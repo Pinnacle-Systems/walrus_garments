@@ -1,0 +1,2676 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Page {
+  id          Int          @id @default(autoincrement())
+  name        String
+  link        String?
+  type        PageType
+  RoleOnPage  RoleOnPage[]
+  active      Boolean      @default(true)
+  PageGroup   PageGroup?   @relation(fields: [pageGroupId], references: [id])
+  pageGroupId Int?
+}
+
+model Company {
+  id                 Int                  @id @default(autoincrement())
+  companyId          String               @unique @default(uuid())
+  name               String
+  code               String?
+  gstNo              String?
+  panNo              String?
+  contactName        String?
+  contactMobile      BigInt
+  contactEmail       String?
+  bankName           String?
+  accNo              String?
+  branchName         String?
+  ifscCode           String?
+  branch             Branch[]
+  country            Country[]
+  active             Boolean              @default(true)
+  Department         Department[]
+  Role               Role[]
+  Subscription       Subscription[]
+  finYear            FinYear[]
+  PartyCategory      PartyCategory[]
+  Currency           Currency[]
+  Party              Party[]
+  Content            Content[]
+  Portion            Portion[]
+  Counts             Counts[]
+  YarnType           YarnType[]
+  Hsn                Hsn[]
+  YarnBlend          YarnBlend[]
+  Yarn               Yarn[]
+  FabricType         FabricType[]
+  Fabric             Fabric[]
+  AccessoryGroup     AccessoryGroup[]
+  AccessoryItem      AccessoryItem[]
+  Accessory          Accessory[]
+  Color              Color[]
+  UnitOfMeasurement  UnitOfMeasurement[]
+  PayTerm            PayTerm[]
+  TaxTerm            TaxTerm[]
+  TaxTemplate        TaxTemplate[]
+  Gauge              Gauge[]
+  Design             Design[]
+  LoopLength         LoopLength[]
+  Gsm                Gsm[]
+  Dia                Dia[]
+  Size               Size[]
+  Location           Location[]
+  Process            Process[]
+  SizeTemplate       SizeTemplate[]
+  Style              Style[]
+  TermsAndConditions TermsAndConditions[]
+  LossReason         LossReason[]
+  PriceTemplate      PriceTemplate[]
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId Int
+  validFrom DateTime
+  expireAt  DateTime
+  code      String
+  maxUsers  Int
+}
+
+model Branch {
+  id                                     Int                          @id @default(autoincrement())
+  branchName                             String
+  branchCode                             String?
+  contactName                            String?
+  contactMobile                          BigInt
+  contactEmail                           String?
+  company                                Company                      @relation(fields: [companyId], references: [id])
+  companyId                              Int
+  active                                 Boolean                      @default(true)
+  EmployeeCategory                       EmployeeCategory[]
+  UserOnBranch                           UserOnBranch[]
+  Employee                               Employee[]
+  idPrefix                               String?
+  idSequence                             String?
+  tempPrefix                             String?
+  tempSequence                           String?
+  prefixCategory                         PrefixCategory?
+  address                                String?
+  gstNo                                  String?
+  panNo                                  String?
+  DeliveryBranchPo                       Po[]                         @relation(name: "deliveryBranch")
+  PoRaised                               Po[]                         @relation(name: "poRaisedBranch")
+  PInwardOrReturn                        PInwardOrReturn[]
+  Location                               Location[]
+  Stock                                  Stock[]
+  ProcessDelivery                        ProcessDelivery[]
+  ProcessInward                          ProcessInward[]
+  CuttingOrder                           CuttingOrder[]
+  CuttingDelivery                        CuttingDelivery[]
+  StockForPcs                            StockForPcs[]
+  CuttingReceipt                         CuttingReceipt[]
+  DirectInwardOrReturn                   DirectInwardOrReturn[]
+  BillEntry                              BillEntry[]
+  Payout                                 Payout[]
+  AdvanceAdjustMent                      AdvanceAdjustMent[]
+  ProcessDeliveryReturn                  ProcessDeliveryReturn[]
+  CuttingExcessFabricReturn              CuttingExcessFabricReturn[]
+  ProductionDelivery                     ProductionDelivery[]
+  ProductionReceipt                      ProductionReceipt[]
+  RawMaterialsSales                      RawMaterialsSales[]
+  RawMaterialsSalesDetails               RawMaterialsSalesDetails[]
+  FinishedGoodsSales                     FinishedGoodsSales[]
+  RawMaterialOpeningStock                RawMaterialOpeningStock[]
+  FinishedGoodsOpeningStock              FinishedGoodsOpeningStock[]
+  FinishedGoodsSalesDelivery             FinishedGoodsSalesDelivery[]
+  StockTransferFinishedGoodsDeliveryTo   StockTransferFinishedGoods[] @relation(name: "deliveryToBranch")
+  StockTransferFinishedGoodsRaisedBranch StockTransferFinishedGoods[] @relation(name: "raisedBranch")
+  PrintingJobWork                        PrintingJobWork[]            @relation(name: "raisedBranch")
+  OnlineSales                            OnlineSales[]
+  OnlineSalesReturn                      OnlineSalesReturn[]
+  CreditDebitNote                        CreditDebitNote[]
+  Order                                  Order[]
+}
+
+model UserOnBranch {
+  id       Int    @id @default(autoincrement())
+  Branch   Branch @relation(fields: [branchId], references: [id])
+  branchId Int
+  User     User   @relation(fields: [userId], references: [id])
+  userId   Int
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   Int
+  User        User[]
+  RoleOnPage  RoleOnPage[]
+  active      Boolean      @default(true)
+  defaultRole Boolean      @default(false)
+
+  @@unique([companyId, name])
+}
+
+model RoleOnPage {
+  id     Int     @id @default(autoincrement())
+  role   Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId Int
+  page   Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId Int
+  read   Boolean @default(false)
+  create Boolean @default(false)
+  edit   Boolean @default(false)
+  delete Boolean @default(false)
+
+  @@unique([roleId, pageId])
+}
+
+model User {
+  id                                  Int                          @id @default(autoincrement())
+  username                            String                       @unique
+  email                               String?
+  Employee                            Employee?                    @relation(fields: [employeeId], references: [id])
+  password                            String
+  role                                Role?                        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId                              Int?
+  otp                                 String?
+  active                              Boolean                      @default(true)
+  UserOnBranch                        UserOnBranch[]
+  employeeId                          Int?
+  partyCreatedBy                      Party[]                      @relation(name: "createdBy")
+  partyUpdatedBy                      Party[]                      @relation(name: "updatedBy")
+  poCreatedBy                         Po[]                         @relation(name: "createdBy")
+  poUpdatedBy                         Po[]                         @relation(name: "updatedBy")
+  PInwardOrReturnCreatedBy            PInwardOrReturn[]            @relation(name: "createdBy")
+  PInwardOrReturnUpdateBy             PInwardOrReturn[]            @relation(name: "updatedBy")
+  ProcessDeliveryCreatedBy            ProcessDelivery[]            @relation(name: "createdBy")
+  ProcessDeliveryUpdateBy             ProcessDelivery[]            @relation(name: "updatedBy")
+  ProcessInwardCreatedBy              ProcessInward[]              @relation(name: "createdBy")
+  ProcessInwardUpdateBy               ProcessInward[]              @relation(name: "updatedBy")
+  TermsAndConditionsCreatedBy         TermsAndConditions[]         @relation(name: "createdBy")
+  TermsAndConditionsUpdateBy          TermsAndConditions[]         @relation(name: "updatedBy")
+  CuttingOrderCreatedBy               CuttingOrder[]               @relation(name: "createdBy")
+  CuttingOrderUpdatedBy               CuttingOrder[]               @relation(name: "updatedBy")
+  CuttingDeliveryCreatedBy            CuttingDelivery[]            @relation(name: "createdBy")
+  CuttingDeliveryUpdatedBy            CuttingDelivery[]            @relation(name: "updatedBy")
+  CuttingReceiptCreatedBy             CuttingReceipt[]             @relation(name: "createdBy")
+  CuttingReceiptUpdatedBy             CuttingReceipt[]             @relation(name: "updatedBy")
+  DirectInwardOrReturnCreatedBy       DirectInwardOrReturn[]       @relation(name: "createdBy")
+  DirectInwardOrReturnUpdatedBy       DirectInwardOrReturn[]       @relation(name: "updatedBy")
+  BillEntryCreatedBy                  BillEntry[]                  @relation(name: "createdBy")
+  BillEntryUpdatedBy                  BillEntry[]                  @relation(name: "updatedBy")
+  PayoutCreatedBy                     Payout[]                     @relation(name: "createdBy")
+  PayoutUpdatedBy                     Payout[]                     @relation(name: "updatedBy")
+  AdvanceAdjustMentCreatedBy          AdvanceAdjustMent[]          @relation(name: "createdBy")
+  AdvanceAdjustMentUpdatedBy          AdvanceAdjustMent[]          @relation(name: "updatedBy")
+  ProcessDeliveryReturnCreatedBy      ProcessDeliveryReturn[]      @relation(name: "createdBy")
+  ProcessDeliveryReturnUpdatedBy      ProcessDeliveryReturn[]      @relation(name: "updatedBy")
+  CuttingExcessFabricReturnCreatedBy  CuttingExcessFabricReturn[]  @relation(name: "createdBy")
+  CuttingExcessFabricReturnUpdatedBy  CuttingExcessFabricReturn[]  @relation(name: "updatedBy")
+  ProductionDeliveryCreatedBy         ProductionDelivery[]         @relation(name: "createdBy")
+  ProductionDeliveryUpdatedBy         ProductionDelivery[]         @relation(name: "updatedBy")
+  ProductionReceiptCreatedBy          ProductionReceipt[]          @relation(name: "createdBy")
+  ProductionReceiptUpdatedBy          ProductionReceipt[]          @relation(name: "updatedBy")
+  RawMaterialsSalesCreatedBy          RawMaterialsSales[]          @relation(name: "createdBy")
+  RawMaterialsSalesUpdatedBy          RawMaterialsSales[]          @relation(name: "updatedBy")
+  FinishedGoodsSalesCreatedBy         FinishedGoodsSales[]         @relation(name: "createdBy")
+  FinishedGoodsSalesUpdatedBy         FinishedGoodsSales[]         @relation(name: "updatedBy")
+  RawMaterialOpeningStockCreatedBy    RawMaterialOpeningStock[]    @relation(name: "createdBy")
+  RawMaterialOpeningStockUpdatedBy    RawMaterialOpeningStock[]    @relation(name: "updatedBy")
+  FinishedGoodsOpeningStockCreatedBy  FinishedGoodsOpeningStock[]  @relation(name: "createdBy")
+  FinishedGoodsOpeningStockUpdatedBy  FinishedGoodsOpeningStock[]  @relation(name: "updatedBy")
+  FinishedGoodsSalesDeliveryCreatedBy FinishedGoodsSalesDelivery[] @relation(name: "createdBy")
+  FinishedGoodsSalesDeliveryUpdatedBy FinishedGoodsSalesDelivery[] @relation(name: "updatedBy")
+  StockTransferFinishedGoodsCreatedBy StockTransferFinishedGoods[] @relation(name: "createdBy")
+  StockTransferFinishedGoodsUpdatedBy StockTransferFinishedGoods[] @relation(name: "updatedBy")
+  PrintingJobWorkCreatedBy            PrintingJobWork[]            @relation(name: "createdBy")
+  PrintingJobWorkUpdatedBy            PrintingJobWork[]            @relation(name: "updatedBy")
+  OnlineSalesCreatedBy                OnlineSales[]                @relation(name: "createdBy")
+  OnlineSalesUpdatedBy                OnlineSales[]                @relation(name: "updatedBy")
+  OnlineSalesReturnCreatedBy          OnlineSalesReturn[]          @relation(name: "createdBy")
+  OnlineSalesReturnUpdatedBy          OnlineSalesReturn[]          @relation(name: "updatedBy")
+  CreditDebitNoteCreatedBy            CreditDebitNote[]            @relation(name: "createdBy")
+  CreditDebitNoteUpdatedBy            CreditDebitNote[]            @relation(name: "updatedBy")
+  Order                               Order[]                      @relation(name: "createdBy")
+  UpdatedOrder                        Order[]                      @relation(name: "updatedBy")
+}
+
+model Employee {
+  id                 Int               @id @default(autoincrement())
+  name               String
+  email              String            @unique
+  regNo              String            @unique
+  chamberNo          String
+  department         Department?       @relation(fields: [departmentId], references: [id])
+  departmentId       Int?
+  joiningDate        DateTime
+  fatherName         String?
+  dob                DateTime?
+  gender             Gender?
+  maritalStatus      MaritalStatus?
+  bloodGroup         BloodGroup?
+  panNo              String?
+  consultFee         String?
+  salaryPerMonth     String
+  commissionCharges  String?
+  mobile             BigInt?
+  accountNo          String?
+  ifscNo             String?
+  branchName         String?
+  degree             String?
+  specialization     String?
+  localAddress       String?
+  localCity          City              @relation("localCity", fields: [localCityId], references: [id])
+  localCityId        Int
+  localPincode       Int?
+  permAddress        String?
+  permCity           City?             @relation("permCity", fields: [permCityId], references: [id])
+  permCityId         Int?
+  permPincode        Int?
+  active             Boolean           @default(true)
+  image              Bytes?            @db.LongBlob
+  Branch             Branch?           @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  EmployeeCategory   EmployeeCategory? @relation(fields: [employeeCategoryId], references: [id])
+  employeeCategoryId Int?
+  permanent          Boolean           @default(false)
+  leavingReason      String?
+  leavingDate        DateTime?
+  canRejoin          Boolean           @default(true)
+  rejoinReason       String?
+  User               User[]
+}
+
+model FinYear {
+  id        Int      @id @default(autoincrement())
+  from      DateTime
+  to        DateTime
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model EmployeeCategory {
+  id              Int        @id @default(autoincrement())
+  name            String
+  code            String
+  Branch          Branch?    @relation(fields: [branchId], references: [id])
+  branchId        Int?
+  active          Boolean    @default(true)
+  defaultCategory Boolean    @default(false)
+  Employee        Employee[]
+}
+
+model Country {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String
+  state     State[]
+  active    Boolean @default(true)
+  Company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
+}
+
+model State {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String
+  gstNo     String
+  country   Country @relation(fields: [countryId], references: [id])
+  countryId Int
+  city      City[]
+  active    Boolean @default(true)
+}
+
+model City {
+  id              Int        @id @default(autoincrement())
+  name            String
+  code            String
+  state           State      @relation(fields: [stateId], references: [id])
+  stateId         Int
+  active          Boolean    @default(true)
+  doctorLocalCity Employee[] @relation(name: "localCity")
+  doctorPermCity  Employee[] @relation(name: "permCity")
+  Party           Party[]
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String
+  code      String
+  active    Boolean    @default(true)
+  doctor    Employee[] @relation()
+  Company   Company    @relation(fields: [companyId], references: [id])
+  companyId Int
+}
+
+enum PageType {
+  Masters
+  Transactions
+  Reports
+  AdminAccess
+}
+
+model PageGroup {
+  id     Int      @id @default(autoincrement())
+  type   PageType
+  name   String
+  Page   Page[]
+  active Boolean  @default(true)
+}
+
+enum PrefixCategory {
+  Default
+  Specific
+}
+
+enum BloodGroup {
+  AP
+  BP
+  AN
+  BN
+  ABP
+  ABN
+  OP
+  ON
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  SEPARATED
+}
+
+// PS TEX Tables
+model PartyCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model Currency {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String?
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+  Party     Party[]
+}
+
+model Party {
+  id                         Int                          @id @default(autoincrement())
+  name                       String
+  code                       String?
+  aliasName                  String?
+  displayName                String?
+  address                    String?
+  image                      Bytes?                       @db.LongBlob
+  City                       City?                        @relation(fields: [cityId], references: [id])
+  cityId                     Int?
+  pincode                    Int?
+  panNo                      String?
+  tinNo                      String?
+  cstNo                      String?
+  cstDate                    DateTime?                    @db.Date
+  cinNo                      String?
+  faxNo                      String?
+  email                      String?
+  website                    String?
+  contactPersonName          String?
+  gstNo                      String?
+  Currency                   Currency?                    @relation(fields: [currencyId], references: [id])
+  currencyId                 Int?
+  costCode                   String?
+  active                     Boolean                      @default(true)
+  contactMobile              BigInt                       @default(0)
+  PartyOnAccessoryItems      PartyOnAccessoryItems[]
+  Company                    Company                      @relation(fields: [companyId], references: [id])
+  companyId                  Int
+  yarn                       Boolean                      @default(false)
+  fabric                     Boolean                      @default(false)
+  accessoryGroup             Boolean                      @default(false)
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  createdBy                  User                         @relation("createdBy", fields: [createdById], references: [id])
+  createdById                Int
+  updatedBy                  User?                        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                Int?
+  PriceTemplate              PriceTemplate?               @relation(fields: [priceTemplateId], references: [id])
+  priceTemplateId            Int?
+  PoSupplier                 Po[]                         @relation(name: "supplier")
+  PoDelivery                 Po[]                         @relation(name: "deliveryTo")
+  PInwardOrReturn            PInwardOrReturn[]
+  PartyOnProcess             PartyOnProcess[]
+  ProcessDelivery            ProcessDelivery[]
+  CuttingOrder               CuttingOrder[]
+  CuttingDeliverySupplier    CuttingDelivery[]            @relation(name: "supplier")
+  CuttingDeliveryToParty     CuttingDelivery[]            @relation(name: "deliveryTo")
+  CuttingReceiptSupplier     CuttingReceipt[]             @relation(name: "supplier")
+  CuttingReceiptToParty      CuttingReceipt[]             @relation(name: "deliveryTo")
+  DirectInwardOrReturn       DirectInwardOrReturn[]
+  BillEntry                  BillEntry[]
+  Ledger                     Ledger[]
+  Payout                     Payout[]
+  CuttingExcessFabricReturn  CuttingExcessFabricReturn[]
+  ProductionDeliverySupplier ProductionDelivery[]         @relation(name: "supplier")
+  ProductionDeliveryToParty  ProductionDelivery[]         @relation(name: "deliveryTo")
+  ProductionReceiptSupplier  ProductionReceipt[]          @relation(name: "supplier")
+  ProductionReceiptToParty   ProductionReceipt[]          @relation(name: "deliveryTo")
+  RawMaterialsSalesSupplier  RawMaterialsSales[]          @relation(name: "supplier")
+  RawMaterialsSalesToParty   RawMaterialsSales[]          @relation(name: "deliveryTo")
+  FinishedGoodsSalesSupplier FinishedGoodsSales[]         @relation(name: "supplier")
+  FinishedGoodsSalesDelivery FinishedGoodsSalesDelivery[]
+  PrintingJobWork            PrintingJobWork[]
+  OnlineSales                OnlineSales[]
+  OnlineSalesReturn          OnlineSalesReturn[]
+  CreditDebitNote            CreditDebitNote[]
+  Order                      Order[]
+}
+
+model PartyOnAccessoryItems {
+  id              Int           @id @default(autoincrement())
+  Party           Party         @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId         Int
+  AccessoryItems  AccessoryItem @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId Int
+}
+
+model Content {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+  Yarn      Yarn[]
+}
+
+model Counts {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+  Yarn      Yarn[]
+}
+
+model YarnType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+  Yarn      Yarn[]
+}
+
+model Hsn {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model YarnBlend {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  Company           Company?            @relation(fields: [companyId], references: [id])
+  companyId         Int?
+  active            Boolean             @default(true)
+  YarnOnYarnBlend   YarnOnYarnBlend[]
+  FabricOnYarnBlend FabricOnYarnBlend[]
+}
+
+model Yarn {
+  id                            Int                             @id @default(autoincrement())
+  content                       Content                         @relation(fields: [contentId], references: [id])
+  contentId                     Int
+  yarnType                      YarnType                        @relation(fields: [yarnTypeId], references: [id])
+  yarnTypeId                    Int
+  counts                        Counts                          @relation(fields: [countsId], references: [id])
+  countsId                      Int
+  aliasName                     String
+  hsn                           String
+  taxPercent                    Float                           @default(0)
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  YarnOnYarnBlend               YarnOnYarnBlend[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model YarnOnYarnBlend {
+  id          Int       @id @default(autoincrement())
+  yarn        Yarn      @relation(fields: [yarnId], references: [id], onDelete: Cascade)
+  yarnBlend   YarnBlend @relation(fields: [yarnBlendId], references: [id])
+  yarnBlendId Int
+  percentage  Int
+  yarnId      Int
+}
+
+model FabricType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+  Fabric    Fabric[]
+}
+
+model Fabric {
+  id                            Int                             @id @default(autoincrement())
+  aliasName                     String
+  hsn                           String
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  FabricType                    FabricType                      @relation(fields: [fabricTypeId], references: [id])
+  FabricOnYarnBlend             FabricOnYarnBlend[]
+  fabricTypeId                  Int
+  organic                       Boolean                         @default(false)
+  Style                         Style[]
+  CuttingDeliveryDetails        CuttingDeliveryDetails[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model FabricOnYarnBlend {
+  id          Int       @id @default(autoincrement())
+  yarnBlend   YarnBlend @relation(fields: [yarnBlendId], references: [id])
+  fabric      Fabric    @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  yarnBlendId Int
+  percentage  Int
+  fabricId    Int
+}
+
+model AccessoryGroup {
+  id            Int             @id @default(autoincrement())
+  name          String
+  Company       Company?        @relation(fields: [companyId], references: [id])
+  companyId     Int?
+  active        Boolean         @default(true)
+  AccessoryItem AccessoryItem[]
+}
+
+model AccessoryItem {
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  AccessoryGroup        AccessoryGroup          @relation(fields: [accessoryGroupId], references: [id])
+  active                Boolean                 @default(true)
+  accessoryGroupId      Int
+  Company               Company?                @relation(fields: [companyId], references: [id])
+  companyId             Int?
+  Accessory             Accessory[]
+  PartyOnAccessoryItems PartyOnAccessoryItems[]
+}
+
+model Accessory {
+  id                            Int                             @id @default(autoincrement())
+  aliasName                     String
+  accessoryCategory             AccessoryCategory
+  accessoryItem                 AccessoryItem                   @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId               Int
+  hsn                           String
+  Company                       Company                         @relation(fields: [companyId], references: [id])
+  companyId                     Int
+  active                        Boolean                         @default(true)
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+enum AccessoryCategory {
+  STITCHING
+  PACKING
+}
+
+enum PoTypes {
+  GreyYarn
+  DyedYarn
+  GreyFabric
+  DyedFabric
+  Accessory
+}
+
+enum P_InwardOrReturn {
+  PurchaseCancel
+  PurchaseInward
+  PurchaseReturn
+  ProcessDelivery
+  ProcessInward
+  DirectInward
+  DirectReturn
+  CuttingDelivery
+  CuttingInward
+  CuttingExcessFabricReturn
+  ProcessDeliveryReturn
+  RawMaterialSales
+  RawMaterialOpeningStock
+}
+
+model Color {
+  id                                        Int                                         @id @default(autoincrement())
+  name                                      String
+  pantone                                   String
+  Company                                   Company                                     @relation(fields: [companyId], references: [id])
+  companyId                                 Int
+  active                                    Boolean                                     @default(true)
+  isGrey                                    Boolean                                     @default(false)
+  StyleOnColor                              StyleOnColor[]
+  CuttingOrderDetails                       CuttingOrderDetails[]
+  CuttingDeliveryDetails                    CuttingDeliveryDetails[]
+  PoItems                                   PoItems[]
+  Stock                                     Stock[]
+  DirectItems                               DirectItems[]
+  ProcessDeliveryProgramDetails             ProcessDeliveryProgramDetails[]
+  RawMaterials                              RawMaterials[]
+  StockForPcs                               StockForPcs[]
+  ProductionDeliveryDetails                 ProductionDeliveryDetails[]
+  RawMaterialsSalesDetails                  RawMaterialsSalesDetails[]
+  FinishedGoodsSalesDetails                 FinishedGoodsSalesDetails[]
+  RawMaterialOpeningStockItems              RawMaterialOpeningStockItems[]
+  FinishedGoodsOpeningStockDetails          FinishedGoodsOpeningStockDetails[]
+  FinishedGoodsSalesDeliveryDetails         FinishedGoodsSalesDeliveryDetails[]
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+model UnitOfMeasurement {
+  id                                        Int                                         @id @default(autoincrement())
+  name                                      String
+  Company                                   Company                                     @relation(fields: [companyId], references: [id])
+  companyId                                 Int
+  active                                    Boolean                                     @default(true)
+  isCutting                                 Boolean                                     @default(false)
+  CuttingOrderDetails                       CuttingOrderDetails[]
+  CuttingDeliveryDetails                    CuttingDeliveryDetails[]
+  PoItems                                   PoItems[]
+  Stock                                     Stock[]
+  DirectItems                               DirectItems[]
+  ProcessDeliveryProgramDetails             ProcessDeliveryProgramDetails[]
+  RawMaterials                              RawMaterials[]
+  StockForPcs                               StockForPcs[]
+  ProductionDeliveryDetails                 ProductionDeliveryDetails[]
+  RawMaterialsSalesDetails                  RawMaterialsSalesDetails[]
+  FinishedGoodsSalesDetails                 FinishedGoodsSalesDetails[]
+  RawMaterialOpeningStockItems              RawMaterialOpeningStockItems[]
+  FinishedGoodsOpeningStockDetails          FinishedGoodsOpeningStockDetails[]
+  FinishedGoodsSalesDeliveryDetails         FinishedGoodsSalesDeliveryDetails[]
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  PrintingJobWorkDet                        PrintingJobWorkDet[]
+  OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+enum DeliveryType {
+  ToSelf
+  ToParty
+}
+
+model Po {
+  id               Int            @id @default(autoincrement())
+  supplier         Party          @relation("supplier", fields: [supplierId], references: [id])
+  transType        PoTypes
+  dueDate          DateTime       @db.Date
+  taxTemplate      TaxTemplate    @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId    Int
+  supplierId       Int
+  PayTerms         PayTerm        @relation(fields: [payTermId], references: [id])
+  payTermId        Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  createdBy        User           @relation("createdBy", fields: [createdById], references: [id])
+  createdById      Int
+  updatedBy        User?          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
+  Branch           Branch         @relation("poRaisedBranch", fields: [branchId], references: [id])
+  docId            String
+  branchId         Int
+  active           Boolean        @default(true)
+  discountType     DiscountTypes?
+  discountValue    Float?         @default(0)
+  deliveryType     DeliveryType
+  DeliveryParty    Party?         @relation("deliveryTo", fields: [deliveryPartyId], references: [id])
+  deliveryPartyId  Int?
+  DeliveryBranch   Branch?        @relation("deliveryBranch", fields: [deliveryBranchId], references: [id])
+  deliveryBranchId Int?
+  remarks          String?        @db.LongText
+  PoItems          PoItems[]
+}
+
+model PoItems {
+  id                  Int                   @id @default(autoincrement())
+  Po                  Po                    @relation(fields: [poId], references: [id], onDelete: Cascade)
+  Fabric              Fabric?               @relation(fields: [fabricId], references: [id])
+  fabricId            Int?
+  Yarn                Yarn?                 @relation(fields: [yarnId], references: [id])
+  yarnId              Int?
+  Accessory           Accessory?            @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  Color               Color?                @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement     @relation(fields: [uomId], references: [id])
+  uomId               Int
+  Design              Design?               @relation(fields: [designId], references: [id])
+  Gauge               Gauge?                @relation(fields: [gaugeId], references: [id])
+  LoopLength          LoopLength?           @relation(fields: [loopLengthId], references: [id])
+  Gsm                 Gsm?                  @relation(fields: [gsmId], references: [id])
+  noOfBags            Int?
+  weightPerBag        Float?
+  qty                 Float
+  price               Float
+  discountType        DiscountTypes
+  discountValue       Float                 @default(0)
+  taxPercent          Float                 @default(0)
+  Size                Size?                 @relation(fields: [sizeId], references: [id])
+  designId            Int?
+  gaugeId             Int?
+  loopLengthId        Int?
+  gsmId               Int?
+  sizeId              Int?
+  poId                Int
+  KDia                Dia?                  @relation("kDiaPoItem", fields: [kDiaId], references: [id])
+  kDiaId              Int?
+  FDia                Dia?                  @relation("fDiaPoItem", fields: [fDiaId], references: [id])
+  fDiaId              Int?
+  PoInwardReturnItems PoInwardReturnItems[]
+  BillEntryItems      BillEntryItems[]
+}
+
+model PInwardOrReturn {
+  id                  Int                   @id @default(autoincrement())
+  inwardOrReturn      P_InwardOrReturn
+  vehicleNo           String?
+  specialInstructions String?               @db.LongText
+  remarks             String?               @db.LongText
+  dcNo                String?
+  dcDate              DateTime?             @db.Date
+  Store               Location?             @relation(fields: [storeId], references: [id])
+  poType              PoTypes
+  supplier            Party                 @relation(fields: [supplierId], references: [id])
+  supplierId          Int
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           User                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int
+  updatedBy           User?                 @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  Branch              Branch                @relation(fields: [branchId], references: [id])
+  branchId            Int
+  active              Boolean               @default(true)
+  storeId             Int?
+  docId               String
+  PoInwardReturnItems PoInwardReturnItems[]
+}
+
+model PoInwardReturnItems {
+  id                     Int             @id @default(autoincrement())
+  PurchaseInwardOrReturn PInwardOrReturn @relation(fields: [pInwardOrReturnId], references: [id], onDelete: Cascade)
+  pInwardOrReturnId      Int
+  PoItem                 PoItems?        @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId              Int?
+  weightPerBag           Float?
+  noOfBags               Int?
+  noOfRolls              Int?
+  qty                    Float
+  lotNo                  String?
+  Stock                  Stock?          @relation(fields: [stockId], references: [id])
+  stockId                Int?            @unique
+}
+
+model DirectInwardOrReturn {
+  id                  Int              @id @default(autoincrement())
+  inwardOrReturn      P_InwardOrReturn
+  dcNo                String?
+  dcDate              DateTime?        @db.Date
+  Store               Location?        @relation(fields: [storeId], references: [id])
+  poType              PoTypes
+  supplier            Party            @relation(fields: [supplierId], references: [id])
+  supplierId          Int
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  createdBy           User             @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int
+  updatedBy           User?            @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  Branch              Branch           @relation(fields: [branchId], references: [id])
+  branchId            Int
+  active              Boolean          @default(true)
+  storeId             Int?
+  docId               String
+  PayTerm             PayTerm?         @relation(fields: [payTermId], references: [id])
+  payTermId           Int?
+  TaxTemplate         TaxTemplate?     @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId       Int?
+  discountType        DiscountTypes?
+  discountValue       Float?           @default(0)
+  vehicleNo           String?
+  specialInstructions String?          @db.LongText
+  remarks             String?          @db.LongText
+  DirectItems         DirectItems[]
+}
+
+model DirectItems {
+  id                     Int                  @id @default(autoincrement())
+  DirectInwardOrReturn   DirectInwardOrReturn @relation(fields: [directInwardOrReturnId], references: [id])
+  Fabric                 Fabric?              @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId               Int?
+  Yarn                   Yarn?                @relation(fields: [yarnId], references: [id])
+  yarnId                 Int?
+  Accessory              Accessory?           @relation(fields: [accessoryId], references: [id])
+  accessoryId            Int?
+  Color                  Color?               @relation(fields: [colorId], references: [id])
+  colorId                Int?
+  Uom                    UnitOfMeasurement    @relation(fields: [uomId], references: [id])
+  uomId                  Int
+  Design                 Design?              @relation(fields: [designId], references: [id])
+  Gauge                  Gauge?               @relation(fields: [gaugeId], references: [id])
+  LoopLength             LoopLength?          @relation(fields: [loopLengthId], references: [id])
+  Gsm                    Gsm?                 @relation(fields: [gsmId], references: [id])
+  price                  Float
+  discountType           DiscountTypes
+  discountValue          Float                @default(0)
+  taxPercent             Float                @default(0)
+  Size                   Size?                @relation(fields: [sizeId], references: [id])
+  designId               Int?
+  gaugeId                Int?
+  loopLengthId           Int?
+  gsmId                  Int?
+  sizeId                 Int?
+  KDia                   Dia?                 @relation("kDiaDirectItem", fields: [kDiaId], references: [id])
+  kDiaId                 Int?
+  FDia                   Dia?                 @relation("fDiaDirectItem", fields: [fDiaId], references: [id])
+  fDiaId                 Int?
+  directInwardOrReturnId Int
+  Stock                  Stock                @relation(fields: [stockId], references: [id])
+  stockId                Int                  @unique
+  weightPerBag           Float?
+  noOfBags               Int?
+  noOfRolls              Int?
+  qty                    Float
+  lotNo                  String?
+  lotNoCommonIndex       Int?
+  BillEntryItems         BillEntryItems[]
+}
+
+model PayTerm {
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  days                 Int
+  Company              Company                @relation(fields: [companyId], references: [id])
+  companyId            Int
+  active               Boolean                @default(true)
+  Po                   Po[]
+  DirectInwardOrReturn DirectInwardOrReturn[]
+  BillEntry            BillEntry[]
+}
+
+enum DiscountTypes {
+  Flat
+  Percentage
+}
+
+model TaxTerm {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  isPoWise           Boolean              @default(false)
+  Company            Company              @relation(fields: [companyId], references: [id])
+  companyId          Int
+  active             Boolean              @default(true)
+  TaxTemplateDetails TaxTemplateDetails[]
+}
+
+model TaxTemplate {
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  Company              Company                @relation(fields: [companyId], references: [id])
+  companyId            Int
+  active               Boolean                @default(true)
+  TaxTemplateDetails   TaxTemplateDetails[]
+  Po                   Po[]
+  DirectInwardOrReturn DirectInwardOrReturn[]
+  BillEntry            BillEntry[]
+  RawMaterialsSales    RawMaterialsSales[]
+  FinishedGoodsSales   FinishedGoodsSales[]
+  PrintingJobWork      PrintingJobWork[]
+  CreditDebitNote      CreditDebitNote[]
+}
+
+model TaxTemplateDetails {
+  id            Int         @id @default(autoincrement())
+  TaxTemplate   TaxTemplate @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
+  taxTemplateId Int
+  TaxTerm       TaxTerm     @relation(fields: [taxTermId], references: [id])
+  taxTermId     Int
+  displayName   String
+  value         String?
+  amount        String?
+}
+
+model Gauge {
+  id                            Int                             @id @default(autoincrement())
+  name                          String
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  CuttingDeliveryDetails        CuttingDeliveryDetails[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model Design {
+  id                            Int                             @id @default(autoincrement())
+  name                          String
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  CuttingDeliveryDetails        CuttingDeliveryDetails[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model LoopLength {
+  id                            Int                             @id @default(autoincrement())
+  name                          String
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  CuttingDeliveryDetails        CuttingDeliveryDetails[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model Gsm {
+  id                            Int                             @id @default(autoincrement())
+  name                          String
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean                         @default(true)
+  CuttingDeliveryDetails        CuttingDeliveryDetails[]
+  PoItems                       PoItems[]
+  Stock                         Stock[]
+  DirectItems                   DirectItems[]
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  RawMaterials                  RawMaterials[]
+  RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
+  RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+}
+
+model Dia {
+  id                                Int                             @id @default(autoincrement())
+  name                              String
+  measurement                       DiaMeasurement
+  kDia                              Boolean                         @default(false)
+  fDia                              Boolean                         @default(false)
+  Company                           Company?                        @relation(fields: [companyId], references: [id])
+  companyId                         Int?
+  active                            Boolean                         @default(true)
+  CuttingDeliveryDetailsKDia        CuttingDeliveryDetails[]        @relation(name: "kDia")
+  CuttingDeliveryDetailsFDia        CuttingDeliveryDetails[]        @relation(name: "fDia")
+  PoItemsKDia                       PoItems[]                       @relation(name: "kDiaPoItem")
+  PoItemsFDia                       PoItems[]                       @relation(name: "fDiaPoItem")
+  StockKDia                         Stock[]                         @relation(name: "kDiaStock")
+  StockFDia                         Stock[]                         @relation(name: "fDiaStock")
+  DirectItemsKDia                   DirectItems[]                   @relation(name: "kDiaDirectItem")
+  DirectItemsFDia                   DirectItems[]                   @relation(name: "fDiaDirectItem")
+  ProcessDeliveryProgramDetailsKDia ProcessDeliveryProgramDetails[] @relation(name: "kDia")
+  ProcessDeliveryProgramDetailsFDia ProcessDeliveryProgramDetails[] @relation(name: "fDia")
+  RawMaterialsKDia                  RawMaterials[]                  @relation(name: "kDia")
+  RawMaterialsFDia                  RawMaterials[]                  @relation(name: "fDia")
+  RawMaterialsSalesDetailsKDia      RawMaterialsSalesDetails[]      @relation(name: "kDia")
+  RawMaterialsSalesDetailsFDia      RawMaterialsSalesDetails[]      @relation(name: "fDia")
+  RawMaterialOpeningStockItemsKDia  RawMaterialOpeningStockItems[]  @relation(name: "kDia")
+  RawMaterialOpeningStockItemsFDia  RawMaterialOpeningStockItems[]  @relation(name: "fDia")
+}
+
+model Size {
+  id                                        Int                                         @id @default(autoincrement())
+  name                                      String
+  isAccessory                               Boolean                                     @default(false)
+  Company                                   Company?                                    @relation(fields: [companyId], references: [id])
+  companyId                                 Int?
+  active                                    Boolean                                     @default(true)
+  SizeTemplateOnSize                        SizeTemplateOnSize[]
+  CuttingOrderDetails                       CuttingOrderDetails[]
+  StockForPcs                               StockForPcs[]
+  PoItems                                   PoItems[]
+  Stock                                     Stock[]
+  DirectItems                               DirectItems[]
+  ProcessDeliveryProgramDetails             ProcessDeliveryProgramDetails[]
+  RawMaterials                              RawMaterials[]
+  ProductionDeliveryDetails                 ProductionDeliveryDetails[]
+  RawMaterialsSalesDetails                  RawMaterialsSalesDetails[]
+  FinishedGoodsSalesDetails                 FinishedGoodsSalesDetails[]
+  RawMaterialOpeningStockItems              RawMaterialOpeningStockItems[]
+  FinishedGoodsOpeningStockDetails          FinishedGoodsOpeningStockDetails[]
+  FinishedGoodsSalesDeliveryDetails         FinishedGoodsSalesDeliveryDetails[]
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  PriceTemplateStyleSizeDetails             PriceTemplateStyleSizeDetails[]
+  OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+model SizeTemplate {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  Company            Company?             @relation(fields: [companyId], references: [id])
+  companyId          Int?
+  active             Boolean              @default(true)
+  SizeTemplateOnSize SizeTemplateOnSize[]
+  Style              Style[]
+}
+
+model SizeTemplateOnSize {
+  id             Int          @id @default(autoincrement())
+  SizeTemplate   SizeTemplate @relation(fields: [sizeTemplateId], references: [id])
+  sizeTemplateId Int
+  Size           Size         @relation(fields: [sizeId], references: [id])
+  sizeId         Int
+}
+
+enum DiaMeasurement {
+  CMS
+  INCHES
+  OPENWIDTH
+  TUBULER
+}
+
+model Stock {
+  id                                        Int                                      @id @default(autoincrement())
+  itemType                                  PoTypes
+  inOrOut                                   P_InwardOrReturn
+  Fabric                                    Fabric?                                  @relation(fields: [fabricId], references: [id])
+  fabricId                                  Int?
+  Yarn                                      Yarn?                                    @relation(fields: [yarnId], references: [id])
+  yarnId                                    Int?
+  Accessory                                 Accessory?                               @relation(fields: [accessoryId], references: [id])
+  accessoryId                               Int?
+  Color                                     Color?                                   @relation(fields: [colorId], references: [id])
+  colorId                                   Int?
+  Uom                                       UnitOfMeasurement                        @relation(fields: [uomId], references: [id])
+  uomId                                     Int
+  Design                                    Design?                                  @relation(fields: [designId], references: [id])
+  designId                                  Int?
+  Gauge                                     Gauge?                                   @relation(fields: [gaugeId], references: [id])
+  gaugeId                                   Int?
+  LoopLength                                LoopLength?                              @relation(fields: [loopLengthId], references: [id])
+  loopLengthId                              Int?
+  Gsm                                       Gsm?                                     @relation(fields: [gsmId], references: [id])
+  gsmId                                     Int?
+  Size                                      Size?                                    @relation(fields: [sizeId], references: [id])
+  sizeId                                    Int?
+  KDia                                      Dia?                                     @relation("kDiaStock", fields: [kDiaId], references: [id])
+  kDiaId                                    Int?
+  FDia                                      Dia?                                     @relation("fDiaStock", fields: [fDiaId], references: [id])
+  fDiaId                                    Int?
+  qty                                       Float
+  price                                     Float
+  noOfRolls                                 Int?                                     @default(0)
+  noOfBags                                  Int?                                     @default(0)
+  Store                                     Location                                 @relation(fields: [storeId], references: [id])
+  Branch                                    Branch                                   @relation(fields: [branchId], references: [id])
+  storeId                                   Int
+  branchId                                  Int
+  Process                                   Process?                                 @relation(fields: [processId], references: [id])
+  active                                    Boolean                                  @default(true)
+  processId                                 Int?
+  lotNo                                     String?
+  PoInwardReturnItems                       PoInwardReturnItems?
+  DirectItems                               DirectItems?
+  RawMaterials                              RawMaterials?
+  ProgramInwardLotDetails                   ProgramInwardLotDetail?                  @relation(fields: [programInwardLotDetailsId], references: [id], onDelete: Cascade)
+  programInwardLotDetailsId                 Int?                                     @unique
+  ProcessDeliveryReturnRawMaterialDetails   ProcessDeliveryReturnRawMaterialDetails? @relation(fields: [processDeliveryReturnRawMaterialDetailsId], references: [id], onDelete: Cascade)
+  processDeliveryReturnRawMaterialDetailsId Int?                                     @unique
+  CuttingDeliveryDetails                    CuttingDeliveryDetails?                  @relation(fields: [cuttingDeliveryDetailsId], references: [id], onDelete: Cascade)
+  cuttingDeliveryDetailsId                  Int?                                     @unique
+  CuttingExcessFabricReturnDetails          CuttingExcessFabricReturnDetails?        @relation(fields: [cuttingExcessFabricReturnDetailsId], references: [id], onDelete: Cascade)
+  cuttingExcessFabricReturnDetailsId        Int?                                     @unique
+  RawMaterialsSalesDetails                  RawMaterialsSalesDetails?                @relation(fields: [rawMaterialsSalesDetailsId], references: [id], onDelete: Cascade)
+  rawMaterialsSalesDetailsId                Int?                                     @unique
+  RawMaterialOpeningStockItems              RawMaterialOpeningStockItems?            @relation(fields: [rawMaterialOpeningStockItemsId], references: [id], onDelete: Cascade)
+  rawMaterialOpeningStockItemsId            Int?                                     @unique
+  createdAt                                 DateTime?                                @default(now())
+}
+
+model Location {
+  id                         Int                          @id @default(autoincrement())
+  storeName                  String
+  Location                   Branch                       @relation(fields: [locationId], references: [id])
+  locationId                 Int
+  isFabric                   Boolean                      @default(true)
+  isYarn                     Boolean                      @default(true)
+  isAccessory                Boolean                      @default(true)
+  isGarments                 Boolean                      @default(true)
+  active                     Boolean                      @default(true)
+  Company                    Company                      @relation(fields: [companyId], references: [id])
+  companyId                  Int
+  PInwardOrReturn            PInwardOrReturn[]
+  Stock                      Stock[]
+  ProcessDelivery            ProcessDelivery[]
+  ProcessInward              ProcessInward[]
+  CuttingDelivery            CuttingDelivery[]
+  CuttingReceipt             CuttingReceipt[]
+  StockForPcs                StockForPcs[]
+  DirectInwardOrReturn       DirectInwardOrReturn[]
+  BillEntry                  BillEntry[]
+  ProcessDeliveryReturn      ProcessDeliveryReturn[]
+  CuttingDeliveryDetails     CuttingDeliveryDetails[]
+  CuttingExcessFabricReturn  CuttingExcessFabricReturn[]
+  ProductionDelivery         ProductionDelivery[]
+  ProductionReceipt          ProductionReceipt[]
+  RawMaterialsSales          RawMaterialsSales[]
+  RawMaterialsSalesDetails   RawMaterialsSalesDetails[]
+  FinishedGoodsSales         FinishedGoodsSales[]
+  RawMaterialOpeningStock    RawMaterialOpeningStock[]
+  FinishedGoodsOpeningStock  FinishedGoodsOpeningStock[]
+  FinishedGoodsSalesDelivery FinishedGoodsSalesDelivery[]
+  StockTransferFinishedGoods StockTransferFinishedGoods[]
+  OnlineSales                OnlineSales[]
+  OnlineSalesReturn          OnlineSalesReturn[]
+}
+
+enum ProcessIO {
+  GY_GY
+  GY_DY
+  GY_GF
+  DY_DY
+  DY_DF
+  GF_DF
+  DF_DF
+}
+
+model Process {
+  id                                        Int                                         @id @default(autoincrement())
+  name                                      String
+  code                                      String
+  io                                        ProcessIO?
+  isCutting                                 Boolean                                     @default(false)
+  isPacking                                 Boolean                                     @default(false)
+  isPcsStage                                Boolean                                     @default(false)
+  isIroning                                 Boolean                                     @default(false)
+  active                                    Boolean                                     @default(true)
+  Company                                   Company                                     @relation(fields: [companyId], references: [id])
+  companyId                                 Int
+  PartyOnProcess                            PartyOnProcess[]
+  ProcessDelivery                           ProcessDelivery[]
+  Stock                                     Stock[]
+  CuttingDeliveryDetails                    CuttingDeliveryDetails[]
+  StockForPcs                               StockForPcs[]
+  RawMaterials                              RawMaterials[]
+  BillEntry                                 BillEntry[]
+  ProductionDeliveryFromProcess             ProductionDelivery[]                        @relation(name: "fromProcess")
+  ProductionDeliveryToProcess               ProductionDelivery[]                        @relation(name: "toProcess")
+  ProductionDeliveryDetails                 ProductionDeliveryDetails[]
+  ProductionReceipt                         ProductionReceipt[]
+  RawMaterialsSales                         RawMaterialsSales[]
+  RawMaterialsSalesDetails                  RawMaterialsSalesDetails[]
+  FinishedGoodsSalesDetails                 FinishedGoodsSalesDetails[]
+  RawMaterialOpeningStockItems              RawMaterialOpeningStockItems[]
+  FinishedGoodsOpeningStockDetails          FinishedGoodsOpeningStockDetails[]
+  FinishedGoodsSalesDeliveryDetails         FinishedGoodsSalesDeliveryDetails[]
+  isPrintingJobWork                         Boolean                                     @default(false)
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  PrintingJobWorkDet                        PrintingJobWorkDet[]
+  OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+model PartyOnProcess {
+  id        Int     @id @default(autoincrement())
+  Party     Party   @relation(fields: [partyId], references: [id])
+  partyId   Int
+  Process   Process @relation(fields: [processId], references: [id])
+  processId Int
+}
+
+model Style {
+  id                                        Int                                         @id @default(autoincrement())
+  name                                      String
+  sku                                       String
+  productType                               String?
+  seoTitle                                  String?
+  image                                     Bytes?                                      @db.LongBlob
+  SizeTemplate                              SizeTemplate                                @relation(fields: [sizeTemplateId], references: [id], onDelete: Cascade)
+  sizeTemplateId                            Int
+  Fabric                                    Fabric                                      @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId                                  Int
+  sleeve                                    String?
+  pattern                                   String?
+  occasion                                  String?
+  material                                  String?
+  washCare                                  String?
+  active                                    Boolean                                     @default(true)
+  Company                                   Company                                     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId                                 Int
+  hsn                                       String?
+  StyleOnColor                              StyleOnColor[]
+  ProcessDelivery                           ProcessDelivery[]
+  CuttingOrder                              CuttingOrder[]
+  StockForPcs                               StockForPcs[]
+  ProductionDelivery                        ProductionDelivery[]
+  ProductionDeliveryDetails                 ProductionDeliveryDetails[]
+  ProductionReceipt                         ProductionReceipt[]
+  FinishedGoodsSalesDetails                 FinishedGoodsSalesDetails[]
+  FinishedGoodsOpeningStock                 FinishedGoodsOpeningStock[]
+  portionDetails                            StyleOnPortion[]
+  FinishedGoodsSalesDeliveryDetails         FinishedGoodsSalesDeliveryDetails[]
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  PriceTemplateStyleWiseDetails             PriceTemplateStyleWiseDetails[]
+  OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+model StyleOnColor {
+  id      Int   @id @default(autoincrement())
+  Style   Style @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  styleId Int
+  Color   Color @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  colorId Int
+}
+
+model ProcessDelivery {
+  id                            Int                             @id @default(autoincrement())
+  Process                       Process                         @relation(fields: [processId], references: [id], onDelete: Cascade)
+  delNo                         String?
+  delDate                       DateTime?                       @db.Date
+  dueDate                       DateTime?                       @db.Date
+  Store                         Location                        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  supplier                      Party                           @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierId                    Int
+  createdAt                     DateTime                        @default(now())
+  updatedAt                     DateTime                        @updatedAt
+  createdBy                     User                            @relation("createdBy", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById                   Int
+  updatedBy                     User?                           @relation("updatedBy", fields: [updatedById], references: [id], onDelete: Cascade)
+  updatedById                   Int?
+  Branch                        Branch                          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branchId                      Int
+  active                        Boolean                         @default(true)
+  storeId                       Int
+  processId                     Int
+  Style                         Style?                          @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  vehicleNo                     String?
+  specialInstructions           String?
+  remarks                       String?
+  itemType                      PoTypes
+  styleId                       Int?
+  ProcessInward                 ProcessInward[]
+  docId                         String
+  ProcessDeliveryProgramDetails ProcessDeliveryProgramDetails[]
+  ProcessDeliveryReturn         ProcessDeliveryReturn[]
+}
+
+model ProcessDeliveryProgramDetails {
+  id                                  Int                                   @id @default(autoincrement())
+  ProcessDelivery                     ProcessDelivery                       @relation(fields: [processDeliveryId], references: [id], onDelete: Cascade)
+  processDeliveryId                   Int
+  Fabric                              Fabric?                               @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId                            Int?
+  Yarn                                Yarn?                                 @relation(fields: [yarnId], references: [id], onDelete: Cascade)
+  yarnId                              Int?
+  Accessory                           Accessory?                            @relation(fields: [accessoryId], references: [id], onDelete: Cascade)
+  accessoryId                         Int?
+  Color                               Color?                                @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  colorId                             Int?
+  Uom                                 UnitOfMeasurement                     @relation(fields: [uomId], references: [id])
+  uomId                               Int
+  Design                              Design?                               @relation(fields: [designId], references: [id])
+  designId                            Int?
+  Gauge                               Gauge?                                @relation(fields: [gaugeId], references: [id])
+  gaugeId                             Int?
+  LoopLength                          LoopLength?                           @relation(fields: [loopLengthId], references: [id])
+  loopLengthId                        Int?
+  Gsm                                 Gsm?                                  @relation(fields: [gsmId], references: [id])
+  gsmId                               Int?
+  Size                                Size?                                 @relation(fields: [sizeId], references: [id])
+  sizeId                              Int?
+  KDia                                Dia?                                  @relation("kDia", fields: [kDiaId], references: [id])
+  kDiaId                              Int?
+  FDia                                Dia?                                  @relation("fDia", fields: [fDiaId], references: [id])
+  fDiaId                              Int?
+  noOfBags                            Int?
+  weightPerBag                        Float?
+  qty                                 Float
+  processCost                         Float
+  rawMaterials                        RawMaterials[]
+  ProcessInwardDetails                ProcessInwardProgramDetails[]
+  ProcessDeliveryReturnProgramDetails ProcessDeliveryReturnProgramDetails[]
+  BillEntryItems                      BillEntryItems[]
+}
+
+model RawMaterials {
+  id                                         Int                                          @id @default(autoincrement())
+  ProcessDeliveryProgramDetails              ProcessDeliveryProgramDetails                @relation(fields: [processDeliveryProgramDetailsId], references: [id], onDelete: Cascade)
+  processDeliveryProgramDetailsId            Int
+  Fabric                                     Fabric?                                      @relation(fields: [fabricId], references: [id])
+  fabricId                                   Int?
+  Yarn                                       Yarn?                                        @relation(fields: [yarnId], references: [id])
+  yarnId                                     Int?
+  Accessory                                  Accessory?                                   @relation(fields: [accessoryId], references: [id])
+  accessoryId                                Int?
+  Color                                      Color?                                       @relation(fields: [colorId], references: [id])
+  colorId                                    Int?
+  Uom                                        UnitOfMeasurement                            @relation(fields: [uomId], references: [id])
+  uomId                                      Int
+  Design                                     Design?                                      @relation(fields: [designId], references: [id])
+  designId                                   Int?
+  Gauge                                      Gauge?                                       @relation(fields: [gaugeId], references: [id])
+  gaugeId                                    Int?
+  LoopLength                                 LoopLength?                                  @relation(fields: [loopLengthId], references: [id])
+  loopLengthId                               Int?
+  Gsm                                        Gsm?                                         @relation(fields: [gsmId], references: [id])
+  gsmId                                      Int?
+  Size                                       Size?                                        @relation(fields: [sizeId], references: [id])
+  sizeId                                     Int?
+  KDia                                       Dia?                                         @relation("kDia", fields: [kDiaId], references: [id])
+  kDiaId                                     Int?
+  FDia                                       Dia?                                         @relation("fDia", fields: [fDiaId], references: [id])
+  fDiaId                                     Int?
+  stockQty                                   Float
+  stockBags                                  Int?
+  stockRolls                                 Int?
+  lotNo                                      String?
+  noOfRolls                                  Int?
+  noOfBags                                   Int?
+  weightPerBag                               Float?
+  qty                                        Float
+  stockPrice                                 Float?
+  Process                                    Process?                                     @relation(fields: [processId], references: [id])
+  processId                                  Int?
+  Stock                                      Stock                                        @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  stockId                                    Int                                          @unique
+  ProcessInwardRawMaterialConsumptionDetails ProcessInwardRawMaterialConsumptionDetails[]
+  ProcessDeliveryReturnRawMaterialDetails    ProcessDeliveryReturnRawMaterialDetails[]
+}
+
+model ProcessInward {
+  id                   Int                           @id @default(autoincrement())
+  ProcessDelivery      ProcessDelivery               @relation(fields: [processDeliveryId], references: [id])
+  processDeliveryId    Int
+  dcNo                 String?
+  dcDate               DateTime?                     @db.Date
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
+  Store                Location                      @relation(fields: [storeId], references: [id])
+  createdBy            User                          @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int
+  updatedBy            User?                         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  docId                String
+  storeId              Int
+  Branch               Branch                        @relation(fields: [branchId], references: [id])
+  branchId             Int
+  vehicleNo            String?
+  specialInstructions  String?
+  remarks              String?
+  userInwardDate       DateTime?
+  ProcessInwardDetails ProcessInwardProgramDetails[]
+}
+
+model ProcessInwardProgramDetails {
+  id                              Int                                          @id @default(autoincrement())
+  ProcessInward                   ProcessInward                                @relation(fields: [processInwardId], references: [id], onDelete: Cascade)
+  processInwardId                 Int
+  ProcessDeliveryProgramDetails   ProcessDeliveryProgramDetails                @relation(fields: [processDeliveryProgramDetailsId], references: [id])
+  processDeliveryProgramDetailsId Int
+  rawMaterials                    ProcessInwardRawMaterialConsumptionDetails[]
+  lotDetails                      ProgramInwardLotDetail[]
+}
+
+model ProgramInwardLotDetail {
+  id                            Int                         @id @default(autoincrement())
+  ProgramInwardProgramDetailsId ProcessInwardProgramDetails @relation(fields: [processInwardProgramDetailsId], references: [id], onDelete: Cascade)
+  processInwardProgramDetailsId Int
+  lotNo                         String?
+  inwardQty                     Float
+  inwardBags                    Int?
+  inwardRolls                   Int?
+  Stock                         Stock?
+}
+
+model ProcessInwardRawMaterialConsumptionDetails {
+  id                            Int                         @id @default(autoincrement())
+  ProcessInwardProgramDetails   ProcessInwardProgramDetails @relation(fields: [processInwardProgramDetailsId], references: [id], onDelete: Cascade)
+  processInwardProgramDetailsId Int
+  RawMaterials                  RawMaterials                @relation(fields: [rawMaterialsId], references: [id])
+  rawMaterialsId                Int
+  consumptionQty                Float
+  lossQty                       Float
+  stockPrice                    Float?
+}
+
+model TermsAndConditions {
+  id              Int      @id @default(autoincrement())
+  itemType        PoTypes
+  description     String   @db.LongText
+  Company         Company  @relation(fields: [companyId], references: [id])
+  companyId       Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdBy       User     @relation("createdBy", fields: [createdById], references: [id])
+  createdById     Int
+  updatedBy       User?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById     Int?
+  active          Boolean  @default(true)
+  isPurchaseOrder Boolean  @default(false)
+}
+
+model CuttingOrder {
+  id                        Int                         @id @default(autoincrement())
+  Style                     Style                       @relation(fields: [styleId], references: [id])
+  styleId                   Int
+  Party                     Party                       @relation(fields: [partyId], references: [id])
+  partyId                   Int
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  createdBy                 User                        @relation("createdBy", fields: [createdById], references: [id])
+  createdById               Int
+  updatedBy                 User?                       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById               Int?
+  Branch                    Branch                      @relation(fields: [branchId], references: [id])
+  branchId                  Int
+  docId                     String
+  vehicleNo                 String
+  specialInstructions       String?
+  remarks                   String?
+  CuttingOrderDetails       CuttingOrderDetails[]
+  CuttingDelivery           CuttingDelivery[]
+  CuttingReceipt            CuttingReceipt[]
+  CuttingExcessFabricReturn CuttingExcessFabricReturn[]
+}
+
+model CuttingOrderDetails {
+  id                          Int                           @id @default(autoincrement())
+  CuttingOrder                CuttingOrder                  @relation(fields: [cuttingOrderId], references: [id])
+  cuttingOrderId              Int
+  Portion                     Portion?                      @relation(fields: [portionId], references: [id])
+  portionId                   Int?
+  Color                       Color                         @relation(fields: [colorId], references: [id])
+  colorId                     Int
+  Size                        Size                          @relation(fields: [sizeId], references: [id])
+  sizeId                      Int
+  UOM                         UnitOfMeasurement             @relation(fields: [uomId], references: [id])
+  uomId                       Int
+  orderQty                    Float
+  cuttingPrice                Float
+  CuttingReceiptInwardDetails CuttingReceiptInwardDetails[]
+}
+
+model CuttingDelivery {
+  id                     Int                      @id @default(autoincrement())
+  docId                  String
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  createdBy              User                     @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int
+  updatedBy              User?                    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  CuttingOrder           CuttingOrder             @relation(fields: [cuttingOrderId], references: [id])
+  cuttingOrderId         Int
+  Store                  Location                 @relation(fields: [storeId], references: [id])
+  storeId                Int
+  Supplier               Party                    @relation("supplier", fields: [supplierId], references: [id])
+  supplierId             Int
+  DeliveryTo             Party                    @relation("deliveryTo", fields: [deliveryId], references: [id])
+  deliveryId             Int
+  vehicleNo              String
+  specialInstructions    String?
+  remarks                String?
+  dueDate                DateTime?
+  CuttingDeliveryDetails CuttingDeliveryDetails[]
+  Branch                 Branch                   @relation(fields: [branchId], references: [id])
+  branchId               Int
+}
+
+model CuttingDeliveryDetails {
+  id                                     Int                                      @id @default(autoincrement())
+  CuttingDelivery                        CuttingDelivery                          @relation(fields: [cuttingDeliveryId], references: [id])
+  cuttingDeliveryId                      Int
+  Process                                Process?                                 @relation(fields: [processId], references: [id])
+  processId                              Int?
+  Fabric                                 Fabric                                   @relation(fields: [fabricId], references: [id])
+  fabricId                               Int
+  Color                                  Color                                    @relation(fields: [colorId], references: [id])
+  colorId                                Int
+  Design                                 Design                                   @relation(fields: [designId], references: [id])
+  designId                               Int
+  Gsm                                    Gsm                                      @relation(fields: [gsmId], references: [id])
+  gsmId                                  Int
+  LoopLength                             LoopLength                               @relation(fields: [loopLengthId], references: [id])
+  loopLengthId                           Int
+  KDia                                   Dia                                      @relation("kDia", fields: [kDiaId], references: [id])
+  kDiaId                                 Int
+  Gauge                                  Gauge                                    @relation(fields: [gaugeId], references: [id])
+  FDia                                   Dia                                      @relation("fDia", fields: [fDiaId], references: [id])
+  fDiaId                                 Int
+  Uom                                    UnitOfMeasurement                        @relation(fields: [uomId], references: [id])
+  uomId                                  Int
+  delRolls                               Int
+  delQty                                 Float
+  gaugeId                                Int
+  lotNo                                  String?
+  CuttingReceiptFabricConsumptionDetails CuttingReceiptFabricConsumptionDetails[]
+  Stock                                  Stock?
+  stockPrice                             Float?
+  Store                                  Location?                                @relation(fields: [storeId], references: [id])
+  storeId                                Int?
+  CuttingExcessFabricReturnDetails       CuttingExcessFabricReturnDetails[]
+}
+
+model CuttingReceipt {
+  id                                     Int                                      @id @default(autoincrement())
+  docId                                  String
+  createdAt                              DateTime                                 @default(now())
+  updatedAt                              DateTime                                 @updatedAt
+  createdBy                              User                                     @relation("createdBy", fields: [createdById], references: [id])
+  createdById                            Int
+  updatedBy                              User?                                    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                            Int?
+  CuttingOrder                           CuttingOrder                             @relation(fields: [cuttingOrderId], references: [id])
+  cuttingOrderId                         Int
+  Store                                  Location                                 @relation(fields: [storeId], references: [id])
+  storeId                                Int
+  Supplier                               Party                                    @relation("supplier", fields: [supplierId], references: [id])
+  supplierId                             Int
+  DeliveryTo                             Party                                    @relation("deliveryTo", fields: [deliveryId], references: [id])
+  deliveryId                             Int
+  supplierDc                             String?
+  vehicleNo                              String?
+  specialInstructions                    String?
+  remarks                                String?
+  Branch                                 Branch                                   @relation(fields: [branchId], references: [id])
+  CuttingReceiptInwardDetails            CuttingReceiptInwardDetails[]
+  CuttingReceiptFabricConsumptionDetails CuttingReceiptFabricConsumptionDetails[]
+  branchId                               Int
+}
+
+model CuttingReceiptInwardDetails {
+  id                    Int                 @id @default(autoincrement())
+  CuttingReceipt        CuttingReceipt      @relation(fields: [cuttingReceiptId], references: [id], onDelete: Cascade)
+  cuttingReceiptId      Int
+  CuttingOrderDetails   CuttingOrderDetails @relation(fields: [cuttingOrderDetailsId], references: [id], onDelete: Cascade)
+  cuttingOrderDetailsId Int
+  receivedQty           Int
+  StockForPcs           StockForPcs?
+}
+
+model CuttingReceiptFabricConsumptionDetails {
+  id                       Int                               @id @default(autoincrement())
+  CuttingReceipt           CuttingReceipt                    @relation(fields: [cuttingReceiptId], references: [id])
+  cuttingReceiptId         Int
+  CuttingDeliveryDetails   CuttingDeliveryDetails            @relation(fields: [cuttingDeliveryDetailsId], references: [id])
+  cuttingDeliveryDetailsId Int
+  consumption              Float
+  lossDetails              CuttingReceiptFabricLossDetails[]
+}
+
+model LossReason {
+  id                              Int                               @id @default(autoincrement())
+  reason                          String
+  CuttingReceiptFabricLossDetails CuttingReceiptFabricLossDetails[]
+  active                          Boolean                           @default(true)
+  Company                         Company                           @relation(fields: [companyId], references: [id])
+  companyId                       Int
+  ProductionReceiptLossDetails    ProductionReceiptLossDetails[]
+}
+
+model CuttingReceiptFabricLossDetails {
+  id                                       Int                                    @id @default(autoincrement())
+  CuttingReceiptFabricConsumptionDetails   CuttingReceiptFabricConsumptionDetails @relation(fields: [cuttingReceiptFabricConsumptionDetailsId], references: [id], onDelete: Cascade)
+  Reason                                   LossReason                             @relation(fields: [lossReasonId], references: [id])
+  lossReasonId                             Int
+  lossQty                                  Float
+  cuttingReceiptFabricConsumptionDetailsId Int
+}
+
+model CuttingExcessFabricReturn {
+  id                               Int                                @id @default(autoincrement())
+  CuttingExcessFabricReturnDetails CuttingExcessFabricReturnDetails[]
+  docId                            String
+  createdAt                        DateTime                           @default(now())
+  updatedAt                        DateTime                           @updatedAt
+  createdBy                        User                               @relation("createdBy", fields: [createdById], references: [id])
+  createdById                      Int
+  updatedBy                        User?                              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                      Int?
+  CuttingOrder                     CuttingOrder                       @relation(fields: [cuttingOrderId], references: [id])
+  cuttingOrderId                   Int
+  Store                            Location                           @relation(fields: [storeId], references: [id])
+  storeId                          Int
+  Supplier                         Party                              @relation(fields: [supplierId], references: [id])
+  supplierId                       Int
+  supplierDc                       String?
+  vehicleNo                        String?
+  specialInstructions              String?
+  remarks                          String?
+  Branch                           Branch                             @relation(fields: [branchId], references: [id])
+  branchId                         Int
+}
+
+model CuttingExcessFabricReturnDetails {
+  id                          Int                       @id @default(autoincrement())
+  CuttingExcessFabricReturn   CuttingExcessFabricReturn @relation(fields: [cuttingExcessFabricReturnId], references: [id])
+  CuttingDeliveryDetails      CuttingDeliveryDetails    @relation(fields: [cuttingDeliveryDetailsId], references: [id])
+  cuttingDeliveryDetailsId    Int
+  returnExcessQty             Float
+  returnExcessRolls           Float
+  cuttingExcessFabricReturnId Int
+  Stock                       Stock?
+}
+
+enum StockForPcsInOrOut {
+  In
+  Out
+}
+
+model StockForPcs {
+  id                                         Int                                        @id @default(autoincrement())
+  inOrOut                                    StockForPcsInOrOut
+  Portion                                    Portion?                                   @relation(fields: [portionId], references: [id])
+  portionId                                  Int?
+  Style                                      Style                                      @relation(fields: [styleId], references: [id])
+  styleId                                    Int
+  Uom                                        UnitOfMeasurement?                         @relation(fields: [uomId], references: [id])
+  Color                                      Color?                                     @relation(fields: [colorId], references: [id])
+  Size                                       Size                                       @relation(fields: [sizeId], references: [id])
+  sizeId                                     Int
+  qty                                        Int
+  Store                                      Location                                   @relation(fields: [storeId], references: [id])
+  storeId                                    Int
+  Branch                                     Branch                                     @relation(fields: [branchId], references: [id])
+  branchId                                   Int
+  PrevProcess                                Process?                                   @relation(fields: [prevProcessId], references: [id])
+  prevProcessId                              Int?
+  CuttingReceiptInwardDetails                CuttingReceiptInwardDetails?               @relation(fields: [cuttingReceiptInwardDetailsId], references: [id], onDelete: Cascade)
+  cuttingReceiptInwardDetailsId              Int?                                       @unique
+  colorId                                    Int?
+  uomId                                      Int?
+  ProductionDeliveryDetails                  ProductionDeliveryDetails?                 @relation(fields: [productionDeliveryDetailsId], references: [id], onDelete: Cascade)
+  productionDeliveryDetailsId                Int?                                       @unique
+  ProductionReceiptDetails                   ProductionReceiptDetails?                  @relation(fields: [productionReceiptDetailsId], references: [id], onDelete: Cascade)
+  productionReceiptDetailsId                 Int?                                       @unique
+  FinishedGoodsSalesDetails                  FinishedGoodsSalesDetails?                 @relation(fields: [finishedGoodsSalesDetailsId], references: [id], onDelete: Cascade)
+  finishedGoodsSalesDetailsId                Int?                                       @unique
+  FinishedGoodsOpeningStockDetails           FinishedGoodsOpeningStockDetails?          @relation(fields: [finishedGoodsOpeningStockDetailsId], references: [id], onDelete: Cascade)
+  finishedGoodsOpeningStockDetailsId         Int?                                       @unique
+  createdAt                                  DateTime?                                  @default(now())
+  FinishedGoodsSalesDeliveryDetails          FinishedGoodsSalesDeliveryDetails?         @relation(fields: [finishedGoodsSalesDeliveryDetailsId], references: [id], onDelete: Cascade)
+  finishedGoodsSalesDeliveryDetailsId        Int?                                       @unique
+  StockTransferFinishedGoodsDetails          StockTransferFinishedGoodsDeliveryDetails? @relation(fields: [stockTransferFinishedGoodsDetailsId], references: [id], onDelete: Cascade)
+  stockTransferFinishedGoodsDetailsId        Int?                                       @unique
+  StockTransferFinishedGoodsReceiptDetails   StockTransferFinishedGoodsReceiptDetails?  @relation(fields: [stockTransferFinishedGoodsReceiptDetailsId], references: [id], onDelete: Cascade)
+  stockTransferFinishedGoodsReceiptDetailsId Int?                                       @unique
+  OnlineSalesDetails                         OnlineSalesDetails?                        @relation(fields: [onlineSalesDetailsId], references: [id], onDelete: Cascade)
+  onlineSalesDetailsId                       Int?                                       @unique
+  OnlineSalesReturnDetails                   OnlineSalesReturnDetails?                  @relation(fields: [onlineSalesReturnDetailsId], references: [id], onDelete: Cascade)
+  onlineSalesReturnDetailsId                 Int?                                       @unique
+}
+
+model BillEntry {
+  id                   Int                    @id @default(autoincrement())
+  Store                Location?              @relation(fields: [storeId], references: [id])
+  Process              Process?               @relation(fields: [processId], references: [id])
+  processId            Int?
+  poType               PoTypes?
+  supplier             Party                  @relation(fields: [supplierId], references: [id])
+  supplierId           Int
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  createdBy            User                   @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int
+  updatedBy            User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  Branch               Branch                 @relation(fields: [branchId], references: [id])
+  branchId             Int
+  active               Boolean                @default(true)
+  storeId              Int?
+  docId                String
+  PayTerm              PayTerm?               @relation(fields: [payTermId], references: [id])
+  payTermId            Int?
+  TaxTemplate          TaxTemplate?           @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId        Int?
+  partyBillNo          String?
+  netBillValue         Int?
+  discountType         DiscountTypes?
+  discountValue        Float?                 @default(0)
+  partyBillDate        DateTime?              @db.Date
+  BillEntryItems       BillEntryItems[]
+  Ledger               Ledger?
+  PayOutItems          PayOutItems[]
+  AdvanceAdjustDetails AdvanceAdjustDetails[]
+  isProcessBillEntry   Boolean                @default(false)
+  RawMaterialsSales    RawMaterialsSales?     @relation(fields: [rawMaterialsSalesId], references: [id], onDelete: Cascade)
+  rawMaterialsSalesId  Int?                   @unique
+  FinishedGoodsSales   FinishedGoodsSales?    @relation(fields: [finishedGoodsSalesId], references: [id], onDelete: Cascade)
+  finishedGoodsSalesId Int?                   @unique
+  PrintingJobWork      PrintingJobWork?       @relation(fields: [printingJobWorkId], references: [id], onDelete: Cascade)
+  printingJobWorkId    Int?                   @unique
+  isDirect             Boolean?               @default(true)
+}
+
+model BillEntryItems {
+  id                              Int                            @id @default(autoincrement())
+  isPoItem                        Boolean                        @default(false)
+  BillEntry                       BillEntry                      @relation(fields: [billEntryId], references: [id], onDelete: Cascade)
+  billEntryId                     Int
+  PoItem                          PoItems?                       @relation(fields: [poItemsId], references: [id])
+  poItemsId                       Int?
+  DirectItems                     DirectItems?                   @relation(fields: [directItemsId], references: [id])
+  directItemsId                   Int?
+  ProcessDeliveryProgramDetails   ProcessDeliveryProgramDetails? @relation(fields: [processDeliveryProgramDetailsId], references: [id])
+  processDeliveryProgramDetailsId Int?
+  qty                             Float
+  discountType                    DiscountTypes?
+  discountValue                   Float?                         @default(0)
+  price                           Float?                         @default(0)
+  taxPercent                      Float?
+  notes                           String?
+}
+
+enum PaymentType {
+  AgainstBill
+  Advance
+}
+
+enum PaymentMode {
+  Check
+  Online
+  Upi
+  Cash
+  Credit
+  NEFT
+  RDGS
+  IMVS
+  IMPS
+}
+
+enum PayerType {
+  My_Payment
+  Customer_Payment
+}
+
+model Payout {
+  id                Int                 @id @default(autoincrement())
+  docId             String
+  supplier          Party               @relation(fields: [supplierId], references: [id])
+  supplierId        Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  createdBy         User                @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int
+  updatedBy         User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Branch            Branch              @relation(fields: [branchId], references: [id])
+  branchId          Int
+  paymentType       PaymentType
+  paymentMode       PaymentMode
+  refNo             String?
+  payOutDate        DateTime?           @db.Date
+  PayOutItems       PayOutItems[]
+  amount            Float
+  Ledger            Ledger?
+  payerType         PayerType?
+  AdvanceAdjustMent AdvanceAdjustMent[]
+}
+
+model PayOutItems {
+  id          Int       @id @default(autoincrement())
+  PayOut      Payout    @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  payoutId    Int
+  BillEntry   BillEntry @relation(fields: [billEntryId], references: [id], onDelete: Cascade)
+  billEntryId Int
+  amount      Float
+}
+
+model AdvanceAdjustMent {
+  id                   Int                    @id @default(autoincrement())
+  docId                String
+  AdvancePayOut        Payout                 @relation(fields: [advancePayOutId], references: [id])
+  advancePayOutId      Int
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  createdBy            User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  Branch               Branch                 @relation(fields: [branchId], references: [id])
+  branchId             Int
+  amount               Float
+  AdvanceAdjustDetails AdvanceAdjustDetails[]
+}
+
+model AdvanceAdjustDetails {
+  id                  Int               @id @default(autoincrement())
+  AdvanceAdjustment   AdvanceAdjustMent @relation(fields: [advanceAdjustMentId], references: [id])
+  advanceAdjustMentId Int
+  BillEntry           BillEntry         @relation(fields: [billEntryId], references: [id], onDelete: Cascade)
+  billEntryId         Int
+  amount              Float
+}
+
+enum LedgerEntryType {
+  Purchase_Bill
+  Process_Bill
+  Sales
+  My_Payment
+  Customer_Payment
+  Credit_Note
+  Debit_Note
+  Opening_Balance
+  Printing_Job_Work
+}
+
+enum LedgerType {
+  Supplier
+  Customer
+}
+
+model Ledger {
+  id                Int              @id @default(autoincrement())
+  EntryType         LedgerEntryType
+  LedgerType        LedgerType?
+  creditOrDebit     Credit_Debit?
+  BillEntry         BillEntry?       @relation(fields: [billEntryId], references: [id], onDelete: Cascade)
+  billEntryId       Int?             @unique
+  PayOut            Payout?          @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  payoutId          Int?             @unique
+  Party             Party            @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId           Int
+  amount            Float
+  partyBillDate     DateTime?        @db.Date
+  partyBillNo       String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  CreditDebitNote   CreditDebitNote? @relation(fields: [creditDebitNoteId], references: [id], onDelete: Cascade)
+  creditDebitNoteId Int?             @unique
+}
+
+model ProcessDeliveryReturn {
+  id                                  Int                                   @id @default(autoincrement())
+  ProcessDelivery                     ProcessDelivery                       @relation(fields: [processDeliveryId], references: [id])
+  processDeliveryId                   Int
+  dcNo                                String?
+  dcDate                              DateTime?                             @db.Date
+  createdAt                           DateTime                              @default(now())
+  updatedAt                           DateTime                              @updatedAt
+  Store                               Location                              @relation(fields: [storeId], references: [id])
+  createdBy                           User                                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById                         Int
+  updatedBy                           User?                                 @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                         Int?
+  docId                               String
+  storeId                             Int
+  Branch                              Branch                                @relation(fields: [branchId], references: [id])
+  branchId                            Int
+  vehicleNo                           String?
+  specialInstructions                 String?
+  remarks                             String?
+  userInwardDate                      DateTime?
+  ProcessDeliveryReturnProgramDetails ProcessDeliveryReturnProgramDetails[]
+}
+
+model ProcessDeliveryReturnProgramDetails {
+  id                              Int                                       @id @default(autoincrement())
+  ProcessDeliveryReturn           ProcessDeliveryReturn                     @relation(fields: [processDeliveryReturnId], references: [id])
+  processDeliveryReturnId         Int
+  ProcessDeliveryProgramDetails   ProcessDeliveryProgramDetails             @relation(fields: [processDeliveryProgramDetailsId], references: [id])
+  processDeliveryProgramDetailsId Int
+  rawMaterials                    ProcessDeliveryReturnRawMaterialDetails[]
+}
+
+model ProcessDeliveryReturnRawMaterialDetails {
+  id                                    Int                                 @id @default(autoincrement())
+  ProcessDeliveryReturnProgramDetails   ProcessDeliveryReturnProgramDetails @relation(fields: [processDeliveryReturnProgramDetailsId], references: [id], onDelete: Cascade)
+  processDeliveryReturnProgramDetailsId Int
+  stockPrice                            Float?
+  RawMaterials                          RawMaterials                        @relation(fields: [rawMaterialsId], references: [id])
+  rawMaterialsId                        Int
+  returnRolls                           Int?
+  returnBags                            Int?
+  returnQty                             Float
+  Stock                                 Stock?
+}
+
+enum ProductionType {
+  INHOUSE
+  OUTSIDE
+}
+
+model ProductionDelivery {
+  id                        Int                         @id @default(autoincrement())
+  docId                     String
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  createdBy                 User                        @relation("createdBy", fields: [createdById], references: [id])
+  createdById               Int
+  updatedBy                 User?                       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById               Int?
+  Store                     Location                    @relation(fields: [storeId], references: [id])
+  storeId                   Int
+  Supplier                  Party?                      @relation("supplier", fields: [supplierId], references: [id])
+  supplierId                Int?
+  DeliveryTo                Party?                      @relation("deliveryTo", fields: [deliveryId], references: [id])
+  deliveryId                Int?
+  vehicleNo                 String?
+  specialInstructions       String?
+  remarks                   String?
+  userInwardDate            DateTime?
+  productionType            ProductionType
+  Style                     Style                       @relation(fields: [styleId], references: [id])
+  styleId                   Int
+  FromProcess               Process?                    @relation("fromProcess", fields: [fromProcessId], references: [id], onDelete: Cascade)
+  fromProcessId             Int?
+  ToProcess                 Process?                    @relation("toProcess", fields: [toProcessId], references: [id], onDelete: Cascade)
+  toProcessId               Int?
+  Branch                    Branch                      @relation(fields: [branchId], references: [id])
+  ProductionDeliveryDetails ProductionDeliveryDetails[]
+  branchId                  Int
+  dueDate                   DateTime?
+  ProductionReceipt         ProductionReceipt[]
+}
+
+model ProductionDeliveryDetails {
+  id                       Int                        @id @default(autoincrement())
+  ProductionDelivery       ProductionDelivery         @relation(fields: [productionDeliveryId], references: [id])
+  productionDeliveryId     Int
+  Style                    Style                      @relation(fields: [styleId], references: [id])
+  styleId                  Int
+  Portion                  Portion?                   @relation(fields: [portionId], references: [id])
+  portionId                Int?
+  Uom                      UnitOfMeasurement          @relation(fields: [uomId], references: [id])
+  uomId                    Int
+  Color                    Color                      @relation(fields: [colorId], references: [id])
+  colorId                  Int
+  Size                     Size                       @relation(fields: [sizeId], references: [id])
+  sizeId                   Int
+  PrevProcess              Process?                   @relation(fields: [prevProcessId], references: [id])
+  prevProcessId            Int?
+  delQty                   Int
+  processCost              Float?
+  StockForPcs              StockForPcs?
+  ProductionReceiptDetails ProductionReceiptDetails[]
+}
+
+model ProductionReceipt {
+  id                       Int                        @id @default(autoincrement())
+  docId                    String
+  PrevProcess              Process?                   @relation(fields: [prevProcessId], references: [id])
+  prevProcessId            Int?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  createdBy                User                       @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  Store                    Location                   @relation(fields: [storeId], references: [id])
+  storeId                  Int
+  Supplier                 Party?                     @relation("supplier", fields: [supplierId], references: [id])
+  supplierId               Int?
+  DeliveryTo               Party?                     @relation("deliveryTo", fields: [deliveryId], references: [id])
+  deliveryId               Int?
+  vehicleNo                String?
+  specialInstructions      String?
+  remarks                  String?
+  userInwardDate           DateTime?
+  supplierDc               String?
+  Style                    Style                      @relation(fields: [styleId], references: [id])
+  styleId                  Int
+  ProductionDelivery       ProductionDelivery         @relation(fields: [productionDeliveryId], references: [id])
+  productionDeliveryId     Int
+  Branch                   Branch                     @relation(fields: [branchId], references: [id])
+  branchId                 Int
+  ProductionReceiptDetails ProductionReceiptDetails[]
+}
+
+model ProductionReceiptDetails {
+  id                          Int                            @id @default(autoincrement())
+  ProductionReceipt           ProductionReceipt              @relation(fields: [productionReceiptId], references: [id])
+  productionReceiptId         Int
+  ProductionDeliveryDetails   ProductionDeliveryDetails      @relation(fields: [productionDeliveryDetailsId], references: [id])
+  productionDeliveryDetailsId Int
+  receivedQty                 Float
+  StockForPcs                 StockForPcs?
+  lossDetails                 ProductionReceiptLossDetails[]
+}
+
+model ProductionReceiptLossDetails {
+  id                         Int                      @id @default(autoincrement())
+  ProductionReceiptDetails   ProductionReceiptDetails @relation(fields: [productionReceiptDetailsId], references: [id], onDelete: Cascade)
+  productionReceiptDetailsId Int
+  Reason                     LossReason               @relation(fields: [lossReasonId], references: [id])
+  lossReasonId               Int
+  lossQty                    Float
+}
+
+model RawMaterialsSales {
+  id                       Int                        @id @default(autoincrement())
+  docId                    String
+  poType                   PoTypes
+  Process                  Process?                   @relation(fields: [processId], references: [id])
+  processId                Int?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  createdBy                User                       @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  Store                    Location                   @relation(fields: [storeId], references: [id])
+  storeId                  Int
+  Supplier                 Party?                     @relation("supplier", fields: [supplierId], references: [id])
+  supplierId               Int?
+  DeliveryTo               Party?                     @relation("deliveryTo", fields: [deliveryId], references: [id])
+  deliveryId               Int?
+  vehicleNo                String?
+  specialInstructions      String?
+  remarks                  String?
+  userInwardDate           DateTime?
+  supplierPoDetail         String?
+  Branch                   Branch                     @relation(fields: [branchId], references: [id])
+  branchId                 Int
+  TaxTemplate              TaxTemplate?               @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId            Int?
+  invoiceType              InvoiceType?
+  discountType             DiscountTypes?
+  discountValue            Float?                     @default(0)
+  eWayBillNo               String?
+  poNo                     String?
+  RawMaterialsSalesDetails RawMaterialsSalesDetails[]
+  BillEntry                BillEntry?
+}
+
+model RawMaterialsSalesDetails {
+  id                  Int               @id @default(autoincrement())
+  RawMaterialsSales   RawMaterialsSales @relation(fields: [rawMaterialsSalesId], references: [id], onDelete: Cascade)
+  rawMaterialsSalesId Int
+  Fabric              Fabric?           @relation(fields: [fabricId], references: [id])
+  fabricId            Int?
+  Yarn                Yarn?             @relation(fields: [yarnId], references: [id])
+  yarnId              Int?
+  Accessory           Accessory?        @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  Color               Color?            @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement @relation(fields: [uomId], references: [id])
+  uomId               Int
+  Design              Design?           @relation(fields: [designId], references: [id])
+  designId            Int?
+  Gauge               Gauge?            @relation(fields: [gaugeId], references: [id])
+  gaugeId             Int?
+  LoopLength          LoopLength?       @relation(fields: [loopLengthId], references: [id])
+  loopLengthId        Int?
+  Gsm                 Gsm?              @relation(fields: [gsmId], references: [id])
+  gsmId               Int?
+  Size                Size?             @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  KDia                Dia?              @relation("kDia", fields: [kDiaId], references: [id])
+  kDiaId              Int?
+  FDia                Dia?              @relation("fDia", fields: [fDiaId], references: [id])
+  fDiaId              Int?
+  qty                 Float
+  price               Float
+  noOfRolls           Int?              @default(0)
+  noOfBags            Int?              @default(0)
+  Store               Location          @relation(fields: [storeId], references: [id])
+  Branch              Branch            @relation(fields: [branchId], references: [id])
+  storeId             Int
+  branchId            Int
+  Process             Process?          @relation(fields: [processId], references: [id], onDelete: Cascade)
+  active              Boolean           @default(true)
+  processId           Int?
+  lotNo               String?
+  stockPrice          Float?
+  stockQty            Float?
+  taxPercent          Float?
+  weightPerBag        Int?
+  stockRolls          Int?
+  stockBags           Int?
+  Stock               Stock?
+}
+
+enum SalesTypes {
+  WHOLESALE
+  RETAIL
+}
+
+enum FinishedGoodsSalesBillType {
+  DIRECT
+  AGAINSTDELIVERY
+}
+
+enum InvoiceType {
+  Cash
+  Credit
+}
+
+model FinishedGoodsSales {
+  id                        Int                         @id @default(autoincrement())
+  docId                     String
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  createdBy                 User                        @relation("createdBy", fields: [createdById], references: [id])
+  createdById               Int
+  updatedBy                 User?                       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById               Int?
+  Store                     Location?                   @relation(fields: [storeId], references: [id])
+  storeId                   Int?
+  Supplier                  Party?                      @relation("supplier", fields: [supplierId], references: [id])
+  supplierId                Int?
+  vehicleNo                 String?
+  specialInstructions       String?
+  remarks                   String?
+  userInwardDate            DateTime?
+  salesType                 SalesTypes
+  Branch                    Branch                      @relation(fields: [branchId], references: [id])
+  branchId                  Int
+  isTaxBill                 Boolean                     @default(false)
+  customerName              String?
+  customerMobile            String?
+  TaxTemplate               TaxTemplate?                @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId             Int?
+  invoiceType               InvoiceType?
+  discountType              DiscountTypes?
+  discountValue             Float?                      @default(0)
+  eWayBillNo                String?
+  poNo                      String?
+  FinishedGoodsSalesDetails FinishedGoodsSalesDetails[]
+  finishedGoodsBillType     FinishedGoodsSalesBillType?
+  BillEntry                 BillEntry?
+}
+
+model FinishedGoodsSalesDetails {
+  id                                  Int                                @id @default(autoincrement())
+  FinishedGoodsSales                  FinishedGoodsSales                 @relation(fields: [finishedGoodsSalesId], references: [id], onDelete: Cascade)
+  finishedGoodsSalesId                Int
+  Style                               Style                              @relation(fields: [styleId], references: [id])
+  styleId                             Int
+  Uom                                 UnitOfMeasurement                  @relation(fields: [uomId], references: [id])
+  uomId                               Int
+  Color                               Color                              @relation(fields: [colorId], references: [id])
+  colorId                             Int
+  Size                                Size                               @relation(fields: [sizeId], references: [id])
+  sizeId                              Int
+  PrevProcess                         Process?                           @relation(fields: [prevProcessId], references: [id])
+  prevProcessId                       Int?
+  qty                                 Int
+  price                               Float?
+  tax                                 Float?
+  StockForPcs                         StockForPcs?
+  FinishedGoodsSalesDeliveryDetails   FinishedGoodsSalesDeliveryDetails? @relation(fields: [finishedGoodsSalesDeliveryDetailsId], references: [id])
+  finishedGoodsSalesDeliveryDetailsId Int?
+}
+
+model RawMaterialOpeningStock {
+  id                           Int                            @id @default(autoincrement())
+  docId                        String
+  createdAt                    DateTime                       @default(now())
+  updatedAt                    DateTime                       @updatedAt
+  createdBy                    User                           @relation("createdBy", fields: [createdById], references: [id])
+  createdById                  Int
+  updatedBy                    User?                          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                  Int?
+  rawMaterialType              PoTypes
+  Branch                       Branch                         @relation(fields: [branchId], references: [id])
+  Store                        Location                       @relation(fields: [storeId], references: [id])
+  storeId                      Int
+  RawMaterialOpeningStockItems RawMaterialOpeningStockItems[]
+  branchId                     Int
+}
+
+model RawMaterialOpeningStockItems {
+  id                        Int                     @id @default(autoincrement())
+  RawMaterialOpeningStock   RawMaterialOpeningStock @relation(fields: [rawMaterialOpeningStockId], references: [id])
+  rawMaterialOpeningStockId Int
+  PrevProcess               Process?                @relation(fields: [prevProcessId], references: [id])
+  prevProcessId             Int?
+  Fabric                    Fabric?                 @relation(fields: [fabricId], references: [id])
+  fabricId                  Int?
+  Yarn                      Yarn?                   @relation(fields: [yarnId], references: [id])
+  yarnId                    Int?
+  Accessory                 Accessory?              @relation(fields: [accessoryId], references: [id])
+  accessoryId               Int?
+  Color                     Color?                  @relation(fields: [colorId], references: [id])
+  colorId                   Int?
+  Uom                       UnitOfMeasurement       @relation(fields: [uomId], references: [id])
+  uomId                     Int
+  Design                    Design?                 @relation(fields: [designId], references: [id])
+  Gauge                     Gauge?                  @relation(fields: [gaugeId], references: [id])
+  LoopLength                LoopLength?             @relation(fields: [loopLengthId], references: [id])
+  Gsm                       Gsm?                    @relation(fields: [gsmId], references: [id])
+  noOfRolls                 Int?
+  noOfBags                  Int?
+  weightPerBag              Float?
+  qty                       Float
+  price                     Float
+  Size                      Size?                   @relation(fields: [sizeId], references: [id])
+  designId                  Int?
+  gaugeId                   Int?
+  loopLengthId              Int?
+  gsmId                     Int?
+  sizeId                    Int?
+  KDia                      Dia?                    @relation("kDia", fields: [kDiaId], references: [id])
+  kDiaId                    Int?
+  FDia                      Dia?                    @relation("fDia", fields: [fDiaId], references: [id])
+  fDiaId                    Int?
+  lotNo                     String?
+  Stock                     Stock?
+}
+
+model FinishedGoodsOpeningStock {
+  id                               Int                                @id @default(autoincrement())
+  docId                            String
+  createdAt                        DateTime                           @default(now())
+  updatedAt                        DateTime                           @updatedAt
+  createdBy                        User                               @relation("createdBy", fields: [createdById], references: [id])
+  createdById                      Int
+  updatedBy                        User?                              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                      Int?
+  Branch                           Branch                             @relation(fields: [branchId], references: [id])
+  branchId                         Int
+  Store                            Location                           @relation(fields: [storeId], references: [id])
+  storeId                          Int
+  Style                            Style                              @relation(fields: [styleId], references: [id])
+  styleId                          Int
+  FinishedGoodsOpeningStockDetails FinishedGoodsOpeningStockDetails[]
+}
+
+model FinishedGoodsOpeningStockDetails {
+  id                          Int                       @id @default(autoincrement())
+  FinishedGoodsOpeningStock   FinishedGoodsOpeningStock @relation(fields: [finishedGoodsOpeningStockId], references: [id], onDelete: Cascade)
+  finishedGoodsOpeningStockId Int
+  PrevProcess                 Process?                  @relation(fields: [prevProcessId], references: [id])
+  prevProcessId               Int?
+  Color                       Color                     @relation(fields: [colorId], references: [id])
+  colorId                     Int
+  Size                        Size                      @relation(fields: [sizeId], references: [id])
+  sizeId                      Int
+  UOM                         UnitOfMeasurement         @relation(fields: [uomId], references: [id])
+  uomId                       Int
+  qty                         Float
+  StockForPcs                 StockForPcs?
+}
+
+model Portion {
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  Company                   Company?                    @relation(fields: [companyId], references: [id])
+  companyId                 Int?
+  active                    Boolean                     @default(true)
+  StyleOnPortion            StyleOnPortion[]
+  CuttingOrderDetails       CuttingOrderDetails[]
+  StockForPcs               StockForPcs[]
+  ProductionDeliveryDetails ProductionDeliveryDetails[]
+}
+
+model StyleOnPortion {
+  id        Int     @id @default(autoincrement())
+  Style     Style   @relation(fields: [styleId], references: [id])
+  Portion   Portion @relation(fields: [portionId], references: [id])
+  portionId Int
+  styleId   Int
+}
+
+model FinishedGoodsSalesDelivery {
+  id                                Int                                 @id @default(autoincrement())
+  docId                             String
+  createdAt                         DateTime                            @default(now())
+  updatedAt                         DateTime                            @updatedAt
+  createdBy                         User                                @relation("createdBy", fields: [createdById], references: [id])
+  createdById                       Int
+  updatedBy                         User?                               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                       Int?
+  Store                             Location                            @relation(fields: [storeId], references: [id])
+  storeId                           Int
+  Supplier                          Party?                              @relation(fields: [supplierId], references: [id])
+  supplierId                        Int?
+  vehicleNo                         String?
+  specialInstructions               String?
+  remarks                           String?
+  userDeliveryDate                  DateTime?
+  Branch                            Branch                              @relation(fields: [branchId], references: [id])
+  branchId                          Int
+  FinishedGoodsSalesDeliveryDetails FinishedGoodsSalesDeliveryDetails[]
+}
+
+model FinishedGoodsSalesDeliveryDetails {
+  id                           Int                         @id @default(autoincrement())
+  FinishedGoodsSalesDelivery   FinishedGoodsSalesDelivery  @relation(fields: [finishedGoodsSalesDeliveryId], references: [id], onDelete: Cascade)
+  finishedGoodsSalesDeliveryId Int
+  Style                        Style                       @relation(fields: [styleId], references: [id])
+  styleId                      Int
+  Uom                          UnitOfMeasurement           @relation(fields: [uomId], references: [id])
+  uomId                        Int
+  Color                        Color                       @relation(fields: [colorId], references: [id])
+  colorId                      Int
+  Size                         Size                        @relation(fields: [sizeId], references: [id])
+  sizeId                       Int
+  PrevProcess                  Process?                    @relation(fields: [prevProcessId], references: [id])
+  prevProcessId                Int?
+  qty                          Int
+  StockForPcs                  StockForPcs?
+  FinishedGoodsSalesDetails    FinishedGoodsSalesDetails[]
+}
+
+enum DelOrRec {
+  DELIVERY
+  RECEIPT
+}
+
+model StockTransferFinishedGoods {
+  id                                        Int                                         @id @default(autoincrement())
+  docId                                     String
+  delOrRec                                  DelOrRec
+  createdAt                                 DateTime                                    @default(now())
+  updatedAt                                 DateTime                                    @updatedAt
+  createdBy                                 User                                        @relation("createdBy", fields: [createdById], references: [id])
+  createdById                               Int
+  updatedBy                                 User?                                       @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                               Int?
+  Store                                     Location                                    @relation(fields: [storeId], references: [id])
+  storeId                                   Int
+  DeliveryBranch                            Branch?                                     @relation("deliveryToBranch", fields: [deliveryToBranchId], references: [id])
+  deliveryToBranchId                        Int?
+  vehicleNo                                 String?
+  specialInstructions                       String?
+  remarks                                   String?
+  userDeliveryDate                          DateTime?
+  Branch                                    Branch                                      @relation("raisedBranch", fields: [branchId], references: [id])
+  branchId                                  Int
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
+  StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
+  PrevDelivery                              StockTransferFinishedGoods?                 @relation("prev", fields: [prevDeliveryId], references: [id])
+  prevDeliveryId                            Int?                                        @unique
+  StockTransferFinishedGoods                StockTransferFinishedGoods?                 @relation("prev")
+}
+
+model StockTransferFinishedGoodsDeliveryDetails {
+  id                                       Int                                        @id @default(autoincrement())
+  StockTransferFinishedGoods               StockTransferFinishedGoods                 @relation(fields: [stockTransferFinishedGoodsId], references: [id], onDelete: Cascade)
+  stockTransferFinishedGoodsId             Int
+  Style                                    Style                                      @relation(fields: [styleId], references: [id])
+  styleId                                  Int
+  Uom                                      UnitOfMeasurement                          @relation(fields: [uomId], references: [id])
+  uomId                                    Int
+  Color                                    Color                                      @relation(fields: [colorId], references: [id])
+  colorId                                  Int
+  Size                                     Size                                       @relation(fields: [sizeId], references: [id])
+  sizeId                                   Int
+  PrevProcess                              Process?                                   @relation(fields: [prevProcessId], references: [id])
+  prevProcessId                            Int?
+  qty                                      Int
+  StockForPcs                              StockForPcs?
+  StockTransferFinishedGoodsReceiptDetails StockTransferFinishedGoodsReceiptDetails[]
+}
+
+model StockTransferFinishedGoodsReceiptDetails {
+  id                                        Int                                       @id @default(autoincrement())
+  StockTransferFinishedGoods                StockTransferFinishedGoods                @relation(fields: [stockTransferFinishedGoodsId], references: [id], onDelete: Cascade)
+  stockTransferFinishedGoodsId              Int
+  StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails @relation(fields: [stockTransferDeliveryDetailsId], references: [id])
+  stockTransferDeliveryDetailsId            Int
+  Style                                     Style                                     @relation(fields: [styleId], references: [id])
+  styleId                                   Int
+  Uom                                       UnitOfMeasurement                         @relation(fields: [uomId], references: [id])
+  uomId                                     Int
+  Color                                     Color                                     @relation(fields: [colorId], references: [id])
+  colorId                                   Int
+  Size                                      Size                                      @relation(fields: [sizeId], references: [id])
+  sizeId                                    Int
+  PrevProcess                               Process?                                  @relation(fields: [prevProcessId], references: [id])
+  prevProcessId                             Int?
+  qty                                       Int
+  StockForPcs                               StockForPcs?
+}
+
+model PriceTemplate {
+  id               Int                             @id @default(autoincrement())
+  name             String
+  styleWiseDetails PriceTemplateStyleWiseDetails[]
+  Company          Company                         @relation(fields: [companyId], references: [id])
+  companyId        Int
+  active           Boolean                         @default(true)
+  Party            Party[]
+}
+
+model PriceTemplateStyleWiseDetails {
+  id              Int                             @id @default(autoincrement())
+  Style           Style                           @relation(fields: [styleId], references: [id])
+  styleId         Int
+  SizeDetails     PriceTemplateStyleSizeDetails[]
+  PriceTemplate   PriceTemplate                   @relation(fields: [priceTemplateId], references: [id], onDelete: Cascade)
+  priceTemplateId Int
+}
+
+model PriceTemplateStyleSizeDetails {
+  id                              Int                            @id @default(autoincrement())
+  Size                            Size                           @relation(fields: [sizeId], references: [id])
+  sizeId                          Int
+  PriceTemplateStyleWiseDetails   PriceTemplateStyleWiseDetails? @relation(fields: [PriceTemplateStyleWiseDetailsId], references: [id], onDelete: Cascade)
+  PriceTemplateStyleWiseDetailsId Int?
+  price                           Float                          @default(0)
+}
+
+model PrintingJobWork {
+  id                  Int                  @id @default(autoincrement())
+  docId               String
+  createdAt           DateTime             @default(now())
+  orderDate           DateTime             @default(now())
+  supplierDc          String?
+  TaxTemplate         TaxTemplate?         @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId       Int?
+  Supplier            Party?               @relation(fields: [supplierId], references: [id])
+  supplierId          Int?
+  updatedAt           DateTime             @updatedAt
+  createdBy           User                 @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int
+  updatedBy           User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  vehicleNo           String?
+  specialInstructions String?
+  remarks             String?
+  discountType        DiscountTypes?
+  discountValue       Float?               @default(0)
+  Branch              Branch               @relation("raisedBranch", fields: [branchId], references: [id])
+  branchId            Int
+  PrintingJobWorkDet  PrintingJobWorkDet[]
+  BillEntry           BillEntry?
+}
+
+model PrintingJobWorkDet {
+  id                Int                @id @default(autoincrement())
+  PrintingJobWork   PrintingJobWork    @relation(fields: [printingJobWorkId], references: [id], onDelete: Cascade)
+  printingJobWorkId Int
+  Process           Process            @relation(fields: [processId], references: [id])
+  processId         Int
+  Uom               UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId             Int?
+  qty               Float              @default(0)
+  price             Float              @default(0)
+  tax               Float              @default(0)
+}
+
+model OnlineSales {
+  id                  Int                  @id @default(autoincrement())
+  docId               String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdBy           User                 @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int
+  updatedBy           User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  Store               Location             @relation(fields: [storeId], references: [id])
+  storeId             Int
+  Supplier            Party?               @relation(fields: [supplierId], references: [id])
+  supplierId          Int?
+  vehicleNo           String?
+  specialInstructions String?
+  remarks             String?
+  userDeliveryDate    DateTime?
+  Branch              Branch               @relation(fields: [branchId], references: [id])
+  branchId            Int
+  OnlineSalesDetails  OnlineSalesDetails[]
+}
+
+model OnlineSalesDetails {
+  id                       Int                        @id @default(autoincrement())
+  OnlineSales              OnlineSales                @relation(fields: [onlineSalesId], references: [id], onDelete: Cascade)
+  onlineSalesId            Int
+  Style                    Style                      @relation(fields: [styleId], references: [id])
+  styleId                  Int
+  Uom                      UnitOfMeasurement          @relation(fields: [uomId], references: [id])
+  uomId                    Int
+  Color                    Color                      @relation(fields: [colorId], references: [id])
+  colorId                  Int
+  Size                     Size                       @relation(fields: [sizeId], references: [id])
+  sizeId                   Int
+  PrevProcess              Process?                   @relation(fields: [prevProcessId], references: [id])
+  prevProcessId            Int?
+  qty                      Int
+  StockForPcs              StockForPcs?
+  OnlineSalesReturnDetails OnlineSalesReturnDetails[]
+}
+
+model OnlineSalesReturn {
+  id                       Int                        @id @default(autoincrement())
+  docId                    String
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  createdBy                User                       @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  Store                    Location                   @relation(fields: [storeId], references: [id])
+  storeId                  Int
+  Supplier                 Party?                     @relation(fields: [supplierId], references: [id])
+  supplierId               Int?
+  vehicleNo                String?
+  specialInstructions      String?
+  remarks                  String?
+  userDeliveryDate         DateTime?
+  Branch                   Branch                     @relation(fields: [branchId], references: [id])
+  branchId                 Int
+  OnlineSalesReturnDetails OnlineSalesReturnDetails[]
+}
+
+model OnlineSalesReturnDetails {
+  id                   Int                @id @default(autoincrement())
+  OnlineSalesReturn    OnlineSalesReturn  @relation(fields: [onlineSalesReturnId], references: [id], onDelete: Cascade)
+  onlineSalesReturnId  Int
+  OnlineSalesDetails   OnlineSalesDetails @relation(fields: [onlineSalesDetailsId], references: [id])
+  onlineSalesDetailsId Int
+  qty                  Int
+  StockForPcs          StockForPcs?
+}
+
+enum Credit_Debit {
+  Credit
+  Debit
+}
+
+model CreditDebitNote {
+  id            Int          @id @default(autoincrement())
+  docId         String
+  type          Credit_Debit
+  TaxTemplate   TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
+  amount        Float?
+  tax           Float?
+  narration     String?      @db.LongText
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  createdBy     User         @relation("createdBy", fields: [createdById], references: [id])
+  createdById   Int
+  updatedBy     User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById   Int?
+  Supplier      Party?       @relation(fields: [supplierId], references: [id])
+  supplierId    Int?
+  Branch        Branch       @relation(fields: [branchId], references: [id])
+  branchId      Int
+  Ledger        Ledger?
+  taxTemplateId Int?
+}
+
+model Order {
+  id                Int            @id @default(autoincrement())
+  docId             String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  createdBy         User           @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int
+  updatedBy         User?          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Party             Party?         @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId           Int?
+  Branch            Branch?        @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  phone             String?
+  contactPersonName String?
+  address           String?
+  validDate         DateTime?
+  orderDetails      OrderDetails[]
+}
+
+model OrderDetails {
+  id                  Int                   @id @default(autoincrement())
+  Order               Order?                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId             Int?
+  orderDetailsSubGrid OrderDetailsSubGrid[]
+}
+
+model OrderDetailsSubGrid {
+  id             Int           @id @default(autoincrement())
+  OrderDetails   OrderDetails? @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId Int?
+}
