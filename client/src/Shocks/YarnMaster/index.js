@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
-
 import toast from 'react-hot-toast';
 import { useGetContentMasterQuery } from '../../redux/uniformService/ContentMasterServices';
 import { useGetYarnBlendMasterQuery } from '../../redux/uniformService/YarnBlendMasterServices';
@@ -11,7 +10,8 @@ import { DropdownInput, LongTextInput, Modal, TextInput, ToggleButton } from '..
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
-
+import { useGetCountsMasterQuery } from '../../redux/uniformService/CountsMasterServices';
+import { yarnBlendDetails } from './YarnBlendDetails';
 
 
 
@@ -55,9 +55,8 @@ export default function Form() {
     const { data: YarnTypeList } =
         useGetYarnTypeMasterQuery({ params });
 
-    // const { data: countsList } =
-    //     useGetCountsMasterQuery({ params });
-    let countsList;
+    const { data: countsList } =
+        useGetCountsMasterQuery({ params });
 
     const { data: allData, isLoading, isFetching } = useGetYarnMasterQuery({ params, searchParams: searchValue });
 
@@ -228,7 +227,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[70%] h-[80%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[70%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -250,13 +249,13 @@ export default function Form() {
                             <div className='overflow-y-auto flex justify-between'>
                                 <div className="md:grid md:grid-cols-2 gap-x-3 w-[48%]">
                                     <div className='mb-3'>
-                                        <DropdownInput name="Content" options={dropDownListObject(id ? contentList.data : contentList.data.filter(item => item.active), "name", "id")} value={contentId} setValue={(value) => { setContentId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <DropdownInput name="Content" options={dropDownListObject(id ? contentList?.data : contentList?.data?.filter(item => item.active), "name", "id")} value={contentId} setValue={(value) => { setContentId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
                                     <div className='mb-3'>
-                                        <DropdownInput name="Counts" options={dropDownListObject(id ? countsList.data : countsList.data.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                        <DropdownInput name="Counts" options={dropDownListObject(id ? countsList?.data : countsList?.data?.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                                     </div>
                                     <div className='mb-3'>
-                                        <DropdownInput name="Yarn Type" options={dropDownListObject(id ? YarnTypeList.data : YarnTypeList.data.filter(item => item.active), "name", "id")} value={yarnTypeId} setValue={(value) => { setYarnTypeId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                        <DropdownInput name="Yarn Type" options={dropDownListObject(id ? YarnTypeList?.data : YarnTypeList?.data?.filter(item => item.active), "name", "id")} value={yarnTypeId} setValue={(value) => { setYarnTypeId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                                     </div>
                                     <div className='mb-3'>
                                         <TextInput name={"Gst %"} value={taxPercent} setValue={setTaxPercent} readOnly={readOnly} required disabled={(childRecord.current > 0)} />

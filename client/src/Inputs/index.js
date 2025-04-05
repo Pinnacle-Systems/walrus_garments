@@ -135,69 +135,93 @@ export const TextArea = ({ name, value, setValue, readOnly, required = false, di
     )
 }
 
-// export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, options, value, setValue, defaultValue, className, readOnly, required = false, disabled = false, clear = false, tabIndex = null, autoFocus = false }) => {
-//     const handleOnChange = (e) => {
-//         setValue(e.target.value);
-//     }
-//     return (
-//         <div className=' items-center md:my-1 md:px-1 data'>
-//             <label className={`md:text-start flex ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
-//             <select
-//                 onBlur={onBlur}
-//                 autoFocus={autoFocus} tabIndex={tabIndex ? tabIndex : undefined} defaultValue={defaultValue} id='dd'
-//                 required={required} name="name" className='input-field  md:col-span-2 col-span-1 rounded'
-//                 value={value} onChange={(e) => { beforeChange(); handleOnChange(e); }} disabled={readOnly}>
-//                 <option value="" hidden={!clear}>Select</option>
-//                 {options.map((option, index) => <option key={index} value={option.value} >
-//                     {option.show}
-//                 </option>)}
-//             </select>
-//         </div>
-//     )
-// }
-export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, options, value, setValue, defaultValue, className, readOnly, required = false, disabled = false, clear = false, tabIndex = null, autoFocus = false, width }) => {
+export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, options, value, setValue, defaultValue, className, readOnly, required = false, disabled = false, clear = false, tabIndex = null, autoFocus = false }) => {
     const handleOnChange = (e) => {
         setValue(e.target.value);
     }
     return (
-        <div className="group input-group">
-
-            <FormControl variant="standard"
-                sx={{
-                    "& .MuiInputBase-input": { fontSize: "12px", padding: "1.5px" }, // Input text size
-
-                }}
-                className='w-full'>
-                <label htmlFor="title" className="input-label group-hover:text-blue-600 text-normal">
-                    <span className="flex items-center gap-2">
-                        {/* <FileText className="input-icon group-hover:text-blue-500" /> */}
-                        {required ? <RequiredLabel name={name} /> : `${name}`}
-                    </span>
-                </label>
-                <Select
-                    onBlur={onBlur}
-                    autoFocus={autoFocus} tabIndex={tabIndex ? tabIndex : undefined} defaultValue={defaultValue}
-                    required={required} name="name"
-                    sx={{
-                        "& .MuiInputBase-input": { fontSize: "12px" }, // Input text size
-                        "& .MuiInputBase-input.Mui-disabled": {
-                            color: "#333", // Darker text color
-                            WebkitTextFillColor: "#333", // Ensures text stays dark in Webkit browsers
-                        }, // Input text size
-
-                    }}
-                    className={`rounded border-none mt-0 `}
-                    value={value} onChange={(e) => { beforeChange(); handleOnChange(e); }} disabled={readOnly}>
-                    <MenuItem value="" hidden={!clear}><em>Select</em></MenuItem>
-                    {options?.map((option, index) => <MenuItem key={index} value={option.value} sx={{ fontSize: "12px" }}>
-                        {option.name}
-                    </MenuItem>)}
-                </Select>
-            </FormControl>
-
+        <div className=' items-center md:my-1 md:px-1 data'>
+            <label className={`md:text-start flex ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
+            <select
+                onBlur={onBlur}
+                autoFocus={autoFocus} tabIndex={tabIndex ? tabIndex : undefined} defaultValue={defaultValue} id='dd'
+                required={required} name="name" className='input-field  md:col-span-2 col-span-1 rounded'
+                value={value} onChange={(e) => { beforeChange(); handleOnChange(e); }} disabled={readOnly}>
+                <option value="" hidden={!clear}>Select</option>
+                {options.map((option, index) => <option key={index} value={option.value} >
+                    {option.show}
+                </option>)}
+            </select>
         </div>
     )
 }
+// export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, options, value, setValue, defaultValue, className, readOnly, required = false, disabled = false, clear = false, tabIndex = null, autoFocus = false, width }) => {
+//     const handleOnChange = (e) => {
+//         setValue(e.target.value);
+//     }
+//     return (
+//         <div className="group input-group">
+//             <FormControl
+//                 variant="standard"
+//                 className="w-full"
+//                 sx={{
+//                     "& .MuiInputBase-input": {
+//                         fontSize: "12px",
+//                         padding: "1.5px",
+//                     },
+//                     "& .MuiInputBase-input.Mui-disabled": {
+//                         color: "#333",
+//                         WebkitTextFillColor: "#333",
+//                     },
+//                 }}
+//             >
+//                 <label htmlFor="title" className="input-label group-hover:text-blue-600 text-normal">
+//                     <span className="flex items-center gap-2">
+//                         {/* <FileText className="input-icon group-hover:text-blue-500" /> */}
+//                         {required ? <RequiredLabel name={name} /> : name}
+//                     </span>
+//                 </label>
+
+//                 <Select
+//                     name="name"
+//                     required={required}
+//                     autoFocus={autoFocus}
+//                     tabIndex={tabIndex ?? undefined}
+//                     defaultValue={defaultValue}
+//                     value={value}
+//                     onBlur={onBlur}
+//                     disabled={readOnly}
+//                     onChange={(e) => {
+//                         beforeChange();
+//                         handleOnChange(e);
+//                     }}
+//                     className="rounded border-none mt-0"
+//                     sx={{
+//                         "& .MuiInputBase-input": { fontSize: "12px" },
+//                         "& .MuiInputBase-input.Mui-disabled": {
+//                             color: "#333",
+//                             WebkitTextFillColor: "#333",
+//                         },
+//                     }}
+//                 >
+//                     {clear && (
+//                         <MenuItem value="">
+//                             <em>Select</em>
+//                         </MenuItem>
+//                     )}
+//                     {console.log("options", options)}
+
+//                     {options?.map((option, index) => (
+//                         <MenuItem key={index} value={option.value} sx={{ fontSize: "12px" }}>
+//                             {option.show}
+//                         </MenuItem>
+//                     ))}
+//                 </Select>
+//             </FormControl>
+
+//         </div>
+//     )
+// }
 
 
 export const LongDropdownInput = ({ name, options, value, setValue, defaultValue, className, readOnly, required = false,

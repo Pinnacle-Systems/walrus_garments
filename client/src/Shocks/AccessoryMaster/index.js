@@ -248,7 +248,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[45%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[45%] h-[90%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -267,7 +267,7 @@ export default function Form() {
                     <fieldset className='mb-3'>
                         <div className='sub-heading'>Accessories</div>
                         <div className='flex justify-between gap-3'>
-                            <div className="mb-3 w-[48%]">
+                            <div className="mb-3 w-[48%] mt-2">
                                 <DropdownInput
                                     name="Accessory Category"
                                     options={accessoryCategoryList}
@@ -278,7 +278,7 @@ export default function Form() {
                                     disabled={(childRecord.current > 0)}
                                 />
                             </div>
-                            <div className="mb-3 w-[48%]">
+                            <div className="mb-3 w-[48%] mt-2">
                                 <DropdownInput name="Accessory Group" options={dropDownListObject(id ? accessoryGroupList.data : accessoryGroupList.data.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                             </div>
                         </div>
