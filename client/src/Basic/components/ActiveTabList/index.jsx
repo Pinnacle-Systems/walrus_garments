@@ -11,7 +11,7 @@ import {
   ColorMaster,
   PayTermMaster,
   SizeMaster,
-  LocationMaster
+  LocationMaster,
   MachineMaster,
 
 } from "../../components";
@@ -38,7 +38,8 @@ const ActiveTabList = () => {
     "PAGE MASTER": <PageMaster />,
     // "COMPANY MASTER": <CompanyMaster />,
     // "PAGE GROUP MASTER": <PageGroupMaster />,
-    "COUNTRY MASTER": <MachineMaster />,
+    "COUNTRY MASTER": <CountryMaster />,
+    "MACHINE MASTER": <MachineMaster />,
     "STATE MASTER": <StateMaster />,
     "CITY MASTER": <CityMaster />,
     "DEPARTMENT MASTER": <DepartmentMaster />,
