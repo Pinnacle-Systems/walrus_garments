@@ -83,5 +83,6 @@ export { default as rawMaterialOpeningStock } from "./rawMaterialOpeningStock.ro
 export { default as sizeTemplate } from "./sizeTemplate.route.js"
 export { default as contentMaster } from "./contentMaster.route.js"
 export { default as counts } from "./counts.route.js"
+export { default as currency } from "./currency.route.js"
 export { default as Machine } from "./machineMaster.route .js"
 

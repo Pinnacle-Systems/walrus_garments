@@ -46,11 +46,19 @@ const Home = () => {
             <Header profile={profile} setProfile={setProfile} />
             {/* <Dashboard /> */}
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
-            <ActiveTabList />
+
+            {/* <ActiveTabList /> */}
+
+
           </div>
         )}
 
         {/* <AppFooter /> */}
+
+
+        <div className="flex-1">
+          <ActiveTabList />
+        </div>
       </div>
     </>
   );

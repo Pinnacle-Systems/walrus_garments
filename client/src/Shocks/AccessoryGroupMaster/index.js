@@ -22,12 +22,9 @@ export default function Form() {
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
 
-
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
     const dispatch = useDispatch();
-
-
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"

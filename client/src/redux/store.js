@@ -125,7 +125,7 @@ const commonReducers = {
   dispatched: DispatchedApi.reducer,
   generalPurchase: GeneralPurchaseApi.reducer,
   RawMaterialOpeningStock: RawMaterialOpeningStockApi.reducer,
-  CurrencyMaster: CurrencyMasterApi.reducer,
+  currencyMaster: CurrencyMasterApi.reducer,
   SizeMasterTemplate: sizeTemplateApi.reducer,
   contentMaster: ContentMasterApi.reducer,
   countsMaster: CountsMasterApi.reducer,

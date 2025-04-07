@@ -171,7 +171,7 @@ export default function Form() {
                     } />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] "} onClose={() => { setForm(false); setErrors({}); }}>
+                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[60%]"} onClose={() => { setForm(false); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
@@ -200,7 +200,7 @@ export default function Form() {
                                                 <TextInput name="Pantone" type="text" value={pantone} setValue={setPantone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                                             </div></div>
-                                        <div className={`h-20 w-32 border`} style={{ backgroundColor: pantone }}></div>
+                                        <div className={`h-20 w-32 `} style={{ backgroundColor: pantone }}></div>
                                     </div>
                                     <div className='mb-3'>
                                         <CheckBox name="Grey" readOnly={readOnly} value={isGrey} setValue={setIsGrey} />

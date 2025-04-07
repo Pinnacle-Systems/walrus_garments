@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 // import { PAGE_MASTER_PATH, COMPANY_MASTER_PATH } from "../../../Constants/Config";
-import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
-import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
+import { useDispatch } from "react-redux";
+import secureLocalStorage from "react-secure-storage";
 
 export function MastersDropDown({ heading, items }) {
 
@@ -79,7 +79,7 @@ export function MastersDropDown({ heading, items }) {
             type="link"
             className="nav-dropdown-bg z-99 p-2 text-start block w-full"
             onClick={() => {
-              dispatch(push({id:item.id, name: item.name}))
+              dispatch(push({ id: item.id, name: item.name }))
               secureLocalStorage.setItem(
                 sessionStorage.getItem("sessionId") + "currentPage",
                 item.id

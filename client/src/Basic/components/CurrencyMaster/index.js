@@ -5,7 +5,11 @@ import {
     useAddCurrencyMasterMutation,
     useDeleteCurrencyMasterMutation,
     useGetCurrencyMasterByIdQuery,
+
+
     useGetCurrencyMasterQuery,
+
+
     useUpdateCurrencyMasterMutation
 } from '../../../redux/services/CurrencyMasterServices';
 import toast from 'react-hot-toast';
@@ -38,7 +42,7 @@ export default function Form() {
         ),
     };
     const { data: allData } = useGetCurrencyMasterQuery({ params, searchParams: searchValue });
-
+    console.log(allData, "allData")
     const {
         data: singleData,
         isFetching: isSingleFetching,

@@ -72,7 +72,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
     const [hoveredGroupId, setHoveredGroupId] = useState(null);
     const navigate = useNavigate();
 
-    console.log(groups, "pages")
+
     const [search, setSearch] = useState("");
 
     const filteredData = pages.filter((item) =>
