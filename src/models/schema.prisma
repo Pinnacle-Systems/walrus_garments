@@ -2674,3 +2674,11 @@ model OrderDetailsSubGrid {
   OrderDetails   OrderDetails? @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
   orderDetailsId Int?
 }
+
+model Machine {
+  id     Int      @id @default(autoincrement())
+  name   String?
+  code   String?
+  time   Float?
+  active Boolean? @default(true)
+}

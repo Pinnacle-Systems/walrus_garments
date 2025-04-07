@@ -28,7 +28,8 @@ import {
   processDelivery, productionDelivery, productionReceipt,
   dispatched, generalPurchase, rawMaterialOpeningStock,
   contentMaster,
-  counts
+  counts,
+  Machine
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -149,7 +150,7 @@ app.use("/rawMaterialOpeningStock", rawMaterialOpeningStock);
 app.use("/sizeTemplate", size);
 app.use("/content", contentMaster);
 app.use("/counts", counts);
-
+app.use("/machine", Machine);
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

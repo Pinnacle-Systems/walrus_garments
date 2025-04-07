@@ -17,6 +17,7 @@ import {
   TaxTemplateApi,
   TermsAndConditionsMasterApi,
   CurrencyMasterApi,
+  machineMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -128,6 +129,7 @@ const commonReducers = {
   SizeMasterTemplate: sizeTemplateApi.reducer,
   contentMaster: ContentMasterApi.reducer,
   countsMaster: CountsMasterApi.reducer,
+  machineMaster: machineMasterApi.reducer,
   [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer
 
 }
@@ -210,6 +212,7 @@ CurrencyMasterApi.middleware,
 sizeTemplateApi.middleware,
 ContentMasterApi.middleware,
 CountsMasterApi.middleware,
+machineMasterApi.middleware
 ];
 
 

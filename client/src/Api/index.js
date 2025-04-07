@@ -81,3 +81,5 @@ export const PRODUCTION_RECEIPT_API = "productionReceipt"
 export const DISPATCHED_API = "dispatched"
 export const GENERALPURCHASE_API = "generalpurchase"
 export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock"
+export const MACHINE_API = "machine"
+

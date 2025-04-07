@@ -11,6 +11,7 @@ const Home = () => {
   const [logout, setLogout] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMainDropdownOpen, setIsMainDropdownOpen] = useState(false);
+  const [profile, setProfile] = useState(false);
   const isSuperAdmin = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "superAdmin"
   );
@@ -42,13 +43,10 @@ const Home = () => {
           />
         ) : (
           <div >
-            <Header />
+            <Header profile={profile} setProfile={setProfile} />
             {/* <Dashboard /> */}
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
-
             <ActiveTabList />
-
-
           </div>
         )}
 

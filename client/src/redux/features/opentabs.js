@@ -4,14 +4,22 @@ const initialState = {
   tabs: [],
 };
 
+// const initialState = {
+//   tabs: JSON.parse(localStorage.getItem("openTabs")) || [],
+// };
+
+
 export const openTabs = createSlice({
   name: "openTabs",
   initialState,
   reducers: {
     push: (state, action) => {
+
+      console.log(state.tabs, "state.tabs", action, "action")
       const existingIndex = state.tabs.findIndex(
         (item) => item.name === action.payload.name
       );
+      console.log(existingIndex, "existingIndex")
       state.tabs = state.tabs.map((tab) => {
         return { ...tab, active: false };
       });

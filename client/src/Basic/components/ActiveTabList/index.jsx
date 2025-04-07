@@ -12,6 +12,7 @@ import {
   PayTermMaster,
   SizeMaster,
   LocationMaster,
+  MachineMaster,
 
 } from "../../components";
 
@@ -28,7 +29,7 @@ const ActiveTabList = () => {
 
   const tabs = {
     "PAGE MASTER": <PageMaster />,
-    "COUNTRY MASTER": <CountryMaster />,
+    "COUNTRY MASTER": <MachineMaster />,
     "STATE MASTER": <StateMaster />,
     "CITY MASTER": <CityMaster />,
     "DEPARTMENT MASTER": <DepartmentMaster />,
@@ -62,7 +63,7 @@ const ActiveTabList = () => {
 
   };
   return (
-    <div className="overflow-hidden h-[91%] mt-5 p-2 m-3">
+    <div className="overflow-hidden h-[91%] mt-5 p-2 m-3">{console.log(openTabs.tabs, "openTabs.tabs")}
       <div className="flex gap-2">
         {openTabs.tabs.map((tab, index) => (
           <div
