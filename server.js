@@ -28,7 +28,8 @@ import {
   processDelivery, productionDelivery, productionReceipt,
   dispatched, generalPurchase, rawMaterialOpeningStock,
   contentMaster,
-  counts
+  counts,
+  currency
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -149,7 +150,7 @@ app.use("/rawMaterialOpeningStock", rawMaterialOpeningStock);
 app.use("/sizeTemplate", size);
 app.use("/content", contentMaster);
 app.use("/counts", counts);
-
+app.use("/currency", currency);
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {
@@ -167,7 +168,7 @@ const io = new Server(httpServer, {
 
 io.on("connection", socketMain);
 
-const PORT = process.env.PORT || 8002;
+const PORT = process.env.PORT || 9000;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });

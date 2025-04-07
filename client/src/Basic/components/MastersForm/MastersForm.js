@@ -105,7 +105,7 @@ const MastersForm = ({
   return (
     <>
 
-      <div className="h-full p-5">
+      <div className="h-full  ">
 
         <div className=" flex flex-col h-full ">
           <div className="mx-auto w-[95%]  flex flex-col">

@@ -6,8 +6,8 @@ import {
   useGetCountriesQuery, useGetCountryByIdQuery,
   useUpdateCountryMutation
 } from '../../../redux/services/CountryMasterService';
-import FormHeader from '../../components/FormHeader';
-import FormReport from '../../components/FormReportTemplate';
+import FormHeader from '../FormHeader';
+import FormReport from '../FormReportTemplate';
 import { TextInput, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import Modal from '../../../UiComponents/Modal';

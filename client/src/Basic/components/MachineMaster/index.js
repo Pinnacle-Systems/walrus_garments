@@ -6,8 +6,8 @@ import {
   useGetCountriesQuery, useGetCountryByIdQuery,
   useUpdateCountryMutation
 } from '../../../redux/services/CountryMasterService';
-import FormHeader from '../../components/FormHeader';
-import FormReport from '../../components/FormReportTemplate';
+import FormHeader from '../FormHeader';
+import FormReport from '../FormReportTemplate';
 import { TextInput, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import Modal from '../../../UiComponents/Modal';
@@ -17,7 +17,7 @@ import MasterForm from '../MastersForm/MastersForm';
 
 
 
-const MODEL = "Country Master";
+const MODEL = "Machine Master";
 
 export default function Form() {
 
@@ -26,6 +26,7 @@ export default function Form() {
   const [id, setId] = useState("")
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [time, setTime] = useState("");
   const [active, setActive] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -203,6 +204,9 @@ export default function Form() {
                     <div className='mb-3 w-[48%]'>
                       <TextInput name="Country Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
 
+                    </div>
+                    <div className='mb-3 ml-5 w-[20%]'>
+                      <TextInput name="Pro" type="text" value={time} setValue={setTime} required={true} readOnly={readOnly} />
                     </div>
                     <div className='mb-3 ml-5 w-[20%]'>
                       <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} />

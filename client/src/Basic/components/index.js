@@ -31,4 +31,5 @@ export { default as Sidebar } from "./Sidebar";
 export { default as Header } from "./Header";
 export { default as SizeMaster } from "./SizeMaster";
 export { default as LocationMaster } from "./LocationMaster";
+export { default as MachineMaster } from "./MachineMaster";
 
