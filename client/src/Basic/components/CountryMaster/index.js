@@ -200,7 +200,7 @@ export default function Form() {
 
                 <div className='p-2'>
                   <div className='flex'>
-                    <div className='mb-3 w-[48%]'>
+                    <div className='mb-3 w-[48%] p-1'>
                       <TextInput name="Country Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
 
                     </div>
