@@ -104,7 +104,7 @@ label {
   }
 
   .input-field {
-    @apply text-black h-6 w-5/6;
+    @apply text-black h-6;
   }
 
   .table-header {
@@ -304,5 +304,9 @@ label {
 
   .input-icon {
     @apply w-3 h-3 text-gray-400 transition-colors duration-300;
+  }
+
+  .input-hover {
+    @apply text-gray-600 hover:text-gray-800;
   }
 }

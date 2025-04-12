@@ -68,12 +68,10 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, pantone, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
-        isGrey
-    }
+        name, active}
 
     const validateData = (data) => {
-        if (data.name && data.pantone) {
+        if (data.name ) {
             return true;
         }
         return false;
@@ -171,7 +169,7 @@ export default function Form() {
                     } />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[60%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
@@ -196,15 +194,11 @@ export default function Form() {
                                             <div className="mb-3 w-[48%]">
                                                 <TextInput name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
-                                            <div className="mb-3 w-[48%]">
-                                                <TextInput name="Pantone" type="text" value={pantone} setValue={setPantone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
-                                            </div></div>
+                                         
+                                            </div>
                                         <div className={`h-20 w-32 `} style={{ backgroundColor: pantone }}></div>
                                     </div>
-                                    <div className='mb-3'>
-                                        <CheckBox name="Grey" readOnly={readOnly} value={isGrey} setValue={setIsGrey} />
-                                    </div>
+                                   
                                     <div className='mb-5'>
                                         <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                     </div>

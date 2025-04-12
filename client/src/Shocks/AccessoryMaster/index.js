@@ -279,11 +279,11 @@ export default function Form() {
                                 />
                             </div>
                             <div className="mb-3 w-[48%] mt-2">
-                                <DropdownInput name="Accessory Group" options={dropDownListObject(id ? accessoryGroupList.data : accessoryGroupList.data.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                <DropdownInput name="Accessory Group" options={dropDownListObject(id ? accessoryGroupList?.data : accessoryGroupList?.data?.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                             </div>
                         </div>
                         <div className="mb-3 w-[48%]">
-                            <DropdownInput name="Accessory Item" options={dropDownListObject(id ? accessoryItemList.data.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)) : accessoryItemList.data.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)).filter(item => item.active), "name", "id")} value={accessoryItemId} setValue={(value) => { setAccessoryItemId(value) }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                            <DropdownInput name="Accessory Item" options={dropDownListObject(id ? accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)) : accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)).filter(item => item.active), "name", "id")} value={accessoryItemId} setValue={(value) => { setAccessoryItemId(value) }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                         </div>
 
                         <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />

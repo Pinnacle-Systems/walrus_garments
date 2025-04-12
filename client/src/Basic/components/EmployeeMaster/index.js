@@ -449,24 +449,11 @@ export default function Form() {
             setStep(tabNumber);
         }
     };
-    //step
 
 
-    // if (!form)
-    //     return (
-    //         <EmployeeReport
-    //             loading={
-    //                 isLoading || isFetching
-    //             }
-    //             setForm={setForm}
-    //             employees={allData?.data}
-    //             onClick={onDataClick}
-    //             onNew={onNew}
-    //             searchValue={searchValue}
-    //             setSearchValue={setSearchValue}
-    //         />
-    //     );
-    if (!countriesList?.data || !employeeCategoryList?.data || !cityList?.data) return <Loader />
+    
+ 
+    // if (!countriesList?.data || !employeeCategoryList?.data || !cityList?.data) return <Loader />
 
     return (
         <div onKeyDown={handleKeyDown}>
@@ -520,9 +507,10 @@ export default function Form() {
                     tableDataNames={tableDataNames}
 
                     data={allData?.data}
-                    loading={
-                        isLoading || isFetching
-                    } /> :
+                // loading={
+                //     isLoading || isFetching
+                // } 
+                /> :
                     <div>
                         <div className='flex items-center mx-2'>
                             <span className='flex items-center mr-3 button'><div className='bg-green-200 rounded-full w-2 h-2 mr-1' />Active</span>

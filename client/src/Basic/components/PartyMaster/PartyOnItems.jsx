@@ -13,7 +13,7 @@ function Items({ groupsItemsList, handleItemSelect, findIfAccessoryItemAdded }) 
   }
   return (
     <div className='flex flex-col gap-3 mt-7 justify-start items-start'>
-      {groupsItemsList.map(item =>
+      {groupsItemsList?.map(item =>
         <div className='flex gap-3 justify-start items-center' key={item.id}>
           <input type="checkbox" checked={findIfAccessoryItemAdded(parseInt(item.id))} onChange={(e) => handleChange(e, item.id)} />
           <label className='text-sm'>{item.name}</label>
@@ -26,13 +26,13 @@ function Items({ groupsItemsList, handleItemSelect, findIfAccessoryItemAdded }) 
 
 function GroupComponent({ findCommonElement, group, index, groupsList, setGroupsList, itemsList, handleGroupSelect, handleItemSelect, findIfAccessoryItemAdded }) {
   let checked = groupsList[index]["active"]
-  let groupsItemsList = itemsList.filter(item => parseInt(item.accessoryGroupId) === parseInt(group.id))
+  let groupsItemsList = itemsList?.filter(item => parseInt(item.accessoryGroupId) === parseInt(group.id))
   function groupDataUpdate(e) {
     let newGroupList = structuredClone(groupsList);
     newGroupList[index]["active"] = e.target.checked;
     setGroupsList(newGroupList);
-    if (e.target.checked) handleGroupSelect(groupsItemsList.map(item => item.id), "push")
-    else handleGroupSelect(groupsItemsList.map(item => item.id), "")
+    if (e.target.checked) handleGroupSelect(groupsItemsList?.map(item => item.id), "push")
+    else handleGroupSelect(groupsItemsList?.map(item => item.id), "")
   }
   function groupOpenToggle(value) {
     let newGroupList = structuredClone(groupsList);
@@ -48,7 +48,7 @@ function GroupComponent({ findCommonElement, group, index, groupsList, setGroups
           <button className='bg-lime-400 rounded hover:text-white hover:bg-lime-700 text-base p-2 py-0 pointer-events-auto' onClick={() => groupOpenToggle(true)}>+</button>
         }
         <div className='flex gap-2 justify-start items-center mt-0.5'>
-          <input type="checkbox" checked={findCommonElement(groupsItemsList.map(item => item.id))} onChange={groupDataUpdate} />
+          <input type="checkbox" checked={findCommonElement(groupsItemsList?.map(item => item.id))} onChange={groupDataUpdate} />
           <label className='w-36 text-sm'>{group.name}</label>
         </div>
       </td>
@@ -126,7 +126,7 @@ const PartyOnItems = ({ readOnly, accessoryItemList, setAccessoryItemList, acces
           </tr>
         </thead>
         <tbody>
-          {groupsList.map((group, index) => <GroupComponent key={group.id} findCommonElement={findCommonElement} findIfAccessoryItemAdded={findIfAccessoryItemAdded} handleItemSelect={handleItemSelect} handleGroupSelect={handleGroupSelect} itemsList={accessoryItemsMasterList.data} index={index} groupsList={groupsList} group={group} setGroupsList={setGroupsList} />)}
+          {groupsList?.map((group, index) => <GroupComponent key={group.id} findCommonElement={findCommonElement} findIfAccessoryItemAdded={findIfAccessoryItemAdded} handleItemSelect={handleItemSelect} handleGroupSelect={handleGroupSelect} itemsList={accessoryItemsMasterList?.data} index={index} groupsList={groupsList} group={group} setGroupsList={setGroupsList} />)}
         </tbody>
       </table>
       <button onClick={() => setItemsPopup(false)} className={`${readOnly ? "hidden" : ""} w-20 h-8 rounded mx-52 font-semibold bg-lime-400 hover:text-white hover:bg-lime-700`}>Done</button>

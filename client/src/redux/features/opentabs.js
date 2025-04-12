@@ -77,7 +77,6 @@ export const openTabs = createSlice({
   reducers: {
     push: (state, action) => {
 
-      console.log(state.tabs, "state.tabs", action, "action")
       const existingIndex = state.tabs.findIndex(
 
 

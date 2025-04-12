@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Loader from '../Loader';
-import "./Master.css";
+import "./grid.css";
 // import { ToggleButton } from '../Uis';
 import { Power, Table } from 'lucide-react';
 import { FaTableList } from "react-icons/fa6";
@@ -34,7 +34,7 @@ const ACTIVE_PLAN = (
     <button className="rounded-md text-white bg-blue-600 border p-1 disabled">ACTIVE</button>
 );
 
-const Mastertable = ({
+export default function Form(
     tableHeaders,
     tableDataNames,
     setId,
@@ -46,7 +46,9 @@ const Mastertable = ({
     header,
     setForm,
     onDataClick
-}) => {
+){
+   
+
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -107,7 +109,8 @@ const Mastertable = ({
                             <div className="flex-1 flex justify-center bg-white  text-gray-800 items-center text-xl py-3">
                                 <p>No Data Found...! </p>
                             </div>
-                        ) : <>
+                        ) :
+                         <>
                             <div className=" bg-white overflow-auto custom-scrollbar border-y border-gray-300 h-[65vh]">
                                 <table className="min-w-full  text-normal striped-table">
                                     <thead>
@@ -142,7 +145,6 @@ const Mastertable = ({
 
                                 </table>
                             </div>
-                            {/* Pagination Controls */}
                             <div className="flex justify-center items-center mt-2  my-2 text-normal font-semibold">
                                 <button
                                     className={`text-xs text-stone-900 rounded ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-400"}`}
@@ -163,11 +165,11 @@ const Mastertable = ({
                                 >
                                     &nbsp;&gt;
                                 </button>
-                            </div></>}</>
-
-
-
-
+                            
+                            </div>
+                            </>
+                            }
+                            </>
                 )}
 
             </div>
@@ -175,4 +177,3 @@ const Mastertable = ({
     );
 }
 
-export default Mastertable

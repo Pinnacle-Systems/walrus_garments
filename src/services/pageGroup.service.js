@@ -30,7 +30,7 @@ async function getPermissions(req) {
         where: {
             roleId_pageId: {
                 roleId: parseInt(roleId),
-                pageId: parseInt(pageId)
+                pageId: parseFloat(pageId) ? parseInt(pageId) : undefined,
             }
         },
     })

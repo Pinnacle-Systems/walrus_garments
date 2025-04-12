@@ -42,9 +42,12 @@ export const MultiSelectDropdown = ({ name, selected, labelName, setSelected, op
 
 // export const TextInput = ({ name, type, value, setValue, readOnly, className, inputClass, required = false, disabled = false, tabIndex = null, onBlur = null }) => {
 //     return (
-//         <div className=' grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1 data gap-1'>
+//         <div className='input-group grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1 data gap-1'>
 //             <label className={`md:text-start flex ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
-//             <input onBlur={onBlur} tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required} className={`${"input-field focus:outline-none md:col-span-2 border-gray-500 border rounded"} ${inputClass}`} value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly} />
+//             <input onBlur={onBlur} tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled}
+//                 required={required} className={`${"input-field focus:outline-none md:col-span-2 border-gray-500 border rounded"} ${inputClass}`} value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly}
+//                 placeholder={`${name}`}
+//             />
 //         </div>
 //     )
 // }
@@ -53,10 +56,9 @@ export const TextInput = ({ name, type, value, setValue, readOnly, className, re
 
     return (
         <>
-            <div className="group input-group">
-                <label htmlFor="title" className="input-label group-hover:text-blue-600 text-normal">
-                    <span className="flex items-center gap-2">
-                        {/* <FileText className="input-icon group-hover:text-blue-500" /> */}
+            <div className="group input-group  text-sm">
+                <label htmlFor="title" className="input-label group-hover:text-blue-600  font-weight: 100 ">
+                    <span className="flex items-center gap-2  font-weight: 100">
                         {required ? <RequiredLabel name={name} /> : `${name}`}
                     </span>
                 </label>
@@ -64,26 +66,22 @@ export const TextInput = ({ name, type, value, setValue, readOnly, className, re
                     id={name}
                     variant="standard"
                     name={`${name}`}
-                    className={`input-base field-text p-0.5 rounded `}
-                    //   placeholder={`${name}`}
+                    className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+                    // placeholder={`${name}`}
 
                     sx={{
                         "& .MuiInputBase-input": { fontSize: "12px" },
                         "& .MuiInputBase-input.Mui-disabled": {
-                            color: "#333", // Darker text color
-                            WebkitTextFillColor: "#333", // Ensures text stays dark in Webkit browsers
-                        } // Input text size
+                            color: "#333",
+                            WebkitTextFillColor: "#333",
+                        }
                     }}
                     onBlur={onBlur} tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={readOnly} required={required}
                     value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly}
                 />
             </div>
 
-            {/* <div className='grid grid-cols-1 items-center  px-1 data  mb-1'>
-            <label className={`md:text-start flex ${className} `}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
-            <input onBlur={onBlur} tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required}
-                className={`p-1  text-xs shadow appearance-none border border-slate-400  ${width}  text-gray-700 leading-tight focus:outline-none focus:border-slate-500 focus:drop-shadow rounded h-[21px] input-text focus:ring-2 focus:ring-blue-300 focus:drop-shadow-lg focus:border-blue-500`} value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly} />
-        </div> */}
+
         </>
 
     )
@@ -91,7 +89,7 @@ export const TextInput = ({ name, type, value, setValue, readOnly, className, re
 
 export const LongTextInput = ({ name, type, value, setValue, className, readOnly, required = false, disabled = false, tabIndex = null }) => {
     return (
-        <div className=' grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data gap-1'>
+        <div className='input-group grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data gap-1'>
             <label className='md:text-start flex'>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
             <input tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required} className={className} value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly} />
         </div>
@@ -100,9 +98,9 @@ export const LongTextInput = ({ name, type, value, setValue, className, readOnly
 
 export const DisabledInput = ({ name, type, value, className = "", textClassName = "", tabIndex = null }) => {
     return (
-        <div className={` grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1 data  ${className}`}>
+        <div className={`input-group grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data  ${className}`}>
             <label className={`md:text-start flex ${className} `}>{name}</label>
-            <input tabIndex={tabIndex ? tabIndex : undefined} type={type} className={`input-field ${textClassName} focus:outline-none md:col-span-2 border border-gray-500 rounded`} value={value} disabled />
+            <input tabIndex={tabIndex ? tabIndex : undefined} type={type} className={`input-field ${textClassName} focus:outline-none md:col-span-1 border border-gray-500 group-hover:text-blue-600 rounded `} value={value} disabled />
         </div>
     )
 }
@@ -140,12 +138,12 @@ export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, o
         setValue(e.target.value);
     }
     return (
-        <div className=' items-center md:my-1 md:px-1 data'>
-            <label className={`md:text-start flex ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
+        <div className='input-group items-center md:my-1 md:px-1 data '>
+            <label className={`md:text-start flex  text-sm ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
             <select
                 onBlur={onBlur}
                 autoFocus={autoFocus} tabIndex={tabIndex ? tabIndex : undefined} defaultValue={defaultValue} id='dd'
-                required={required} name="name" className='input-field  md:col-span-2 col-span-1 rounded'
+                required={required} name="name" className='input-field  md:col-span-2 col-span-1 rounded min-w-52 border-b border-black'
                 value={value} onChange={(e) => { beforeChange(); handleOnChange(e); }} disabled={readOnly}>
                 <option value="" hidden={!clear}>Select</option>
                 {options.map((option, index) => <option key={index} value={option.value} >
@@ -155,46 +153,59 @@ export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, o
         </div>
     )
 }
-// export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, options, value, setValue, defaultValue, className, readOnly, required = false, disabled = false, clear = false, tabIndex = null, autoFocus = false, width }) => {
-//     const handleOnChange = (e) => {
+
+// export const DropdownInput = ({
+//     name,
+//     beforeChange = () => { },
+//     onBlur = null,
+//     options = [],
+//     value,
+//     setValue,
+//     defaultValue,
+//     className = "",
+//     readOnly = false,
+//     required = false,
+//     disabled = false,
+//     clear = false,
+//     tabIndex = null,
+//     autoFocus = false,
+//     width
+// }) => {
+
+//     const handleChange = (e) => {
+//         beforeChange();
 //         setValue(e.target.value);
-//     }
+//     };
+
 //     return (
-//         <div className="group input-group">
+//         <div className={`group input-group ${className}`}>
 //             <FormControl
 //                 variant="standard"
 //                 className="w-full"
 //                 sx={{
-//                     "& .MuiInputBase-input": {
-//                         fontSize: "12px",
-//                         padding: "1.5px",
-//                     },
+//                     "& .MuiInputBase-input": { fontSize: "12px", padding: "1.5px" },
 //                     "& .MuiInputBase-input.Mui-disabled": {
 //                         color: "#333",
 //                         WebkitTextFillColor: "#333",
 //                     },
 //                 }}
 //             >
-//                 <label htmlFor="title" className="input-label group-hover:text-blue-600 text-normal">
+//                 <label className="input-label group-hover:text-blue-600 text-normal">
 //                     <span className="flex items-center gap-2">
-//                         {/* <FileText className="input-icon group-hover:text-blue-500" /> */}
 //                         {required ? <RequiredLabel name={name} /> : name}
 //                     </span>
 //                 </label>
 
 //                 <Select
 //                     name="name"
+//                     value={value}
+//                     onChange={handleChange}
+//                     onBlur={onBlur}
+//                     defaultValue={defaultValue}
 //                     required={required}
+//                     disabled={readOnly || disabled}
 //                     autoFocus={autoFocus}
 //                     tabIndex={tabIndex ?? undefined}
-//                     defaultValue={defaultValue}
-//                     value={value}
-//                     onBlur={onBlur}
-//                     disabled={readOnly}
-//                     onChange={(e) => {
-//                         beforeChange();
-//                         handleOnChange(e);
-//                     }}
 //                     className="rounded border-none mt-0"
 //                     sx={{
 //                         "& .MuiInputBase-input": { fontSize: "12px" },
@@ -209,19 +220,21 @@ export const DropdownInput = ({ name, beforeChange = () => { }, onBlur = null, o
 //                             <em>Select</em>
 //                         </MenuItem>
 //                     )}
-//                     {console.log("options", options)}
 
-//                     {options?.map((option, index) => (
-//                         <MenuItem key={index} value={option.value} sx={{ fontSize: "12px" }}>
+//                     {options.map((option, index) => (
+//                         <MenuItem
+//                             key={index}
+//                             value={option.value}
+//                             sx={{ fontSize: "12px" }}
+//                         >
 //                             {option.show}
 //                         </MenuItem>
 //                     ))}
 //                 </Select>
 //             </FormControl>
-
 //         </div>
-//     )
-// }
+//     );
+// };
 
 
 export const LongDropdownInput = ({ name, options, value, setValue, defaultValue, className, readOnly, required = false,
@@ -288,10 +301,10 @@ const RequiredLabel = ({ name }) => <p>{`${name}`}<span className="text-red-500"
 
 export const DateInput = ({ name, value, setValue, readOnly, required = false, type = "date", disabled = false, tabIndex = null, inputClass, inputHead }) => {
     return (
-        <div className=' grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full'>
-            <label htmlFor="id" className={`md:text-start flex ${inputHead}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
+        <div className='   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full'>
+            <label htmlFor="id" className={`md:text-start flex text-sm ${inputHead}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
             <input tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required}
-                className={`input-field focus:outline-none md:col-span-2 border border-gray-500 rounded w-full ${inputClass}`} id='id' value={value} onChange={(e) => { setValue(e.target.value); }} readOnly={readOnly} />
+                className={`input-field focus:outline-none md:col-span-2 border border-gray-500 rounded  ${inputClass}`} id='id' value={value} onChange={(e) => { setValue(e.target.value); }} readOnly={readOnly} />
         </div>
     )
 }
@@ -310,8 +323,9 @@ export const CheckBox = ({ name, value, setValue, readOnly = false, className, r
     const handleOnChange = (e) => {
         setValue(!value);
     }
+    console.log("value", value)
     return (
-        <div className='items-center md:my-1 md:px-1 data'>
+        <div className='items-center md:my-1 md:px-1 data  '>
             <label htmlFor="id" className={`md:text-start items-center ${className}`}>
                 <input tabIndex={tabIndex ? tabIndex : undefined} type="checkbox" required={required} className='mx-2 py-2' checked={value} onChange={(e) => { handleOnChange(e); }} disabled={readOnly} />
                 {name}

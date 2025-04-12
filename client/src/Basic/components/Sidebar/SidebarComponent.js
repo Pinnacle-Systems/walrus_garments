@@ -62,8 +62,10 @@ import yarncount from "./images/yarncount.png";
 import accessorygroup from "./images/accessorygroup.png";
 import accessory from "./images/accessory.png";
 import accessoryitem from "./images/accessoryitem.png"
+import Machine from "./images/Machine.jpeg";
 import { useGetPageGroupQuery } from "../../../redux/services/PageGroupMasterServices";
 import axios from "axios";
+import { MachineMaster } from "..";
 
 
 const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDropdownOpen, heading, setIsOpen }) => {
@@ -82,51 +84,40 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
     const iconMapping = {
         "COUNTRY MASTER":
             <img src={country} alt="country" className="w-[23px]  justify-center items-center bg-white rounded border-2 border-white shadow" />
-        // <TfiWorld size={20} />
         ,
         "EMPLOYEE MASTER":
-            // <GrUserWorker size={20} />
             <img src={employee} alt="country" className="w-[23px]  justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
         "STATE MASTER":
             <img src={state} alt="country" className="w-[23px]  justify-center items-center  bg-white border-2 border-white rounded shadow" />
-        // <FaMapLocationDot size={20}/>
         ,
         "CITY MASTER":
             <img src={city} alt="country" className="w-[23px]  justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <MdOutlineMyLocation size={20} />
         ,
         "DEPARTMENT MASTER":
             <img src={department} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <University size={20} />
         ,
         "FIN YEAR MASTER":
             <img src={calender} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <TbCalendarDollar size={20} />
         ,
         "EMPLOYEE CATEGORY MASTER":
             <img src={empcategory} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
         "PARTY MASTER":
             <img src={party} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <LuUserCheck size={20} />
         ,
         "PARTY CATEGORY MASTER":
             <img src={partycategory} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <BiCategoryAlt size={20} />
         ,
         "CURRENCY MASTER":
             <img src={currency} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <MdCurrencyRupee size={20} />
         ,
         "COLOR MASTER":
             <img src={color} alt="country" className="w-[23px] flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <IoColorPaletteOutline size={20} />
         ,
         "UNIT OF MEASUREMENT MASTER": <img />,
         "PAY TERM MASTER":
             <img src={payterm} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <HandCoins size={20} />
         ,
         "TAX TERM MASTER":
             <img src={taxterm} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
@@ -184,26 +175,24 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "GAUGE MASTER": <img />,
         "LOOP LENGTH MASTER": <img />,
         "DESIGN MASTER": <img />,
-        // "FABRIC MASTER":<FaSocks size={20}/>,
         "ACCESSORY ITEM MASTER":
             <img src={accessoryitem} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <GiFoldedPaper size={20} />
         ,
         "ACCESSORY MASTER":
             <img src={accessory} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <TbNeedleThread size={20} />
         ,
         "COUNTS MASTER":
             <img src={yarncount} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <FaSocks size={20} />
         ,
         "ACCESSORY GROUP MASTER":
             <img src={accessorygroup} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
-        // <GiRolledCloth size={20} />
+        ,
+        "MACHINE MASTER":
+            <img src={Machine} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
     }
     return (
         <div
-            className="fixed top-[16.5%] left-[78px] z-50"
+            className="fixed top-[16.5%] left-[87px] z-50"
         >
 
             {isMainDropdownOpen === true ? <div onClick={() => setIsMainDropdownOpen(false)} className="bg-gray-600 opacity-40 fixed top-0 left-0 right-0 bottom-0 -z-10 "

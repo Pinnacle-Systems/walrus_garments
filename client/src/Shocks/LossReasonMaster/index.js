@@ -182,7 +182,7 @@ export default function Form() {
                 >
                     <fieldset className=' rounded mt-2'>
                         <div className=''>
-                            <div className='mb-3 w-[48%]'>
+                            <div className='mb-3 w-[48%] h-[48%] '>
                                 <TextInput name="Reason" type="text" value={reason} setValue={setReason} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                             </div>
                             <div className='mb-5'>

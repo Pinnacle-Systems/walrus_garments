@@ -1940,6 +1940,37 @@ CREATE TABLE `OrderDetailsSubGrid` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Machine` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `code` VARCHAR(191) NULL,
+    `time` DOUBLE NULL,
+    `active` BOOLEAN NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ShippingAddress` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `supplierId` INTEGER NULL,
+    `address` LONGTEXT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ContactDetails` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `contactPersonName` VARCHAR(191) NULL,
+    `mobileNo` VARCHAR(191) NULL,
+    `email` VARCHAR(191) NULL,
+    `partyId` INTEGER NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `Page` ADD CONSTRAINT `Page_pageGroupId_fkey` FOREIGN KEY (`pageGroupId`) REFERENCES `PageGroup`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -3364,3 +3395,9 @@ ALTER TABLE `OrderDetails` ADD CONSTRAINT `OrderDetails_orderId_fkey` FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE `OrderDetailsSubGrid` ADD CONSTRAINT `OrderDetailsSubGrid_orderDetailsId_fkey` FOREIGN KEY (`orderDetailsId`) REFERENCES `OrderDetails`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ShippingAddress` ADD CONSTRAINT `ShippingAddress_supplierId_fkey` FOREIGN KEY (`supplierId`) REFERENCES `Party`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ContactDetails` ADD CONSTRAINT `ContactDetails_partyId_fkey` FOREIGN KEY (`partyId`) REFERENCES `Party`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

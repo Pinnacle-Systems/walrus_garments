@@ -12,13 +12,12 @@ import { useGetCountriesQuery } from "../../../redux/services/CountryMasterServi
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, ToggleButton } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, ToggleButton, Modal } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import { useDispatch } from "react-redux";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from '../MastersForm/MastersForm';
-import { Modal } from "@mui/material";
 
 
 const MODEL = "State Master";
@@ -209,7 +208,7 @@ export default function Form() {
         />
 
         <div>
-          {form === true && (<Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
+          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
             <MastersForm
               onNew={onNew}
               onClose={() => {
@@ -291,8 +290,7 @@ export default function Form() {
 
               </fieldset>
             </MastersForm>
-          </Modal>)}
-
+          </Modal>}
         </div>
       </div>
 

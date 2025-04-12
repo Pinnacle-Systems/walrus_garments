@@ -63,7 +63,7 @@ export const Generalpurchase = [
     { show: "Grey Fabric", value: "GreyFabric" },
     { show: "DyedFabric", value: "DyedFabric" },
     { show: "Accessory", value: "Accessory" },
-    
+
 ]
 
 

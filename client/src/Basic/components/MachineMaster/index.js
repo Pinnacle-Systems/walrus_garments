@@ -33,7 +33,8 @@ export default function Form() {
   const childRecord = useRef(0);
 
   const params = { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }
-  const { data: allData, isLoading, isFetching } = useGetMachineByIdQuery({ params, searchParams: searchValue });
+  const { data: allData, isLoading, isFetching } = useGetMachineQuery({ params, searchParams: searchValue });
+
 
   const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetMachineByIdQuery(id, { skip: !id });
 
@@ -55,7 +56,8 @@ export default function Form() {
     } else {
       setReadOnly(true)
       setName(data?.name || "");
-      setTime(data?.code || "");
+      setTime(data?.time || "");
+      setCode(data?.code || "");
       setActive(id ? (data?.active ?? false) : true);
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     }
@@ -73,13 +75,14 @@ export default function Form() {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData])
 
+  console.log(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), "companyId")
 
   const data = {
-    name, code: time, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), active, id
+    name, time, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), active, id, code
   }
 
   const validateData = (data) => {
-    if (data.name && data.code) {
+    if (data.name) {
       return true;
     }
     return false;
@@ -153,9 +156,9 @@ export default function Form() {
     setForm(true);
   }
   const tableHeaders = [
-    "S.NO", "Code", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
+    "S.NO", "Name", "Code", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
   ]
-  const tableDataNames = ["index+1", "dataObj.code", "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+  const tableDataNames = ["index+1", "dataObj.name", "dataObj.code", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
 
 
   return (
@@ -210,15 +213,17 @@ export default function Form() {
                     </div>
 
                     <div className='mb-3 ml-5 w-[20%]'>
-                      <TextInput name="Production Time Per Hour" type="text" value={time} setValue={setTime} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                      <TextInput name="Production Time" type="text" value={time} setValue={setTime} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                     </div>
                     <div className='mb-3 ml-5 w-[20%]'>
                       <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                     </div>
 
                   </div>
-                  <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                  {/* <CheckBox name="Active" value={active} setValue={setActive} readOnly={readOnly} /> */}
+                  <div className='mt-2'>
+                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+
+                  </div>
                 </div>
               </fieldset>
             </MasterForm>

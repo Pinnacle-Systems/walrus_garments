@@ -5,9 +5,11 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { companyId, active } = req.query
+    console.log("hitgert")
     const data = await prisma.machine.findMany({
+
+
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
@@ -49,11 +51,11 @@ async function getSearch(req) {
 async function create(body) {
 
     const { name, code, time, active } = await body
-    console.log(body, "hit")
-    const data = await prisma.Machine.create(
+    const data = await prisma.machine.create(
+        console.log("hit"),
         {
             data: {
-                name, code, time: parseFloat(time), active
+                name, code, time: time ? parseFloat(time) : undefined, active
             }
         }
     )
@@ -62,13 +64,13 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, code, time, active } = await body
-    const dataFound = await prisma.Machine.findUnique({
+    const dataFound = await prisma.machine.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("counts");
-    const data = await prisma.Machine.update({
+    if (!dataFound) return NoRecordFound("Machine");
+    const data = await prisma.machine.update({
         where: {
             id: parseInt(id),
         },
@@ -81,7 +83,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.Machine.delete({
+    const data = await prisma.machine.delete({
         where: {
             id: parseInt(id)
         },

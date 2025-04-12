@@ -193,7 +193,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -211,7 +211,7 @@ export default function Form() {
                 >
                     <fieldset className=' rounded mt-2'>
                         <div className=''>
-                            <div className="flex flex-wrap justify-between">
+                            <div className="flex flex-wrap justify-between mt-4">
 
                                 <div className='mb-3'>
                                     <CheckBox name="Yarn" value={isYarn} setValue={setIsYarn}
@@ -238,11 +238,11 @@ export default function Form() {
                                     />
                                 </div>
                             </div>
-                            <div className='flex justify-between'>
+                            <div className='flex-col'>
                                 <div className='mb-3 w-[48%]'>
                                     <DropdownInput
                                         name="Location"
-                                        options={dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")}
+                                        options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
                                         value={locationId}
                                         setValue={setLocationId}
                                         required={true}
@@ -259,7 +259,7 @@ export default function Form() {
 
                             </div>
 
-                            <div className='mb-5'>
+                            <div className='mb-5 mt-3'>
                                 {/* <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} /> */}
                                 <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                             </div>

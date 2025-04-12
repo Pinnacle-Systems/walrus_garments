@@ -11,7 +11,7 @@ import {
   SearchButton,
   OpenProjectButton,
   ViewButtton,
-  
+
 } from "../../../Buttons";
 import { toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
@@ -105,7 +105,7 @@ const FormHeader = ({
       {isLoading || isFetching ? (
         <div></div>
       ) : (
-        <div className="md:flex md:items-center md:justify-between page-heading">
+        <div className="md:flex md:items-center md:justify-between ">
           {model ? (
             <div className="font-bold  heading text-center md:mx-10">
               {model}
@@ -114,9 +114,9 @@ const FormHeader = ({
             <div></div>
           )}
           <div className="flex sub-heading">
-          {
-              viewReport  &&
-              <ViewButtton   onClick={viewReport}  />
+            {
+              viewReport &&
+              <ViewButtton onClick={viewReport} />
             }
             {
               projectOpen &&
@@ -156,7 +156,7 @@ const FormHeader = ({
             {onClose &&
               <CloseButton onClick={onClose} />
             }
-        
+
           </div>
         </div>
       )}

@@ -151,7 +151,8 @@ app.use("/rawMaterialOpeningStock", rawMaterialOpeningStock);
 app.use("/sizeTemplate", size);
 app.use("/content", contentMaster);
 app.use("/counts", counts);
-app.use("/machine", Machine); app.use("/currency", currency);
+app.use("/machine", Machine);
+app.use("/currency", currency);
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

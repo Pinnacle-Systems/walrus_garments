@@ -5,6 +5,8 @@ import { BranchAndFinyearForm, LogoutConfirm } from "../../components";
 import ActiveTabList from "../../components/ActiveTabList";
 import secureLocalStorage from "react-secure-storage";
 import SuperAdminHeader from "../../components/SuperAdminHeader";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Home = () => {
   const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -15,6 +17,8 @@ const Home = () => {
   const isSuperAdmin = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "superAdmin"
   );
+  const navigate = useNavigate();
+  const openTabs = useSelector((state) => state.openTabs);
   return (
     <>
       <Modal
@@ -37,17 +41,26 @@ const Home = () => {
       </Modal>
       <div className="h-screen overflow-hidden">
         {isSuperAdmin ? (
-          <SuperAdminHeader
-            setIsGlobalOpen={setIsGlobalOpen}
-            setLogout={setLogout}
-          />
+          <>
+            <SuperAdminHeader
+              setIsGlobalOpen={setIsGlobalOpen}
+              setLogout={setLogout}
+            />
+            <div className="">
+              <ActiveTabList />
+
+            </div>
+
+          </>
         ) : (
           <div >
             <Header profile={profile} setProfile={setProfile} />
-            {/* <Dashboard /> */}
-            <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
 
-            {/* <ActiveTabList /> */}
+            <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
+            <div className="mt-[30px]  p-5 bg-gray-100  :tab">
+              <ActiveTabList />
+              {openTabs.tabs.length === 0 ? <Dashboard /> : ''}
+            </div>
 
 
           </div>
@@ -55,10 +68,10 @@ const Home = () => {
 
         {/* <AppFooter /> */}
 
-
+        {/* 
         <div className="flex-1">
           <ActiveTabList />
-        </div>
+        </div> */}
       </div>
     </>
   );

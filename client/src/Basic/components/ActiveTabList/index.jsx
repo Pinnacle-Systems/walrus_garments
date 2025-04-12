@@ -13,6 +13,9 @@ import {
   SizeMaster,
   LocationMaster,
   MachineMaster,
+  PageGroupMaster,
+  CompanyMaster,
+  Dashboard,
 
 } from "../../components";
 
@@ -23,6 +26,7 @@ import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import { AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, LossReasonMaster, ProcessMaster, SizeTemplateMaster, StyleMaster, YarnBlendMaster, YarnMaster, YarnTypeMaster } from "../../../Shocks";
 import ContentMaster from "../../../Shocks/ContentMaster";
 import secureLocalStorage from "react-secure-storage";
+import { Order } from "../../../Uniform/Components";
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
@@ -36,8 +40,8 @@ const ActiveTabList = () => {
 
   const tabs = {
     "PAGE MASTER": <PageMaster />,
-    // "COMPANY MASTER": <CompanyMaster />,
-    // "PAGE GROUP MASTER": <PageGroupMaster />,
+    "COMPANY MASTER": <CompanyMaster />,
+    "PAGE GROUP MASTER": <PageGroupMaster />,
     "COUNTRY MASTER": <CountryMaster />,
     "MACHINE MASTER": <MachineMaster />,
     "STATE MASTER": <StateMaster />,
@@ -68,6 +72,8 @@ const ActiveTabList = () => {
     "ACCESSORY GROUP MASTER": <AccessoryGroupMaster />,
     "ACCESSORY ITEM MASTER": <AccessoryItemMaster />,
     "ACCESSORY MASTER": <AccessoryMaster />,
+    "ORDER": <Order />,
+    "DASHBOARD": <Dashboard />
 
   };
   const innerWidth = window.innerWidth;
@@ -80,13 +86,13 @@ const ActiveTabList = () => {
     sessionStorage.getItem("sessionId") + "userId"
   )
   return (
-    <div className="relative">
+    <div className="relative  ">
       <div className="flex justify-between">
         <div className="flex gap-2">
           {(currentShowingTabs)?.map((tab, index) => (
             <div
               key={index}
-              className={`p-1 rounded-t-md text-[10px] flex justify-center gap-1 ${tab.active ? "bg-red-300" : "bg-white"
+              className={`px-2   rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active ? "bg-gray-500 text-white border border-gray-500" : "text-gray-500 border border-gray-500"
                 }`}
             >
               <button
@@ -141,13 +147,14 @@ const ActiveTabList = () => {
           </ul>
         }
       </div>
-      {/* <MonthlySales /> */}
+
       {(openTabs?.tabs)?.map((tab, index) => (
         <div key={index} className={`${tab.active ? "block" : "hidden"}`}>
           {tabs[tab.name]}
         </div>
       ))}
     </div>
+
   );
 };
 

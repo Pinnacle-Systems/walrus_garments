@@ -226,7 +226,7 @@ async function create(req) {
     const data = await prisma.employee.create(
         {
             data: {
-                // regNo: employeeId,
+                regNo: employeeId,
                 EmployeeCategory: { connect: { id: parseInt(employeeCategoryId) } },
                 Branch: { connect: { id: parseInt(branchId) } },
                 name, email, chamberNo, fatherName, dob: dob ? new Date(dob) : null, joiningDate: dob ? new Date(joiningDate) : null, gender, maritalStatus,

@@ -227,7 +227,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[70%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[70%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -244,10 +244,27 @@ export default function Form() {
                     emptyErrors={() => setErrors({})}
                 >
                     <div className=''>
+                        <fieldset className='overflow-auto  border-gray-600 w-[100%]'>
+                            <div className='mb-3'>Yarn Details</div>
+                            <div className='w-full'>
+                                <div className='mb-3'>
+                                    <TextInput readOnly name="Yarn Name" className={'focus:outline-none cursor-not-allowed md:col-span-2 h-6 py-1  rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
+                                </div>
+
+                                <div className="mb-3">
+                                    <TextInput name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 py-1  rounded'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                </div>
+                                <div className='mb-3 w-[20%]'>
+                                    <TextInput name="HSN Code" className={'focus:outline-none md:col-span-2 h-6 py-1 border rounded'} type="text" value={hsn} setValue={setHsn} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                </div>
+
+
+                            </div>
+                        </fieldset>
                         <fieldset className=' w-[100%] h-[60%]'>
                             <div className='mb-3'>Yarn Blend Details</div>
-                            <div className='overflow-y-auto flex justify-between'>
-                                <div className="md:grid md:grid-cols-2 gap-x-3 w-[48%]">
+                            <div className=' flex flex-wrap '>
+                                <div className="md:grid md:grid-cols-2 gap-x-3 ">
                                     <div className='mb-3'>
                                         <DropdownInput name="Content" options={dropDownListObject(id ? contentList?.data : contentList?.data?.filter(item => item.active), "name", "id")} value={contentId} setValue={(value) => { setContentId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
@@ -271,23 +288,7 @@ export default function Form() {
 
                             </div>
                         </fieldset>
-                        <fieldset className='overflow-auto  border-gray-600 w-[100%]'>
-                            <div className='mb-3'>Yarn Details</div>
-                            <div className='w-full'>
-                                <div className='mb-3'>
-                                    <LongTextInput readOnly name="Yarn Name" className={'focus:outline-none cursor-not-allowed md:col-span-2 h-6 py-1  rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
-                                </div>
 
-                                <div className="mb-3">
-                                    <LongTextInput name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 py-1  rounded'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                </div>
-                                <div className='mb-3 w-[20%]'>
-                                    <LongTextInput name="HSN Code" className={'focus:outline-none md:col-span-2 h-6 py-1 border rounded'} type="text" value={hsn} setValue={setHsn} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                </div>
-
-
-                            </div>
-                        </fieldset>
                     </div>
 
 

@@ -9,22 +9,20 @@ import {
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DisabledInput, DateInput, DropdownInput, TextInput, CheckBox } from "../../../Inputs";
-import { dropDownListObject, } from '../../../Utils/contructObject';
-
+import { DisabledInput, DateInput, DropdownInput, TextInput} from "../../../Inputs";
 import Modal from "../../../UiComponents/Modal";
 import FormReport from "./FormReport";
-
 import moment from "moment";
 import { getCommonParams } from "../../../Utils/helper";
-import { faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import StyleTypeHeading from "./StyleTypeHeading";
-import PanelWiseProcess from "./PanelWiseProcess";
-import { useGetItemMasterByIdQuery, useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-OR";
 import tw from "../../../Utils/tailwind-react-pdf";
+import { sampleUpdateStage } from "../../../Utils/DropdownData";
+import {  Loader } from "../../../Basic/components";
+import { RiPlayListAddLine } from "react-icons/ri";
+import { DELETE } from "../../../icons";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import {  useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 
 const MODEL = "Order";
@@ -48,26 +46,25 @@ export default function Form() {
     const [partyId, setPartyId] = useState("");
     const [date, setDate] = useState("");
     const childRecord = useRef(0);
-    const [itemId, setItemId] = useState("");
     const { branchId, userId, companyId, finYearId } = getCommonParams()
     const [printModalOpen, setPrintModalOpen] = useState(false)
+  
+    const [loading, setLoading] = useState(false);
+   
+
     const params = {
         branchId, userId, finYearId
     };
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
+ 
 
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
-    const {
-        data: itemData,
-
-    } = useGetItemMasterByIdQuery(itemId, { skip: !itemId });
+    const { data: sizeList,   isLoading: isSizeListLoading   } = useGetSizeMasterQuery({ params: { ...params } });
 
     const {
-        data: itemList,
-        isLoading: isItemListLoading,
-        isFetching: isItemListFetching,
-    } = useGetItemMasterQuery({ params });
+        data: colorlist,
+        isLoading: isColorListLoading,
+        isFetching: isColorListFetching,
+    } = useGetColorMasterQuery({ params });
 
 
     const getNextDocId = useCallback(() => {
@@ -87,12 +84,6 @@ export default function Form() {
 
 
 
-    const orderDetailsSubGrid = orderDetails?.map(item => item.orderDetailsSubGrid)
-    let classIds = [];
-
-    orderDetailsSubGrid?.forEach(item =>
-        item.forEach(cl => classIds.push(cl.classIds))
-    )
 
 
     const [addData] = useAddOrderMutation();
@@ -230,177 +221,57 @@ export default function Form() {
     const onNew = () => {
         setId("");
         setReadOnly(false);
-        syncFormWithDb(undefined)
-        getNextDocId();
-    };
+        setOrderDetails([]);
+
+    }
+
+
+  function addNewRow() {
+        if (readOnly) return toast.info("Turn on Edit Mode...!!!")
+        setOrderDetails(prev => [
+            ...prev,
+            {
+                sockType: "", Material: "", size: "", color: "", design: "", qty: "0", packingRequirement: "",
+            }
+        ]);
+    }
+
+    function deleteRow(index) {
+        if (readOnly) return toast.info("Turn on Edit Mode...!!!")
+        setOrderDetails(prev => prev.filter((_, i) => i !== index))
+    }
 
 
     useEffect(() => {
-        if (id) return
-        if (!singleSupplier?.data || isSingleSupplierLoading || isSingleSupplierFetching) return
-        if (!partyId) return
-        setPhone(singleSupplier?.data?.contactMobile ? singleSupplier?.data.contactMobile : "")
-        setContactPersonName(singleSupplier?.data?.contactPersonName ? singleSupplier?.data.contactPersonName : "");
-        setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
-    }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
-
-
-    const handleInputChange = (value, index, field) => {
+        if (orderDetails?.length >= 10) return
         setOrderDetails(prev => {
-            const newBlend = structuredClone(prev);
-            newBlend[index][field] = value;
-            return newBlend
-        });
-    };
-
-    useEffect(() => {
-        if (id) return
-        if (noOfSet) return
-        setOrderDetails(prev => {
-            if (prev?.length >= 2) return prev
-            let newArray = Array.from({ length: 2 - prev?.length }, i => {
+            let newArray = Array.from({ length: 10 - prev.length }, () => {
                 return {
-                    itemTypeId: "", orderDetailsSubGrid: [{
-                        uniformType: "",
-                        classIds: [],
-                        femaleColorsIds: [],
-                        maleColorIds: [],
-                        malePanelProcess: [],
-                        feMalePanelProcess: [],
-                        isMaleColorId: "",
-                        noOfSetMale: "",
-                        noOfSetFemale: "",
-                        isFemaleColorId: "",
-                        isMaleItemId: "",
-                        isFemaleItemId: "",
-                        qty: ""
-                    }]
+                    sockType: "", Material: "", size: "", color: "", design: "", qty: "0", packingRequirement: "",
                 }
             })
             return [...prev, ...newArray]
         }
         )
-    }, [setOrderDetails, id, orderDetails])
+    }, [setOrderDetails, orderDetails])
 
-
-
-    useEffect(() => {
-        if (!noOfSet) return
-        if (id) return
-        setOrderDetails((prev) => {
-            let newObj = structuredClone(prev)
-            newObj = newObj.map((item, itemIndex) => {
-                return {
-                    ...item,
-                    orderDetailsSubGrid: item.orderDetailsSubGrid?.map(val => {
-                        return {
-                            ...val, noOfSetMale: noOfSet, noOfSetFemale: noOfSet
-                        }
-                    })
-                }
-            })
-
-            return newObj
-        })
-
-
-    }, [noOfSet, id])
-
-    useEffect(() => {
-        let newObj = {};
-        let tempArray = []
-        singleData?.data?.orderDetails?.forEach((item, itemIndex) => {
-            item?.orderDetailsSubGrid?.forEach((val, valIndex) => {
-                console.log(val, "val")
-                newObj = {
-                    itemType: item?.ItemType?.name,
-                    typeOfUniform: val?.uniformType,
-                    // classIds:val?.classIds?.map(v=>v.Class?.name)?.join(","),
-                    classIds: `${val?.classIds[0]?.Class?.name} ${"-"} ${val?.classIds?.[val?.classIds?.length - 1]?.Class?.name}`,
-                    maleItem: val?.isMaleStyle?.name,
-                    maleColor: val?.isMaleColor?.name,
-                    maleSet: val?.noOfSetMale,
-                    maleColorIds: val?.
-                        maleColorIds?.map(item => item?.Color?.name).join(","),
-                    femaleItem: val?.isFemaleStyle?.name,
-                    femaleColor: val?.isFemaleColor?.name,
-                    femaleSet: val?.noOfSetFemale,
-                    femaleColorsIds: val?.femaleColorsIds?.map(item => item?.Color?.name).join(",")
-                }
-            })
-            tempArray.push(newObj)
-        })
-        setTempOrderDetails(tempArray)
-    }, [singleData, setTempOrderDetails])
-
-
-    // console.log(tempOrderDetails,"tempOrderDetails")
-
-    //  useEffect(() => {
-    //         if (id) return
-    //         if (!itemId) return
-
-    //         if (value?.[arrayName]?.length > 0) return
-    //         itemData?.data?.ItemPanel?.forEach((panel, panelIndex) => {
-    //             setOrderDetails((prev) => {
-    //                 const updatedPanelData = [...prev];
-    //                 updatedPanelData[index]["orderDetailsSubGrid"]?.[currentSelectedIndex]?.[arrayName]?.push({
-    //                     panelId: panel.panelId,
-    //                     selectedAddons: []
-    //                 })
-    //                 return updatedPanelData;
-    //             });
-    //         })
-
-    //     }, [arrayName, itemTypeId, itemId, itemData])
-
-    const handleInputChangeOrderDetails = (value, index, valueIndex, field) => {
-
-        setOrderDetails(prev => {
-            const newBlend = structuredClone(prev);
-            newBlend[index]["orderDetailsSubGrid"][valueIndex][field] = value;
-
-            if (field === "isMaleItemId") {
-
-                let itemData = itemList?.data?.find(val => parseInt(val.id) == parseInt(value))
-
-
-                let panelProcess = itemData?.ItemPanel?.map((panel, panelIndex) => {
-                    return {
-                        panelId: panel.panelId,
-                        selectedAddons: []
-                    }
-                })
-                newBlend[index]["orderDetailsSubGrid"][valueIndex]["malePanelProcess"] = panelProcess
-            }
-            if (field === "isFemaleItemId") {
-
-                let itemData = itemList?.data?.find(val => parseInt(val.id) == parseInt(value))
-
-
-                let panelProcess = itemData?.ItemPanel?.map((panel, panelIndex) => {
-                    return {
-                        panelId: panel.panelId,
-                        selectedAddons: []
-                    }
-                })
-                newBlend[index]["orderDetailsSubGrid"][valueIndex]["feMalePanelProcess"] = panelProcess
-            }
-            return newBlend
-        });
-
+    function handleInputChange(value, index, field) {
+        setOrderDetails(orderDetails => {
+        const newBlend = structuredClone(orderDetails);
+        newBlend[index][field] = value;
+         return newBlend
+     }
+     );
     };
+   
+         console.log(orderDetails, "orderDetails")
+     
 
-
-
-
-
-    let supplierListBasedOnSupply = supplierList ? supplierList.data?.filter(val => val?.isBuyer) : []
     return (
         <>
             <div
                 onKeyDown={handleKeyDown}
-                className="md:items-start md:justify-items-center  bg-theme h-[800px]  overflow-auto ">
+                className="md:items-start md:justify-items-center  bg-theme h-[800px]  ">
 
                 <Modal isOpen={formReport} onClose={() => setFormReport(false)} widthClass={"px-2 h-[90%] w-[90%]"}>
                     <FormReport
@@ -434,134 +305,204 @@ export default function Form() {
 
 
                 <div className="flex flex-col frame w-full ">
-                    <FormHeader
-                        onNew={onNew}
-                        model={MODEL}
-                        saveData={saveData}
-                        setReadOnly={setReadOnly}
-                        deleteData={deleteData}
-                        openReport={() => { setFormReport(true) }}
-                        onPrint={id ? () => setPrintModalOpen(true) : null}
-                        childRecord={childRecord.current}
-                    />
-                    <div className="flex-1 grid gap-x-2">
+                    <div className="bg-gray-700">
+                        <FormHeader
+                            onNew={onNew}
+                            model={MODEL}
+                            saveData={saveData}
+                            setReadOnly={setReadOnly}
+                            deleteData={deleteData}
+                            openReport={() => { setFormReport(true) }}
+                            onPrint={id ? () => setPrintModalOpen(true) : null}
+                            childRecord={childRecord.current}
+                        />
+                    </div>
+
+                    <div className="flex-1 grid gap-x-2 p-3">
                         <div className="col-span-3 grid ">
                             <div className='col-span-3 grid '>
                                 <div className='mr-1'>
                                     <div className={`grid`}>
-                                        <div className={"flex flex-col"}>
-                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1'>
+                                        <div className={"flex flex-col gap-x-2 h-[100vh] gap-y-4"}>
+                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1 h-[20vh]'>
                                                 <legend className='sub-heading'>Order Info</legend>
                                                 <div className='flex flex-col justify-center items-start flex-1 w-full'>
-                                                    <div className="grid grid-cols-5 w-full">
+                                                    <div className="grid grid-cols-6 w-full">
                                                         <DisabledInput name="Doc Id." value={docId} required={true} />
-                                                        <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
-                                                        <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={partyId} setValue={setPartyId} required={true} readOnly={readOnly} />
-                                                        <TextInput name="Phone No" type="text" value={phone} setValue={setPhone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        <TextInput name="Con.Person.Name" type="text" value={contactPersonName} setValue={setContactPersonName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                                        <TextInput name="Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                                        {/* <TextInput name="Order.Qty" type="text" value={orderQty} setValue={setOrderQty} readOnly={readOnly} disabled={(childRecord.current > 0)} /> */}
-                                                        <TextInput name="No.Of.Set" type="number" value={noOfSet} setValue={setNoOfSet} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        <DateInput name="Order Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
                                                         <DateInput name="Delivery.Date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
-                                                        <CheckBox name="StudentList" readOnly={readOnly} value={isForOrderImportItems} setValue={setIsForOrderImportItems} />
-
+                                                        <DropdownInput name="Customer"
+                                                            //  options={dropDownListObject(supplierListBasedOnSupply, "name", "id")}
+                                                            options={sampleUpdateStage}
+                                                            value={partyId} setValue={setPartyId} required={true} readOnly={readOnly} />
+                                                        <TextInput name="Phone No" type="text" value={phone} setValue={setPhone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        <TextInput name="Shipping Address" type="number" value={noOfSet} setValue={setNoOfSet} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                                                     </div>
                                                 </div>
                                             </fieldset>
-                                            <fieldset className={`frame my-1 grid grid-cols-4 `}>
-                                                <legend className='sub-heading'>Order Info</legend>
-                                                <div className=' grid col-span-4'>
-                                                    <table className="border border-gray-500">
-                                                        <thead className="border border-gray-500">
-                                                            <tr className="">
-                                                                <th className="border border-gray-500 text-sm p-1">S.No </th>
-                                                                <th className="border border-gray-500 text-sm p-1">Type Of Uniform</th>
-                                                                <th className="border border-gray-500 text-sm p-1 w-64">Class</th>
-                                                                <th className="border border-gray-500 text-sm">
-                                                                    <div className="flex flex-col gap-y-1">
-                                                                        <span className="border-b-4">
-                                                                            Male
-                                                                        </span>
-                                                                        <div className="grid grid-cols-5 w-full">
-                                                                            <span className="border-r-2  col-span-2">
-                                                                                Item
-                                                                            </span>
-                                                                            <span className="border-r-2 col-span-2">
-                                                                                Color
-                                                                            </span>
-                                                                            <span>
-                                                                                No.Of.Set
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </th>
-                                                                <th className="border border-gray-500 text-sm ">
-                                                                    <div className="flex flex-col gap-y-1">
-                                                                        <span className="border-b-4">
-                                                                            Female
-                                                                        </span>
-                                                                        <div className="grid grid-cols-5 w-full">
-                                                                            <span className="border-r-2  col-span-2">
-                                                                                Item
-                                                                            </span>
-                                                                            <span className="border-r-2 col-span-2">
-                                                                                Color
-                                                                            </span>
-                                                                            <span>
-                                                                                No.Of.Set
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </th>
 
-                                                                <th className="border border-gray-500 text-sm p-1" colSpan={2}>
-                                                                    <button type='button' className="text-green-700" onClick={() => {
-                                                                        setOrderDetails(prev => {
-                                                                            let newPrev = structuredClone(prev);
-                                                                            newPrev.push({
-                                                                                itemTypeId: "",
-                                                                                orderDetailsSubGrid: [
-                                                                                    {
-                                                                                        uniformType: "",
-                                                                                        classIds: [],
-                                                                                        femaleColorsIds: [],
-                                                                                        maleColorIds: [],
-                                                                                        malePanelProcess: [],
-                                                                                        feMalePanelProcess: [],
-                                                                                        isMaleItemId: "",
-                                                                                        noOfSetMale: noOfSet,
-                                                                                        noOfSetFemale: noOfSet,
-                                                                                        isFemaleItemId: "",
-                                                                                        isMaleColorId: "",
-                                                                                        isFemaleColorId: "",
-                                                                                        qty: ""
-                                                                                    }
-                                                                                ]
-                                                                            })
-                                                                            return newPrev
-                                                                        })
-                                                                    }}
-                                                                        disabled={readOnly}
-                                                                    > {<FontAwesomeIcon icon={faUserPlus} />}
-                                                                    </button>
-                                                                </th>
-                                                            </tr>
-                                                        </thead>{console.log(orderDetails, "orderDetails")}
-                                                        <tbody>
-                                                            {(orderDetails ? orderDetails : []).map((item, index) =>
-                                                                <StyleTypeHeading params={params} key={index} index={index} noOfSet={noOfSet} orderDetails={orderDetails}
-                                                                    item={item} handleInputChange={handleInputChange} handleInputChangeOrderDetails={handleInputChangeOrderDetails} readOnly={readOnly}
-                                                                    childRecord={childRecord} setOrderDetails={setOrderDetails} id={id}
-                                                                // setCurrentSelectedIndex={setCurrentSelectedIndex}
-                                                                // setArrayName={setArrayName} setItemId={setItemId}
 
-                                                                />
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </fieldset>
-                                        </div>
+
+                                            <div className="row w-full mx-auto">
+                                                <div className="text-xs col-12 px-0 bg-light bg-opacity-15 rounded-lg border shadow-md">
+
+                                                    <div className="flex justify-between mx-3 items-center py-1">
+                                                        <div className='text-normal flex items-center text-gray-600'>
+
+                                                            <RiPlayListAddLine size={20} className=' mr-0.5' />
+                                                            &nbsp; <div className='my-0'>
+                                                                <div className=' text-[13px] text-black my-0'>Order Info</div>
+                                                            </div>
+                                                        </div>
+                                                     
+                                                    </div>
+
+
+                                                    {loading ? (
+                                                        <Loader />
+                                                    ) : (
+                                                        <>
+                                                            {data?.length === 0 ? (
+                                                                <div className="flex-1 flex justify-center bg-white  text-gray-800 items-center text-xl py-3">
+                                                                    <p>No Data Found...! </p>
+                                                                </div>
+                                                            ) :
+                                                    <div className="h-[50vh] overflow-y-auto">
+
+
+
+        <div className=" bg-white  custom-scrollbar border-y border-gray-200   ">
+            <table className="w-full  text-normal  overflow-y-auto  ">
+                <thead>
+                    <tr className=" bg-gray-400 text-[12px]">
+                        <th className="px-4 py-2 w-2 text-center p-0.5">S No</th>
+                        <th className="px-4 py-2 w-64 ">Sock Type</th>
+                        <th className="px-4 py-2 w-64">Material</th>
+                        <th className="px-4 py-2 w-64 ">Size</th>
+                        <th className="px-4 py-2 w-64 ">Color</th>
+                        <th className="px-4 py-2 w-64 ">Design</th>
+                        <th className="px-4 py-2 w-64 ">Qty/Sie</th>
+                        <th className="px-4 py-2 w-64 ">Packing Requirement</th>
+                        <th className="table-data  w-16 p-0.5" >
+                            <button className='text-2xl' onClick={addNewRow}>+</button>
+                        </th>
+
+                    </tr>
+                </thead>
+
+                <tbody className="text-blue-gray-900 ">
+                    {(orderDetails ? orderDetails : []).map((item, index) =>
+
+
+
+                        <tr className="border-b border-blue-gray-200 cursor-pointer " >
+
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px]  w-2 text-center p-0.5 ">{index + 1}</td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] "> {item?.sockType}  </td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">{item?.Material}</td>
+
+                          
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">
+                                      <select
+                                            disabled={readOnly}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "size") } }}
+                                            className='text-left w-full rounded py-1 table-data-input'
+                                            value={item?.size}
+                                    
+                                            onChange={(e) => handleInputChange(e.target.value, index, "size")}
+                                            onBlur={(e) => {
+                                                handleInputChange((e.target.value), index, "size")
+                                            }}
+                                          >
+                                
+                                        <option>
+                                            select
+                                        </option>
+                                {sizeList?.data?.map(size =>
+                                    <option value={size.id || ""} key={size.id}   >
+                                        {size?.name}
+                                    </option>)} 
+                                
+                            </select>
+                            </td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">
+                            <select
+                                            disabled={readOnly}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "color") } }}
+                                            className='text-left w-full rounded py-1 table-data-input'
+                                            value={item?.color}
+                                    
+                                            onChange={(e) => handleInputChange(e.target.value, index, "color")}
+                                            onBlur={(e) => {
+                                                handleInputChange((e.target.value), index, "color")
+                                            }}
+                                          >
+                                
+                                        <option>
+                                            select
+                                        </option>
+                                {colorlist?.data?.map(color =>
+                                    <option value={color.id || ""} key={color.id}   >
+                                        {color?.name}
+                                    </option>)} 
+                             </select>
+                            </td>
+
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">{item?.design}</td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] text-right ">
+                                <input  className='text-right w-full p-1.5 border-gray-200 '
+                                    type="number"
+                                    value={item?.qty} 
+                                    onChange={(e) => { handleInputChange(e.target.value, index, "qty") }}   onFocus={(e) => { e.target.select() }} min={0}
+                                    />
+                                
+                            </td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">{item?.packingRequirement}</td>
+                            <td className="h-[30px]   border-blue-gray-200 text-[11px] ">
+                                <button
+                                    tabIndex={-1}
+                                    type='button'
+                                    onClick={() => {
+                                        deleteRow(index)
+                                    }}
+                                    className='text-xs text-red-600 '>{DELETE}
+                                </button>
+                            </td>
+                        </tr>
+
+                    )}
+
+                    <tr className='w-full h-7  '>
+                        <td className=" text-center w-10 font-bold" colSpan={4}>Total</td>
+                        <td className=" text-center w-10 font-bold">{orderDetails.reduce((a, item) => a + parseFloat(
+                            (parseFloat((item?.orderQty) || 0) * parseFloat(item?.price) || 0)
+                        ), 0).toFixed(2)}</td>
+                        <td className=''>
+                        </td>
+                        <td className="  w-10 text-right pr-1">{orderDetails.reduce((a, c) => a + parseFloat(c.orderQty || 0), 0)}</td>
+
+                        {/* <td className=" text-center w-10 font-bold">{orderDetails.reduce((a, item, index) => a + parseFloat(
+                            priceWithTax((parseFloat((item?.orderQty) || 0) * parseFloat(item?.price) || 0), item?.tax || 0)
+                        ), 0).toFixed(2)}</td> */}
+                        <td className=''>
+                        </td>
+                    </tr>
+                </tbody>
+
+
+
+
+
+
+                                                            </table>
+                                                        </div>
+
+                                                    </div>
+                                                }
+                                            </>
+                                        )}
+
                                     </div>
                                 </div>
                             </div>
@@ -569,7 +510,10 @@ export default function Form() {
                     </div>
                 </div>
             </div>
-        </>
+        </div>
+    </div>
+</div>
+</>
 
-    );
+);
 }

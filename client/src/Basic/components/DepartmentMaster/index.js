@@ -10,9 +10,8 @@ import {
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, ToggleButton } from "../../../Inputs";
+import { TextInput, CheckBox, ToggleButton, Modal } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
-import { Modal } from "@mui/material";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from "../MastersForm/MastersForm";
 import { statusDropdown } from "../../../Utils/DropdownData";
@@ -20,7 +19,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 const MODEL = "Department Master";
 
 export default function Form() {
-    const [form, setForm] = useState(false);
+
 
     // const [openTable, setOpenTable] = useState(false);
 
@@ -30,11 +29,11 @@ export default function Form() {
     const [code, setCode] = useState("");
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
-
+    const [form, setForm] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
 
-
+    console.log(form, "form")
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -179,7 +178,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%]  h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {

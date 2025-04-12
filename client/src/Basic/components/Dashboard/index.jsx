@@ -14,6 +14,9 @@ import {
 } from "chart.js";
 import { useState } from "react";
 import { IndianRupee, PieChart, TrendingUp, UserCheck, UsersRound, UserX } from "lucide-react";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
+
 
 const Dashboard = () => {
 
@@ -113,7 +116,10 @@ const Dashboard = () => {
             {
                 label: "Sales",
                 data: [65, 59, 80, 81, 56],
-                backgroundColor: "#48BD16",
+                // backgroundColor: "#48BD16",
+                backgroundColor: "#5DADE2",
+
+
                 border: 'none',
 
             },
@@ -164,14 +170,15 @@ const Dashboard = () => {
 
     const cardsData = [
         { label: 'Revenue', value: '$2500', logo: <IndianRupee size={50} color={'#30b5fc '} />, increase: true, percentage: '5%' },
-        { label: 'Users', value: 150, logo: <UsersRound size={50} color={'#FF885B '} />, increase: true, percentage: '10%' },
+        { label: 'Employees', value: 150, logo: <UsersRound size={50} color={'#FF885B '} />, increase: true, percentage: '10%' },
         { label: 'Increase', value: '15%', logo: <TrendingUp size={50} color={'#399918'} />, increase: true, percentage: '15%' },
-        { label: 'Active Users', value: 140, logo: <UserCheck size={50} color={'#BE5985'} />, increase: true, percentage: '10%' },
-        { label: 'Inactive Users', value: 10, logo: <UserX size={50} color={'grey'} />, increase: true, percentage: '10%' }
+        { label: 'Present Employees', value: 140, logo: <UserCheck size={50} color={'#BE5985'} />, increase: true, percentage: '10%' },
+        { label: 'Absent Employees', value: 10, logo: <UserX size={50} color={'grey'} />, increase: true, percentage: '10%' }
     ];
     return (
-        <div className="mt-2">
-            {/* Header */}
+        <div className="mt-2  overflow-auto ">
+
+
             <header className="mb-6">
                 <h4 className="text-2xl font-bold   text-gray-800">Organization Dashboard</h4>
             </header>
@@ -206,7 +213,7 @@ const Dashboard = () => {
 
                 {/* Line Chart - User Growth */}
                 <div className="bg-white p-4 rounded-lg shadow">
-                    <h6 className="text-lg font-semibold mb-2">User Growth</h6>
+                    <h6 className="text-lg font-semibold mb-2">Business Growth</h6>
                     <Line data={lineData} className="mt-4" />
                 </div>
 
