@@ -549,18 +549,18 @@ model YarnBlend {
 
 model Yarn {
   id                            Int                             @id @default(autoincrement())
-  content                       Content?                         @relation(fields: [contentId], references: [id])
+  content                       Content?                        @relation(fields: [contentId], references: [id])
   contentId                     Int?
-  yarnType                      YarnType?                        @relation(fields: [yarnTypeId], references: [id])
+  yarnType                      YarnType?                       @relation(fields: [yarnTypeId], references: [id])
   yarnTypeId                    Int?
-  counts                        Counts?                          @relation(fields: [countsId], references: [id])
+  counts                        Counts?                         @relation(fields: [countsId], references: [id])
   countsId                      Int?
   aliasName                     String?
   hsn                           String?
-  taxPercent                    Float?                           @default(0)
+  taxPercent                    Float?                          @default(0)
   Company                       Company?                        @relation(fields: [companyId], references: [id])
   companyId                     Int?
-  active                        Boolean?                         @default(true)
+  active                        Boolean?                        @default(true)
   YarnOnYarnBlend               YarnOnYarnBlend[]
   PoItems                       PoItems[]
   Stock                         Stock[]
@@ -572,7 +572,7 @@ model Yarn {
 }
 
 model YarnOnYarnBlend {
-  id          Int       @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   yarn        Yarn?      @relation(fields: [yarnId], references: [id], onDelete: Cascade)
   yarnBlend   YarnBlend? @relation(fields: [yarnBlendId], references: [id])
   yarnBlendId Int?
@@ -585,18 +585,18 @@ model FabricType {
   name      String?
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
-  active    Boolean?  @default(true)
+  active    Boolean? @default(true)
   Fabric    Fabric[]
 }
 
 model Fabric {
-  id                            Int                            @id @default(autoincrement())
+  id                            Int                             @id @default(autoincrement())
   aliasName                     String?
   hsn                           String?
   Company                       Company?                        @relation(fields: [companyId], references: [id])
   companyId                     Int?
-  active                        Boolean?                         @default(true)
-  FabricType                    FabricType?                      @relation(fields: [fabricTypeId], references: [id])
+  active                        Boolean?                        @default(true)
+  FabricType                    FabricType?                     @relation(fields: [fabricTypeId], references: [id])
   FabricOnYarnBlend             FabricOnYarnBlend[]
   fabricTypeId                  Int
   organic                       Boolean                         @default(false)
@@ -693,10 +693,10 @@ model Color {
   id                                        Int                                         @id @default(autoincrement())
   name                                      String?
   pantone                                   String?
-  Company                                   Company?                                     @relation(fields: [companyId], references: [id])
+  Company                                   Company?                                    @relation(fields: [companyId], references: [id])
   companyId                                 Int?
-  active                                    Boolean?                                     @default(true)
-  isGrey                                    Boolean?                                     @default(false)
+  active                                    Boolean?                                    @default(true)
+  isGrey                                    Boolean?                                    @default(false)
   StyleOnColor                              StyleOnColor[]
   CuttingOrderDetails                       CuttingOrderDetails[]
   CuttingDeliveryDetails                    CuttingDeliveryDetails[]
@@ -1083,10 +1083,10 @@ model Dia {
 model Size {
   id                                        Int                                         @id @default(autoincrement())
   name                                      String?
-  isAccessory                               Boolean?                                     @default(false)
+  isAccessory                               Boolean?                                    @default(false)
   Company                                   Company?                                    @relation(fields: [companyId], references: [id])
   companyId                                 Int?
-  active                                    Boolean?                                     @default(true)
+  active                                    Boolean?                                    @default(true)
   SizeTemplateOnSize                        SizeTemplateOnSize[]
   CuttingOrderDetails                       CuttingOrderDetails[]
   StockForPcs                               StockForPcs[]
@@ -2679,11 +2679,12 @@ model OrderDetailsSubGrid {
 }
 
 model Machine {
-  id     Int      @id @default(autoincrement())
-  name   String?
-  code   String?
-  time   Float?
-  active Boolean? @default(true)
+  id         Int      @id @default(autoincrement())
+  name       String?
+  code       String?
+  time       Float?
+  production Float?
+  active     Boolean? @default(true)
 }
 
 model ShippingAddress {
