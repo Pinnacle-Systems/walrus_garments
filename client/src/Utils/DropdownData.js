@@ -241,3 +241,8 @@ export const uniformTypes = [
     { show: "HOUSE", value: "HOUSE" },
 
 ]
+
+export const packingCover = [
+    { show: "PRINT", value: "PRINT" },
+    { show: "PLAIN", value: "PLAIN" },
+]

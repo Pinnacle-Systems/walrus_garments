@@ -62,50 +62,63 @@ const StyleMaster = () => {
     const [updateData] = useUpdateStyleMasterMutation();
     const [removeData] = useDeleteStyleMasterMutation();
 
+
+
     const syncFormWithDb = useCallback(
         (data) => {
-            if (!id) {
-                setReadOnly(false);
-                setImage("");
-                setSku("");
-                setHsn("");
-                setProductType("");
-                setName("");
-                setSeoTitle("");
-                setSleeve("");
-                setFabricId("");
-                setPattern("");
-                setOccassion("");
-                setMaterial("");
-                setWashCare("");
-                setActive(id ? (data?.active ?? true) : false);
-                setSizeTemplateId("")
-                setSelectedColorsList([])
-                setPortionDetails([])
-            } else {
-                setReadOnly(true);
-                setImage(data?.image ? viewBase64String(data.image) : "");
-                setSku(data?.sku || "");
-                setHsn(data?.hsn || "");
-                setProductType(data?.productType || "");
-                setName(data?.name || "");
-                setSeoTitle(data?.seoTitle || "");
-                setSleeve(data?.sleeve || "");
-                setFabricId(data?.fabricId || "");
-                setPattern(data?.pattern || "");
-                setOccassion(data?.occassion || "");
-                setMaterial(data?.material || "");
-                setWashCare(data?.washCare || "");
-                setActive(id ? (data?.active ?? false) : true);
-                setSizeTemplateId(data?.sizeTemplateId || "")
-                setSelectedColorsList(data?.StyleOnColor ? data.StyleOnColor.map(item => {
-                    return { value: item.colorId, label: item.Color.name }
-                }) : [])
-                setPortionDetails(data?.portionDetails ? data.portionDetails : [])
-            }
+            if (id) setReadOnly(true);
+            setName(data?.name ? data.name : "");
+
+            setSku(data?.sku ? data?.sku : "");
+            setActive(id ? (data?.active ? data.active : false) : true);
         },
         [id]
     );
+
+    // const syncFormWithDb = useCallback(
+    //     (data) => {
+    //         if (!id) {
+    //             setReadOnly(false);
+    //             setImage("");
+    //             setSku("");
+    //             setHsn("");
+    //             setProductType("");
+    //             setName("");
+    //             setSeoTitle("");
+    //             setSleeve("");
+    //             setFabricId("");
+    //             setPattern("");
+    //             setOccassion("");
+    //             setMaterial("");
+    //             setWashCare("");
+    //             setActive(id ? (data?.active ?? true) : false);
+    //             setSizeTemplateId("")
+    //             setSelectedColorsList([])
+    //             setPortionDetails([])
+    //         } else {
+    //             setReadOnly(true);
+    //             setImage(data?.image ? viewBase64String(data.image) : "");
+    //             setSku(data?.sku || "");
+    //             setHsn(data?.hsn || "");
+    //             setProductType(data?.productType || "");
+    //             setName(data?.name || "");
+    //             setSeoTitle(data?.seoTitle || "");
+    //             setSleeve(data?.sleeve || "");
+    //             setFabricId(data?.fabricId || "");
+    //             setPattern(data?.pattern || "");
+    //             setOccassion(data?.occassion || "");
+    //             setMaterial(data?.material || "");
+    //             setWashCare(data?.washCare || "");
+    //             setActive(id ? (data?.active ?? false) : true);
+    //             setSizeTemplateId(data?.sizeTemplateId || "")
+    //             setSelectedColorsList(data?.StyleOnColor ? data.StyleOnColor.map(item => {
+    //                 return { value: item.colorId, label: item.Color.name }
+    //             }) : [])
+    //             setPortionDetails(data?.portionDetails ? data.portionDetails : [])
+    //         }
+    //     },
+    //     [id]
+    // );
     const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params, searchParams: searchValue });
     const { data: colorList } =
         useGetColorMasterQuery({ params });
@@ -114,43 +127,62 @@ const StyleMaster = () => {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, sku, productType, name, seoTitle, sleeve, fabricId, sizeTemplateId,
-        pattern, occassion, material, active, washCare, hsn,
+        id, sku, active,
+        //  productType, 
+        name,
+        // seoTitle, sleeve, fabricId, sizeTemplateId,
+        // pattern, occassion, material, active, washCare, hsn,
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
-        if (data.name && data.sku && data.sizeTemplateId && data.fabricId) {
+        if (data.name && data.sku) {
             return true;
         }
         return false;
     }
 
+
     const handleSubmitCustom = async (callback, data, text) => {
         try {
-            const formData = new FormData()
-            for (let key in data) {
-                formData.append(key, data[key]);
-            }
-            formData.append("selectedColorsList", JSON.stringify(selectedColorsList.map(item => item.value)))
-            formData.append("portionDetails", JSON.stringify(portionDetails))
-            if (image instanceof File) {
-                formData.append("image", image);
-            } else if (!image) {
-                formData.append("isDeleteImage", true);
-            }
             let returnData;
             if (text === "Updated") {
-                returnData = await callback({ id, body: formData }).unwrap();
+                returnData = await callback({ id, body: data }).unwrap();
             } else {
-                returnData = await callback(formData).unwrap();
+                returnData = await callback(data).unwrap();
             }
-            setId(returnData.data.id)
+            setId(returnData.data.id);
             toast.success(text + "Successfully");
         } catch (error) {
             console.log("handle");
         }
     };
+
+    // const handleSubmitCustom = async (callback, data, text) => {
+    //     try {
+    //         const formData = new FormData()
+    //         for (let key in data) {
+    //             formData.append(key, data[key]);
+    //         }
+    //         formData.append("selectedColorsList", JSON.stringify(selectedColorsList.map(item => item.value)))
+    //         formData.append("portionDetails", JSON.stringify(portionDetails))
+    //         if (image instanceof File) {
+    //             formData.append("image", image);
+    //         } else if (!image) {
+    //             formData.append("isDeleteImage", true);
+    //         }
+    //         let returnData;
+    //         if (text === "Updated") {
+    //             returnData = await callback({ id, body: formData }).unwrap();
+    //         } else {
+    //             returnData = await callback(formData).unwrap();
+    //         }
+    //         setId(returnData.data.id)
+    //         toast.success(text + "Successfully");
+    //     } catch (error) {
+    //         console.log("handle");
+    //     }
+    // };
 
     const saveData = () => {
         if (!validateData(data)) {
@@ -236,7 +268,7 @@ const StyleMaster = () => {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[60%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -259,21 +291,21 @@ const StyleMaster = () => {
                                     <div className="mb-3">
                                         <TextInput name="SKU / Style code" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
                                     </div>
-                                    <div className="mb-3">
+                                    {/* <div className="mb-3">
                                         <TextInput name="Product Type" type="text" value={productType} setValue={setProductType} required={true} readOnly={readOnly} />
-                                    </div>
+                                    </div> */}
                                     <div className="mb-3">
                                         <TextInput name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
-                                        {/* <TextInput name="SEO Title" type="text" value={seoTitle} setValue={setSeoTitle} required={true} readOnly={readOnly} /> */}
+
                                     </div>
                                 </div>
-                                <div>
+                                {/* <div>
                                     <BrowseSingleImage picture={image} setPicture={setImage} readOnly={readOnly} />
-                                </div>
+                                </div> */}
                             </div>
                             <div className="mb-5">
                                 <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                {/* <Portion readonly={readOnly} portionDetails={portionDetails} setPortionDetails={setPortionDetails} /> */}
+
                             </div>
 
                         </div>

@@ -85,10 +85,10 @@ export default function Form() {
 
   const { data: payTermList } =
     useGetPaytermMasterQuery({ params: { ...params } });
-    const handlePrint = () => {
-      setPrintModalOpen(true);
-    };
-  
+  const handlePrint = () => {
+    setPrintModalOpen(true);
+  };
+
   const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -167,7 +167,7 @@ export default function Form() {
     finYearId
   }
 
-  console.log(poItems, "poItems")
+
 
   function isSupplierOutside() {
     if (supplierDetails) {
@@ -313,7 +313,7 @@ export default function Form() {
             singleData={id ? singleData?.data : "Null"}
             date={id ? singleData?.data?.selectedDate : date}
             docId={docId ? docId : ""}
-            
+
           />
         </PDFViewer>
       </Modal>

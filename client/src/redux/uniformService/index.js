@@ -27,5 +27,6 @@ export { default as ProcessMasterApi } from './ProcessMasterService';
 export { default as ProductionDeliveryApi } from './ProductionDeliveryServices';
 export { default as ProductionReceiptApi } from './ProductionReceiptServices';
 export { default as DispatchedApi } from './DispatchedServices';
-export { default as GeneralPurchaseApi}  from "./GeneralPurchaseServices";
+export { default as GeneralPurchaseApi } from "./GeneralPurchaseServices";
 export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStockServices"
+export { default as SocksMaterialApi } from "./SocksMaterialMasterService"

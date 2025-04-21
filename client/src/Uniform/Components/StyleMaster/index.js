@@ -230,7 +230,7 @@ export default function Form() {
       onKeyDown={handleKeyDown}
       className="md:items-start md:justify-items-center grid h-full bg-theme"
     >
-      {console.log(singleData, "singledata")}
+
 
       <div className="flex flex-col frame w-full h-full">
         <FormHeader

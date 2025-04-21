@@ -96,11 +96,28 @@ export const LongTextInput = ({ name, type, value, setValue, className, readOnly
     )
 }
 
-export const DisabledInput = ({ name, type, value, className = "", textClassName = "", tabIndex = null }) => {
+export const DisabledInput = ({ name, type, value, className = "", textClassName = "", tabIndex = null, readOnly, required }) => {
     return (
-        <div className={`input-group grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data  ${className}`}>
-            <label className={`md:text-start flex ${className} `}>{name}</label>
-            <input tabIndex={tabIndex ? tabIndex : undefined} type={type} className={`input-field ${textClassName} focus:outline-none md:col-span-1 border border-gray-500 group-hover:text-blue-600 rounded `} value={value} disabled />
+        <div className='   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full'>
+            <label htmlFor="id" className={`md:text-start flex text-sm `}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
+            <TextField
+                id={name}
+                variant="standard"
+                name={`${name}`}
+                className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+                // placeholder={`${name}`}
+
+                sx={{
+                    "& .MuiInputBase-input": { fontSize: "12px" },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                        color: "#333",
+                        WebkitTextFillColor: "#333",
+                    }
+                }}
+                tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={readOnly} required={required}
+                value={value}
+            />
+            {/* <input tabIndex={tabIndex ? tabIndex : undefined} type={type} className={`input-field ${textClassName} focus:outline-none md:col-span-1 border border-gray-500 group-hover:text-blue-600 rounded `} value={value} disabled /> */}
         </div>
     )
 }
@@ -303,8 +320,29 @@ export const DateInput = ({ name, value, setValue, readOnly, required = false, t
     return (
         <div className='   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full'>
             <label htmlFor="id" className={`md:text-start flex text-sm ${inputHead}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
-            <input tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required}
-                className={`input-field focus:outline-none md:col-span-2 border border-gray-500 rounded  ${inputClass}`} id='id' value={value} onChange={(e) => { setValue(e.target.value); }} readOnly={readOnly} />
+            <TextField
+                id={name}
+                variant="standard"
+                name={`${name}`}
+                className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+                // placeholder={`${name}`}
+
+                sx={{
+                    "& .MuiInputBase-input": { fontSize: "12px" },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                        color: "#333",
+                        WebkitTextFillColor: "#333",
+                    }
+                }}
+                tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={readOnly} required={required}
+                value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly}
+            />
+
+
+
+
+            {/* <input tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required}
+                className={`input-field focus:outline-none md:col-span-2 border border-gray-500 rounded  ${inputClass}`} id='id' value={value} onChange={(e) => { setValue(e.target.value); }} readOnly={readOnly} /> */}
         </div>
     )
 }

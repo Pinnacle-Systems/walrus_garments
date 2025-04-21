@@ -140,6 +140,7 @@ model Branch {
   OnlineSales                            OnlineSales[]
   OnlineSalesReturn                      OnlineSalesReturn[]
   CreditDebitNote                        CreditDebitNote[]
+  Order                                  Order[]
 }
 
 model UserOnBranch {
@@ -492,6 +493,7 @@ model Party {
 
   ShippingAddress ShippingAddress[]
   ContactDetails  ContactDetails[]
+  Order           Order[]
 }
 
 model PartyOnAccessoryItems {
@@ -1288,18 +1290,18 @@ model Style {
   productType                               String?
   seoTitle                                  String?
   image                                     Bytes?                                      @db.LongBlob
-  SizeTemplate                              SizeTemplate                                @relation(fields: [sizeTemplateId], references: [id], onDelete: Cascade)
-  sizeTemplateId                            Int
-  Fabric                                    Fabric                                      @relation(fields: [fabricId], references: [id], onDelete: Cascade)
-  fabricId                                  Int
+  SizeTemplate                              SizeTemplate?                               @relation(fields: [sizeTemplateId], references: [id], onDelete: Cascade)
+  sizeTemplateId                            Int?
+  Fabric                                    Fabric?                                     @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId                                  Int?
   sleeve                                    String?
   pattern                                   String?
   occasion                                  String?
   material                                  String?
   washCare                                  String?
   active                                    Boolean                                     @default(true)
-  Company                                   Company                                     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId                                 Int
+  Company                                   Company?                                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId                                 Int?
   hsn                                       String?
   StyleOnColor                              StyleOnColor[]
   ProcessDelivery                           ProcessDelivery[]
@@ -2647,22 +2649,27 @@ model CreditDebitNote {
 }
 
 model Order {
-  id              Int            @id @default(autoincrement())
-  docId           String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  createdBy       User?          @relation("createdBy", fields: [createdById], references: [id])
-  createdById     Int?
-  updatedBy       User?          @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById     Int?
-  phoneNo         String?
-  customer        String?
-  billingAddress  String?
-  shippingAddress String?
-  orderDate       DateTime?
-  deliveryDate    DateTime?
-  gmail           String?
-  orderDetails    OrderDetails[]
+  id               Int            @id @default(autoincrement())
+  docId            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  createdBy        User?          @relation("createdBy", fields: [createdById], references: [id])
+  createdById      Int?
+  updatedBy        User?          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
+  phoneNo          String?
+  customer         String?
+  billingAddress   String?
+  shippingAddress  String?
+  orderDate        DateTime?
+  deliveryDate     DateTime?
+  gmail            String?
+  Branch           Branch?        @relation(fields: [branchId], references: [id])
+  branchId         Int?
+  Party            Party?         @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId          Int?
+  packingCoverType String?
+  orderDetails     OrderDetails[]
 }
 
 model OrderDetails {

@@ -93,14 +93,13 @@ export async function upload(req) {
 
 
 async function create(req) {
-    const { name, fabricId, colorId, companyId, active, styleCode, panelId } = await req;
-
-
-
+    String
+    const { name, fabricId, colorId, companyId, active, styleCode, panelId, sku } = await req;
     const data = await prisma.style.create({
         data: {
             name,
-            styleCode,
+            // styleCode, 
+            sku,
             // fabricId: fabricId ? parseInt(fabricId) : null,
             // colorId: colorId ? parseInt(colorId) : null,
             active: active !== undefined ? JSON.parse(active) : undefined,
@@ -181,7 +180,7 @@ async function updateStylePanel(tx, sampleDetails, sampleData) {
 async function update(id, body) {
 
 
-    const { name, fabricId, colorId, companyId, active, styleCode, panelId } = await body;
+    const { name, fabricId, colorId, companyId, active, styleCode, panelId, sku } = await body;
 
     const dataFound = await prisma.style.findUnique({
         where: { id: parseInt(id) },
@@ -194,9 +193,10 @@ async function update(id, body) {
         where: { id: parseInt(id) },
         data: {
             name,
-            styleCode,
-            fabricId: fabricId ? parseInt(fabricId) : null,
-            colorId: colorId ? parseInt(colorId) : null,
+            sku,
+            // styleCode,
+            // fabricId: fabricId ? parseInt(fabricId) : null,
+            // colorId: colorId ? parseInt(colorId) : null,
             active: active !== undefined ? JSON.parse(active) : undefined,
             companyId: companyId ? parseInt(companyId) : null,
         },

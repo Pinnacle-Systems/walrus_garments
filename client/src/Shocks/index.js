@@ -10,3 +10,4 @@ export { default as CountsMaster } from "./CountsMaster";
 export { default as AccessoryMaster } from "./AccessoryMaster";
 export { default as AccessoryGroupMaster } from "./AccessoryGroupMaster";
 export { default as AccessoryItemMaster } from "./AccessoryItemMaster";
+export { default as SocksMaterial } from "./SocksMaterial";

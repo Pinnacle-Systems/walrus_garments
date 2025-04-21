@@ -464,7 +464,7 @@ async function createOrderDetails(tx, orderId, orderDetails) {
 
 
 async function create(req) {
-    const { userId, branchId, partyId, finYearId, companyId, active, orderQty, noOfSet, isForOrderImportItems,
+    const { userId, branchId, partyId, finYearId, companyId, active, orderQty, noOfSet, isForOrderImportItems, packingCoverType,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -477,7 +477,9 @@ async function create(req) {
         data = await tx.order.create(
             {
                 data: {
-                    docId, noOfSet: parseInt(noOfSet), isForOrderImportItems,
+                    docId,
+                    // noOfSet: parseInt(noOfSet), isForOrderImportItems,
+                    packingCoverType,
                     partyId: partyId ? parseInt(partyId) : undefined,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: parseInt(userId), contactPersonName, address, phone, validDate: validDate ? new Date(validDate) : undefined,
@@ -678,7 +680,7 @@ const updateOrderDetails = async (tx, orderId, orderDetails) => {
 };
 
 const update = async (id, body) => {
-    const { userId, branchId, partyId, orderDetails, contactPersonName, address, phone, validDate, noOfSet, isForOrderImportItems } = body;
+    const { userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate, noOfSet, isForOrderImportItems } = body;
 
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
     if (!dataFound) return { statusCode: 404, message: "No record found for order" };
@@ -689,17 +691,31 @@ const update = async (id, body) => {
             where: { id: parseInt(id) },
             data: {
                 partyId: partyId ? parseInt(partyId) : undefined,
-                noOfSet: parseInt(noOfSet),
+                packingCoverType,
+                // noOfSet: parseInt(noOfSet),
                 branchId: branchId ? parseInt(branchId) : undefined,
                 contactPersonName,
                 address,
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId), isForOrderImportItems
+                updatedById: parseInt(userId), isForOrderImportItems,
+                orderDetails: {
+                    createMany: {
+                        data: orderDetails.map(temp => {
+                            let newItem = {}
+                            newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : "";
+                            newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : "";
+                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : "";
+                            newItem["qty"] = temp["qty"] ? temp["qty"] : "";
+                            return newItem
+                        }
+                        )
+                    }
+                }
             },
         });
 
-        await updateOrderDetails(tx, id, orderDetails);
+        // await updateOrderDetails(tx, id, orderDetails);
     });
 
     return { statusCode: 0, data };

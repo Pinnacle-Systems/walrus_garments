@@ -124,7 +124,7 @@ async function create(body) {
         {
             data: {
                 name, code, aliasName, displayName, isSupplier, isBuyer, isIgst, isClient,
-                cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? pincode : undefined,
+                cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                 cinNo, faxNo, website,
                 gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,
@@ -228,7 +228,7 @@ async function update(id, body) {
                 },
                 data: {
                     name, code, aliasName, displayName, address, isSupplier, isBuyer,
-                    cityId: cityId ? parseInt(cityId) : undefined, pincode,
+                    cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                     cinNo, faxNo, email, website, isIgst,
                     gstNo, yarn, fabric,
