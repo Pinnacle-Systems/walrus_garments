@@ -1,18 +1,18 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
-import {
-    useGetSizeMasterQuery,
-    useGetSizeMasterByIdQuery,
-    useAddSizeMasterMutation,
-    useUpdateSizeMasterMutation,
-    useDeleteSizeMasterMutation,
-} from "../../../redux/uniformService/SizeMasterService";
-import FormHeader from "../../../Basic/components/FormHeader";
-import FormReport from "../../../Basic/components/FormReportTemplate";
+import { 
+    useGetSocksMaterialQuery,
+    useGetSocksMaterialByIdQuery,
+    useAddSocksMaterialMutation,
+    useUpdateSocksMaterialMutation,
+    useDeleteSocksMaterialMutation,
+ } from "../../redux/uniformService/SocksMaterialMasterService";
+ import FormReport from "../../Basic/components/FormReportTemplate";
+ 
 import { toast } from "react-toastify";
-import { TextInput, CheckBox } from "../../../Inputs";
-import ReportTemplate from '../../../Basic/components/ReportTemplate'
-
+import { TextInput,CheckBox } from "../../Inputs";
+import ReportTemplate from "../../Basic/components/ReportTemplate";
+import FormHeader from "../../Basic/components/FormHeader";
 const MODEL = "Socks Material";
 
 export default function Form() {
@@ -34,17 +34,17 @@ export default function Form() {
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
-    const { data: allData, isLoading, isFetching } = useGetSizeMasterQuery({ params, searchParams: searchValue });
+    const { data: allData, isLoading, isFetching } = useGetSocksMaterialQuery({ params, searchParams: searchValue });
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetSizeMasterByIdQuery(id, { skip: !id });
+    } = useGetSocksMaterialByIdQuery(id, { skip: !id });
 
 
-    const [addData] = useAddSizeMasterMutation();
-    const [updateData] = useUpdateSizeMasterMutation();
-    const [removeData] = useDeleteSizeMasterMutation();
+    const [addData] = useAddSocksMaterialMutation();
+    const [updateData] = useUpdateSocksMaterialMutation();
+    const [removeData] = useDeleteSocksMaterialMutation();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -183,9 +183,9 @@ export default function Form() {
                         <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
                             <div className='mr-1 md:ml-2'>
                                 <fieldset className='frame my-1'>
-                                    <legend className='sub-heading'>Size Info</legend>
+                                    <legend className='sub-heading'>ShocksMaterial Info</legend>
                                     <div className='grid grid-cols-1 my-2'>
-                                        <TextInput name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                         {/* <CheckBox name="Accessory" readOnly={readOnly} value={accessory} setValue={setAccessory} disabled={(childRecord.current > 0)} /> */}
                                         <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
                                     </div>

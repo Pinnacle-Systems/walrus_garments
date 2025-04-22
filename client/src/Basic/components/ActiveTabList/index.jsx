@@ -16,6 +16,7 @@ import {
   PageGroupMaster,
   CompanyMaster,
   Dashboard,
+  PurchaseOrder
 
 } from "../../components";
 
@@ -75,7 +76,9 @@ const ActiveTabList = () => {
     "ACCESSORY MASTER": <AccessoryMaster />,
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,
-    "SOCKSMATERIAL": <SocksMaterial />
+    "SHOCKS MATERIAL MASTER": <SocksMaterial />,
+    "PURCHASE ORDER" : <PurchaseOrder />
+    
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

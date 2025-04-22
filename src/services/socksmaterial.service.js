@@ -7,7 +7,7 @@ async function get(req) {
 
     const { companyId, active } = req.query
     
-    let data = await prisma.size.findMany({
+    let data = await prisma.socksMaterial.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -50,7 +50,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.size.findUnique({
+    const data = await prisma.socksMaterial.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -80,7 +80,7 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, companyId, active, accessory } = await body
-    const data = await prisma.size.create(
+    const data = await prisma.socksMaterial.create(
         {
             data: {
                 name, companyId: parseInt(companyId), active,
@@ -93,27 +93,27 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, active, accessory } = await body
-    const dataFound = await prisma.size.findUnique({
+    const dataFound = await prisma.socksMaterial.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("size");
-    const data = await prisma.size.update({
+    const data = await prisma.socksMaterial.update({
         where: {
             id: parseInt(id),
         },
         data:
         {
-            name, active,
-            // isAccessory: accessory
+            name,active,
+           
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.size.delete({
+    const data = await prisma.socksMaterial.delete({
         where: {
             id: parseInt(id)
         },

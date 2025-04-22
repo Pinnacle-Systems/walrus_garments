@@ -52,7 +52,7 @@ export const poTypes = [
     // { show: "Grey Yarn", value: "GreyYarn" },
     // { show: "Dyed Yarn", value: "DyedYarn" },
     // { show: "Grey Fabric", value: "GreyFabric" },
-    { show: "DyedFabric", value: "DyedFabric" },
+    { show: "Yarn", value: "yarn" },
     { show: "Accessory", value: "Accessory" },
 
 ]

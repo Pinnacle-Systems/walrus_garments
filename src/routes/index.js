@@ -11,7 +11,7 @@ export { default as pageGroup } from "./pageGroup.route.js"
 export { default as subscriptions } from "./subscription.route.js"
 export { default as roles } from "./roles.route.js"
 export { default as finYear } from "./finYear.route.js"
-
+export { default as socksMaterial} from "./socksMaterial.route.js"
 export { default as employeeCategories } from "./employeeCategories.route.js";
 
 export { default as partyCategories } from "./partyCategory.route.js"

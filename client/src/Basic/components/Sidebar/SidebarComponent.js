@@ -36,6 +36,7 @@ import { GiFoldedPaper } from "react-icons/gi";
 import { TbNeedleThread } from "react-icons/tb";
 
 import country from './images/flag.png';
+import material from './images/style.png'
 import employee from "./images/employee.png";
 import state from "./images/map.png";
 import city from "./images/city.png";
@@ -187,6 +188,9 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         "ACCESSORY GROUP MASTER":
             <img src={accessorygroup} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
         ,
+        "SHOCKS MATERIAL MASTER":
+        <img src={material} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
+    ,
         "MACHINE MASTER":
             <img src={Machine} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
     }

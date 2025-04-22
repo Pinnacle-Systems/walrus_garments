@@ -29,7 +29,7 @@ import {
   dispatched, generalPurchase, rawMaterialOpeningStock,
   contentMaster,
   counts,
-  Machine,
+  Machine,socksMaterial,
   currency
 } from './src/routes/index.js';
 
@@ -90,6 +90,7 @@ app.use("/employeeCategories", employeeCategories);
 app.use("/partyCategories", partyCategories);
 app.use("/party", party);
 app.use("/productBrand", productBrand);
+app.use("/socksMaterial", socksMaterial)
 app.use("/productCategory", productCategory);
 app.use("/productSubCategory", productSubCategory);
 app.use("/product", product);

@@ -76,6 +76,7 @@ model Company {
   TermsAndConditions TermsAndConditions[]
   LossReason         LossReason[]
   PriceTemplate      PriceTemplate[]
+  SocksMaterial      SocksMaterial[]
 }
 
 model Subscription {
@@ -1107,6 +1108,14 @@ model Size {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   PriceTemplateStyleSizeDetails             PriceTemplateStyleSizeDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+}
+
+model SocksMaterial {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  active    Boolean?                                    @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
 }
 
 model SizeTemplate {

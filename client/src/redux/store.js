@@ -33,7 +33,7 @@ import {
   ProductionDeliveryApi,
   ProductionReceiptApi,
   DispatchedApi,
-  GeneralPurchaseApi, RawMaterialOpeningStockApi
+  GeneralPurchaseApi, RawMaterialOpeningStockApi,SocksMaterialApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -130,6 +130,7 @@ const commonReducers = {
   contentMaster: ContentMasterApi.reducer,
   countsMaster: CountsMasterApi.reducer,
   machineMaster: machineMasterApi.reducer,
+  [SocksMaterialApi.reducerPath]:SocksMaterialApi.reducer,
   [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer
 
 }
@@ -169,7 +170,7 @@ SizeMasterApi.middleware,
 ColorMasterApi.middleware,
 StyleMasterApi.middleware,
 FabricMasterApi.middleware,
-
+SocksMaterialApi.middleware,
 AccessoryGroupMasterApi.middleware,
 AccessoryItemMasterApi.middleware,
 AccessoryMasterApi.middleware,
