@@ -49,7 +49,7 @@ export default function Form() {
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  const [transType, setTransType] = useState("DyedFabric");
+  const [transType, setTransType] = useState("Grey Yarn");
   const [supplierId, setSupplierId] = useState("");
 
   const [discountType, setDiscountType] = useState("Percentage");
@@ -369,14 +369,14 @@ export default function Form() {
                     </fieldset>
                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[360px] px-1 w-full overflow-auto'>
                       <legend className='sub-heading'>Purchase Details</legend>
-                      {transType.toLowerCase().includes("yarn")
+                      {transType.toLowerCase().includes("Grey Yarn")
                         ?
                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         :
                         (
-                          transType.toLowerCase().includes("fabric")
+                          transType.toLowerCase().includes("Dyed Yarn")
                             ?
-                            <FabricPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                            <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                             :
                             <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         )
