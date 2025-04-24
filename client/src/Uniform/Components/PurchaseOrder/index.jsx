@@ -119,7 +119,7 @@ export default function Form() {
       setReadOnly(false);
     }
 
-    setTransType(data?.transType ? data.transType : "DyedFabric");
+    setTransType(data?.transType ? data.transType : "Grey Yarn");
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
 
     setPoItems(data?.PoItems ? data?.PoItems : [])
@@ -277,7 +277,7 @@ export default function Form() {
     return finalSupplier
   }
   let supplierListBasedOnSupply = filterSupplier()
-
+  transType.toLowerCase().includes("grey yarn".toLowerCase())
   return (
     <div
       onKeyDown={handleKeyDown}
@@ -369,12 +369,12 @@ export default function Form() {
                     </fieldset>
                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[360px] px-1 w-full overflow-auto'>
                       <legend className='sub-heading'>Purchase Details</legend>
-                      {transType.toLowerCase().includes("Grey Yarn")
+                      {transType.toLowerCase().includes("Grey Yarn".toLowerCase())
                         ?
                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         :
                         (
-                          transType.toLowerCase().includes("Dyed Yarn")
+                          transType.toLowerCase().includes("Dyed Yarn".toLowerCase())
                             ?
                             <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                             :

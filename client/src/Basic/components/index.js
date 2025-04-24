@@ -34,5 +34,6 @@ export { default as SizeMaster } from "./SizeMaster";
 export { default as LocationMaster } from "./LocationMaster";
 export { default as MachineMaster } from "./MachineMaster";
 export { default as GridTable } from "./GridTable";
+export { default as UomMaster} from "./UomMaster"
 
 

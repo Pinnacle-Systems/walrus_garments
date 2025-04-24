@@ -8,9 +8,7 @@ async function get(req) {
     const { companyId, active, isGrey } = req.query
     const data = await prisma.color.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,   
-
         }
     });
     return { statusCode: 0, data };

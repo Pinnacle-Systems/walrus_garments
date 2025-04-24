@@ -16,7 +16,7 @@ import {
   PageGroupMaster,
   CompanyMaster,
   Dashboard,
-  PurchaseOrder
+  PurchaseOrder,UomMaster
 
 } from "../../components";
 
@@ -78,6 +78,7 @@ const ActiveTabList = () => {
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
     "PURCHASE ORDER" : <PurchaseOrder />,
+    "UOM MASTER" : <UomMaster />
     
   };
   const innerWidth = window.innerWidth;

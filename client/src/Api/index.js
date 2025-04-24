@@ -18,8 +18,7 @@ export const SIZE_TEMPLATE_API = "sizeTemplate"
 export const CONTENT_API = "content"
 export const PARTY_CATEGORY_API = "partyCategories"
 export const COUNTS_API = "counts"
-
-
+export const UNIT_OF_MEASUREMENT_API = 'unitOfMeasurement'
 export const PARTY_API = "party"
 export const PRODUCT_BRAND_API = "productBrand"
 export const PRODUCT_CATEGORY_API = "productCategory"
