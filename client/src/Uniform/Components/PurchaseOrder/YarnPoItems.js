@@ -62,7 +62,6 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
     }
 
 
-    if (!yarnList || !colorList || !uomList) return <Loader />
 
     function getTotals(field) {
         const total = poItems.reduce((accumulator, current) => {

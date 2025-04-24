@@ -77,7 +77,7 @@ const ActiveTabList = () => {
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
-    "PURCHASE ORDER" : <PurchaseOrder />
+    "PURCHASE ORDER" : <PurchaseOrder />,
     
   };
   const innerWidth = window.innerWidth;

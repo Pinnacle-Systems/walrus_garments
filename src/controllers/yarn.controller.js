@@ -51,7 +51,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
     try {
         res.json(await _update(req.params.id, req.body));
-        console.log(res.statusCode);
+        console.log(res.statusCode,"Update Call");
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {

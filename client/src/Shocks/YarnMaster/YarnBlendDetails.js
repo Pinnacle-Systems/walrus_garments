@@ -47,7 +47,6 @@ const YarnBlendDetails = ({ yarnBlend, setYarnBlend, readOnly, params, id }) => 
     function findIdInYarnBlend(id) {
         return yarnBlend ? yarnBlend.find(blend => parseInt(blend.yarnBlendId) === parseInt(id)) : false
     }
-    // if(!yarnBlend || isYarnBlendListLoading || isYarnBlendListFetching) return <Loader/>
 
     return (
         <>

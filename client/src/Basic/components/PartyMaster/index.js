@@ -483,12 +483,7 @@ export default function Form() {
                                         </div>
 
                                     </fieldset>
-                                    <div className="w-full  ">
-                                        <div className='mb-5 w-full'>
-                                            <MultiSelectDropdown readOnly={readOnly} name="Process" selected={processDetails} setSelected={setProcessDetails}
-                                                options={multiSelectOption(processList ? processList.data : [], "name", "id")} />
-                                        </div>
-                                    </div>
+                                  
                                 </div>
                                 <div>
                                     <div>
