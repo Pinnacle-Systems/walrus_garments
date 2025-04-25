@@ -142,9 +142,9 @@ export default function Form() {
     }
 
     const tableHeaders = [
-        "Pantone", "Name", "Status", "color"
+         "Name", "Status",
     ]
-    const tableDataNames = ["dataObj.pantone", "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE', "dataObj.color"]
+    const tableDataNames = [ "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE']
     return (
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>

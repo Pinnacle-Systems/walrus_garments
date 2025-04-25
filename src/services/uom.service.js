@@ -7,9 +7,8 @@ const prisma = new PrismaClient()
 async function get(req) {
     const { companyId, active } = req.query
 
-    const data = await prisma.uom.findMany({
+    const data = await prisma.unitOfMeasurement.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
@@ -18,15 +17,13 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = await prisma.product.count({ where: { uomId: parseInt(id) } });
-    // const childRecord = 0;
-    const data = await prisma.uom.findUnique({
+    const data = await prisma.unitOfMeasurement.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!data) return NoRecordFound("uom");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    if (!data) return NoRecordFound("unitOfMeasurement");
+    return { statusCode: 0, data: data};
 
 }
 
@@ -35,7 +32,7 @@ async function getOne(id) {
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active } = req.query
-    const data = await prisma.uom.findMany({
+    const data = await prisma.unitOfMeasurement.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -54,7 +51,8 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, companyId, active } = await body
-    const data = await prisma.uom.create(
+    console.log('its working')
+    const data = await prisma.unitOfMeasurement.create(
         {
             data: {
                 name, companyId: parseInt(companyId), active
@@ -66,13 +64,13 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, active } = await body
-    const dataFound = await prisma.uom.findUnique({
+    const dataFound = await prisma.unitOfMeasurement.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("uom");
-    const data = await prisma.uom.update({
+    if (!dataFound) return NoRecordFound("unitOfMeasurement");
+    const data = await prisma.unitOfMeasurement.update({
         where: {
             id: parseInt(id),
         },
@@ -85,7 +83,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.uom.delete({
+    const data = await prisma.unitOfMeasurement.delete({
         where: {
             id: parseInt(id)
         },

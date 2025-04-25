@@ -5,6 +5,7 @@ export { default as StyleTypeMasterApi } from "./StyleTypeMasterService"
 export { default as ClassMasterApi } from "./ClassMasterService"
 export { default as DesignApi } from "./DesignMasterServices"
 export { default as GsmApi } from './GsmMasterServices'
+export {default as UnitOfMeasurementApi} from './UnitOfMeasurementServices'
 
 export { default as LoopLengthApi } from './LoopLengthMasterServices'
 export { default as DiaApi } from './DiaMasterServices'
