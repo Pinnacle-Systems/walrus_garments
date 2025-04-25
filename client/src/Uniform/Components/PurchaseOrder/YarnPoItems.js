@@ -217,38 +217,35 @@ console.log(uomList,"uomList")
                     ))}
                   </select>
                 </td>
-                             <td className="table-data">
-                  <select
-                    onKeyDown={(e) => {
-                      if (e.key === "Delete") {
-                        handleInputChange("", index, "uomId");
-                      }
-                    }}
-                    disabled={
-                      readOnly ||
-                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-                      Boolean(row?.alreadyCancelData?._sum?.qty)
-                    }
-                    className="text-left w-20 rounded py-1 table-data-input"
-                    value={row.uomId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "uomId")
-                    }
-                    onBlur={(e) => {
-                      handleInputChange(e.target.value, index, "uomId");
-                    }}
-                  >
-                    <option hidden></option>
-                    {(id
-                      ? uomList.data
-                      : uomList.data.filter((item) => item.active)
-                    ).map((blend) => (
-                      <option value={blend.id} key={blend.id}>
-                        {blend.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
+                <td className="table-data">
+  <select
+    onKeyDown={(e) => {
+      if (e.key === "Delete") {
+        handleInputChange("", index, "uomId");
+      }
+    }}
+    disabled={
+      readOnly ||
+      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+      Boolean(row?.alreadyCancelData?._sum?.qty)
+    }
+    className="text-left w-20 rounded py-1 table-data-input"
+    value={row.uomId}
+    onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+    onBlur={(e) => handleInputChange(e.target.value, index, "uomId")}
+  >
+    <option hidden></option>
+    {uomList?.data &&
+      (id ? uomList.data : uomList.data.filter((item) => item.active)).map(
+        (blend) => (
+          <option value={blend.id} key={blend.id}>
+            {blend.name}
+          </option>
+        )
+      )}
+  </select>
+</td>
+
                 <td className="table-data">
                   <input
                     onKeyDown={(e) => {
