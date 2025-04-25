@@ -9,7 +9,7 @@ import {
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DisabledInput, DateInput, DropdownInput, TextInput } from "../../../Inputs";
+import { DisabledInput, DateInput, DropdownInput, TextInput, CheckBox } from "../../../Inputs";
 import Modal from "../../../UiComponents/Modal";
 import FormReport from "./FormReport";
 import moment from "moment";
@@ -25,6 +25,8 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
+import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
 
 
 const MODEL = "Order";
@@ -53,13 +55,26 @@ export default function Form() {
     const [printModalOpen, setPrintModalOpen] = useState(false)
     const [packingCoverType, setPackingCoverType] = useState("")
     const [loading, setLoading] = useState(false);
+    const [socksMaterial, setSocksMaterial] = useState("")
+    const [socksType, setSocksType] = useState("");
+    const [legColor, setLegColor] = useState("")
+    const [footColor, setFootColor] = useState("")
+    const [stripeColor, setStripeColor] = useState("");
 
 
+    const [isLogo, setIsLogo] = useState(false)
     const params = {
         branchId, userId, finYearId
     };
     const { data: supplierList } =
         useGetPartyQuery({ params: { ...params } });
+
+    const { data: socksMaterialData } =
+        useGetSocksMaterialQuery({ params: { ...params } });
+
+
+    const { data: socksTypeData } =
+        useGetSocksTypeQuery({ params: { ...params } });
 
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
     const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
@@ -86,11 +101,6 @@ export default function Form() {
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetOrderByIdQuery(id, { skip: !id });
-
-
-
-
-
     const [addData] = useAddOrderMutation();
     const [updateData] = useUpdateOrderMutation();
     const [removeData] = useDeleteOrderMutation();
@@ -131,7 +141,7 @@ export default function Form() {
     const data = {
         branchId, id, userId, companyId, packingCoverType,
         //  active, orderQty, noOfSet, isForOrderImportItems,
-        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails
+        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails, socksMaterial, socksType,
     }
 
     const validateData = (data) => {
@@ -228,7 +238,7 @@ export default function Form() {
         setOrderDetails(prev => {
             let newArray = Array.from({ length: 10 - prev.length }, () => {
                 return {
-                    sockType: "", Material: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "", stripecolorId: "", design: "", qty: "0", packingRequirement: "",
+                    sockType: "", Material: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "", stripecolorId: "", design: "", noOfStripes: "0", qty: "0", packingRequirement: "",
                 }
             })
             return [...prev, ...newArray]
@@ -245,8 +255,7 @@ export default function Form() {
         );
     };
 
-    console.log(orderDetails, "orderDetails")
-    console.log(allData, "allData")
+
 
 
     useEffect(() => {
@@ -316,7 +325,7 @@ export default function Form() {
                                 <div className='mr-1'>
                                     <div className={`grid`}>
                                         <div className={"flex flex-col gap-x-2 h-[100vh] gap-y-4"}>
-                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1 h-[20vh]'>
+                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1 h-[24vh]'>
                                                 <legend className='sub-heading'>Order Info</legend>
                                                 <div className='flex flex-col justify-center items-start flex-1 w-full'>
                                                     <div className="grid grid-cols-5 gap-x-2 w-full">
@@ -324,12 +333,19 @@ export default function Form() {
                                                         <DateInput name="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
                                                         <DateInput name="Delivery.Date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
                                                         <DropdownInput name="Customer" options={dropDownListObject((supplierList?.data || []), "name", "id")} value={partyId} setValue={setPartyId} required={true} readOnly={readOnly} />
+                                                        <DropdownInput name="Socks Material" options={dropDownListObject((socksMaterialData?.data || []), "name", "id")} value={socksMaterial} setValue={setSocksMaterial} required={true} readOnly={readOnly} />
+                                                        <DropdownInput name="Socks Type" options={dropDownListObject((socksTypeData?.data || []), "name", "id")} value={socksType} setValue={setSocksType} required={true} readOnly={readOnly} />
                                                         <DropdownInput name="Packing.Cover" options={packingCover} value={packingCoverType} setValue={setPackingCoverType} required={true} readOnly={readOnly} />
                                                         <TextInput name="Con.Person.Name" type="text" value={contactPersonName} setValue={setContactPersonName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                                        <TextInput name="Name" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        {/* <TextInput name="Name" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
 
                                                         <TextInput name="Phone No" type="text" value={phone} setValue={setPhone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        <div className="col-span-5 flex justify-start mt-1">
+
+                                                            <CheckBox name="Name/Logo" readOnly={readOnly} value={isLogo} setValue={setIsLogo} />
+                                                        </div>
+
                                                         {/* <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
                                                         {/* <TextInput name="Shipping Address" type="number" value={noOfSet} setValue={setNoOfSet} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
                                                     </div>
@@ -375,6 +391,7 @@ export default function Form() {
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Leg.Color</th>
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Foot.Color</th>
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Stripe.Color</th>
+                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm w-20">No.oF.Stripe</th>
                                                                                     <th className="px-2 py-0.5  w-24 border border-gray-500 text-sm">Qty/Sie</th>
 
                                                                                     <th className="table-data  w-16 p-0.5 border border-gray-500 text-sm" >
@@ -384,7 +401,7 @@ export default function Form() {
                                                                                 </tr>
                                                                             </thead>
 
-                                                                            <tbody className="text-blue-gray-900 ">
+                                                                            <tbody className="text-blue-gray-900 ">{console.log("orderDetails", orderDetails)}
                                                                                 {(orderDetails ? orderDetails : []).map((item, index) =>
                                                                                     <tr className="border-b border-blue-gray-200 cursor-pointer " >
                                                                                         <td className="h-[30px]   border-blue-gray-200 text-[11px]  text-center p-0.5 ">{index + 1}</td>
@@ -400,7 +417,7 @@ export default function Form() {
                                                                                             }}
                                                                                         >
 
-                                                                                            <option>
+                                                                                            <option value={""} key={""} >
                                                                                                 select
                                                                                             </option>
                                                                                             {styleList?.data?.map(size =>
@@ -500,8 +517,16 @@ export default function Form() {
                                                                                                     </option>)}
                                                                                             </select>
                                                                                         </td>
+                                                                                        <td className="h-[30px]   border-blue-gray-200 text-[11px] text-right ">
+                                                                                            <input className='text-right w-20 p-1.5 border-gray-200 '
+                                                                                                type="number"
+                                                                                                value={item?.noOfStripes || 0}
+                                                                                                onChange={(e) => { handleInputChange(e.target.value, index, "noOfStripes") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                                            />
 
-                                                                                        {/* <td className="h-[30px]   border-blue-gray-200 text-[11px] ">{item?.design}</td> */}
+                                                                                        </td>
+
+
                                                                                         <td className="h-[30px]   border-blue-gray-200 text-[11px] text-right ">
                                                                                             <input className='text-right w-full p-1.5 border-gray-200 '
                                                                                                 type="number"
@@ -527,11 +552,7 @@ export default function Form() {
 
                                                                                 <tr className='w-full h-7  '>
                                                                                     <td className=" text-center w-10 font-bold" colSpan={4}>Total</td>
-                                                                                    {/* <td className=" text-center w-10 font-bold">{orderDetails.reduce((a, item) => a + parseFloat(
-                                                                                        (parseFloat((item?.orderQty) || 0) * parseFloat(item?.price) || 0)
-                                                                                    ), 0).toFixed(2)}</td>
-                                                                                    <td className=''>
-                                                                                    </td> */}
+
                                                                                     <td className="  w-10 text-right pr-1">{orderDetails.reduce((a, c) => a + parseFloat(c.orderQty || 0), 0)}</td>
                                                                                 </tr>
                                                                             </tbody>

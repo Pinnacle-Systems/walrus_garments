@@ -77,6 +77,7 @@ model Company {
   LossReason         LossReason[]
   PriceTemplate      PriceTemplate[]
   SocksMaterial      SocksMaterial[]
+  SocksType          SocksType[]
 }
 
 model Subscription {
@@ -1113,7 +1114,7 @@ model Size {
 model SocksMaterial {
   id        Int      @id @default(autoincrement())
   name      String?
-  active    Boolean?                                    @default(true)
+  active    Boolean? @default(true)
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
 }
@@ -2717,4 +2718,12 @@ model ContactDetails {
   email             String?
   Party             Party?  @relation(fields: [partyId], references: [id], onDelete: Cascade)
   partyId           Int?
+}
+
+model SocksType {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  active    Boolean? @default(true)
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
 }

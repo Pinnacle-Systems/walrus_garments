@@ -33,7 +33,7 @@ import {
   ProductionDeliveryApi,
   ProductionReceiptApi,
   DispatchedApi,
-  GeneralPurchaseApi, RawMaterialOpeningStockApi,SocksMaterialApi
+  GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -46,6 +46,7 @@ import CuttingReceiptApi from "./uniformService/CuttingReceiptServices";
 import sizeTemplateApi from "./uniformService/SizeTemplateMasterServices";
 import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
+
 
 
 
@@ -130,7 +131,8 @@ const commonReducers = {
   contentMaster: ContentMasterApi.reducer,
   countsMaster: CountsMasterApi.reducer,
   machineMaster: machineMasterApi.reducer,
-  [SocksMaterialApi.reducerPath]:SocksMaterialApi.reducer,
+  [SocksMaterialApi.reducerPath]: SocksMaterialApi.reducer,
+  socksType: SocksTypeApi.reducer,
   [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer
 
 }
@@ -213,7 +215,8 @@ CurrencyMasterApi.middleware,
 sizeTemplateApi.middleware,
 ContentMasterApi.middleware,
 CountsMasterApi.middleware,
-machineMasterApi.middleware
+machineMasterApi.middleware,
+SocksTypeApi.middleware,
 ];
 
 
