@@ -82,12 +82,8 @@ const ActiveTabList = () => {
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
     "SOCKS TYPE MASTER": <SocksType />,
     "PURCHASE ORDER": <PurchaseOrder />,
-
-    "PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
-
-
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;
