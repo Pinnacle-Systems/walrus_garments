@@ -16,7 +16,7 @@ import {
   PageGroupMaster,
   CompanyMaster,
   Dashboard,
-  PurchaseOrder,UomMaster
+  PurchaseOrder,UomMaster,
 
 } from "../../components";
 
@@ -59,7 +59,6 @@ const ActiveTabList = () => {
     "PARTY CATEGORY MASTER": <PartyCategorymaster />,
     "CURRENCY MASTER": <CurrencyMaster />,
     "COLOR MASTER": <ColorMaster />,
-    "PAY TERM MASTER": <PayTermMaster />,
     "SIZE MASTER": <SizeMaster />,
     "LOCATION MASTER": <LocationMaster />,
     "STYLE MASTER": <StyleMaster />,
@@ -78,7 +77,9 @@ const ActiveTabList = () => {
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
     "PURCHASE ORDER" : <PurchaseOrder />,
-    "UOM MASTER" : <UomMaster />
+    "UOM MASTER" : <UomMaster />,
+    "PAY TERM MASTER": <PayTermMaster />,
+
     
   };
   const innerWidth = window.innerWidth;

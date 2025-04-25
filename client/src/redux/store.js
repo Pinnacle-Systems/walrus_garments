@@ -33,7 +33,7 @@ import {
   ProductionDeliveryApi,
   ProductionReceiptApi,
   DispatchedApi,
-  GeneralPurchaseApi, RawMaterialOpeningStockApi,SocksMaterialApi
+  GeneralPurchaseApi, RawMaterialOpeningStockApi,SocksMaterialApi,UnitOfMeasurementApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -86,7 +86,7 @@ const commonReducers = {
   sizeMaster: SizeMasterApi.reducer,
   colorMaster: ColorMasterApi.reducer,
   fabricMaster: FabricMasterApi.reducer,
-
+  unitOfMeasurementMaster: UnitOfMeasurementApi.reducer,
 
   panelMaster: PanelMasterApi.reducer,
   gauge: GaugeApi.reducer,
@@ -136,6 +136,7 @@ const commonReducers = {
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
+UnitOfMeasurementApi.middleware,
 stateMasterApi.middleware,
 cityMasterApi.middleware,
 departmentMasterApi.middleware,

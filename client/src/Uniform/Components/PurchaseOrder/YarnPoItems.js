@@ -2,10 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DELETE, PLUS } from "../../../icons";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { useGetUomQuery } from "../../../redux/services/UomMasterService";
-
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { Loader } from "../../../Basic/components";
 import { VIEW } from "../../../icons";
 import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
@@ -89,8 +87,8 @@ const YarnPoItems = ({
     params: { ...params, isGrey: greyFilter ? true : undefined },
   });
 
-  const { data: uomList } = useGetUomQuery({ params });
-
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+console.log(uomList,"uomList")
   function findYarnTax(id) {
     if (!yarnList) return 0;
     let yarnItem = yarnList.data.find(
@@ -138,12 +136,10 @@ const YarnPoItems = ({
       </Modal>
       <div className={` relative w-full overflow-y-auto py-1`}>
         <table className=" border border-gray-500 text-xs table-auto  w-full">
-          <thead className="bg-blue-200 top-0 border-b border-gray-500">
+          <thead className="bg-gray-200 top-0 border-b border-gray-500">
             <tr>
               <th className="table-data  w-2 text-center">S.no</th>
-              <th className="table-data ">
-                Items<span className="text-red-500">*</span>
-              </th>
+           
               <th className="table-data ">
                 Colors<span className="text-red-500">*</span>
               </th>
@@ -181,7 +177,7 @@ const YarnPoItems = ({
               )}
             </tr>
           </thead>
-          {/* <tbody className="overflow-y-auto h-full w-full">
+          <tbody className="overflow-y-auto h-full w-full">
             {poItems.map((row, index) => (
               <tr key={index} className="w-full table-row">
                 <td className="table-data w-2 text-left px-1 py-1">
@@ -221,45 +217,7 @@ const YarnPoItems = ({
                     ))}
                   </select>
                 </td>
-
-                <td className="table-data">
-                  <select
-                    onKeyDown={(e) => {
-                      if (e.key === "Delete") {
-                        handleInputChange("", index, "colorId");
-                      }
-                    }}
-                    disabled={
-                      readOnly ||
-                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-                      Boolean(row?.alreadyCancelData?._sum?.qty)
-                    }
-                    className="text-left w-full rounded py-1 table-data-input"
-                    value={row.colorId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "colorId")
-                    }
-                    onBlur={(e) => {
-                      handleInputChange(e.target.value, index, "colorId");
-                    }}
-                  >
-                    <option hidden></option>
-                    {colorList?.data ? (
-                      (id
-                        ? colorList.data
-                        : colorList.data.filter((item) => item.active)
-                      ).map((blend) => (
-                        <option value={blend.id} key={blend.id}>
-                          {blend.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>Loading colors...</option>
-                    )}
-                  </select>
-                </td>
-
-                <td className="table-data">
+                             <td className="table-data">
                   <select
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
@@ -493,7 +451,7 @@ const YarnPoItems = ({
               <td className="table-data   w-10"></td>
               {!readOnly && <td className="table-data w-10"></td>}
             </tr>
-          </tbody> */}
+          </tbody>
         </table>
       </div>
     </>

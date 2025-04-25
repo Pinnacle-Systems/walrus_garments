@@ -26,7 +26,7 @@ import {
   cuttingOrder, styleType, classMaster, po, taxTemplate, taxTerm, dia, gsm, accessory, accessoryItem, accessoryGroup, payTerm, looplength,
   design, gauge, termsAndCondition, location, directInwardOrReturn, directCancelOrReturn, purchaseCancel, cuttingDelivery, cuttingReceipt, lossReason,
   processDelivery, productionDelivery, productionReceipt,
-  dispatched, generalPurchase, rawMaterialOpeningStock,unitOfMeasurement,
+  dispatched, generalPurchase, rawMaterialOpeningStock,
   contentMaster,
   counts,
   Machine,socksMaterial,
@@ -141,7 +141,6 @@ app.use("/directInwardOrReturn", directInwardOrReturn);
 app.use("/directCancelOrReturn", directCancelOrReturn);
 app.use("/purchaseCancel", purchaseCancel);
 app.use("/cuttingDelivery", cuttingDelivery);
-app.use("/unitOfMeasurement", unitOfMeasurement);
 app.use("/cuttingReceipt", cuttingReceipt);
 app.use("/lossReason", lossReason);
 app.use("/processDelivery", processDelivery);
