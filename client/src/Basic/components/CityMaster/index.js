@@ -25,9 +25,6 @@ const MODEL = "City Master";
 
 export default function Form() {
     const [form, setForm] = useState(false);
-
-
-
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [name, setName] = useState("");

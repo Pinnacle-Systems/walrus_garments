@@ -17,7 +17,7 @@ import {
   PageGroupMaster,
   CompanyMaster,
   Dashboard,
-  PurchaseOrder,UomMaster,
+  PurchaseOrder, UomMaster,
 
 } from "../../components";
 
@@ -25,7 +25,11 @@ import {
 
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
-import { AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, LossReasonMaster, ProcessMaster, SizeTemplateMaster, SocksMaterial, StyleMaster, YarnBlendMaster, YarnMaster, YarnTypeMaster } from "../../../Shocks";
+import {
+  AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, LossReasonMaster,
+  ProcessMaster, SizeTemplateMaster, SocksMaterial, SocksType, StyleMaster, YarnBlendMaster, YarnMaster,
+  YarnTypeMaster
+} from "../../../Shocks";
 import ContentMaster from "../../../Shocks/ContentMaster";
 import secureLocalStorage from "react-secure-storage";
 import { Order } from "../../../Uniform/Components"
@@ -79,11 +83,14 @@ const ActiveTabList = () => {
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
-    "PURCHASE ORDER" : <PurchaseOrder />,
-    "UOM MASTER" : <UomMaster />,
+    "SOCKS TYPE MASTER": <SocksType />,
+    "PURCHASE ORDER": <PurchaseOrder />,
+
+    "PURCHASE ORDER": <PurchaseOrder />,
+    "UOM MASTER": <UomMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
 
-    
+
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

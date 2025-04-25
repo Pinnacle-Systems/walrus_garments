@@ -31,3 +31,4 @@ export { default as DispatchedApi } from './DispatchedServices';
 export { default as GeneralPurchaseApi } from "./GeneralPurchaseServices";
 export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStockServices"
 export { default as SocksMaterialApi } from "./SocksMaterialMasterService"
+export { default as SocksTypeApi } from "./SocksTypeMasterService"

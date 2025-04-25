@@ -82,4 +82,5 @@ export const GENERALPURCHASE_API = "generalpurchase"
 export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock"
 export const MACHINE_API = "machine"
 export const SOCKS_MATERIAL_API = "socksMaterial"
+export const SOCKS_TYPE_API = "socksType"
 
