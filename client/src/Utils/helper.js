@@ -221,6 +221,7 @@ export function priceWithTax(price, tax) {
   return parseFloat(price) + taxAmount
 }
 
+
 export function getItemFullNameFromShortCode(shortCode) {
   let fullForm = "";
   switch (shortCode) {

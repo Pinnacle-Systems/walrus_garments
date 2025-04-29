@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `party` ADD COLUMN `isAcc` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `isDy` BOOLEAN NULL DEFAULT false,
+    ADD COLUMN `isGy` BOOLEAN NULL DEFAULT false;

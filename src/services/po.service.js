@@ -158,7 +158,6 @@ async function getOne(id) {
             PoItems: {
                 select: {
                     id: true,
-                    fabricId: true,
                     yarnId: true,
                     accessoryId: true,
                     Fabric: true,
@@ -179,32 +178,19 @@ async function getOne(id) {
                     tax: true,
                     discountType: true,
                     discountValue: true,
-                    discountAmount: true,
-                    taxPercent: true,
+                    tax: true,
                     Size: true,
                     designId: true,
                     gaugeId: true,
                     loopLengthId: true,
                     gsmId: true,
                     sizeId: true,
-                    accessoryGroupId: true,
-                    accessoryItemId: true,
+                    accessoryId: true,
                     KDia: true,
                     kDiaId: true,
                     FDia: true,
                     fDiaId: true,
-                    AccessoryItem: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    AccessoryGroup: {
-                        select: {
-                            name: true
-                        }
-                    }
-
-                }
+                       }
             },
             PayTerms: {
                 select: {
@@ -232,12 +218,6 @@ async function getOne(id) {
                 select: {
                     name: true,
                     address: true,
-                    City: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    pincode: true,
                     contactPersonName: true,
                     contactMobile: true,
                 }
@@ -247,12 +227,7 @@ async function getOne(id) {
                     branchName: true,
                     contactName: true,
                     contactMobile: true,
-                    City: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    pincode: true,
+                 
                     address: true,
                 }
             },
@@ -757,11 +732,11 @@ export function getPoItemObject(transType, item) {
     newItem["colorId"] = parseInt(item["colorId"])
     newItem["qty"] = parseFloat(item["qty"])
     newItem["price"] = parseFloat(item["price"])
-    newItem["discountType"] = item["discountType"]
+    newItem["discountType"] = item["discountType"] 
     newItem["discountAmount"] = item["discountAmount"]
-    newItem["tax"] = item["tax"]
+    newItem["tax"] = parseFloat(item["tax"])
     newItem["discountValue"] = parseFloat(item["discountValue"])
-    newItem["taxPercent"] = item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0
+  
     return newItem
 }
 
@@ -770,12 +745,14 @@ async function create(body) {
         supplierId, poItems, payTermId, remarks,
         branchId, active, userId, deliveryType, deliveryToId, finYearId } = await body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+let prismaTransType = transType.replace(/\s/g, '');
+
+
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     const data = await prisma.po.create({
         data: {
-            transType,
-            // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
+            transType: prismaTransType,
             payTermId: parseInt(payTermId),
             docId,
             dueDate: dueDate ? new Date(dueDate) : undefined,
@@ -789,9 +766,11 @@ async function create(body) {
             createdById: parseInt(userId),
             PoItems: {
                 createMany: {
-                    data: poItems.map(item => getPoItemObject(transType, item))
+                  data: poItems
+                    .filter(val => val.qty > 1) 
+                    .map(item => getPoItemObject(transType, item))
                 }
-            }
+              }
         },
     });
     return { statusCode: 0, data };
@@ -801,6 +780,7 @@ async function update(id, body) {
     const { transType, dueDate, taxTemplateId, remarks,
         supplierId, poItems, payTermId, deliveryType, deliveryToId,
         branchId, active, userId } = await body
+         console.log(supplierId,"supplierId")
     const dataFound = await prisma.po.findUnique({
         where: {
             id: parseInt(id)

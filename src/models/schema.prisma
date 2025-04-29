@@ -492,7 +492,9 @@ model Party {
   OnlineSales                OnlineSales[]
   OnlineSalesReturn          OnlineSalesReturn[]
   CreditDebitNote            CreditDebitNote[]
-
+  isAcc                      Boolean?                @default(false)
+  isGy                       Boolean?                @default(false)
+  isDy                       Boolean?                @default(false)
   ShippingAddress ShippingAddress[]
   ContactDetails  ContactDetails[]
   Order           Order[]
@@ -758,8 +760,6 @@ model Po {
   supplier         Party          @relation("supplier", fields: [supplierId], references: [id])
   transType        PoTypes
   dueDate          DateTime       @db.Date
-  taxTemplate      TaxTemplate    @relation(fields: [taxTemplateId], references: [id])
-  taxTemplateId    Int
   supplierId       Int
   PayTerms         PayTerm        @relation(fields: [payTermId], references: [id])
   payTermId        Int
@@ -805,9 +805,10 @@ model PoItems {
   weightPerBag        Float?
   qty                 Float
   price               Float
-  discountType        DiscountTypes
-  discountValue       Float                 @default(0)
-  taxPercent          Float                 @default(0)
+  discountType        DiscountTypes?        
+  discountValue       Float?                 @default(0)
+  tax              Float?                    @default(0)
+
   Size                Size?                 @relation(fields: [sizeId], references: [id])
   designId            Int?
   gaugeId             Int?
@@ -973,7 +974,6 @@ model TaxTemplate {
   companyId            Int
   active               Boolean                @default(true)
   TaxTemplateDetails   TaxTemplateDetails[]
-  Po                   Po[]
   DirectInwardOrReturn DirectInwardOrReturn[]
   BillEntry            BillEntry[]
   RawMaterialsSales    RawMaterialsSales[]

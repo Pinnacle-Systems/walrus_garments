@@ -113,21 +113,21 @@ export async function upload(req) {
 
 async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
-        cityId, pincode, panNo, tinNo, cstNo, cstDate, isIgst, yarn, fabric,
+        cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,
         cinNo, faxNo, website,
-        gstNo, currencyId, costCode, priceDetails, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
+        gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
 
         companyId, active, userId } = await body
     let data;
-
+  console.log(igst,"igst")
     data = await prisma.party.create(
         {
             data: {
-                name, code, aliasName, displayName, isSupplier, isBuyer, isIgst, isClient,
+                name, code, aliasName, displayName, isSupplier, isBuyer,  isClient,isAcc,isGy,isDy,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                 cinNo, faxNo, website,
-                gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,
+                gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,isIgst:igst ?igst:false,
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId), active, yarn, fabric,
                 accessoryGroup,
@@ -176,9 +176,9 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, isIgst, processDetails,
+    const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList,
-        cinNo, faxNo, email, website, shippingAddress, contactDetails, isContactOnly = false,
+        cinNo, faxNo, email, website, shippingAddress, contactDetails, isContactOnly = false,isGy,isDy,isAcc,
         gstNo, isLeadForm = false,
         companyId, active, userId } = await body
 
@@ -230,7 +230,7 @@ async function update(id, body) {
                     name, code, aliasName, displayName, address, isSupplier, isBuyer,
                     cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website, isIgst,
+                    cinNo, faxNo, email, website, isIgst:igst ?igst:false,
                     gstNo, yarn, fabric,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,
@@ -251,64 +251,7 @@ async function update(id, body) {
 
 
             })
-
-
-            // if (dataFound?.contactPersonName) {
-
-            //     const oldContactDetailsIds = dataFound.contactDetails.map(item => parseInt(item.id));
-
-            //     const currentContactDetailsIds = contactDetails?.filter(i => i?.id)?.map(item => parseInt(item.id));
-            //     const removedContactDetails = getRemovedItems(oldContactDetailsIds, currentContactDetailsIds);
-
-            //     await tx.ContactDetails?.deleteMany({
-            //         where: {
-            //             id: {
-            //                 in: removedContactDetails
-            //             }
-            //         }
-            //     })
-
-            //     await (async function updateContactDetails() {
-            //         const promises = contactDetails?.map(async (h) => {
-
-            //             if (h?.id) {
-            //                 await tx.ContactDetails.update({
-            //                     where: {
-            //                         id: parseInt(h.id)
-            //                     },
-            //                     data: {
-            //                         partyId: parseInt(data?.id),
-            //                         contactPersonName: h.contactPersonName,
-            //                         mobileNo: h.mobileNo ? h.mobileNo : "",
-            //                         email: h.email ? h.email : ""
-
-            //                     }
-            //                 })
-            //             }
-
-            //             else {
-
-            //                 await tx.ContactDetails.create({
-
-            //                     data: {
-            //                         partyId: parseInt(data?.id),
-            //                         contactPersonName: h.contactPersonName,
-            //                         mobileNo: h.mobileNo ? h.mobileNo : "",
-            //                         email: h.email ? h.email : ""
-            //                     }
-            //                 })
-
-            //             }
-
-
-            //         })
-            //         return Promise.all(promises)
-            //     }())
-            // }
-
-        })
-
-
+     })
     }
     else {
 
@@ -318,8 +261,8 @@ async function update(id, body) {
                     id: parseInt(id),
                 },
                 data: {
-                    name, code, aliasName, displayName, address, isBuyer, isSupplier, isIgst, isClient,
-                    cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric,
+                    name, code, aliasName, displayName, address, isBuyer, isSupplier, isIgst:igst ?igst:false, isClient,
+                    cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric,isAcc,isDy,isGy,
                     pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                     cinNo, faxNo, email, website,

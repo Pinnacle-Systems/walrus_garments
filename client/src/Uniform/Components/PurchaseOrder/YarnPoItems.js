@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { DELETE, PLUS } from "../../../icons";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import {  useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
 import { VIEW } from "../../../icons";
 import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
 import { priceWithTax } from "../../../Utils/helper";
+import { discountTypes } from "../../../Utils/DropdownData";
 
 const YarnPoItems = ({
   id,
@@ -21,6 +22,8 @@ const YarnPoItems = ({
   greyFilter,
 }) => {
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
+
+
   const handleInputChange = (value, index, field) => {
     const newBlend = structuredClone(poItems);
     newBlend[index][field] = value;
@@ -35,21 +38,22 @@ const YarnPoItems = ({
     }
     setPoItems(newBlend);
   };
-
+  console.log(poItems,"poItems")
   useEffect(() => {
-    if (poItems.length >= 12) return;
+    if (poItems.length >= 10) return;
+    if(id) return;
     setPoItems((prev) => {
-      let newArray = Array.from({ length: 12 - prev.length }, (i) => {
+      let newArray = Array.from({ length: 10 - prev.length }, (i) => {
         return {
           yarnId: "",
           qty: "0.000",
-          taxPercent: "0.000",
+          tax: "0",
           colorId: "",
           uomId: "",
           price: "0.00",
-          discountType: "Percentage",
           discountValue: "0.00",
           noOfBags: "0",
+          discountType: "",
           weightPerBag: "0.000",
         };
       });
@@ -61,11 +65,11 @@ const YarnPoItems = ({
     const newRow = {
       yarnId: "",
       qty: "",
-      taxPercent: "0.000",
+      tax: "0",
       colorId: "",
       uomId: "",
       price: "",
-      discountType: "Percentage",
+      discountTypes: "",
       discountValue: "0.00",
     };
     setPoItems([...poItems, newRow]);
@@ -77,18 +81,9 @@ const YarnPoItems = ({
   };
 
   const { data: yarnList } = useGetYarnMasterQuery({ params });
-  console.log(yarnList, "yarnList");
-
-  const {
-    data: colorList,
-    isLoading: isColorLoading,
-    isFetching: isColorFetching,
-  } = useGetColorMasterQuery({
-    params: { ...params, isGrey: greyFilter ? true : undefined },
-  });
-
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-console.log(uomList,"uomList")
+  const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
+  useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
   function findYarnTax(id) {
     if (!yarnList) return 0;
     let yarnItem = yarnList.data.find(
@@ -104,19 +99,55 @@ console.log(uomList,"uomList")
     return parseFloat(total);
   }
 
-  function getGross(field1, field2) {
-    const total = poItems.reduce((accumulator, current) => {
-      return (
-        accumulator +
-        parseFloat(
-          current[field1] && current[field2]
-            ? current[field1] * current[field2]
-            : 0
-        )
-      );
+  const TotalAmount = (price, tax, qty) => {
+    const p = parseFloat(price) || 0;
+    const t = parseFloat(tax) || 0;
+    const q = parseFloat(qty) || 0;
+
+    const priceWithTax = p + (p * t) / 100;
+    return priceWithTax * q;
+  };
+
+  const getDiscountAmount = (row) => {
+    if (!row) return 0;
+    const price = parseFloat(row.price) || 0;
+    const tax = parseFloat(row.tax) || 0;
+    const qty = parseFloat(row.qty) || 0;
+    const discountValue = parseFloat(row.discountValue) || 0;
+    const discountType = (row.discountType || "").toLowerCase();
+     const total = TotalAmount(price, tax, qty);
+
+    if (discountType === "flat") {
+      return total - discountValue;
+    } else if (discountType === "percentage") {
+      const discount = (total * discountValue) / 100;
+      return total - discount;
+    } else {
+      return total;
+    }
+  };
+  const getFinalAmountAfterDiscount = () => {
+    return poItems.reduce((acc, row) => {
+      const price = parseFloat(row.price) || 0;
+      const tax = parseFloat(row.tax) || 0;
+      const qty = parseFloat(row.qty) || 0;
+      const discountValue = parseFloat(row.discountValue) || 0;
+      const discountType = (row.discountType || "").toLowerCase();
+
+      const total = TotalAmount(price, tax, qty);
+
+      let finalAmount = total;
+
+      if (discountType === "flat") {
+        finalAmount = total - discountValue;
+      } else if (discountType === "percentage") {
+        const discount = (total * discountValue) / 100;
+        finalAmount = total - discount;
+      }
+
+      return acc + finalAmount;
     }, 0);
-    return parseFloat(total);
-  }
+  };
 
   return (
     <>
@@ -139,10 +170,10 @@ console.log(uomList,"uomList")
           <thead className="bg-gray-200 top-0 border-b border-gray-500">
             <tr>
               <th className="table-data  w-2 text-center">S.no</th>
-           
-              <th className="table-data ">
-                Colors<span className="text-red-500">*</span>
-              </th>
+
+              <th className="table-data ">Items<span className="text-red-500">*</span></th>
+               <th className="table-data ">Color<span className="text-red-500">*</span></th>
+              
               <th className="table-data  w-20">
                 UOM<span className="text-red-500">*</span>
               </th>
@@ -159,10 +190,20 @@ console.log(uomList,"uomList")
                 Price<span className="text-red-500">*</span>
               </th>
               <th className="table-data  w-16">
-                Price(with Tax)<span className="text-red-500">*</span>
+                tax<span className="text-red-500"></span>
               </th>
-              <th className="table-data  w-16">Gross</th>
-              <th className="table-data  w-20">View Tax</th>
+              <th className="table-data  w-16 hidden">
+                Price with Tax <span className="text-red-500">*</span>
+              </th>
+              <th className="table-data  w-16">
+                Total Amount <span className="text-red-500">*</span>
+              </th>
+              <th className="table-data  w-16">
+                Discount Type<span className="text-red-500"></span>
+              </th>
+              <th>Discount Value</th>
+              <th>Discount Amount</th>
+
               {readOnly ? (
                 ""
               ) : (
@@ -217,34 +258,85 @@ console.log(uomList,"uomList")
                     ))}
                   </select>
                 </td>
-                <td className="table-data">
-  <select
-    onKeyDown={(e) => {
-      if (e.key === "Delete") {
-        handleInputChange("", index, "uomId");
+                {transType.toLowerCase().includes("dyedyarn") ? (
+  <td className="table-data">
+    <select
+      className="w-full rounded py-1 table-data-input text-left"
+      value={row.colorId}
+      disabled={
+        readOnly ||
+        Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+        Boolean(row?.alreadyCancelData?._sum?.qty)
       }
-    }}
-    disabled={
-      readOnly ||
-      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-      Boolean(row?.alreadyCancelData?._sum?.qty)
+      onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
+      onBlur={(e) => handleInputChange(e.target.value, index, "colorId")}
+      onKeyDown={(e) => {
+        if (e.key === "Delete") {
+          handleInputChange("", index, "colorId");
+        }
+      }}
+    >
+      <option hidden value=""></option>
+      {(id ? colorList?.data : colorList?.data?.filter(item => item.active))?.map((color) => (
+        <option key={color.id} value={color.id}>
+          {color.name}
+        </option>
+      ))}
+    </select>
+  </td>
+) : (
+  (() => {
+    const grayColor = colorList?.data?.find(color => color.name?.toLowerCase() === "gray");
+    // If Gray exists, update colorId if needed
+    if (grayColor && row.colorId !== grayColor.id) {
+      setTimeout(() => {
+        handleInputChange(grayColor.id, index, "colorId");
+      }, 0);
     }
-    className="text-left w-20 rounded py-1 table-data-input"
-    value={row.uomId}
-    onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
-    onBlur={(e) => handleInputChange(e.target.value, index, "uomId")}
-  >
-    <option hidden></option>
-    {uomList?.data &&
-      (id ? uomList.data : uomList.data.filter((item) => item.active)).map(
-        (blend) => (
-          <option value={blend.id} key={blend.id}>
-            {blend.name}
-          </option>
-        )
-      )}
-  </select>
-</td>
+    return (
+      <td className="table-data text-right px-1">
+        {grayColor?.name ?? "-"}
+      </td>
+    );
+  })()
+)}
+
+
+
+
+                <td className="table-data">
+                  <select
+                    onKeyDown={(e) => {
+                      if (e.key === "Delete") {
+                        handleInputChange("", index, "uomId");
+                      }
+                    }}
+                    disabled={
+                      readOnly ||
+                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+                      Boolean(row?.alreadyCancelData?._sum?.qty)
+                    }
+                    className="text-left w-20 rounded py-1 table-data-input"
+                    value={row.uomId}
+                    onChange={(e) =>
+                      handleInputChange(e.target.value, index, "uomId")
+                    }
+                    onBlur={(e) =>
+                      handleInputChange(e.target.value, index, "uomId")
+                    }
+                  >
+                    <option hidden></option>
+                    {uomList?.data &&
+                      (id
+                        ? uomList.data
+                        : uomList.data.filter((item) => item.active)
+                      ).map((blend) => (
+                        <option value={blend.id} key={blend.id}>
+                          {blend.name}
+                        </option>
+                      ))}
+                  </select>
+                </td>
 
                 <td className="table-data">
                   <input
@@ -373,43 +465,89 @@ console.log(uomList,"uomList")
                     }}
                   />
                 </td>
-                <td className="table-data text-right px-1">
-                  {priceWithTax(row.price, row.taxPercent).toFixed(2)}
-                </td>
                 <td className="table-data">
                   <input
-                    type="number"
-                    onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 w-16 px-1 table-data-input"
-                    value={
-                      !row.qty || !row.price
-                        ? 0
-                        : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(
-                            2
-                          )
-                    }
-                    disabled={true}
-                  />
-                </td>
-                <td className="table-data">
-                  <button
-                    className="text-center rounded py-1 w-20"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        setCurrentSelectedIndex(index);
+                      if (e.code === "Minus" || e.code === "NumpadSubtract")
+                        e.preventDefault();
+                      if (e.key === "Delete") {
+                        handleInputChange("0.00", index, "price");
                       }
                     }}
-                    onClick={() => {
-                      if (!taxTypeId)
-                        return toast.info("Please select Tax Type", {
-                          position: "top-center",
-                        });
-                      setCurrentSelectedIndex(index);
+                    min={"0"}
+                    type="number"
+                    className="text-right rounded py-1 w-16 px-1 table-data-input"
+                    onFocus={(e) => e.target.select()}
+                    value={!row.tax ? 0 : row.tax}
+                    disabled={
+                      readOnly ||
+                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+                      Boolean(row?.alreadyCancelData?._sum?.qty) ||
+                      Boolean(row?.alreadyCancelData?._sum?.qty)
+                    }
+                    onChange={(e) =>
+                      handleInputChange(e.target.value, index, "tax")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(
+                        parseFloat(e.target.value).toFixed(2),
+                        index,
+                        "tax"
+                      );
                     }}
-                  >
-                    {VIEW}
-                  </button>
+                  />
                 </td>
+                <td className="table-data text-right px-1 hidden">
+                  {priceWithTax(row.price, row.tax).toFixed(2)}
+                </td>
+                <td className="table-data text-right px-1">
+                  {TotalAmount(row.price, row.tax, row.qty).toFixed(2)}
+                </td>
+                <select
+                  className="border rounded px-1 py-0.5 text-xs"
+                  value={poItems[index]?.discountType || ""}
+                  onChange={(e) =>
+                    handleInputChange(e.target.value, index, "discountType")
+                  }
+                >
+                  <option value="">Select</option>
+                  {discountTypes.map((item, i) => (
+                    <option key={i} value={item.value }>
+                      {item.value}
+                    </option>
+                  ))}
+                </select>
+
+                <td className="table-data">
+                  <input
+                    onKeyDown={(e) => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract")
+                        e.preventDefault();
+                      if (e.key === "Delete") {
+                        handleInputChange("0.00", index, "discountValue");
+                      }
+                    }}
+                    min={"0"}
+                    type="number"
+                    className="text-right rounded py-1 w-16 px-1 table-data-input"
+                    onFocus={(e) => e.target.select()}
+                    value={!row.discountValue ? 0 : row.discountValue}
+                    onChange={(e) =>
+                      handleInputChange(e.target.value, index, "discountValue")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(
+                        parseFloat(e.target.value).toFixed(2),
+                        index,
+                        "discountValue"
+                      );
+                    }}
+                  />
+                </td>
+                <td className="table-data text-right px-1">
+                  {getDiscountAmount(row).toFixed(2)}
+                </td>
+
                 {readOnly ? (
                   ""
                 ) : (
@@ -442,11 +580,14 @@ console.log(uomList,"uomList")
               </td>
               <td className="table-data  w-10"></td>
               <td className="table-data  w-10"></td>
+              <td className="table-data  w-10"></td>
+              <td className="table-data  w-10"></td>
+              <td className="table-data  w-10"></td>
               <td className="table-data text-right px-1  w-10">
-                {getGross("qty", "price").toFixed(2)}{" "}
+                {getFinalAmountAfterDiscount().toFixed(2)}
               </td>
               <td className="table-data   w-10"></td>
-              {!readOnly && <td className="table-data w-10"></td>}
+            
             </tr>
           </tbody>
         </table>

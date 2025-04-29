@@ -21,10 +21,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import moment from "moment";
 import PrintFormat from "./PrintFormat-PO/index";
-import PoSummary from "./PoSummary";
 import Modal from "../../../UiComponents/Modal";
-import { useReactToPrint } from "@etsoo/reactprint";
-import PrintFormatGreyYarnPurchaseOrder from "../PrintFormat-PurchaseOrder"
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
 import { deliveryTypes } from "../../../Utils/DropdownData";
@@ -49,7 +46,7 @@ export default function Form() {
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  const [transType, setTransType] = useState("Grey Yarn");
+  const [transType, setTransType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
 
   const [discountType, setDiscountType] = useState("Percentage");
@@ -119,7 +116,7 @@ export default function Form() {
       setReadOnly(false);
     }
 
-    setTransType(data?.transType ? data.transType : "Grey Yarn");
+    setTransType(data?.transType ? data.transType : "GreyYarn");
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
 
     setPoItems(data?.PoItems ? data?.PoItems : [])
@@ -157,7 +154,7 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    transType, supplierId, dueDate, taxTemplateId, payTermId,
+    transType, supplierId, dueDate,  payTermId,
     branchId, id, userId,
     remarks,
     poItems: poItems.filter(po => po.yarnId || po.fabricId || po.accessoryId),
@@ -211,6 +208,7 @@ export default function Form() {
 
 
   const saveData = () => {
+     console.log(data,"data for valitation")
     if (!validateData(data)) {
       toast.info("Please fill all required fields...!", { position: "top-center" })
       return
@@ -221,7 +219,7 @@ export default function Form() {
       handleSubmitCustom(addData, data, "Added");
     }
   }
-
+   console.log(poItems,"poItems")
   const deleteData = async () => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
@@ -254,7 +252,6 @@ export default function Form() {
     getNextDocId()
   };
 
-
   const tableHeadings = ["PoNo", "PoDate", "transType", "DueDate", "Supplier"]
   const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
   useEffect(() => {
@@ -264,20 +261,22 @@ export default function Form() {
   }, [transType, id])
 
   const allSuppliers = supplierList ? supplierList.data : []
-
+  console.log(allSuppliers, "allSuppliers")
   function filterSupplier() {
     let finalSupplier = []
-    if (transType.toLowerCase().includes("yarn")) {
-      finalSupplier = allSuppliers.filter(s => s.yarn)
-    } else if (transType.toLowerCase().includes("fabric")) {
-      finalSupplier = allSuppliers.filter(s => s.fabric)
+    if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
+      finalSupplier = allSuppliers.filter(s => s.isGy)
+    } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
+      finalSupplier = allSuppliers.filter(s => s.isDy)
     } else {
-      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
+      finalSupplier = allSuppliers.filter(s => s.isAcc)
     }
     return finalSupplier
   }
+  const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
+  console.log(clientDetail, "clientDetail")
   let supplierListBasedOnSupply = filterSupplier()
-  transType.toLowerCase().includes("grey yarn".toLowerCase())
+  transType.toLowerCase().includes("greyyarn".toLowerCase())
   return (
     <div
       onKeyDown={handleKeyDown}
@@ -339,7 +338,7 @@ export default function Form() {
                     <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 px-3 overflow-auto'>
                       <legend className='sub-heading'>Purchase Info</legend>
                       <div className='flex flex-col justify-center items-start flex-1 w-full'>
-                        <div className="grid grid-cols-5 w-full">
+                        <div className="grid grid-cols-6 w-full">
                           <DisabledInput name="Po no." value={docId} required={true}
                           />
                           <DateInput name="Po Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
@@ -347,7 +346,7 @@ export default function Form() {
                             options={poTypes}
                             value={transType} setValue={setTransType} required={true} readOnly={readOnly} />
 
-                          <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                          <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} />
 
                           <DateInput name="Due Date" value={dueDate} setValue={setDueDate} required={true} readOnly={readOnly} />
                           <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
@@ -357,24 +356,30 @@ export default function Form() {
                             value={deliveryType}
                             setValue={setDeliveryType}
                             required={true} readOnly={readOnly} />
-                          {deliveryType
-                            ?
-                            <DropdownInput name="Delivery To" options={(deliveryType === "ToSelf") ? dropDownListObject(branchList ? branchList.data : [], "branchName", "id") : dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
-                            :
+                          <DropdownInput
+                            name="Delivery To"
+                            options={
+                              deliveryType === "ToSelf"
+                                ? dropDownListObject(branchList ? branchList.data : [], "branchName", "id")
+                                : dropDownListObject(clientDetail,"name","id")
+                            }
+                            value={deliveryToId}
+                            setValue={setDeliveryToId}
+                            required={true}
+                            readOnly={readOnly}
+                          />
 
-                            <DropdownInput name="Delivery To" options={(supplierList?.data && deliveryType === "ToParty") ? dropDownListObject(supplierList?.data?.filter(val => val.isSupplier), "name", "id") : []} value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
-                          }
                         </div>
                       </div>
                     </fieldset>
-                    <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[360px] px-1 w-full overflow-auto'>
+                    <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[380px] px-1 w-full overflow-auto'>
                       <legend className='sub-heading'>Purchase Details</legend>
-                      {transType.toLowerCase().includes("Grey Yarn".toLowerCase())
+                      {transType.toLowerCase().includes("GreyYarn".toLowerCase())
                         ?
                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         :
                         (
-                          transType.toLowerCase().includes("Dyed Yarn".toLowerCase())
+                          transType.toLowerCase().includes("DyedYarn".toLowerCase())
                             ?
                             <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                             :

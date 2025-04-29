@@ -373,21 +373,6 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
       {isOpen && <div className={`sidebar  w-[70px] ${isMainDropdownOpen ? "h-[400px]" : ""} bg-[#495057] top-[16.5%] left-[1%] fixed z-[999] rounded-lg flex justify-center py-3`}>
 
 
-        {/* <div className={`sidebar-header`}>
-              Logo
-              {isOpen && <img
-                  src={logo} // Replace with your logo URL
-                  alt="Logo"
-                  className="sidebar-logo"
-              />}
-
-              Toggle Button
-              <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)}>
-                  {isOpen ? <PanelLeftClose size={20} /> : <PanelRightClose size={20} />}
-              </button>
-          </div> */}
-
-        {/* Navigation / Sidebar Content */}
         <div className=" ">
           <div className='text-white hover:text-gray-400 cursor-pointer mb-3' onClick={() => navigate('/dashboard')}>
             <a className=' mx-auto text-light flex justify-center hover:text-gray-400 ' type="button" ><LayoutDashboard size={20} /></a>

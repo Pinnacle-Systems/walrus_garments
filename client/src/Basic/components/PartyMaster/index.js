@@ -45,9 +45,13 @@ export default function Form() {
     const [city, setCity] = useState("");
     const [pincode, setPincode] = useState("");
     const [contactPersonName, setContactPersionName] = useState("");
-    const [isIgst, setGstNo] = useState(true);
+    const [igst,setIgst] = useState(false)
+    const [gstNo, setGstNo] = useState('');
     const [costCode, setCostCode] = useState("");
     const [contactMobile, setContactMobile] = useState('');
+    const [isGy,setIsGy] = useState(false)
+    const [isDy,setIsDy] = useState(false)
+    const [isAcc,setIsAcc] = useState(false)
 
     const [processDetails, setProcessDetails] = useState([]);
 
@@ -115,7 +119,6 @@ export default function Form() {
             setName("");
             setImage("")
             setAliasName("");
-
             setDisplayName("");
             setAddress("");
             setTinNo("");
@@ -152,11 +155,15 @@ export default function Form() {
             setAddress(data?.address || "");
             setTinNo(data?.tinNo || "");
             setCstNo(data?.cstNo || "");
+             console.log(data?.isGy,"isGy")
+            setIsGy(data?.isGy|| false)
+            setIsDy(data?.isDy|| false)
+            setIsAcc(data?.isAcc|| false)
             setCinNo(data?.cinNo || "");
             setFaxNo(data?.faxNo || "");
             setCinNo(data?.cinNo || "");
             setContactPersionName(data?.contactPersionName || "");
-            setGstNo(data?.isIgst || "");
+            setGstNo(data?.gstNo || "");
             setCostCode(data?.costCode || "");
             setCstDate(data?.cstDate ? moment.utc(data?.cstDate).format('YYYY-MM-DD') : "");
             setCode(data?.code || "");
@@ -192,12 +199,12 @@ export default function Form() {
 
     const data = {
         name, code, aliasName, displayName, address, cityId: city, pincode, panNo, tinNo, cstNo, cstDate, cinNo,
-        faxNo, email, website, contactPersonName, isIgst, currencyId: currency, costCode, contactMobile,
+        faxNo, email, website, contactPersonName, igst, currencyId: currency, costCode, contactMobile,gstNo,
         active, isSupplier, isClient, accessoryGroup, companyId, shippingAddress, contactDetails,
         accessoryItemList, processDetails: processDetails ? processDetails.map(item => item.value) : undefined,
-        id, userId, priceTemplateId, image
+        id, userId, priceTemplateId, image,isAcc,isGy,isDy
     }
-
+    console.log(isAcc,isGy,isDy)
     const { data: processList, isLoading: isProcessLoading, isFetching: isProcessFetching } = useGetProcessMasterQuery({ params });
 
     const validateData = (data) => {
@@ -392,7 +399,7 @@ export default function Form() {
             return contactDetails.filter((_, i) => parseInt(i) !== parseInt(index))
         });
     }
-
+   console.log(igst,"igst")
 
     const tableHeaders = ["S.NO", "Name", "Alias Name", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
     const tableDataNames = ["index+1", "dataObj.name", 'dataObj.aliasName', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
@@ -404,7 +411,7 @@ export default function Form() {
     // if (isItemsFetching || isItemsLoading || isProcessLoading || isProcessFetching) {
     //     return <Loader />
     // }
-
+console.log(isGy,"isGy")
 
     return (
         <div
@@ -472,7 +479,18 @@ export default function Form() {
                                                         <CheckBox name="Is Client" readOnly={readOnly} value={isClient} setValue={setClient} />
                                                     </div>
                                                     <div className='mb-3 ms-4'>
-                                                        <CheckBox name="IGST" readOnly={readOnly} value={isIgst} setValue={setGstNo} />
+                                                        <CheckBox name="IGST" readOnly={readOnly} value={igst} setValue={setIgst} />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center ">
+                                                    <div className='mb-3 '>
+                                                        <CheckBox name="Grey Yarn" style={{ fontWeight: 'bold' }} readOnly={readOnly} value={isGy} setValue={setIsGy} />
+                                                    </div>
+                                                    <div className='mb-3 ms-4'>
+                                                        <CheckBox name="Dyed Yarn" readOnly={readOnly} value={isDy} setValue={setIsDy} />
+                                                    </div>
+                                                    <div className='mb-3 ms-4'>
+                                                        <CheckBox name="Accessories" readOnly={readOnly} value={isAcc} setValue={setIsAcc} />
                                                     </div>
                                                 </div>
 
@@ -528,7 +546,7 @@ export default function Form() {
                                                 <TextInput name="Pan No" width={'w-[110px]'} type="pan_no" value={panNo} setValue={setPanNo} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
                                             <div className="w-[48%] mb-3">
-                                                <TextInput name="GST No" width={'w-[150px]'} type="text" value={isIgst} setValue={setGstNo} readOnly={readOnly} />
+                                                <TextInput name="GST No" width={'w-[150px]'} type="text" value={gstNo} setValue={setGstNo} readOnly={readOnly} />
                                             </div>
                                         </div>
                                         <div className='flex flex-wrap justify-between w-[100%]'>
