@@ -346,7 +346,8 @@ export default function Form() {
                             options={poTypes}
                             value={transType} setValue={setTransType} required={true} readOnly={readOnly} />
 
-                          <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} />
+                          <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} 
+                          value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} masterName="PARTY MASTER" />
 
                           <DateInput name="Due Date" value={dueDate} setValue={setDueDate} required={true} readOnly={readOnly} />
                           <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
@@ -363,6 +364,7 @@ export default function Form() {
                                 ? dropDownListObject(branchList ? branchList.data : [], "branchName", "id")
                                 : dropDownListObject(clientDetail,"name","id")
                             }
+                            masterName="PARTY MASTER"
                             value={deliveryToId}
                             setValue={setDeliveryToId}
                             required={true}

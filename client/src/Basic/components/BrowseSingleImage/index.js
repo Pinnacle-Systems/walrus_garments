@@ -96,7 +96,7 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
                     {/* Drag & Drop or Browse */}
                     {!picture && (
                         <span className="text-xs max-w-[150px] text-center text-gray-500 w-full">
-                            {isDragging ? "Release to upload" : "Drag & drop or click to upload"}
+                            {isDragging ? "Release to upload" : "click to upload"}
                         </span>
                     )}
                 </div>

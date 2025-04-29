@@ -108,7 +108,7 @@ const MastersForm = ({
       <div className="h-full p-5">
 
         <div className=" flex flex-col h-full ">
-          <div className="mx-auto w-[95%]  flex flex-col">
+          <div className="mx-auto w-[100%]  flex flex-col">
             {model ? (
               <h5 className=" text-stone-900 text-xl mb-2 ">
                 {model}

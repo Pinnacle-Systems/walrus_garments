@@ -195,102 +195,79 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
             <img src={Machine} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
     }
     return (
-        <div
-            className="fixed top-[16.5%] left-[87px] z-50"
-        >
-
-            {isMainDropdownOpen === true ? <div onClick={() => setIsMainDropdownOpen(false)} className="bg-gray-600 opacity-40 fixed top-0 left-0 right-0 bottom-0 -z-10 "
-            ></div> : ""}
-
-
-            {/* Main Dropdown */}
-            {isMainDropdownOpen === true && (
-                <div className=" ">
-
-                    <div className=" bg-white p-2 outline outline-gray-500 shadow-lg  rounded-lg   overflow-auto h-[400px] transition duration-100">
-                        <div className='flex items-center text-[11px] border rounded-full relative  w-full'>
-                            <input className=' px-2 py-1 w-full text-[12px] rounded-full'
-                                placeholder='search'
-                                type='text'
-                                name='masters'
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)} />
-                            <div className='absolute right-2  text-neutral-500'>
-                                <Search size={15} />
+        <div className="fixed top-[16.5%] left-[87px] z-50">
+        {isMainDropdownOpen && (
+          <div
+            onClick={() => setIsMainDropdownOpen(false)}
+            className="bg-black/50 fixed inset-0 -z-10"
+          ></div>
+        )}
+      
+        {isMainDropdownOpen && (
+            <div className="bg-white p-4 rounded-lg shadow-2xl outline outline-1 outline-gray-300 h-[450px] overflow-y-auto w-[360px] transition-all duration-200 space-y-4">
+            
+            <div className="relative">
+              <input
+                type="text"
+                name="masters"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-3 pr-10 py-2 text-sm text-gray-700 bg-gray-100 rounded-full outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <Search size={16} />
+              </div>
+            </div>
+      
+            <ul className="space-y-2">
+              {groups?.map((group) => (
+                <li key={group?.id} className="space-y-1">
+                  {search.length === 0 && (
+                    <h3 className="text-sm font-semibold text-gray-700 pl-2 uppercase tracking-wide">
+                      {(group?.name + " Masters").replace(/\b[a-z]/g, char => char.toUpperCase())}
+                    </h3>
+                  )}
+      
+                  <ul className="grid grid-cols-3 gap-2 pt-1">
+                    {filteredData
+                      .filter(page => parseInt(page.pageGroupId) === parseInt(group.id))
+                      .map(page => (
+                        <li
+                          key={page.id}
+                          onClick={() => {
+                            dispatch(push(page));
+                            secureLocalStorage.setItem(
+                              sessionStorage.getItem("sessionId") + "currentPage",
+                              page?.id
+                            );
+                            setIsMainDropdownOpen(false);
+                            setIsOpen(false);
+                          }}
+                          className="bg-gray-100 hover:bg-gray-200 rounded-lg p-2 text-xs text-center cursor-pointer transition-all duration-150"
+                        >
+                          <div className="flex flex-col items-center justify-center">
+                            <div className="mb-1">
+                              {iconMapping[page?.name] || <span className="text-gray-400">🔘</span>}
                             </div>
-                        </div>
-                        <ul className="w-full p-0 transition duration-150 ease-in-out origin-top   ">
-
-                            {groups && groups.map((group) => (
-                                <li
-                                    key={group?.id}
-                                    className="rounded-md relative my-0"
-                                // onMouseEnter={() => setHoveredGroupId(group.id)}
-                                // onMouseLeave={() => setHoveredGroupId(null)}
-                                >
-                                    {/* Sub-Dropdown Trigger */}
-                                    <div className={`w-full text-[11px] text-left  items-center  rounded cursor-default`} >
-                                        {search.length > 0 ? "" : <div className="text-[14px] font-semibold ml-2.5 text-gray-800 mt-2">{(group?.name + " MASTERS").toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase())}</div>}
-
-                                        <ul
-                                            className=" grid grid-cols-3  rounded-xl left-full  transition-all duration-200 ease-in-out origin-top-left z-50 w-56  px-0 pt-0 pb-3"
-                                        // onMouseEnter={() => setHoveredGroupId(group.id)}
-                                        // onMouseLeave={() => setHoveredGroupId(null)}
-                                        >
-
-                                            {filteredData
-                                                .filter(
-                                                    (page) =>
-                                                        parseInt(page.pageGroupId) === parseInt(group.id)
-                                                )
-                                                .map((page) => (<>
-                                                    <li
-                                                        key={page.id}
-                                                        onClick={() => {
-                                                            dispatch(push(page));
-                                                            secureLocalStorage.setItem(
-                                                                sessionStorage.getItem("sessionId") + "currentPage",
-                                                                page?.id
-                                                            );
-                                                            // navigate(page.type)
-                                                            setIsMainDropdownOpen(false)
-                                                            setIsOpen(false)
-                                                        }}
-                                                        className={`rounded-md text-[9px]  relative flex justify-center items-center  cursor-pointer    text-gray-800
-                                                          hover:text-[black] hover:bg-gray-300
-                                                          transition duration-100  my-0 h-[60px]`}
-                                                    >
-
-                                                        <div className="flex flex-col align-middle text-center justify-center">
-                                                            <div className="w-full flex justify-center mb-0.5 ">
-                                                                {/* <Gamepad2 size={20} /> */}
-                                                                {iconMapping[page?.name] || <img />}
-
-                                                            </div>
-                                                            <div className="">
-                                                                {page?.name.replace(/\bMASTER\b/g, "").trim().toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase())}
-                                                            </div>
-                                                        </div>
-
-                                                    </li></>
-
-                                                ))}
-                                        </ul>
-
-
-                                    </div>
-
-
-
-                                </li>
-                            ))}
-                        </ul>
-
-                    </div>
-                </div>
-
-            )}
-        </div>
+                            <div className="text-[10px] leading-tight">
+                              {page?.name
+                                .replace(/\bMASTER\b/g, "")
+                                .trim()
+                                .toLowerCase()
+                                .replace(/\b[a-z]/g, (char) => char.toUpperCase())}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      
     );
 };
 export default SidebarComponent;
