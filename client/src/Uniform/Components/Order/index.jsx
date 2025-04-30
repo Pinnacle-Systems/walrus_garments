@@ -60,6 +60,7 @@ export default function Form() {
     const [legColor, setLegColor] = useState("")
     const [footColor, setFootColor] = useState("")
     const [stripeColor, setStripeColor] = useState("");
+    const [noOfStripes, setNoOfStripes] = useState(0);
 
 
     const [isLogo, setIsLogo] = useState(false)
@@ -126,7 +127,15 @@ export default function Form() {
         // setIsForOrderImportItems(data?.isForOrderImportItems ? data?.isForOrderImportItems : false)
         setValidDate(data?.validDate ? moment(data?.validDate).format("YYYY-MM-DD") : "");
         setOrderDetails(data?.orderDetails ? data?.orderDetails : []);
-        setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "")
+        setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "");
+        setSocksMaterial(data?.socksMaterial ? data?.socksMaterial : "");
+        setSocksType(data?.socksType ? data?.socksType : "");
+        setLegColor(data?.legColor ? data?.legColor : "");
+        setFootColor(data?.footColor ? data?.footColor : "");
+        setStripeColor(data?.stripeColor ? data?.stripeColor : "");
+        setNoOfStripes(data?.noOfStripes ? data?.noOfStripes : 0);
+        setName(data?.name ? data?.name : 0);
+
         // setNoOfSet(data?.noOfSet ? data?.noOfSet : "")
     }, [id]);
 
@@ -139,13 +148,14 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        branchId, id, userId, companyId, packingCoverType,
+        branchId, id, userId, companyId, packingCoverType, name,
         //  active, orderQty, noOfSet, isForOrderImportItems,
         partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails, socksMaterial, socksType,
+        legColor, footColor, stripeColor, noOfStripes
     }
 
     const validateData = (data) => {
-        // let filterData = data?.orderDetails?.filter(val => val.itemTypeId !== "")
+
         if (orderDetails?.length > 0 && data.partyId) {
             return true
         }
@@ -222,7 +232,7 @@ export default function Form() {
         setOrderDetails(prev => [
             ...prev,
             {
-                sockType: "", Material: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "", stripecolorId: "", design: "", qty: "0", packingRequirement: "",
+                sizeId: "", styleId: "", description: "", qty: "0", needle: "",
             }
         ]);
     }
@@ -336,8 +346,14 @@ export default function Form() {
                                                         <DropdownInput name="Socks Material" options={dropDownListObject((socksMaterialData?.data || []), "name", "id")} value={socksMaterial} setValue={setSocksMaterial} required={true} readOnly={readOnly} />
                                                         <DropdownInput name="Socks Type" options={dropDownListObject((socksTypeData?.data || []), "name", "id")} value={socksType} setValue={setSocksType} required={true} readOnly={readOnly} />
                                                         <DropdownInput name="Packing.Cover" options={packingCover} value={packingCoverType} setValue={setPackingCoverType} required={true} readOnly={readOnly} />
+
+                                                        <DropdownInput name="Leg Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={legColor} setValue={setLegColor} required={true} readOnly={readOnly} />
+                                                        <DropdownInput name="Foot Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={footColor} setValue={setFootColor} required={true} readOnly={readOnly} />
+                                                        <DropdownInput name="Stripe Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={stripeColor} setValue={setStripeColor} required={true} readOnly={readOnly} />
+                                                        <TextInput name="LogoName" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+
+
                                                         <TextInput name="Con.Person.Name" type="text" value={contactPersonName} setValue={setContactPersonName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                                        {/* <TextInput name="Name" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
 
                                                         <TextInput name="Phone No" type="text" value={phone} setValue={setPhone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
@@ -345,6 +361,7 @@ export default function Form() {
 
                                                             <CheckBox name="Name/Logo" readOnly={readOnly} value={isLogo} setValue={setIsLogo} />
                                                         </div>
+                                                        <TextInput name="LogoName" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
 
                                                         {/* <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
                                                         {/* <TextInput name="Shipping Address" type="number" value={noOfSet} setValue={setNoOfSet} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
