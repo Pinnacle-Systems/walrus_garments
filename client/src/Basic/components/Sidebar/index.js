@@ -380,8 +380,6 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
 </div>
 
 
-  
-    {/* Sidebar */}
     {isOpen && (
       <div
         className={`fixed z-[999] top-[16.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${

@@ -567,7 +567,7 @@ const YarnPoItems = ({
                 )}
               </tr>
             ))}
-            <tr className="bg-blue-200 w-full border border-gray-400 h-7 font-bold">
+            <tr className="bg-gray-200 w-full border border-gray-400 h-7 font-bold">
               <td className="table-data text-center w-10 font-bold" colSpan={4}>
                 Total
               </td>

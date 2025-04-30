@@ -195,7 +195,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
             <img src={Machine} alt="country" className="w-[23px]  flex justify-center items-center bg-white border-2 border-white rounded shadow" />
     }
     return (
-        <div className="fixed top-[16.5%] left-[87px] z-50">
+        <div className="fixed top-[3.5%] left-[87px] z-50">
         {isMainDropdownOpen && (
           <div
             onClick={() => setIsMainDropdownOpen(false)}
@@ -204,7 +204,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
         )}
       
         {isMainDropdownOpen && (
-            <div className="bg-white p-4 rounded-lg shadow-2xl outline outline-1 outline-gray-300 h-[450px] overflow-y-auto w-[360px] transition-all duration-200 space-y-4">
+            <div className="bg-white p-4 rounded-lg shadow-2xl outline outline-1 outline-gray-300 h-[650px] overflow-y-auto w-[400px] transition-all duration-200 space-y-4">
             
             <div className="relative">
               <input
@@ -225,11 +225,11 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                 <li key={group?.id} className="space-y-1">
                   {search.length === 0 && (
                     <h3 className="text-sm font-semibold text-gray-700 pl-2 uppercase tracking-wide">
-                      {(group?.name + " Masters").replace(/\b[a-z]/g, char => char.toUpperCase())}
+                      {(group?.name + " Module").replace(/\b[a-z]/g, char => char.toUpperCase())}
                     </h3>
                   )}
       
-                  <ul className="grid grid-cols-3 gap-2 pt-1">
+                  <ul className="grid grid-cols-4 gap-2 pt-1">
                     {filteredData
                       .filter(page => parseInt(page.pageGroupId) === parseInt(group.id))
                       .map(page => (
