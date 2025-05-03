@@ -46,14 +46,15 @@ export const NewButton = ({ onClick }) => {
     )
 }
 
-export const EditButton = ({ onClick }) => {
-    return (
-        <div className='cursor-pointer text-white bg-blue-500 px-3 py-1  text-[11px] rounded focus:outline-none focus:shadow-outline' onClick={() => onClick()}>
-            {<FontAwesomeIcon icon={faEdit} />} Edit
-        </div>
-    )
-}
-
+export const EditButton = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200"
+    >
+      <FontAwesomeIcon icon={faEdit} /> Edit
+    </button>
+  );
+  
 export const EditButtonOnly = ({ onClick }) => {
     return (
         <button className="text-white px-3 pb-1  mt-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
@@ -65,26 +66,60 @@ export const EditButtonOnly = ({ onClick }) => {
 
 export const SaveButton = ({ onClick }) => {
     const [isDisabled, setIsDisabled] = useState(false);
-
+  
     const disableButton = () => {
-        setIsDisabled(true);
-        setTimeout(() => {
-            setIsDisabled(false);
-        }, 5000);
+      setIsDisabled(true);
+      setTimeout(() => setIsDisabled(false), 5000);
     };
+  
     return (
-        <div disabled={isDisabled}
-            className='cursor-pointer bg-green-500 text-white px-2 py-1 mt-1 text-[11px] rounded focus:outline-none focus:shadow-outline'
-            onClick={() => { onClick(); disableButton(); }}>
-            {<FontAwesomeIcon icon={faSave} />} Save
-        </div>
-    )
-}
-
+      <button
+        disabled={isDisabled}
+        onClick={() => {
+          onClick();
+          disableButton();
+        }}
+        className={`flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200 ${
+          isDisabled
+            ? "bg-green-300 text-white cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700 text-white"
+        }`}
+      >
+        <FontAwesomeIcon icon={faSave} /> Save
+      </button>
+    );
+  };
+  
+  export const SaveExitButton = ({ onClick }) => {
+    const [isDisabled, setIsDisabled] = useState(false);
+  
+    const disableButton = () => {
+      setIsDisabled(true);
+      setTimeout(() => setIsDisabled(false), 5000);
+    };
+  
+    return (
+      <button
+        disabled={isDisabled}
+        onClick={() => {
+          onClick();
+          disableButton();
+        }}
+        className={`flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200 ${
+          isDisabled
+            ? "bg-green-300 text-white cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700 text-white"
+        }`}
+      >
+        <FontAwesomeIcon icon={faSave} /> Save & Exit
+      </button>
+    );
+  };
+  
 export const CloseButton = ({ onClick }) => {
     return (
         <div
-            className='cursor-pointer px-3 py-1.5 text-xs rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 text-secondary hover:bg-gray-100 active:bg-gray-200' onClick={() => onClick()}>
+            className='cursor-pointer px-3 py-1.5 text-xs rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 bg-red-500  hover:bg-red-400 active:bg-red-600' onClick={() => onClick()}>
             {<FontAwesomeIcon icon={faClose} />} Cancel
         </div>
     )
@@ -98,13 +133,15 @@ export const OpenTable = ({ onClick }) => {
     )
 }
 
-export const DeleteButton = ({ onClick }) => {
-    return (
-        <div className='cursor-pointer text-red-500  px-2 py-1 text-[11px] rounded focus:outline-none focus:shadow-outline ' onClick={() => onClick()}>
-            {<FontAwesomeIcon icon={faTrashCan} />} Delete
-        </div>
-    )
-}
+export const DeleteButton = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-600 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200"
+    >
+      <FontAwesomeIcon icon={faTrashCan} /> Delete
+    </button>
+  );
+  
 
 
 

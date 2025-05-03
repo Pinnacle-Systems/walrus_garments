@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 // import { useGetCurrencyMasterQuery } from '../../../redux/ErpServices/CurrencyMasterServices';
@@ -27,14 +27,9 @@ import MastersForm from "../MastersForm/MastersForm";
 import {
   Modal,
   ToggleButton,
-  CheckBox,
   DateInput,
   DropdownInput,
-  MultiSelectDropdown,
-  RadioButton,
-  TextArea,
   TextInput,
-  LongTextInput,
   FancyCheckBox,
 } from "../../../Inputs";
 import Mastertable from "../MasterTable/Mastertable";
@@ -44,6 +39,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { DELETE, PLUS } from "../../../icons";
 import toast from "react-hot-toast";
+import { exist } from "joi";
+import { setOpenPartyModal } from "../../../redux/features/openModel";
+import { push } from "../../../redux/features/opentabs";
 
 const MODEL = "Party Master";
 
@@ -72,7 +70,7 @@ export default function Form() {
   const [isGy, setIsGy] = useState(false);
   const [isDy, setIsDy] = useState(false);
   const [isAcc, setIsAcc] = useState(false);
-
+  const [payTermDay,setPayTermDay] = useState('0')
   const [processDetails, setProcessDetails] = useState([]);
 
   const [cstDate, setCstDate] = useState("");
@@ -123,7 +121,25 @@ export default function Form() {
     isLoading,
     isFetching,
   } = useGetPartyQuery({ params, searchParams: searchValue });
+  const openPartyModal = useSelector((state) => state.party.openPartyModal);
+  const lastTapName =  useSelector((state)=>state.party.lastTab)
+  const masterNames = useSelector((state) => state.party.masterName);
 
+  console.log(masterNames,"masterNames")
+  const activeTab = useSelector((state) =>
+    state.openTabs.tabs.find((tab) => tab.active.name)
+  ); 
+ 
+
+  useEffect(() => {
+    if (openPartyModal) {
+      setId("");
+      setForm(true);
+    }
+  }, [openPartyModal]);
+  
+
+ 
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -152,6 +168,7 @@ export default function Form() {
         setContactPersionName("");
         setGstNo("");
         setCostCode("");
+        setPayTermDay("0")
         setCstDate("");
         setCode("");
         setPincode("");
@@ -159,7 +176,7 @@ export default function Form() {
         setEmail("");
         setCity("");
         setCurrency("");
-        setActive(id ? data?.active ?? true : false);
+        setActive(id ? data?.active : true);
         setSupplier(false);
         setClient(false);
         setContactMobile("");
@@ -191,6 +208,7 @@ export default function Form() {
         setCstDate(
           data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
         );
+        setPayTermDay(data?.payTermDay)
         setCode(data?.code || "");
         setPincode(data?.pincode || "");
         setWebsite(data?.website || "");
@@ -261,6 +279,7 @@ export default function Form() {
     companyId,
     shippingAddress,
     contactDetails,
+    payTermDay,
     accessoryItemList,
     processDetails: processDetails
       ? processDetails.map((item) => item.value)
@@ -279,7 +298,7 @@ export default function Form() {
     isLoading: isProcessLoading,
     isFetching: isProcessFetching,
   } = useGetProcessMasterQuery({ params });
-
+console.log(payTermDay,"payTermDay")
   const validateData = (data) => {
     if (data.name) {
       return true;
@@ -289,7 +308,7 @@ export default function Form() {
     }
     return false;
   };
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -297,6 +316,7 @@ export default function Form() {
       } else {
         returnData = await callback(data).unwrap();
       }
+  
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -309,25 +329,25 @@ export default function Form() {
         type: `CurrencyMaster/invalidateTags`,
         payload: ["Currency"],
       });
-      // let returnData = await callback(data).unwrap();
+  
       setId(returnData.data.id);
-      toast.success(text + "Successfully");
+      toast.success(`${text} Successfully`);
+      onNew();
+      setStep(1);
+      if(exit){
+        setForm(false)
+      }
+      if (openPartyModal === true) {
+        dispatch(push({ name: lastTapName }));
+      }
+         dispatch(setOpenPartyModal(false));
+           
     } catch (error) {
-      console.log("handle");
+      console.error("Submission error:", error);
+      toast.error("Something went wrong during submission");
     }
   };
-
-  function handleGroupRadioButton(e) {
-    setAccessoryGroup(e.target.checked);
-  }
-
-  function handleItemRadioButton(e) {
-    if (accessoryGroup) setAccessoryItemList([]);
-    setAccessoryGroupPrev(accessoryGroup);
-    setAccessoryGroup(!e.target.checked);
-    setItemsPopup(true);
-  }
-
+  
   useEffect(() => {
     if (itemsPopup) {
       setBackUpItemsList(accessoryItemList);
@@ -349,39 +369,30 @@ export default function Form() {
 
   const saveData = () => {
     if (!validateData(data)) {
-      console.log("hit");
-
-      toast.error("Please fill all required fields...!", {
+        toast.error("Please fill all required fields...!", {
         position: "top-center",
       });
       return;
     }
-    // if (!validateEmail(data.email)) {
-    //     toast.error("Please enter proper email id!", { position: "top-center" })
-    //     return
-    // }
-    // if (!validateMobile(data.mobile)) {
-    //     toast.error("Please enter proper mobile number...!", { position: "top-center" })
-    //     return
-    // }
-    // if (!validatePan(data.panNo)) {
-    //     toast.error("Please enter proper pan number...!", { position: "top-center" })
-    //     return
-    // }
-    // if (!validatePincode(data.localPincode)) {
-    //     toast.error("Please enter proper local Pincode...!", { position: "top-center" })
-    //     return
-    // }
-    // if (data.permPincode && !validatePincode(data.permPincode)) {
-    //     toast.error("Please enter proper perm. Pincode...!", { position: "top-center" })
-    //     return
-    // }
-
-    if (id) {
+       if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
       console.log("hit");
       handleSubmitCustom(addData, data, "Added");
+    }
+  };
+  const saveExitData = () => {
+    if (!validateData(data)) {
+        toast.error("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
+       if (id) {
+      handleSubmitCustom(updateData, data, "Updated", true);
+    } else {
+      console.log("hit");
+      handleSubmitCustom(addData, data, "Added",true);
     }
   };
 
@@ -439,11 +450,13 @@ export default function Form() {
   };
 
   const onNew = () => {
+     console.log("onNewCalled")
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
     setId("");
     syncFormWithDb(undefined);
+
   };
 
   function onDataClick(id) {
@@ -550,7 +563,12 @@ export default function Form() {
             setForm(false);
             setErrors({});
             setStep(1);
-          }}
+            if (openPartyModal === true) {
+              dispatch(push({ name: lastTapName }));
+            }
+            dispatch(setOpenPartyModal(false));
+           
+                      }}
         >
           <Modal
             isOpen={itemsPopup}
@@ -581,6 +599,7 @@ export default function Form() {
             model={MODEL}
             childRecord={childRecord.current}
             saveData={saveData}
+            saveExitData = {saveExitData}
             setReadOnly={setReadOnly}
             deleteData={deleteData}
             readOnly={readOnly}
@@ -600,7 +619,7 @@ export default function Form() {
                             readOnly ? "pointer-events-none" : ""
                           }`}
                         >
-                          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 md:grid-cols-2 gap-4" style={{fontSize:10}}>
                             <FancyCheckBox
                               label="Is Supplier"
                               value={isSupplier}
@@ -613,13 +632,7 @@ export default function Form() {
                               onChange={setClient}
                               readOnly={readOnly}
                             />
-                            <FancyCheckBox
-                              label="IGST"
-                              value={igst}
-                              onChange={setIgst}
-                              readOnly={readOnly}
-                            />
-
+                         
                             {isSupplier && (
                               <>
                                 <FancyCheckBox
@@ -790,6 +803,7 @@ export default function Form() {
           "id"
         )}
         masterName= "CITY MASTER"
+        lastTab = {activeTab}
         value={city}
         setValue={setCity}
         required={true}
@@ -797,7 +811,14 @@ export default function Form() {
         disabled={childRecord.current > 0}
        
       />
-
+   <TextInput
+        name="PayTerm Days"
+        type="name"
+        value={payTermDay}
+        setValue={setPayTermDay}
+        readOnly={readOnly}
+        disabled={childRecord.current > 0}
+      />
 
       <div className="col-span-1 md:col-span-2 mt-5 lg:col-span-3">
         <ToggleButton
@@ -809,6 +830,7 @@ export default function Form() {
           readOnly={readOnly}
         />
       </div>
+      
     </div>
   </fieldset>
 )}
@@ -955,35 +977,32 @@ export default function Form() {
               </div>
             </fieldset>
           </MastersForm>
-          <div className="absolute top-[80%] -right-6.5 flex justify-between mt-auto w-[100%] px-10">
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className={`  text-gray-900 field-text rounded-pill flex items-center pr-2 ${
-                step > 1 ? "visible" : "invisible"
-              }`}
-            >
-              <ChevronLeft
-                size={24}
-                className=" transition-colors duration-200 "
-              />
-              {/* Prev */}
-            </button>
+          <div className="absolute bottom-20 right-0 left-0 flex justify-between items-center px-5">
+  {/* Previous Icon Button */}
+  <button
+    type="button"
+    onClick={handlePrevious}
+    className={`w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 text-white shadow hover:bg-gray-700 transition duration-200 ${
+      step > 1 ? "block" : "hidden"
+    }`}
+    aria-label="Previous"
+  >
+    <ChevronLeft size={20} />
+  </button>
 
-            <button
-              type="button"
-              onClick={handleNext}
-              className={` text-gray-900 field-text rounded-pill flex items-center pl-2 ${
-                step < 3 ? "visible" : "invisible"
-              }`}
-            >
-              {/* Next */}
-              <ChevronRight
-                size={24}
-                className=" transition-colors duration-200"
-              />
-            </button>
-          </div>
+  {/* Next Icon Button */}
+  <button
+    type="button"
+    onClick={handleNext}
+    className={`w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition duration-200 ${
+      step < 3 ? "block" : "hidden"
+    }`}
+    aria-label="Next"
+  >
+    <ChevronRight size={20} />
+  </button>
+</div>
+
         </Modal>
       )}
     </div>

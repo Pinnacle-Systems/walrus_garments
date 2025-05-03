@@ -498,6 +498,7 @@ model Party {
   ShippingAddress ShippingAddress[]
   ContactDetails  ContactDetails[]
   Order           Order[]
+  payTermDay     String?
 }
 
 model PartyOnAccessoryItems {
@@ -761,8 +762,6 @@ model Po {
   transType        PoTypes
   dueDate          DateTime       @db.Date
   supplierId       Int
-  PayTerms         PayTerm        @relation(fields: [payTermId], references: [id])
-  payTermId        Int
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   createdBy        User           @relation("createdBy", fields: [createdById], references: [id])
@@ -782,6 +781,7 @@ model Po {
   deliveryBranchId Int?
   remarks          String?        @db.LongText
   PoItems          PoItems[]
+  payTermDay       String ?
 }
 
 model PoItems {
@@ -947,7 +947,6 @@ model PayTerm {
   Company              Company                @relation(fields: [companyId], references: [id])
   companyId            Int
   active               Boolean                @default(true)
-  Po                   Po[]
   DirectInwardOrReturn DirectInwardOrReturn[]
   BillEntry            BillEntry[]
 }

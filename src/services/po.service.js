@@ -121,11 +121,7 @@ async function get(req) {
                     aliasName: true
                 }
             },
-            PayTerms: {
-                select: {
-                    name: true
-                }
-            },
+          
             PoItems: {
                 select: {
                     qty: true
@@ -192,11 +188,7 @@ async function getOne(id) {
                     fDiaId: true,
                        }
             },
-            PayTerms: {
-                select: {
-                    name: true
-                }
-            },
+          
             supplier: {
                 select: {
                     aliasName: true,
@@ -777,7 +769,7 @@ let prismaTransType = transType.replace(/\s/g, '');
 }
 
 async function update(id, body) {
-    const { transType, dueDate, taxTemplateId, remarks,
+    const { transType, dueDate, taxTemplateId, remarks,payTermDay,
         supplierId, poItems, payTermId, deliveryType, deliveryToId,
         branchId, active, userId } = await body
          console.log(supplierId,"supplierId")
@@ -814,7 +806,7 @@ async function update(id, body) {
             data: {
                 transType,
                 // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
-                payTermId: parseInt(payTermId),
+                payTermDay: payTermDay,
                 dueDate: dueDate ? new Date(dueDate) : undefined,
                 supplierId: parseInt(supplierId),
                 branchId: parseInt(branchId),

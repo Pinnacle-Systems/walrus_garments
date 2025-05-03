@@ -17,6 +17,8 @@ import { statusDropdown } from '../../../Utils/DropdownData';
 import { Modal, TextInput, ToggleButton } from '../../../Inputs';
 import MastersForm from '../MastersForm/MastersForm';
 import Mastertable from '../MasterTable/Mastertable';
+import { useDispatch, useSelector } from 'react-redux';
+import { setOpenPartyModal } from '../../../redux/features/openModel';
 
 
 const MODEL = "Currency Master";
@@ -30,7 +32,7 @@ export default function Form() {
     const [code, setCode] = useState("");
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
-
+   const dispatch= useDispatch()
 
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
@@ -48,6 +50,14 @@ export default function Form() {
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetCurrencyMasterByIdQuery(id, { skip: !id });
+ const openPartyModal = useSelector((state) => state.party.openPartyModal);
+  console.log(openPartyModal,"openPartyModel")
+
+  useEffect(() => {
+    if (openPartyModal) {
+      setForm(true); 
+    }
+  }, [openPartyModal]);
 
 
     const [addData] = useAddCurrencyMasterMutation();
@@ -190,6 +200,7 @@ export default function Form() {
                                 setForm(false);
                                 setSearchValue("");
                                 setId(false);
+                                dispatch(setOpenPartyModal(false));
                             }}
                             model={MODEL}
                             childRecord={childRecord.current}

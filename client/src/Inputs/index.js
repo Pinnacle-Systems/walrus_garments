@@ -4,9 +4,9 @@ import { MultiSelect } from "react-multi-select-component";
 import Select from "react-dropdown-select";
 import { findFromList } from "../Utils/helper";
 import "./index.css";
-import { FormControl, MenuItem, TextField } from "@mui/material";
-import { CheckCircle, Circle } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { TextField } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { setLastTab, setOpenPartyModal } from "../redux/features/openModel";
 import { push } from "../redux/features/opentabs";
 
 export const handleOnChange = (event, setValue) => {
@@ -167,43 +167,37 @@ export const LongTextInput = ({
 
 export const DisabledInput = ({
   name,
-  type,
+  type = "text",
   value,
-  className = "",
-  textClassName = "",
   tabIndex = null,
-  readOnly,
-  required,
-}) => {
-  return (
-    <div className="   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full">
-      <label htmlFor="id" className={`md:text-start flex text-sm `}>
-        {required ? <RequiredLabel name={name} /> : `${name}`}
-      </label>
-      <TextField
-        id={name}
-        variant="standard"
-        name={`${name}`}
-        className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
-        // placeholder={`${name}`}
+  readOnly = true,
+  required = false,
+}) => (
+  <div className="flex flex-col w-full my-2 px-1">
+    <label htmlFor={name} className="text-xs text-gray-700 font-medium mb-1">
+      {required ? <RequiredLabel name={name} /> : name}
+    </label>
+    <TextField
+      id={name}
+      name={name}
+      type={type}
+      value={value}
+      variant="standard"
+      disabled={readOnly}
+      required={required}
+      tabIndex={tabIndex || undefined}
+      className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-gray-100"
+      sx={{
+        "& .MuiInputBase-input": { fontSize: "12px" },
+        "& .MuiInputBase-input.Mui-disabled": {
+          color: "#333",
+          WebkitTextFillColor: "#333",
+        },
+      }}
+    />
+  </div>
+);
 
-        sx={{
-          "& .MuiInputBase-input": { fontSize: "12px" },
-          "& .MuiInputBase-input.Mui-disabled": {
-            color: "#333",
-            WebkitTextFillColor: "#333",
-          },
-        }}
-        tabIndex={tabIndex ? tabIndex : undefined}
-        type={type}
-        disabled={readOnly}
-        required={required}
-        value={value}
-      />
-      {/* <input tabIndex={tabIndex ? tabIndex : undefined} type={type} className={`input-field ${textClassName} focus:outline-none md:col-span-1 border border-gray-500 group-hover:text-blue-600 rounded `} value={value} disabled /> */}
-    </div>
-  );
-};
 
 export const FloatingLabelInput = ({
   label,
@@ -299,80 +293,74 @@ export const TextArea = ({
     </div>
   );
 };
-
 export const DropdownInput = ({
   name,
-  beforeChange = () => {},
   onBlur = null,
-  options,
+  options = [],
   value,
   setValue,
-  defaultValue,
-  className,
-  readOnly,
+  defaultValue = "",
+  className = "",
+  readOnly = false,
   required = false,
   disabled = false,
-  clear = false,
+  clear = true,
   tabIndex = null,
   autoFocus = false,
   masterName = "",
+  lastTab,
 }) => {
   const dispatch = useDispatch();
-  console.log(masterName, "mastername");
+
   const handleOnChange = (e) => {
     const selectedValue = e.target.value;
-
     if (selectedValue === "__create_new__") {
-      console.log(`Trigger create new for: ${masterName}`);
+      dispatch(setOpenPartyModal(true));
+      dispatch(setLastTab(lastTab));
       dispatch(push({ name: masterName }));
-      return;
+    } else {
+      setValue(selectedValue);
     }
-
-    setValue(selectedValue);
   };
 
   return (
-    <div className="input-group items-center w-40 md:my-1 md:px-1 data">
-      <label
-        style={{ fontSize: 10 }}
-        className={`md:text-start flex text-sm ${className}`}
-      >
+    <div className="flex flex-col w-full my-2 px-1">
+      <label className={`text-xs text-gray-700 font-medium mb-1 ${className}`}>
         {required ? <RequiredLabel name={name} /> : name}
       </label>
-
       <select
         onBlur={onBlur}
-        style={{ fontSize: 10 }}
         autoFocus={autoFocus}
         tabIndex={tabIndex || undefined}
         defaultValue={defaultValue}
         required={required}
-        name="name"
-        className="input-field md:col-span-2 col-span-1 rounded min-w-40 border-b border-black"
         value={value}
+        name={name}
         onChange={handleOnChange}
         disabled={readOnly || disabled}
+        className="text-xs border-0 border-b-2  border-dotted border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
       >
-        {clear && <option value="">Select</option>}
-
+        {clear && (
+          <option value="" disabled>
+            -- Select {name} --
+          </option>
+        )}
+        {masterName && (
+          <option value="__create_new__" className="text-blue-600 font-semibold bg-gray-100">
+            + Create New
+          </option>
+        )}
         {options.map((option, index) => (
           <option key={index} value={option.value}>
             {option.show}
           </option>
         ))}
-
-        {masterName !== "" && (
-          <option
-            value="__create_new__"
-            className="text-blue-600 font-semibold"
-          >
-            + Create New 
-          </option>
-        )}
       </select>
     </div>
   );
 };
+
+
 
 // export const DropdownInput = ({
 //     name,
@@ -607,55 +595,43 @@ export const DateInput = ({
   name,
   value,
   setValue,
-  readOnly,
+  readOnly = false,
   required = false,
   type = "date",
   disabled = false,
   tabIndex = null,
-  inputClass,
-  inputHead,
-}) => {
-  return (
-    <div className="   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full">
-      <label
-        htmlFor="id"
-        style={{ fontSize: 10 }}
-        className={`md:text-start flex text-gray-700 ${inputHead}`}
-      >
-        {required ? <RequiredLabel name={name} /> : `${name}`}
-      </label>
-      <TextField
-        id={name}
-        variant="standard"
-        name={`${name}`}
-        className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
-        // placeholder={`${name}`}
+  inputClass = "",
+  inputHead = "",
+}) => (
+  <div className="flex flex-col w-28 my-2 px-1">
+    <label htmlFor={name} className={`text-xs text-gray-700 font-medium mb-1 ${inputHead}`}>
+      {required ? <RequiredLabel name={name} /> : name}
+    </label>
+    <TextField
+      id={name}
+      name={name}
+      type={type}
+      value={value}
+      onChange={(e) =>
+        type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue)
+      }
+      variant="standard"
+      required={required}
+      disabled={readOnly || disabled}
+      tabIndex={tabIndex || undefined}
+      readOnly={readOnly}
+      className={`w-full border border-gray-300 rounded px-2 py-1 text-xs ${inputClass}`}
+      sx={{
+        "& .MuiInputBase-input": { fontSize: "12px" },
+        "& .MuiInputBase-input.Mui-disabled": {
+          color: "#333",
+          WebkitTextFillColor: "#333",
+        },
+      }}
+    />
+  </div>
+);
 
-        sx={{
-          "& .MuiInputBase-input": { fontSize: "11px" },
-          "& .MuiInputBase-input.Mui-disabled": {
-            color: "#333",
-            WebkitTextFillColor: "#333",
-          },
-        }}
-        tabIndex={tabIndex ? tabIndex : undefined}
-        type={type}
-        disabled={readOnly}
-        required={required}
-        value={value}
-        onChange={(e) => {
-          type === "number"
-            ? setValue(e.target.value)
-            : handleOnChange(e, setValue);
-        }}
-        readOnly={readOnly}
-      />
-
-      {/* <input tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled} required={required}
-                className={`input-field focus:outline-none md:col-span-2 border border-gray-500 rounded  ${inputClass}`} id='id' value={value} onChange={(e) => { setValue(e.target.value); }} readOnly={readOnly} /> */}
-    </div>
-  );
-};
 
 export const LongDateInput = ({
   name,
@@ -692,6 +668,7 @@ export const LongDateInput = ({
 export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
   return (
     <label
+    style={{fontSize:11}}
       className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${
         readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
       }`}
