@@ -114,7 +114,7 @@ const MastersForm = ({
             )}
             <div className="mx-0.5">{children}</div>
           </div>
-          <div className="w-[95%] mx-auto flex flex-wrap justify-end gap-2 mt-auto">
+          <div className="w-[95%] mx-auto flex flex-wrap justify-center gap-2 mt-auto">
             <CloseButton
               onClick={() => {
                 onClose();

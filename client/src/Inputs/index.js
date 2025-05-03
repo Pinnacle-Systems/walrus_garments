@@ -165,7 +165,7 @@ export const LongTextInput = ({
   );
 };
 
-export const DisabledInput = ({
+export const DisabledInput = ({ 
   name,
   type = "text",
   value,
@@ -680,7 +680,7 @@ export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
         disabled={readOnly}
         className="accent-blue-600"
       />
-      <span className="break-words text-wrap w-full">{label}</span>
+      <span className="break-words text-xs text-wrap w-full">{label}</span>
     </label>
   );
 };

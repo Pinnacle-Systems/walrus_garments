@@ -47,14 +47,14 @@ export const NewButton = ({ onClick }) => {
 }
 
 export const EditButton = ({ onClick }) => (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200"
-    >
-      <FontAwesomeIcon icon={faEdit} /> Edit
-    </button>
-  );
-  
+  <button
+    onClick={onClick}
+    className="flex items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 shadow-sm"
+  >
+    <FontAwesomeIcon icon={faEdit} /> Edit
+  </button>
+);
+
 export const EditButtonOnly = ({ onClick }) => {
     return (
         <button className="text-white px-3 pb-1  mt-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
@@ -64,66 +64,70 @@ export const EditButtonOnly = ({ onClick }) => {
     )
 }
 
+const baseButtonStyles = " items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-200";
+
 export const SaveButton = ({ onClick }) => {
-    const [isDisabled, setIsDisabled] = useState(false);
-  
-    const disableButton = () => {
-      setIsDisabled(true);
-      setTimeout(() => setIsDisabled(false), 5000);
-    };
-  
-    return (
-      <button
-        disabled={isDisabled}
-        onClick={() => {
-          onClick();
-          disableButton();
-        }}
-        className={`flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200 ${
-          isDisabled
-            ? "bg-green-300 text-white cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700 text-white"
-        }`}
-      >
-        <FontAwesomeIcon icon={faSave} /> Save
-      </button>
-    );
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const disableButton = () => {
+    setIsDisabled(true);  
+    setTimeout(() => setIsDisabled(false), 5000);
   };
-  
-  export const SaveExitButton = ({ onClick }) => {
-    const [isDisabled, setIsDisabled] = useState(false);
-  
-    const disableButton = () => {
-      setIsDisabled(true);
-      setTimeout(() => setIsDisabled(false), 5000);
-    };
-  
-    return (
-      <button
-        disabled={isDisabled}
-        onClick={() => {
-          onClick();
-          disableButton();
-        }}
-        className={`flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200 ${
-          isDisabled
-            ? "bg-green-300 text-white cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700 text-white"
-        }`}
-      >
-        <FontAwesomeIcon icon={faSave} /> Save & Exit
-      </button>
-    );
+
+  return (
+    <button
+      disabled={isDisabled}
+      onClick={() => {
+        onClick();
+        disableButton();
+      }}
+      className={`${baseButtonStyles} ${
+        isDisabled
+          ? "bg-green-300 text-white cursor-not-allowed"
+          : "bg-green-600 hover:bg-green-700 active:bg-green-800 text-white"
+      }`}
+    >
+      <FontAwesomeIcon icon={faSave} /> Save
+    </button>
+  );
+};
+
+export const SaveExitButton = ({ onClick }) => {
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const disableButton = () => {
+    setIsDisabled(true);
+    setTimeout(() => setIsDisabled(false), 5000);
   };
+
+  return (
+    <button
+      disabled={isDisabled}
+      onClick={() => {
+        onClick();
+        disableButton();
+      }}
+      className={`${baseButtonStyles} ${
+        isDisabled
+          ? "bg-green-300 text-white cursor-not-allowed"
+          : "bg-green-600 hover:bg-green-700 active:bg-green-800 text-white"
+      }`}
+    >
+      <FontAwesomeIcon icon={faSave} /> Save & Exit
+    </button>
+  );
+};
+
   
-export const CloseButton = ({ onClick }) => {
-    return (
-        <div
-            className='cursor-pointer px-3 py-1.5 text-xs rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 bg-red-500  hover:bg-red-400 active:bg-red-600' onClick={() => onClick()}>
-            {<FontAwesomeIcon icon={faClose} />} Cancel
-        </div>
-    )
-}
+export const CloseButton = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 active:bg-red-800 transition-all duration-200 shadow-sm"
+  >
+    <FontAwesomeIcon icon={faClose} /> Cancel
+  </button>
+);
+
 
 export const OpenTable = ({ onClick }) => {
     return (
@@ -134,14 +138,14 @@ export const OpenTable = ({ onClick }) => {
 }
 
 export const DeleteButton = ({ onClick }) => (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-600 text-xs font-medium px-3 py-1 rounded-xl shadow-sm transition-all duration-200"
-    >
-      <FontAwesomeIcon icon={faTrashCan} /> Delete
-    </button>
-  );
-  
+  <button
+    onClick={onClick}
+    className="flex items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 active:bg-red-300 transition-all duration-200 shadow-sm"
+  >
+    <FontAwesomeIcon icon={faTrashCan} /> Delete
+  </button>
+);
+
 
 
 

@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { push } from '../../../redux/features/opentabs';
 
 import secureLocalStorage from 'react-secure-storage';
 import {
     useAddCurrencyMasterMutation,
     useDeleteCurrencyMasterMutation,
     useGetCurrencyMasterByIdQuery,
-
-
     useGetCurrencyMasterQuery,
-
-
     useUpdateCurrencyMasterMutation
 } from '../../../redux/services/CurrencyMasterServices';
 import toast from 'react-hot-toast';
@@ -58,7 +55,8 @@ export default function Form() {
       setForm(true); 
     }
   }, [openPartyModal]);
-
+  const lastTapName =  useSelector((state)=>state.party.lastTab)    
+  console.log(lastTapName,"lastTapName")
 
     const [addData] = useAddCurrencyMasterMutation();
     const [updateData] = useUpdateCurrencyMasterMutation();
@@ -102,6 +100,9 @@ export default function Form() {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             toast.success(text + "Successfully");
+              if (openPartyModal === true) {
+                    dispatch(push({ name: lastTapName }));
+                  }
 
         } catch (error) {
             console.log("handle");
@@ -124,7 +125,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
-
+    const saveExitData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+           if (id) {
+          handleSubmitCustom(updateData, data, "Updated", true);
+        } else {
+          console.log("hit");
+          handleSubmitCustom(addData, data, "Added",true);
+        }
+      };
     const deleteData = async () => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
@@ -165,7 +179,7 @@ export default function Form() {
         setId(id);
         setForm(true);
     }
-
+ console.log(openPartyModal,"openPartyModal")
     const tableHeaders = [
         "S.NO", "Code", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
     ]
@@ -193,13 +207,22 @@ export default function Form() {
                 />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); if (openPartyModal === true) {
+                                     console.log("isCalled")
+                                              dispatch(push({ name: lastTapName }));
+                                            }; dispatch(setOpenPartyModal(false)); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
                                 setForm(false);
                                 setSearchValue("");
+                                console.log("isCalled outside")
+
                                 setId(false);
+                                 if (openPartyModal === true) {
+                                     console.log("isCalled")
+                                              dispatch(push({ name: lastTapName }));
+                                            }
                                 dispatch(setOpenPartyModal(false));
                             }}
                             model={MODEL}

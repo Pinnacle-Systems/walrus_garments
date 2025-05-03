@@ -20,7 +20,9 @@ import { useDispatch } from "react-redux";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from '../MastersForm/MastersForm';
 import { statusDropdown } from "../../../Utils/DropdownData";
-
+import { useSelector } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
+import { setOpenPartyModal } from "../../../redux/features/openModel";
 const MODEL = "City Master";
 
 export default function Form() {
@@ -45,8 +47,15 @@ export default function Form() {
     };
     const { data: stateList, isLoading: isStateLoading, isFetching: isStateFetching } = useGetStateQuery({ params });
     const { data: allData, isLoading, isFetching } = useGetCityQuery({ params, searchParams: searchValue });
-
-
+ const lastTapName =  useSelector((state)=>state.party.lastTab)    
+  console.log(lastTapName,"lastTapName")
+  const openPartyModal = useSelector((state) => state.party.openPartyModal);
+    console.log(openPartyModal,"openPartyModel")
+ useEffect(() => {
+    if (openPartyModal) {
+      setForm(true); 
+    }
+  }, [openPartyModal]);
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -97,6 +106,9 @@ export default function Form() {
             setId(returnData.data.id)
             toast.success(text + "Successfully");
             setForm(false)
+              if (openPartyModal === true) {
+                                dispatch(push({ name: lastTapName }));
+                              }
             dispatch({
                 type: `StateMaster/invalidateTags`,
                 payload: ['State'],
@@ -123,6 +135,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
+    const saveExitData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+           if (id) {
+          handleSubmitCustom(updateData, data, "Updated", true);
+        } else {
+          console.log("hit");
+          handleSubmitCustom(addData, data, "Added",true);
+        }
+      };
 
     const deleteData = async () => {
         if (id) {
@@ -217,12 +243,18 @@ export default function Form() {
                             isLoading || isFetching
                         } />
                     <div>
-                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false);if (openPartyModal === true) {
+                                                             console.log("isCalled")
+                                                                      dispatch(push({ name: lastTapName }));
+                                                                    }; dispatch(setOpenPartyModal(false)); setErrors({}); }}>
                             <MastersForm
                                 onNew={onNew}
                                 onClose={() => {
                                     setForm(false);
                                     setSearchValue("");
+                                      if (openPartyModal === true) {
+                                                        dispatch(push({ name: lastTapName }));
+                                                      }
                                     setId(false);
                                 }}
                                 model={MODEL}

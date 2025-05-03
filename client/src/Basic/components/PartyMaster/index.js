@@ -111,6 +111,7 @@ export default function Form() {
   const params = {
     companyId,
   };
+;
   const { data: cityList } = useGetCityQuery({ params });
   console.log(cityList, "cityList");
 
@@ -125,12 +126,11 @@ export default function Form() {
   const lastTapName =  useSelector((state)=>state.party.lastTab)
   const masterNames = useSelector((state) => state.party.masterName);
 
-  console.log(masterNames,"masterNames")
-  const activeTab = useSelector((state) =>
-    state.openTabs.tabs.find((tab) => tab.active.name)
-  ); 
- 
-
+  console.log(lastTapName,"lastTapName")
+const activeTab = useSelector((state) =>
+    state.openTabs.tabs.find((tab) => tab.active).name
+  );
+  console.log(activeTab, "activeTab")
   useEffect(() => {
     if (openPartyModal) {
       setId("");
@@ -149,7 +149,7 @@ export default function Form() {
   const [addData] = useAddPartyMutation();
   const [updateData] = useUpdatePartyMutation();
   const [removeData] = useDeletePartyMutation();
-
+ 
   const syncFormWithDb = useCallback(
     (data) => {
       if (!id) {
@@ -619,7 +619,7 @@ console.log(payTermDay,"payTermDay")
                             readOnly ? "pointer-events-none" : ""
                           }`}
                         >
-                          <div className="grid grid-cols-2 md:grid-cols-2 gap-4" style={{fontSize:10}}>
+                          <div className="grid grid-cols-2 md:grid-cols-2 gap-4" style={{fontSize:12}}>
                             <FancyCheckBox
                               label="Is Supplier"
                               value={isSupplier}
@@ -788,6 +788,7 @@ console.log(payTermDay,"payTermDay")
           "name",
           "id"
         )}
+        lastTab = {activeTab}
         masterName="CURRENCY MASTER"
         value={currency}
         setValue={setCurrency}
@@ -838,10 +839,10 @@ console.log(payTermDay,"payTermDay")
 {step === 3 && (
   <>
     {/* Shipping Address */}
-    <fieldset className="bg-white p-4 rounded-lg shadow-sm border border-gray-300 mb-4 text-[10px]">
+    <fieldset className="bg-white p-4 rounded-lg shadow-sm border border-gray-300 mb-4 text-[12px]">
       <legend className="text-[11px] font-semibold text-gray-700 mb-2 px-2">Shipping Address</legend>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-gray-700 border border-gray-300 text-[10px]">
+        <table className="min-w-full text-gray-700 border border-gray-300 text-[12px]">
           <thead className="bg-blue-100 text-left">
             <tr className="h-6">
               <th className="px-1 py-1 w-10 border-r">S.No</th>
@@ -863,7 +864,7 @@ console.log(payTermDay,"payTermDay")
                 <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[10px]"
+                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[12px]"
                     value={item?.address || ""}
                     disabled={readOnly}
                     onChange={(e) =>
@@ -888,10 +889,10 @@ console.log(payTermDay,"payTermDay")
     </fieldset>
 
     {/* Contact Details */}
-    <fieldset className="bg-white p-4 rounded-lg shadow-sm border border-gray-300 text-[10px]">
+    <fieldset className="bg-white p-4 rounded-lg shadow-sm border border-gray-300 text-[12px]">
       <legend className="text-[11px] font-semibold text-gray-700 mb-2 px-2">Contact Details</legend>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-gray-700 border border-gray-300 text-[10px]">
+        <table className="min-w-full text-gray-700 border border-gray-300 text-[12px]">
           <thead className="bg-blue-100 text-left">
             <tr className="h-6">
               <th className="px-1 py-1 w-10 border-r">S.No</th>
@@ -916,7 +917,7 @@ console.log(payTermDay,"payTermDay")
                 <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded px-1 py-[2px] capitalize focus:outline-none focus:ring-1 focus:ring-blue-400 text-[10px]"
+                    className="w-full border border-gray-300 rounded px-1 py-[2px] capitalize focus:outline-none focus:ring-1 focus:ring-blue-400 text-[12px]"
                     value={item.contactPersonName}
                     onChange={(e) => {
                       const updated = [...contactDetails];
@@ -931,7 +932,7 @@ console.log(payTermDay,"payTermDay")
                 <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[10px]"
+                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[12px]"
                     value={item.mobileNo}
                     onChange={(e) => {
                       const updated = [...contactDetails];
@@ -946,7 +947,7 @@ console.log(payTermDay,"payTermDay")
                 <td className="px-1 py-1">
                   <input
                     type="text"
-                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[10px]"
+                    className="w-full border border-gray-300 rounded px-1 py-[2px] focus:outline-none focus:ring-1 focus:ring-blue-400 text-[12px]"
                     value={item.email}
                     onChange={(e) => {
                       const updated = [...contactDetails];
@@ -977,7 +978,7 @@ console.log(payTermDay,"payTermDay")
               </div>
             </fieldset>
           </MastersForm>
-          <div className="absolute bottom-20 right-0 left-0 flex justify-between items-center px-5">
+          <div className="absolute bottom-12 right-0 left-0 flex justify-between items-center px-5">
   {/* Previous Icon Button */}
   <button
     type="button"
