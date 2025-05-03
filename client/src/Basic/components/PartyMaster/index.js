@@ -38,7 +38,7 @@ import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMaste
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { DELETE, PLUS } from "../../../icons";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
@@ -124,7 +124,6 @@ export default function Form() {
   } = useGetPartyQuery({ params, searchParams: searchValue });
   const openPartyModal = useSelector((state) => state.party.openPartyModal);
   const lastTapName =  useSelector((state)=>state.party.lastTab)
-  const masterNames = useSelector((state) => state.party.masterName);
 
   console.log(lastTapName,"lastTapName")
 const activeTab = useSelector((state) =>
@@ -316,7 +315,7 @@ console.log(payTermDay,"payTermDay")
       } else {
         returnData = await callback(data).unwrap();
       }
-  
+      toast.success(text + "Successfully");
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -331,16 +330,18 @@ console.log(payTermDay,"payTermDay")
       });
   
       setId(returnData.data.id);
-      toast.success(`${text} Successfully`);
       onNew();
       setStep(1);
       if(exit){
         setForm(false)
       }
-      if (openPartyModal === true) {
-        dispatch(push({ name: lastTapName }));
+      if(exit){
+        if (openPartyModal === true) {
+          dispatch(push({ name: lastTapName }));
+        }
+           dispatch(setOpenPartyModal(false));
       }
-         dispatch(setOpenPartyModal(false));
+     
            
     } catch (error) {
       console.error("Submission error:", error);

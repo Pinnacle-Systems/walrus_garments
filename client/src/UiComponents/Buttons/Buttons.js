@@ -38,21 +38,24 @@ export const Delete = ({ onClick }) => {
     )
 }
 
-export const NewButton = ({ onClick }) => {
-    return (
-        <button className='text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline' onClick={() => { onClick(); }}>
-            {<FontAwesomeIcon icon={faUserPlus} />} New
-        </button>
-    )
-}
+const baseClasses = "flex items-center text-sm font-medium py-2 px-4 rounded-xl shadow-md transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-1";
+
+export const NewButton = ({ onClick }) => (
+    <button
+        onClick={onClick}
+        className={`${baseClasses} text-white bg-violet-500 hover:bg-violet-600 hover:scale-105`}
+    >
+        <FontAwesomeIcon icon={faUserPlus} className="me-2" /> New
+    </button>
+);
 
 export const EditButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="flex items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 shadow-sm"
-  >
-    <FontAwesomeIcon icon={faEdit} /> Edit
-  </button>
+    <button
+        onClick={onClick}
+        className={`${baseClasses} text-white bg-yellow-400 hover:bg-yellow-500 hover:scale-105`}
+    >
+        <FontAwesomeIcon icon={faEdit} className="me-2" /> Edit
+    </button>
 );
 
 export const EditButtonOnly = ({ onClick }) => {

@@ -30,9 +30,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     };
 
     useEffect(() => {
-        if (poItems.length >= 10) return
+        if (poItems.length >= 9) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 10 - prev.length }, i => {
+            let newArray = Array.from({ length: 9 - prev.length }, i => {
                 return { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
             })
             return [...prev, ...newArray]

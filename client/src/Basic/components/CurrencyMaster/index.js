@@ -53,6 +53,7 @@ export default function Form() {
   useEffect(() => {
     if (openPartyModal) {
       setForm(true); 
+      setId('')
     }
   }, [openPartyModal]);
   const lastTapName =  useSelector((state)=>state.party.lastTab)    

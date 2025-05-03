@@ -102,65 +102,59 @@ const FormHeader = ({
   };
   return (
     <>
-      {isLoading || isFetching ? (
-        <div></div>
-      ) : (
-        <div className="md:flex md:items-center md:justify-between ">
-          {model ? (
-            <div className="font-bold  heading text-center md:mx-10">
-              {model}
-            </div>
-          ) : (
-            <div></div>
-          )}
-          <div className="flex sub-heading">
-            {
-              viewReport &&
-              <ViewButtton onClick={viewReport} />
-            }
-            {
-              projectOpen &&
-              <OpenProjectButton setNavigateProjectId={setNavigateProjectId} quotesData={quotesData} onClick={() => {
-                projectOpen()
-              }} />
-
-            }
-
-            <NewButton onClick={() => { hasPermission(onNew, "create") }} />
-            {setReadOnly &&
-              <EditButton
-                onClick={() => {
-                  hasPermission(setReadOnly, "edit");
-                  toast.info("You Can Edit The Datas...!", { position: "top-center" })
-                }}
-              />}
-
-            {
-              saveData && <SaveButton
-                onClick={saveData}
-              />
-            }
-            {
-              deleteData &&
-              <DeleteButton
-                onClick={() => {
-                  hasPermission(deleteData, "delete");
-                }}
-              />
-            }
-
-            {openReport && <SearchButton onClick={openReport} />}
-            {onPrint &&
-              <PrintButtonOnly onClick={onPrint}
-              />}
-            {onClose &&
-              <CloseButton onClick={onClose} />
-            }
-
+    {isLoading || isFetching ? (
+      <div></div>
+    ) : (
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-4 py-2 border-b border-gray-300 bg-white shadow-sm">
+        
+        {model ? (
+          <div className="text-xl font-semibold text-center md:text-left text-gray-800">
+            {model}
           </div>
+        ) : (
+          <div></div>
+        )}
+  
+        <div className="flex flex-wrap gap-2 justify-center md:justify-end">
+          {viewReport && <ViewButtton onClick={viewReport} />}
+          
+          {projectOpen && (
+            <OpenProjectButton
+              setNavigateProjectId={setNavigateProjectId}
+              quotesData={quotesData}
+              onClick={() => projectOpen()}
+            />
+          )}
+  
+          <NewButton onClick={() => hasPermission(onNew, "create")} />
+  
+          {setReadOnly && (
+            <EditButton
+              onClick={() => {
+                hasPermission(setReadOnly, "edit");
+                toast.info("You Can Edit The Datas...!", { position: "top-center" });
+              }}
+            />
+          )}
+  
+          {saveData && <SaveButton onClick={saveData} />}
+          
+          {deleteData && (
+            <DeleteButton
+              onClick={() => hasPermission(deleteData, "delete")}
+            />
+          )}
+  
+          {openReport && <SearchButton onClick={openReport} />}
+          
+          {onPrint && <PrintButtonOnly onClick={onPrint} />}
+          
+          {onClose && <CloseButton onClick={onClose} />}
         </div>
-      )}
-    </>
+      </div>
+    )}
+  </>
+  
   );
 };
 
