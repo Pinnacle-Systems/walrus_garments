@@ -781,7 +781,6 @@ model Po {
   deliveryBranchId Int?
   remarks          String?        @db.LongText
   PoItems          PoItems[]
-  payTermDay       String ?
 }
 
 model PoItems {

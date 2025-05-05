@@ -336,9 +336,10 @@ console.log(payTermDay,"payTermDay")
         setForm(false)
       }
       if(exit){
-        if (openPartyModal === true) {
+        if (openPartyModal === true && lastTapName) {
           dispatch(push({ name: lastTapName }));
         }
+        
            dispatch(setOpenPartyModal(false));
       }
      

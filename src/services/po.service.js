@@ -725,7 +725,7 @@ export function getPoItemObject(transType, item) {
     newItem["qty"] = parseFloat(item["qty"])
     newItem["price"] = parseFloat(item["price"])
     newItem["discountType"] = item["discountType"] 
-    newItem["discountAmount"] = item["discountAmount"]
+    newItem["discountAmount"] =parseFloat( item["discountAmount"])
     newItem["tax"] = parseFloat(item["tax"])
     newItem["discountValue"] = parseFloat(item["discountValue"])
   
@@ -745,7 +745,7 @@ let prismaTransType = transType.replace(/\s/g, '');
     const data = await prisma.po.create({
         data: {
             transType: prismaTransType,
-            payTermId: parseInt(payTermId),
+            payTermDay: payTermId,
             docId,
             dueDate: dueDate ? new Date(dueDate) : undefined,
             supplierId: parseInt(supplierId),

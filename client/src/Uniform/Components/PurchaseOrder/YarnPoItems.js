@@ -167,7 +167,7 @@ const YarnPoItems = ({
       </Modal>
       <div className={` relative w-full overflow-y-auto py-1`}>
         <table className=" border border-gray-500 text-xs table-auto  w-full">
-          <thead className="bg-gray-200 top-0 border-b border-gray-500">
+          <thead className="bg-gray-200 top-0 border-b text-gray-800 border-gray-500">
             <tr>
               <th className="table-data  w-2 text-center">S.no</th>
 

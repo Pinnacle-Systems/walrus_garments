@@ -178,15 +178,14 @@ export default function Form() {
     }
     return false
   }
+   console.log(transType,"transtype")
   const validateData = (data) => {
     let mandatoryFields = ["uomId", "colorId", "qty", "price"];
     if (transType === "GreyYarn" || transType === "DyedYarn") {
       mandatoryFields = [...mandatoryFields, ...["yarnId", "noOfBags"]]
     } else if (transType === "GreyFabric" || transType === "DyedFabric") {
       mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-    } else if (transType === "Accessory") {
-      mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-    }
+    } 
     return data.supplierId && data.dueDate && data.payTermId
       && isGridDatasValid(data.poItems, false, mandatoryFields) && data.poItems.length !== 0
   }
@@ -215,10 +214,7 @@ export default function Form() {
 
   const saveData = () => {
     console.log(data, "data for valitation")
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", { position: "top-center" })
-      return
-    }
+   
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
@@ -429,6 +425,7 @@ export default function Form() {
                                 : dropDownListObject(clientDetail, "name", "id")
                             }
                             masterName="PARTY MASTER"
+                            lastTab={activeTab}
                             value={deliveryToId}
                             setValue={setDeliveryToId}
                             required
