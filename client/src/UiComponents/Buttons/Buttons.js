@@ -52,7 +52,7 @@ export const NewButton = ({ onClick }) => (
 export const EditButton = ({ onClick }) => (
     <button
         onClick={onClick}
-        className={`${baseClasses} text-white bg-yellow-400 hover:bg-yellow-500 hover:scale-105`}
+        className={`${baseClasses} text-white bg-amber-700 hover:bg-amber-800 hover:scale-105`}
     >
         <FontAwesomeIcon icon={faEdit} className="me-2" /> Edit
     </button>

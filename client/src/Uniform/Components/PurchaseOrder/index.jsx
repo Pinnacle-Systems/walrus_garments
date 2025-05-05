@@ -281,8 +281,14 @@ export default function Form() {
   }
   const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
   console.log(clientDetail, "clientDetail")
-  let supplierListBasedOnSupply = filterSupplier()
+ 
+    let supplierListBasedOnSupply = filterSupplier()
   transType.toLowerCase().includes("greyyarn".toLowerCase())
+   console.log(supplierListBasedOnSupply,"supplierListBasedOnSupply")
+    console.log(supplierId,"supplierId")
+    const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+
+   console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
   return (
     <div
       onKeyDown={handleKeyDown}
@@ -395,14 +401,12 @@ export default function Form() {
                         </div>
 
                         <div className="col-span-1 pt-0.5">
-                          <DropdownInput
-                            name="Pay Terms"
-                            options={dropDownListObject(payTermList?.data || [], "name", "id")}
-                            value={payTermId}
-                            setValue={setPayTermId}
-                            required
-                            readOnly={readOnly}
-                          />
+                        <DisabledInput 
+  name="Pay Terms" 
+  value={payTermDay} 
+  required 
+/>
+
                         </div>
 
                         <div className="col-span-1 pt-0.5">

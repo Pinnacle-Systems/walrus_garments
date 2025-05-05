@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSave, faClose, faUserPlus, faEdit, faTrashCan, faPlusCircle, faRefresh,faSearch, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {  faClose, faUserPlus, faEdit, faTrashCan, faPlusCircle, faRefresh,faSearch, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { useState } from 'react';
 import excelIcon from "../assets/icons8-microsoft-excel-48.png"
 import {
@@ -62,7 +62,7 @@ export const NewButton = ({ onClick }) => (
 );
 
 export const EditButton = ({ onClick }) => (
-  <button onClick={onClick} className={`${baseClasses} text-white bg-amber-400 hover:bg-amber-500`}>
+  <button onClick={onClick} className={`${baseClasses} text-white bg-amber-800 hover:bg-amber-900`}>
     <FontAwesomeIcon icon={faPenToSquare} className="me-1" /> Edit
   </button>
 );
