@@ -363,7 +363,7 @@ const Login = () => {
       <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-[#e0e7ff] via-white to-[#f0f5ff] font-[Poppins] overflow-hidden"
       style={{
         backgroundImage:
-          "url('https://media.istockphoto.com/id/1387073187/vector/orange-vector-cover-wallpaper.jpg?s=612x612&w=0&k=20&c=c-mVdVrioq3C4kcLxk4Y-bltcCUv3z0l5SzaaerfC-A=')",
+          "url('https://files.123freevectors.com/wp-content/original/107061-light-orange-abstract.jpg')",
         fontFamily: 'Poppins, sans-serif',
       }}
     >
