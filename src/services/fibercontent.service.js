@@ -3,10 +3,9 @@ import { NoRecordFound } from '../configs/Responses.js';
 
 const prisma = new PrismaClient()
 
-
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.fabric.findMany({
+    const data = await prisma.fiberContent.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -18,22 +17,22 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.fabric.findUnique({
+    const data = await prisma.fiberContent.findUnique({
         where: {
             id: parseInt(id)
         },
-        // include: {
-        //     FabricOnYarnBlend: true
-        // }
+        include: {
+            fiberBlend: true
+        }
     })
-    if (!data) return NoRecordFound("Fabric");
+    if (!data) return NoRecordFound("fiberContent");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active } = req.query
-    const data = await prisma.fabric.findMany({
+    const data = await prisma.fiberContent.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -50,21 +49,18 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { fabricTypeId, hsn, yarnBlendDetails, organic, companyId, active, aliasName } = await body
-    const data = await prisma.fabric.create(
+    const { aliasName, companyId, active, fiberBlend } = await body
+    const data = await prisma.fiberContent.create(
         {
             data: {
-                // fabricTypeId: parseInt(fabricTypeId),
-                // aliasName, hsn,
-                // FabricOnYarnBlend: yarnBlendDetails ? {
-                //     createMany: {
-                //         data: yarnBlendDetails.map(blend => {
-                //             return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
-                //         })
-                //     }
-                // } : undefined,
-                // organic,
                 aliasName,
+                fiberBlend: fiberBlend ? {
+                    createMany: {
+                        data: fiberBlend.map(blend => {
+                            return { fabricId: parseInt(blend.fabricId), percentage: parseInt(blend.percentage) }
+                        })
+                    }
+                } : undefined,
                 companyId: parseInt(companyId), active
             }
         }
@@ -73,30 +69,27 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { fabricTypeId, hsn, yarnBlendDetails, organic, companyId, active, aliasName } = await body
-    const dataFound = await prisma.fabric.findUnique({
+    const { contentId, yarnTypeId, countsId, aliasName, hsn, fiberBlend, taxPercent, companyId, active } = await body
+    const dataFound = await prisma.fiberContent.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("Fabric");
-    const data = await prisma.fabric.update({
+    if (!dataFound) return NoRecordFound("yarn");
+    const data = await prisma.fiberContent.update({
         where: {
             id: parseInt(id),
         },
         data: {
-            // fabricTypeId: parseInt(fabricTypeId),
-            // aliasName, hsn,
-            // FabricOnYarnBlend: yarnBlendDetails ? {
-            //     deleteMany: {},
-            //     createMany: {
-            //         data: yarnBlendDetails.map(blend => {
-            //             return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
-            //         })
-            //     }
-            // } : undefined,
-            // organic,
             aliasName,
+            fiberBlend: fiberBlend ? {
+                deleteMany: {},
+                createMany: {
+                    data: fiberBlend.map(blend => {
+                        return { fabricId: parseInt(blend.fabricId), percentage: parseInt(blend.percentage) }
+                    })
+                }
+            } : undefined,
             companyId: parseInt(companyId), active
         }
     })
@@ -104,7 +97,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.fabric.delete({
+    const data = await prisma.fiberContent.delete({
         where: {
             id: parseInt(id)
         },

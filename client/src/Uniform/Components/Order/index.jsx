@@ -134,7 +134,7 @@ export default function Form() {
         setFootColor(data?.footColor ? data?.footColor : "");
         setStripeColor(data?.stripeColor ? data?.stripeColor : "");
         setNoOfStripes(data?.noOfStripes ? data?.noOfStripes : 0);
-        setName(data?.name ? data?.name : 0);
+        setName(data?.name ? data?.name : "");
 
         // setNoOfSet(data?.noOfSet ? data?.noOfSet : "")
     }, [id]);
@@ -334,8 +334,8 @@ export default function Form() {
                             <div className='col-span-3 grid '>
                                 <div className='mr-1'>
                                     <div className={`grid`}>
-                                        <div className={"flex flex-col gap-x-2 h-[100vh] gap-y-4"}>
-                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1 h-[24vh]'>
+                                        <div className={"flex flex-col gap-x-2 h-[130vh] gap-y-4"}>
+                                            <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 p-1 h-[36vh]'>
                                                 <legend className='sub-heading'>Order Info</legend>
                                                 <div className='flex flex-col justify-center items-start flex-1 w-full'>
                                                     <div className="grid grid-cols-5 gap-x-2 w-full">
@@ -350,17 +350,18 @@ export default function Form() {
                                                         <DropdownInput name="Leg Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={legColor} setValue={setLegColor} required={true} readOnly={readOnly} />
                                                         <DropdownInput name="Foot Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={footColor} setValue={setFootColor} required={true} readOnly={readOnly} />
                                                         <DropdownInput name="Stripe Color" options={dropDownListObject((colorlist?.data || []), "name", "id")} value={stripeColor} setValue={setStripeColor} required={true} readOnly={readOnly} />
-                                                        <TextInput name="LogoName" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        <TextInput name="NoOfStripes" type="text" value={noOfStripes} setValue={setNoOfStripes} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                                        {/* <TextInput name="LogoName" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
 
 
                                                         <TextInput name="Con.Person.Name" type="text" value={contactPersonName} setValue={setContactPersonName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
 
                                                         <TextInput name="Phone No" type="text" value={phone} setValue={setPhone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                                        <div className="col-span-5 flex justify-start mt-1">
+                                                        {/* <div className="col-span-5 flex justify-start mt-1">
 
                                                             <CheckBox name="Name/Logo" readOnly={readOnly} value={isLogo} setValue={setIsLogo} />
-                                                        </div>
+                                                        </div> */}
                                                         <TextInput name="LogoName" type="text" value={name} setValue={setName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
 
                                                         {/* <TextInput name=" Billing Address" type="text" value={address} setValue={setAddress} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
@@ -402,13 +403,11 @@ export default function Form() {
                                                                                 <tr className=" bg-gray-400">
                                                                                     <th className=" border border-gray-500 text-sm px-2 py-0.5 w-12 text-center p-0.5">S No</th>
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Style</th>
-                                                                                    {/* <th className="px-2 py-0.5 w-64 border border-gray-500 text-sm">Sock Type</th>
-                                                                                    <th className="px-2 py-0.5 w-64 border border-gray-500 text-sm">Material</th> */}
+                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm">Desc</th>
+
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Size</th>
-                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm">Leg.Color</th>
-                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm">Foot.Color</th>
-                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm">Stripe.Color</th>
-                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm w-20">No.oF.Stripe</th>
+
+
                                                                                     <th className="px-2 py-0.5  w-24 border border-gray-500 text-sm">Qty/Sie</th>
 
                                                                                     <th className="table-data  w-16 p-0.5 border border-gray-500 text-sm" >
@@ -444,6 +443,19 @@ export default function Form() {
 
                                                                                         </select>
                                                                                         </td>
+                                                                                        <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                                                                                            <textarea readOnly={readOnly} className=" w-full overflow-auto focus:outline-none border border-gray-500 rounded py-1 text-xs"
+                                                                                                value={item.description}
+                                                                                                onChange={(e) => handleInputChange(e.target.value, index, "description")}
+
+                                                                                            >
+                                                                                            </textarea>
+
+                                                                                        </td>
+
+
+
+
                                                                                         {/* <td className="h-[30px]   border-blue-gray-200 text-[11px] ">{item?.Material}</td> */}
                                                                                         <td className="h-[30px] w-32  border-blue-gray-200 text-[11px] ">
                                                                                             <select
@@ -468,7 +480,7 @@ export default function Form() {
 
                                                                                             </select>
                                                                                         </td>
-                                                                                        <td className="h-[30px] w-32  border-blue-gray-200 text-[11px] ">
+                                                                                        {/* <td className="h-[30px] w-32  border-blue-gray-200 text-[11px] ">
                                                                                             <select
                                                                                                 disabled={readOnly}
                                                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "legcolorId") } }}
@@ -541,7 +553,7 @@ export default function Form() {
                                                                                                 onChange={(e) => { handleInputChange(e.target.value, index, "noOfStripes") }} onFocus={(e) => { e.target.select() }} min={0}
                                                                                             />
 
-                                                                                        </td>
+                                                                                        </td> */}
 
 
                                                                                         <td className="h-[30px]   border-blue-gray-200 text-[11px] text-right ">

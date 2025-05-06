@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { FABRIC_API } from "../../Api";
+import { MEASUREMENT_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const FabricMasterApi = createApi({
-    reducerPath: "fabricMaster",
+const MeasurementMasterApi = createApi({
+    reducerPath: "measurementMaster",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["Fabric"],
+    tagTypes: ["MeasurementMaster"],
     endpoints: (builder) => ({
-        getFabricMaster: builder.query({
+        getMeasurementMaster: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: FABRIC_API + "/search/" + searchParams,
+                        url: MEASUREMENT_API + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const FabricMasterApi = createApi({
                     };
                 }
                 return {
-                    url: FABRIC_API,
+                    url: MEASUREMENT_API,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -31,54 +31,58 @@ const FabricMasterApi = createApi({
                     params
                 };
             },
-            providesTags: ["Fabric"],
+            providesTags: ["MeasurementMaster"],
         }),
-        getFabricMasterById: builder.query({
+        getMeasurementMasterById: builder.query({
             query: (id) => {
                 return {
-                    url: `${FABRIC_API}/${id}`,
+                    url: `${MEASUREMENT_API}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 };
             },
-            providesTags: ["Fabric"],
+            providesTags: ["MeasurementMaster"],
         }),
-        addFabricMaster: builder.mutation({
+        addMeasurementMaster: builder.mutation({
             query: (payload) => ({
-                url: FABRIC_API,
+                url: MEASUREMENT_API,
                 method: "POST",
                 body: payload,
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
             }),
-            invalidatesTags: ["Fabric"],
+            invalidatesTags: ["MeasurementMaster"],
         }),
-        updateFabricMaster: builder.mutation({
-            query: ({ id, body }) => {
+        updateMeasurementMaster: builder.mutation({
+            query: (payload) => {
+                const { id, ...body } = payload;
                 return {
-                    url: `${FABRIC_API}/${id}`,
+                    url: `${MEASUREMENT_API}/${id}`,
                     method: "PUT",
-                    body
+                    body,
                 };
             },
-            invalidatesTags: ["Fabric"],
+            invalidatesTags: ["MeasurementMaster"],
         }),
-        deleteFabricMaster: builder.mutation({
+        deleteMeasurementMaster: builder.mutation({
             query: (id) => ({
-                url: `${FABRIC_API}/${id}`,
+                url: `${MEASUREMENT_API}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["Fabric"],
+            invalidatesTags: ["MeasurementMaster"],
         }),
     }),
 });
 
 export const {
-    useGetFabricMasterQuery,
-    useGetFabricMasterByIdQuery,
-    useAddFabricMasterMutation,
-    useUpdateFabricMasterMutation,
-    useDeleteFabricMasterMutation,
-} = FabricMasterApi;
+    useGetMeasurementMasterQuery,
+    useGetMeasurementMasterByIdQuery,
+    useAddMeasurementMasterMutation,
+    useUpdateMeasurementMasterMutation,
+    useDeleteMeasurementMasterMutation,
+} = MeasurementMasterApi;
 
-export default FabricMasterApi;
+export default MeasurementMasterApi;

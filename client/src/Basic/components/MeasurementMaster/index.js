@@ -13,8 +13,9 @@ import MastersForm from '../MastersForm/MastersForm';
 import { Modal, TextInput, ToggleButton } from '../../../Inputs';
 import Mastertable from '../MasterTable/Mastertable';
 import { statusDropdown } from '../../../Utils/DropdownData';
+import { useAddMeasurementMasterMutation, useDeleteMeasurementMasterMutation, useGetMeasurementMasterByIdQuery, useGetMeasurementMasterQuery, useUpdateMeasurementMasterMutation } from '../../../redux/uniformService/MeasurementMasterService';
 
-const MODEL = "Size Master"
+const MODEL = "Measurement Master"
 export default function Form() {
     const [form, setForm] = useState(false);
 
@@ -39,7 +40,7 @@ export default function Form() {
 
     console.log(params, "params")
 
-    const { data: allData, isLoading, isFetching } = useGetSizeMasterQuery({ params, searchParams: searchValue });
+    const { data: allData, isLoading, isFetching } = useGetMeasurementMasterQuery({ params, searchParams: searchValue });
 
     console.log(allData, "datatat")
 
@@ -47,12 +48,12 @@ export default function Form() {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetSizeMasterByIdQuery(id, { skip: !id });
+    } = useGetMeasurementMasterByIdQuery(id, { skip: !id });
 
 
-    const [addData] = useAddSizeMasterMutation();
-    const [updateData] = useUpdateSizeMasterMutation();
-    const [removeData] = useDeleteSizeMasterMutation();
+    const [addData] = useAddMeasurementMasterMutation();
+    const [updateData] = useUpdateMeasurementMasterMutation();
+    const [removeData] = useDeleteMeasurementMasterMutation();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -76,7 +77,7 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, accessory, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, name, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
@@ -163,14 +164,14 @@ export default function Form() {
     return (
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-                <h5 className='my-1'>Size Master</h5>
+                <h5 className='my-1'>Measurement Master</h5>
                 <div className='flex items-center'>
                     <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
                 </div>
             </div>
             <div className='w-full flex items-start'>
                 <Mastertable
-                    header={'Size list'}
+                    header={'Measurement list'}
                     searchValue={searchValue}
                     setSearchValue={setSearchValue}
                     onDataClick={onDataClick}
@@ -202,7 +203,7 @@ export default function Form() {
                         <div className=''>
                             <div className="flex flex-wrap justify-between">
                                 <div className='mb-3 w-[48%]'>
-                                    <TextInput name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                    <TextInput name="Measurement" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                 </div>
                                 {/* <div className='mb-3 w-[48%]'>
                                     <CheckBox name="Accessory" readOnly={readOnly} value={accessory} setValue={setAccessory} disabled={(childRecord.current > 0)} />

@@ -21,17 +21,17 @@ export const handleOnChange = (event, setValue) => {
 
   setValue(
     valueBeforeCursor +
-      inputValue.slice(inputSelectionStart, inputSelectionEnd) +
-      valueAfterCursor
+    inputValue.slice(inputSelectionStart, inputSelectionEnd) +
+    valueAfterCursor
   );
 
   // Set the cursor position to the end of the input value
   setTimeout(() => {
     event.target.setSelectionRange(
       valueBeforeCursor.length +
-        inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
       valueBeforeCursor.length +
-        inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length
     );
   });
 };
@@ -56,7 +56,7 @@ export const MultiSelectDropdown = ({
         className={`focus:outline-none  border border-gray-500 rounded text-black  ${inputClass}`}
         options={options}
         value={selected}
-        onChange={readOnly ? () => {} : setSelected}
+        onChange={readOnly ? () => { } : setSelected}
         labelledBy="Select"
       />
     </div>
@@ -177,7 +177,7 @@ export const DisabledInput = ({
 }) => {
   return (
     <div className="   grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data w-full">
-      <label htmlFor="id" className={`md:text-start flex text-sm `}>
+      <label htmlFor="id" className={`md:text-start flex text-xs `}>
         {required ? <RequiredLabel name={name} /> : `${name}`}
       </label>
       <TextField
@@ -302,7 +302,7 @@ export const TextArea = ({
 
 export const DropdownInput = ({
   name,
-  beforeChange = () => {},
+  beforeChange = () => { },
   onBlur = null,
   options,
   value,
@@ -332,7 +332,7 @@ export const DropdownInput = ({
   };
 
   return (
-    <div className="input-group items-center w-40 md:my-1 md:px-1 data">
+    <div className="input-group items-center w-40  md:px-1 data">
       <label
         style={{ fontSize: 10 }}
         className={`md:text-start flex text-sm ${className}`}
@@ -366,7 +366,7 @@ export const DropdownInput = ({
             value="__create_new__"
             className="text-blue-600 font-semibold"
           >
-            + Create New 
+            + Create New
           </option>
         )}
       </select>
@@ -692,9 +692,8 @@ export const LongDateInput = ({
 export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
   return (
     <label
-      className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${
-        readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
-      }`}
+      className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
+        }`}
     >
       <input
         type="checkbox"
@@ -797,7 +796,7 @@ export const DropdownWithSearch = ({
     });
 
     return () => {
-      dropDownElement.removeEventListener("keydown", () => {});
+      dropDownElement.removeEventListener("keydown", () => { });
     };
   }, [currentIndex]);
 
@@ -828,11 +827,11 @@ export const DropdownWithSearch = ({
         values={
           value
             ? [
-                {
-                  id: value,
-                  name: findFromList(value, options || [], "name"),
-                },
-              ]
+              {
+                id: value,
+                name: findFromList(value, options || [], "name"),
+              },
+            ]
             : []
         }
         onChange={(value) => {

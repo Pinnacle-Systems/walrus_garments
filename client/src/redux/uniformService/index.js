@@ -5,7 +5,7 @@ export { default as StyleTypeMasterApi } from "./StyleTypeMasterService"
 export { default as ClassMasterApi } from "./ClassMasterService"
 export { default as DesignApi } from "./DesignMasterServices"
 export { default as GsmApi } from './GsmMasterServices'
-export {default as UnitOfMeasurementApi} from './UnitOfMeasurementServices'
+export { default as UnitOfMeasurementApi } from './UnitOfMeasurementServices'
 
 export { default as LoopLengthApi } from './LoopLengthMasterServices'
 export { default as DiaApi } from './DiaMasterServices'
@@ -31,4 +31,6 @@ export { default as DispatchedApi } from './DispatchedServices';
 export { default as GeneralPurchaseApi } from "./GeneralPurchaseServices";
 export { default as RawMaterialOpeningStockApi } from "./RawMaterialOpeningStockServices"
 export { default as SocksMaterialApi } from "./SocksMaterialMasterService"
-export { default as SocksTypeApi } from "./SocksTypeMasterService"
+export { default as SocksTypeApi } from "./SocksTypeMasterService";
+export { default as MeasurementMasterApi } from "./MeasurementMasterService"
+export { default as FiberContentMasterApi } from "./FiberContentMasterServices"

@@ -18,6 +18,7 @@ import {
   CompanyMaster,
   Dashboard,
   PurchaseOrder, UomMaster,
+  MeasurementMaster,
 
 } from "../../components";
 
@@ -26,13 +27,14 @@ import {
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import {
-  AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, LossReasonMaster,
+  AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, FiberContent, LossReasonMaster,
   ProcessMaster, SizeTemplateMaster, SocksMaterial, SocksType, StyleMaster, YarnBlendMaster, YarnMaster,
   YarnTypeMaster
 } from "../../../Shocks";
 import ContentMaster from "../../../Shocks/ContentMaster";
 import secureLocalStorage from "react-secure-storage";
-import { Order } from "../../../Uniform/Components"
+import { FabricMaster, Order } from "../../../Uniform/Components"
+import Fabric from "../../../Uniform/Components/SampleDashboard/Fabric";
 
 
 const ActiveTabList = () => {
@@ -87,6 +89,9 @@ const ActiveTabList = () => {
     "PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
+    "MEASUREMENT MASTER": <MeasurementMaster />,
+    "FABRIC MASTER": <FabricMaster />,
+    "FIBER CONTENT MASTER": <FiberContent />
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

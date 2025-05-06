@@ -83,4 +83,6 @@ export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock"
 export const MACHINE_API = "machine"
 export const SOCKS_MATERIAL_API = "socksMaterial"
 export const SOCKS_TYPE_API = "socksType"
+export const MEASUREMENT_API = "measurement"
+export const FIBER_CONTENT_API = "fiberContent"
 

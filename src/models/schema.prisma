@@ -78,6 +78,8 @@ model Company {
   PriceTemplate      PriceTemplate[]
   SocksMaterial      SocksMaterial[]
   SocksType          SocksType[]
+  Measurement        Measurement[]
+  FiberContent       FiberContent[]
 }
 
 model Subscription {
@@ -492,12 +494,12 @@ model Party {
   OnlineSales                OnlineSales[]
   OnlineSalesReturn          OnlineSalesReturn[]
   CreditDebitNote            CreditDebitNote[]
-  isAcc                      Boolean?                @default(false)
-  isGy                       Boolean?                @default(false)
-  isDy                       Boolean?                @default(false)
-  ShippingAddress ShippingAddress[]
-  ContactDetails  ContactDetails[]
-  Order           Order[]
+  isAcc                      Boolean?                     @default(false)
+  isGy                       Boolean?                     @default(false)
+  isDy                       Boolean?                     @default(false)
+  ShippingAddress            ShippingAddress[]
+  ContactDetails             ContactDetails[]
+  Order                      Order[]
 }
 
 model PartyOnAccessoryItems {
@@ -604,7 +606,7 @@ model Fabric {
   active                        Boolean?                        @default(true)
   FabricType                    FabricType?                     @relation(fields: [fabricTypeId], references: [id])
   FabricOnYarnBlend             FabricOnYarnBlend[]
-  fabricTypeId                  Int
+  fabricTypeId                  Int?
   organic                       Boolean                         @default(false)
   Style                         Style[]
   CuttingDeliveryDetails        CuttingDeliveryDetails[]
@@ -615,6 +617,7 @@ model Fabric {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  FiberBlend                    FiberBlend[]
 }
 
 model FabricOnYarnBlend {
@@ -785,29 +788,29 @@ model Po {
 }
 
 model PoItems {
-  id                  Int                   @id @default(autoincrement())
-  Po                  Po                    @relation(fields: [poId], references: [id], onDelete: Cascade)
-  Fabric              Fabric?               @relation(fields: [fabricId], references: [id])
-  fabricId            Int?
-  Yarn                Yarn?                 @relation(fields: [yarnId], references: [id])
-  yarnId              Int?
-  Accessory           Accessory?            @relation(fields: [accessoryId], references: [id])
-  accessoryId         Int?
-  Color               Color?                @relation(fields: [colorId], references: [id])
-  colorId             Int?
-  Uom                 UnitOfMeasurement     @relation(fields: [uomId], references: [id])
-  uomId               Int
-  Design              Design?               @relation(fields: [designId], references: [id])
-  Gauge               Gauge?                @relation(fields: [gaugeId], references: [id])
-  LoopLength          LoopLength?           @relation(fields: [loopLengthId], references: [id])
-  Gsm                 Gsm?                  @relation(fields: [gsmId], references: [id])
-  noOfBags            Int?
-  weightPerBag        Float?
-  qty                 Float
-  price               Float
-  discountType        DiscountTypes?        
-  discountValue       Float?                 @default(0)
-  tax              Float?                    @default(0)
+  id            Int               @id @default(autoincrement())
+  Po            Po                @relation(fields: [poId], references: [id], onDelete: Cascade)
+  Fabric        Fabric?           @relation(fields: [fabricId], references: [id])
+  fabricId      Int?
+  Yarn          Yarn?             @relation(fields: [yarnId], references: [id])
+  yarnId        Int?
+  Accessory     Accessory?        @relation(fields: [accessoryId], references: [id])
+  accessoryId   Int?
+  Color         Color?            @relation(fields: [colorId], references: [id])
+  colorId       Int?
+  Uom           UnitOfMeasurement @relation(fields: [uomId], references: [id])
+  uomId         Int
+  Design        Design?           @relation(fields: [designId], references: [id])
+  Gauge         Gauge?            @relation(fields: [gaugeId], references: [id])
+  LoopLength    LoopLength?       @relation(fields: [loopLengthId], references: [id])
+  Gsm           Gsm?              @relation(fields: [gsmId], references: [id])
+  noOfBags      Int?
+  weightPerBag  Float?
+  qty           Float
+  price         Float
+  discountType  DiscountTypes?
+  discountValue Float?            @default(0)
+  tax           Float?            @default(0)
 
   Size                Size?                 @relation(fields: [sizeId], references: [id])
   designId            Int?
@@ -2726,4 +2729,30 @@ model SocksType {
   active    Boolean? @default(true)
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
+}
+
+model Measurement {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean? @default(true)
+}
+
+model FiberContent {
+  id         Int          @id @default(autoincrement())
+  aliasName  String?
+  Company    Company?     @relation(fields: [companyId], references: [id])
+  companyId  Int?
+  active     Boolean?     @default(true)
+  fiberBlend FiberBlend[]
+}
+
+model FiberBlend {
+  id             Int           @id @default(autoincrement())
+  FiberContent   FiberContent? @relation(fields: [fiberContentId], references: [id], onDelete: Cascade)
+  Fabric         Fabric?       @relation(fields: [fabricId], references: [id])
+  fabricId       Int?
+  percentage     Int?
+  fiberContentId Int?
 }

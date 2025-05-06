@@ -33,7 +33,9 @@ import {
   ProductionDeliveryApi,
   ProductionReceiptApi,
   DispatchedApi,
-  GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi, UnitOfMeasurementApi
+  GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi, UnitOfMeasurementApi,
+  MeasurementMasterApi,
+  FiberContentMasterApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -133,7 +135,9 @@ const commonReducers = {
   machineMaster: machineMasterApi.reducer,
   [SocksMaterialApi.reducerPath]: SocksMaterialApi.reducer,
   socksType: SocksTypeApi.reducer,
-  [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer
+  [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer,
+  measurementMaster: MeasurementMasterApi.reducer,
+  fiberContentMaster: FiberContentMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -218,6 +222,8 @@ ContentMasterApi.middleware,
 CountsMasterApi.middleware,
 machineMasterApi.middleware,
 SocksTypeApi.middleware,
+MeasurementMasterApi.middleware,
+FiberContentMasterApi.middleware
 ];
 
 
@@ -234,3 +240,5 @@ const store = configureStore({
 });
 
 export default store;
+
+

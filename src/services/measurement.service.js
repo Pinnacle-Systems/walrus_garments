@@ -7,9 +7,7 @@ async function get(req) {
 
     const { companyId, active } = req.query
 
-    console.log(companyId, active, "companyId, active ")
-
-    let data = await prisma.size.findMany({
+    let data = await prisma.measurement.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -52,19 +50,19 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.size.findUnique({
+    const data = await prisma.measurement.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!data) return NoRecordFound("size");
+    if (!data) return NoRecordFound("measurement");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active, } = req.query
-    const data = await prisma.size.findMany({
+    const data = await prisma.measurement.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -82,7 +80,7 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, companyId, active, accessory } = await body
-    const data = await prisma.size.create(
+    const data = await prisma.measurement.create(
         {
             data: {
                 name, companyId: parseInt(companyId), active,
@@ -95,13 +93,13 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, active, accessory } = await body
-    const dataFound = await prisma.size.findUnique({
+    const dataFound = await prisma.measurement.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("size");
-    const data = await prisma.size.update({
+    if (!dataFound) return NoRecordFound("measurement");
+    const data = await prisma.measurement.update({
         where: {
             id: parseInt(id),
         },
@@ -115,7 +113,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.size.delete({
+    const data = await prisma.measurement.delete({
         where: {
             id: parseInt(id)
         },
