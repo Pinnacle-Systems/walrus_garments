@@ -604,7 +604,7 @@ export const DateInput = ({
   inputHead = "",
 }) => (
   <div className="flex flex-col w-28 my-2 px-1">
-    <label htmlFor={name} className={`text-xs text-gray-700 font-medium mb-1 ${inputHead}`}>
+    <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
       {required ? <RequiredLabel name={name} /> : name}
     </label>
     <TextField

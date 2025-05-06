@@ -46,7 +46,7 @@ export default function Form() {
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
-
+console.log(poItems,"poItems")
   const [transType, setTransType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
 
@@ -124,7 +124,7 @@ export default function Form() {
 
     setTransType(data?.transType ? data.transType : "GreyYarn");
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
-
+  
     setPoItems(data?.PoItems ? data?.PoItems : [])
     if (data?.docId) {
       setDocId(data?.docId)

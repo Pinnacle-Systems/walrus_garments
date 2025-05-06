@@ -492,13 +492,13 @@ model Party {
   OnlineSales                OnlineSales[]
   OnlineSalesReturn          OnlineSalesReturn[]
   CreditDebitNote            CreditDebitNote[]
-  isAcc                      Boolean?                @default(false)
-  isGy                       Boolean?                @default(false)
-  isDy                       Boolean?                @default(false)
-  ShippingAddress ShippingAddress[]
-  ContactDetails  ContactDetails[]
-  Order           Order[]
-  payTermDay     String?
+  isAcc                      Boolean?                     @default(false)
+  isGy                       Boolean?                     @default(false)
+  isDy                       Boolean?                     @default(false)
+  ShippingAddress            ShippingAddress[]
+  ContactDetails             ContactDetails[]
+  Order                      Order[]
+  payTermDay                 String?
 }
 
 model PartyOnAccessoryItems {
@@ -634,6 +634,7 @@ model AccessoryGroup {
   companyId     Int?
   active        Boolean         @default(true)
   AccessoryItem AccessoryItem[]
+  PoItems       PoItems[]
 }
 
 model AccessoryItem {
@@ -646,6 +647,7 @@ model AccessoryItem {
   companyId             Int?
   Accessory             Accessory[]
   PartyOnAccessoryItems PartyOnAccessoryItems[]
+  PoItems               PoItems[]
 }
 
 model Accessory {
@@ -784,29 +786,33 @@ model Po {
 }
 
 model PoItems {
-  id                  Int                   @id @default(autoincrement())
-  Po                  Po                    @relation(fields: [poId], references: [id], onDelete: Cascade)
-  Fabric              Fabric?               @relation(fields: [fabricId], references: [id])
-  fabricId            Int?
-  Yarn                Yarn?                 @relation(fields: [yarnId], references: [id])
-  yarnId              Int?
-  Accessory           Accessory?            @relation(fields: [accessoryId], references: [id])
-  accessoryId         Int?
-  Color               Color?                @relation(fields: [colorId], references: [id])
-  colorId             Int?
-  Uom                 UnitOfMeasurement     @relation(fields: [uomId], references: [id])
-  uomId               Int
-  Design              Design?               @relation(fields: [designId], references: [id])
-  Gauge               Gauge?                @relation(fields: [gaugeId], references: [id])
-  LoopLength          LoopLength?           @relation(fields: [loopLengthId], references: [id])
-  Gsm                 Gsm?                  @relation(fields: [gsmId], references: [id])
-  noOfBags            Int?
-  weightPerBag        Float?
-  qty                 Float
-  price               Float
-  discountType        DiscountTypes?        
-  discountValue       Float?                 @default(0)
-  tax              Float?                    @default(0)
+  id               Int               @id @default(autoincrement())
+  Po               Po                @relation(fields: [poId], references: [id], onDelete: Cascade)
+  Fabric           Fabric?           @relation(fields: [fabricId], references: [id])
+  fabricId         Int?
+  Yarn             Yarn?             @relation(fields: [yarnId], references: [id])
+  yarnId           Int?
+  Accessory        Accessory?        @relation(fields: [accessoryId], references: [id])
+  accessoryId      Int?
+  AccessoryGroup   AccessoryGroup?    @relation(fields: [AccessoryGroupId], references: [id])
+  AccessoryGroupId Int?
+  accessoryItem    AccessoryItem?    @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  Color            Color?            @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  Uom              UnitOfMeasurement @relation(fields: [uomId], references: [id])
+  uomId            Int
+  Design           Design?           @relation(fields: [designId], references: [id])
+  Gauge            Gauge?            @relation(fields: [gaugeId], references: [id])
+  LoopLength       LoopLength?       @relation(fields: [loopLengthId], references: [id])
+  Gsm              Gsm?              @relation(fields: [gsmId], references: [id])
+  noOfBags         Int?
+  weightPerBag     Float?
+  qty              Float
+  price            Float
+  discountType     DiscountTypes?
+  discountValue    Float?            @default(0)
+  tax              Float?            @default(0)
 
   Size                Size?                 @relation(fields: [sizeId], references: [id])
   designId            Int?

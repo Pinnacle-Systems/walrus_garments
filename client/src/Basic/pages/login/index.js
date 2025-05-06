@@ -131,11 +131,9 @@
 
 //       <div className="flex justify-around items-center bg-pink-300  h-screen">
 
-
 //         <div className="w-96 h-96" >
 //           <img className="rounded-xl w-full h-full" src={buildingLogo} />
 //         </div>
-
 
 //         <div>
 //           <form
@@ -191,15 +189,8 @@
 //               &copy;{new Date().getFullYear()} Pinnacle Systems All rights reserved.
 //             </p>
 
-
-
-
 //           </form>
 //         </div>
-
-
-
-
 
 //       </div>
 //     </>
@@ -208,27 +199,25 @@
 
 // export default Login;
 
-import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import secureLocalStorage from "react-secure-storage";
 import axios from "axios";
 
-import { LOGIN_API } from '../../../Api';
-import { generateSessionId } from '../../../Utils/helper';
-import Modal from '../../../UiComponents/Modal';
-import BranchAndFinYearForm from '../../components/BranchAndFinyear';
-import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
-import toast from 'react-hot-toast';
-
+import { LOGIN_API } from "../../../Api";
+import { generateSessionId } from "../../../Utils/helper";
+import Modal from "../../../UiComponents/Modal";
+import BranchAndFinYearForm from "../../components/BranchAndFinyear";
+import { PRODUCT_ADMIN_HOME_PATH } from "../../../Route/urlPaths";
+import toast from "react-hot-toast";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const Login = () => {
-
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false)
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   // const [formData, setFormData] = useState({ email: email, password: password })
   const [errors, setErrors] = useState({});
   const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -239,7 +228,6 @@ const Login = () => {
   // Validation function to check email and password
   const validate = () => {
     const errors = {};
-
 
     if (!username) {
       errors.email = "Email is required";
@@ -261,12 +249,12 @@ const Login = () => {
     return errors;
   };
 
-  const data = { username, password }
+  const data = { username, password };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    const validateErrors = validate()
-    setErrors(validateErrors)
+    e.preventDefault();
+    const validateErrors = validate();
+    setErrors(validateErrors);
     if (Object.keys(validateErrors).length === 0) {
       axios({
         method: "post",
@@ -327,7 +315,7 @@ const Login = () => {
                   );
                   secureLocalStorage.setItem(
                     sessionStorage.getItem("sessionId") +
-                    "latestActivePlanExpireDate",
+                      "latestActivePlanExpireDate",
                     new Date(
                       result.data.userInfo.role.company.Subscription[0].expireAt
                     ).toDateString()
@@ -345,7 +333,7 @@ const Login = () => {
                 }
               }
             } else {
-              console.log(result)
+              console.log(result);
               toast.error(result.data.message);
               setLoading(false);
             }
@@ -358,9 +346,8 @@ const Login = () => {
           setLoading(false);
         }
       );
-    };
-  }
-
+    }
+  };
 
   return (
     <>
@@ -373,63 +360,83 @@ const Login = () => {
       >
         <BranchAndFinYearForm setIsGlobalOpen={setIsGlobalOpen} />
       </Modal>
-      <div className="flex flex-row w-screen h-screen bg-beige">
-        {/* Left Section */}
-        <div className="flex justify-center items-center w-1/2 bg-[--main-color]">
-          <div>
-            <div className="text-9xl font-bold ">erp</div>
-            <p className="text-xl text-end">systems</p>
-          </div>
-        </div>
+      <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-[#e0e7ff] via-white to-[#f0f5ff] font-[Poppins] overflow-hidden"
+      style={{
+        backgroundImage:
+          "url('https://media.istockphoto.com/id/1387073187/vector/orange-vector-cover-wallpaper.jpg?s=612x612&w=0&k=20&c=c-mVdVrioq3C4kcLxk4Y-bltcCUv3z0l5SzaaerfC-A=')",
+        fontFamily: 'Poppins, sans-serif',
+      }}
+    >
 
-        {/* Right Section */}
-        <div className="flex justify-center items-center w-1/2">
-          <div className="w-1/2 px-3 py-4 rounded-xl shadow-lg bg-white">
-            <p className="font-semibold mb-1 text-center text-2xl">Welcome Back!</p>
-            <p className="text-center text-gray-400">Please enter your details to sign in.</p>
+{/* Central Glassmorphic Login Circle */}
+<div className="z-10 w-[420px] h-[420px] rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_rgba(31,38,135,0.37)] flex flex-col justify-center items-center text-center px-8 py-6">
+  <h2 className="text-3xl font-bold mb-3 text-gray-800">Welcome Back</h2>
+  <p className="text-gray-500 mb-6">Login to your dashboard</p>
 
-            <form onSubmit={(e) => handleSubmit(e)}>
-              {/* Username Field */}
-              <div className="mb-3">
-                <div className="border rounded-md">
-                  <input className="p-2 w-full" placeholder="Enter your username..." type="text" name="username" value={username} id="username" onChange={(e) => setUsername(e.target.value)} />
-                </div>
-                {errors.username ? (<div className="text-red-500">{errors.username}</div>) : (<div className="text-sm">&nbsp;</div>)}
-              </div>
+  <form className="w-full space-y-4" onSubmit={(e) => handleSubmit(e)}>
+    <input
+      type="text"
+      name="username"
+      placeholder="Username"
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+    />
+    {errors.username && <div className="text-sm text-red-500">{errors.username}</div>}
 
-              {/* Password Field */}
-              <div className="mb-2">
-                <div className="flex items-center border rounded-md relative">
-                  <input className="p-2 w-80" placeholder="Password" type={showPassword ? "text" : "password"} name="password" value={password} id="password" onChange={(e) => setPassword(e.target.value)} />
-                  <div className="absolute right-2 top-2.5 text-neutral-500">
-                    {showPassword ? <EyeOff size={15} onClick={() => setShowPassword(false)} /> : <Eye size={15} onClick={() => setShowPassword(true)} />}
-                  </div>
-                </div>
-                {errors.password ? (<div className="text-red-500">{errors.password}</div>) : (<div className="text-sm">&nbsp;</div>)}
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="w-full mb-3 flex justify-between items-center px-1 text-xs">
-                <div className="flex items-center">
-                  <input type="checkbox" /> <span className="ml-1">Remember me</span>
-                </div>
-                <div className="underline cursor-pointer text-gray-500">Forgot password?</div>
-              </div>
-
-              {/* Login Button */}
-              <button type="submit" className="w-full p-2 text-white bg-black rounded-lg">Login</button>
-            </form>
-
-            {/* Sign Up Link */}
-            <div className="mt-3 text-xs text-center">
-              <p>Don{`'`}t have an account yet? <span onClick={() => navigate('/register')} className="text-blue-600 cursor-pointer">Sign Up</span></p>
-            </div>
-          </div>
-        </div>
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        name="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      />
+      <div className="absolute top-2.5 right-3 text-gray-500 cursor-pointer">
+        {showPassword ? <EyeOff size={18} onClick={() => setShowPassword(false)} /> : <Eye size={18} onClick={() => setShowPassword(true)} />}
       </div>
+    </div>
+    {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
+
+    <button type="submit" className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all">
+      Login
+    </button>
+  </form>
+
+  <div className="mt-4 text-sm">
+    Don’t have an account?{" "}
+    <span onClick={() => navigate("/register")} className="text-indigo-600 underline cursor-pointer">Sign Up</span>
+  </div>
+</div>
+
+{/* Orbiting Product Balls */}
+{[
+  { title: "GMS", desc: "ERP for Garments" },
+  { title: "PMS", desc: "Payroll with App" },
+  { title: "PCS", desc: "Spinning & Knitting" },
+  { title: "POS", desc: "Retail POS" },
+  { title: "Costing", desc: "Textile Costing" },
+  { title: "Lab", desc: "LIMS Management" }
+].map((product, i) => {
+  const angle = (360 / 6) * i;
+  return (
+    <div
+      key={i}
+      className="absolute w-32 h-32 bg-white/30 rounded-full backdrop-blur-md border border-white/30 shadow-md flex flex-col justify-center items-center text-center text-sm p-2 hover:scale-110 transition-all"
+      style={{
+        transform: `rotate(${angle}deg) translate(260px) rotate(-${angle}deg)`
+      }}
+    >
+      <div className="text-[#E77817] font-bold">{product.title}</div>
+      <div className="text-gray-700 text-xs">{product.desc}</div>
+    </div>
+  );
+})}
+</div>
 
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
