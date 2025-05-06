@@ -27,22 +27,20 @@ label {
   width: 440px !important;
   margin: 1px;
 }
-
-
-@keyframes neon-glow {
+@keyframes neon-glow-orange {
   0% {
-    box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
   }
   100% {
-    box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
   }
 }
 
-.neon-glow {
-  animation: neon-glow 3s ease-in-out infinite;
+.neon-glow-orange {
+  animation: neon-glow-orange 3s ease-in-out infinite;
 }
 
 @keyframes rotate-ring {
@@ -58,13 +56,13 @@ label {
   animation: rotate-ring 80s linear infinite;
 }
 
-.bg-grid-white\/5 {
+.bg-grid-orange-900\/5 {
   background-image: linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.05) 1px,
+      rgba(249, 115, 22, 0.05) 1px,
       transparent 1px
     ),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(249, 115, 22, 0.05) 1px, transparent 1px);
 }
 
 @media print {
