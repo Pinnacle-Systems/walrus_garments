@@ -211,7 +211,8 @@ import Modal from "../../../UiComponents/Modal";
 import BranchAndFinYearForm from "../../components/BranchAndFinyear";
 import { PRODUCT_ADMIN_HOME_PATH } from "../../../Route/urlPaths";
 import toast from "react-hot-toast";
-
+import {  User, Lock } from 'react-feather';
+import { motion } from 'framer-motion'
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const Login = () => {
@@ -360,80 +361,157 @@ const Login = () => {
       >
         <BranchAndFinYearForm setIsGlobalOpen={setIsGlobalOpen} />
       </Modal>
-      <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-[#e0e7ff] via-white to-[#f0f5ff] font-[Poppins] overflow-hidden"
-      style={{
-        backgroundImage:
-          "url('https://files.123freevectors.com/wp-content/original/107061-light-orange-abstract.jpg')",
-        fontFamily: 'Poppins, sans-serif',
-      }}
-    >
-
-{/* Central Glassmorphic Login Circle */}
-<div className="z-10 w-[420px] h-[420px] rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_rgba(31,38,135,0.37)] flex flex-col justify-center items-center text-center px-8 py-6">
-  <h2 className="text-3xl font-bold mb-3 text-gray-800">Welcome Back</h2>
-  <p className="text-gray-500 mb-6">Login to your dashboard</p>
-
-  <form className="w-full space-y-4" onSubmit={(e) => handleSubmit(e)}>
-    <input
-      type="text"
-      name="username"
-      placeholder="Username"
-      value={username}
-      onChange={(e) => setUsername(e.target.value)}
-      className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-    />
-    {errors.username && <div className="text-sm text-red-500">{errors.username}</div>}
-
-    <div className="relative">
-      <input
-        type={showPassword ? "text" : "password"}
-        name="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      <div className="absolute top-2.5 right-3 text-gray-500 cursor-pointer">
-        {showPassword ? <EyeOff size={18} onClick={() => setShowPassword(false)} /> : <Eye size={18} onClick={() => setShowPassword(true)} />}
+      <div className="relative flex items-center justify-center min-h-screen bg-gray-900 font-[Poppins] overflow-hidden">
+      {/* Background Layers */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-900/80 via-gray-900 to-purple-900/80">
+        <div
+          className="absolute inset-0 animate-pulse-slow opacity-20"
+          style={{
+            background: `linear-gradient(45deg, 
+              rgba(56, 189, 248, 0.2) 0%, 
+              rgba(236, 72, 153, 0.2) 50%,
+              rgba(245, 158, 11, 0.2) 100%)`,
+            filter: 'blur(100px)',
+          }}
+        />
       </div>
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 z-0 bg-[size:40px_40px] bg-grid-white/5 opacity-20" />
+
+      {/* Main Card */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 100 }}
+        className="z-10 w-[420px] rounded-xl bg-gray-800/80 backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col justify-center items-center px-8 py-6 relative overflow-hidden neon-glow"
+      >
+        {/* Top Gradient Border */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
+        {/* Bottom Gradient Border */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent" />
+
+        <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          Welcome Back
+        </h2>
+        <p className="text-gray-400 mb-6">Access your digital workspace</p>
+
+        <form className="w-full space-y-5" onSubmit={handleSubmit}>
+          {/* Username Field */}
+          <motion.div whileHover={{ scale: 1.02 }} className="relative group">
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              className="w-full pl-10 pr-4 py-3 bg-gray-700/50 backdrop-blur-md border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 placeholder-gray-400 text-gray-100"
+            />
+            <User className="absolute left-3 top-3 text-gray-400" size={18} />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </motion.div>
+
+          {/* Password Field */}
+          <motion.div className="relative group" whileHover={{ scale: 1.02 }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder="Password"
+              className="w-full pl-10 pr-10 py-3 bg-gray-700/50 backdrop-blur-md border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 placeholder-gray-400 text-gray-100"
+            />
+            <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+            <motion.div
+              className="absolute top-3 right-3 text-gray-400 cursor-pointer hover:text-purple-400"
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </motion.div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </motion.div>
+
+          {/* Authenticate Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-violet-500 text-white rounded-lg shadow-lg hover:shadow-cyan-400/50 transition-all duration-200 font-medium relative overflow-hidden group"
+          >
+            <span className="relative z-10">Authenticate</span>
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-10 transition-opacity" />
+          </motion.button>
+        </form>
+
+        {/* Request Access */}
+        <motion.div
+          className="mt-4 text-sm text-gray-400 hover:text-purple-400 cursor-pointer transition-colors group"
+          whileHover={{ scale: 1.05 }}
+        >
+          New user? <span className="font-semibold group-hover:underline">Request access</span>
+        </motion.div>
+      </motion.div>
+
+      {/* Product Showcase */}
+      <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center">
+        <div className="relative w-[800px] h-[800px] orbit-ring">
+          {[
+            { title: 'GMS', desc: 'Garment ERP', icon: '👔', color: 'text-blue-400' },
+            { title: 'PMS', desc: 'Payroll System', icon: '💰', color: 'text-green-400' },
+            { title: 'PCS', desc: 'Production Control', icon: '🏭', color: 'text-purple-400' },
+            { title: 'POS', desc: 'Retail POS', icon: '🛒', color: 'text-orange-400' },
+            { title: 'Costing', desc: 'Textile Costing', icon: '🧮', color: 'text-pink-400' },
+            { title: 'Lab', desc: 'LIMS', icon: '🔬', color: 'text-yellow-400' },
+          ].map((product, i) => {
+            const angle = (Math.PI * 2 * i) / 6;
+            const radius = 320;
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-48 h-48 flex items-center justify-center"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: 1,
+                  opacity: 1,
+                  x: Math.cos(angle) * radius,
+                  y: Math.sin(angle) * radius,
+                }}
+                transition={{
+                  type: 'spring',
+                  delay: i * 0.1,
+                  stiffness: 50,
+                  damping: 10,
+                }}
+                whileHover={{
+                  scale: 1.15,
+                  transition: { duration: 0.3 },
+                }}
+              >
+                <div className="bg-gray-800/80 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-center shadow-2xl transform hover:rotate-[5deg] transition-all duration-300">
+                  <div className={`text-4xl mb-3 ${product.color}`}>{product.icon}</div>
+                  <h3 className={`text-xl font-bold mb-1 ${product.color}`}>{product.title}</h3>
+                  <p className="text-gray-300 text-sm">{product.desc}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Animated Connections */}
+      <svg className="absolute inset-0 pointer-events-none z-10">
+        {[...Array(6)].map((_, i) => (
+          <motion.path
+            key={i}
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1.5, delay: i * 0.2 }}
+            className="stroke-white/5"
+            d={`M 400 400 Q ${
+              400 + Math.cos((Math.PI * 2 * i) / 6) * 200
+            } ${400 + Math.sin((Math.PI * 2 * i) / 6) * 200} 400 400`}
+            fill="none"
+            strokeWidth="1"
+          />
+        ))}
+      </svg>
     </div>
-    {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
-
-    <button type="submit" className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all">
-      Login
-    </button>
-  </form>
-
-  <div className="mt-4 text-sm">
-    Don’t have an account?{" "}
-    <span onClick={() => navigate("/register")} className="text-indigo-600 underline cursor-pointer">Sign Up</span>
-  </div>
-</div>
-
-{/* Orbiting Product Balls */}
-{[
-  { title: "GMS", desc: "ERP for Garments" },
-  { title: "PMS", desc: "Payroll with App" },
-  { title: "PCS", desc: "Spinning & Knitting" },
-  { title: "POS", desc: "Retail POS" },
-  { title: "Costing", desc: "Textile Costing" },
-  { title: "Lab", desc: "LIMS Management" }
-].map((product, i) => {
-  const angle = (360 / 6) * i;
-  return (
-    <div
-      key={i}
-      className="absolute w-32 h-32 bg-white/30 rounded-full backdrop-blur-md border border-white/30 shadow-md flex flex-col justify-center items-center text-center text-sm p-2 hover:scale-110 transition-all"
-      style={{
-        transform: `rotate(${angle}deg) translate(260px) rotate(-${angle}deg)`
-      }}
-    >
-      <div className="text-[#E77817] font-bold">{product.title}</div>
-      <div className="text-gray-700 text-xs">{product.desc}</div>
-    </div>
-  );
-})}
-</div>
 
     </>
   );

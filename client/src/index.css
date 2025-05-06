@@ -28,6 +28,45 @@ label {
   margin: 1px;
 }
 
+
+@keyframes neon-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+  }
+}
+
+.neon-glow {
+  animation: neon-glow 3s ease-in-out infinite;
+}
+
+@keyframes rotate-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.orbit-ring {
+  animation: rotate-ring 80s linear infinite;
+}
+
+.bg-grid-white\/5 {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
 @media print {
   html {}
 }
