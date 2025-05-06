@@ -121,11 +121,7 @@ async function get(req) {
                     aliasName: true
                 }
             },
-            PayTerms: {
-                select: {
-                    name: true
-                }
-            },
+          
             PoItems: {
                 select: {
                     qty: true
@@ -150,101 +146,77 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    let po = await prisma.po.findUnique({
-        where: {
-            id: parseInt(id)
+  
+    const po = await prisma.po.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        PoItems: {
+          include: {
+            Fabric: true,
+            Yarn: true,
+            Accessory: true,
+            Color: true,
+            Uom: true,
+            Design: true,
+            Gauge: true,
+            LoopLength: true,
+            Gsm: true,
+            Size: true,
+            KDia: true,
+            FDia: true,
+            accessoryItem: {
+              select: {
+                name: true,
+              },
+            },
+            AccessoryGroup: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
-        include: {
-            PoItems: {
-                select: {
-                    id: true,
-                    yarnId: true,
-                    accessoryId: true,
-                    Fabric: true,
-                    Yarn: true,
-                    Accessory: true,
-                    Color: true,
-                    colorId: true,
-                    Uom: true,
-                    uomId: true,
-                    Design: true,
-                    Gauge: true,
-                    LoopLength: true,
-                    Gsm: true,
-                    noOfBags: true,
-                    weightPerBag: true,
-                    qty: true,
-                    price: true,
-                    tax: true,
-                    discountType: true,
-                    discountValue: true,
-                    tax: true,
-                    Size: true,
-                    designId: true,
-                    gaugeId: true,
-                    loopLengthId: true,
-                    gsmId: true,
-                    sizeId: true,
-                    accessoryId: true,
-                    KDia: true,
-                    kDiaId: true,
-                    FDia: true,
-                    fDiaId: true,
-                       }
+        supplier: {
+          select: {
+            aliasName: true,
+            contactPersonName: true,
+            contactMobile: true,
+            gstNo: true,
+            address: true,
+            pincode: true,
+            City: {
+              select: {
+                name: true,
+              },
             },
-            PayTerms: {
-                select: {
-                    name: true
-                }
-            },
-            supplier: {
-                select: {
-                    aliasName: true,
-                    contactPersonName: true,
-                    contactMobile: true,
-                    gstNo: true,
-                    address: true,
-                    pincode: true,
-                    City: {
-                        select: {
-                            name: true
-                        }
-                    },
-
-
-                }
-            },
-            DeliveryParty: {
-                select: {
-                    name: true,
-                    address: true,
-                    contactPersonName: true,
-                    contactMobile: true,
-                }
-            },
-            DeliveryBranch: {
-                select: {
-                    branchName: true,
-                    contactName: true,
-                    contactMobile: true,
-                 
-                    address: true,
-                }
-            },
-
-        }
-    })
-    // po["PoItems"] = await (async function getDetailsPoItem() {
-    //     let promises = po["PoItems"].map(async (item) => {
-    //         let poItem = await getPoItemById(item.id, null, null, null, null)
-    //         return poItem.data
-    //     })
-    //     return Promise.all(promises)
-    // })()
-
+          },
+        },
+        DeliveryParty: {
+          select: {
+            name: true,
+            address: true,
+            contactPersonName: true,
+            contactMobile: true,
+          },
+        },
+        DeliveryBranch: {
+          select: {
+            branchName: true,
+            contactName: true,
+            contactMobile: true,
+            address: true,
+          },
+        },
+      },
+    });
+  
     if (!po) return NoRecordFound("po");
-    return { statusCode: 0, data: { ...po, ...{ childRecord } } };
-}
+  
+    return { statusCode: 0, data: { ...po, childRecord } };
+  }
+  
 
 async function getSearch(req) {
     const { companyId, active } = req.query
@@ -710,74 +682,83 @@ function getStockObject(transType, item) {
 
 export function getPoItemObject(transType, item) {
     let newItem = {};
-    if ((transType === "GreyYarn") || (transType === "DyedYarn")) {
-        newItem["yarnId"] = parseInt(item["yarnId"]);
-        newItem["noOfBags"] = parseInt(item["noOfBags"])
-        newItem["weightPerBag"] = parseFloat(item["weightPerBag"])
-    } else if ((transType === "GreyFabric") || (transType === "DyedFabric")) {
-        newItem["fabricId"] = parseInt(item["fabricId"]);
-        newItem["designId"] = parseInt(item["designId"]);
-        newItem["gaugeId"] = parseInt(item["gaugeId"]);
-        newItem["loopLengthId"] = parseInt(item["loopLengthId"]);
-        newItem["gsmId"] = parseInt(item["gsmId"]);
-        newItem["kDiaId"] = parseInt(item["kDiaId"]);
-        newItem["fDiaId"] = parseInt(item["fDiaId"]);
-    } else if (transType === "Accessory") {
-        newItem["accessoryId"] = parseInt(item["accessoryId"])
-        newItem["accessoryGroupId"] = parseInt(item["accessoryGroupId"])
-        newItem["accessoryItemId"] = parseInt(item["accessoryItemId"])
-        newItem["sizeId"] = item["sizeId"] ? parseInt(item["sizeId"]) : undefined
-    }
-    newItem["uomId"] = parseInt(item["uomId"])
-    newItem["colorId"] = parseInt(item["colorId"])
-    newItem["qty"] = parseFloat(item["qty"])
-    newItem["price"] = parseFloat(item["price"])
-    newItem["discountType"] = item["discountType"] 
-    newItem["discountAmount"] = item["discountAmount"]
-    newItem["tax"] = parseFloat(item["tax"])
-    newItem["discountValue"] = parseFloat(item["discountValue"])
+     console.log(item,"item")
   
-    return newItem
-}
-
+    if (transType === "GreyYarn" || transType === "DyedYarn") {
+      newItem.yarnId = parseInt(item.yarnId);
+      newItem.noOfBags = parseInt(item.noOfBags);
+      newItem.weightPerBag = parseFloat(item.weightPerBag);
+    } else if (transType === "GreyFabric" || transType === "DyedFabric") {
+      newItem.fabricId = parseInt(item.fabricId);
+      newItem.designId = parseInt(item.designId);
+      newItem.gaugeId = parseInt(item.gaugeId);
+      newItem.loopLengthId = parseInt(item.loopLengthId);
+      newItem.gsmId = parseInt(item.gsmId);
+      newItem.kDiaId = parseInt(item.kDiaId);
+      newItem.fDiaId = parseInt(item.fDiaId);
+    } else if (transType === "Accessory") {
+      newItem.accessoryId = parseInt(item.accessoryId);
+      newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
+      newItem.AccessoryGroupId= parseInt(item.accessoryGroupId)
+      newItem.accessoryItemId= parseInt(item.accessoryItemId)
+    }
+  
+    newItem.uomId = parseInt(item.uomId);
+    newItem.colorId = parseInt(item.colorId);
+    newItem.qty = parseFloat(item.qty);
+    newItem.price = parseFloat(item.price);
+    newItem.discountType = item.discountType ?? null;
+    newItem.discountValue = parseFloat(item.discountValue ?? 0);
+    newItem.tax = parseFloat(item.tax ?? 0);
+  
+    return newItem;
+  }
+  
+  
 async function create(body) {
-    const { transType, dueDate, taxTemplateId,
-        supplierId, poItems, payTermId, remarks,
-        branchId, active, userId, deliveryType, deliveryToId, finYearId } = await body
-    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-let prismaTransType = transType.replace(/\s/g, '');
-
-
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
+    const {
+      transType, dueDate, taxTemplateId,
+      supplierId, poItems, payTermId, remarks,
+      branchId, active, userId, deliveryType,
+      deliveryToId, finYearId
+    } = await body;
+  
+    const finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate.startTime, finYearDate.endTime) : "";
+    const docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
+    const prismaTransType = transType.replace(/\s/g, '');
+  
+    const filteredPoItems = poItems
+      .filter(val => val.qty > 0)
+      .map(item => getPoItemObject(transType, item));
+  
     const data = await prisma.po.create({
-        data: {
-            transType: prismaTransType,
-            payTermId: parseInt(payTermId),
-            docId,
-            dueDate: dueDate ? new Date(dueDate) : undefined,
-            supplierId: parseInt(supplierId),
-            branchId: parseInt(branchId),
-            active,
-            remarks,
-            deliveryType,
-            deliveryBranchId: (deliveryType === "ToSelf") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
-            deliveryPartyId: (deliveryType === "ToParty") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
-            createdById: parseInt(userId),
-            PoItems: {
-                createMany: {
-                  data: poItems
-                    .filter(val => val.qty > 1) 
-                    .map(item => getPoItemObject(transType, item))
-                }
-              }
+      data: {
+        transType: prismaTransType,
+        docId,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        supplierId: parseInt(supplierId),
+        branchId: parseInt(branchId),
+        active: active ?? true,
+        remarks: remarks ?? "",
+        deliveryType,
+        deliveryBranchId: deliveryType === "ToSelf" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
+        deliveryPartyId: deliveryType === "ToParty" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
+        createdById: parseInt(userId),
+        PoItems: {
+          createMany: {
+            data: filteredPoItems,
+          },
         },
+      },
     });
+  
     return { statusCode: 0, data };
-}
+  }
+  
 
 async function update(id, body) {
-    const { transType, dueDate, taxTemplateId, remarks,
+    const { transType, dueDate, taxTemplateId, remarks,payTermDay,
         supplierId, poItems, payTermId, deliveryType, deliveryToId,
         branchId, active, userId } = await body
          console.log(supplierId,"supplierId")
@@ -814,7 +795,7 @@ async function update(id, body) {
             data: {
                 transType,
                 // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
-                payTermId: parseInt(payTermId),
+                payTermDay: payTermDay,
                 dueDate: dueDate ? new Date(dueDate) : undefined,
                 supplierId: parseInt(supplierId),
                 branchId: parseInt(branchId),

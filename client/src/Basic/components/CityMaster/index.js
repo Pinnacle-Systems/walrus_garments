@@ -20,7 +20,9 @@ import { useDispatch } from "react-redux";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from '../MastersForm/MastersForm';
 import { statusDropdown } from "../../../Utils/DropdownData";
-
+import { useSelector } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
+import { setOpenPartyModal } from "../../../redux/features/openModel";
 const MODEL = "City Master";
 
 export default function Form() {
@@ -45,8 +47,16 @@ export default function Form() {
     };
     const { data: stateList, isLoading: isStateLoading, isFetching: isStateFetching } = useGetStateQuery({ params });
     const { data: allData, isLoading, isFetching } = useGetCityQuery({ params, searchParams: searchValue });
-
-
+ const lastTapName =  useSelector((state)=>state.party.lastTab)    
+  console.log(lastTapName,"lastTapName")
+  const openPartyModal = useSelector((state) => state.party.openPartyModal);
+    console.log(openPartyModal,"openPartyModel")
+ useEffect(() => {
+    if (openPartyModal) {
+      setForm(true); 
+      setId('')
+    }
+  }, [openPartyModal]);
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -63,22 +73,22 @@ export default function Form() {
             setReadOnly(false);
             setName("");
             setCode("");
-            setActive(id ? (data?.active ?? true) : false);
+            setActive(true);
             setState("");
         } else {
             setReadOnly(true);
             setName(data?.name || "");
             setCode(data?.code || "");
-            setActive(id ? (data?.active ?? false) : true);
+            setActive(data?.active ? data?.active : true);
             setState(data?.stateId || "");
-            childRecord.current = data?.childRecord ? data?.childRecord : 0;
+            childRecord.current = data?.childRecord ? data.childRecord : 0;
         }
-
     }, [id]);
 
-    useEffect(() => {
-        syncFormWithDb(singleData?.data);
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+   useEffect(() => {
+    syncFormWithDb(singleData?.data);
+}, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
         name, code, active, state, id
@@ -90,13 +100,29 @@ export default function Form() {
         }
         return false;
     };
+    const onNew = () => {
+        setId("");
+        setReadOnly(false);
+        setForm(true);
+        setSearchValue("");
+    };
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text,exit=false) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             toast.success(text + "Successfully");
-            setForm(false)
+             onNew()
+            setId('')
+            if(exit){
+                      setForm(false)
+                    }
+                    if(exit){
+                      if (openPartyModal === true) {
+                        dispatch(push({ name: lastTapName }));
+                      }
+                         dispatch(setOpenPartyModal(false));
+                    }
             dispatch({
                 type: `StateMaster/invalidateTags`,
                 payload: ['State'],
@@ -107,22 +133,35 @@ export default function Form() {
         }
     };
 
-    const saveData = () => {
-        if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
-            });
-            return;
-        }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
-        }
-        if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
-        } else {
-            handleSubmitCustom(addData, data, "Added");
-        }
-    };
+
+  const saveData = () => {
+    if (!validateData(data)) {
+        toast.error("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
+       if (id) {
+      handleSubmitCustom(updateData, data, "Updated");
+    } else {
+      console.log("hit");
+      handleSubmitCustom(addData, data, "Added");
+    }
+  };
+  const saveExitData = () => {
+    if (!validateData(data)) {
+        toast.error("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
+       if (id) {
+      handleSubmitCustom(updateData, data, "Updated", true);
+    } else {
+      console.log("hit");
+      handleSubmitCustom(addData, data, "Added",true);
+    }
+  };
 
     const deleteData = async () => {
         if (id) {
@@ -157,12 +196,7 @@ export default function Form() {
         }
     };
 
-    const onNew = () => {
-        setId("");
-        setReadOnly(false);
-        setForm(true);
-        setSearchValue("");
-    };
+   
 
     function onDataClick(id) {
         setId(id);
@@ -170,23 +204,6 @@ export default function Form() {
     }
     const tableHeaders = ["S.NO", "City Name", "Code", "State", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
     const tableDataNames = ["index+1", "dataObj.code", "dataObj.name", "dataObj.state.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-    // if (!form)
-    //     return (
-    //         <ReportTemplate
-    //             heading={MODEL}
-    //             tableHeaders={tableHeaders}
-    //             tableDataNames={tableDataNames}
-    //             loading={
-    //                 isLoading || isFetching
-    //             }
-    //             setForm={setForm}
-    //             data={allData?.data}
-    //             onClick={onDataClick}
-    //             onNew={onNew}
-    //             searchValue={searchValue}
-    //             setSearchValue={setSearchValue}
-    //         />
-    //     );
     function countryFromState() {
         return state ? stateList.data.find(item => item.id === parseInt(state)).country?.name : ""
     }
@@ -217,17 +234,24 @@ export default function Form() {
                             isLoading || isFetching
                         } />
                     <div>
-                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false);if (openPartyModal === true) {
+                                                             console.log("isCalled")
+                                                                      dispatch(push({ name: lastTapName }));
+                                                                    }; dispatch(setOpenPartyModal(false)); setErrors({}); }}>
                             <MastersForm
                                 onNew={onNew}
                                 onClose={() => {
                                     setForm(false);
                                     setSearchValue("");
+                                      if (openPartyModal === true) {
+                                                        dispatch(push({ name: lastTapName }));
+                                                      }
                                     setId(false);
                                 }}
                                 model={MODEL}
                                 childRecord={childRecord.current}
                                 saveData={saveData}
+                                saveExitData ={saveExitData}
                                 setReadOnly={setReadOnly}
                                 deleteData={deleteData}
                                 readOnly={readOnly}
@@ -247,7 +271,17 @@ export default function Form() {
                                         </div>
                                         <div className="flex flex-wrap w-full justify-between">
                                             <div className="mb-3 w-[48%]">
-                                                <DropdownInput name="State" options={dropDownListObject(id ? stateList.data : stateList.data.filter(item => item.active), "name", "id")} value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                <DropdownInput name="State" 
+                                              options={
+                                                Array.isArray(stateList?.data)
+                                                  ? dropDownListObject(
+                                                      id ? stateList.data : stateList.data.filter(item => item?.active),
+                                                      "name",
+                                                      "id"
+                                                    )
+                                                  : []
+                                              }
+                                                 value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
                                             <div className="mb-3 w-[48%]">
                                                 <DisabledInput name="Country" width={"w-[150px]"} type="text" value={countryFromState()} disabled={(childRecord.current > 0)} />

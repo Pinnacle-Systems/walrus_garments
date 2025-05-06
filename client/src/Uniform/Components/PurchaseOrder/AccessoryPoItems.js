@@ -30,9 +30,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     };
 
     useEffect(() => {
-        if (poItems.length >= 10) return
+        if (poItems.length >= 9) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 10 - prev.length }, i => {
+            let newArray = Array.from({ length: 9 - prev.length }, i => {
                 return { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
             })
             return [...prev, ...newArray]
@@ -143,7 +143,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
             </Modal>
             <div className={` relative w-full overflow-y-auto p-3`}>
                 <table className=" border border-gray-500 text-xs table-auto w-full">
-                    <thead className='bg-blue-200 top-0 border border-gray-500'>
+                    <thead className='bg-gray-200 top-0 border border-gray-500'>
                         <tr>
                             <th className="table-data  w-2 text-center">S.no</th>
 
@@ -164,9 +164,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                             <th className="table-data  w-16">Amount</th>
                             {readOnly ?
                                 "" :
-                                <th className='w-20  bg-green-600 text-white'>
+                                <th className='w-20  bg-gray-200 text-white'>
                                     <div onClick={addRow}
-                                        className='hover:cursor-pointer py-2 flex items-center justify-center bg-green-600 text-white'>
+                                        className='hover:cursor-pointer py-2 flex items-center justify-center bg-gray-200 text-green-800'>
                                         {PLUS}
                                     </div>
                                 </th>
@@ -477,7 +477,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                             ""
                                             :
                                             <div tabIndex={-1} onClick={() => handleDeleteRow(index)}
-                                                className='flex justify-center px-2 py-1.5 items-center cursor-pointer'>
+                                                className='flex justify-center table-data px-2 py-1.5 items-center cursor-pointer'>
                                                 {DELETE}
                                             </div>
                                         }
@@ -485,7 +485,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 }
                             </tr>
                         ))}
-                        <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
+                        <tr className='bg-gray-200 w-full border border-gray-400 h-7 font-bold'>
                             <td className="table-data text-center w-10 font-bold" colSpan={7}>Total</td>
                             <td className="table-data text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
                             <td className="table-data  w-10"></td>

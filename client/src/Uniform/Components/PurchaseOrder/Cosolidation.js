@@ -7,7 +7,7 @@ const Consolidation = ({
   readOnly
 }) => {
   return (
-    <div className="fixed bottom-2 w-full bg-gray-50 text-xs px-2 py-2 shadow border-t border-gray-300">
+    <div className="fixed bottom-2 w-full bg-gray-50 text-xs px-2 py-2 shadow ">
       <div className="flex items-center space-x-2 px-2">
         <TextArea
           name="Remarks"

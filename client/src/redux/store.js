@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { openTabs } from "./features";
+import { openTabs,party } from "./features";
 import {
   countryMasterApi, pageMasterApi, stateMasterApi,
   cityMasterApi, departmentMasterApi, employeeCategoryMasterApi,
@@ -53,7 +53,7 @@ import CountsMasterApi from "./uniformService/CountsMasterServices";
 
 
 const commonReducers = {
-  openTabs,
+  openTabs,party,
   countryMaster: countryMasterApi.reducer,
   pageMaster: pageMasterApi.reducer,
   stateMaster: stateMasterApi.reducer,

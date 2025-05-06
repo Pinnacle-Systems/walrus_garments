@@ -40,10 +40,10 @@ const YarnPoItems = ({
   };
   console.log(poItems,"poItems")
   useEffect(() => {
-    if (poItems.length >= 10) return;
+    if (poItems.length >= 9) return;  
     if(id) return;
     setPoItems((prev) => {
-      let newArray = Array.from({ length: 10 - prev.length }, (i) => {
+      let newArray = Array.from({ length: 9 - prev.length }, (i) => {
         return {
           yarnId: "",
           qty: "0.000",
@@ -167,7 +167,7 @@ const YarnPoItems = ({
       </Modal>
       <div className={` relative w-full overflow-y-auto py-1`}>
         <table className=" border border-gray-500 text-xs table-auto  w-full">
-          <thead className="bg-gray-200 top-0 border-b border-gray-500">
+          <thead className="bg-gray-200 top-0 border-b text-gray-800 border-gray-500">
             <tr>
               <th className="table-data  w-2 text-center">S.no</th>
 
@@ -201,16 +201,16 @@ const YarnPoItems = ({
               <th className="table-data  w-16">
                 Discount Type<span className="text-red-500"></span>
               </th>
-              <th>Discount Value</th>
-              <th>Discount Amount</th>
+              <th className="table-data  w-16">Discount Value</th>
+              <th className="table-data  w-16">Discount Amount</th>
 
               {readOnly ? (
                 ""
               ) : (
-                <th className="w-20  bg-green-600 text-white">
+                <th className="w-20  bg-gary-100 text-white table-data ">
                   <div
                     onClick={addRow}
-                    className="hover:cursor-pointer w-full h-full flex items-center justify-center"
+                    className="hover:cursor-pointer text-green-800 w-full h-full flex items-center justify-center"
                   >
                     {PLUS}
                   </div>
@@ -225,7 +225,7 @@ const YarnPoItems = ({
                   {index + 1}
                 </td>
 
-                <td className="table-data">
+                <td className="table-data ">
                   <select
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
@@ -503,6 +503,7 @@ const YarnPoItems = ({
                 <td className="table-data text-right px-1">
                   {TotalAmount(row.price, row.tax, row.qty).toFixed(2)}
                 </td>
+                <td className="table-data text-right px-1">
                 <select
                   className="border rounded px-1 py-0.5 text-xs"
                   value={poItems[index]?.discountType || ""}
@@ -517,6 +518,8 @@ const YarnPoItems = ({
                     </option>
                   ))}
                 </select>
+                  </td>
+            
 
                 <td className="table-data">
                   <input

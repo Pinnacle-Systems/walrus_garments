@@ -113,7 +113,7 @@ export async function upload(req) {
 
 async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
-        cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,
+        cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,payTermDay,
         cinNo, faxNo, website,
         gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
 
@@ -126,7 +126,7 @@ async function create(body) {
                 name, code, aliasName, displayName, isSupplier, isBuyer,  isClient,isAcc,isGy,isDy,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                cinNo, faxNo, website,
+                cinNo, faxNo, website,payTermDay,
                 gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,isIgst:igst ?igst:false,
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId), active, yarn, fabric,
@@ -177,11 +177,11 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails,
-        cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList,
+        cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList,payTermDay,
         cinNo, faxNo, email, website, shippingAddress, contactDetails, isContactOnly = false,isGy,isDy,isAcc,
         gstNo, isLeadForm = false,
         companyId, active, userId } = await body
-
+    console.log(payTermDay,"payTermDay for sql")
     let data;
 
     const dataFound = await prisma.party.findUnique({
@@ -227,7 +227,7 @@ async function update(id, body) {
                     id: parseInt(id),
                 },
                 data: {
-                    name, code, aliasName, displayName, address, isSupplier, isBuyer,
+                    name, code, aliasName, displayName, address, isSupplier, isBuyer,payTermDay,
                     cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                     cinNo, faxNo, email, website, isIgst:igst ?igst:false,
@@ -265,7 +265,7 @@ async function update(id, body) {
                     cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric,isAcc,isDy,isGy,
                     pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website,
+                    cinNo, faxNo, email, website,payTermDay,
                     gstNo,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,

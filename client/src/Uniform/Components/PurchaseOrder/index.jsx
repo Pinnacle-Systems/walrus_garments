@@ -28,6 +28,7 @@ import { deliveryTypes } from "../../../Utils/DropdownData";
 
 import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import Consolidation from "./Cosolidation";
+import { useSelector } from "react-redux";
 const MODEL = "Purchase Order";
 
 
@@ -45,7 +46,7 @@ export default function Form() {
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
-
+console.log(poItems,"poItems")
   const [transType, setTransType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
 
@@ -85,6 +86,11 @@ export default function Form() {
   const handlePrint = () => {
     setPrintModalOpen(true);
   };
+  const activeTab = useSelector((state) =>
+    state.openTabs.tabs.find((tab) => tab.active).name
+  );
+  console.log(activeTab, "activeTab")
+
 
   const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
 
@@ -118,7 +124,7 @@ export default function Form() {
 
     setTransType(data?.transType ? data.transType : "GreyYarn");
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
-
+  
     setPoItems(data?.PoItems ? data?.PoItems : [])
     if (data?.docId) {
       setDocId(data?.docId)
@@ -154,7 +160,7 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    transType, supplierId, dueDate,  payTermId,
+    transType, supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
     poItems: poItems.filter(po => po.yarnId || po.fabricId || po.accessoryId),
@@ -172,15 +178,14 @@ export default function Form() {
     }
     return false
   }
+   console.log(transType,"transtype")
   const validateData = (data) => {
     let mandatoryFields = ["uomId", "colorId", "qty", "price"];
     if (transType === "GreyYarn" || transType === "DyedYarn") {
       mandatoryFields = [...mandatoryFields, ...["yarnId", "noOfBags"]]
     } else if (transType === "GreyFabric" || transType === "DyedFabric") {
       mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-    } else if (transType === "Accessory") {
-      mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-    }
+    } 
     return data.supplierId && data.dueDate && data.payTermId
       && isGridDatasValid(data.poItems, false, mandatoryFields) && data.poItems.length !== 0
   }
@@ -208,18 +213,15 @@ export default function Form() {
 
 
   const saveData = () => {
-     console.log(data,"data for valitation")
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", { position: "top-center" })
-      return
-    }
+    console.log(data, "data for valitation")
+   
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
       handleSubmitCustom(addData, data, "Added");
     }
   }
-   console.log(poItems,"poItems")
+  console.log(poItems, "poItems")
   const deleteData = async () => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
@@ -275,8 +277,14 @@ export default function Form() {
   }
   const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
   console.log(clientDetail, "clientDetail")
-  let supplierListBasedOnSupply = filterSupplier()
+ 
+    let supplierListBasedOnSupply = filterSupplier()
   transType.toLowerCase().includes("greyyarn".toLowerCase())
+   console.log(supplierListBasedOnSupply,"supplierListBasedOnSupply")
+    console.log(supplierId,"supplierId")
+    const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+
+   console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
   return (
     <div
       onKeyDown={handleKeyDown}
@@ -335,46 +343,100 @@ export default function Form() {
               <div className='mr-1'>
                 <div className={`grid`}>
                   <div className={"flex flex-col"}>
-                    <fieldset className='frame rounded-tr-lg rounded-bl-lg w-full border border-gray-600 px-3 overflow-auto'>
-                      <legend className='sub-heading'>Purchase Info</legend>
-                      <div className='flex flex-col justify-center items-start flex-1 w-full'>
-                        <div className="grid grid-cols-6 w-full">
-                          <DisabledInput name="Po no." value={docId} required={true}
+                    <fieldset className="border border-gray-600 rounded-tr-lg rounded-bl-lg px-4 py-3 w-full">
+                      <legend className="text-sm font-semibold text-gray-700 px-2">Purchase Info</legend>
+
+                      <div className="grid grid-cols-10 gap-x-4 gap-y-3 mt-2">
+                        <div className="col-span-1">
+                          <DisabledInput name="Po no." value={docId} required />
+                        </div>
+
+                        <div className="col-span-1">
+                          <DateInput
+                            name="Po Date"
+                            value={date}
+                            type="date"
+                            required
+                            readOnly={readOnly}
+                            disabled
                           />
-                          <DateInput name="Po Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
-                          <DropdownInput name="Po Type"
+                        </div>
+
+                        <div className="col-span-1 pt-0.5">
+                          <DropdownInput
+                            name="Po Type"
                             options={poTypes}
-                            value={transType} setValue={setTransType} required={true} readOnly={readOnly} />
+                            value={transType}
+                            setValue={setTransType}
+                            required
+                            readOnly={readOnly}
+                          />
+                        </div>
 
-                          <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} 
-                          value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} masterName="PARTY MASTER" />
+                        <div className="col-span-2 pt-0.5">
+                          <DropdownInput
+                            name="Supplier"
+                            options={dropDownListObject(supplierListBasedOnSupply, "name", "id")}
+                            value={supplierId}
+                            setValue={setSupplierId}
+                            required
+                            readOnly={readOnly}
+                            masterName="PARTY MASTER"
+                            lastTab={activeTab}
+                          />
+                        </div>
 
-                          <DateInput name="Due Date" value={dueDate} setValue={setDueDate} required={true} readOnly={readOnly} />
-                          <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
-                          {/* <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} /> */}
-                          <DropdownInput name="Delivery Type"
+                        <div className="col-span-1">
+                          <DateInput
+                            name="Due Date"
+                            value={dueDate}
+                            setValue={setDueDate}
+                            required
+                            readOnly={readOnly}
+                          />
+                        </div>
+
+                        <div className="col-span-1 pt-0.5">
+                        <DisabledInput 
+  name="Pay Terms" 
+  value={payTermDay} 
+  required 
+/>
+
+                        </div>
+
+                        <div className="col-span-1 pt-0.5">
+                          <DropdownInput
+                            name="Delivery Type"
                             options={deliveryTypes}
                             value={deliveryType}
                             setValue={setDeliveryType}
-                            required={true} readOnly={readOnly} />
+                            required
+                            readOnly={readOnly}
+                          />
+                        </div>
+
+                        <div className="col-span-2 pt-0.5">
                           <DropdownInput
                             name="Delivery To"
                             options={
                               deliveryType === "ToSelf"
-                                ? dropDownListObject(branchList ? branchList.data : [], "branchName", "id")
-                                : dropDownListObject(clientDetail,"name","id")
+                                ? dropDownListObject(branchList?.data || [], "branchName", "id")
+                                : dropDownListObject(clientDetail, "name", "id")
                             }
                             masterName="PARTY MASTER"
+                            lastTab={activeTab}
                             value={deliveryToId}
                             setValue={setDeliveryToId}
-                            required={true}
+                            required
                             readOnly={readOnly}
                           />
-
                         </div>
                       </div>
+
                     </fieldset>
-                    <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[380px] px-1 w-full overflow-auto'>
+
+                    <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[370px] px-1 w-full overflow-auto'>
                       <legend className='sub-heading'>Purchase Details</legend>
                       {transType.toLowerCase().includes("GreyYarn".toLowerCase())
                         ?
@@ -388,8 +450,6 @@ export default function Form() {
                             <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         )
                       }
-
-
                       <Consolidation readOnly={readOnly} remarks={remarks} setRemarks={setRemarks}
                       />
                     </fieldset>
