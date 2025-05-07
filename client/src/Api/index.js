@@ -85,4 +85,4 @@ export const SOCKS_MATERIAL_API = "socksMaterial"
 export const SOCKS_TYPE_API = "socksType"
 export const MEASUREMENT_API = "measurement"
 export const FIBER_CONTENT_API = "fiberContent"
-
+export const YARN_NEEDLE_APT = "yarnNeedle"

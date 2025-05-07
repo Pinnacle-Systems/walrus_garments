@@ -69,7 +69,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { contentId, yarnTypeId, countsId, aliasName, hsn, fiberBlend, taxPercent, companyId, active } = await body
+    const { aliasName, fiberBlend, companyId, active } = await body
     const dataFound = await prisma.fiberContent.findUnique({
         where: {
             id: parseInt(id)

@@ -30,7 +30,8 @@ import {
   contentMaster,
   counts,
   Machine, socksMaterial,
-  currency, socksType, measurement, fibercontent
+  currency, socksType, measurement, fibercontent,
+  yarnNeedle
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -157,6 +158,9 @@ app.use("/currency", currency);
 app.use("/socksType", socksType);
 app.use("/measurement", measurement);
 app.use("/fiberContent", fibercontent);
+app.use("/fiberContent", fibercontent);
+app.use("/yarnNeedle", yarnNeedle);
+
 
 app.get("/retreiveFile/:fileName", (req, res) => {
   const { fileName } = req.params

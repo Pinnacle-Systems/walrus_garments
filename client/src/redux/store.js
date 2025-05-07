@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { openTabs,party } from "./features";
+import { openTabs, party } from "./features";
 import {
   countryMasterApi, pageMasterApi, stateMasterApi,
   cityMasterApi, departmentMasterApi, employeeCategoryMasterApi,
@@ -48,12 +48,13 @@ import CuttingReceiptApi from "./uniformService/CuttingReceiptServices";
 import sizeTemplateApi from "./uniformService/SizeTemplateMasterServices";
 import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
+import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 
 
 
 
 const commonReducers = {
-  openTabs,party,
+  openTabs, party,
   countryMaster: countryMasterApi.reducer,
   pageMaster: pageMasterApi.reducer,
   stateMaster: stateMasterApi.reducer,
@@ -138,6 +139,7 @@ const commonReducers = {
   [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer,
   measurementMaster: MeasurementMasterApi.reducer,
   fiberContentMaster: FiberContentMasterApi.reducer,
+  YarnNeedleMaster: YarnNeedleMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -223,7 +225,8 @@ CountsMasterApi.middleware,
 machineMasterApi.middleware,
 SocksTypeApi.middleware,
 MeasurementMasterApi.middleware,
-FiberContentMasterApi.middleware
+FiberContentMasterApi.middleware,
+YarnNeedleMasterApi.middleware,
 ];
 
 
