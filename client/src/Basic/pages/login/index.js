@@ -384,13 +384,19 @@ const Login = () => {
         <BranchAndFinYearForm setIsGlobalOpen={setIsGlobalOpen} />
       </Modal>
       <div 
-  style={{ backgroundImage: "url('https://files.123freevectors.com/wp-content/original/107061-light-orange-abstract.jpg')" }}
-  className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 font-sans overflow-hidden"
+  style={{ 
+    backgroundImage: "url('https://png.pngtree.com/thumb_back/fh260/background/20220428/pngtree-attractive-advertise-blank-banner-copyspace-vector-image_1102577.jpg')",
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center"
+  }}
+  className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-stone-50 to-amber-50 font-sans overflow-hidden"
 >
+
   {/* Background Elements */}
   <div className="absolute inset-0 z-0">
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-100/50 to-transparent" />
-    <div className="absolute inset-0 bg-grid-orange-900/5 opacity-20" />
+    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-100/40 to-transparent" />
+    <div className="absolute inset-0 bg-grid-stone-900/5 opacity-15" />
   </div>
 
   {/* Floating Blobs */}
@@ -404,7 +410,7 @@ const Login = () => {
       repeat: Infinity,
       ease: "easeInOut",
     }}
-    className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-amber-300/20 blur-3xl -z-10"
+    className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-teal-400/15 blur-3xl -z-10"
   />
   <motion.div 
     animate={{
@@ -417,7 +423,7 @@ const Login = () => {
       ease: "easeInOut",
       delay: 2
     }}
-    className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-orange-400/15 blur-3xl -z-10"
+    className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-rose-400/10 blur-3xl -z-10"
   />
 
   {/* Main Card */}
@@ -425,15 +431,15 @@ const Login = () => {
     initial={{ scale: 0.95, opacity: 0, y: 20 }}
     animate={{ scale: 1, opacity: 1, y: 0 }}
     transition={{ type: 'spring', stiffness: 120 }}
-    className="relative z-10 w-full max-w-md px-8 py-10 bg-white/90 backdrop-blur-lg rounded-2xl border border-orange-200 shadow-xl overflow-hidden"
+    className="relative z-10 w-full max-w-md px-8 py-10 bg-white/95 backdrop-blur-lg rounded-2xl border border-stone-200 shadow-xl overflow-hidden"
   >
     {/* Decorative Elements */}
-    <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-amber-400/10 blur-md" />
-    <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-orange-500/10 blur-md" />
+    <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-teal-400/10 blur-md" />
+    <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-rose-500/10 blur-md" />
     
     {/* Gradient Borders */}
-    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-400 to-transparent" />
+    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent" />
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
 
     {/* Content */}
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -443,12 +449,12 @@ const Login = () => {
         transition={{ delay: 0.4 }}
         className="space-y-1"
       >
-        <label htmlFor="username" className="text-sm font-medium text-orange-800/80">
+        <label htmlFor="username" className="text-sm font-medium text-stone-700">
           Username
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <User className="h-5 w-5 text-orange-400" />
+            <User className="h-5 w-5 text-teal-600" />
           </div>
           <input
             id="username"
@@ -457,7 +463,7 @@ const Login = () => {
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 bg-white/80 border border-orange-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder-orange-400/70 text-orange-900 transition-all duration-200"
+            className="block w-full pl-10 pr-3 py-3 bg-white/80 border border-stone-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-stone-400 text-stone-700 transition-all duration-200"
             placeholder="Enter your username"
           />
         </div>
@@ -469,12 +475,12 @@ const Login = () => {
         transition={{ delay: 0.5 }}
         className="space-y-1"
       >
-        <label htmlFor="password" className="text-sm font-medium text-orange-800/80">
+        <label htmlFor="password" className="text-sm font-medium text-stone-700">
           Password
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Lock className="h-5 w-5 text-orange-400" />
+            <Lock className="h-5 w-5 text-teal-600" />
           </div>
           <input
             id="password"
@@ -483,7 +489,7 @@ const Login = () => {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 bg-white/80 border border-orange-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder-orange-400/70 text-orange-900 transition-all duration-200"
+            className="block w-full pl-10 pr-10 py-3 bg-white/80 border border-stone-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-stone-400 text-stone-700 transition-all duration-200"
             placeholder="Enter your password"
           />
           <button
@@ -492,9 +498,9 @@ const Login = () => {
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5 text-orange-400 hover:text-orange-600 transition-colors" />
+              <EyeOff className="h-5 w-5 text-stone-400 hover:text-stone-600 transition-colors" />
             ) : (
-              <Eye className="h-5 w-5 text-orange-400 hover:text-orange-600 transition-colors" />
+              <Eye className="h-5 w-5 text-stone-400 hover:text-stone-600 transition-colors" />
             )}
           </button>
         </div>
@@ -511,8 +517,8 @@ const Login = () => {
           disabled={isSubmitting}
           className={`w-full py-3.5 px-4 rounded-lg font-medium text-white transition-all duration-300 ${
             isSubmitting
-              ? 'bg-orange-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-md hover:shadow-amber-400/40'
+              ? 'bg-teal-600 cursor-not-allowed'
+              : 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md hover:shadow-teal-400/30'
           }`}
         >
           {isSubmitting ? (
@@ -534,13 +540,13 @@ const Login = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.8 }}
-      className="mt-6 text-center text-sm text-orange-700/80"
+      className="mt-6 text-center text-sm text-stone-600"
     >
-      <a href="#" className="font-medium text-orange-600 hover:text-orange-700 transition-colors">
+      <a href="#" className="font-medium text-teal-600 hover:text-teal-700 transition-colors">
         Forgot password?
       </a>
-      <span className="mx-2">•</span>
-      <a href="#" className="font-medium text-orange-600 hover:text-orange-700 transition-colors">
+      <span className="mx-2 text-stone-400">•</span>
+      <a href="#" className="font-medium text-rose-500 hover:text-rose-600 transition-colors">
         Create account
       </a>
     </motion.div>
@@ -574,17 +580,16 @@ const Login = () => {
             transition: { duration: 0.3 },
           }}
         >
-          <div className="bg-white/90 backdrop-blur-md border border-orange-200 rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="bg-white/95 backdrop-blur-md border border-stone-200 rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className={`text-4xl mb-3 ${product.color}`}>{product.icon}</div>
-            <h3 className={`text-lg font-bold mb-1 ${product.color}`}>{product.title}</h3>
-            <p className="text-orange-700/80 text-xs">{product.desc}</p>
+            <h3 className="text-lg font-bold mb-1 text-stone-800">{product.title}</h3>
+            <p className="text-stone-600 text-xs">{product.desc}</p>
           </div>
         </motion.div>
       );
     })}
   </div>
 </div>
-
 
 
     </>
