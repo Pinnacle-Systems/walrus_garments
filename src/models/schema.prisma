@@ -2703,12 +2703,13 @@ model OrderDetailsSubGrid {
 }
 
 model Machine {
-  id         Int      @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   name       String?
   code       String?
   time       Float?
   production Float?
-  active     Boolean? @default(true)
+  active     Boolean?     @default(true)
+  YarnNeedle YarnNeedle[]
 }
 
 model ShippingAddress {
@@ -2759,4 +2760,13 @@ model FiberBlend {
   fabricId       Int?
   percentage     Int?
   fiberContentId Int?
+}
+
+model YarnNeedle {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  active    Boolean? @default(true)
+  Machine   Machine? @relation(fields: [machineId], references: [id])
+  machineId Int?
+  aliasName String?
 }

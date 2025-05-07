@@ -29,6 +29,7 @@ import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import {
   AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, FiberContent, LossReasonMaster,
   ProcessMaster, SizeTemplateMaster, SocksMaterial, SocksType, StyleMaster, YarnBlendMaster, YarnMaster,
+  YarnNeedle,
   YarnTypeMaster
 } from "../../../Shocks";
 import ContentMaster from "../../../Shocks/ContentMaster";
@@ -91,7 +92,8 @@ const ActiveTabList = () => {
     "PAY TERM MASTER": <PayTermMaster />,
     "MEASUREMENT MASTER": <MeasurementMaster />,
     "FABRIC MASTER": <FabricMaster />,
-    "FIBER CONTENT MASTER": <FiberContent />
+    "FIBER CONTENT MASTER": <FiberContent />,
+    "YARN NEEDLE MASTER": <YarnNeedle />,
   };
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;

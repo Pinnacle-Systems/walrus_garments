@@ -5,8 +5,7 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { companyId, active } = req.query
-    console.log("hitgert")
-    const data = await prisma.machine.findMany({
+    const data = await prisma.YarnNeedle.findMany({
 
 
         where: {
@@ -20,7 +19,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.machine.findUnique({
+    const data = await prisma.YarnNeedle.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -50,11 +49,12 @@ async function getSearch(req) {
 
 async function create(body) {
 
-    const { name, code, time, active } = await body
-    const data = await prisma.machine.create(
+    const { name, machineId, aliasName, active } = await body
+    const data = await prisma.YarnNeedle.create(
         {
             data: {
-                name, code, time: time ? parseFloat(time) : undefined, active
+                name, aliasName, active,
+                machineId: parseInt(machineId)
             }
         }
     )
@@ -62,27 +62,29 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, time, active } = await body
-    const dataFound = await prisma.machine.findUnique({
+    const { name, machineId, aliasName, active } = await body
+    const dataFound = await prisma.YarnNeedle.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("Machine");
-    const data = await prisma.machine.update({
+    if (!dataFound) return NoRecordFound("YaenNeedle");
+    const data = await prisma.YarnNeedle.update({
         where: {
             id: parseInt(id),
         },
         data:
         {
-            name, code, time: parseFloat(time), active
+            name, active,
+            machineId: parseInt(machineId),
+            aliasName
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.machine.delete({
+    const data = await prisma.YarnNeedle.delete({
         where: {
             id: parseInt(id)
         },

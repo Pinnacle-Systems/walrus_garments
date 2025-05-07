@@ -309,6 +309,7 @@ export const DropdownInput = ({
   autoFocus = false,
   masterName = "",
   lastTab,
+  setAliasName,
 }) => {
   const dispatch = useDispatch();
 

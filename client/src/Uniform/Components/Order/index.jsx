@@ -27,6 +27,7 @@ import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
+import { useGetYarnNeedleMasterQuery } from "../../../redux/uniformService/YarnNeedleMasterservices";
 
 
 const MODEL = "Order";
@@ -80,6 +81,7 @@ export default function Form() {
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
     const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
     const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
+    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
 
     const {
         data: colorlist,
@@ -265,6 +267,7 @@ export default function Form() {
         );
     };
 
+    console.log(orderDetails, "orderDetails")
 
 
 
@@ -403,6 +406,8 @@ export default function Form() {
                                                                                 <tr className=" bg-gray-400">
                                                                                     <th className=" border border-gray-500 text-sm px-2 py-0.5 w-12 text-center p-0.5">S No</th>
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Style</th>
+                                                                                    <th className="px-2 py-0.5  border border-gray-500 text-sm">YarnNeedle</th>
+
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Desc</th>
 
                                                                                     <th className="px-2 py-0.5  border border-gray-500 text-sm">Size</th>
@@ -442,6 +447,29 @@ export default function Form() {
                                                                                                 </option>)}
 
                                                                                         </select>
+                                                                                        </td>
+                                                                                        <td className="h-[30px] w-32  border-blue-gray-200 text-[11px] ">
+                                                                                            <select
+                                                                                                disabled={readOnly}
+                                                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnNeedleId") } }}
+                                                                                                className='text-left w-full rounded py-1 table-data-input'
+                                                                                                value={item?.yarnNeedleId}
+
+                                                                                                onChange={(e) => handleInputChange(e.target.value, index, "yarnNeedleId")}
+                                                                                                onBlur={(e) => {
+                                                                                                    handleInputChange((e.target.value), index, "yarnNeedleId")
+                                                                                                }}
+                                                                                            >
+
+                                                                                                <option>
+                                                                                                    select
+                                                                                                </option>
+                                                                                                {Yarnlist?.data?.map(size =>
+                                                                                                    <option value={size.id || ""} key={size.id}   >
+                                                                                                        {size?.aliasName}
+                                                                                                    </option>)}
+
+                                                                                            </select>
                                                                                         </td>
                                                                                         <td className="table-data w-9 text-left px-1 py-1 text-xs">
                                                                                             <textarea readOnly={readOnly} className=" w-full overflow-auto focus:outline-none border border-gray-500 rounded py-1 text-xs"
