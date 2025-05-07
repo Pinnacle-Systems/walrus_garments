@@ -27,6 +27,43 @@ label {
   width: 440px !important;
   margin: 1px;
 }
+@keyframes neon-glow-orange {
+  0% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+  }
+}
+
+.neon-glow-orange {
+  animation: neon-glow-orange 3s ease-in-out infinite;
+}
+
+@keyframes rotate-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.orbit-ring {
+  animation: rotate-ring 80s linear infinite;
+}
+
+.bg-grid-orange-900\/5 {
+  background-image: linear-gradient(
+      to right,
+      rgba(249, 115, 22, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(249, 115, 22, 0.05) 1px, transparent 1px);
+}
 
 @media print {
   html {}

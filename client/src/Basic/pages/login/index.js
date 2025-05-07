@@ -131,9 +131,11 @@
 
 //       <div className="flex justify-around items-center bg-pink-300  h-screen">
 
+
 //         <div className="w-96 h-96" >
 //           <img className="rounded-xl w-full h-full" src={buildingLogo} />
 //         </div>
+
 
 //         <div>
 //           <form
@@ -189,8 +191,15 @@
 //               &copy;{new Date().getFullYear()} Pinnacle Systems All rights reserved.
 //             </p>
 
+
+
+
 //           </form>
 //         </div>
+
+
+
+
 
 //       </div>
 //     </>
@@ -199,25 +208,28 @@
 
 // export default Login;
 
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from "react-secure-storage";
 import axios from "axios";
+import { motion } from 'framer-motion';
+import { LOGIN_API } from '../../../Api';
+import { generateSessionId } from '../../../Utils/helper';
+import Modal from '../../../UiComponents/Modal';
+import BranchAndFinYearForm from '../../components/BranchAndFinyear';
+import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
+import toast from 'react-hot-toast';
+import { UserIcon as User, LockClosedIcon as Lock,} from '@heroicons/react/outline';
 
-import { LOGIN_API } from "../../../Api";
-import { generateSessionId } from "../../../Utils/helper";
-import Modal from "../../../UiComponents/Modal";
-import BranchAndFinYearForm from "../../components/BranchAndFinyear";
-import { PRODUCT_ADMIN_HOME_PATH } from "../../../Route/urlPaths";
-import toast from "react-hot-toast";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const Login = () => {
+
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false)
   // const [formData, setFormData] = useState({ email: email, password: password })
   const [errors, setErrors] = useState({});
   const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -228,6 +240,7 @@ const Login = () => {
   // Validation function to check email and password
   const validate = () => {
     const errors = {};
+
 
     if (!username) {
       errors.email = "Email is required";
@@ -249,12 +262,20 @@ const Login = () => {
     return errors;
   };
 
-  const data = { username, password };
-
+  const data = { username, password }
+  const products = [
+    { title: 'GMS', desc: 'Garment ERP', icon: '👔', color: 'text-amber-500' },
+    { title: 'PMS', desc: 'Payroll System', icon: '💰', color: 'text-orange-500' },
+    { title: 'PCS', desc: 'Production Control', icon: '🏭', color: 'text-orange-600' },
+    { title: 'POS', desc: 'Retail POS', icon: '🛒', color: 'text-amber-600' },
+    { title: 'Costing', desc: 'Textile Costing', icon: '🧮', color: 'text-orange-700' },
+    { title: 'Lab', desc: 'LIMS', icon: '🔬', color: 'text-amber-700' },
+  ];
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleSubmit = (e) => {
-    e.preventDefault();
-    const validateErrors = validate();
-    setErrors(validateErrors);
+    e.preventDefault()
+    const validateErrors = validate()
+    setErrors(validateErrors)
     if (Object.keys(validateErrors).length === 0) {
       axios({
         method: "post",
@@ -315,7 +336,7 @@ const Login = () => {
                   );
                   secureLocalStorage.setItem(
                     sessionStorage.getItem("sessionId") +
-                      "latestActivePlanExpireDate",
+                    "latestActivePlanExpireDate",
                     new Date(
                       result.data.userInfo.role.company.Subscription[0].expireAt
                     ).toDateString()
@@ -333,7 +354,7 @@ const Login = () => {
                 }
               }
             } else {
-              console.log(result);
+              console.log(result)
               toast.error(result.data.message);
               setLoading(false);
             }
@@ -346,8 +367,10 @@ const Login = () => {
           setLoading(false);
         }
       );
-    }
-  };
+    };
+  }
+  
+
 
   return (
     <>
@@ -360,83 +383,212 @@ const Login = () => {
       >
         <BranchAndFinYearForm setIsGlobalOpen={setIsGlobalOpen} />
       </Modal>
-      <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-[#e0e7ff] via-white to-[#f0f5ff] font-[Poppins] overflow-hidden"
-      style={{
-        backgroundImage:
-          "url('https://files.123freevectors.com/wp-content/original/107061-light-orange-abstract.jpg')",
-        fontFamily: 'Poppins, sans-serif',
-      }}
+      <div 
+  style={{ backgroundImage: "url('https://files.123freevectors.com/wp-content/original/107061-light-orange-abstract.jpg')" }}
+  className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 font-sans overflow-hidden"
+>
+  {/* Background Elements */}
+  <div className="absolute inset-0 z-0">
+    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-orange-100/50 to-transparent" />
+    <div className="absolute inset-0 bg-grid-orange-900/5 opacity-20" />
+  </div>
+
+  {/* Floating Blobs */}
+  <motion.div 
+    animate={{
+      x: [0, 20, 0],
+      y: [0, -20, 0],
+    }}
+    transition={{
+      duration: 15,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+    className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-amber-300/20 blur-3xl -z-10"
+  />
+  <motion.div 
+    animate={{
+      x: [0, -30, 0],
+      y: [0, 30, 0],
+    }}
+    transition={{
+      duration: 20,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay: 2
+    }}
+    className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-orange-400/15 blur-3xl -z-10"
+  />
+
+  {/* Main Card */}
+  <motion.div
+    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+    animate={{ scale: 1, opacity: 1, y: 0 }}
+    transition={{ type: 'spring', stiffness: 120 }}
+    className="relative z-10 w-full max-w-md px-8 py-10 bg-white/90 backdrop-blur-lg rounded-2xl border border-orange-200 shadow-xl overflow-hidden"
+  >
+    {/* Decorative Elements */}
+    <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-amber-400/10 blur-md" />
+    <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-orange-500/10 blur-md" />
+    
+    {/* Gradient Borders */}
+    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-400 to-transparent" />
+
+    {/* Content */}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-1"
+      >
+        <label htmlFor="username" className="text-sm font-medium text-orange-800/80">
+          Username
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <User className="h-5 w-5 text-orange-400" />
+          </div>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            required
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="block w-full pl-10 pr-3 py-3 bg-white/80 border border-orange-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder-orange-400/70 text-orange-900 transition-all duration-200"
+            placeholder="Enter your username"
+          />
+        </div>
+      </motion.div>
+
+      <motion.div 
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5 }}
+        className="space-y-1"
+      >
+        <label htmlFor="password" className="text-sm font-medium text-orange-800/80">
+          Password
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Lock className="h-5 w-5 text-orange-400" />
+          </div>
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="block w-full pl-10 pr-10 py-3 bg-white/80 border border-orange-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder-orange-400/70 text-orange-900 transition-all duration-200"
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5 text-orange-400 hover:text-orange-600 transition-colors" />
+            ) : (
+              <Eye className="h-5 w-5 text-orange-400 hover:text-orange-600 transition-colors" />
+            )}
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="pt-2"
+      >
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`w-full py-3.5 px-4 rounded-lg font-medium text-white transition-all duration-300 ${
+            isSubmitting
+              ? 'bg-orange-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-md hover:shadow-amber-400/40'
+          }`}
+        >
+          {isSubmitting ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </span>
+          ) : (
+            'Sign In'
+          )}
+        </button>
+      </motion.div>
+    </form>
+
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.8 }}
+      className="mt-6 text-center text-sm text-orange-700/80"
     >
+      <a href="#" className="font-medium text-orange-600 hover:text-orange-700 transition-colors">
+        Forgot password?
+      </a>
+      <span className="mx-2">•</span>
+      <a href="#" className="font-medium text-orange-600 hover:text-orange-700 transition-colors">
+        Create account
+      </a>
+    </motion.div>
+  </motion.div>
 
-{/* Central Glassmorphic Login Circle */}
-<div className="z-10 w-[420px] h-[420px] rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_rgba(31,38,135,0.37)] flex flex-col justify-center items-center text-center px-8 py-6">
-  <h2 className="text-3xl font-bold mb-3 text-gray-800">Welcome Back</h2>
-  <p className="text-gray-500 mb-6">Login to your dashboard</p>
-
-  <form className="w-full space-y-4" onSubmit={(e) => handleSubmit(e)}>
-    <input
-      type="text"
-      name="username"
-      placeholder="Username"
-      value={username}
-      onChange={(e) => setUsername(e.target.value)}
-      className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-    />
-    {errors.username && <div className="text-sm text-red-500">{errors.username}</div>}
-
-    <div className="relative">
-      <input
-        type={showPassword ? "text" : "password"}
-        name="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full px-4 py-2 bg-white/60 backdrop-blur-md border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      <div className="absolute top-2.5 right-3 text-gray-500 cursor-pointer">
-        {showPassword ? <EyeOff size={18} onClick={() => setShowPassword(false)} /> : <Eye size={18} onClick={() => setShowPassword(true)} />}
-      </div>
-    </div>
-    {errors.password && <div className="text-sm text-red-500">{errors.password}</div>}
-
-    <button type="submit" className="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all">
-      Login
-    </button>
-  </form>
-
-  <div className="mt-4 text-sm">
-    Don’t have an account?{" "}
-    <span onClick={() => navigate("/register")} className="text-indigo-600 underline cursor-pointer">Sign Up</span>
+  {/* Floating Product Cards */}
+  <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center">
+    {products.map((product, i) => {
+      const angle = (Math.PI * 2 * i) / products.length;
+      const radius = 320;
+      return (
+        <motion.div
+          key={i}
+          className="absolute w-48 h-48 flex items-center justify-center"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius,
+          }}
+          transition={{
+            type: 'spring',
+            delay: i * 0.1,
+            stiffness: 50,
+            damping: 10,
+          }}
+          whileHover={{
+            scale: 1.1,
+            zIndex: 10,
+            transition: { duration: 0.3 },
+          }}
+        >
+          <div className="bg-white/90 backdrop-blur-md border border-orange-200 rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className={`text-4xl mb-3 ${product.color}`}>{product.icon}</div>
+            <h3 className={`text-lg font-bold mb-1 ${product.color}`}>{product.title}</h3>
+            <p className="text-orange-700/80 text-xs">{product.desc}</p>
+          </div>
+        </motion.div>
+      );
+    })}
   </div>
 </div>
 
-{/* Orbiting Product Balls */}
-{[
-  { title: "GMS", desc: "ERP for Garments" },
-  { title: "PMS", desc: "Payroll with App" },
-  { title: "PCS", desc: "Spinning & Knitting" },
-  { title: "POS", desc: "Retail POS" },
-  { title: "Costing", desc: "Textile Costing" },
-  { title: "Lab", desc: "LIMS Management" }
-].map((product, i) => {
-  const angle = (360 / 6) * i;
-  return (
-    <div
-      key={i}
-      className="absolute w-32 h-32 bg-white/30 rounded-full backdrop-blur-md border border-white/30 shadow-md flex flex-col justify-center items-center text-center text-sm p-2 hover:scale-110 transition-all"
-      style={{
-        transform: `rotate(${angle}deg) translate(260px) rotate(-${angle}deg)`
-      }}
-    >
-      <div className="text-[#E77817] font-bold">{product.title}</div>
-      <div className="text-gray-700 text-xs">{product.desc}</div>
-    </div>
-  );
-})}
-</div>
+
 
     </>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
