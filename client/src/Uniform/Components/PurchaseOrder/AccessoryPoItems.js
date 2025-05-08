@@ -109,7 +109,12 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     }
 
 
-    const findAmount = (qty, price, tax, discountType, disAmount) => {
+    const findAmount = (row) => {
+        const qty = row.qty;
+        const price = row.price;
+        const tax =  row.tax;
+        const discountType =  row.discountType;
+        const disAmount=  row.discountAmount
         let taxAmount = 0;
         let grossAmount = parseFloat((parseFloat(qty) * parseFloat(price)) || 0).toFixed(2);
         let dicountAmount = 0;
@@ -245,25 +250,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                {/* <td className='table-data'>
-                                    <input
-                                        type="text-left px-1"
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-center rounded w-36 py-1 table-data-input"
-                                        value={findAccessoryItemName(row.accessoryId)}
-                                        disabled={true}
-
-                                    />
-                                </td>
-                                <td className='table-data'>
-                                    <input
-                                        type="text"
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-center rounded w-36 py-1 table-data-input"
-                                        value={findAccessoryGroupName(row.accessoryId)}
-                                        disabled={true}
-                                    />
-                                </td> */}
+                            
                                 <td className='table-data'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -460,15 +447,14 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 {/* <td className='table-data text-right px-1 '>
                                                                                {priceWithTax(row.price, row.taxPercent).toFixed(2)}
                                                                            </td> */}
-                                <td className='table-data '>
-                                    <input
-                                        className="text-right  rounded py-1 px-1 w-16 table-data-input"
-                                        // value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
-                                        value={findAmount(row.qty, row.price, row.tax, row.discountType, row.discountAmount)}
-                                        disabled={true}
-                                        onFocus={(e) => e.target.select()}
-                                    />
-                                </td>
+                          <td className='table-data '>
+    <input
+        className="text-right rounded py-1 px-1 w-16 table-data-input"
+        value={findAmount(row)}
+        readOnly={true} // Changed from disabled
+        onFocus={(e) => e.target.select()}
+    />
+</td>
 
                                 {readOnly
                                     ?

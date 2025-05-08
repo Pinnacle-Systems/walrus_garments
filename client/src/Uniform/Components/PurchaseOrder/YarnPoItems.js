@@ -41,7 +41,6 @@ const YarnPoItems = ({
   console.log(poItems,"poItems")
   useEffect(() => {
     if (poItems.length >= 9) return;  
-    if(id) return;
     setPoItems((prev) => {
       let newArray = Array.from({ length: 9 - prev.length }, (i) => {
         return {

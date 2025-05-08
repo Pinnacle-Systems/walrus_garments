@@ -700,7 +700,7 @@ export function getPoItemObject(transType, item) {
     } else if (transType === "Accessory") {
       newItem.accessoryId = parseInt(item.accessoryId);
       newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
-      newItem.AccessoryGroupId= parseInt(item.accessoryGroupId)
+      newItem.accessoryGroupId= parseInt(item.accessoryGroupId)
       newItem.accessoryItemId= parseInt(item.accessoryItemId)
     }
   
