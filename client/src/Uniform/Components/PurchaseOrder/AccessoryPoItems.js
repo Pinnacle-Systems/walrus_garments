@@ -447,14 +447,15 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 {/* <td className='table-data text-right px-1 '>
                                                                                {priceWithTax(row.price, row.taxPercent).toFixed(2)}
                                                                            </td> */}
-                          <td className='table-data '>
-    <input
-        className="text-right rounded py-1 px-1 w-16 table-data-input"
-        value={findAmount(row)}
-        readOnly={true} // Changed from disabled
-        onFocus={(e) => e.target.select()}
-    />
-</td>
+                                <td className='table-data '>
+                                    <input
+                                        className="text-right  rounded py-1 px-1 w-16 table-data-input"
+                                        // value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
+                                        value={findAmount(row)}
+                                        disabled={true}
+                                        onFocus={(e) => e.target.select()}
+                                    />
+                                </td>
 
                                 {readOnly
                                     ?
