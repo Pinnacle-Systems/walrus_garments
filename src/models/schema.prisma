@@ -797,8 +797,8 @@ model PoItems {
   yarnId           Int?
   Accessory        Accessory?        @relation(fields: [accessoryId], references: [id])
   accessoryId      Int?
-  AccessoryGroup   AccessoryGroup?   @relation(fields: [AccessoryGroupId], references: [id])
-  AccessoryGroupId Int?
+  accessoryGroup   AccessoryGroup?   @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
   accessoryItem    AccessoryItem?    @relation(fields: [accessoryItemId], references: [id])
   accessoryItemId  Int?
   Color            Color?            @relation(fields: [colorId], references: [id])

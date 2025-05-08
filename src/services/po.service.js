@@ -171,7 +171,7 @@ async function getOne(id) {
                 name: true,
               },
             },
-            AccessoryGroup: {
+            accessoryGroup: {
               select: {
                 name: true,
               },
@@ -216,6 +216,7 @@ async function getOne(id) {
   
     return { statusCode: 0, data: { ...po, childRecord } };
   }
+  
   
 
 async function getSearch(req) {

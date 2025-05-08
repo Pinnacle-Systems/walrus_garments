@@ -28,13 +28,14 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
         }
         setPoItems(newBlend);
     };
+     console.log (poItems,"poItems")
 
     useEffect(() => {
         if (poItems.length >= 9) return
         setPoItems(prev => {
             let newArray = Array.from({ length: 9 - prev.length }, i => {
                 return { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
-            })
+            }  )                              
             return [...prev, ...newArray]
         }
         )
@@ -134,7 +135,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
 
 
     if (!accessoryList || !colorList || !uomList || !sizeList) return <Loader />
-
+   console.log((accessoryGroupList?.data || []),"accessoryGroupList")
     return (
         <>
 
@@ -193,14 +194,15 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                     >
                                         <option hidden>{console.log(accessoryGroupList, "accessoryGroupList")}
                                         </option>
-                                        {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
+                                        {(id ? (accessoryGroupList?.data || []) : 
+                                        accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
                                             <option value={blend.id} key={blend.id}>
                                                 {blend.name}
                                             </option>
                                         )}
                                     </select>
                                 </td>
-                                <td className=' border border-gray-500'>{console.log(accessoryItemList, "accessoryItemList")}
+                                <td className=' border border-gray-500'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}

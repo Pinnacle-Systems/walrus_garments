@@ -93,7 +93,7 @@ export const TextInput = ({
       <div className="group input-group  text-sm">
         <label
           htmlFor="title"
-          className="input-label group-hover:text-blue-600  font-weight: 100 "
+          className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
         >
           <span className="flex items-center gap-2  font-weight: 100">
             {required ? <RequiredLabel name={name} /> : `${name}`}
