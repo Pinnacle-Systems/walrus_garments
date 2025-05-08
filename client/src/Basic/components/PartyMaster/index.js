@@ -41,7 +41,7 @@ import { DELETE, PLUS } from "../../../icons";
 import { toast } from "react-toastify";
 import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
-import { push } from "../../../redux/features/opentabs";
+import { push,remove } from "../../../redux/features/opentabs";
 
 const MODEL = "Party Master";
 
@@ -123,9 +123,8 @@ export default function Form() {
     isFetching,
   } = useGetPartyQuery({ params, searchParams: searchValue });
   const openPartyModal = useSelector((state) => state.party.openPartyModal);
-  const lastTapName =  useSelector((state)=>state.party.lastTab)
+  // const lastTapName =  useSelector((state)=>state.party.lastTab)
 
-  console.log(lastTapName,"lastTapName")
 const activeTab = useSelector((state) =>
     state.openTabs.tabs.find((tab) => tab.active).name
   );
@@ -336,8 +335,8 @@ console.log(payTermDay,"payTermDay")
         setForm(false)
       }
       if(exit){
-        if (openPartyModal === true && lastTapName) {
-          dispatch(push({ name: lastTapName }));
+        if (openPartyModal === true) {
+          dispatch(remove({ name: activeTab }));
         }
         
            dispatch(setOpenPartyModal(false));
@@ -566,7 +565,7 @@ console.log(payTermDay,"payTermDay")
             setErrors({});
             setStep(1);
             if (openPartyModal === true) {
-              dispatch(push({ name: lastTapName }));
+              dispatch(remove({ name: activeTab }));
             }
             dispatch(setOpenPartyModal(false));
            

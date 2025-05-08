@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DELETE, PLUS } from "../../../icons";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
-import {  useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
 import { VIEW } from "../../../icons";
@@ -23,7 +23,6 @@ const YarnPoItems = ({
 }) => {
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
 
-
   const handleInputChange = (value, index, field) => {
     const newBlend = structuredClone(poItems);
     newBlend[index][field] = value;
@@ -38,9 +37,10 @@ const YarnPoItems = ({
     }
     setPoItems(newBlend);
   };
-  console.log(poItems,"poItems")
+  console.log(poItems, "poItems");
   useEffect(() => {
-    if (poItems.length >= 9) return;  
+    if(id) return
+    if (poItems.length >= 9) return;
     setPoItems((prev) => {
       let newArray = Array.from({ length: 9 - prev.length }, (i) => {
         return {
@@ -81,8 +81,13 @@ const YarnPoItems = ({
 
   const { data: yarnList } = useGetYarnMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-  const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
-  useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
+  const {
+    data: colorList,
+    isLoading: isColorLoading,
+    isFetching: isColorFetching,
+  } = useGetColorMasterQuery({
+    params: { ...params, isGrey: greyFilter ? true : undefined },
+  });
   function findYarnTax(id) {
     if (!yarnList) return 0;
     let yarnItem = yarnList.data.find(
@@ -114,7 +119,7 @@ const YarnPoItems = ({
     const qty = parseFloat(row.qty) || 0;
     const discountValue = parseFloat(row.discountValue) || 0;
     const discountType = (row.discountType || "").toLowerCase();
-     const total = TotalAmount(price, tax, qty);
+    const total = TotalAmount(price, tax, qty);
 
     if (discountType === "flat") {
       return total - discountValue;
@@ -170,9 +175,13 @@ const YarnPoItems = ({
             <tr>
               <th className="table-data  w-2 text-center">S.no</th>
 
-              <th className="table-data ">Items<span className="text-red-500">*</span></th>
-               <th className="table-data ">Color<span className="text-red-500">*</span></th>
-              
+              <th className="table-data ">
+                Items<span className="text-red-500">*</span>
+              </th>
+              <th className="table-data ">
+                Color<span className="text-red-500">*</span>
+              </th>
+
               <th className="table-data  w-20">
                 UOM<span className="text-red-500">*</span>
               </th>
@@ -258,50 +267,56 @@ const YarnPoItems = ({
                   </select>
                 </td>
                 {transType.toLowerCase().includes("dyedyarn") ? (
-  <td className="table-data">
-    <select
-      className="w-full rounded py-1 table-data-input text-left"
-      value={row.colorId}
-      disabled={
-        readOnly ||
-        Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-        Boolean(row?.alreadyCancelData?._sum?.qty)
-      }
-      onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-      onBlur={(e) => handleInputChange(e.target.value, index, "colorId")}
-      onKeyDown={(e) => {
-        if (e.key === "Delete") {
-          handleInputChange("", index, "colorId");
-        }
-      }}
-    >
-      <option hidden value=""></option>
-      {(id ? colorList?.data : colorList?.data?.filter(item => item.active))?.map((color) => (
-        <option key={color.id} value={color.id}>
-          {color.name}
-        </option>
-      ))}
-    </select>
-  </td>
-) : (
-  (() => {
-    const grayColor = colorList?.data?.find(color => color.name?.toLowerCase() === "gray");
-    // If Gray exists, update colorId if needed
-    if (grayColor && row.colorId !== grayColor.id) {
-      setTimeout(() => {
-        handleInputChange(grayColor.id, index, "colorId");
-      }, 0);
-    }
-    return (
-      <td className="table-data text-right px-1">
-        {grayColor?.name ?? "-"}
-      </td>
-    );
-  })()
-)}
-
-
-
+                  <td className="table-data">
+                    <select
+                      className="w-full rounded py-1 table-data-input text-left"
+                      value={row.colorId}
+                      disabled={
+                        readOnly ||
+                        Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+                        Boolean(row?.alreadyCancelData?._sum?.qty)
+                      }
+                      onChange={(e) =>
+                        handleInputChange(e.target.value, index, "colorId")
+                      }
+                      onBlur={(e) =>
+                        handleInputChange(e.target.value, index, "colorId")
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Delete") {
+                          handleInputChange("", index, "colorId");
+                        }
+                      }}
+                    >
+                      <option hidden value=""></option>
+                      {(id
+                        ? colorList?.data
+                        : colorList?.data?.filter((item) => item.active)
+                      )?.map((color) => (
+                        <option key={color.id} value={color.id}>
+                          {color.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                ) : (
+                  (() => {
+                    const grayColor = colorList?.data?.find(
+                      (color) => color.name?.toLowerCase() === "gray"
+                    );
+                    // If Gray exists, update colorId if needed
+                    if (grayColor && row.colorId !== grayColor.id) {
+                      setTimeout(() => {
+                        handleInputChange(grayColor.id, index, "colorId");
+                      }, 0);
+                    }
+                    return (
+                      <td className="table-data text-right px-1">
+                        {grayColor?.name ?? "-"}
+                      </td>
+                    );
+                  })()
+                )}
 
                 <td className="table-data">
                   <select
@@ -410,16 +425,12 @@ const YarnPoItems = ({
                         handleInputChange("0.000", index, "qty");
                       }
                     }}
-                    min={"0"}
+                    min="0"
                     type="number"
                     className="text-right rounded py-1 px-1 w-16 table-data-input"
                     onFocus={(e) => e.target.select()}
                     value={!row.qty ? 0 : row.qty}
-                    disabled={
-                      readOnly ||
-                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-                      Boolean(row?.alreadyCancelData?._sum?.qty)
-                    }
+                    readOnly={readOnly} // Use readOnly instead of disabled
                     onChange={(e) =>
                       handleInputChange(e.target.value, index, "qty")
                     }
@@ -432,6 +443,7 @@ const YarnPoItems = ({
                     }}
                   />
                 </td>
+
                 <td className="table-data">
                   <input
                     onKeyDown={(e) => {
@@ -503,22 +515,21 @@ const YarnPoItems = ({
                   {TotalAmount(row.price, row.tax, row.qty).toFixed(2)}
                 </td>
                 <td className="table-data text-right px-1">
-                <select
-                  className="border rounded px-1 py-0.5 text-xs"
-                  value={poItems[index]?.discountType || ""}
-                  onChange={(e) =>
-                    handleInputChange(e.target.value, index, "discountType")
-                  }
-                >
-                  <option value="">Select</option>
-                  {discountTypes.map((item, i) => (
-                    <option key={i} value={item.value }>
-                      {item.value}
-                    </option>
-                  ))}
-                </select>
-                  </td>
-            
+                  <select
+                    className="border rounded px-1 py-0.5 text-xs"
+                    value={poItems[index]?.discountType || ""}
+                    onChange={(e) =>
+                      handleInputChange(e.target.value, index, "discountType")
+                    }
+                  >
+                    <option value="">Select</option>
+                    {discountTypes.map((item, i) => (
+                      <option key={i} value={item.value}>
+                        {item.value}
+                      </option>
+                    ))}
+                  </select>
+                </td>
 
                 <td className="table-data">
                   <input
@@ -589,7 +600,6 @@ const YarnPoItems = ({
                 {getFinalAmountAfterDiscount().toFixed(2)}
               </td>
               <td className="table-data   w-10"></td>
-            
             </tr>
           </tbody>
         </table>

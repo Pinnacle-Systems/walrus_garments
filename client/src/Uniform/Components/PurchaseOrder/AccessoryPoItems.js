@@ -37,6 +37,7 @@ const AccessoryPoItems = ({
   console.log(poItems, "poItems");
 
   useEffect(() => {
+    if(id) return 
     if (poItems.length >= 9) return;
     setPoItems((prev) => {
       let newArray = Array.from({ length: 9 - prev.length }, (i) => {
