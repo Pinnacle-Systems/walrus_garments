@@ -41,7 +41,7 @@ import { DELETE, PLUS } from "../../../icons";
 import { toast } from "react-toastify";
 import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
-import { push,remove } from "../../../redux/features/opentabs";
+import { push } from "../../../redux/features/opentabs";
 
 const MODEL = "Party Master";
 
@@ -123,7 +123,7 @@ export default function Form() {
     isFetching,
   } = useGetPartyQuery({ params, searchParams: searchValue });
   const openPartyModal = useSelector((state) => state.party.openPartyModal);
-  // const lastTapName =  useSelector((state)=>state.party.lastTab)
+  const lastTapName =  useSelector((state)=>state.party.lastTab)
 
 const activeTab = useSelector((state) =>
     state.openTabs.tabs.find((tab) => tab.active).name
@@ -335,8 +335,8 @@ console.log(payTermDay,"payTermDay")
         setForm(false)
       }
       if(exit){
-        if (openPartyModal === true) {
-          dispatch(remove({ name: activeTab }));
+        if (openPartyModal === true && lastTapName) {
+          dispatch(push({ name: lastTapName }));
         }
         
            dispatch(setOpenPartyModal(false));
@@ -525,6 +525,9 @@ console.log(payTermDay,"payTermDay")
   //     return <Loader />
   // }
   console.log(isGy, "isGy");
+  const openKYCInNewTab = () => {
+    window.open('/kyc-form', '_blank');
+  };
 
   return (
     <div onKeyDown={handleKeyDown}>
@@ -565,7 +568,7 @@ console.log(payTermDay,"payTermDay")
             setErrors({});
             setStep(1);
             if (openPartyModal === true) {
-              dispatch(remove({ name: activeTab }));
+              dispatch(push({ name: lastTapName }));
             }
             dispatch(setOpenPartyModal(false));
            
@@ -659,6 +662,14 @@ console.log(payTermDay,"payTermDay")
                           </div>
                         </div>
                       </fieldset>
+                      <div className="mt-6">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          onClick={openKYCInNewTab}
+        >
+          Kyc Form Update
+        </button>
+      </div>
                     </div>
 
                     {/* Right Section: Image Upload */}

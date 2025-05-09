@@ -12,7 +12,9 @@ import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
 import { useGetCountsMasterQuery } from '../../redux/uniformService/CountsMasterServices';
 import YarnBlendDetails from './YarnBlendDetails';
-
+import { useDispatch, useSelector } from "react-redux";
+import { setOpenPartyModal } from '../../redux/features/openModel';
+import { push } from '../../redux/features/opentabs';
 const MODEL = 'Yarn Master'
 
 export default function Form() {
@@ -80,6 +82,22 @@ export default function Form() {
         setTaxPercent(data?.taxPercent ? data?.taxPercent : 0);
         setActive(id ? (data?.active ? data.active : false) : true);
     }, [id]);
+      const dispatch = useDispatch();
+         const openPartyModal = useSelector((state) => state.party.openPartyModal);
+          const lastTapName =  useSelector((state)=>state.party.lastTab)
+        
+          console.log(lastTapName,"lastTapName")
+        const activeTab = useSelector((state) =>
+            state.openTabs.tabs.find((tab) => tab.active).name
+          );
+          console.log(openPartyModal, "openPartyModal")
+          useEffect(() => {
+            if (openPartyModal) {
+              setId("");
+              setForm(true);
+            }
+          }, [openPartyModal]);
+    
 
     useEffect(() => {
         if (id) {
@@ -131,7 +149,7 @@ export default function Form() {
             data.hsn && data.countsId
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, exit = false) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -139,8 +157,19 @@ export default function Form() {
             } else {
                 returnData = await callback(data).unwrap();
             }
-            setId(returnData.data.id)
+            setId("")
+            onNew()
             toast.success(text + "Successfully");
+             if(exit){
+                                  setForm(false)
+                                }
+                                if(exit){
+                                  if (openPartyModal === true && lastTapName) {
+                                    dispatch(push({ name: lastTapName }));
+                                  }
+                                  
+                                     dispatch(setOpenPartyModal(false));
+                                }
         } catch (error) {
             console.log("handle");
         }
@@ -164,7 +193,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     }
-
+    const saveExitData = () => {
+      if (!validateData(data)) {
+          toast.error("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+         if (id) {
+        handleSubmitCustom(updateData, data, "Updated", true);
+      } else {
+        console.log("hit");
+        handleSubmitCustom(addData, data, "Added",true);
+      }
+    };
     const deleteData = async () => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
@@ -191,12 +233,26 @@ export default function Form() {
     };
 
     const onNew = () => {
-        setId("");
-        setForm(true);
-        setSearchValue("");
-        setReadOnly(false);
-        // syncFormWithDb(undefined)
-    };
+      setId("");
+      setForm(true);
+      setSearchValue("");
+      setReadOnly(false);
+      setAliasName(""); 
+      setContentId(""); 
+      setYarnTypeId(""); 
+      setHsn(""); 
+      setCountsId("");
+      setTaxPercent(0); 
+      setActive(true); 
+  
+      setYarnBlendDetails([
+          { yarnBlendId: "", percentage: "" },
+          { yarnBlendId: "", percentage: "" },
+          { yarnBlendId: "", percentage: "" },
+          { yarnBlendId: "", percentage: "" },
+      ]);
+  };
+  
 
     function onDataClick(id) {
         setId(id);
@@ -243,6 +299,10 @@ export default function Form() {
     onClose={() => {
       setForm(false);
       setErrors({});
+      if (openPartyModal === true) {
+        dispatch(push({ name: lastTapName }));
+      }
+      dispatch(setOpenPartyModal(false));
     }}
   >
     <MastersForm
@@ -251,7 +311,12 @@ export default function Form() {
         setForm(false);
         setSearchValue('');
         setId(false);
-      }}
+        if (openPartyModal === true) {
+                              dispatch(push({ name: lastTapName }));
+                            }
+                            dispatch(setOpenPartyModal(false)); }}
+                            saveExitData = {saveExitData}
+      
       model={MODEL}
       saveData={saveData}
       setReadOnly={setReadOnly}

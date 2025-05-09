@@ -11,6 +11,7 @@ export { default as CountryMaster } from "./CountryMaster";
 export { default as CurrencyMaster } from "./CurrencyMaster";
 export { default as ColorMaster } from "./ColorMaster";
 export { default as Dashboard } from "./Dashboard"
+export {default as KycForm} from "./KycForm"
 export { default as PageMaster } from "./PageMaster";
 export { default as CityMaster } from "./CityMaster";
 export { default as DepartmentMaster } from "./DepartmentMaster";

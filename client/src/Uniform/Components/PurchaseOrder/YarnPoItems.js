@@ -9,6 +9,9 @@ import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import Modal from "../../../UiComponents/Modal";
 import { priceWithTax } from "../../../Utils/helper";
 import { discountTypes } from "../../../Utils/DropdownData";
+import { useDispatch, useSelector } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
+import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 
 const YarnPoItems = ({
   id,
@@ -78,6 +81,9 @@ const YarnPoItems = ({
       yarnBlend.filter((row, index) => index !== parseInt(id))
     );
   };
+   const activeTab = useSelector((state) =>
+      state.openTabs.tabs.find((tab) => tab.active).name
+    );
 
   const { data: yarnList } = useGetYarnMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -152,6 +158,12 @@ const YarnPoItems = ({
       return acc + finalAmount;
     }, 0);
   };
+   const dispatch = useDispatch();
+   const handleCreateNew = (masterName="")=>{
+       dispatch(setOpenPartyModal(true));
+          dispatch(setLastTab(activeTab));
+          dispatch(push({ name: masterName }));
+   }
 
   return (
     <>
@@ -234,38 +246,47 @@ const YarnPoItems = ({
                 </td>
 
                 <td className="table-data ">
-                  <select
-                    onKeyDown={(e) => {
-                      if (e.key === "Delete") {
-                        handleInputChange("", index, "yarnId");
-                      }
-                    }}
-                    tabIndex={"0"}
-                    disabled={
-                      readOnly ||
-                      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
-                      Boolean(row?.alreadyCancelData?._sum?.qty)
-                    }
-                    className="text-left w-full rounded py-1 table-data-input"
-                    value={row.yarnId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "yarnId")
-                    }
-                    onBlur={(e) =>
-                      handleInputChange(e.target.value, index, "yarnId")
-                    }
-                  >
-                    <option hidden />
-                    {(id
-                      ? yarnList?.data
-                      : yarnList?.data?.filter((item) => item.active) || []
-                    ).map((blend) => (
-                      <option value={blend.id} key={blend.id}>
-                        {blend.aliasName}
-                      </option>
-                    ))}
-                  </select>
-                </td>
+  <select
+    onKeyDown={(e) => {
+      if (e.key === "Delete") {
+        handleInputChange("", index, "yarnId");
+      }
+    }}
+    tabIndex="0"
+    disabled={
+      readOnly ||
+      Boolean(row?.alreadyInwardedData?._sum?.qty) ||
+      Boolean(row?.alreadyCancelData?._sum?.qty)
+    }
+    className="text-left w-full rounded py-1 table-data-input"
+    value={row.yarnId}
+    onChange={(e) => {
+      const selectedValue = e.target.value;
+      if (selectedValue === "createNew") {
+        handleCreateNew("YARN MASTER"); 
+      } else {
+        handleInputChange(selectedValue, index, "yarnId");
+      }
+    }}
+    onBlur={(e) =>
+      handleInputChange(e.target.value, index, "yarnId")
+    }
+  >
+    <option hidden />
+    {(id
+      ? yarnList?.data
+      : yarnList?.data?.filter((item) => item.active) || []
+    ).map((blend) => (
+      <option value={blend.id} key={blend.id}>
+        {blend.aliasName}
+      </option>
+    ))}
+    <option value="createNew" className="text-blue-500 font-semibold">
+      + Create New
+    </option>
+  </select>
+</td>
+
                 {transType.toLowerCase().includes("dyedyarn") ? (
                   <td className="table-data">
                     <select
@@ -332,8 +353,14 @@ const YarnPoItems = ({
                     }
                     className="text-left w-20 rounded py-1 table-data-input"
                     value={row.uomId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "uomId")
+                    onChange={(e) =>{
+                      const selectedValue = e.target.value;
+                      if (selectedValue === "createNew") {
+                        handleCreateNew("UOM MASTER"); 
+                      } else {
+                        handleInputChange(e.target.value, index, "uomId")
+                      }
+                    }
                     }
                     onBlur={(e) =>
                       handleInputChange(e.target.value, index, "uomId")
@@ -349,6 +376,9 @@ const YarnPoItems = ({
                           {blend.name}
                         </option>
                       ))}
+                       <option value="createNew" className="text-blue-500 font-semibold">
+      + Create New
+    </option>
                   </select>
                 </td>
 

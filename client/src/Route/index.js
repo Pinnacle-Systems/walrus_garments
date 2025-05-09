@@ -1,8 +1,8 @@
 import React from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { Login, Home, Register } from "../Basic/pages";
-import { Dashboard, ProtectedRoute } from "../Basic/components";
-import { LOGIN, HOME_PATH, PRODUCT_ADMIN_HOME_PATH, REGISTER_PATH, DASHBOARD } from "./urlPaths";
+import { Dashboard, ProtectedRoute,KycForm } from "../Basic/components";
+import { LOGIN, HOME_PATH, PRODUCT_ADMIN_HOME_PATH, REGISTER_PATH, DASHBOARD,KYCFORM } from "./urlPaths";
 import ActiveTabList from "../Basic/components/ActiveTabList";
 
 export default function Routing() {
@@ -12,6 +12,7 @@ export default function Routing() {
         <Route path={LOGIN} element={<Login />} />
         <Route path={REGISTER_PATH} element={<Register />} />
         <Route path={DASHBOARD} element={<Dashboard />} />
+        <Route path= {KYCFORM} element = {<KycForm />} />
         <Route
           path={HOME_PATH}
           element={

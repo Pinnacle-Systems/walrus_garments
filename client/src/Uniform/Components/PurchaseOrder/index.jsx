@@ -37,7 +37,6 @@ export default function Form() {
   const today = new Date()
   const componentRef = useRef();
 
-  const [summary, setSummary] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [poItems, setPoItems] = useState([]);
   const [docId, setDocId] = useState("")

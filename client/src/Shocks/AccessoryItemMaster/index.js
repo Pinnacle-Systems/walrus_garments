@@ -11,7 +11,9 @@ import { DropdownInput, Modal, TextInput, ToggleButton } from '../../Inputs';
 import PartySupplyDetails from './PartySupplyDetails';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
-
+import {  useSelector } from "react-redux";
+import { setOpenPartyModal } from '../../redux/features/openModel';
+import { push } from '../../redux/features/opentabs';
 
 
 const MODEL = "Access Item Master"
@@ -29,7 +31,20 @@ export default function Form() {
     const childRecord = useRef(0);
 
     const dispatch = useDispatch()
-
+   const openPartyModal = useSelector((state) => state.party.openPartyModal);
+      const lastTapName =  useSelector((state)=>state.party.lastTab)
+    
+      console.log(lastTapName,"lastTapName")
+    const activeTab = useSelector((state) =>
+        state.openTabs.tabs.find((tab) => tab.active).name
+      );
+      console.log(activeTab, "activeTab")
+      useEffect(() => {
+        if (openPartyModal) {
+          setId("");
+          setForm(true);
+        }
+      }, [openPartyModal]);
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -60,13 +75,13 @@ export default function Form() {
                 setReadOnly(false);
                 setName("");
                 setAccessoryGroupId("");
-                setActive(id ? (data?.active ?? true) : false);
+                setActive(id ? (data?.active ) : true);
                 setPartySuppliesItem([])
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");
                 setAccessoryGroupId(data?.accessoryGroupId || "");
-                setActive(id ? (data?.active ?? false) : true);
+                setActive(id ? (data?.active) : true);
                 setPartySuppliesItem(data?.PartyOnAccessoryItems ? data?.PartyOnAccessoryItems.map(item => item.partyId) : [])
             }
         },
@@ -89,7 +104,7 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, exit = false) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -98,6 +113,16 @@ export default function Form() {
                 payload: ['Party'],
             });
             toast.success(text + "Successfully");
+              if(exit){
+                                  setForm(false)
+                                }
+                                if(exit){
+                                  if (openPartyModal === true && lastTapName) {
+                                    dispatch(push({ name: lastTapName }));
+                                  }
+                                  
+                                     dispatch(setOpenPartyModal(false));
+                                }
         } catch (error) {
             console.log("handle");
         }
@@ -119,6 +144,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
+    const saveExitData = () => {
+            if (!validateData(data)) {
+                toast.error("Please fill all required fields...!", {
+                position: "top-center",
+              });
+              return;
+            }
+               if (id) {
+              handleSubmitCustom(updateData, data, "Updated", true);
+            } else {
+              console.log("hit");
+              handleSubmitCustom(addData, data, "Added",true);
+            }
+          };
 
     const deleteData = async () => {
         if (id) {
@@ -164,7 +203,6 @@ export default function Form() {
         setId(id);
         setForm(true);
     }
-
     const tableHeaders = [
         "S.NO", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
     ]
@@ -191,7 +229,11 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[70%] h-[95%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[70%] h-[95%]"}
+             onClose={() => { setForm(false); setErrors({});   if (openPartyModal === true) {
+                                   dispatch(push({ name: lastTapName }));
+                                 }
+                                 dispatch(setOpenPartyModal(false));  }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -202,6 +244,7 @@ export default function Form() {
                     model={MODEL}
                     childRecord={childRecord.current}
                     saveData={saveData}
+                    saveExitData = {saveExitData}
                     setReadOnly={setReadOnly}
                     deleteData={deleteData}
                     readOnly={readOnly}
@@ -217,7 +260,20 @@ export default function Form() {
                                         <TextInput className={"text-sm"} name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
                                     <div className='mb-3'>
-                                        <DropdownInput className={"text-sm"} name="Item Type" options={dropDownListObject(id ? AccessoryGroupList?.data : AccessoryGroupList?.data?.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+<DropdownInput 
+  className="text-sm" 
+  name="Item Type" 
+  options={dropDownListObject(
+    id ? AccessoryGroupList?.data : AccessoryGroupList?.data?.filter(item => item.active), 
+    "name", 
+    "id"
+  )} 
+  value={accessoryGroupId} 
+  setValue={(value) => setAccessoryGroupId(value)} 
+  required 
+  readOnly={readOnly} 
+  disabled={childRecord.current > 0} 
+/>
                                     </div>
                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                 </div>
@@ -229,7 +285,8 @@ export default function Form() {
                                 <div className=''>Party Supply Details</div >
                                 <div className='h-[40%] my-2 justify-items-center items-center '>
                                     <PartySupplyDetails readOnly={readOnly} partySuppliesItem={partySuppliesItem} setPartySuppliesItem={setPartySuppliesItem}
-                                        partyDetails={partyData ? partyData.data : []} />
+                                       partyDetails={partyData?.data?.filter(item => item.isAcc) ?? []}
+/>
                                 </div>
                             </fieldset>
                         </div>

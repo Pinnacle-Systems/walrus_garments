@@ -14,7 +14,12 @@ import { priceWithTax } from "../../../Utils/helper";
 import { discountTypes } from "../../../Utils/DropdownData";
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 import { useGetAccessoryItemMasterQuery } from "../../../redux/uniformService/AccessoryItemMasterServices";
-
+import { useDispatch, useSelector } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
+import {
+  setLastTab,
+  setOpenPartyModal,
+} from "../../../redux/features/openModel";
 const AccessoryPoItems = ({
   id,
   poItems,
@@ -35,9 +40,11 @@ const AccessoryPoItems = ({
     setPoItems(newBlend);
   };
   console.log(poItems, "poItems");
-
+  const activeTab = useSelector(
+    (state) => state.openTabs.tabs.find((tab) => tab.active).name
+  );
   useEffect(() => {
-    if(id) return 
+    if (id) return;
     if (poItems.length >= 9) return;
     setPoItems((prev) => {
       let newArray = Array.from({ length: 9 - prev.length }, (i) => {
@@ -144,38 +151,56 @@ const AccessoryPoItems = ({
     return parseFloat(total);
   }
 
-  const getTotalAmount = (qtyKey, priceKey, taxKey, discountTypeKey, discountAmountKey) => {
+  const getTotalAmount = (
+    qtyKey,
+    priceKey,
+    taxKey,
+    discountTypeKey,
+    discountAmountKey
+  ) => {
     const total = poItems.reduce((acc, item) => {
       const qty = parseFloat(item[qtyKey]) || 0;
       const price = parseFloat(item[priceKey]) || 0;
       const tax = parseFloat(item[taxKey]) || 0;
-      const discountType = item[discountTypeKey] || '';
+      const discountType = item[discountTypeKey] || "";
       const discountAmount = parseFloat(item[discountAmountKey]) || 0;
-  
-      const amount = calculateRowTotal(qty, price, tax, discountType, discountAmount);
-      
+
+      const amount = calculateRowTotal(
+        qty,
+        price,
+        tax,
+        discountType,
+        discountAmount
+      );
+
       return acc + (Number.isFinite(amount) ? amount : 0);
     }, 0);
-  
+
     return Number.isFinite(total) ? total : 0;
   };
-  
-  const calculateRowTotal = (qty, price, taxPercent, discountType, discountValue) => {
+
+  const calculateRowTotal = (
+    qty,
+    price,
+    taxPercent,
+    discountType,
+    discountValue
+  ) => {
     // Core calculations
     const gross = qty * price;
     const tax = gross * (taxPercent / 100);
     let discount = 0;
-  
-    switch(discountType) {
-      case 'Flat':
+
+    switch (discountType) {
+      case "Flat":
         discount = Math.min(discountValue, gross + tax);
         break;
-      case 'Percentage':
+      case "Percentage":
         discount = (gross + tax) * (discountValue / 100);
         break;
     }
-  
-    return (gross + tax - discount);
+
+    return gross + tax - discount;
   };
 
   const findAmount = (row) => {
@@ -196,16 +221,23 @@ const AccessoryPoItems = ({
     if (discountType === "Flat") {
       discountValue = parseFloat(disAmount) || 0;
     } else if (discountType === "Percentage") {
-      discountValue = (grossAmount + taxAmount) * (parseFloat(disAmount) / 100) || 0;
-  }
-  
+      discountValue =
+        (grossAmount + taxAmount) * (parseFloat(disAmount) / 100) || 0;
+    }
 
     const finalAmount = (grossAmount + taxAmount - discountValue).toFixed(2);
     return finalAmount;
   };
+  const dispatch = useDispatch();
+
 
   if (!accessoryList || !colorList || !uomList || !sizeList) return <Loader />;
   console.log(accessoryGroupList?.data || [], "accessoryGroupList");
+  const handleCreateNew = (masterName = "") => {
+    dispatch(setOpenPartyModal(true));
+    dispatch(setLastTab(activeTab));
+    dispatch(push({ name: masterName }));
+  };
   return (
     <>
       <Modal
@@ -272,7 +304,8 @@ const AccessoryPoItems = ({
             {poItems.map((row, index) => (
               <tr key={index} className="w-full table-row">
                 <td className="table-data  w-2 text-left px-1">{index + 1}</td>
-                <td className=" border border-gray-500">
+                {/* Accessory Group Dropdown */}
+                <td className="border border-gray-500">
                   <select
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
@@ -282,13 +315,18 @@ const AccessoryPoItems = ({
                     disabled={readOnly}
                     className="text-left w-full rounded py-1 table-data-input"
                     value={row.accessoryGroupId}
-                    onChange={(e) =>
-                      handleInputChange(
-                        e.target.value,
-                        index,
-                        "accessoryGroupId"
-                      )
-                    }
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      if (selectedValue === "createNew") {
+                        handleCreateNew("ACCESSORY GROUP MASTER");
+                      } else {
+                        handleInputChange(
+                          selectedValue,
+                          index,
+                          "accessoryGroupId"
+                        );
+                      }
+                    }}
                     onBlur={(e) => {
                       handleInputChange(
                         e.target.value,
@@ -297,9 +335,7 @@ const AccessoryPoItems = ({
                       );
                     }}
                   >
-                    <option hidden>
-                      {console.log(accessoryGroupList, "accessoryGroupList")}
-                    </option>
+                    <option hidden></option>
                     {(id
                       ? accessoryGroupList?.data || []
                       : accessoryGroupList?.data.filter(
@@ -310,9 +346,17 @@ const AccessoryPoItems = ({
                         {blend.name}
                       </option>
                     ))}
+                    <option
+                      value="createNew"
+                      className="text-blue-500 font-semibold"
+                    >
+                      + Create New
+                    </option>
                   </select>
                 </td>
-                <td className=" border border-gray-500">
+
+                {/* Accessory Item Dropdown */}
+                <td className="border border-gray-500">
                   <select
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
@@ -322,13 +366,18 @@ const AccessoryPoItems = ({
                     disabled={readOnly}
                     className="text-left w-full rounded py-1 table-data-input"
                     value={row.accessoryItemId}
-                    onChange={(e) =>
-                      handleInputChange(
-                        e.target.value,
-                        index,
-                        "accessoryItemId"
-                      )
-                    }
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      if (selectedValue === "createNew") {
+                        handleCreateNew("ACCESSORY ITEM MASTER");
+                      } else {
+                        handleInputChange(
+                          selectedValue,
+                          index,
+                          "accessoryItemId"
+                        );
+                      }
+                    }}
                     onBlur={(e) => {
                       handleInputChange(
                         e.target.value,
@@ -350,9 +399,17 @@ const AccessoryPoItems = ({
                         {blend.name}
                       </option>
                     ))}
+                    <option
+                      value="createNew"
+                      className="text-blue-500 font-semibold"
+                    >
+                      + Create New
+                    </option>
                   </select>
                 </td>
-                <td className=" border border-gray-500">
+
+                {/* Accessory Dropdown */}
+                <td className="border border-gray-500">
                   <select
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
@@ -362,15 +419,19 @@ const AccessoryPoItems = ({
                     disabled={readOnly}
                     className="text-left w-full rounded py-1 table-data-input"
                     value={row.accessoryId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "accessoryId")
-                    }
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      if (selectedValue === "createNew") {
+                        handleCreateNew("ACCESSORY MASTER");
+                      } else {
+                        handleInputChange(selectedValue, index, "accessoryId");
+                      }
+                    }}
                     onBlur={(e) => {
                       handleInputChange(e.target.value, index, "accessoryId");
                     }}
                   >
                     <option hidden></option>
-                    {/* handleInputChange(e.target.value, index, "accessoryItemId") */}
                     {(id
                       ? accessoryList.data || []
                       : accessoryList.data.filter(
@@ -383,6 +444,12 @@ const AccessoryPoItems = ({
                         {blend.aliasName}
                       </option>
                     ))}
+                    <option
+                      value="createNew"
+                      className="text-blue-500 font-semibold"
+                    >
+                      + Create New
+                    </option>
                   </select>
                 </td>
 
@@ -396,8 +463,18 @@ const AccessoryPoItems = ({
                     disabled={readOnly}
                     className="text-left w-full rounded py-1 table-data-input"
                     value={row.colorId}
-                    onChange={(e) =>
-                      handleInputChange(e.target.value, index, "colorId")
+                    onChange={(e) =>{
+                      const selectedValue = e.target.value
+                      if(selectedValue == "createNew"){
+                        handleCreateNew("COLOR MASTER")
+                      }
+                      else{
+                        handleInputChange(e.target.value, index, "colorId")
+                      }
+                      
+
+                    }
+                      
                     }
                     onBlur={(e) => {
                       handleInputChange(e.target.value, index, "colorId");
@@ -412,6 +489,12 @@ const AccessoryPoItems = ({
                         {blend.name}
                       </option>
                     ))}
+                     <option
+                      value="createNew"
+                      className="text-blue-500 font-semibold"
+                    >
+                      + Create New
+                    </option>
                   </select>
                 </td>
                 <td className="table-data">
