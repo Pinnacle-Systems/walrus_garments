@@ -111,6 +111,57 @@ export async function upload(req) {
     return { statusCode: 0, data };
 }
 
+async function kycForm(body) {
+  const {
+    companyName,
+    gstNumber,
+    panNumber,
+    aadharNumber,
+    registrationNumber,
+    ownerName,
+    contactNumber,
+    email,
+    address,
+    cityState,
+    pincode,
+    businessType,
+    productCategories,
+    documents, 
+    companyId,
+    active,
+    userId
+  } = body;
+  try {
+    const newKYC = await prisma.partyKYC.create({
+      data: {
+        companyName,
+        gstNumber,
+        panNumber,
+        aadharNumber,
+        registrationNumber,
+        ownerName,
+        contactNumber,
+        email,
+        address,
+        cityState,
+        pincode,
+        businessType,
+        productCategories,
+        documents,
+        createdById: userId ? parseInt(userId) : undefined,
+        companyId: parseInt(companyId),
+        active: !!active,  
+      },
+    });
+  return { statusCode: 0, data:newKYC };
+  } catch (error) {
+    console.error('Error adding party KYC:', error);
+    return { statusCode: 0, error: error };
+  }
+};
+
+
+
 async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
         cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,payTermDay,
@@ -400,6 +451,7 @@ export {
     getOne,
     getSearch,
     create,
+    kycForm,
     update,
     remove
 }

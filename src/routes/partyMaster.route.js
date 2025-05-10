@@ -2,11 +2,14 @@ import { Router } from 'express';
 const router = Router();
 import multerUpload from '../utils/multerUpload.js';
 
-import { get, getOne, getSearch, create, update, remove, upload } from '../controllers/partyMaster.controller.js';
+import { get, getOne, getSearch, create, update, remove, upload, kycFormController } from '../controllers/partyMaster.controller.js';
 
 router.patch('/upload/:id', multerUpload.single('image'), upload);
 
 router.post('/', create);
+
+router.post('/kycform', kycFormController);
+
 
 router.get('/', get);
 

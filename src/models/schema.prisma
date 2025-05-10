@@ -2770,3 +2770,23 @@ model YarnNeedle {
   machineId Int?
   aliasName String?
 }
+ 
+model PartyKYC {
+  id                 Int      @id @default(autoincrement())
+  companyName        String
+  gstNumber          String?
+  panNumber          String?
+  aadharNumber       String?
+  registrationNumber String?
+  ownerName          String
+  contactNumber      String
+  email              String
+  address            String
+  cityState          String
+  pincode            String
+  businessType       String
+  productCategories  String
+  documents          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

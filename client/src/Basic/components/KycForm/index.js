@@ -12,6 +12,8 @@ import {
   FaUpload
 } from 'react-icons/fa';
 import { FiChevronDown } from 'react-icons/fi';
+import { useAddPartykycMutation } from '../../../redux/services/PartyMasterService';
+import toast from 'react-hot-toast';
 
 const EnhancedKycForm = () => {
   const [formData, setFormData] = useState({
@@ -30,6 +32,8 @@ const EnhancedKycForm = () => {
     productCategories: '',
     documents: null
   });
+ const [addData] =  useAddPartykycMutation()
+      const [id,setId] = useState('')
 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -71,13 +75,24 @@ const EnhancedKycForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmitCustom = async (callback, data, text) => {
+    try {
+      let returnData = await callback(data).unwrap();
+      setId(returnData.data.id)
+      toast.success(text + "Successfully");
+
+    } catch (error) {
+      console.log("handle")
+    }
+  }
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
       console.log('Form submitted:', formData);
       setIsSubmitted(true);
-    }
+     handleSubmitCustom(addData, formData, "Added");    }
   };
+  
 
   if (isSubmitted) {
     return (

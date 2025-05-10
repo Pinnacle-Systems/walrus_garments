@@ -1,6 +1,8 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload } from '../services/partyMaster.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload ,
+    kycForm as kycFormService
+} from '../services/partyMaster.service.js';
 
 async function get(req, res, next) {
     try {
@@ -67,6 +69,24 @@ async function create(req, res, next) {
         }
     }
 }
+async function kycFormController(req, res, next) {
+    try {
+        res.json(await kycFormService(req.body));
+        console.log(res.statusCode);
+         console.log("its working")
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: error.message })
+        }
+    }
+}
 
 async function update(req, res, next) {
     try {
@@ -109,6 +129,7 @@ export {
     getOne,
     getSearch,
     create,
+    kycFormController,
     update,
     remove
 };
