@@ -17,6 +17,7 @@ import {
   TaxTemplateApi,
   TermsAndConditionsMasterApi,
   CurrencyMasterApi,
+  emailkycUpdateApi ,
   machineMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
@@ -62,6 +63,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
+  
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
@@ -100,6 +102,7 @@ const commonReducers = {
   itemTypeMaster: ItemTypeMasterApi.reducer,
   styleTypeMaster: StyleTypeMasterApi.reducer,
   [OrderApi.reducerPath]: OrderApi.reducer,
+  [emailkycUpdateApi.reducerPath] : emailkycUpdateApi.reducer,
   [CuttingOrderApi.reducerPath]: CuttingOrderApi.reducer,
   design: DesignApi.reducer,
   loopLength: LoopLengthApi.reducer,
@@ -149,6 +152,7 @@ stateMasterApi.middleware,
 cityMasterApi.middleware,
 departmentMasterApi.middleware,
 employeeCategoryMasterApi.middleware,
+emailkycUpdateApi.middleware,
 finYearMasterApi.middleware,
 rolesMasterApi.middleware,
 userMasterApi.middleware,

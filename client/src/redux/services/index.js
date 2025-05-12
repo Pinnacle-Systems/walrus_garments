@@ -9,6 +9,7 @@ export { default as finYearMasterApi } from "./FinYearMasterService";
 export { default as rolesMasterApi } from "./RolesMasterService";
 export { default as userMasterApi } from "./UsersMasterService";
 export { default as employeeMasterApi } from "./EmployeeMasterService";
+export { emailkycUpdateApi, useSendKycEmailMutation } from './emailApi';
 export { default as branchMasterApi } from "./BranchMasterService";
 export { default as subscriptionMasterApi } from "./SubscriptionService";
 export { default as companyMasterApi } from "./CompanyMasterService";

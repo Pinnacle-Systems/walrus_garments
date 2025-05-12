@@ -14,6 +14,8 @@ export { default as finYear } from "./finYear.route.js"
 export { default as socksMaterial } from "./socksMaterial.route.js"
 export { default as employeeCategories } from "./employeeCategories.route.js";
 
+export { default as emailRoutes } from "./email.route.js";
+
 export { default as partyCategories } from "./partyCategory.route.js"
 
 export { default as party } from "./partyMaster.route.js"

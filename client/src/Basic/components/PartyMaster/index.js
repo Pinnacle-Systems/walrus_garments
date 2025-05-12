@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
-// import { useGetCurrencyMasterQuery } from '../../../redux/ErpServices/CurrencyMasterServices';
 import {
   useAddPartyMutation,
   useDeletePartyMutation,
@@ -12,7 +11,6 @@ import {
 } from "../../../redux/services/PartyMasterService";
 import moment from "moment";
 import { findFromList } from "../../../Utils/helper";
-// import { useGetProcessQuery } from '../../../redux/services/procss';
 import Loader from "../../components/Loader";
 import {
   dropDownListMergedObject,
@@ -42,6 +40,7 @@ import { toast } from "react-toastify";
 import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
+import { useSendKycEmailMutation } from "../../../redux/services/emailApi";
 
 const MODEL = "Party Master";
 
@@ -75,6 +74,8 @@ export default function Form() {
 
   const [cstDate, setCstDate] = useState("");
   const [email, setEmail] = useState("");
+    const [kycEmail, setKycEmail] = useState("");
+
   const [accessoryItemList, setAccessoryItemList] = useState([]);
 
   const [accessoryGroup, setAccessoryGroup] = useState(false);
@@ -291,6 +292,7 @@ const activeTab = useSelector((state) =>
     isDy,
   };
   console.log(isAcc, isGy, isDy);
+  const [sendKycEmail, { isLoadingMail }] = useSendKycEmailMutation();
   const {
     data: processList,
     isLoading: isProcessLoading,
@@ -348,6 +350,28 @@ console.log(payTermDay,"payTermDay")
       toast.error("Something went wrong during submission");
     }
   };
+
+   const handleSendEmail = async () => {
+        if (!kycEmail) {
+            alert('Please enter an email address.');
+            return;
+        }
+
+        try {
+            const response = await sendKycEmail({ to: kycEmail }); 
+            
+            if (response?.data) {
+                alert('Email sent successfully!');
+                setKycEmail('');
+            } else {
+                alert('Failed to send email. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while sending the email.');
+        }
+    };
+
   
   useEffect(() => {
     if (itemsPopup) {
@@ -682,6 +706,23 @@ console.log(payTermDay,"payTermDay")
                         />
                       </div>
                     </div>
+            <div className="flex flex-col items-center gap-4 p-6 bg-gray-100 rounded-md">
+            <h2 className="text-lg font-semibold">Send KYC Update Email</h2>
+            <input
+                type="email"
+                value={kycEmail}
+                onChange={(e) => setKycEmail(e.target.value)}
+                placeholder="Enter email address"
+                className="p-2 border border-gray-300 rounded w-80"
+            />
+            <button
+                onClick={handleSendEmail}
+                disabled={isLoading}
+                className={`px-4 py-2 rounded ${isLoading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+            >
+                {isLoading ? 'Sending...' : 'Send Email'}
+            </button>
+        </div>
                   </div>
                 )}
 

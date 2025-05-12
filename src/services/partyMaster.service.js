@@ -126,11 +126,10 @@ async function kycForm(body) {
     pincode,
     businessType,
     productCategories,
-    documents, 
-    companyId,
-    active,
-    userId
+    documents,
+    userId,
   } = body;
+ console.log(documents,"documents")
   try {
     const newKYC = await prisma.partyKYC.create({
       data: {
@@ -147,15 +146,13 @@ async function kycForm(body) {
         pincode,
         businessType,
         productCategories,
-        documents,
-        createdById: userId ? parseInt(userId) : undefined,
-        companyId: parseInt(companyId),
-        active: !!active,  
+        documents: documents ? documents.name : null,  
+        createdById: userId ? parseInt(userId) : undefined,    
       },
     });
-  return { statusCode: 0, data:newKYC };
+    return { statusCode: 0, data: newKYC };
   } catch (error) {
-    console.error('Error adding party KYC:', error);
+    console.error('Error adding party KYC:', error);    
     return { statusCode: 0, error: error };
   }
 };

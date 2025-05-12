@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 import {
-  employees, states, countries, cities,
+  employees, states, countries, cities,emailRoutes,
   departments, companies, branches, users, pages, roles, subscriptions, finYear,
   employeeCategories, pageGroup,
   party,
@@ -116,6 +116,7 @@ app.use("/yarnType", yarnType);
 app.use("/yarnBlend", yarnBlend);
 app.use("/yarn", yarn);
 app.use("/fabricType", fabricType);
+app.use('/send-email', emailRoutes);
 app.use("/size", size);
 app.use("/style", style);
 app.use("/item", item);
