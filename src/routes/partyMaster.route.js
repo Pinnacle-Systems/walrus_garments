@@ -8,8 +8,7 @@ router.patch('/upload/:id', multerUpload.single('image'), upload);
 
 router.post('/', create);
 
-router.post('/kycform', kycFormController);
-
+router.post('/kycform', multerUpload.single('image'), kycFormController);
 
 router.get('/', get);
 
