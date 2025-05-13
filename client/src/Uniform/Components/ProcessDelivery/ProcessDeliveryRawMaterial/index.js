@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 
 import StockSelectionFillGrid from './StockSelectionFillGrid';
 import Modal from '../../../UiComponents/Modal';
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty'
+;
 import Fabric from './Fabric';
 
 const RawMaterial = ({ storeId, rawMaterialType, currentProgramIndex, programDetails, setProgramDetails, styleColors, readOnly }) => {
