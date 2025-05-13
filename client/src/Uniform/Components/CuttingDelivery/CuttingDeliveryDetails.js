@@ -1,5 +1,6 @@
 import React from 'react'
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty'
+;
 import CuttingDeliveryItem from './CuttingDeliveryItem';
 import { PLUS } from '../../../icons';
 
@@ -13,7 +14,7 @@ const CuttingDeliveryDetails = ({ readOnly, id, openStockGrid, setCuttingDeliver
   function removeItem(removeItem) {
     setCuttingDeliveryDetails(cuttingDeliveryDetails => {
       let newItems = structuredClone(cuttingDeliveryDetails);
-      newItems = newItems.filter(item => !(_.isEqual(item, removeItem)))
+   
       return newItems
     });
   }

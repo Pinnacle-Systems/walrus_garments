@@ -3,7 +3,8 @@ import { Loader } from '../../../Basic/components';
 import secureLocalStorage from "react-secure-storage";
 import FabricStockFillGrid from './FabricStockFillGrid';
 import { useGetStockQuery } from '../../../redux/services/StockService';
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty'
+;
 
 
 const StockSelectionFillGrid = ({ storeId, getIssuedQty, setCuttingDeliveryDetails, cuttingDeliveryDetails, setFillGrid }) => {
