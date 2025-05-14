@@ -80,7 +80,8 @@ export default function Form() {
             setAccessoryItemId("");
             setHsn("");
             setAccessoryGroupId("");
-            setActive(id ? (data?.active ?? true) : false);
+                  setActive(id ? (data?.active ) : true);
+
         } else {
             setReadOnly(true);
             setAliasName(data?.aliasName || "");

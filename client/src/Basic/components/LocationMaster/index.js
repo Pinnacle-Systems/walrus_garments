@@ -58,7 +58,8 @@ export default function Form() {
                 setIsFabric(false);
                 setIsYarn(false);
                 setIsGarments(false);
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setStoreName(data?.storeName || "");

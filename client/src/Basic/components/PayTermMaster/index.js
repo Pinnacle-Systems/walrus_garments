@@ -56,7 +56,8 @@ export default function Form() {
                 setReadOnly(false);
                 setName("");
                 setdays("");
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
                 return
             } else {
                 setReadOnly(true);

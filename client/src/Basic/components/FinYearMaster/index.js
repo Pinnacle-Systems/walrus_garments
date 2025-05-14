@@ -51,7 +51,8 @@ export default function Form() {
                 setReadOnly(false);
                 setTo(data?.to || "");
                 setFrom(data?.from || "");
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
                 setCode("")
             } else {
                 setReadOnly(true);

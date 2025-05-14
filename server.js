@@ -31,7 +31,7 @@ import {
   counts,
   Machine, socksMaterial,
   currency, socksType, measurement, fibercontent,
-  yarnNeedle
+  yarnNeedle,certificate
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -76,6 +76,7 @@ BigInt.prototype['toJSON'] = function () {
 
 app.use("/employees", employees);
 app.use("/countries", countries);
+app.use("/certificate", certificate)
 app.use("/states", states);
 app.use("/cities", cities);
 app.use("/departments", departments);

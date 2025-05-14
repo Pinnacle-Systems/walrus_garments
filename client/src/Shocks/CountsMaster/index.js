@@ -48,7 +48,8 @@ export default function Form() {
             if (!id) {
                 setReadOnly(false);
                 setName("");
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
 
             } else {
                 setReadOnly(true);

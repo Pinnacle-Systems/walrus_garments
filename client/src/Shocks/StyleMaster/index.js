@@ -91,7 +91,8 @@ const StyleMaster = () => {
     //             setOccassion("");
     //             setMaterial("");
     //             setWashCare("");
-    //             setActive(id ? (data?.active ?? true) : false);
+    //                   setActive(id ? (data?.active ) : true);
+
     //             setSizeTemplateId("")
     //             setSelectedColorsList([])
     //             setPortionDetails([])

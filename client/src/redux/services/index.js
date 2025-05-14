@@ -2,6 +2,7 @@ export { default as countryMasterApi } from "./CountryMasterService";
 export { default as pageMasterApi } from "./PageMasterService";
 export { default as stateMasterApi } from "./StateMasterService";
 export { default as cityMasterApi } from "./CityMasterService";
+export { default as certificateApi } from "./CertificateMasterService"
 export { default as CurrencyMasterApi } from "./CurrencyMasterServices";
 export { default as departmentMasterApi } from "./DepartmentMasterService";
 export { default as employeeCategoryMasterApi } from "./EmployeeCategoryMasterService";

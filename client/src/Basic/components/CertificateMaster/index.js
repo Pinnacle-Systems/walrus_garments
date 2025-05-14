@@ -2,22 +2,19 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
 import { toast } from 'react-toastify';
 import {
-  useAddCountryMutation, useDeleteCountryMutation,
-  useGetCountriesQuery, useGetCountryByIdQuery,
-  useUpdateCountryMutation
-} from '../../../redux/services/CountryMasterService';
-import FormHeader from '../FormHeader';
-import FormReport from '../FormReportTemplate';
+  useGetCertificateQuery,
+  useGetCertificateByIdQuery,
+  useAddCertificateMutation,
+  useUpdateCertificateMutation,
+  useDeleteCertificateMutation,
+} from '../../../redux/services/CertificateMasterService';
+
 import { TextInput, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import Modal from '../../../UiComponents/Modal';
-import e from 'cors';
 import Mastertable from '../MasterTable/Mastertable';
 import MasterForm from '../MastersForm/MastersForm';
-
-
-
-const MODEL = "Country Master";
+const MODEL = "Certificate Master";
 
 export default function Form() {
 
@@ -34,12 +31,12 @@ export default function Form() {
   const childRecord = useRef(0);
 
   const params = { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }
-  const { data: allData, isLoading, isFetching } = useGetCountriesQuery({ params, searchParams: searchValue });
-  const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetCountryByIdQuery(id, { skip: !id });
+  const { data: allData, isLoading, isFetching } = useGetCertificateQuery({ params, searchParams: searchValue });
+  const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetCertificateByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddCountryMutation();
-  const [updateData] = useUpdateCountryMutation();
-  const [removeData] = useDeleteCountryMutation();
+  const [addData] = useAddCertificateMutation();
+  const [updateData] = useUpdateCertificateMutation();
+  const [removeData] = useDeleteCertificateMutation();
 
 
 
@@ -51,8 +48,7 @@ export default function Form() {
 
       setName("");
       setCode("");
-            setActive(id ? (data?.active ) : true);
-
+      setActive(id ? (data?.active ) : true);
 
       return;
     } else {
@@ -81,12 +77,21 @@ export default function Form() {
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
       toast.success(text + "Successfully");
+  if (exit) {
+        setForm(false);
+      }
+      // if (exit) {
+      //   if (openPartyModal === true && lastTapName) {
+      //     dispatch(push({ name: lastTapName }));
+      //   }
 
+      //   dispatch(setOpenPartyModal(false));
+      // }
     } catch (error) {
       console.log("handle")
     }
@@ -108,6 +113,20 @@ export default function Form() {
       handleSubmitCustom(addData, data, "Added");
     }
   }
+    const saveExitData = () => {
+      if (!validateData(data)) {
+        toast.error("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+      if (id) {
+        handleSubmitCustom(updateData, data, "Updated", true);
+      } else {
+        console.log("hit");
+        handleSubmitCustom(addData, data, "Added", true);
+      }
+    };
 
   const deleteData = async () => {
     if (id) {
@@ -159,7 +178,7 @@ export default function Form() {
   return (
     <div onKeyDown={handleKeyDown} className='px-5'>
       <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-        <h5 className='my-1 text-xl'>Country Master</h5>
+        <h5 className='my-1 text-xl'>Certificate Master</h5>
         <div className='flex items-center'>
           <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
         </div>
@@ -180,8 +199,8 @@ export default function Form() {
           } />
 
         <div>
-          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
-            <MasterForm
+          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[45%]"} onClose={() => { setForm(false); setErrors({}); }}>
+              <MasterForm
               onNew={onNew}
               onClose={() => {
                 setForm(false);
@@ -190,6 +209,7 @@ export default function Form() {
               }}
               model={MODEL}
               childRecord={childRecord.current}
+              saveExitData = {saveExitData}
               saveData={saveData}
               setReadOnly={setReadOnly}
               deleteData={deleteData}
@@ -201,8 +221,8 @@ export default function Form() {
 
                 <div className='p-2'>
                   <div className='flex'>
-                    <div className='mb-3 w-[48%]'>
-                      <TextInput name="Country Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                    <div className='mb-3 w-[48%] p-1'>
+                      <TextInput name="Certificate Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
 
                     </div>
                     <div className='mb-3 ml-5 w-[20%]'>

@@ -52,7 +52,8 @@ export default function Form() {
 
       setName("");
       setTime("");
-      setActive(id ? (data?.active ?? true) : false);
+            setActive(id ? (data?.active ) : true);
+
 
       return;
     } else {

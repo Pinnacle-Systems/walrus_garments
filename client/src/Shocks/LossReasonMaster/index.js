@@ -44,7 +44,8 @@ export default function Form() {
             if (!id) {
                 setReadOnly(false);
                 setReason("");
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setReason(data?.reason || "");

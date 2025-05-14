@@ -60,7 +60,8 @@ export default function Form() {
                 setIsPcsStage(false);
                 setIsPrintingJobWork(false);
                 setIsIroning(false);
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");

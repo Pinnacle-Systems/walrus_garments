@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import {
   NewButton,
@@ -35,9 +35,7 @@ const MastersForm = ({
   step,
 }) => {
   const openTabs = useSelector((state) => state.openTabs);
-
   const activeTab = openTabs.tabs.find((tab) => tab.active);
-
   const currentPageId = activeTab.id;
 
   const userRoleId = secureLocalStorage.getItem(
@@ -95,7 +93,7 @@ const MastersForm = ({
           });
         }
       } else {
-        toast.error(" Past Fin Year Only can view!", {
+        toast.error("Past Fin Year Only can view!", {
           position: "top-center",
         });
       }
@@ -103,60 +101,74 @@ const MastersForm = ({
   };
 
   return (
-    <>
-      <div className="h-full p-5">
-        <div className=" flex flex-col h-full ">
-          <div className="mx-auto w-[100%]  flex flex-col">
-            {model ? (
-              <h5 className=" text-stone-900 text-xl mb-2 ">{model}</h5>
-            ) : (
-              <></>
-            )}
-            <div className="mx-0.5">{children}</div>
+    <div className="p-4 bg-gray-50">
+      <div className="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-sm">
+      
+        <div className="bg-indigo-600 px-4 py-2">
+          {model && (
+            <h4 className="text-lg font-semibold text-white">
+              {model}
+            </h4>
+          )}
+        </div>
+        
+        {/* Content Section - Reduced padding */}
+        <div className="p-4">
+          <div className="space-y-4">
+            {children}
           </div>
-          <div className="w-[95%] mx-auto flex flex-wrap justify-center gap-2 mt-auto">
-            <CloseButton
-              onClick={() => {
-                onClose();
-                emptyErrors();
-              }}
-            />
-
-            {!readOnly ? (
-              <>
-                <SaveButton
+          
+          {/* Action Buttons - More compact */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap justify-between items-center gap-3">
+              <div className="flex gap-2">
+                <CloseButton
                   onClick={() => {
-                    hasPermission(saveData, "edit");
+                    onClose();
+                    emptyErrors();
                   }}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors duration-200 text-sm"
                 />
-                <SaveExitButton
-                  onClick={() => {
-                    hasPermission(saveExitData, "edit");
-                  }}
-                />
-              </>
-            ) : (
-              <div className="flex items-center">
-                <div className="mr-2">
-                  <DeleteButton
-                    onClick={() => {
-                      hasPermission(deleteData, "delete");
-                    }}
-                  />
-                </div>
-                <div>
-                  <EditButton
-                    onClick={() => {
-                      hasPermission(setReadOnly, "edit");
-                    }}
-                  />
-                </div>
               </div>
-            )}
+              
+              <div className="flex flex-wrap gap-2">
+                {!readOnly ? (
+                  <>
+                    <SaveButton
+                      onClick={() => {
+                        hasPermission(saveData, "edit");
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 text-sm"
+                    />
+                    <SaveExitButton
+                      onClick={() => {
+                        hasPermission(saveExitData, "edit");
+                      }}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors duration-200 text-sm"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <DeleteButton
+                      onClick={() => {
+                        hasPermission(deleteData, "delete");
+                      }}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 text-sm"
+                    />
+                    <EditButton
+                      onClick={() => {
+                        hasPermission(setReadOnly, "edit");
+                      }}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md transition-colors duration-200 text-sm"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

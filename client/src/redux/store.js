@@ -12,6 +12,7 @@ import {
   invoiceApi,
   OrderImportApi,
   GaugeApi,
+  certificateApi,
   PaytermMasterApi,
   TaxTermMasterApi,
   TaxTemplateApi,
@@ -51,9 +52,6 @@ import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
 import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 
-
-
-
 const commonReducers = {
   openTabs, party,
   countryMaster: countryMasterApi.reducer,
@@ -63,7 +61,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
-  
+  certificateMaster:certificateApi.reducer,
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
@@ -151,6 +149,7 @@ UnitOfMeasurementApi.middleware,
 stateMasterApi.middleware,
 cityMasterApi.middleware,
 departmentMasterApi.middleware,
+certificateApi.middleware,
 employeeCategoryMasterApi.middleware,
 emailkycUpdateApi.middleware,
 finYearMasterApi.middleware,

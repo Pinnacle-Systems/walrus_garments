@@ -54,7 +54,8 @@ export default function Form() {
                 setName("");
                 setPantone("");
                 setIsGrey(false);
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");

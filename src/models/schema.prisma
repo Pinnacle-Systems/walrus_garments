@@ -80,6 +80,7 @@ model Company {
   SocksType          SocksType[]
   Measurement        Measurement[]
   FiberContent       FiberContent[]
+  Certificate        Certificate[]
 }
 
 model Subscription {
@@ -328,6 +329,16 @@ model Country {
   companyId Int
 }
 
+model Certificate {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String
+  active    Boolean @default(true)
+  Company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
+  Party     Party[]
+}
+
 model State {
   id        Int     @id @default(autoincrement())
   name      String
@@ -501,6 +512,8 @@ model Party {
   ContactDetails             ContactDetails[]
   Order                      Order[]
   payTermDay                 String?
+  Certificate                Certificate?                 @relation(fields: [certificateId], references: [id])
+  certificateId              Int?
 }
 
 model PartyOnAccessoryItems {
@@ -2770,7 +2783,7 @@ model YarnNeedle {
   machineId Int?
   aliasName String?
 }
- 
+
 model PartyKYC {
   id                 Int      @id @default(autoincrement())
   companyName        String

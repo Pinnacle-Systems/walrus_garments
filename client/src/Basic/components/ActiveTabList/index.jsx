@@ -7,6 +7,8 @@ import secureLocalStorage from "react-secure-storage";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
+const CertificateMaster = lazy(() => import("../../components/CertificateMaster"));
+
 const PageMaster = lazy(() => import("../../components/PageMaster"));
 const StateMaster = lazy(() => import("../../components/StateMaster"));
 const CityMaster = lazy(() => import("../../components/CityMaster"));
@@ -63,6 +65,7 @@ const ActiveTabList = () => {
     "COMPANY MASTER": <CompanyMaster />,
     "PAGE GROUP MASTER": <PageGroupMaster />,
     "COUNTRY MASTER": <CountryMaster />,
+    "CERTIFICATE MASTER": <CertificateMaster />,
     "MACHINE MASTER": <MachineMaster />,
     "STATE MASTER": <StateMaster />,
     "TAX TERM MASTER": <TaxTermMaster />,
