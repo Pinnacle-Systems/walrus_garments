@@ -332,13 +332,13 @@ model Country {
 }
 
 model Certificate {
-  id        Int     @id @default(autoincrement())
-  name      String
-  code      String
-  active    Boolean @default(true)
-  Company   Company @relation(fields: [companyId], references: [id])
-  companyId Int
-  Party     Party[]
+  id                Int                 @id @default(autoincrement())
+  name              String
+  code              String
+  active            Boolean             @default(true)
+  Company           Company             @relation(fields: [companyId], references: [id])
+  companyId         Int
+  CertificateDetail CertificateDetail[]
 }
 
 model State {
@@ -514,8 +514,16 @@ model Party {
   ContactDetails             ContactDetails[]
   Order                      Order[]
   payTermDay                 String?
-  Certificate                Certificate?                 @relation(fields: [certificateId], references: [id])
-  certificateId              Int?
+  mailId                     String?
+  CertificateDetail          CertificateDetail[]
+}
+
+model CertificateDetail {
+  id            Int          @id @default(autoincrement())
+  Party         Party        @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId       Int
+  Certificate   Certificate? @relation(fields: [certificateId], references: [id])
+  certificateId Int?
 }
 
 model PartyOnAccessoryItems {

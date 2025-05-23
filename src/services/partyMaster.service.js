@@ -114,6 +114,7 @@ export async function upload(req) {
 async function kycForm(body) {
   const {
     companyName,
+    mailId,
     gstNumber,
     panNumber,
     aadharNumber,
@@ -140,7 +141,7 @@ async function kycForm(body) {
         registrationNumber,
         ownerName,
         contactNumber,
-        email,
+        email,mailId,
         address,
         cityState,
         pincode,
@@ -162,19 +163,19 @@ async function kycForm(body) {
 async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
         cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,payTermDay,
-        cinNo, faxNo, website,
+        cinNo, faxNo, website,mail,certificate,
         gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
 
         companyId, active, userId } = await body
     let data;
-  console.log(igst,"igst")
+  console.log(certificate,"mailId")
     data = await prisma.party.create(
         {
             data: {
                 name, code, aliasName, displayName, isSupplier, isBuyer,  isClient,isAcc,isGy,isDy,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                cinNo, faxNo, website,payTermDay,
+                cinNo, faxNo, website,payTermDay,mailId: mail,
                 gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,isIgst:igst ?igst:false,
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId), active, yarn, fabric,
@@ -226,10 +227,10 @@ async function create(body) {
 async function update(id, body) {
     const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList,payTermDay,
-        cinNo, faxNo, email, website, shippingAddress, contactDetails, isContactOnly = false,isGy,isDy,isAcc,
+        cinNo, faxNo, email, website,mail, shippingAddress, contactDetails, isContactOnly = false,isGy,isDy,isAcc,
         gstNo, isLeadForm = false,
         companyId, active, userId } = await body
-    console.log(payTermDay,"payTermDay for sql")
+    console.log(mail,"payTermDay for sql")
     let data;
 
     const dataFound = await prisma.party.findUnique({
@@ -279,7 +280,7 @@ async function update(id, body) {
                     cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                     cinNo, faxNo, email, website, isIgst:igst ?igst:false,
-                    gstNo, yarn, fabric,
+                    gstNo, yarn, fabric,mailId: mail,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,
                     accessoryGroup,
@@ -314,7 +315,7 @@ async function update(id, body) {
                     pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                     cinNo, faxNo, email, website,payTermDay,
-                    gstNo,
+                    gstNo,mailId:mail,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,
                     accessoryGroup,

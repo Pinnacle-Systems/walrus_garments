@@ -5,7 +5,6 @@ import secureLocalStorage from 'react-secure-storage';
 import { useGetAccessoryGroupMasterQuery } from '../../../redux/uniformService/AccessoryGroupMasterServices';
 import Loader from '../../components/Loader';
 
-
 function Items({ groupsItemsList, handleItemSelect, findIfAccessoryItemAdded }) {
   function handleChange(e, id) {
     if (e.target.checked) handleItemSelect(id, "push")
