@@ -5,21 +5,21 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.YarnNeedle.findMany({
+    const data = await prisma.yarnNeedle.findMany({
 
 
         where: {
             active: active ? Boolean(active) : undefined,
         }
     });
-    console.log(data, "data")
+
     return { statusCode: 0, data };
 }
 
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.YarnNeedle.findUnique({
+    const data = await prisma.yarnNeedle.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -31,7 +31,7 @@ async function getOne(id) {
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active } = req.query
-    const data = await prisma.counts.findMany({
+    const data = await prisma.yarnNeedle.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -50,11 +50,13 @@ async function getSearch(req) {
 async function create(body) {
 
     const { name, machineId, aliasName, active } = await body
-    const data = await prisma.YarnNeedle.create(
+    const data = await prisma.yarnNeedle.create(
         {
             data: {
-                name, aliasName, active,
-                machineId: parseInt(machineId)
+                name, active,
+                // aliasName,
+
+                // machineId: parseInt(machineId)
             }
         }
     )
@@ -63,28 +65,28 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, machineId, aliasName, active } = await body
-    const dataFound = await prisma.YarnNeedle.findUnique({
+    const dataFound = await prisma.yarnNeedle.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("YaenNeedle");
-    const data = await prisma.YarnNeedle.update({
+    const data = await prisma.yarnNeedle.update({
         where: {
             id: parseInt(id),
         },
         data:
         {
             name, active,
-            machineId: parseInt(machineId),
-            aliasName
+            // machineId: parseInt(machineId),
+            // aliasName
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.YarnNeedle.delete({
+    const data = await prisma.yarnNeedle.delete({
         where: {
             id: parseInt(id)
         },

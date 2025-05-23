@@ -49,11 +49,11 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { aliasName, companyId, active, fiberBlend } = await body
+    const { aliasName, companyId, active, fiberBlend, fabricName } = await body
     const data = await prisma.fiberContent.create(
         {
             data: {
-                aliasName,
+                aliasName, fabricName,
                 fiberBlend: fiberBlend ? {
                     createMany: {
                         data: fiberBlend.map(blend => {
@@ -69,7 +69,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { aliasName, fiberBlend, companyId, active } = await body
+    const { aliasName, fiberBlend, companyId, active, fabricName } = await body
     const dataFound = await prisma.fiberContent.findUnique({
         where: {
             id: parseInt(id)
@@ -81,7 +81,7 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            aliasName,
+            aliasName, fabricName,
             fiberBlend: fiberBlend ? {
                 deleteMany: {},
                 createMany: {

@@ -21,7 +21,7 @@ const MODEL = 'Fiber Content Master'
 export default function Form() {
   const [form, setForm] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
-
+  const [fabricName, setFabricName] = useState("")
   const [id, setId] = useState("");
   const [aliasName, setAliasName] = useState("");
   const [fiberBlend, setFiberBlend] = useState("");
@@ -65,6 +65,7 @@ export default function Form() {
   const syncFormWithDb = useCallback((data) => {
     if (id) setReadOnly(true);
     if (id) setAliasName(data?.aliasName ? data?.aliasName : "");
+    setFabricName(data?.fabricName ? data?.fabricName : "")
     setFiberBlend(data?.fiberBlend ? data?.fiberBlend : [])
     setActive(id ? (data?.active ? data.active : false) : true);
   }, [id]);
@@ -78,10 +79,12 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    aliasName,
+    aliasName, fabricName,
     fiberBlend: fiberBlend ? fiberBlend.filter(item => item.fabricId) : undefined,
     active, companyId, id
   }
+
+  console.log(fabricName, "fabricName")
 
   const validatePercentage = () => {
     const yarnBlendPercentage = fiberBlend.filter(blend => blend.yarnBlendId).reduce((accumulator, currentValue) => {
@@ -89,10 +92,6 @@ export default function Form() {
     }, 0);
     return yarnBlendPercentage === 100
   }
-
-
-
-
 
 
   const validateData = (data) => {
@@ -116,7 +115,7 @@ export default function Form() {
 
 
   const saveData = () => {
-    console.log("click button work")
+
     // if (!validatePercentage()) {
     //   toast.error("Yarn Blend equal to 100...!", { position: "top-center" })
     //   return
@@ -163,8 +162,38 @@ export default function Form() {
     setForm(true);
     setSearchValue("");
     setReadOnly(false);
-    // syncFormWithDb(undefined)
+    syncFormWithDb(undefined)
   };
+
+
+
+  function findName(arr, id) {
+    if (!arr) return ""
+    let data = arr.find(item => parseInt(item.id) === parseInt(id))
+    return data ? data.aliasName : ""
+  }
+
+  const calculateFabricName = () => {
+
+
+    let fiberBlendDet = fiberBlend ?
+      fiberBlend?.filter(blend => blend.fabricId && blend.percentage).map(blend => `${parseInt(blend.percentage)}%${findName(fabricList?.data, blend.fabricId)}`).join(' ') : "";
+    if (!fiberBlendDet) return ""
+
+    return `${aliasName}/ ${fiberBlendDet} `
+  }
+
+  // useEffect(() => {
+  //   if (id) return
+  //   setFabricName(calculateFabricName())
+  // }, [calculateFabricName()])
+
+  console.log(allData, "alldataa")
+
+  useEffect(() => {
+    if (id) return
+    setFabricName(calculateFabricName())
+  }, [fiberBlend, aliasName])
 
   function onDataClick(id) {
     setId(id);
@@ -229,7 +258,11 @@ export default function Form() {
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 w-full">
               {/* Left - Yarn Detail */}
-              <fieldset className="border flex gap-x-10 w-full rounded shadow-sm ">
+
+
+
+
+              <fieldset className="border grid grid-cols-2 gap-x-10 w-full  rounded shadow-sm px-2 lg:col-span-2">
                 <legend className="text-sm font-medium text-gray-700">Fabric Details</legend>
 
 
@@ -244,6 +277,11 @@ export default function Form() {
                   required
                   disabled={childRecord.current > 0}
                 />
+
+
+
+
+
                 <ToggleButton
                   name="Status"
                   options={statusDropdown}
@@ -251,6 +289,17 @@ export default function Form() {
                   setActive={setActive}
                   required
                   readOnly={readOnly}
+                />
+
+
+                <TextInput
+                  readOnly
+                  name="Fabric Name"
+                  className="w-full"
+                  type="text"
+                  // value={calculateFabricName()}
+                  value={fabricName}
+                  disabled={childRecord.current > 0}
                 />
 
               </fieldset>

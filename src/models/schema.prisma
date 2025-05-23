@@ -81,6 +81,7 @@ model Company {
   Measurement        Measurement[]
   FiberContent       FiberContent[]
   Certificate        Certificate[]
+  Order              Order[]
 }
 
 model Subscription {
@@ -306,6 +307,7 @@ model FinYear {
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
   active    Boolean  @default(true)
+  Order     Order[]
 }
 
 model EmployeeCategory {
@@ -740,6 +742,9 @@ model Color {
   StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+  OrderDetails                              OrderDetails[]
+  footOrderDetails                          OrderDetails[]                              @relation(name: "footOrderDetails")
+  stripesOrderDetails                       OrderDetails[]                              @relation(name: "stripesOrderDetails")
 }
 
 model UnitOfMeasurement {
@@ -1129,14 +1134,16 @@ model Size {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   PriceTemplateStyleSizeDetails             PriceTemplateStyleSizeDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+  OrderDetails                              OrderDetails[]
 }
 
 model SocksMaterial {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  active    Boolean? @default(true)
-  Company   Company? @relation(fields: [companyId], references: [id])
-  companyId Int?
+  id           Int            @id @default(autoincrement())
+  name         String?
+  active       Boolean?       @default(true)
+  Company      Company?       @relation(fields: [companyId], references: [id])
+  companyId    Int?
+  OrderDetails OrderDetails[]
 }
 
 model SizeTemplate {
@@ -1348,6 +1355,7 @@ model Style {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   PriceTemplateStyleWiseDetails             PriceTemplateStyleWiseDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+  OrderDetails                              OrderDetails[]
 }
 
 model StyleOnColor {
@@ -2679,50 +2687,72 @@ model CreditDebitNote {
 }
 
 model Order {
-  id               Int            @id @default(autoincrement())
-  docId            String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  createdBy        User?          @relation("createdBy", fields: [createdById], references: [id])
-  createdById      Int?
-  updatedBy        User?          @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById      Int?
-  phoneNo          String?
-  customer         String?
-  billingAddress   String?
-  shippingAddress  String?
-  orderDate        DateTime?
-  deliveryDate     DateTime?
-  gmail            String?
-  Branch           Branch?        @relation(fields: [branchId], references: [id])
-  branchId         Int?
-  Party            Party?         @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  partyId          Int?
-  packingCoverType String?
-  orderDetails     OrderDetails[]
+  id                Int            @id @default(autoincrement())
+  docId             String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  createdBy         User?          @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  phone             String?
+  contactPersonName String
+  address           String?        @db.LongText
+  orderDate         DateTime?
+  validDate         DateTime?
+  gmail             String?
+  Branch            Branch?        @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  Company           Company?       @relation(fields: [companyId], references: [id])
+  companyId         Int?
+  Party             Party?         @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId           Int?
+  packingCoverType  String?
+  active            Boolean        @default(true)
+  FinYear           FinYear?       @relation(fields: [finYearId], references: [id])
+  finYearId         Int?
+  orderDetails      OrderDetails[]
 }
 
 model OrderDetails {
-  id                  Int                   @id @default(autoincrement())
-  Order               Order?                @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId             Int?
-  orderDetailsSubGrid OrderDetailsSubGrid[]
-}
-
-model OrderDetailsSubGrid {
-  id             Int           @id @default(autoincrement())
-  OrderDetails   OrderDetails? @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
-  orderDetailsId Int?
+  id              Int            @id @default(autoincrement())
+  Order           Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int?
+  yarnNeedleId    Int?
+  yarnNeedle      YarnNeedle?    @relation(fields: [yarnNeedleId], references: [id])
+  machineId       Int?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  fiberContentId  Int?
+  fiberContent    FiberContent?  @relation(fields: [fiberContentId], references: [id])
+  description     String?        @db.LongText
+  qty             Float?
+  socksMaterialId Int?
+  socksMaterial   SocksMaterial? @relation(fields: [socksMaterialId], references: [id])
+  measurements    String?
+  sizeId          Int?
+  size            Size?          @relation(fields: [sizeId], references: [id])
+  styleId         Int?
+  style           Style?         @relation(fields: [styleId], references: [id])
+  legcolorId      Int?
+  legcolor        Color?         @relation(fields: [legcolorId], references: [id])
+  footcolorId     Int?
+  footcolor       Color?         @relation("footOrderDetails", fields: [footcolorId], references: [id])
+  stripecolorId   Int?
+  stripecolor     Color?         @relation("stripesOrderDetails", fields: [stripecolorId], references: [id])
+  noOfStripes     String?
+  socksTypeId     Int?
+  socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
 }
 
 model Machine {
-  id         Int          @id @default(autoincrement())
-  name       String?
-  code       String?
-  time       Float?
-  production Float?
-  active     Boolean?     @default(true)
-  YarnNeedle YarnNeedle[]
+  id           Int            @id @default(autoincrement())
+  name         String?
+  code         String?
+  time         Float?
+  production   Float?
+  active       Boolean?       @default(true)
+  YarnNeedle   YarnNeedle[]
+  OrderDetails OrderDetails[]
 }
 
 model ShippingAddress {
@@ -2742,11 +2772,12 @@ model ContactDetails {
 }
 
 model SocksType {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  active    Boolean? @default(true)
-  Company   Company? @relation(fields: [companyId], references: [id])
-  companyId Int?
+  id           Int            @id @default(autoincrement())
+  name         String?
+  active       Boolean?       @default(true)
+  Company      Company?       @relation(fields: [companyId], references: [id])
+  companyId    Int?
+  OrderDetails OrderDetails[]
 }
 
 model Measurement {
@@ -2758,12 +2789,14 @@ model Measurement {
 }
 
 model FiberContent {
-  id         Int          @id @default(autoincrement())
-  aliasName  String?
-  Company    Company?     @relation(fields: [companyId], references: [id])
-  companyId  Int?
-  active     Boolean?     @default(true)
-  fiberBlend FiberBlend[]
+  id           Int            @id @default(autoincrement())
+  aliasName    String?
+  fabricName   String?
+  Company      Company?       @relation(fields: [companyId], references: [id])
+  companyId    Int?
+  active       Boolean?       @default(true)
+  fiberBlend   FiberBlend[]
+  OrderDetails OrderDetails[]
 }
 
 model FiberBlend {
@@ -2776,12 +2809,13 @@ model FiberBlend {
 }
 
 model YarnNeedle {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  active    Boolean? @default(true)
-  Machine   Machine? @relation(fields: [machineId], references: [id])
-  machineId Int?
-  aliasName String?
+  id           Int            @id @default(autoincrement())
+  name         String?
+  active       Boolean?       @default(true)
+  Machine      Machine?       @relation(fields: [machineId], references: [id])
+  machineId    Int?
+  aliasName    String?
+  OrderDetails OrderDetails[]
 }
 
 model PartyKYC {

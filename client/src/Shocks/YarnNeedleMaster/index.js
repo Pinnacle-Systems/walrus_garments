@@ -48,26 +48,19 @@ export default function Form() {
             setReadOnly(false);
 
             setName("");
-            setAliasName("");
+            // setAliasName("");
             setActive("");
-            setMachineId("");
+            // setMachineId("");
 
             return;
         } else {
             setReadOnly(true)
             setName(data?.name || "");
-            setAliasName(data?.aliasName || "");
+            // setAliasName(data?.aliasName || "");
             setActive(id ? (data?.active ?? false) : true);
-            setMachineId(data?.machineId)
+            // setMachineId(data?.machineId)
             childRecord.current = data?.childRecord ? data?.childRecord : 0;
         }
-
-        // childRecord.current = data?.childRecord ? data?.childRecord : 0;
-        // if (data?.childRecord !== 0) {
-        //     setReadOnly(true)
-        // } else {
-        //     setReadOnly(false)
-        // }
     }, [id])
 
 
@@ -75,10 +68,14 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData])
 
-    console.log(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), "companyId")
+
 
     const data = {
-        name, machineId, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), active, id, aliasName
+        name,
+        //  machineId, 
+        companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
+        active, id,
+        //  aliasName
     }
 
     const validateData = (data) => {
@@ -156,9 +153,9 @@ export default function Form() {
         setForm(true);
     }
     const tableHeaders = [
-        "S.NO", "Name", "AliasName", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
+        "S.NO", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
     ]
-    const tableDataNames = ["index+1", "dataObj.name", "dataObj.aliasName", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+    const tableDataNames = ["index+1", "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
 
 
     return (
@@ -220,7 +217,7 @@ export default function Form() {
 
                                         </div>
 
-                                        <div className='mb-3 ml-5 w-[40%]'>
+                                        {/* <div className='mb-3 ml-5 w-[40%]'>
                                             <DropdownInput
                                                 setAliasName={setAliasName}
                                                 name={"Machine"}
@@ -244,7 +241,7 @@ export default function Form() {
                                         <div className='mb-3 w-[20%]'>
                                             <TextInput name="Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                                        </div>
+                                        </div> */}
 
                                     </div>
                                     <div className='mt-2'>

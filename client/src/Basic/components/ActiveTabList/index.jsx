@@ -4,6 +4,7 @@ import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
+import { FiberContent, YarnNeedle } from "../../../Shocks";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -105,6 +106,8 @@ const ActiveTabList = () => {
     "PAY TERM MASTER": <PayTermMaster />,
     "MEASUREMENT MASTER": <MeasurementMaster />,
     "FABRIC MASTER": <FabricMaster />,
+    "FIBER CONTENT MASTER": <FiberContent />,
+    "YARN NEEDLE MASTER": <YarnNeedle />
 
   };
 
@@ -123,11 +126,10 @@ const ActiveTabList = () => {
           {currentShowingTabs?.map((tab, index) => (
             <div
               key={index}
-              className={`px-2 rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${
-                tab.active 
-                  ? "bg-gray-500 text-white border border-gray-500" 
-                  : "text-gray-500 border border-gray-500"
-              }`}
+              className={`px-2 rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active
+                ? "bg-gray-500 text-white border border-gray-500"
+                : "text-gray-500 border border-gray-500"
+                }`}
             >
               <button
                 onClick={() => {
@@ -162,9 +164,8 @@ const ActiveTabList = () => {
             {hiddenTabs.map((tab) => (
               <li
                 key={tab.name}
-                className={`flex justify-between ${
-                  tab.active ? "bg-green-300" : "bg-gray-300"
-                } `}
+                className={`flex justify-between ${tab.active ? "bg-green-300" : "bg-gray-300"
+                  } `}
               >
                 <button
                   onClick={() => {

@@ -99,13 +99,13 @@ export const TextInput = ({
             {required ? <RequiredLabel name={name} /> : `${name}`}
           </span>
         </label>
-        <TextField
+        <input
           id={name}
           variant="standard"
           name={`${name}`}
-          className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+          className={` text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400 ${className}`}
           // placeholder={`${name}`}
-
+          // className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
           sx={{
             "& .MuiInputBase-input": { fontSize: "12px" },
             "& .MuiInputBase-input.Mui-disabled": {
@@ -173,11 +173,11 @@ export const DisabledInput = ({
   readOnly = true,
   required = false,
 }) => (
-  <div className="flex flex-col w-full my-2 px-1">
+  <div className="flex flex-col w-full my-1 px-1">
     <label htmlFor={name} className="text-xs text-gray-700 font-medium mb-1">
       {required ? <RequiredLabel name={name} /> : name}
     </label>
-    <TextField
+    <input
       id={name}
       name={name}
       type={type}
@@ -186,7 +186,7 @@ export const DisabledInput = ({
       disabled={readOnly}
       required={required}
       tabIndex={tabIndex || undefined}
-      className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-gray-100"
+      className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
       sx={{
         "& .MuiInputBase-input": { fontSize: "12px" },
         "& .MuiInputBase-input.Mui-disabled": {
@@ -326,7 +326,7 @@ export const DropdownInput = ({
 
   return (
     <div className="flex flex-col w-full my-2 px-1">
-      <label className={`text-xs text-gray-700 font-medium mb-1 ${className}`}>
+      <label className={`input-label group-hover:text-blue-600  font-weight: 100 text-xs`}>
         {required ? <RequiredLabel name={name} /> : name}
       </label>
       <select
@@ -339,7 +339,7 @@ export const DropdownInput = ({
         name={name}
         onChange={handleOnChange}
         disabled={readOnly || disabled}
-        className="text-xs border-0 border-b-2  border-dotted border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
+        className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
       >
         {clear && (
           <option value="" disabled>
@@ -604,11 +604,11 @@ export const DateInput = ({
   inputClass = "",
   inputHead = "",
 }) => (
-  <div className="flex flex-col w-28 my-2 px-1">
+  <div className="flex flex-col w-28 my-1 px-1">
     <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
       {required ? <RequiredLabel name={name} /> : name}
     </label>
-    <TextField
+    <input
       id={name}
       name={name}
       type={type}
@@ -621,7 +621,7 @@ export const DateInput = ({
       disabled={readOnly || disabled}
       tabIndex={tabIndex || undefined}
       readOnly={readOnly}
-      className={`w-full border border-gray-300 rounded px-2 py-1 text-xs ${inputClass}`}
+      className={`text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400 ${inputClass}`}
       sx={{
         "& .MuiInputBase-input": { fontSize: "12px" },
         "& .MuiInputBase-input.Mui-disabled": {

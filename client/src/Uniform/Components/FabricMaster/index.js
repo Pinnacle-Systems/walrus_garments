@@ -248,8 +248,7 @@ export default function Form() {
                                         <div className="grid grid-cols-2">
                                             <TextInput name="FabricName" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                                            {/* <DropdownInput name="Fabric Type" options={dropDownListObject(id ? FabricTypeList.data : FabricTypeList.data.filter(item => item.active), "name", "id")} value={fabricTypeId} setValue={(value) => { setFabricTypeId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                            <CheckBox name="Organic" readOnly={readOnly} value={organic} setValue={setOrganic} /> */}
+
                                             <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
                                         </div>
                                         {/* <YarnBlendDetails id={id} params={params} yarnBlend={yarnBlendDetails} setYarnBlend={setYarnBlendDetails} readOnly={readOnly} /> */}
