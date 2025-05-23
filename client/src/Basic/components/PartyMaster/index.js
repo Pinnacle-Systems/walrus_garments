@@ -9,16 +9,16 @@ import {
   useGetPartyQuery,
   useUpdatePartyMutation,
 } from "../../../redux/services/PartyMasterService";
+import { useGetCertificateQuery } from "../../../redux/services/CertificateMasterService";
 import moment from "moment";
 import { findFromList } from "../../../Utils/helper";
-import Loader from "../../components/Loader";
 import {
   dropDownListMergedObject,
   dropDownListObject,
   multiSelectOption,
 } from "../../../Utils/contructObject";
 import PartyOnItems from "./PartyOnItems";
-import { ChevronLeft, ChevronRight, Delete, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import BrowseSingleImage from "../../components/BrowseSingleImage";
 import MastersForm from "../MastersForm/MastersForm";
@@ -29,6 +29,7 @@ import {
   DropdownInput,
   TextInput,
   FancyCheckBox,
+  MultiSelectDropdown,
 } from "../../../Inputs";
 import Mastertable from "../MasterTable/Mastertable";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
@@ -41,6 +42,7 @@ import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
 import { useSendKycEmailMutation } from "../../../redux/services/emailApi";
+import { TextField } from "@mui/material";
 
 const MODEL = "Party Master";
 
@@ -73,7 +75,7 @@ export default function Form() {
   const [processDetails, setProcessDetails] = useState([]);
 
   const [cstDate, setCstDate] = useState("");
-  const [email, setEmail] = useState("");
+  const [mail, setMail] = useState("");
   const [kycEmail, setKycEmail] = useState("");
 
   const [accessoryItemList, setAccessoryItemList] = useState([]);
@@ -90,8 +92,9 @@ export default function Form() {
   const [backUpItemsList, setBackUpItemsList] = useState([]);
   const [shippingAddress, setShippingAddress] = useState([]);
   const [contactDetails, setContactDetails] = useState([]);
-
+  const [certificate,setCertificate ] = useState([])
   const [searchValue, setSearchValue] = useState("");
+  const [email,setEmail] = useState("")
 
   const [errors, setErrors] = useState({});
   const [image, setImage] = useState({});
@@ -114,7 +117,7 @@ export default function Form() {
   };
   const { data: cityList } = useGetCityQuery({ params });
   console.log(cityList, "cityList");
-
+  const cerdificateDetail = useGetCertificateQuery({params})
   const { data: currencyList } = useGetCurrencyMasterQuery({ params });
 
   const {
@@ -151,6 +154,8 @@ export default function Form() {
       if (!id) {
         setReadOnly(false);
         setPanNo("");
+        setMail("");
+        setCertificate([])
         setName("");
         setImage("");
         setAliasName("");
@@ -184,7 +189,7 @@ export default function Form() {
         setReadOnly(true);
         setPanNo(data?.panNo || "");
         setName(data?.name || "");
-
+        setMail(data?.mailId||"")
         setAliasName(data?.aliasName || "");
         setImage(data?.image || "");
         setDisplayName(data?.displayName || "");
@@ -256,6 +261,7 @@ export default function Form() {
     pincode,
     panNo,
     tinNo,
+    certificate,
     cstNo,
     cstDate,
     cinNo,
@@ -285,6 +291,7 @@ export default function Form() {
     priceTemplateId,
     image,
     isAcc,
+    certificate,mail,
     isGy,
     isDy,
   };
@@ -305,6 +312,7 @@ export default function Form() {
     }
     return false;
   };
+   console.log(certificate,"certificate")
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
       let returnData;
@@ -467,7 +475,7 @@ export default function Form() {
       saveData();
     }
   };
-
+console.log(cerdificateDetail,"cerdificateDetail")
   const onNew = () => {
     console.log("onNewCalled");
     setReadOnly(false);
@@ -631,12 +639,12 @@ export default function Form() {
         {/* Left Section: Options */}
         <div className="space-y-6">
           {/* Party Type Card */}
-          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-xs">
-            <h3 className="mb-5 text-lg font-semibold text-gray-900">
+          <div className="rounded-xl border border-gray-100 bg-white  shadow-xs">
+            <h3 className="mb-5 text-sm font-semibold text-gray-900">
               Party Type
             </h3>
-            <div className={`space-y-5 ${readOnly ? "opacity-80" : ""}`}>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <FancyCheckBox
                   label="Is Supplier"
                   value={isSupplier}
@@ -685,8 +693,8 @@ export default function Form() {
           </div>
 
           {/* KYC Actions */}
-          <div className="rounded-xl border border-gray-100 bg-white p-1 shadow-xs">
-            <h4 className="mb-4 text-base font-medium text-gray-700">
+            {/* <div className="rounded-xl border border-gray-100 bg-white p-1 shadow-xs">
+            <h4 className="mb-2 text-sm font-medium text-gray-700">
               KYC Update Notification
             </h4>
             <div className="flex flex-col gap-4 sm:flex-row">
@@ -749,13 +757,30 @@ export default function Form() {
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
+         <TextInput
+              name="Kyc Form Send Email"
+              type="text"
+              value={mail}
+              setValue={setMail}
+              required={true}
+              readOnly={readOnly}
+              disabled={childRecord.current > 0}
+              onBlur={(e) => {
+                if (aliasName) return;
+                setAliasName(e.target.value);
+              }}
+              className="focus:ring-2 focus:ring-blue-100"
+            />
+          <MultiSelectDropdown readOnly={readOnly} name="Certificate" selected={certificate} setSelected={setCertificate} 
+          options={multiSelectOption(cerdificateDetail ? cerdificateDetail?.currentData?.data : [], "name", "id")} />
+        
         </div>
 
         {/* Right Section: Image Upload */}
         <div className="flex flex-col items-center lg:items-end">
-          <div className="w-full max-w-xs rounded-xl border border-gray-100 bg-white p-5 shadow-xs">
-            <h3 className="mb-4 text-center text-base font-medium text-gray-700">
+          <div className="w-full max-w-xs rounded-xl border border-gray-100 bg-white p-2 shadow-xs">
+            <h3 className="mb-4 text-center text-sm font-medium text-gray-700">
               Party Logo/Image
             </h3>
             <BrowseSingleImage
@@ -777,28 +802,8 @@ export default function Form() {
     {step === 2 && (
       <div className="space-y-6">
         {/* Basic Information Card */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-xs">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Basic Information
-            </h3>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-500">
-                Status:
-              </span>
-              <ToggleButton
-                name="Status"
-                options={statusDropdown}
-                value={active}
-                setActive={setActive}
-                required={true}
-                readOnly={readOnly}
-                className="bg-gray-100 p-1 rounded-lg"
-                activeClass="bg-white shadow-sm text-blue-600 font-medium"
-                inactiveClass="text-gray-500"
-              />
-            </div>
-          </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-2 shadow-xs">
+          
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <TextInput
@@ -886,6 +891,7 @@ export default function Form() {
               className="focus:ring-2 focus:ring-blue-100"
             />
 
+
             <DateInput
               name="CST Date"
               value={cstDate}
@@ -963,345 +969,246 @@ export default function Form() {
               disabled={childRecord.current > 0}
               className="focus:ring-2 focus:ring-blue-100"
             />
+                 <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-500">
+                Status:
+              </span>
+              <ToggleButton
+                name="Status"
+                options={statusDropdown}
+                value={active}
+                setActive={setActive}
+                required={true}
+                readOnly={readOnly}
+                className="bg-gray-100 p-1 rounded-lg"
+                activeClass="bg-white shadow-sm text-blue-600 font-medium"
+                inactiveClass="text-gray-500"
+              />
+            </div>
           </div>
         </div>
       </div>
     )}
 
-    {step === 3 && (
-      <div className="space-y-8">
-        {/* Shipping Address Card */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-xs">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Shipping Addresses
-            </h3>
-            <button
-              onClick={addNewAddress}
-              disabled={readOnly}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:shadow-none"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add Address
-            </button>
-          </div>
-
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    S.No
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Address
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {(shippingAddress || []).map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-700">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-50"
-                        value={item?.address || ""}
-                        disabled={readOnly}
-                        onChange={(e) =>
-                          handleInputAddress(
-                            e.target.value,
-                            index,
-                            "address"
-                          )
-                        }
-                      />
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <button
-                        type="button"
-                        onClick={() => deleteAddress(index)}
-                        disabled={readOnly}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 disabled:text-gray-400"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {(!shippingAddress || shippingAddress.length === 0) && (
-                  <tr>
-                    <td
-                      colSpan="3"
-                      className="px-6 py-8 text-center text-sm text-gray-500"
-                    >
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-10 w-10 text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                          />
-                        </svg>
-                        <p>No shipping addresses added yet</p>
-                        <button
-                          onClick={addNewAddress}
-                          disabled={readOnly}
-                          className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        >
-                          + Add your first address
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Contact Details Card */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-xs">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Contact Details
-            </h3>
-            <button
-              type="button"
-              onClick={() => setContactDetails([...contactDetails, {}])}
-              disabled={readOnly || childRecord.current > 0}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:shadow-none"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-              </svg>
-              Add Contact
-            </button>
-          </div>
-
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    S.No
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Contact Person
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Mobile No
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Email
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {(contactDetails || []).map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-700">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm capitalize focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-50"
-                        value={item.contactPersonName || ""}
-                        onChange={(e) => {
-                          const updated = [...contactDetails];
-                          updated[index].contactPersonName =
-                            e.target.value;
-                          setContactDetails(updated);
-                        }}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        required
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-50"
-                        value={item.mobileNo || ""}
-                        onChange={(e) => {
-                          const updated = [...contactDetails];
-                          updated[index].mobileNo = e.target.value;
-                          setContactDetails(updated);
-                        }}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        required
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="text"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-gray-50"
-                        value={item.email || ""}
-                        onChange={(e) => {
-                          const updated = [...contactDetails];
-                          updated[index].email = e.target.value;
-                          setContactDetails(updated);
-                        }}
-                        readOnly={readOnly}
-                      />
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        disabled={readOnly || childRecord.current > 0}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 disabled:text-gray-400"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {(!contactDetails || contactDetails.length === 0) && (
-                  <tr>
-                    <td
-                      colSpan="5"
-                      className="px-6 py-8 text-center text-sm text-gray-500"
-                    >
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-10 w-10 text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        <p>No contact details added yet</p>
-                        <button
-                          onClick={() => setContactDetails([...contactDetails, {}])}
-                          disabled={readOnly || childRecord.current > 0}
-                          className="mt-2 text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                        >
-                          + Add your first contact
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+ {step === 3 && (
+  <div className="space-y-4">
+    {/* Shipping Address Card */}
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-base font-medium text-gray-900">
+          Shipping Addresses
+        </h3>
+        <button
+          onClick={addNewAddress}
+          disabled={readOnly}
+          className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Add Address
+        </button>
       </div>
-    )}
+
+      <div className="overflow-hidden rounded-md border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">#</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Address</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {(shippingAddress || []).map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-600">{index + 1}</td>
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                    value={item?.address || ""}
+                    disabled={readOnly}
+                    onChange={(e) => handleInputAddress(e.target.value, index, "address")}
+                  />
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <button
+                    onClick={() => deleteAddress(index)}
+                    disabled={readOnly}
+                    className="p-1 text-red-500 hover:text-red-700 disabled:text-gray-400"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {(!shippingAddress || shippingAddress.length === 0) && (
+              <tr>
+                <td colSpan="3" className="px-3 py-4 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
+                   
+                    <p className="text-xs">No addresses found</p>
+                    <button
+                      onClick={addNewAddress}
+                      disabled={readOnly}
+                      className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                    >
+                      + Add address
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* Contact Details Card */}
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-base font-medium text-gray-900">Contact Details</h3>
+        <button
+          onClick={() => setContactDetails([...contactDetails, {}])}
+          disabled={readOnly || childRecord.current > 0}
+          className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+          </svg>
+          Add Contact
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-md border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">#</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Name</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Mobile</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Email</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {(contactDetails || []).map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-600">{index + 1}</td>
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                    value={item.contactPersonName || ""}
+                    onChange={(e) => {
+                      const updated = [...contactDetails];
+                      updated[index].contactPersonName = e.target.value;
+                      setContactDetails(updated);
+                    }}
+                    disabled={readOnly || childRecord.current > 0}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                    value={item.mobileNo || ""}
+                    onChange={(e) => {
+                      const updated = [...contactDetails];
+                      updated[index].mobileNo = e.target.value;
+                      setContactDetails(updated);
+                    }}
+                    disabled={readOnly || childRecord.current > 0}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="email"
+                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                    value={item.email || ""}
+                    onChange={(e) => {
+                      const updated = [...contactDetails];
+                      updated[index].email = e.target.value;
+                      setContactDetails(updated);
+                    }}
+                    disabled={readOnly}
+                  />
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <button
+                    onClick={() => removeItem(index)}
+                    disabled={readOnly || childRecord.current > 0}
+                    className="p-1 text-red-500 hover:text-red-700 disabled:text-gray-400"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {(!contactDetails || contactDetails.length === 0) && (
+              <tr>
+                <td colSpan="5" className="px-3 py-4 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
+                    
+                    <p className="text-xs">No contacts found</p>
+                    <button
+                      onClick={() => setContactDetails([...contactDetails, {}])}
+                      disabled={readOnly || childRecord.current > 0}
+                      className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                    >
+                      + Add contact
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
   </div>
 </MastersForm>
-          <div className="absolute bottom-12 right-0 left-0 flex justify-between items-center px-5">
-            {/* Previous Icon Button */}
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className={`w-10 h-10 flex items-center justify-center rounded-full bg-gray-600 text-white shadow hover:bg-gray-700 transition duration-200 ${
-                step > 1 ? "block" : "hidden"
-              }`}
-              aria-label="Previous"
-            >
-              <ChevronLeft size={20} />
-            </button>
+      <div className="absolute bottom-2 right-0 left-0 flex justify-between items-center px-5">
+  <button
+    type="button"
+    onClick={handlePrevious}
+    className={`w-7 h-7 flex items-center justify-center rounded-full bg-gray-600 text-white shadow hover:bg-gray-700 transition duration-200 ${
+      step > 1 ? "block" : "hidden"
+    }`}
+    aria-label="Previous"
+  >
+    <ChevronLeft className="w-4 h-4" /> 
+  </button>
 
-            {/* Next Icon Button */}
-            <button
-              type="button"
-              onClick={handleNext}
-              className={`w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition duration-200 ${
-                step < 3 ? "block" : "hidden"
-              }`}
-              aria-label="Next"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
+  <button
+    type="button"
+    onClick={handleNext}
+    className={`w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition duration-200 ${
+      step < 3 ? "block" : "hidden"
+    }`}
+    aria-label="Next"
+  >
+    <ChevronRight className="w-4 h-4" /> {/* Reduced size */}
+  </button>
+</div>
+
         </Modal>
       )}
     </div>

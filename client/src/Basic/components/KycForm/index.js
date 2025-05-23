@@ -1,433 +1,224 @@
-import React, { useState } from 'react';
-import { 
-  FaBuilding, 
-  FaIdCard, 
-  FaPhone, 
-  FaEnvelope, 
-  FaMapMarkerAlt, 
-  FaUser,
-  FaFileAlt,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaUpload
-} from 'react-icons/fa';
-import { FiChevronDown } from 'react-icons/fi';
-import { useAddPartykycMutation } from '../../../redux/services/PartyMasterService';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { FaUser, FaEnvelope, FaPhone, FaIdBadge, FaCalendar, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { MdWork, MdApartment, MdPassword } from 'react-icons/md';
 
-const EnhancedKycForm = () => {
-  const [formData, setFormData] = useState({
-    companyName: '',
-    gstNumber: '',
-    panNumber: '',
-    aadharNumber: '',
-    registrationNumber: '',
-    ownerName: '',
-    contactNumber: '',
-    email: '',
-    address: '',
-    cityState: '',
-    pincode: '',
-    businessType: '',
-    productCategories: '',
-    documents: null
-  });
- const [addData] =  useAddPartykycMutation()
-      const [id,setId] = useState('')
-
-  const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files ? files[0] : value
-    }));
-    
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
-    }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    
-    if (!formData.companyName) newErrors.companyName = 'Company name is required';
-    if (!formData.gstNumber) newErrors.gstNumber = 'GST number is required';
-    if (!formData.panNumber) newErrors.panNumber = 'PAN number is required';
-    if (!formData.aadharNumber) newErrors.aadharNumber = 'Aadhar number is required';
-    if (!formData.ownerName) newErrors.ownerName = 'Owner name is required';
-    if (!formData.contactNumber) newErrors.contactNumber = 'Contact number is required';
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    if (!formData.address) newErrors.address = 'Address is required';
-    if (!formData.businessType) newErrors.businessType = 'Business type is required';
-    if (!formData.documents) newErrors.documents = 'Document upload is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmitCustom = async (callback, data, text) => {
-    try {
-      let returnData = await callback(data).unwrap();
-      setId(returnData.data.id)
-      toast.success(text + "Successfully");
-
-    } catch (error) {
-      console.log("handle")
-    }
-  }
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) {
-      console.log('Form submitted:', formData);
-      setIsSubmitted(true);
-     handleSubmitCustom(addData, formData, "Added");    }
-  };
+const EmployeeForm = () => {
+  const { register, handleSubmit, formState: { errors }, watch } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
   
-
-  if (isSubmitted) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
-        <div className="w-full max-w-4xl bg-white rounded-xl shadow-md p-8 text-center">
-          <FaCheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">KYC Submitted Successfully!</h2>
-          <p className="text-gray-600 mb-6">Thank you for submitting your KYC details. Our team will review your information and get back to you shortly.</p>
-          <button 
-            onClick={() => setIsSubmitted(false)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Edit Information
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const onSubmit = data => console.log(data);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800">KYC Verification</h1>
-          <p className="text-gray-600 mt-2">Complete your Know Your Customer (KYC) details for garment & accessories business</p>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <MdWork className="text-blue-500" />
+          Employee Registration
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Company Details */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center">
-                <FaBuilding className="h-5 w-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-gray-800">Company Details</h2>
-              </div>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Personal Information */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <FaUser className="text-blue-500" />
+              Personal Information
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.companyName ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter company name"
-                  />
-                  <FaIdCard className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.companyName && <p className="mt-1 text-sm text-red-600">{errors.companyName}</p>}
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaUser className="text-gray-400" />
+                  Full Name
+                </label>
+                <input
+                  {...register("fullName", { required: "Full name is required" })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.fullName ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">GST Number *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="gstNumber"
-                    value={formData.gstNumber}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.gstNumber ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="22AAAAA0000A1Z5"
-                  />
-                  <FaFileAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.gstNumber && <p className="mt-1 text-sm text-red-600">{errors.gstNumber}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="panNumber"
-                    value={formData.panNumber}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.panNumber ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="AAAAA0000A"
-                  />
-                  <FaFileAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.panNumber && <p className="mt-1 text-sm text-red-600">{errors.panNumber}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Aadhar Number *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="aadharNumber"
-                    value={formData.aadharNumber}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.aadharNumber ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="1234 5678 9012"
-                  />
-                  <FaIdCard className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.aadharNumber && <p className="mt-1 text-sm text-red-600">{errors.aadharNumber}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="registrationNumber"
-                    value={formData.registrationNumber}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg pl-10"
-                    placeholder="Company registration number"
-                  />
-                  <FaFileAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaCalendar className="text-gray-400" />
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  {...register("dob", { required: "Date of birth is required" })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.dob ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>}
               </div>
             </div>
           </div>
 
-          {/* Contact Details */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center">
-                <FaUser className="h-5 w-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-gray-800">Contact Details</h2>
-              </div>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Contact Information */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <FaEnvelope className="text-blue-500" />
+              Contact Information
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Owner/Director Name *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="ownerName"
-                    value={formData.ownerName}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.ownerName ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Enter full name"
-                  />
-                  <FaUser className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.ownerName && <p className="mt-1 text-sm text-red-600">{errors.ownerName}</p>}
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaEnvelope className="text-gray-400" />
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Invalid email address"
+                    }
+                  })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.email ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number *</label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    name="contactNumber"
-                    value={formData.contactNumber}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="+91 9876543210"
-                  />
-                  <FaPhone className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.contactNumber && <p className="mt-1 text-sm text-red-600">{errors.contactNumber}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="your@email.com"
-                  />
-                  <FaEnvelope className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Street address"
-                  />
-                  <FaMapMarkerAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City/State</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="cityState"
-                    value={formData.cityState}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg pl-10"
-                    placeholder="City and state"
-                  />
-                  <FaMapMarkerAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg pl-10"
-                    placeholder="Postal code"
-                  />
-                  <FaMapMarkerAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaPhone className="text-gray-400" />
+                  Phone Number
+                </label>
+                <input
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^[0-9]{10}$/,
+                      message: "Invalid phone number"
+                    }
+                  })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.phone ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
               </div>
             </div>
           </div>
 
-          {/* Business Details */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center">
-                <FaBuilding className="h-5 w-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-gray-800">Business Details</h2>
+          {/* Employment Information */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MdApartment className="text-blue-500" />
+              Employment Details
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaIdBadge className="text-gray-400" />
+                  Employee ID
+                </label>
+                <input
+                  {...register("employeeId", { required: "Employee ID is required" })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.employeeId ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.employeeId && <p className="text-red-500 text-sm mt-1">{errors.employeeId.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <MdWork className="text-gray-400" />
+                  Department
+                </label>
+                <select
+                  {...register("department", { required: "Department is required" })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.department ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                >
+                  <option value="">Select Department</option>
+                  <option value="hr">Human Resources</option>
+                  <option value="it">Information Technology</option>
+                  <option value="finance">Finance</option>
+                </select>
+                {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department.message}</p>}
               </div>
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          </div>
+
+          {/* Login Credentials */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <MdPassword className="text-blue-500" />
+              Login Credentials
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Type *</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaLock className="text-gray-400" />
+                  Password
+                </label>
                 <div className="relative">
-                  <select
-                    name="businessType"
-                    value={formData.businessType}
-                    onChange={handleChange}
-                    className={`w-full p-3 border rounded-lg pl-10 pr-8 appearance-none ${errors.businessType ? 'border-red-500' : 'border-gray-300'}`}
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 8,
+                        message: "Password must be at least 8 characters"
+                      }
+                    })}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                      errors.password ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-blue-500"
                   >
-                    <option value="">Select business type</option>
-                    <option value="Manufacturer">Manufacturer</option>
-                    <option value="Wholesaler">Wholesaler</option>
-                    <option value="Retailer">Retailer</option>
-                    <option value="Exporter">Exporter</option>
-                    <option value="Importer">Importer</option>
-                  </select>
-                  <FaBuilding className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                  <FiChevronDown className="h-5 w-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
-                {errors.businessType && <p className="mt-1 text-sm text-red-600">{errors.businessType}</p>}
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product Categories</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="productCategories"
-                    value={formData.productCategories}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg pl-10"
-                    placeholder="e.g., T-shirts, Jeans, Accessories"
-                  />
-                  <FaFileAlt className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                </div>
+                <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center gap-2">
+                  <FaLock className="text-gray-400" />
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  {...register("confirmPassword", {
+                    validate: value =>
+                      value === watch('password') || "Passwords do not match"
+                  })}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
+                />
+                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
               </div>
             </div>
           </div>
 
-          {/* Document Upload */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center">
-                <FaFileAlt className="h-5 w-5 text-blue-600 mr-2" />
-                <h2 className="text-xl font-semibold text-gray-800">Document Upload</h2>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className={`border-2 border-dashed rounded-lg p-6 text-center ${errors.documents ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'}`}>
-                <div className="flex flex-col items-center justify-center">
-                  <FaUpload className="h-12 w-12 text-gray-400 mb-3" />
-                  <p className="mb-2 text-sm text-gray-600">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
-                  </p>
-                  <p className="text-xs text-gray-500 mb-4">PDF, JPG, PNG up to 5MB</p>
-                  <input
-                    type="file"
-                    name="documents"
-                    onChange={handleChange}
-                    className="hidden"
-                    id="document-upload"
-                  />
-                  <label
-                    htmlFor="document-upload"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer flex items-center"
-                  >
-                    <FaUpload className="mr-2" />
-                    Select Files
-                  </label>
-                </div>
-                {formData.documents && (
-                  <div className="mt-4 flex items-center justify-center text-green-600">
-                    <FaCheckCircle className="h-5 w-5 mr-2" />
-                    <span>{formData.documents.name}</span>
-                  </div>
-                )}
-                {errors.documents && (
-                  <div className="mt-4 flex items-center justify-center text-red-600">
-                    <FaTimesCircle className="h-5 w-5 mr-2" />
-                    <span>{errors.documents}</span>
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 text-xs text-gray-500">
-                <p>Upload any of the following documents: GST certificate, PAN card, Aadhar card, Business registration certificate</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Form Submission */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-md flex items-center"
-            >
-              <FaCheckCircle className="mr-2" />
-              Submit KYC
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105"
+          >
+            Register Employee
+          </button>
         </form>
       </div>
     </div>
   );
 };
 
-export default EnhancedKycForm;
+export default EmployeeForm;

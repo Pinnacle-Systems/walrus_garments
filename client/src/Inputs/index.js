@@ -49,11 +49,11 @@ export const MultiSelectDropdown = ({
 }) => {
   return (
     <div
-      className={`m-1  md:grid-cols-3 items-center z-0 md:my-0.5 md:py-3 data ${className}`}
+      className={`m-1  md:grid-cols-3 items-center z-0 data ${className}`}
     >
       <label className={`md:text-start flex ${labelName}`}>{name}</label>
       <MultiSelect
-        className={`focus:outline-none  border border-gray-500 rounded text-black  ${inputClass}`}
+        className={`focus:outline-none  border-gray-300 rounded text-black  ${inputClass}`}
         options={options}
         value={selected}
         onChange={readOnly ? () => { } : setSelected}
@@ -339,7 +339,7 @@ export const DropdownInput = ({
         name={name}
         onChange={handleOnChange}
         disabled={readOnly || disabled}
-        className="text-xs border-0 border-b-2  border-dotted border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
+        className="text-xs border-0 border-b-2  border-dotted border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400"
       >
         {clear && (
           <option value="" disabled>
@@ -604,7 +604,7 @@ export const DateInput = ({
   inputClass = "",
   inputHead = "",
 }) => (
-  <div className="flex flex-col w-28 my-2 px-1">
+  <div className="flex flex-col w-28  px-1">
     <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
       {required ? <RequiredLabel name={name} /> : name}
     </label>
@@ -621,7 +621,7 @@ export const DateInput = ({
       disabled={readOnly || disabled}
       tabIndex={tabIndex || undefined}
       readOnly={readOnly}
-      className={`w-full border border-gray-300 rounded px-2 py-1 text-xs ${inputClass}`}
+      className={`w-full border border-gray-300 rounded px-2  text-xs ${inputClass}`}
       sx={{
         "& .MuiInputBase-input": { fontSize: "12px" },
         "& .MuiInputBase-input.Mui-disabled": {
@@ -828,7 +828,7 @@ export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
       <div className={`relative bg-white rounded-lg ${widthClass}`}>
         {onClose ? (
           <button
-            className="absolute top-0 right-0 m-4 text-gray-600 hover:text-gray-800 focus:outline-none "
+            className="absolute top-3 right-5 m-4 text-red-600 hover:text-red-800 bg-white rounded-xl  focus:outline-none "
             onClick={onClose}
           >
             <svg
