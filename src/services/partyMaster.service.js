@@ -26,6 +26,13 @@ async function get(req) {
                     state: true
                 }
             },
+            ShippingAddress: {
+                select: {
+                    id: true,
+                    address: true,
+                    aliasName: true
+                }
+            },
         }
 
     });
@@ -52,7 +59,8 @@ async function getOne(id) {
             ShippingAddress: {
                 select: {
                     id: true,
-                    address: true
+                    address: true,
+                    aliasName: true
                 }
             },
             ContactDetails: {
@@ -112,71 +120,71 @@ export async function upload(req) {
 }
 
 async function kycForm(body) {
-  const {
-    companyName,
-    mailId,
-    gstNumber,
-    panNumber,
-    aadharNumber,
-    registrationNumber,
-    ownerName,
-    contactNumber,
-    email,
-    address,
-    cityState,
-    pincode,
-    businessType,
-    productCategories,
-    documents,
-    userId,
-  } = body;
- console.log(documents,"documents")
-  try {
-    const newKYC = await prisma.partyKYC.create({
-      data: {
+    const {
         companyName,
+        mailId,
         gstNumber,
         panNumber,
         aadharNumber,
         registrationNumber,
         ownerName,
         contactNumber,
-        email,mailId,
+        email,
         address,
         cityState,
         pincode,
         businessType,
         productCategories,
-        documents: documents ? documents.name : null,  
-        createdById: userId ? parseInt(userId) : undefined,    
-      },
-    });
-    return { statusCode: 0, data: newKYC };
-  } catch (error) {
-    console.error('Error adding party KYC:', error);    
-    return { statusCode: 0, error: error };
-  }
+        documents,
+        userId,
+    } = body;
+    console.log(documents, "documents")
+    try {
+        const newKYC = await prisma.partyKYC.create({
+            data: {
+                companyName,
+                gstNumber,
+                panNumber,
+                aadharNumber,
+                registrationNumber,
+                ownerName,
+                contactNumber,
+                email, mailId,
+                address,
+                cityState,
+                pincode,
+                businessType,
+                productCategories,
+                documents: documents ? documents.name : null,
+                createdById: userId ? parseInt(userId) : undefined,
+            },
+        });
+        return { statusCode: 0, data: newKYC };
+    } catch (error) {
+        console.error('Error adding party KYC:', error);
+        return { statusCode: 0, error: error };
+    }
 };
 
 
 
 async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
-        cityId, pincode, panNo, tinNo, cstNo, cstDate,  yarn, fabric,isAcc,isGy,isDy,payTermDay,
-        cinNo, faxNo, website,mail,certificate,
+        cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
+        cinNo, faxNo, website, mail, certificate,
         gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
 
         companyId, active, userId } = await body
     let data;
-  console.log(certificate,"mailId")
+    console.log(certificate, "mailId")
     data = await prisma.party.create(
         {
             data: {
-                name, code, aliasName, displayName, isSupplier, isBuyer,  isClient,isAcc,isGy,isDy,
+                name, code, aliasName, displayName, isSupplier, isBuyer, isClient, isAcc, isGy, isDy,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                cinNo, faxNo, website,payTermDay,mailId: mail,
-                gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode,isIgst:igst ?igst:false,
+                cinNo, faxNo, website, payTermDay, mailId: mail,
+                gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode, isIgst: igst ? igst : false,
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId), active, yarn, fabric,
                 accessoryGroup,
@@ -197,6 +205,7 @@ async function create(body) {
                         data: shippingAddress?.map((temp) => {
                             let newItem = {}
                             newItem["address"] = temp["address"] ? temp["address"] : null;
+                            newItem["aliasName"] = temp["aliasName"] ? temp["aliasName"] : null;
                             return newItem
                         })
                     } : undefined
@@ -226,11 +235,11 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails,
-        cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList,payTermDay,
-        cinNo, faxNo, email, website,mail, shippingAddress, contactDetails, isContactOnly = false,isGy,isDy,isAcc,
+        cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList, payTermDay,
+        cinNo, faxNo, email, website, mail, shippingAddress, contactDetails, isContactOnly = false, isGy, isDy, isAcc,
         gstNo, isLeadForm = false,
         companyId, active, userId } = await body
-    console.log(mail,"payTermDay for sql")
+
     let data;
 
     const dataFound = await prisma.party.findUnique({
@@ -248,7 +257,8 @@ async function update(id, body) {
             ShippingAddress: {
                 select: {
                     id: true,
-                    address: true
+                    address: true,
+                    aliasName: true
                 }
             },
             ContactDetails: {
@@ -264,7 +274,7 @@ async function update(id, body) {
 
         }
     })
-    console.log("dataFound", dataFound);
+
     if (!dataFound) return NoRecordFound("party");
 
 
@@ -276,11 +286,11 @@ async function update(id, body) {
                     id: parseInt(id),
                 },
                 data: {
-                    name, code, aliasName, displayName, address, isSupplier, isBuyer,payTermDay,
+                    name, code, aliasName, displayName, address, isSupplier, isBuyer, payTermDay,
                     cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website, isIgst:igst ?igst:false,
-                    gstNo, yarn, fabric,mailId: mail,
+                    cinNo, faxNo, email, website, isIgst: igst ? igst : false,
+                    gstNo, yarn, fabric, mailId: mail,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,
                     accessoryGroup,
@@ -300,7 +310,7 @@ async function update(id, body) {
 
 
             })
-     })
+        })
     }
     else {
 
@@ -310,12 +320,12 @@ async function update(id, body) {
                     id: parseInt(id),
                 },
                 data: {
-                    name, code, aliasName, displayName, address, isBuyer, isSupplier, isIgst:igst ?igst:false, isClient,
-                    cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric,isAcc,isDy,isGy,
+                    name, code, aliasName, displayName, address, isBuyer, isSupplier, isIgst: igst ? igst : false, isClient,
+                    cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric, isAcc, isDy, isGy,
                     pincode: pincode ? parseInt(pincode) : undefined,
                     panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website,payTermDay,
-                    gstNo,mailId:mail,
+                    cinNo, faxNo, email, website, payTermDay,
+                    gstNo, mailId: mail,
                     createdById: userId ? parseInt(userId) : undefined,
                     companyId: companyId ? parseInt(companyId) : undefined, active,
                     accessoryGroup,
@@ -368,7 +378,7 @@ async function update(id, body) {
                             data: {
                                 supplierId: parseInt(data?.id),
                                 address: h.address,
-
+                                aliasName: h.aliasName ? h.aliasName : null
                             }
                         })
                     }
@@ -379,6 +389,7 @@ async function update(id, body) {
                             data: {
                                 supplierId: parseInt(data?.id),
                                 address: h.address,
+                                aliasName: h.aliasName ? h.aliasName : null
                             }
                         })
 

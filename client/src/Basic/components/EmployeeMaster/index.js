@@ -92,7 +92,7 @@ export default function Form() {
     const [newForm, setNewForm] = useState(false);
 
 
-    const [formHeading, setFormHeading] = ("");
+
 
 
 
@@ -121,7 +121,7 @@ export default function Form() {
 
 
 
-    const isCurrentEmployeeDoctor = (employeeCategory) => employeeCategoryList.data.find((cat) => parseInt(cat.id) === parseInt(employeeCategory))?.name?.toUpperCase() === "DOCTOR";
+    const isCurrentEmployeeDoctor = (employeeCategory) => employeeCategoryList?.data?.find((cat) => parseInt(cat.id) === parseInt(employeeCategory))?.name?.toUpperCase() === "DOCTOR";
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -237,7 +237,8 @@ export default function Form() {
     const validateData = (data) => {
         return data.name && data.joiningDate && data.fatherName && data.dob && data.gender && data.maritalStatus && data.bloodGroup &&
             data.panNo && data.email && data.mobile && data.degree && data.specialization &&
-            data.localAddress && data.localCity && data.localPincode && data.employeeCategoryId && (isCurrentEmployeeDoctor(employeeCategory) ? data.department && data.chamberNo : true)
+            data.localAddress && data.localCity && data.localPincode && data.employeeCategoryId
+
 
     }
 
@@ -451,8 +452,8 @@ export default function Form() {
     };
 
 
-    
- 
+
+
     // if (!countriesList?.data || !employeeCategoryList?.data || !cityList?.data) return <Loader />
 
     return (
@@ -619,16 +620,13 @@ export default function Form() {
                                             <div className='flex'>
 
                                                 <div className="w-[100%]">
-                                                    {/* <div className={`text-xs font-semibold my-2 ${active === true ? "text-green-500" : "text-red-500"}`}>
-                                                        {regNo} */}
-                                                    {/* {id ? <DisabledInput name="Employee Id" type={"text"} value={regNo} /> : <DisabledInput visibility={''} name="Employee Id" type={"text"} value={regNo} />} */}
-                                                    {/* </div> */}
+
                                                     <div className="w-[100%] mb-3">
                                                         <TextInput ref={input1Ref} name="Name" width={"md:w-[100%]"} type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} onKeyDown={(e) => handleKeyNext(e, input2Ref)} />
                                                         {errors.name && <span className="text-red-500 text-[10px]">{errors.name}</span>}
                                                     </div>
                                                     <div className='w-[100%]  mb-3'>
-                                                        <DropdownInput ref={input2Ref} name="Employee Category" width={""} options={dropDownListObject(id ? employeeCategoryList.data : employeeCategoryList.data.filter(item => item.active), "name", "id")} value={employeeCategory} setValue={(value) => { setEmployeeCategory(value); if (!isCurrentEmployeeDoctor(value)) { setDepartment("") }; setChamberNo(""); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} onKeyDown={(e) => handleKeyNext(e, input3Ref)} />
+                                                        <DropdownInput ref={input2Ref} name="Employee Category" width={""} options={dropDownListObject(id ? employeeCategoryList?.data : employeeCategoryList?.data.filter(item => item.active), "name", "id")} value={employeeCategory} setValue={(value) => { setEmployeeCategory(value) }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} onKeyDown={(e) => handleKeyNext(e, input3Ref)} />
                                                         {(branchPrefixCategory === "Specific")
                                                             ?
                                                             <DropdownInput name="Employee Type" options={employeeType} value={permanent} setValue={setPermanent} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
@@ -640,13 +638,7 @@ export default function Form() {
                                                 </div>
 
                                             </div>
-                                            <div className='flex justify-between w-full'>
 
-                                                <div className="w-[100%] mb-3">
-                                                    <TextInput ref={input3Ref} name="Chamber no" type="text" value={chamberNo} setValue={setChamberNo} readOnly={readOnly} required={isCurrentEmployeeDoctor(employeeCategory)} disabled={(childRecord.current > 0)} onKeyDown={(e) => handleKeyNext(e, null)} />
-                                                </div>
-
-                                            </div>
 
                                             <div className="w-[100%] mb-3">
                                                 <DropdownInput name="Department" options={dropDownListObject(id ? departmentList.data : departmentList.data.filter(item => item.active), "name", "id")} value={department} setValue={setDepartment} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
@@ -757,13 +749,13 @@ export default function Form() {
                                         <div className="mb-3">
                                             <TextArea name="Permanent Address" rows={'2'} value={permAddress} setValue={setPermAddress} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                         </div>
-                                        <div className="mb-1 flex flex-wrap w-full">
+                                        <div className="mb-1 flex flex-wrap gap-x-3 w-full">
                                             <div className={`w-[30%] mb-3`} >
                                                 <TextInput name="Pincode"
                                                     type="number" value={permPincode} setValue={setPermPincode} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
                                             <div className={`w-[48%] ms-4 mb-3`}>
-                                                <DropdownInput name="City/State Name" options={dropDownListMergedObject(id ? cityList.data : cityList.data.filter(item => item.active), "name", "id")} value={permCity} setValue={setPermCity} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                <DropdownInput name="City/State Name" options={dropDownListMergedObject(id ? cityList?.data : cityList?.data?.filter(item => item.active), "name", "id")} value={permCity} setValue={setPermCity} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
 
                                         </div>
@@ -777,7 +769,7 @@ export default function Form() {
                                             <TextArea name="Local Address" value={localAddress} rows={'2'} setValue={setlocalAddress} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             {errors.localAddress && <span className="text-red-500 text-[10px]">{errors.localAddress}</span>}
                                         </div>
-                                        <div className="mb-1 flex flex-wrap w-full">
+                                        <div className="mb-1 flex flex-wrap gap-x-3 w-full">
                                             <div className={`w-[30%] mb-3`}>
                                                 <TextInput name="Pincode" type="number" value={localPincode} setValue={setLocalPincode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                 {errors.localPincode && <span className="text-red-500 text-[10px]">{errors.localPincode}</span>}

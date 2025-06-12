@@ -361,81 +361,80 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   ]
   return (
     <>
-    {/* Toggle Button */}
-    <div
-  onClick={() => {
-    if (isOpen && isMainDropdownOpen) {
-      setIsOpen(false);
-      setIsMainDropdownOpen(false);
-    }
-    setIsOpen(!isOpen);
-  }}
-  className="fixed z-[99] top-[28.5%] left-0 bg-gradient-to-r from-gray-700 to-gray-600 text-white w-8 h-12 flex items-center justify-center rounded-r-xl shadow-xl cursor-pointer transition-all duration-300 hover:from-gray-800 hover:to-gray-700 hover:scale-105"
->
-  {isOpen ? (
-    <ArrowLeftCircle size={22} className="text-white transition-all duration-300" />
-  ) : (
-    <ArrowRightCircle size={22} className="text-white transition-all duration-300" />
-  )}
-</div>
-
-
-    {isOpen && (
+      {/* Toggle Button */}
       <div
-        className={`fixed z-[999] top-[16.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${
-          isMainDropdownOpen ? "h-[450px]" : "h-auto"
-        } rounded-lg py-4 flex flex-col items-center shadow-xl transition-all duration-300`}
+        onClick={() => {
+          if (isOpen && isMainDropdownOpen) {
+            setIsOpen(false);
+            setIsMainDropdownOpen(false);
+          }
+          setIsOpen(!isOpen);
+        }}
+        className="fixed z-[99] top-[28.5%] left-0 bg-gradient-to-r from-gray-700 to-gray-600 text-white w-8 h-12 flex items-center justify-center rounded-r-xl shadow-xl cursor-pointer transition-all duration-300 hover:from-gray-800 hover:to-gray-700 hover:scale-105"
       >
-        {/* Dashboard Link */}
+        {isOpen ? (
+          <ArrowLeftCircle size={22} className="text-white transition-all duration-300" />
+        ) : (
+          <ArrowRightCircle size={22} className="text-white transition-all duration-300" />
+        )}
+      </div>
+
+
+      {isOpen && (
         <div
-          className="text-white hover:text-gray-300 cursor-pointer mb-4 flex flex-col items-center"
-          onClick={() => navigate("/dashboard")}
+          className={`fixed z-[999] top-[16.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${isMainDropdownOpen ? "h-[450px]" : "h-auto"
+            } rounded-lg py-4 flex flex-col items-center shadow-xl transition-all duration-300`}
         >
-          <LayoutDashboard size={20} />
-          <span className="text-[11px] text-center mt-1">Dashboard</span>
-        </div>
-  
-        {/* Main Menu Items */}
-        {headers.map((ele, index) => (
+          {/* Dashboard Link */}
           <div
-            key={index}
-            onClick={() => {
-              setIsMainDropdownOpen(true);
-              setName(ele.heading);
-            }}
-            className="hover:text-gray-300 cursor-pointer my-3 flex flex-col items-center transition"
+            className="text-white hover:text-gray-300 cursor-pointer mb-4 flex flex-col items-center"
+            onClick={() => navigate("/dashboard")}
           >
-            {ele.logo}
-            <span className="text-[11px] text-center mt-1">{ele.heading}</span>
+            <LayoutDashboard size={20} />
+            <span className="text-[11px] text-center mt-1">Dashboard</span>
           </div>
-        ))}
+
+          {/* Main Menu Items */}
+          {headers.map((ele, index) => (
+            <div
+              key={index}
+              onClick={() => {
+                setIsMainDropdownOpen(true);
+                setName(ele.heading);
+              }}
+              className="hover:text-gray-300 cursor-pointer my-3 flex flex-col items-center transition"
+            >
+              {ele.logo}
+              <span className="text-[11px] text-center mt-1">{ele.heading}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="my-0 ">
+
+        <ul className='my-0 flex flex-col '>
+
+
+          {headers.map((ele, index) => {
+            return (
+              <div key={index}>
+                <li >
+                  {name === ele.heading && <SidebarComponent setIsOpen={setIsOpen} heading={ele.heading} logo={ele.logo} groups={ele.groups} pages={ele.pages} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />}
+
+                  {/* <a className='relative group' href={ele.path} type="button" >{ele.logo}</a> */}
+                  {/* Tooltip */}
+                </li>
+              </div>
+            )
+          })}
+
+        </ul>
+
       </div>
-    )}
-  
-  <div className="my-0 ">
 
-<ul className='my-0 flex flex-col '>
+    </>
 
-
-  {headers.map((ele, index) => {
-    return (
-      <div key={index}>
-        <li >
-          {name === ele.heading && <SidebarComponent setIsOpen={setIsOpen} heading={ele.heading} logo={ele.logo} groups={ele.groups} pages={ele.pages} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />}
-
-          {/* <a className='relative group' href={ele.path} type="button" >{ele.logo}</a> */}
-          {/* Tooltip */}
-        </li>
-      </div>
-    )
-  })}
-
-</ul>
-
-</div>
-  
-  </>
-  
   )
 }
 

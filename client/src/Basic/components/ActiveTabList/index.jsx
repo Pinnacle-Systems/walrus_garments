@@ -52,6 +52,7 @@ const YarnTypeMaster = lazy(() => import("../../../Shocks/YarnTypeMaster"));
 const ContentMaster = lazy(() => import("../../../Shocks/ContentMaster"));
 const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster"));
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
+const Sample = lazy(() => import("../../../Uniform/Components/SampleFollow"));
 const Fabric = lazy(() => import("../../../Uniform/Components/SampleDashboard/Fabric"));
 
 const ActiveTabList = () => {
@@ -107,7 +108,8 @@ const ActiveTabList = () => {
     "MEASUREMENT MASTER": <MeasurementMaster />,
     "FABRIC MASTER": <FabricMaster />,
     "FIBER CONTENT MASTER": <FiberContent />,
-    "YARN NEEDLE MASTER": <YarnNeedle />
+    "YARN NEEDLE MASTER": <YarnNeedle />,
+    "SAMPLE ENTRY": <Sample />
 
   };
 

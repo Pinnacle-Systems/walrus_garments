@@ -2750,6 +2750,7 @@ model OrderDetails {
   noOfStripes     String?
   socksTypeId     Int?
   socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
+  filePath        String?        @db.LongText
 }
 
 model Machine {
@@ -2768,6 +2769,7 @@ model ShippingAddress {
   supplier   Party?  @relation(fields: [supplierId], references: [id])
   supplierId Int?
   address    String? @db.LongText
+  aliasName  String? @db.LongText
 }
 
 model ContactDetails {

@@ -49,11 +49,12 @@ export const MultiSelectDropdown = ({
 }) => {
   return (
     <div
-      className={`m-1  md:grid-cols-3 items-center z-0 data ${className}`}
+      className={`md:grid-cols-3 items-center z-0  ${className}`}
     >
-      <label className={`md:text-start flex ${labelName}`}>{name}</label>
+      <label className={`text-xs text-slate-800 group-hover:text-blue-600 md:text-start flex mb-1 ${labelName}`}>{name}</label>
       <MultiSelect
-        className={`focus:outline-none  border-gray-300 rounded text-black  ${inputClass}`}
+        className={`focus:outline-none   rounded text-black text-xs border border-slate-300 ${inputClass}`}
+        // className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
         options={options}
         value={selected}
         onChange={readOnly ? () => { } : setSelected}
@@ -77,6 +78,7 @@ export const MultiSelectDropdown = ({
 
 export const TextInput = ({
   name,
+
   type,
   value,
   setValue,
@@ -93,7 +95,7 @@ export const TextInput = ({
       <div className="group input-group  text-sm">
         <label
           htmlFor="title"
-          className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
+          className="input-label group-hover:text-blue-600  font-weight: 100 text-xs mb-1"
         >
           <span className="flex items-center gap-2  font-weight: 100">
             {required ? <RequiredLabel name={name} /> : `${name}`}
@@ -103,9 +105,9 @@ export const TextInput = ({
           id={name}
           variant="standard"
           name={`${name}`}
-          className={` text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400 ${className}`}
-          // placeholder={`${name}`}
-          // className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
+          className="w-full px-2 py-1 h-7 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
+          // className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm text-black shadow-sm w-full h-7 ${className}`}
+
           sx={{
             "& .MuiInputBase-input": { fontSize: "12px" },
             "& .MuiInputBase-input.Mui-disabled": {
@@ -165,38 +167,24 @@ export const LongTextInput = ({
   );
 };
 
-export const DisabledInput = ({
-  name,
-  type = "text",
-  value,
-  tabIndex = null,
-  readOnly = true,
-  required = false,
-}) => (
-  <div className="flex flex-col w-full my-1 px-1">
-    <label htmlFor={name} className="text-xs text-gray-700 font-medium mb-1">
-      {required ? <RequiredLabel name={name} /> : name}
-    </label>
-    <input
-      id={name}
-      name={name}
-      type={type}
-      value={value}
-      variant="standard"
-      disabled={readOnly}
-      required={required}
-      tabIndex={tabIndex || undefined}
-      className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1 py-1 focus:outline-none focus:border-blue-400"
-      sx={{
-        "& .MuiInputBase-input": { fontSize: "12px" },
-        "& .MuiInputBase-input.Mui-disabled": {
-          color: "#333",
-          WebkitTextFillColor: "#333",
-        },
-      }}
-    />
-  </div>
-);
+export const DisabledInput = ({ name, type, value, className = "", textClassName = "", tabIndex = null }) => {
+  return (
+    <div className={`flex flex-col mb-4 ${className}`}>
+      {/* <label className={`text-gray-900 text-sm mb-1 ${className}`}>{name}</label> */}
+      <label
+        htmlFor="title"
+        className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
+      >{name}</label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-xs text-black shadow-sm w-full h-7 ${textClassName}`}
+        value={value}
+        disabled
+      />
+    </div>
+  )
+}
 
 
 export const FloatingLabelInput = ({
@@ -325,10 +313,15 @@ export const DropdownInput = ({
   };
 
   return (
-    <div className="flex flex-col w-full my-2 px-1">
-      <label className={`input-label group-hover:text-blue-600  font-weight: 100 text-xs`}>
+    <div className={`flex flex-col mb-4 `}>
+      {/* <label className={`input-label group-hover:text-blue-600  font-weight: 100 text-xs`}>
         {required ? <RequiredLabel name={name} /> : name}
-      </label>
+      </label> */}
+      <label
+        htmlFor="title"
+        className="input-label group-hover:text-blue-600  font-weight: 100 text-xs mb-1"
+      >  {required ? <RequiredLabel name={name} /> : name}</label>
+
       <select
         onBlur={onBlur}
         autoFocus={autoFocus}
@@ -339,7 +332,10 @@ export const DropdownInput = ({
         name={name}
         onChange={handleOnChange}
         disabled={readOnly || disabled}
-        className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400"
+        // className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm text-black shadow-sm w-full h-7 `}
+        className="w-full px-2 py-1 h-7 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
+
+      // className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400"
       >
         {clear && (
           <option value="" disabled>
@@ -604,10 +600,19 @@ export const DateInput = ({
   inputClass = "",
   inputHead = "",
 }) => (
-  <div className="flex flex-col w-28 my-1 px-1">
-    <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
+  <div className={`flex flex-col mb-4`}>
+    {/* <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
       {required ? <RequiredLabel name={name} /> : name}
-    </label>
+    </label> */}
+
+
+    <label
+      htmlFor="title"
+      className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
+    > {required ? <RequiredLabel name={name} /> : name}</label>
+
+
+
     <input
       id={name}
       name={name}
@@ -621,7 +626,8 @@ export const DateInput = ({
       disabled={readOnly || disabled}
       tabIndex={tabIndex || undefined}
       readOnly={readOnly}
-      className={`text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400 ${inputClass}`}
+      className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm  shadow-sm w-full h-7 ${inputClass}`}
+      // className={`text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400 ${inputClass}`}
       sx={{
         "& .MuiInputBase-input": { fontSize: "12px" },
         "& .MuiInputBase-input.Mui-disabled": {

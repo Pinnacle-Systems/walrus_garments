@@ -68,7 +68,7 @@ const OrderApi = createApi({
         }),
         updateOrder: builder.mutation({
             query: (payload) => {
-                const { id, ...body } = payload;
+                const { id, body } = payload;
                 return {
                     url: `${ORDER_API}/${id}`,
                     method: "PUT",

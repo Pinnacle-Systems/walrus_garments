@@ -11,7 +11,6 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
     const imageFormatter = () => {
         if (picture) {
             if (typeof picture === "object") {
-                console.log("object", URL.createObjectURL(picture))
                 return URL.createObjectURL(picture);
             } else {
                 return picture;

@@ -13,6 +13,7 @@ import { TablePagination } from '@mui/material';
 const FormReport = ({
     heading,
     onClick,
+
 }) => {
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
@@ -115,11 +116,7 @@ const FormReport = ({
                                     />
                                 </th>
 
-                                <th
-                                    className="border-2  top-0 stick-bg"
-                                >
-                                    <label>No of Set</label>
-                                </th>
+
                                 <th
                                     className="border-2  top-0 stick-bg"
                                 >
@@ -155,7 +152,7 @@ const FormReport = ({
                                         <td className='py-1'> {dataObj.docId}</td>
                                         <td className='py-1'>{dataObj?.docDate} </td>
                                         <td className='py-1'>{dataObj?.Party?.name}</td>
-                                        <td className='py-1'>{dataObj?.noOfSet}</td>
+                                        {/* <td className='py-1'>{dataObj?.noOfSet}</td> */}
                                         <td className='py-1'>
                                             {dataObj?.validDate ?
                                                 new Date(dataObj.validDate).toISOString().split('T')[0] :

@@ -56,7 +56,7 @@ const Mastertable = ({
 
     const currentData = data?.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
     return (
-        <div className="row w-full mx-auto">
+        <div className="row w-full mx-auto ">
             <div className="text-xs col-12 px-0 bg-light bg-opacity-15 rounded-lg border shadow-md">
 
                 <div className="flex justify-between mx-3 items-center py-1">

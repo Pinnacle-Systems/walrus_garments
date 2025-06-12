@@ -101,37 +101,37 @@ const MastersForm = ({
   };
 
   return (
-    <div className="p-4 bg-gray-50">
-      <div className="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-sm">
-      
-        <div className="bg-indigo-600 px-4 py-2">
+    <div className="p-4  bg-[#f1f1f0] ">
+      <div className="w-full max-w-6xl mx-auto  rounded-lg shadow-sm">
+
+        <div className="bg-[#f1f1f0] px-4 py-2">
           {model && (
-            <h4 className="text-lg font-semibold text-white">
+            <h4 className="text-lg font-semibold text-slate-800">
               {model}
             </h4>
           )}
         </div>
-        
+
         {/* Content Section - Reduced padding */}
         <div className="p-4">
           <div className="space-y-4">
             {children}
           </div>
-          
+
           {/* Action Buttons - More compact */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex flex-wrap justify-between items-center gap-3">
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap justify-between items-center gap-2">
               <div className="flex gap-2">
-                <CloseButton
+                {/* <CloseButton
                   onClick={() => {
                     onClose();
                     emptyErrors();
                   }}
                   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors duration-200 text-sm"
-                />
+                /> */}
               </div>
-              
-              <div className="flex flex-wrap gap-2">
+
+              <div className="flex flex-wrap gap-x-2 ">
                 {!readOnly ? (
                   <>
                     <SaveButton
