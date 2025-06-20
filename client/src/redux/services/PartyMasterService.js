@@ -53,6 +53,14 @@ const partyMasterApi = createApi({
       }),
       invalidatesTags: ["Party"],
     }),
+    addPartykyc: builder.mutation({
+      query: (payload) => ({
+        url: `${PARTY_API}/kycForm`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Party"],
+    }),
     upload: builder.mutation({
       query: (payload) => {
         const { id, body } = payload;
@@ -81,6 +89,13 @@ const partyMasterApi = createApi({
       }),
       invalidatesTags: ["Party"],
     }),
+    deletePartyBranch: builder.mutation({
+      query: (partyBranchId) => ({
+        url: `${PARTY_API}/${partyBranchId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Party"],
+    }),
   }),
 });
 
@@ -88,8 +103,10 @@ export const {
   useGetPartyQuery,
   useGetPartyByIdQuery,
   useAddPartyMutation,
+  useAddPartykycMutation,
   useUpdatePartyMutation,
   useDeletePartyMutation,
+  useDeletePartyBranchMutation,
   useUploadMutation,
 } = partyMasterApi;
 

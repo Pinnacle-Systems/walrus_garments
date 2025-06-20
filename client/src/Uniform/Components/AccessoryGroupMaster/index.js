@@ -12,7 +12,9 @@ import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
 import { TextInput, CheckBox } from "../../../Inputs";
 import ReportTemplate from '../../../Basic/components/ReportTemplate'
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setOpenPartyModal } from "../../../redux/features/openModel";
+import { push } from "../../../redux/features/opentabs";
 
 const MODEL = "Accessory Group Master";
 
@@ -28,6 +30,20 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
     const dispatch = useDispatch();
+     const openPartyModal = useSelector((state) => state.party.openPartyModal);
+      const lastTapName =  useSelector((state)=>state.party.lastTab)
+    
+      console.log(lastTapName,"lastTapName")
+    const activeTab = useSelector((state) =>
+        state.openTabs.tabs.find((tab) => tab.active).name
+      );
+      console.log(activeTab, "activeTab")
+      useEffect(() => {
+        if (openPartyModal) {
+          setId("");
+          setForm(true);
+        }
+      }, [openPartyModal]);
 
 
     const params = {
@@ -71,7 +87,7 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text,exit = false) => {
         try {
             let returnData = await callback(data).unwrap();
             setId("")
@@ -81,6 +97,16 @@ export default function Form() {
                 type: `AccessoryMaster/invalidateTags`,
                 payload: ['AccessoryMaster'],
             });
+             if(exit){
+                    setForm(false)
+                  }
+                  if(exit){
+                    if (openPartyModal === true && lastTapName) {
+                      dispatch(push({ name: lastTapName }));
+                    }
+                    
+                       dispatch(setOpenPartyModal(false));
+                  }
         } catch (error) {
             console.log("handle");
         }
@@ -102,6 +128,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
+    const saveExitData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+           if (id) {
+          handleSubmitCustom(updateData, data, "Updated", true);
+        } else {
+          console.log("hit");
+          handleSubmitCustom(addData, data, "Added",true);
+        }
+      };
 
     const deleteData = async () => {
         if (id) {

@@ -5,12 +5,13 @@ export { default as Loader } from "./Loader";
 export { default as BranchAndFinyearForm } from "./BranchAndFinyear"
 export { default as LogoutConfirm } from "./LogoutConfirm"
 export { default as CompanyMaster } from "./CompanyMaster";
-export { default as PurchaseOrder} from "../../Uniform/Components/PurchaseOrder"
+export { default as PurchaseOrder } from "../../Uniform/Components/PurchaseOrder";
 export { default as StateMaster } from "./StateMaster";
 export { default as CountryMaster } from "./CountryMaster";
 export { default as CurrencyMaster } from "./CurrencyMaster";
 export { default as ColorMaster } from "./ColorMaster";
 export { default as Dashboard } from "./Dashboard"
+export {default as KycForm} from "./KycForm"
 export { default as PageMaster } from "./PageMaster";
 export { default as CityMaster } from "./CityMaster";
 export { default as DepartmentMaster } from "./DepartmentMaster";
@@ -34,5 +35,7 @@ export { default as SizeMaster } from "./SizeMaster";
 export { default as LocationMaster } from "./LocationMaster";
 export { default as MachineMaster } from "./MachineMaster";
 export { default as GridTable } from "./GridTable";
+export { default as UomMaster } from "./Uommaster";
+export { default as MeasurementMaster } from "./MeasurementMaster";
 
 

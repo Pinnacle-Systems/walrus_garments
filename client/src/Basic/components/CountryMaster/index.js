@@ -51,7 +51,8 @@ export default function Form() {
 
       setName("");
       setCode("");
-      setActive(id ? (data?.active ?? true) : false);
+            setActive(id ? (data?.active ) : true);
+
 
       return;
     } else {
@@ -179,7 +180,7 @@ export default function Form() {
           } />
 
         <div>
-          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[45%]"} onClose={() => { setForm(false); setErrors({}); }}>
             <MasterForm
               onNew={onNew}
               onClose={() => {

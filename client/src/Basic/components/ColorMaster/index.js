@@ -32,6 +32,9 @@ export default function Form() {
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
+
+    console.log(params, "params")
+
     const { data: allData, isLoading, isFetching } = useGetColorMasterQuery({ params, searchParams: searchValue });
     const {
         data: singleData,
@@ -51,7 +54,8 @@ export default function Form() {
                 setName("");
                 setPantone("");
                 setIsGrey(false);
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");
@@ -68,10 +72,11 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        name, active}
+        name, active
+    }
 
     const validateData = (data) => {
-        if (data.name ) {
+        if (data.name) {
             return true;
         }
         return false;
@@ -142,9 +147,9 @@ export default function Form() {
     }
 
     const tableHeaders = [
-        "Pantone", "Name", "Status", "color"
+        "Name", "Status",
     ]
-    const tableDataNames = ["dataObj.pantone", "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE', "dataObj.color"]
+    const tableDataNames = ["dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE']
     return (
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
@@ -194,11 +199,11 @@ export default function Form() {
                                             <div className="mb-3 w-[48%]">
                                                 <TextInput name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
-                                         
-                                            </div>
+
+                                        </div>
                                         <div className={`h-20 w-32 `} style={{ backgroundColor: pantone }}></div>
                                     </div>
-                                   
+
                                     <div className='mb-5'>
                                         <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                     </div>

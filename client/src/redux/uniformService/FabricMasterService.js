@@ -8,7 +8,7 @@ const FabricMasterApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["Party"],
+    tagTypes: ["Fabric"],
     endpoints: (builder) => ({
         getFabricMaster: builder.query({
             query: ({ params, searchParams }) => {
@@ -31,7 +31,7 @@ const FabricMasterApi = createApi({
                     params
                 };
             },
-            providesTags: ["Party"],
+            providesTags: ["Fabric"],
         }),
         getFabricMasterById: builder.query({
             query: (id) => {
@@ -43,7 +43,7 @@ const FabricMasterApi = createApi({
                     },
                 };
             },
-            providesTags: ["Party"],
+            providesTags: ["Fabric"],
         }),
         addFabricMaster: builder.mutation({
             query: (payload) => ({
@@ -51,7 +51,7 @@ const FabricMasterApi = createApi({
                 method: "POST",
                 body: payload,
             }),
-            invalidatesTags: ["Party"],
+            invalidatesTags: ["Fabric"],
         }),
         updateFabricMaster: builder.mutation({
             query: ({ id, body }) => {
@@ -61,14 +61,14 @@ const FabricMasterApi = createApi({
                     body
                 };
             },
-            invalidatesTags: ["Party"],
+            invalidatesTags: ["Fabric"],
         }),
         deleteFabricMaster: builder.mutation({
             query: (id) => ({
                 url: `${FABRIC_API}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["Party"],
+            invalidatesTags: ["Fabric"],
         }),
     }),
 });

@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { openTabs } from "./features";
+import { openTabs, party } from "./features";
 import {
   countryMasterApi, pageMasterApi, stateMasterApi,
   cityMasterApi, departmentMasterApi, employeeCategoryMasterApi,
@@ -12,11 +12,13 @@ import {
   invoiceApi,
   OrderImportApi,
   GaugeApi,
+  certificateApi,
   PaytermMasterApi,
   TaxTermMasterApi,
   TaxTemplateApi,
   TermsAndConditionsMasterApi,
   CurrencyMasterApi,
+  emailkycUpdateApi ,
   machineMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
@@ -33,7 +35,9 @@ import {
   ProductionDeliveryApi,
   ProductionReceiptApi,
   DispatchedApi,
-  GeneralPurchaseApi, RawMaterialOpeningStockApi,SocksMaterialApi
+  GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi, UnitOfMeasurementApi,
+  MeasurementMasterApi,
+  FiberContentMasterApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -46,11 +50,10 @@ import CuttingReceiptApi from "./uniformService/CuttingReceiptServices";
 import sizeTemplateApi from "./uniformService/SizeTemplateMasterServices";
 import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
-
-
+import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 
 const commonReducers = {
-  openTabs,
+  openTabs, party,
   countryMaster: countryMasterApi.reducer,
   pageMaster: pageMasterApi.reducer,
   stateMaster: stateMasterApi.reducer,
@@ -58,6 +61,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
+  certificateMaster:certificateApi.reducer,
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
@@ -86,7 +90,7 @@ const commonReducers = {
   sizeMaster: SizeMasterApi.reducer,
   colorMaster: ColorMasterApi.reducer,
   fabricMaster: FabricMasterApi.reducer,
-
+  unitOfMeasurementMaster: UnitOfMeasurementApi.reducer,
 
   panelMaster: PanelMasterApi.reducer,
   gauge: GaugeApi.reducer,
@@ -96,6 +100,7 @@ const commonReducers = {
   itemTypeMaster: ItemTypeMasterApi.reducer,
   styleTypeMaster: StyleTypeMasterApi.reducer,
   [OrderApi.reducerPath]: OrderApi.reducer,
+  [emailkycUpdateApi.reducerPath] : emailkycUpdateApi.reducer,
   [CuttingOrderApi.reducerPath]: CuttingOrderApi.reducer,
   design: DesignApi.reducer,
   loopLength: LoopLengthApi.reducer,
@@ -130,16 +135,23 @@ const commonReducers = {
   contentMaster: ContentMasterApi.reducer,
   countsMaster: CountsMasterApi.reducer,
   machineMaster: machineMasterApi.reducer,
-  [SocksMaterialApi.reducerPath]:SocksMaterialApi.reducer,
-  [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer
+  [SocksMaterialApi.reducerPath]: SocksMaterialApi.reducer,
+  socksType: SocksTypeApi.reducer,
+  [ProductionReceiptApi.reducerPath]: ProductionReceiptApi.reducer,
+  measurementMaster: MeasurementMasterApi.reducer,
+  fiberContentMaster: FiberContentMasterApi.reducer,
+  YarnNeedleMaster: YarnNeedleMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
+UnitOfMeasurementApi.middleware,
 stateMasterApi.middleware,
 cityMasterApi.middleware,
 departmentMasterApi.middleware,
+certificateApi.middleware,
 employeeCategoryMasterApi.middleware,
+emailkycUpdateApi.middleware,
 finYearMasterApi.middleware,
 rolesMasterApi.middleware,
 userMasterApi.middleware,
@@ -213,7 +225,11 @@ CurrencyMasterApi.middleware,
 sizeTemplateApi.middleware,
 ContentMasterApi.middleware,
 CountsMasterApi.middleware,
-machineMasterApi.middleware
+machineMasterApi.middleware,
+SocksTypeApi.middleware,
+MeasurementMasterApi.middleware,
+FiberContentMasterApi.middleware,
+YarnNeedleMasterApi.middleware,
 ];
 
 
@@ -230,3 +246,5 @@ const store = configureStore({
 });
 
 export default store;
+
+

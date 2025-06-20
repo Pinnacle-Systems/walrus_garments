@@ -51,7 +51,8 @@ export default function Form() {
                 setReadOnly(false);
                 setTo(data?.to || "");
                 setFrom(data?.from || "");
-                setActive(id ? (data?.active ?? true) : false);
+                setActive(id ? (data?.active) : true);
+
                 setCode("")
             } else {
                 setReadOnly(true);
@@ -154,8 +155,10 @@ export default function Form() {
         setForm(true);
     }
     const tableHeaders = ["S.NO", "from", "to", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-    const tableDataNames = ["index+1", "moment.utc(dataObj.from).format('DD-MM-YYYY')",
-        "moment.utc(dataObj.to).format('DD-MM-YYYY')", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+    const tableDataNames = ["index+1", "dataObj.from",
+        "dataObj.to", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+    // const tableDataNames = ["index+1", "moment.utc(dataObj.from).format('DD-MM-YYYY')",
+    //     "moment.utc(dataObj.to).format('DD-MM-YYYY')", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
     return (
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
@@ -178,7 +181,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {

@@ -13,7 +13,8 @@ import { TextInput, Modal, ToggleButton } from "../../../Inputs";
 import MastersForm from "../MastersForm/MastersForm";
 import Mastertable from "../MasterTable/Mastertable";
 import { statusDropdown } from "../../../Utils/DropdownData";
-
+import Swal from "sweetalert2";
+import "../../../../src/swapStyle.css";
 const MODEL = "Pay Term Master";
 
 export default function Form() {
@@ -27,7 +28,7 @@ export default function Form() {
     const [days, setdays] = useState("");
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
-
+    const [aliasName, setAliasName] = useState("")
 
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
@@ -56,13 +57,15 @@ export default function Form() {
                 setReadOnly(false);
                 setName("");
                 setdays("");
-                setActive(id ? (data?.active ?? true) : false);
+                setActive(id ? (data?.active) : true);
+
                 return
             } else {
                 setReadOnly(true);
                 setName(data?.name ? data.name : "");
                 setdays(data?.days ? data.days : "");
                 setActive(id ? (data?.active ?? false) : true);
+                setAliasName(data?.aliasName ? data?.aliasName : "")
             }
         },
         [id]
@@ -73,7 +76,7 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, days, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, aliasName, name, days, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
@@ -87,7 +90,18 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            Swal.fire({
+                title: text + "  " + "Successfully",
+                icon: "success",
+                draggable: true,
+                timer: 1000, // time in milliseconds (2000ms = 2 seconds)
+                showConfirmButton: false, // hides the OK button
+                // timerProgressBar: true, // shows a progress bar
+                didOpen: () => {
+                    Swal.showLoading(); // optional: show loading spinner
+                }
+            });
+            // toast.success(text + "Successfully");
 
         } catch (error) {
             console.log("handle");
@@ -153,6 +167,14 @@ export default function Form() {
         setForm(true);
     }
 
+
+    useEffect(() => {
+        if (id) return
+
+        setAliasName(` ${days} ${" "} ${name} `);
+    }, [name, days])
+
+
     const tableHeaders = [
         "S.NO", "Days", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
     ]
@@ -179,7 +201,7 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[50%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -197,13 +219,17 @@ export default function Form() {
                 >
                     <fieldset className=' rounded mt-2'>
                         <div className=''>
-                            <div className="flex flex-wrap">
-                                <div className='mb-3 w-[48%]'>
+                            <div className="grid grid-cols-3 gap-x-5 ">
+                                <div className='mb-3'>
+                                    <TextInput name="Days" width={'w-[200px]'} type="number" value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                </div>
+                                <div className='mb-3 '>
                                     <TextInput name="Pay Term" width={'w-[200px]'} type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                 </div>
-                                <div className='mb-3 w-[20%] ml-6'>
-                                    <TextInput name="Days" width={'w-[40px]'} type="number" value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                </div>
+
+                                <div className='mb-3 '>
+                                    <TextInput name="AliasName" width={'w-[200px]'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                </div>{console.log(aliasName, "aliasnameee")}
 
                             </div>
 

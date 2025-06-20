@@ -3,6 +3,7 @@ export const CITY_API = "cities";
 export const CURRENCY_API = "currency";
 export const STATE_API = "states";
 export const COUNTRY_API = "countries";
+export const CERTIFICATE_API =  "certificate"
 export const DEPARTMENT_API = "departments";
 export const LOGIN_API = "users/login";
 export const COMPANY_API = "companies";
@@ -18,8 +19,7 @@ export const SIZE_TEMPLATE_API = "sizeTemplate"
 export const CONTENT_API = "content"
 export const PARTY_CATEGORY_API = "partyCategories"
 export const COUNTS_API = "counts"
-
-
+export const UNIT_OF_MEASUREMENT_API = 'uom'
 export const PARTY_API = "party"
 export const PRODUCT_BRAND_API = "productBrand"
 export const PRODUCT_CATEGORY_API = "productCategory"
@@ -83,4 +83,7 @@ export const GENERALPURCHASE_API = "generalpurchase"
 export const RAW_MATERIAL_OPENING_STOCK_API = "rawMaterialOpeningStock"
 export const MACHINE_API = "machine"
 export const SOCKS_MATERIAL_API = "socksMaterial"
-
+export const SOCKS_TYPE_API = "socksType"
+export const MEASUREMENT_API = "measurement"
+export const FIBER_CONTENT_API = "fiberContent"
+export const YARN_NEEDLE_APT = "yarnNeedle"

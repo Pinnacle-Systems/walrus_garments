@@ -68,11 +68,11 @@ export default function Form() {
 
     const syncFormWithDb = useCallback((data) => {
         if (id) setReadOnly(true);
-        // setAliasName(data?.aliasName ? data?.aliasName : "");
+        setAliasName(data?.aliasName ? data?.aliasName : "");
         // setYarnBlendDetails(data?.FabricOnYarnBlend ? data?.FabricOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
         // setFabricTypeId(data?.fabricTypeId ? data?.fabricTypeId : "");
         // setHsn(data?.hsn ? data?.hsn : "");
-        setName(data?.name ? data.name : "");
+        // setName(data?.name ? data.name : "");
         setActive(id ? (data?.active ? data.active : false) : true);
         // setOrganic(data?.organic ? data.organic : false);
     }, [id]);
@@ -86,10 +86,8 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        name,
-
+        aliasName,
         active,
-
         companyId, id, userId
     }
 
@@ -123,7 +121,11 @@ export default function Form() {
 
 
     const validateData = (data) => {
-        return data?.name
+        if (data?.aliasName) {
+            return true;
+        }
+        return false;
+
     }
 
     const handleSubmitCustom = async (callback, data, text) => {
@@ -196,7 +198,7 @@ export default function Form() {
         setForm(true);
     }
     const tableHeaders = ["Name", "Status"]
-    const tableDataNames = ['dataObj.name', 'dataObj.active ? ACTIVE : INACTIVE']
+    const tableDataNames = ['dataObj.aliasName', 'dataObj.active ? ACTIVE : INACTIVE']
 
 
     if (!form)
@@ -244,10 +246,9 @@ export default function Form() {
                                     <legend className='sub-heading'>Fabric Info</legend>
                                     <div className='flex flex-col justify-start gap-3 flex-1'>
                                         <div className="grid grid-cols-2">
-                                            <TextInput name="FabricName" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                            <TextInput name="FabricName" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                                            {/* <DropdownInput name="Fabric Type" options={dropDownListObject(id ? FabricTypeList.data : FabricTypeList.data.filter(item => item.active), "name", "id")} value={fabricTypeId} setValue={(value) => { setFabricTypeId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                            <CheckBox name="Organic" readOnly={readOnly} value={organic} setValue={setOrganic} /> */}
+
                                             <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
                                         </div>
                                         {/* <YarnBlendDetails id={id} params={params} yarnBlend={yarnBlendDetails} setYarnBlend={setYarnBlendDetails} readOnly={readOnly} /> */}

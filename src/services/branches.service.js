@@ -10,10 +10,10 @@ async function get(req) {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         },
-        include:{
-            Employee:{
-                select:{
-                    id:true
+        include: {
+            Employee: {
+                select: {
+                    id: true
                 }
             }
         }
@@ -66,7 +66,7 @@ async function create(body) {
     const { name, code, contactEmail, contactName, contactMobile, companyId, address } = await body
     const data = await prisma.branch.create({
         data: {
-            branchName: name, branchCode: code, contactEmail, contactName, contactMobile: parseInt(contactMobile),address,
+            branchName: name, branchCode: code, contactEmail, contactName, contactMobile: parseInt(contactMobile), address,
             company: {
                 connect: { id: parseInt(companyId) }
             }
@@ -89,7 +89,8 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            branchName: name, branchCode: code, contactEmail, contactName, contactMobile: contactEmail ? parseInt(contactMobile) : undefined, active,
+            branchName: name, branchCode: code, contactEmail, contactName,
+            contactMobile: contactEmail ? parseInt(contactMobile) : undefined, active,
             idPrefix, idSequence, tempPrefix, tempSequence, prefixCategory, address
         },
     })
@@ -112,7 +113,8 @@ async function updateMany(req) {
             },
             data: {
                 branchName: branch.branchName,
-                idPrefix: branch.idPrefix, idSequence: branch.idSequence, tempPrefix: branch.tempPrefix, tempSequence: branch.tempSequence,
+                idPrefix: branch.idPrefix, idSequence: branch.idSequence, tempPrefix: branch.tempPrefix,
+                tempSequence: branch.tempSequence,
                 prefixCategory: branch.prefixCategory
             },
         })

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FabricStockFillGrid from './FabricStockFillGrid';
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty'
+;
 
 
 const StockSelectionFillGrid = ({ storeId, getIssuedPropertyFabric, setRawMaterials, rawMaterials, setFillGrid, styleColors }) => {

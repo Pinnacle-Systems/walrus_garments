@@ -1,26 +1,26 @@
 import React from 'react'
-import { DisabledInput, TextArea, TextInput } from '../../../Inputs'
+import { TextArea } from '../../../Inputs'
 
-const Consolidation = ({ isPurchaseCancel, isRawMaterialSales = null, netAmount = 0, totalQty, vehicleNo, setVehicleNo, remarks, setRemarks, specialInstructions, setSpecialInstructions, readOnly }) => {
-    return (
-        <div className='fixed bottom-5 overflow-auto w-full text-xs bg-gray-50'>
-            <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg w-full border border-gray-600 p-1 overflow-auto flex justify-between'>
-                <legend className='sub-heading'>Consolidation</legend>
-                {/* {!isPurchaseCancel
-                    &&
-                    <>
-                        <TextInput name={"Vehicle No."} value={vehicleNo} setValue={setVehicleNo} readOnly={readOnly} />
-                        <TextArea name={"Special Instructions:"} value={specialInstructions} setValue={setSpecialInstructions} readOnly={readOnly} rows={3} />
-                    </>
-                } */}
-                <TextArea name={"Remarks:"} value={remarks} setValue={setRemarks} readOnly={readOnly} rows={3} cols={96} />
-                {/* {isRawMaterialSales &&
-                    <DisabledInput name={"Net Amount:"} value={parseFloat(netAmount).toFixed(3)} type={"number"} textClassName='text-right' />
-                }
-                <DisabledInput name={"Total Qty"} value={parseFloat(totalQty).toFixed(3)} type={"number"} textClassName='text-right' /> */}
-            </fieldset>
-        </div>
-    )
+const Consolidation = ({
+  remarks,
+  setRemarks,
+  readOnly
+}) => {
+  return (
+    <div className="fixed bottom-2 w-full bg-gray-50 text-xs px-2 py-2 shadow ">
+      <div className="flex items-center space-x-2 px-2">
+        <TextArea
+          name="Remarks"
+          value={remarks}
+          setValue={setRemarks}
+          readOnly={readOnly}
+          rows={3} // Increased height here
+          cols={80} // Optional: wider if you want
+          className="text-xs rounded-lg border-gray-400 focus:ring-2 focus:ring-blue-300"
+        />
+      </div>
+    </div>
+  )
 }
 
 export default Consolidation

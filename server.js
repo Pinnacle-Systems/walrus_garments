@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 import {
-  employees, states, countries, cities,
+  employees, states, countries, cities,emailRoutes,
   departments, companies, branches, users, pages, roles, subscriptions, finYear,
   employeeCategories, pageGroup,
   party,
@@ -29,8 +29,9 @@ import {
   dispatched, generalPurchase, rawMaterialOpeningStock,
   contentMaster,
   counts,
-  Machine,socksMaterial,
-  currency
+  Machine, socksMaterial,
+  currency, socksType, measurement, fibercontent,
+  yarnNeedle,certificate
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -75,6 +76,7 @@ BigInt.prototype['toJSON'] = function () {
 
 app.use("/employees", employees);
 app.use("/countries", countries);
+app.use("/certificate", certificate)
 app.use("/states", states);
 app.use("/cities", cities);
 app.use("/departments", departments);
@@ -115,6 +117,7 @@ app.use("/yarnType", yarnType);
 app.use("/yarnBlend", yarnBlend);
 app.use("/yarn", yarn);
 app.use("/fabricType", fabricType);
+app.use('/send-email', emailRoutes);
 app.use("/size", size);
 app.use("/style", style);
 app.use("/item", item);
@@ -154,6 +157,11 @@ app.use("/content", contentMaster);
 app.use("/counts", counts);
 app.use("/machine", Machine);
 app.use("/currency", currency);
+app.use("/socksType", socksType);
+app.use("/measurement", measurement);
+app.use("/fiberContent", fibercontent);
+app.use("/fiberContent", fibercontent);
+app.use("/yarnNeedle", yarnNeedle);
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

@@ -1,52 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { push, remove } from "../../../redux/features/opentabs";
-import {
-  CountryMaster, PageMaster, StateMaster, CityMaster,
-  DepartmentMaster, EmployeeCategoryMaster, FinYearMaster, UserAndRolesMaster,
-  AccountSettings, ControlPanel, EmployeeMaster,
-  PartyMaster,
-  PartyCategorymaster,
-  CurrencyMaster,
-  ColorMaster,
-  PayTermMaster,
-  SizeMaster,
-  LocationMaster,
-  MachineMaster,
-  PageGroupMaster,
-  CompanyMaster,
-  Dashboard,
-  PurchaseOrder
-
-} from "../../components";
-
-// import { PatientVisitTransaction, DoctorConsultation } from "../../../pharma/components";
-
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
-import { AccessoryGroupMaster, AccessoryItemMaster, AccessoryMaster, CountsMaster, LossReasonMaster, ProcessMaster, SizeTemplateMaster, SocksMaterial, StyleMaster, YarnBlendMaster, YarnMaster, YarnTypeMaster } from "../../../Shocks";
-import ContentMaster from "../../../Shocks/ContentMaster";
 import secureLocalStorage from "react-secure-storage";
-import { Order } from "../../../Uniform/Components"
+import { FiberContent, YarnNeedle } from "../../../Shocks";
 
+// Lazy-loaded components
+const CountryMaster = lazy(() => import("../../components/CountryMaster"));
+const CertificateMaster = lazy(() => import("../../components/CertificateMaster"));
+
+const PageMaster = lazy(() => import("../../components/PageMaster"));
+const StateMaster = lazy(() => import("../../components/StateMaster"));
+const CityMaster = lazy(() => import("../../components/CityMaster"));
+const DepartmentMaster = lazy(() => import("../../components/DepartmentMaster"));
+const EmployeeCategoryMaster = lazy(() => import("../../components/EmployeeCategoryMaster"));
+const FinYearMaster = lazy(() => import("../../components/FinYearMaster"));
+const UserAndRolesMaster = lazy(() => import("../../components/UserAndRolesMaster"));
+const AccountSettings = lazy(() => import("../../components/AccountSettings"));
+const ControlPanel = lazy(() => import("../../components/ControlPanel"));
+const EmployeeMaster = lazy(() => import("../../components/EmployeeMaster"));
+const PartyMaster = lazy(() => import("../../components/PartyMaster"));
+const PartyCategorymaster = lazy(() => import("../../components/PartyCategoryMaster"));
+const CurrencyMaster = lazy(() => import("../../components/CurrencyMaster"));
+const TaxTermMaster = lazy(() => import("../../components/TaxTermMaster"));
+const TaxTemplate = lazy(() => import("../../components/TaxTemplate"));
+const ColorMaster = lazy(() => import("../../components/ColorMaster"));
+const PayTermMaster = lazy(() => import("../../components/PayTermMaster"));
+const SizeMaster = lazy(() => import("../../components/SizeMaster"));
+const LocationMaster = lazy(() => import("../../components/LocationMaster"));
+const MachineMaster = lazy(() => import("../../components/MachineMaster"));
+const PageGroupMaster = lazy(() => import("../../components/PageGroupMaster"));
+const CompanyMaster = lazy(() => import("../../components/CompanyMaster"));
+const Dashboard = lazy(() => import("../../components/Dashboard"));
+const PurchaseOrder = lazy(() => import("../../../Uniform/Components/PurchaseOrder"));
+const UomMaster = lazy(() => import("../../components/Uommaster"));
+const MeasurementMaster = lazy(() => import("../../components/MeasurementMaster"));
+const AccessoryGroupMaster = lazy(() => import("../../../Shocks/AccessoryGroupMaster"));
+const AccessoryItemMaster = lazy(() => import("../../../Shocks/AccessoryItemMaster"));
+const AccessoryMaster = lazy(() => import("../../../Shocks/AccessoryMaster"));
+const CountsMaster = lazy(() => import("../../../Shocks/CountsMaster"));
+const LossReasonMaster = lazy(() => import("../../../Shocks/LossReasonMaster"));
+const ProcessMaster = lazy(() => import("../../../Shocks/ProcessMaster"));
+const SizeTemplateMaster = lazy(() => import("../../../Shocks/SizeTemplateMaster"));
+const SocksMaterial = lazy(() => import("../../../Shocks/SocksMaterial"));
+const SocksType = lazy(() => import("../../../Shocks/SocksType"));
+const StyleMaster = lazy(() => import("../../../Shocks/StyleMaster"));
+const YarnBlendMaster = lazy(() => import("../../../Shocks/YarnBlendMaster"));
+const YarnMaster = lazy(() => import("../../../Shocks/YarnMaster"));
+const YarnTypeMaster = lazy(() => import("../../../Shocks/YarnTypeMaster"));
+const ContentMaster = lazy(() => import("../../../Shocks/ContentMaster"));
+const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster"));
+const Order = lazy(() => import("../../../Uniform/Components/Order"));
+const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
+const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
+const Fabric = lazy(() => import("../../../Uniform/Components/SampleDashboard/Fabric"));
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
-
-
   const dispatch = useDispatch();
   const [showHidden, setShowHidden] = useState(false);
-  const [isAllowableUser, setIsAllowableUser] = useState(false)
-
-  const ref = useOutsideClick(() => { setShowHidden(false) })
+  const [isAllowableUser, setIsAllowableUser] = useState(false);
+  const ref = useOutsideClick(() => { setShowHidden(false) });
 
   const tabs = {
     "PAGE MASTER": <PageMaster />,
     "COMPANY MASTER": <CompanyMaster />,
     "PAGE GROUP MASTER": <PageGroupMaster />,
     "COUNTRY MASTER": <CountryMaster />,
+    "CERTIFICATE MASTER": <CertificateMaster />,
     "MACHINE MASTER": <MachineMaster />,
     "STATE MASTER": <StateMaster />,
+    "TAX TERM MASTER": <TaxTermMaster />,
+    "TAX TEMPLATE": <TaxTemplate />,
     "CITY MASTER": <CityMaster />,
     "DEPARTMENT MASTER": <DepartmentMaster />,
     "EMPLOYEE CATEGORY MASTER": <EmployeeCategoryMaster />,
@@ -59,7 +85,6 @@ const ActiveTabList = () => {
     "PARTY CATEGORY MASTER": <PartyCategorymaster />,
     "CURRENCY MASTER": <CurrencyMaster />,
     "COLOR MASTER": <ColorMaster />,
-    "PAY TERM MASTER": <PayTermMaster />,
     "SIZE MASTER": <SizeMaster />,
     "LOCATION MASTER": <LocationMaster />,
     "STYLE MASTER": <StyleMaster />,
@@ -77,40 +102,50 @@ const ActiveTabList = () => {
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
-    "PURCHASE ORDER" : <PurchaseOrder />,
-    
+    "SOCKS TYPE MASTER": <SocksType />,
+    "PURCHASE ORDER": <PurchaseOrder />,
+    "UOM MASTER": <UomMaster />,
+    "PAY TERM MASTER": <PayTermMaster />,
+    "MEASUREMENT MASTER": <MeasurementMaster />,
+    "FABRIC MASTER": <FabricMaster />,
+    "FIBER CONTENT MASTER": <FiberContent />,
+    "YARN NEEDLE MASTER": <YarnNeedle />,
+    "SAMPLE ENTRY": <Sample />,
+    "SAMPLE FOLLOW": <SampleFollow />,
+
   };
+
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;
-
   let currentShowingTabs = openTabs.tabs.slice(0, parseInt(itemsToShow));
-
   const hiddenTabs = openTabs.tabs.slice(parseInt(itemsToShow));
   const userId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userId"
-  )
+  );
+
   return (
-    <div className="relative  ">
+    <div className="relative">
       <div className="flex justify-between">
         <div className="flex gap-2">
-          {(currentShowingTabs)?.map((tab, index) => (
+          {currentShowingTabs?.map((tab, index) => (
             <div
               key={index}
-              className={`px-2   rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active ? "bg-gray-500 text-white border border-gray-500" : "text-gray-500 border border-gray-500"
+              className={`px-2 rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active
+                ? "bg-gray-500 text-white border border-gray-500"
+                : "text-gray-500 border border-gray-500"
                 }`}
             >
               <button
                 onClick={() => {
                   dispatch(push({ name: tab.name }));
-                  // dispatch(push({ id: tab.id }));
                 }}
               >
                 {tab.name}
               </button>
-              <button className="px-1 rounded-xs transition"
+              <button
+                className="px-1 rounded-xs transition"
                 onClick={() => {
                   dispatch(remove({ name: tab.name }));
-                  // dispatch(remove({ id: tab.id }));
                 }}
               >
                 {CLOSE_ICON}
@@ -119,48 +154,53 @@ const ActiveTabList = () => {
           ))}
         </div>
         <div>
-          {(hiddenTabs.length !== 0) &&
+          {hiddenTabs.length !== 0 && (
             <button onClick={() => setShowHidden(true)}>
               {DOUBLE_NEXT_ICON}
             </button>
-          }
+          )}
         </div>
-        {showHidden &&
-          <ul ref={ref} className="absolute right-0 top-5 bg-gray-200 z-50 text-xs p-1">
-            {hiddenTabs.map(tab =>
-              <li key={tab.name} className={`flex justify-between  ${tab.active ? "bg-green-300" : "bg-gray-300"
-                } `}>
+        {showHidden && (
+          <ul
+            ref={ref}
+            className="absolute right-0 top-5 bg-gray-200 z-50 text-xs p-1"
+          >
+            {hiddenTabs.map((tab) => (
+              <li
+                key={tab.name}
+                className={`flex justify-between ${tab.active ? "bg-green-300" : "bg-gray-300"
+                  } `}
+              >
                 <button
                   onClick={() => {
                     dispatch(push({ name: tab.name }));
-                    // dispatch(push({ id: tab.id }));
                   }}
                 >
                   {tab.name}
                 </button>
-                <button className="hover:bg-red-400 px-1 rounded-xs transition"
+                <button
+                  className="hover:bg-red-400 px-1 rounded-xs transition"
                   onClick={() => {
                     dispatch(remove({ name: tab.name }));
-                    // dispatch(remove({ id: tab.id }));
                   }}
                 >
                   {CLOSE_ICON}
                 </button>
               </li>
-            )}
+            ))}
           </ul>
-        }
+        )}
       </div>
 
-      {(openTabs?.tabs)?.map((tab, index) => (
+      {openTabs?.tabs?.map((tab, index) => (
         <div key={index} className={`${tab.active ? "block" : "hidden"}`}>
-          {tabs[tab.name]}
+          <Suspense fallback={<div>Loading...</div>}>
+            {tabs[tab.name]}
+          </Suspense>
         </div>
       ))}
     </div>
-
   );
 };
-
 
 export default ActiveTabList;

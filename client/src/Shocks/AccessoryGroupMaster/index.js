@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-
-import { useDispatch } from 'react-redux';
 import secureLocalStorage from 'react-secure-storage';
 import toast from 'react-hot-toast';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
@@ -8,8 +6,9 @@ import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { Modal, TextInput, ToggleButton } from '../../Inputs';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { useAddAccessoryGroupMasterMutation, useDeleteAccessoryGroupMasterMutation, useGetAccessoryGroupMasterByIdQuery, useGetAccessoryGroupMasterQuery, useUpdateAccessoryGroupMasterMutation } from '../../redux/uniformService/AccessoryGroupMasterServices';
-
-
+import { useDispatch, useSelector } from "react-redux";
+import { setOpenPartyModal } from '../../redux/features/openModel';
+import { push } from '../../redux/features/opentabs';
 
 const MODEL = "Accessory Group Master"
 
@@ -24,7 +23,6 @@ export default function Form() {
 
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
-    const dispatch = useDispatch();
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -36,7 +34,21 @@ export default function Form() {
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetAccessoryGroupMasterByIdQuery(id, { skip: !id });
-
+   const dispatch = useDispatch();
+     const openPartyModal = useSelector((state) => state.party.openPartyModal);
+      const lastTapName =  useSelector((state)=>state.party.lastTab)
+    
+      console.log(lastTapName,"lastTapName")
+    const activeTab = useSelector((state) =>
+        state.openTabs.tabs.find((tab) => tab.active).name
+      );
+      console.log(activeTab, "activeTab")
+      useEffect(() => {
+        if (openPartyModal) {
+          setId("");
+          setForm(true);
+        }
+      }, [openPartyModal]);
 
     const [addData] = useAddAccessoryGroupMasterMutation();
     const [updateData] = useUpdateAccessoryGroupMasterMutation();
@@ -47,11 +59,11 @@ export default function Form() {
             if (!id) {
                 setReadOnly(false);
                 setName("");
-                setActive(id ? (data?.active ?? true) : false);
+                setActive(id ? data?.active : true);
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");
-                setActive(id ? (data?.active ?? false) : true);
+                setActive(id ? data?.active : true);
             }
         },
         [id]
@@ -72,20 +84,30 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
-        try {
-            let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
-            toast.success(text + "Successfully");
-            dispatch({
-                type: `AccessoryMaster/invalidateTags`,
-                payload: ['AccessoryMaster'],
-            });
-        } catch (error) {
-            console.log("handle");
-        }
-    };
-
+  const handleSubmitCustom = async (callback, data, text,exit = false) => {
+          try {
+              let returnData = await callback(data).unwrap();
+              setId("")
+              syncFormWithDb(undefined)
+              toast.success(text + "Successfully");
+              dispatch({
+                  type: `AccessoryMaster/invalidateTags`,
+                  payload: ['AccessoryMaster'],
+              });
+               if(exit){
+                      setForm(false)
+                    }
+                    if(exit){
+                      if (openPartyModal === true && lastTapName) {
+                        dispatch(push({ name: lastTapName }));
+                      }
+                      
+                         dispatch(setOpenPartyModal(false));
+                    }
+          } catch (error) {
+              console.log("handle");
+          }
+      };
     const saveData = () => {
         if (!validateData(data)) {
             toast.error("Please fill all required fields...!", {
@@ -102,7 +124,20 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
-
+const saveExitData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+            position: "top-center",
+          });
+          return;
+        }
+           if (id) {
+          handleSubmitCustom(updateData, data, "Updated", true);
+        } else {
+          console.log("hit");
+          handleSubmitCustom(addData, data, "Added",true);
+        }
+      };
     const deleteData = async () => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
@@ -175,7 +210,11 @@ export default function Form() {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({});
+         if (openPartyModal === true) {
+                      dispatch(push({ name: lastTapName }));
+                    }
+                    dispatch(setOpenPartyModal(false)); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {
@@ -186,6 +225,7 @@ export default function Form() {
                     model={MODEL}
                     childRecord={childRecord.current}
                     saveData={saveData}
+                    saveExitData = {saveExitData}
                     setReadOnly={setReadOnly}
                     deleteData={deleteData}
                     readOnly={readOnly}

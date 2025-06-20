@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -21,6 +22,7 @@ const MastersForm = ({
   model,
   saveData,
   setReadOnly,
+  masterClass,
   deleteData,
   onClose = null,
   onSearch = null,
@@ -37,11 +39,11 @@ const MastersForm = ({
 }) => {
 
 
-  const openTabs = useSelector((state) => state.openTabs);
+  const openTabs = useSelector((state) => state?.openTabs);
 
-  const activeTab = openTabs.tabs.find(tab => tab.active);
+  const activeTab = openTabs?.tabs?.find(tab => tab.active);
 
-  const currentPageId = activeTab.id
+  const currentPageId = activeTab?.id
 
   const userRoleId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userRoleId"
@@ -87,9 +89,10 @@ const MastersForm = ({
     } else {
       if (isCurrentFinYearActive()) {
         if (IsDefaultAdmin()) {
+          console.log("Hit Masterform")
           callback();
 
-        } else if (currentPagePermissions.data[type]) {
+        } else if (currentPagePermissions?.data[type]) {
           callback();
         } else {
           toast.error(`No Permission to ${type}...!`, {
@@ -103,57 +106,49 @@ const MastersForm = ({
   };
 
   return (
-    <>
+    <div className="h-full px-6 py-4  bg-gray-50 rounded-md shadow-inner overflow-auto ">
+      <div className="flex flex-col h-full">
+        {model && (
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">{model}</h2>
+        )}
 
-      <div className="h-full p-5">
-
-        <div className=" flex flex-col h-full ">
-          <div className="mx-auto w-[95%]  flex flex-col">
-            {model ? (
-              <h5 className=" text-stone-900 text-xl mb-2 ">
-                {model}
-              </h5>
-            ) : (
-              <></>
-            )}
-            <div className="mx-0.5">
-              {children}
-            </div>
-
-          </div>
-          <div className="w-[95%] mx-auto flex justify-between mt-auto">
-            <CloseButton onClick={() => { onClose(); emptyErrors() }} />
-            {!readOnly ? <SaveButton
-              onClick={() => {
-                hasPermission(saveData, "edit");
-              }
-              }
-            /> : <div className="flex items-center">
-              <div className="mr-2">
-                <DeleteButton
-                  onClick={() => {
-                    hasPermission(deleteData, "delete");
-                  }}
-                />
-              </div>
-              <div>
-                <EditButton
-                  onClick={() => {
-                    hasPermission(setReadOnly, "edit");
-                  }}
-                />
-              </div>
-
-            </div>}
-
-          </div>
-
+        <div className="bg-white rounded-md p-3 shadow-md mb-3">
+          {children}
         </div>
 
-      </div>
+        <div className={`${"flex justify-between items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
+          <CloseButton
+            onClick={() => {
+              onClose();
+              emptyErrors();
+            }}
+          />
+          {!readOnly ? (
+            <SaveButton
 
-    </>
+              onClick={() => {
+                hasPermission(saveData, "edit");
+              }}
+            />
+          ) : (
+            <div className="flex space-x-3">
+              <DeleteButton
+                onClick={() => {
+                  hasPermission(deleteData, "delete");
+                }}
+              />
+              <EditButton
+                onClick={() => {
+                  hasPermission(setReadOnly, "edit");
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
+
 };
 
 

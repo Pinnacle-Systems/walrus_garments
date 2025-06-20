@@ -51,7 +51,8 @@ export default function Form() {
 
       setName("");
       setCode("");
-      setActive(id ? (data?.active ?? true) : false);
+            setActive(id ? (data?.active ) : true);
+
 
       return;
     } else {

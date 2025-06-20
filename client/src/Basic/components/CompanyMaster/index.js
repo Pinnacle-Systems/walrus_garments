@@ -61,6 +61,9 @@ export default function Form() {
   const [updateData] = useUpdateCompanyMutation();
   const [removeData] = useDeleteCompanyMutation();
 
+
+  console.log(allData, "allcompanyyy")
+
   const syncFormWithDb = useCallback(
     (data) => {
       if (id) setReadOnly(true);
@@ -81,6 +84,8 @@ export default function Form() {
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     }, [id])
 
+
+  console.log(singleData?.data, "singleData?.data")
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
@@ -186,24 +191,24 @@ export default function Form() {
       </Modal>
       <div onKeyDown={handleKeyDown} className='md:items-start md:justify-items-center grid h-full bg-theme'>
         <div className='flex flex-col frame w-full h-full'>
-          <FormHeader onNew={onNew} onClose={() => { setForm(false); setSearchValue(""); }} model={MODEL} saveData={saveData} setReadOnly={setReadOnly} deleteData={deleteData}  />
+          <FormHeader onNew={onNew} onClose={() => { setForm(false); setSearchValue(""); }} model={MODEL} saveData={saveData} setReadOnly={setReadOnly} deleteData={deleteData} />
           <div className='flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip'>
             <div className='col-span-3 grid md:grid-cols-2 border'>
               <fieldset className='frame mr-1 md:m-1 overflow-auto'>
                 <legend className='sub-heading'>Company Info</legend>
                 <div className='grid grid-cols-1 my-2'>
-                  <TextInput name="Company Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                  <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                  <TextInput name="GST No" type="text" value={gstNo} setValue={setGstNo} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                  <TextInput name="PAN No" type="text" value={panNo} setValue={setPanNo} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
+                  <TextInput name="Company Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                  <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                  <TextInput name="GST No" type="text" value={gstNo} setValue={setGstNo} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                  <TextInput name="PAN No" type="text" value={panNo} setValue={setPanNo} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                 </div>
                 <fieldset className='row-span-2 overflow-auto'>
                   <legend className='sub-heading'>Contact Person Details</legend>
                   <div className='grid grid-cols-1 my-2'>
-                    <TextInput name="Name" type="text" value={contactName} setValue={setContactName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                    <TextInput name="Mobile No" type="number" value={contactMobile} setValue={setContactMobile} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                    <TextInput name="Email id" type="text" value={contactEmail} setValue={setContactEmail} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
+                    <TextInput name="Name" type="text" value={contactName} setValue={setContactName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                    <TextInput name="Mobile No" type="number" value={contactMobile} setValue={setContactMobile} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                    <TextInput name="Email id" type="text" value={contactEmail} setValue={setContactEmail} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                   </div>
                 </fieldset>
                 {id ?
@@ -211,10 +216,10 @@ export default function Form() {
                     <legend className='sub-heading'>Current Subscription details</legend>
                     {Boolean(maxUsers) ?
                       <div className='row-span-2'>
-                        <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} readOnly={true} disabled={(childRecord.current > 0)}/>
-                        <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} readOnly={true} disabled={(childRecord.current > 0)}/>
-                        <TextInput name="Max Users" type="number" value={maxUsers} setValue={setMaxUsers} readOnly={true} disabled={(childRecord.current > 0)}/>
-                        <TextInput name="Subcription Code" type="text" value={subscriptionCode} setValue={setSubscriptionCode} readOnly={true} disabled={(childRecord.current > 0)}/>
+                        <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} readOnly={true} disabled={(childRecord.current > 0)} />
+                        <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} readOnly={true} disabled={(childRecord.current > 0)} />
+                        <TextInput name="Max Users" type="number" value={maxUsers} setValue={setMaxUsers} readOnly={true} disabled={(childRecord.current > 0)} />
+                        <TextInput name="Subcription Code" type="text" value={subscriptionCode} setValue={setSubscriptionCode} readOnly={true} disabled={(childRecord.current > 0)} />
                       </div>
                       :
                       <div className='text-center flex justify-center items-center'>{SUBSCRIPTION_ICON} No Current Subscription Plan</div>
@@ -225,8 +230,8 @@ export default function Form() {
                   <fieldset className='row-span-2'>
                     <legend className='sub-heading'>Add Subscription details</legend>
                     <div className='row-span-2'>
-                      <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-                      <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
+                      <DateInput name="Valid From" value={validFrom} setValue={setValidFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                      <DateInput name="Valid To" value={expireAt} setValue={setExpireAt} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                       <TextInput name="Max Users" type="number" value={maxUsers} setValue={setMaxUsers} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                     </div>
                   </fieldset>

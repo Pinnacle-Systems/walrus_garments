@@ -6,44 +6,46 @@ const prisma = new PrismaClient()
 async function get(req) {
 
     const { companyId, active } = req.query
-    
+
+    console.log(companyId, active, "companyId, active ")
+
     let data = await prisma.size.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
-  
-    const sortNumbersWithSuffix = (arr) => {
-        return arr.sort((a, b) => {
-          const extractParts = (str) => {
-            const match = str.match(/^(\d+)([A-Za-z']*)$/);
-            return match ? [parseInt(match[1]), match[2] || ""] : [Infinity, ""];
-          };
-      
-          const [numA, suffixA] = extractParts(a.name.toString()); 
-          const [numB, suffixB] = extractParts(b.name.toString()); 
-      
-          if (numA !== numB) return numA - numB;
-          return suffixA.localeCompare(suffixB);
-        });
-      };
-      
-      let tempArray = [];
-      
-      data.forEach((item, index) => {  
-        let newObj = {
-          id: item.id,
-          name: item.name,
-          companyId: item.companyId,
-          active: item.active
-        };
-        tempArray.push(newObj);
-      });
-      
-      data = sortNumbersWithSuffix(tempArray);
-      
-      
+
+    // const sortNumbersWithSuffix = (arr) => {
+    //     return arr.sort((a, b) => {
+    //       const extractParts = (str) => {
+    //         const match = str.match(/^(\d+)([A-Za-z']*)$/);
+    //         return match ? [parseInt(match[1]), match[2] || ""] : [Infinity, ""];
+    //       };
+
+    //       const [numA, suffixA] = extractParts(a.name.toString()); 
+    //       const [numB, suffixB] = extractParts(b.name.toString()); 
+
+    //       if (numA !== numB) return numA - numB;
+    //       return suffixA.localeCompare(suffixB);
+    //     });
+    //   };
+
+    //   let tempArray = [];
+
+    //   data.forEach((item, index) => {  
+    //     let newObj = {
+    //       id: item.id,
+    //       name: item.name,
+    //       companyId: item.companyId,
+    //       active: item.active
+    //     };
+    //     tempArray.push(newObj);
+    //   });
+
+    //   data = sortNumbersWithSuffix(tempArray);
+
+
     return { statusCode: 0, data };
 }
 

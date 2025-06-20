@@ -1,12 +1,14 @@
 import { getYearShortCode } from "./helper"
 
 export const dropDownListObject = (data, showKey, valueKey) => {
-    const outputData = []
+    const outputData = [];
+    if (!Array.isArray(data)) return outputData;
     for (let i of data) {
-        outputData.push({ show: i[showKey], value: i[valueKey] })
+        outputData.push({ show: i[showKey], value: i[valueKey] });
     }
-    return outputData
+    return outputData;
 }
+
 
 export const dropDownFinYear = (data) => {
     const outputData = [];
@@ -18,9 +20,11 @@ export const dropDownFinYear = (data) => {
 
 export const dropDownListMergedObject = (data) => {
     let Data = data ? data : []
+
+    console.log(data, "datatata")
     const outputData = []
     for (let i of Data) {
-        outputData.push({ show: i.name + " / " + i.state.name, value: i["id"] })
+        outputData.push({ show: i?.name + " / " + i.state.name, value: i["id"] })
     }
     return outputData
 }

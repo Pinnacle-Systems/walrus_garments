@@ -46,8 +46,9 @@ import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import ViewImage from "./ViewImage";
 import PrintFormat from "../../PrintFormat-Sample";
 import { useGetUserQuery } from "../../../redux/services/UsersMasterService";
+import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 
-const MODEL = "Sample Register";
+const MODEL = "Sample Entry";
 
 export default function Form({ }) {
   const [active, setActive] = useState(true);
@@ -59,9 +60,9 @@ export default function Form({ }) {
   const [searchValue, setSearchValue] = useState("");
   const [date, setDate] = useState(getDateFromDateTime(today));
   const [docId, setDocId] = useState("");
-  const [sizeId, setSizeId] = useState();
+
   const [validDate, setValidDate] = useState();
-  const [colorId, setColorId] = useState();
+  const [orderId, setOrderId] = useState("")
   const [styleId, setStyleId] = useState();
   const [merchandId, setMerchandId] = useState();
   const [fabricId, setFabricId] = useState();
@@ -71,9 +72,9 @@ export default function Form({ }) {
   const [contactPersonName, setContactPersonName] = useState("");
   const [isPartyLogoOpen, setIsPartyLogoOpen] = useState(false);
   const [logo, setLogo] = useState("");
-  const [styleImages, setStyleImages] = useState([]);
+
   const [isStyleImageOpen, setIsStyleImageOpen] = useState(false);
-  const [sampleSizeGrid, setSampleSizeGrid] = useState([]);
+
   const [currentImage, setCurrentImage] = useState("");
   const childRecord = useRef(0);
   const [sampleDetails, setSampleDetails] = useState([]);
@@ -95,6 +96,8 @@ export default function Form({ }) {
   const params = {
     branchId,
   };
+
+  const { data: orderData } = useGetOrderQuery({ params });
 
   const { data: partyList } = useGetPartyQuery({ params });
   const {
@@ -487,12 +490,17 @@ export default function Form({ }) {
                     required={true}
                     readOnly={readOnly}
                   />
-                  <PartySearchComponent
-                    setPartyId={setPartyId}
-                    partyId={partyId}
-                    name="School Name"
+                  <DropdownInput
+                    name="Order"
+                    options={dropDownListObject(
+                      orderData?.data || [],
+                      "docId",
+                      "id"
+                    )}
+                    value={orderId}
+                    setValue={setOrderId}
                     readOnly={readOnly}
-                    id={id}
+                    required={true}
                   />
                   <DropdownInput
                     name="Merchandiser"

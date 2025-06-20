@@ -49,8 +49,8 @@ export const statusDropdown = [
 ]
 
 export const poTypes = [
-    { show: "Grey Yarn", value: "Grey Yarn" },
-    { show: "Dyed Yarn", value: "Dyed Yarn" },
+    { show: "GreyYarn", value: "GreyYarn" },
+    { show: "DyedYarn", value: "DyedYarn" },
     { show: "Accessory", value: "Accessory" },
 
 ]
@@ -135,7 +135,6 @@ export const deliveryTypes = [
     { show: "To Party", value: "ToParty" },
 
 ]
-
 export const showEntries = [
     { show: "10", value: "10" },
     { show: "25", value: "25" },

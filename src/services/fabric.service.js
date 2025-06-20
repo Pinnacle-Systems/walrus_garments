@@ -26,7 +26,7 @@ async function getOne(id) {
         //     FabricOnYarnBlend: true
         // }
     })
-    if (!data) return NoRecordFound("fabric");
+    if (!data) return NoRecordFound("Fabric");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
@@ -50,7 +50,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { fabricTypeId, aliasName, hsn, yarnBlendDetails, organic, companyId, active, name } = await body
+    const { fabricTypeId, hsn, yarnBlendDetails, organic, companyId, active, aliasName } = await body
     const data = await prisma.fabric.create(
         {
             data: {
@@ -64,7 +64,7 @@ async function create(body) {
                 //     }
                 // } : undefined,
                 // organic,
-                name,
+                aliasName,
                 companyId: parseInt(companyId), active
             }
         }
@@ -73,13 +73,13 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { fabricTypeId, aliasName, hsn, yarnBlendDetails, organic, companyId, active, name } = await body
+    const { fabricTypeId, hsn, yarnBlendDetails, organic, companyId, active, aliasName } = await body
     const dataFound = await prisma.fabric.findUnique({
         where: {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("fabric");
+    if (!dataFound) return NoRecordFound("Fabric");
     const data = await prisma.fabric.update({
         where: {
             id: parseInt(id),
@@ -96,7 +96,7 @@ async function update(id, body) {
             //     }
             // } : undefined,
             // organic,
-            name,
+            aliasName,
             companyId: parseInt(companyId), active
         }
     })

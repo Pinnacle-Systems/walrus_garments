@@ -28,6 +28,8 @@ export default function Form() {
   const [active, setActive] = useState(false);
   const [errors, setErrors] = useState({});
 
+  console.log(name, "name")
+
   const [searchValue, setSearchValue] = useState("");
 
   const childRecord = useRef(0);
@@ -50,7 +52,8 @@ export default function Form() {
 
       setName("");
       setTime("");
-      setActive(id ? (data?.active ?? true) : false);
+            setActive(id ? (data?.active ) : true);
+
 
       return;
     } else {
@@ -186,7 +189,7 @@ export default function Form() {
         />
 
         <div>
-          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[50%] h-[70%]"} onClose={() => { setForm(false); setErrors({}); }}>
             <MasterForm
               onNew={onNew}
               onClose={() => {

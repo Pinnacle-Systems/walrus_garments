@@ -18,31 +18,41 @@ const PartySupplyDetails = ({ partyDetails, partySuppliesItem, setPartySuppliesI
 
     return (
         <div className='h-[300px] overflow-y-auto border rounded-lg shadow-md w-full'>
-            <table className=' text-center overflow-hidden rounded w-full'>
-                <thead className='border border-gray-500'>
-                    <tr className='bg-gray-200 '>
-                        <th className='text-[15px] border border-gray-500 p-0.5'>
-                            Party Name
-                        </th>
-                        <th className='text-[15px] border border-gray-500 p-0.5'>
-                            Party Alias Name
-                        </th>
-                        <th className='text-[15px] border border-gray-500 p-0.5'>
-                            Supply
-                        </th>
+        <table className='text-center overflow-hidden rounded w-full'>
+            <thead className='border border-gray-300'>
+                <tr className='bg-gray-100'>
+                    <th className='text-[13px] border border-gray-300 py-1 px-2'>
+                        Party Name
+                    </th>
+                    <th className='text-[13px] border border-gray-300 py-1 px-2'>
+                        Party Alias Name
+                    </th>
+                    <th className='text-[13px] border border-gray-300 py-1 px-2'>
+                        Supply
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {partyDetails.map((party) => (
+                    <tr key={party.id} className='hover:bg-gray-50'>
+                        <td className='border border-gray-300 text-[12px] p-1'>
+                            {party.name}
+                        </td>
+                        <td className='border border-gray-300 text-[12px] p-1'>
+                            {party.aliasName}
+                        </td>
+                        <td
+                            className='border border-gray-300 text-[12px] p-1 cursor-pointer'
+                            onClick={() => handleOnClick(party.id)}
+                        >
+                            {findPartySuppliesCurrentItem(party.id) ? TICK_ICON : ""}
+                        </td>
                     </tr>
-                </thead>
-                <tbody className=''>
-                    {partyDetails.map((party, index) =>
-                        <tr key={party.id}>
-                            <td className='border border-gray-500 table-data text-sm p-1'> {party.name} </td>
-                            <td className='border border-gray-500 table-data text-sm'> {party.aliasName} </td>
-                            <td className='border border-gray-500 table-data text-sm' onClick={() => { handleOnClick(party.id) }}> {findPartySuppliesCurrentItem(party.id) ? TICK_ICON : ""} </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
+                ))}
+            </tbody>
+        </table>
+    </div>
+    
     )
 }
 

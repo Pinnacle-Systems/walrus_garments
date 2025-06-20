@@ -91,7 +91,8 @@ const StyleMaster = () => {
     //             setOccassion("");
     //             setMaterial("");
     //             setWashCare("");
-    //             setActive(id ? (data?.active ?? true) : false);
+    //                   setActive(id ? (data?.active ) : true);
+
     //             setSizeTemplateId("")
     //             setSelectedColorsList([])
     //             setPortionDetails([])
@@ -268,7 +269,7 @@ const StyleMaster = () => {
                         isLoading || isFetching
                     } />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
                 <MastersForm
                     onNew={onNew}
                     onClose={() => {

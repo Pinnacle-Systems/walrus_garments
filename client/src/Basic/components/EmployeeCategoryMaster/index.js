@@ -36,7 +36,7 @@ export default function Form() {
 
     const params = {
         companyId: secureLocalStorage.getItem(
-            sessionStorage.getItem("sessionId") + "userCompanyId"
+            sessionStorage.getItem("sessionId") + "currentBranchId"
         ),
     };
     const { data: allData, isLoading, isFetching } = useGetEmployeeCategoryQuery({ params, searchParams: searchValue });
@@ -178,10 +178,13 @@ export default function Form() {
                     data={allData?.data}
                     loading={
                         isLoading || isFetching
-                    } />
+                    }
+                    setReadOnly={setReadOnly}
+                    deleteData={deleteData}
+                />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
@@ -197,27 +200,42 @@ export default function Form() {
                             readOnly={readOnly}
                             emptyErrors={() => setErrors({})}
                         >
+                            <fieldset className="rounded border border-gray-300 p-4 mt-4 shadow-sm bg-white">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <TextInput
+                                        name="Category Name"
+                                        type="text"
+                                        value={name}
+                                        setValue={setName}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                    />
 
-                            <fieldset className=' rounded mt-2'>
+                                    <TextInput
+                                        name="Code"
+                                        type="text"
+                                        value={code}
+                                        setValue={setCode}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                    />
+                                </div>
 
-                                <div className=''>
-                                    <div className="flex flex-wrap">
-                                        <div className="mb-3 w-[48%]">
-                                            <TextInput name="Category Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        </div>
-
-
-                                        <div className="mb-3 w-[20%] ml-6">
-                                            <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        </div>
-                                    </div>
-                                    <div className='mb-3'>
-                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                    </div>
-
+                                <div className="mt-4">
+                                    <ToggleButton
+                                        name="Status"
+                                        options={statusDropdown}
+                                        value={active}
+                                        setActive={setActive}
+                                        required={true}
+                                        readOnly={readOnly}
+                                    />
                                 </div>
                             </fieldset>
                         </MastersForm>
+
                     </Modal>}
 
                 </div>

@@ -11,7 +11,6 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
     const imageFormatter = () => {
         if (picture) {
             if (typeof picture === "object") {
-                console.log("object", URL.createObjectURL(picture))
                 return URL.createObjectURL(picture);
             } else {
                 return picture;
@@ -96,7 +95,7 @@ const BrowseSingleImage = ({ picture, setPicture, readOnly }) => {
                     {/* Drag & Drop or Browse */}
                     {!picture && (
                         <span className="text-xs max-w-[150px] text-center text-gray-500 w-full">
-                            {isDragging ? "Release to upload" : "Drag & drop or click to upload"}
+                            {isDragging ? "Release to upload" : "click to upload"}
                         </span>
                     )}
                 </div>

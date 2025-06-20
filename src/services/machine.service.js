@@ -52,7 +52,6 @@ async function create(body) {
 
     const { name, code, time, active } = await body
     const data = await prisma.machine.create(
-        console.log("hit"),
         {
             data: {
                 name, code, time: time ? parseFloat(time) : undefined, active

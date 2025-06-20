@@ -36,7 +36,13 @@ export default function Form() {
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
+
+    console.log(params, "params")
+
     const { data: allData, isLoading, isFetching } = useGetSizeMasterQuery({ params, searchParams: searchValue });
+
+    console.log(allData, "datatat")
+
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -54,7 +60,8 @@ export default function Form() {
                 setReadOnly(false);
                 setName("");
                 // setAccessory(data?.isAccessory || false);
-                setActive(id ? (data?.active ?? true) : false);
+                      setActive(id ? (data?.active ) : true);
+
             } else {
                 setReadOnly(true);
                 setName(data?.name || "");
