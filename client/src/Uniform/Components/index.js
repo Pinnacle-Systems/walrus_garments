@@ -43,3 +43,4 @@ export { default as ProductionReceipt } from './ProductionReceipt';
 export { default as Dispatched } from './Dispatched';
 export { default as GeneralPurchase } from "./PurchaseGeneral"
 export { default as OpeningStock } from "./RawMaterialOpeningStock"
+export { default as SampleEntry } from "./SampleEntry"

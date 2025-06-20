@@ -50,11 +50,11 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, days, companyId, active } = await body
+    const { name, days, companyId, active, aliasName } = await body
     const data = await prisma.payTerm.create(
         {
             data: {
-                name, days: days ? parseInt(days) : undefined, companyId: parseInt(companyId), active
+                name, aliasName, days: days ? parseInt(days) : undefined, companyId: parseInt(companyId), active
             }
         }
     )

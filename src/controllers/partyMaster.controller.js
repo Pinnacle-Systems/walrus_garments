@@ -1,7 +1,8 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload ,
-    kycForm as kycFormService
+import {
+    get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload,
+    kycForm as kycFormService, removePartyBranch as _removePartyBranch
 } from '../services/partyMaster.service.js';
 import multer from 'multer';
 
@@ -74,7 +75,7 @@ async function kycFormController(req, res, next) {
     try {
         res.json(await kycFormService(req.body));
         console.log(res.statusCode);
-         console.log("its working")
+        console.log("its working")
     } catch (error) {
         console.error(`Error`, error.message);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -125,6 +126,30 @@ async function remove(req, res, next) {
     }
 }
 
+
+
+async function removePartyBranch(req, res, next) {
+    console.log(req.params, "req.params")
+    try {
+        res.json(await _removePartyBranch(req.params.id));
+        console.log(res.statusCode);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            res.statusCode = 200;
+            res.json({ statusCode: 1, message: `Record Not Found` })
+            console.log(res.statusCode)
+        }
+        else if (error.code === "P2003") {
+            res.statusCode = 200;
+            res.json({ statusCode: 1, message: "Child record Exists" })
+        }
+        console.log(`Error`, error.message);
+    }
+}
+
+
+
+
 export {
     get,
     getOne,
@@ -132,5 +157,6 @@ export {
     create,
     kycFormController,
     update,
-    remove
+    remove,
+    removePartyBranch
 };

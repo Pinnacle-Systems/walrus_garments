@@ -4,6 +4,7 @@ import secureLocalStorage from "react-secure-storage";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 import {
   useAddPartyMutation,
+  useDeletePartyBranchMutation,
   useDeletePartyMutation,
   useGetPartyByIdQuery,
   useGetPartyQuery,
@@ -17,10 +18,7 @@ import {
   dropDownListObject,
   multiSelectOption,
 } from "../../../Utils/contructObject";
-import PartyOnItems from "./PartyOnItems";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import BrowseSingleImage from "../../components/BrowseSingleImage";
 import MastersForm from "../MastersForm/MastersForm";
 import {
   Modal,
@@ -30,25 +28,24 @@ import {
   TextInput,
   FancyCheckBox,
   MultiSelectDropdown,
+  CheckBox,
+  RadioButton,
+  TextArea,
 } from "../../../Inputs";
-import Mastertable from "../MasterTable/Mastertable";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMasterServices";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashCan, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { DELETE, PLUS } from "../../../icons";
 import { toast } from "react-toastify";
-import { exist } from "joi";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
 import { useSendKycEmailMutation } from "../../../redux/services/emailApi";
-import { TextField } from "@mui/material";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaChevronRight } from "react-icons/fa6";
+import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
+import AddBranch from "./AddBranch";
 
 const MODEL = "Party Master";
 
-export default function Form({ partyId, onCloseForm }) {
+export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [form, setForm] = useState(false);
@@ -77,17 +74,13 @@ export default function Form({ partyId, onCloseForm }) {
   const [isAcc, setIsAcc] = useState(false);
   const [payTermDay, setPayTermDay] = useState("0");
   const [processDetails, setProcessDetails] = useState([]);
-
   const [cstDate, setCstDate] = useState("");
   const [mail, setMail] = useState("");
   const [kycEmail, setKycEmail] = useState("");
-
   const [accessoryItemList, setAccessoryItemList] = useState([]);
-
   const [accessoryGroup, setAccessoryGroup] = useState(false);
   const [accessoryGroupPrev, setAccessoryGroupPrev] = useState(false);
   const [priceTemplateId, setPriceTemplateId] = useState("");
-
   const [currency, setCurrency] = useState("INR");
   const [active, setActive] = useState(true);
   const [isSupplier, setSupplier] = useState(true);
@@ -99,10 +92,16 @@ export default function Form({ partyId, onCloseForm }) {
   const [certificate, setCertificate] = useState([])
   const [searchValue, setSearchValue] = useState("");
   const [email, setEmail] = useState("")
-
+  const [addressOnlyRead, setAddressOnlyRead] = useState(true)
   const [errors, setErrors] = useState({});
   const [image, setImage] = useState({});
-
+  const [branchModelOpen, setBranchModelOpen] = useState(false);
+  const [branchName, setBranchName] = useState("");
+  const [branchCode, setBranchCode] = useState("");
+  const [branchAddress, setBranchAddress] = useState("");
+  const [branchContact, setBranchContact] = useState("");
+  const [branchEmail, setBranchEmail] = useState("");
+  const [partyBranch, setPartyBranch] = useState([])
 
   const childRecord = useRef(0);
   const dispatch = useDispatch();
@@ -110,7 +109,7 @@ export default function Form({ partyId, onCloseForm }) {
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
-  // const { data: accessoryItemsMasterList, isLoading: isItemsLoading, isFetching: isItemsFetching } = useGetAccessoryItemMasterQuery({ companyId })
+
   let accessoryItemsMasterList;
 
   const userId = secureLocalStorage.getItem(
@@ -120,6 +119,7 @@ export default function Form({ partyId, onCloseForm }) {
     companyId,
   };
   const { data: cityList } = useGetCityQuery({ params });
+  const { data: payTermList } = useGetPaytermMasterQuery({ params });
 
   const cerdificateDetail = useGetCertificateQuery({ params })
   const { data: currencyList } = useGetCurrencyMasterQuery({ params });
@@ -136,9 +136,6 @@ export default function Form({ partyId, onCloseForm }) {
     (state) => state.openTabs.tabs.find((tab) => tab.active).name
   );
 
-
-
-
   useEffect(() => {
     if (openPartyModal) {
       setId("");
@@ -146,131 +143,100 @@ export default function Form({ partyId, onCloseForm }) {
     }
   }, [openPartyModal]);
 
-
-
-
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetPartyByIdQuery(id, { skip: !id });
 
-  console.log(singleData, "singgg")
-
   const [addData] = useAddPartyMutation();
   const [updateData] = useUpdatePartyMutation();
   const [removeData] = useDeletePartyMutation();
+  const [removeBranchData] = useDeletePartyBranchMutation();
 
   const syncFormWithDb = useCallback(
     (data) => {
-      if (!id) {
-        setReadOnly(false);
-        setPanNo("");
-        setMail("");
-        setCertificate([])
-        setName("");
-        setImage("");
-        setAliasName("");
-        setDisplayName("");
-        setAddress("");
-        setTinNo("");
-        setCstNo("");
-        setCinNo("");
-        setFaxNo("");
-        setCinNo("");
-        setContactPersionName("");
-        setGstNo("");
-        setCostCode("");
-        setPayTermDay("0");
-        setCstDate("");
-        setCode("");
-        setPincode("");
-        setWebsite("");
-        setEmail("");
-        setCity("");
-        setCurrency("");
-        setActive(id ? data?.active : true);
-        setSupplier(false);
-        setClient(false);
-        setContactMobile("");
-        setAccessoryGroup(false);
-        setAccessoryItemList([]);
-        setPriceTemplateId("");
-        setProcessDetails([]);
+
+      if (id || partyId) {
+        if (openModelForAddress || partyId) {
+          setReadOnly(false);
+
+        }
+        else {
+          setReadOnly(true);
+        }
+
       } else {
-        // if (partyId) {
-        //   setReadOnly(false);
-        // } else {
-        setReadOnly(true);
-        // }
-
-        setPanNo(data?.panNo || "");
-        setName(data?.name || "");
-        setMail(data?.mailId || "")
-        setAliasName(data?.aliasName || "");
-        setImage(data?.image || "");
-        setDisplayName(data?.displayName || "");
-        setAddress(data?.address || "");
-        setTinNo(data?.tinNo || "");
-        setCstNo(data?.cstNo || "");
-
-        setIsGy(data?.isGy || false);
-        setIsDy(data?.isDy || false);
-        setIsAcc(data?.isAcc || false);
-        setCinNo(data?.cinNo || "");
-        setFaxNo(data?.faxNo || "");
-        setCinNo(data?.cinNo || "");
-        setContactPersionName(data?.contactPersionName || "");
-        setGstNo(data?.gstNo || "");
-        setCostCode(data?.costCode || "");
-        setCstDate(
-          data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
-        );
-        setPayTermDay(data?.payTermDay);
-        setCode(data?.code || "");
-        setPincode(data?.pincode || "");
-        setWebsite(data?.website || "");
-        setEmail(data?.email || "");
-        setCity(data?.cityId || "");
-        setCurrency(data?.currencyId || "");
-        setActive(id ? data?.active ?? false : true);
-        setSupplier(data?.yarn || false);
-        setClient(data?.fabric || false);
-        setAccessoryGroup(data?.accessoryGroup || false);
-        setAccessoryItemList(
-          data?.PartyOnAccessoryItems
-            ? data.PartyOnAccessoryItems.map((item) =>
-              parseInt(item.accessoryItemId)
-            )
-            : []
-        );
-        setPriceTemplateId(data?.priceTemplateId || "");
-        setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
-        setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
-        setSupplier(data?.isSupplier || false);
-        setClient(data?.isClient || false);
-        setProcessDetails(
-          data?.PartyOnProcess
-            ? data.PartyOnProcess.map((item) => {
-              return {
-                value: parseInt(item.processId),
-                label: findFromList(item.processId, processList.data, "name"),
-              };
-            })
-            : []
-        );
+        setReadOnly(false);
       }
+      setPanNo(data?.panNo || "");
+      setName(data?.name || "");
+      setMail(data?.mailId || "")
+      setAliasName(data?.aliasName || "");
+      setImage(data?.image || "");
+      setDisplayName(data?.displayName || "");
+      setAddress(data?.address || "");
+      setTinNo(data?.tinNo || "");
+      setCstNo(data?.cstNo || "");
+      setIsGy(data?.isGy || false);
+      setIsDy(data?.isDy || false);
+      setIsAcc(data?.isAcc || false);
+      setCinNo(data?.cinNo || "");
+      setFaxNo(data?.faxNo || "");
+      setCinNo(data?.cinNo || "");
+      setContactPersionName(data?.contactPersionName || "");
+      setGstNo(data?.gstNo || "");
+      setCostCode(data?.costCode || "");
+      setCstDate(
+        data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
+      );
+      setPayTermDay(data?.payTermDay || "");
+      setCode(data?.code || "");
+      setPincode(data?.pincode || "");
+      setWebsite(data?.website || "");
+      setEmail(data?.email || "");
+      setCity(data?.cityId || "");
+      setCurrency(data?.currencyId || "");
+      setActive(id ? data?.active : true);
+      setSupplier(data?.yarn || false);
+      setClient(data?.fabric || false);
+      setAccessoryGroup(data?.accessoryGroup || false);
+      setAccessoryItemList(
+        data?.PartyOnAccessoryItems
+          ? data.PartyOnAccessoryItems.map((item) =>
+            parseInt(item.accessoryItemId)
+          )
+          : []
+      );
+      setPriceTemplateId(data?.priceTemplateId || "");
+      setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
+      setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
+      setSupplier(data?.isSupplier || false);
+      setClient(data?.isClient || false);
+      setBranchAddress(data?.branchAddress ? data?.branchAddress : "")
+      setBranchEmail(data?.branchEmail ? data?.branchEmail : "")
+      setBranchContact(data?.branchContact ? data?.branchContact : "")
+      setBranchName(data?.branchName ? data?.branchName : "")
+      setBranchCode(data?.branchCode ? data?.branchCode : "");
+      setPartyBranch(data?.partyBranch ? data?.partyBranch : [])
+      setProcessDetails(
+        data?.PartyOnProcess
+          ? data.PartyOnProcess.map((item) => {
+            return {
+              value: parseInt(item.processId),
+              label: findFromList(item.processId, processList.data, "name"),
+            };
+          })
+          : []
+      );
     },
+
     [id]
   );
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
-
-
-
-
 
   const data = {
     name,
@@ -315,6 +281,7 @@ export default function Form({ partyId, onCloseForm }) {
     certificate, mail,
     isGy,
     isDy,
+    partyBranch
   };
 
   const [sendKycEmail, { isLoadingMail }] = useSendKycEmailMutation();
@@ -327,9 +294,7 @@ export default function Form({ partyId, onCloseForm }) {
   const validateData = (data) => {
     if (data.name) {
       return true;
-      // && data.joiningDate && data.fatherName && data.dob && data.gender && data.maritalStatus && data.bloodGroup &&
-      //     data.panNo && data.email && data.mobile && data.degree && data.specialization &&
-      //     data.localAddress && data.localCity && data.localPincode && data.partyCategoryId && data.currencyId
+
     }
     return false;
   };
@@ -415,7 +380,12 @@ export default function Form({ partyId, onCloseForm }) {
     accessoryItemsMasterList,
   ]);
 
+
+
   const saveData = () => {
+
+
+
     if (!validateData(data)) {
       toast.error("Please fill all required fields...!", {
         position: "top-center",
@@ -439,7 +409,7 @@ export default function Form({ partyId, onCloseForm }) {
     if (id) {
       handleSubmitCustom(updateData, data, "Updated", true);
     } else {
-      console.log("hit");
+
       handleSubmitCustom(addData, data, "Added", true);
     }
   };
@@ -478,14 +448,30 @@ export default function Form({ partyId, onCloseForm }) {
   };
 
 
-  const handleNext = () => {
-    setStep(step + 1);
+  const deletePartyBranchData = async (partyBranchId) => {
+    if (partyBranchId) {
+
+
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+
+
+      try {
+        let deldata = await removeBranchData(partyBranchId).unwrap();
+        if (deldata?.statusCode == 1) {
+          toast.error(deldata?.message);
+          return;
+        }
+        toast.success("Deleted Successfully");
+      } catch (error) {
+        toast.error("something went wrong");
+      }
+    }
   };
 
 
-  const handlePrevious = () => {
-    setStep(step - 1);
-  };
+
 
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -496,7 +482,6 @@ export default function Form({ partyId, onCloseForm }) {
   };
 
   const onNew = () => {
-
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
@@ -514,11 +499,18 @@ export default function Form({ partyId, onCloseForm }) {
     setShippingAddress(newBlend);
   }
 
-  function deleteAddress(index) {
-    setShippingAddress((prev) => prev.filter((_, i) => i !== index));
+  function deleteAddress(id) {
+    setPartyBranch((prev) => prev.filter((v, i) => parseInt(v?.id) !== parseInt(id)));
+    deletePartyBranchData(id)
   }
   function addNewAddress() {
+
     setShippingAddress((prev) => [...prev, { address: "" }]);
+  }
+
+  function addNewBranch() {
+
+    setPartyBranch((prev) => [...prev, { branchName: "", branchCode: "", branchEmail: "", branchContact: "", branchAddress: "" }]);
   }
 
   function removeItem(index) {
@@ -578,10 +570,11 @@ export default function Form({ partyId, onCloseForm }) {
     else {
       setId(partyId);
     }
-
     setForm(true);
-    setReadOnly(false)
-  }, [partyId]);
+    if (openModelForAddress) {
+      setIsAddressExpanded(true);
+    }
+  }, [partyId, openModelForAddress]);
 
 
 
@@ -604,37 +597,24 @@ export default function Form({ partyId, onCloseForm }) {
       header: 'Alias Name',
       accessor: (item) => item.aliasName
     },
-    // {
-    //   header: 'Party',
-    //   accessor: (item) => item.Party?.name,
-    //   cellClass: () => 'uppercase'
-    // },
-    // {
-    //   header: 'ContactPerson',
-    //   accessor: (item) => item.contactPersonName,
-    //   cellClass: () => 'text-gray-800 uppercase'
-    // },
-    // {
-    //   header: 'Contact',
-    //   accessor: (item) => item.phone,
-    //   cellClass: () => 'text-gray-800 uppercase'
-    // },
-
 
   ];
+
+  const handleChange = (type) => {
+    setSupplier(type === 'supplier');
+    setClient(type === 'client');
+  };
 
 
 
 
   if (partyId) {
-
-
     return (
       <>
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[75%] h-[45%] -mt-40"}
+          widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[65%]"}`}
           onClose={() => {
             setForm(false);
             onCloseForm();
@@ -647,26 +627,36 @@ export default function Form({ partyId, onCloseForm }) {
 
           }}
         >
+
           <Modal
-            isOpen={itemsPopup}
+            isOpen={branchModelOpen}
+            form={form}
+            widthClass={`${"w-[55%] h-[50%]"}`}
+            setBranchModelOpen={setBranchModelOpen}
             onClose={() => {
-              setAccessoryGroup(accessoryGroupPrev);
-              setAccessoryItemList(structuredClone(backUpItemsList));
-              setItemsPopup(false);
+              setBranchModelOpen(false)
             }}
-            widthClass={
-              "w-[55%] h-[45%] "
-            }
           >
-            <PartyOnItems
-              readOnly={readOnly}
-              setItemsPopup={setItemsPopup}
-              accessoryItemsMasterList={accessoryItemsMasterList}
-              accessoryItemList={accessoryItemList}
-              setAccessoryItemList={setAccessoryItemList}
+
+
+
+            <AddBranch partyData={allData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+              branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
+              branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} onNew={onNew}
+              setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
+              deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
+              handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
+              shippingAddress={shippingAddress} setForm={setForm} addNewAddress={addNewAddress}
+              handleInputAddress={handleInputAddress} deleteAddress={deleteAddress} removeItem={removeItem}
+              partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen}
             />
+
+
+
           </Modal>
+
           <MastersForm
+            masterClass={"pb-2"}
             onNew={onNew}
             onClose={() => {
               setForm(false);
@@ -683,7 +673,7 @@ export default function Form({ partyId, onCloseForm }) {
             readOnly={readOnly}
             emptyErrors={() => setErrors({})}
           >
-            <div className="space-y-4 bg-[#f1f1f0]">
+            <div className="space-y-4 bg-[#f1f1f0] p-2">
               {/* {step === 1 && ( */}
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
 
@@ -695,64 +685,75 @@ export default function Form({ partyId, onCloseForm }) {
                     </h3>
                     <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                        <FancyCheckBox
-                          label="Is Supplier"
-                          value={isSupplier}
-                          onChange={setSupplier}
-                          readOnly={readOnly}
-                          className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
-                        />
-                        <FancyCheckBox
-                          label="Is Client"
-                          value={isClient}
-                          onChange={setClient}
-                          readOnly={readOnly}
-                          className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
-                        />
+
+
+                        <div className="grid grid-cols-2 ml-2  items-center gap-1">
+
+                          <input
+                            type="radio"
+                            name="type"
+                            checked={isSupplier}
+                            onChange={() => handleChange('supplier')}
+                          />
+
+                          <label className="text-xs">Supplier</label>
+                        </div>
+                        <div className="grid grid-cols-2 ml-2  items-center gap-1">
+                          <input
+                            type="radio"
+                            name="type"
+                            checked={isClient}
+                            onChange={() => handleChange('client')}
+                          />
+
+                          <label className="text-xs">Client</label>
+                        </div>
+
+                        {/* <CheckBox
+                              name="Is Supplier"
+                              value={isSupplier}
+                              setValue={setSupplier}
+                              readOnly={readOnly}
+                              className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
+                            />
+                            <CheckBox
+                              name="Is Client"
+                              value={isClient}
+                              setValue={setClient}
+                              readOnly={readOnly}
+                              className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
+                            /> */}
 
 
 
                         {isSupplier && (
                           <>
-                            <FancyCheckBox
-                              label="Grey Yarn"
+                            <CheckBox
+                              name="Grey Yarn"
                               value={isGy}
-                              onChange={setIsGy}
+                              setValue={setIsGy}
                               readOnly={readOnly}
                               className="hover:bg-gray-100 p-3 rounded-lg"
                             />
-                            <FancyCheckBox
-                              label="Dyed Yarn"
+                            <CheckBox
+                              name="Dyed Yarn"
                               value={isDy}
-                              onChange={setIsDy}
+                              setValue={setIsDy}
                               readOnly={readOnly}
                               className="hover:bg-gray-100 p-3 rounded-lg"
                             />
-                            <FancyCheckBox
-                              label="Accessories"
+                            <CheckBox
+                              name="Accessories"
                               value={isAcc}
-                              onChange={setIsAcc}
+                              setValue={setIsAcc}
                               readOnly={readOnly}
                               className="hover:bg-gray-100 p-3 rounded-lg"
                             />
                           </>
                         )}
 
-
-
-
-
-
-
-
-
-
-
-
                         <div className="flex items-center gap-x-2">
-                          {/* <span className="text-slate-800 font-medium text-gray-500 text-xs">
-                            Status:
-                          </span> */}
+
                           <ToggleButton
                             name="Status"
                             options={statusDropdown}
@@ -771,11 +772,11 @@ export default function Form({ partyId, onCloseForm }) {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-2 shadow-xs ">
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5 ">
+                  <div className="space-y-2">
+                    <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-1 shadow-xs ">
+                      <div className="grid grid-cols-1 gap-x-2  md:grid-cols-2 lg:grid-cols-5 ">
                         <TextInput
-                          name="Party Name"
+                          name={isSupplier ? "Supplier Name" : "Customer Name"}
                           type="text"
                           value={name}
                           setValue={setName}
@@ -820,15 +821,15 @@ export default function Form({ partyId, onCloseForm }) {
                           className="focus:ring-2 focus:ring-blue-100"
                         />
 
-                        <TextInput
-                          name="Pincode"
-                          type="number"
-                          value={pincode}
-                          setValue={setPincode}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          className="focus:ring-2 focus:ring-blue-100"
-                        />
+                        {/* <TextInput
+                              name="Pincode"
+                              type="number"
+                              value={pincode}
+                              setValue={setPincode}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100"
+                            /> */}
                         <TextInput
                           name="CST No"
                           type="text"
@@ -839,47 +840,7 @@ export default function Form({ partyId, onCloseForm }) {
                           className="focus:ring-2 focus:ring-blue-100"
                         />
 
-                        {/* <TextInput
-                        name="Cost Code"
-                        type="text"
-                        value={costCode}
-                        setValue={setCostCode}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
 
-                    
-
-                      <TextInput
-                        name="Tin No"
-                        type="text"
-                        value={tinNo}
-                        setValue={setTinNo}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-
-
-                      <DateInput
-                        name="CST Date"
-                        value={cstDate}
-                        setValue={setCstDate}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-
-                      <TextInput
-                        name="Cin No"
-                        type="text"
-                        value={cinNo}
-                        setValue={setCinNo}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      /> */}
 
                         <TextInput
                           name="Fax No"
@@ -911,6 +872,11 @@ export default function Form({ partyId, onCloseForm }) {
                           className="focus:ring-2 focus:ring-blue-100"
                         />
 
+                        <div className="col-span-2">
+
+                          <TextArea name="Address" inputClass="h-8" value={address} setValue={setAddress} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                        </div>
+
                         <DropdownInput
                           name="City/State Name"
                           options={dropDownListMergedObject(
@@ -929,16 +895,64 @@ export default function Form({ partyId, onCloseForm }) {
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
-
                         <TextInput
-                          name="PayTerm Days"
-                          type="name"
-                          value={payTermDay}
-                          setValue={setPayTermDay}
+                          name="Pincode"
+                          type="number"
+                          value={pincode}
+                          setValue={setPincode}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
+
+
+                        <DropdownInput
+                          name="PayTerm Days"
+                          options={dropDownListObject(
+                            id
+                              ? payTermList?.data
+                              : payTermList?.data?.filter((item) => item.active),
+                            "aliasName",
+                            "id"
+                          )}
+                          value={payTermDay}
+                          setValue={setPayTermDay}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+
+
+
+                        <button
+                          onClick={() => { setBranchModelOpen(true) }}
+                          disabled={readOnly}
+                          className="mt-4 flex items-center pl-3 h-9 w-24 rounded-md bg-blue-600  text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          Add Branch
+                        </button>
+
+
+
+
+                        {/* <TextInput
+                              name="PayTerm Days"
+                              type="name"
+                              value={payTermDay}
+                              setValue={setPayTermDay}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100"
+                            /> */}
 
                       </div>
                     </div>
@@ -949,11 +963,7 @@ export default function Form({ partyId, onCloseForm }) {
 
 
 
-
-
-
-
-              <div className="border-t pt-4 mt-4">
+              <div className="">
                 <div
                   className="flex justify-between items-center mb-3 cursor-pointer"
                   onClick={() => setIsAddressExpanded(!isAddressExpanded)}
@@ -967,101 +977,9 @@ export default function Form({ partyId, onCloseForm }) {
                 </div>
 
                 {isAddressExpanded && (
-
                   <>
+                    <div className="space-y-2">
 
-
-
-
-                    <div className="space-y-4">
-
-
-                      <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-base font-medium text-gray-900">
-                          Shipping Addresses
-                        </h3>
-                        <button
-                          onClick={addNewAddress}
-                          disabled={readOnly}
-                          className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3 w-3"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                          </svg>
-                          Add Address
-                        </button>
-                      </div>
-
-                      <div className="overflow-hidden rounded-md border border-gray-200">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">S.no</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Address</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">AliasName</th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200 bg-[#f1f1f0] ">
-                            {(shippingAddress || []).map((item, index) => (
-                              <tr key={index} className="hover:bg-gray-50">
-                                <td className="whitespace-nowrap px-3 py-1.5 text-xs text-gray-600">{index + 1}</td>
-                                <td className="px-3 py-1.5">
-                                  <input
-                                    type="text"
-                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-                                    value={item?.address || ""}
-                                    disabled={readOnly}
-                                    onChange={(e) => handleInputAddress(e.target.value, index, "address")}
-                                  />
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  <input
-                                    type="text"
-                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-                                    value={item?.aliasName || ""}
-                                    disabled={readOnly}
-                                    onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
-                                  />
-                                </td>
-                                <td className="whitespace-nowrap px-3 py-2 text-right">
-                                  <button
-                                    onClick={() => deleteAddress(index)}
-                                    disabled={readOnly}
-                                    className="p-1 text-red-500 hover:text-red-700 disabled:text-gray-400"
-                                  >
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                            {(!shippingAddress || shippingAddress.length === 0) && (
-                              <tr>
-                                <td colSpan="3" className="px-3 py-3 text-center">
-                                  <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
-
-                                    <p className="text-xs">No addresses found</p>
-                                    {/* <button
-                                    onClick={addNewAddress}
-                                    disabled={readOnly}
-                                    className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                                  >
-                                    + Add address
-                                  </button> */}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
 
 
 
@@ -1069,7 +987,7 @@ export default function Form({ partyId, onCloseForm }) {
 
 
                       <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-base font-medium text-gray-900">Contact Details</h3>
+                        <h3 className=" text-sm font-semibold text-gray-900">Contact Details</h3>
                         <button
                           onClick={() => setContactDetails([...contactDetails, {}])}
                           disabled={readOnly || childRecord.current > 0}
@@ -1160,13 +1078,118 @@ export default function Form({ partyId, onCloseForm }) {
                                   <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
 
                                     <p className="text-xs">No contacts found</p>
-                                    {/* <button
-                                    onClick={() => setContactDetails([...contactDetails, {}])}
-                                    disabled={readOnly || childRecord.current > 0}
-                                    className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+
+
+
+
+
+
+
+
+                      <div className="mb-1 flex items-center justify-between">
+                        <h3 className=" text-sm font-semibold text-gray-900">
+                          Branch Addresses
+                        </h3>
+                        {/* <button
+                          onClick={addNewAddress}
+                          disabled={readOnly}
+                          className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          Add Address
+                        </button> */}
+                      </div>
+
+                      <div className="overflow-hidden rounded-md border border-gray-200">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">S.no</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Name</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Address</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Contact</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Email</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
+
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200 bg-[#f1f1f0] ">
+                            {(partyBranch || []).map((item, index) => (
+                              <tr key={index} className="hover:bg-gray-50">
+                                <td className="whitespace-nowrap px-3 py-1.5 text-xs text-gray-600">{index + 1}</td>
+
+                                <td className="px-3 py-1.5">
+                                  <input
+                                    type="text"
+                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                    value={item?.branchName || ""}
+                                    disabled={true}
+                                  // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                  />
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <input
+                                    type="text"
+                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                    value={item?.branchAddress || ""}
+                                    disabled={true}
+                                  // onChange={(e) => handleInputAddress(e.target.value, index, "address")}
+                                  />
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <input
+                                    type="text"
+                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                    value={item?.branchContact || ""}
+                                    disabled={true}
+                                  // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                  />
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <input
+                                    type="text"
+                                    className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                    value={item?.branchEmail || ""}
+                                    disabled={true}
+                                  // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                  />
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-right">
+                                  <button
+                                    onClick={() => deleteAddress(item?.id)}
+                                    disabled={readOnly}
+                                    className="p-1 text-red-500 hover:text-red-700 disabled:text-gray-400"
                                   >
-                                    + Add contact
-                                  </button> */}
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                            {(!partyBranch || partyBranch.length === 0) && (
+                              <tr>
+                                <td colSpan="3" className="px-3 py-3 text-center">
+                                  <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
+
+                                    <p className="text-xs">No addresses found</p>
+
                                   </div>
                                 </td>
                               </tr>
@@ -1177,92 +1200,12 @@ export default function Form({ partyId, onCloseForm }) {
                     </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    {/* <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto] mt-4">
-                      <div className=" grid grid-cols-1 gap-x-3">
-                        <TextInput
-                          name="Kyc Form Send Email"
-                          type="text"
-                          value={mail}
-                          setValue={setMail}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          onBlur={(e) => {
-                            if (aliasName) return;
-                            setAliasName(e.target.value);
-                          }}
-                          className="focus:ring-2 focus:ring-blue-100"
-                        />
-
-
-                        <MultiSelectDropdown readOnly={readOnly} name="Certificate" selected={certificate} setSelected={setCertificate}
-                          options={multiSelectOption(cerdificateDetail?.currentData?.data ? cerdificateDetail?.currentData?.data : [], "name", "id")} />
-                      </div>
-                      <div className="flex flex-col items-center lg:items-end">
-                        <div className="w-full max-w-xs rounded-xl border border-gray-100 bg-[#f1f1f0]  shadow-xs">
-                          <h3 className=" text-center text-sm font-medium text-gray-700">
-                            Party Logo/Image
-                          </h3>
-                          <BrowseSingleImage
-                            picture={image}
-                            setPicture={setImage}
-                            readOnly={readOnly}
-                            className="h-52 w-52 rounded-xl border-2 border-dashed border-gray-200 p-2 hover:border-blue-300 transition-colors"
-                          />
-                        </div>
-                      </div>
-                    </div> */}
-
-
-
-
-
-
                   </>
                 )}
 
               </div>
-
-              {/* )} */}
             </div>
           </MastersForm>
-
-
-          {/* <div className="pb-2 bottom-2 right-0 left-0 flex justify-between items-center px-5 bg-[#f1f1f0] ">
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className={`w-7 h-7 flex items-center justify-center rounded-full bg-gray-600 text-white shadow hover:bg-gray-700 transition duration-200 ${step > 1 ? "block" : "hidden"
-                }`}
-              aria-label="Previous"
-            >
-              <ChevronLeft className="  w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleNext}
-              className={`w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition duration-200 ${step < 3 ? "block" : "hidden"
-                }`}
-              aria-label="Next"
-            >
-              <ChevronRight className="w-4 h-4  " />
-            </button>
-          </div> */}
-
         </Modal>
       </>
 
@@ -1273,6 +1216,7 @@ export default function Form({ partyId, onCloseForm }) {
     return (
       <div onKeyDown={handleKeyDown} >
         <>
+
           <div className="w-full flex justify-between mb-2 items-center px-0.5 p-2">
             <h1 className="text-2xl font-bold text-gray-800"> Party Master</h1>
             <div className="flex items-center">
@@ -1288,7 +1232,7 @@ export default function Form({ partyId, onCloseForm }) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">{console.log(allData, "alll")}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <CommonTable
               columns={columns}
               data={allData?.data || []}
@@ -1300,24 +1244,6 @@ export default function Form({ partyId, onCloseForm }) {
           </div>
 
 
-
-
-
-
-
-          {/* <div className={`${"w-full flex items-start"}`}>
-            <Mastertable
-              header={"Party List"}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              onDataClick={onDataClick}
-
-              tableHeaders={tableHeaders}
-              tableDataNames={tableDataNames}
-              data={allData?.data}
-              loading={isLoading || isFetching}
-            />
-          </div> */}
         </>
 
         {form === true &&
@@ -1325,7 +1251,7 @@ export default function Form({ partyId, onCloseForm }) {
             <Modal
               isOpen={form}
               form={form}
-              widthClass={"w-[75%] h-[45%] -mt-40"}
+              widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[65%]"}`}
               onClose={() => {
                 setForm(false);
                 onCloseForm();
@@ -1338,26 +1264,37 @@ export default function Form({ partyId, onCloseForm }) {
 
               }}
             >
+
               <Modal
-                isOpen={itemsPopup}
+                isOpen={branchModelOpen}
+                form={form}
+                widthClass={`${"w-[55%] h-[50%]"}`}
+                setBranchModelOpen={setBranchModelOpen}
                 onClose={() => {
-                  setAccessoryGroup(accessoryGroupPrev);
-                  setAccessoryItemList(structuredClone(backUpItemsList));
-                  setItemsPopup(false);
+                  setBranchModelOpen(false)
                 }}
-                widthClass={
-                  "w-[55%] h-[45%] "
-                }
               >
-                <PartyOnItems
-                  readOnly={readOnly}
-                  setItemsPopup={setItemsPopup}
-                  accessoryItemsMasterList={accessoryItemsMasterList}
-                  accessoryItemList={accessoryItemList}
-                  setAccessoryItemList={setAccessoryItemList}
+
+
+
+                <AddBranch partyData={allData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                  branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
+                  branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} onNew={onNew}
+                  setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
+                  deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
+                  handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
+                  shippingAddress={shippingAddress} setForm={setForm} addNewAddress={addNewAddress}
+                  handleInputAddress={handleInputAddress} deleteAddress={deleteAddress} removeItem={removeItem}
+                  partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen}
                 />
+
+
+
               </Modal>
+
               <MastersForm
+
+                masterClass={"pb-2"}
                 onNew={onNew}
                 onClose={() => {
                   setForm(false);
@@ -1374,7 +1311,7 @@ export default function Form({ partyId, onCloseForm }) {
                 readOnly={readOnly}
                 emptyErrors={() => setErrors({})}
               >
-                <div className="space-y-4 bg-[#f1f1f0]">
+                <div className="space-y-4 bg-[#f1f1f0] p-2">
                   {/* {step === 1 && ( */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
 
@@ -1386,64 +1323,75 @@ export default function Form({ partyId, onCloseForm }) {
                         </h3>
                         <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
                           <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                            <FancyCheckBox
-                              label="Is Supplier"
+
+
+                            <div className="grid grid-cols-2 ml-2  items-center gap-1">
+
+                              <input
+                                type="radio"
+                                name="type"
+                                checked={isSupplier}
+                                onChange={() => handleChange('supplier')}
+                              />
+
+                              <label className="text-xs">Supplier</label>
+                            </div>
+                            <div className="grid grid-cols-2 ml-2  items-center gap-1">
+                              <input
+                                type="radio"
+                                name="type"
+                                checked={isClient}
+                                onChange={() => handleChange('client')}
+                              />
+
+                              <label className="text-xs">Client</label>
+                            </div>
+
+                            {/* <CheckBox
+                              name="Is Supplier"
                               value={isSupplier}
-                              onChange={setSupplier}
+                              setValue={setSupplier}
                               readOnly={readOnly}
                               className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
                             />
-                            <FancyCheckBox
-                              label="Is Client"
+                            <CheckBox
+                              name="Is Client"
                               value={isClient}
-                              onChange={setClient}
+                              setValue={setClient}
                               readOnly={readOnly}
                               className="hover:bg-gray-50 p-3 rounded-lg transition-colors"
-                            />
+                            /> */}
 
 
 
                             {isSupplier && (
                               <>
-                                <FancyCheckBox
-                                  label="Grey Yarn"
+                                <CheckBox
+                                  name="Grey Yarn"
                                   value={isGy}
-                                  onChange={setIsGy}
+                                  setValue={setIsGy}
                                   readOnly={readOnly}
                                   className="hover:bg-gray-100 p-3 rounded-lg"
                                 />
-                                <FancyCheckBox
-                                  label="Dyed Yarn"
+                                <CheckBox
+                                  name="Dyed Yarn"
                                   value={isDy}
-                                  onChange={setIsDy}
+                                  setValue={setIsDy}
                                   readOnly={readOnly}
                                   className="hover:bg-gray-100 p-3 rounded-lg"
                                 />
-                                <FancyCheckBox
-                                  label="Accessories"
+                                <CheckBox
+                                  name="Accessories"
                                   value={isAcc}
-                                  onChange={setIsAcc}
+                                  setValue={setIsAcc}
                                   readOnly={readOnly}
                                   className="hover:bg-gray-100 p-3 rounded-lg"
                                 />
                               </>
                             )}
 
-
-
-
-
-
-
-
-
-
-
-
                             <div className="flex items-center gap-x-2">
-                              {/* <span className="text-slate-800 font-medium text-gray-500 text-xs">
-                            Status:
-                          </span> */}
+
                               <ToggleButton
                                 name="Status"
                                 options={statusDropdown}
@@ -1462,11 +1410,11 @@ export default function Form({ partyId, onCloseForm }) {
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-2 shadow-xs ">
-                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5 ">
+                      <div className="space-y-2">
+                        <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-1 shadow-xs ">
+                          <div className="grid grid-cols-1 gap-x-2  md:grid-cols-2 lg:grid-cols-5 ">
                             <TextInput
-                              name="Party Name"
+                              name={isSupplier ? "Supplier Name" : "Customer Name"}
                               type="text"
                               value={name}
                               setValue={setName}
@@ -1511,15 +1459,7 @@ export default function Form({ partyId, onCloseForm }) {
                               className="focus:ring-2 focus:ring-blue-100"
                             />
 
-                            <TextInput
-                              name="Pincode"
-                              type="number"
-                              value={pincode}
-                              setValue={setPincode}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
+
                             <TextInput
                               name="CST No"
                               type="text"
@@ -1530,47 +1470,7 @@ export default function Form({ partyId, onCloseForm }) {
                               className="focus:ring-2 focus:ring-blue-100"
                             />
 
-                            {/* <TextInput
-                        name="Cost Code"
-                        type="text"
-                        value={costCode}
-                        setValue={setCostCode}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
 
-                    
-
-                      <TextInput
-                        name="Tin No"
-                        type="text"
-                        value={tinNo}
-                        setValue={setTinNo}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-
-
-                      <DateInput
-                        name="CST Date"
-                        value={cstDate}
-                        setValue={setCstDate}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-
-                      <TextInput
-                        name="Cin No"
-                        type="text"
-                        value={cinNo}
-                        setValue={setCinNo}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      /> */}
 
                             <TextInput
                               name="Fax No"
@@ -1602,6 +1502,11 @@ export default function Form({ partyId, onCloseForm }) {
                               className="focus:ring-2 focus:ring-blue-100"
                             />
 
+                            <div className="col-span-2">
+
+                              <TextArea name="Address" inputClass="h-8" value={address} setValue={setAddress} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                            </div>
+
                             <DropdownInput
                               name="City/State Name"
                               options={dropDownListMergedObject(
@@ -1620,8 +1525,53 @@ export default function Form({ partyId, onCloseForm }) {
                               disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100"
                             />
-
                             <TextInput
+                              name="Pincode"
+                              type="number"
+                              value={pincode}
+                              setValue={setPincode}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100"
+                            />
+
+
+                            <DropdownInput
+                              name="PayTerm Days"
+                              options={dropDownListObject(
+                                id
+                                  ? payTermList?.data
+                                  : payTermList?.data?.filter((item) => item.active),
+                                "aliasName",
+                                "id"
+                              )}
+                              value={payTermDay}
+                              setValue={setPayTermDay}
+                              required={true}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className="focus:ring-2 focus:ring-blue-100"
+                            />
+
+
+
+                            <button
+                              onClick={() => setBranchModelOpen(true)}
+                              disabled={readOnly}
+                              className="mt-4 flex items-center pl-3 h-9 w-24 rounded-md bg-blue-600  text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3 w-3"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                              </svg>
+                              Add Branch
+                            </button>
+
+                            {/* <TextInput
                               name="PayTerm Days"
                               type="name"
                               value={payTermDay}
@@ -1629,7 +1579,7 @@ export default function Form({ partyId, onCloseForm }) {
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100"
-                            />
+                            /> */}
 
                           </div>
                         </div>
@@ -1637,14 +1587,7 @@ export default function Form({ partyId, onCloseForm }) {
 
                     </div>
                   </div>
-
-
-
-
-
-
-
-                  <div className="border-t pt-4 mt-4">
+                  <div className="">
                     <div
                       className="flex justify-between items-center mb-3 cursor-pointer"
                       onClick={() => setIsAddressExpanded(!isAddressExpanded)}
@@ -1658,17 +1601,12 @@ export default function Form({ partyId, onCloseForm }) {
                     </div>
 
                     {isAddressExpanded && (
-
                       <>
+                        <div className="space-y-2">
 
 
-
-
-                        <div className="space-y-4">
-
-
-                          <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-base font-medium text-gray-900">
+                          {/* <div className="mb-1 flex items-center justify-between">
+                            <h3 className=" text-sm font-semibold text-gray-900">
                               Shipping Addresses
                             </h3>
                             <button
@@ -1686,9 +1624,9 @@ export default function Form({ partyId, onCloseForm }) {
                               </svg>
                               Add Address
                             </button>
-                          </div>
+                          </div> */}
 
-                          <div className="overflow-hidden rounded-md border border-gray-200">
+                          {/* <div className="overflow-hidden rounded-md border border-gray-200">
                             <table className="min-w-full divide-y divide-gray-200">
                               <thead className="bg-gray-50">
                                 <tr>
@@ -1739,20 +1677,14 @@ export default function Form({ partyId, onCloseForm }) {
                                       <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
 
                                         <p className="text-xs">No addresses found</p>
-                                        {/* <button
-                                    onClick={addNewAddress}
-                                    disabled={readOnly}
-                                    className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                                  >
-                                    + Add address
-                                  </button> */}
+
                                       </div>
                                     </td>
                                   </tr>
                                 )}
                               </tbody>
                             </table>
-                          </div>
+                          </div> */}
 
 
 
@@ -1760,7 +1692,7 @@ export default function Form({ partyId, onCloseForm }) {
 
 
                           <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-base font-medium text-gray-900">Contact Details</h3>
+                            <h3 className=" text-sm font-semibold text-gray-900">Contact Details</h3>
                             <button
                               onClick={() => setContactDetails([...contactDetails, {}])}
                               disabled={readOnly || childRecord.current > 0}
@@ -1851,13 +1783,105 @@ export default function Form({ partyId, onCloseForm }) {
                                       <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
 
                                         <p className="text-xs">No contacts found</p>
-                                        {/* <button
-                                    onClick={() => setContactDetails([...contactDetails, {}])}
-                                    disabled={readOnly || childRecord.current > 0}
-                                    className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-                                  >
-                                    + Add contact
-                                  </button> */}
+
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+
+
+
+
+
+
+
+
+
+                          <div className="mb-1 flex items-center justify-between">
+                            <h3 className=" text-sm font-semibold text-gray-900">
+                              Branch Addresses
+                            </h3>
+
+                          </div>
+
+                          <div className="overflow-hidden rounded-md border border-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">S.no</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Name</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Address</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Contact</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Email</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Actions</th>
+
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 bg-[#f1f1f0] ">
+                                {(partyBranch || []).map((item, index) => (
+                                  <tr key={index} className="hover:bg-gray-50">
+                                    <td className="whitespace-nowrap px-3 py-1.5 text-xs text-gray-600">{index + 1}</td>
+
+                                    <td className="px-3 py-1.5">
+                                      <input
+                                        type="text"
+                                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                        value={item?.branchName || ""}
+                                        disabled={true}
+                                      // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                      />
+                                    </td>
+                                    <td className="px-3 py-1.5">
+                                      <input
+                                        type="text"
+                                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                        value={item?.branchAddress || ""}
+                                        disabled={true}
+                                      // onChange={(e) => handleInputAddress(e.target.value, index, "address")}
+                                      />
+                                    </td>
+                                    <td className="px-3 py-1.5">
+                                      <input
+                                        type="text"
+                                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                        value={item?.branchContact || ""}
+                                        disabled={true}
+                                      // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                      />
+                                    </td>
+                                    <td className="px-3 py-1.5">
+                                      <input
+                                        type="text"
+                                        className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                        value={item?.branchEmail || ""}
+                                        disabled={true}
+                                      // onChange={(e) => handleInputAddress(e.target.value, index, "aliasName")}
+                                      />
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                                      <button
+                                        onClick={() => deleteAddress(item?.id)}
+                                        disabled={readOnly}
+                                        className="p-1 text-red-500 hover:text-red-700 disabled:text-gray-400"
+                                      >
+                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                                {(!partyBranch || partyBranch.length === 0) && (
+                                  <tr>
+                                    <td colSpan="3" className="px-3 py-3 text-center">
+                                      <div className="flex flex-col items-center justify-center space-y-1 text-gray-400">
+
+                                        <p className="text-xs">No addresses found</p>
+
                                       </div>
                                     </td>
                                   </tr>
@@ -1868,92 +1892,12 @@ export default function Form({ partyId, onCloseForm }) {
                         </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        {/* <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto] mt-4">
-                      <div className=" grid grid-cols-1 gap-x-3">
-                        <TextInput
-                          name="Kyc Form Send Email"
-                          type="text"
-                          value={mail}
-                          setValue={setMail}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          onBlur={(e) => {
-                            if (aliasName) return;
-                            setAliasName(e.target.value);
-                          }}
-                          className="focus:ring-2 focus:ring-blue-100"
-                        />
-
-
-                        <MultiSelectDropdown readOnly={readOnly} name="Certificate" selected={certificate} setSelected={setCertificate}
-                          options={multiSelectOption(cerdificateDetail?.currentData?.data ? cerdificateDetail?.currentData?.data : [], "name", "id")} />
-                      </div>
-                      <div className="flex flex-col items-center lg:items-end">
-                        <div className="w-full max-w-xs rounded-xl border border-gray-100 bg-[#f1f1f0]  shadow-xs">
-                          <h3 className=" text-center text-sm font-medium text-gray-700">
-                            Party Logo/Image
-                          </h3>
-                          <BrowseSingleImage
-                            picture={image}
-                            setPicture={setImage}
-                            readOnly={readOnly}
-                            className="h-52 w-52 rounded-xl border-2 border-dashed border-gray-200 p-2 hover:border-blue-300 transition-colors"
-                          />
-                        </div>
-                      </div>
-                    </div> */}
-
-
-
-
-
-
                       </>
                     )}
 
                   </div>
-
-                  {/* )} */}
                 </div>
               </MastersForm>
-
-
-              {/* <div className="pb-2 bottom-2 right-0 left-0 flex justify-between items-center px-5 bg-[#f1f1f0] ">
-            <button
-              type="button"
-              onClick={handlePrevious}
-              className={`w-7 h-7 flex items-center justify-center rounded-full bg-gray-600 text-white shadow hover:bg-gray-700 transition duration-200 ${step > 1 ? "block" : "hidden"
-                }`}
-              aria-label="Previous"
-            >
-              <ChevronLeft className="  w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleNext}
-              className={`w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition duration-200 ${step < 3 ? "block" : "hidden"
-                }`}
-              aria-label="Next"
-            >
-              <ChevronRight className="w-4 h-4  " />
-            </button>
-          </div> */}
-
             </Modal>
           )}
       </div>

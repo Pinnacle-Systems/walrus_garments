@@ -107,6 +107,7 @@ const CommonTable = ({
       <table className="w-full border-collapse">
         <thead className="bg-gray-200 text-gray-800">
           <tr>
+
             {columns.map((column, index) => (
               <th
                 key={index}
@@ -116,11 +117,11 @@ const CommonTable = ({
               </th>
             ))}
             {rowActions && (
-              <th className="px-4 py-2 text-left font-medium text-[13px]">Actions</th>
+              <th className="px-4 py-2 text-center font-medium text-[13px]">Actions</th>
             )}
           </tr>
         </thead>
-        <tbody>
+        <tbody>{console.log(currentItems, "currentItems")}
           {currentItems.length === 0 ? (
             <tr>
               <td colSpan={columns.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
@@ -140,7 +141,7 @@ const CommonTable = ({
                     className={`px-4 py-1 ${colIndex < columns.length - 1 ? 'border-r border-gray-200' : ''} h-8 ${column.cellClass ? column.cellClass(item) : ''
                       }`}
                   >
-                    {column.accessor(item)}
+                    {column.accessor(item, index)}
                   </td>
                 ))}
                 {rowActions && (

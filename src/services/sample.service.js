@@ -60,9 +60,6 @@ async function manualFilterSearchData(searchBillDate, searchValidDate, data) {
 
 async function get(req) {
   const {
-    isDashboard = false,
-    isCompletedReport = false,
-    isWipOnly = false,
     companyId,
     active,
     branchId,
@@ -80,7 +77,6 @@ async function get(req) {
 
   data = await prisma.sample.findMany({
     where: {
-      // companyId: companyId ? parseInt(companyId) : undefined,
       branchId: branchId ? parseInt(branchId) : undefined,
       active: active ? Boolean(active) : undefined,
       docId: Boolean(searchDocId)
@@ -88,37 +84,22 @@ async function get(req) {
           contains: searchDocId,
         }
         : undefined,
-      Party:
-        Boolean(searchSchool) ||
-          Boolean(searchContactName) ||
-          Boolean(searchContact)
-          ? {
-            name: {
-              contains: searchSchool,
-            },
-            contactPersonName: {
-              contains: searchContactName,
-            },
-            contactMobile: {
-              contains: searchContact,
-            },
-          }
-          : undefined,
+
     },
     orderBy: {
       id: "desc",
     },
     include: {
-      Style: {
-        select: {
-          name: true,
-        },
-      },
-      Fabric: {
-        select: {
-          name: true,
-        },
-      },
+      // Style: {
+      //   select: {
+      //     name: true,
+      //   },
+      // },
+      // Fabric: {
+      //   select: {
+      //     name: true,
+      //   },
+      // },
       Party: {
         select: {
           name: true,
@@ -126,45 +107,45 @@ async function get(req) {
           contactMobile: true,
         },
       },
-      sampleDetails: {
-        select: {
-          id: true,
-          sizeId: true,
-          comment: true,
-          filePath: true,
-          colorId: true,
-          Fabric: true,
-          fabricId: true,
-          itemId: true,
-          sampleId: true,
-          Color: true,
-          Size: true,
-          Item: true,
-          ItemType: true,
-          itemTypeId: true,
-          pattern: true,
-          printing: true,
-          stitching: true,
-          ironingAndPacking: true,
-          embroiding: true,
-          cutting: true,
-          embroidingDate: true,
-          printingDate: true,
-          cuttingDate: true,
-          ironingAndPackingDate: true,
-          stitchingDate: true,
-          patternDate: true,
-          printingFilePath: true,
-          embroidingFilePath: true,
-          ironingAndPackingFilePath: true,
-          patternUserId: true,
-          cuttingUserId: true,
-          printingUserId: true,
-          embroidingUserId: true,
-          stitchingUserId: true,
-          ironingAndPackingUserId: true,
-        },
-      },
+      // sampleDetails: {
+      //   select: {
+      //     id: true,
+      //     sizeId: true,
+      //     comment: true,
+      //     filePath: true,
+      //     colorId: true,
+      //     Fabric: true,
+      //     fabricId: true,
+      //     itemId: true,
+      //     sampleId: true,
+      //     Color: true,
+      //     Size: true,
+      //     Item: true,
+      //     ItemType: true,
+      //     itemTypeId: true,
+      //     pattern: true,
+      //     printing: true,
+      //     stitching: true,
+      //     ironingAndPacking: true,
+      //     embroiding: true,
+      //     cutting: true,
+      //     embroidingDate: true,
+      //     printingDate: true,
+      //     cuttingDate: true,
+      //     ironingAndPackingDate: true,
+      //     stitchingDate: true,
+      //     patternDate: true,
+      //     printingFilePath: true,
+      //     embroidingFilePath: true,
+      //     ironingAndPackingFilePath: true,
+      //     patternUserId: true,
+      //     cuttingUserId: true,
+      //     printingUserId: true,
+      //     embroidingUserId: true,
+      //     stitchingUserId: true,
+      //     ironingAndPackingUserId: true,
+      //   },
+      // },
     },
   });
   data = await manualFilterSearchData(searchBillDate, searchValidDate, data);
@@ -176,34 +157,42 @@ async function get(req) {
       pageNumber * dataPerPage
     );
   }
-  if (JSON.parse(isDashboard)) {
-    if (JSON.parse(isCompletedReport)) {
-      data = data?.filter(
-        (i) =>
-          i.sampleDetails?.every(
-            (val) =>
-              val.cutting == true ||
-              val.printing == true ||
-              val.stitching == true ||
-              val.embroiding == true ||
-              val.ironingAndPacking == true ||
-              val.pattern == true
-          ) && i.sampleSubmitBy
-      );
-    } else if (JSON.parse(isWipOnly)) {
-      data = data?.filter((i) =>
-        i.sampleDetails?.some(
-          (val) =>
-            val.cutting == false ||
-            val.printing == false ||
-            val.stitching == false ||
-            val.embroiding == false ||
-            val.ironingAndPacking == false ||
-            val.pattern == false
-        )
-      );
-    }
-  }
+
+
+
+
+
+
+  // if (JSON.parse(isDashboard)) {
+  //   if (JSON.parse(isCompletedReport)) {
+  //     data = data?.filter(
+  //       (i) =>
+  //         i.sampleDetails?.every(
+  //           (val) =>
+  //             val.cutting == true ||
+  //             val.printing == true ||
+  //             val.stitching == true ||
+  //             val.embroiding == true ||
+  //             val.ironingAndPacking == true ||
+  //             val.pattern == true
+  //         ) && i.sampleSubmitBy
+  //     );
+  //   } else if (JSON.parse(isWipOnly)) {
+  //     data = data?.filter((i) =>
+  //       i.sampleDetails?.some(
+  //         (val) =>
+  //           val.cutting == false ||
+  //           val.printing == false ||
+  //           val.stitching == false ||
+  //           val.embroiding == false ||
+  //           val.ironingAndPacking == false ||
+  //           val.pattern == false
+  //       )
+  //     );
+  //   }
+  // }
+
+
   return { statusCode: 0, nextDocId: newDocId, data, totalCount };
 }
 
@@ -567,49 +556,45 @@ async function update(id, body) {
   });
   if (!dataFound) return NoRecordFound("sample");
   await prisma.$transaction(async (tx) => {
-    if (sampleUpdateMerchandiser) {
-      data = await tx.sample.update({
-        where: {
-          id: parseInt(id),
-        },
-        data: {
-          remarks,
-          sampleSubmitBy: sampleSubmitBy ? sampleSubmitBy : undefined,
-          sampleSubmitWay: sampleSubmitWay ? sampleSubmitWay : undefined,
-          updatedById: userId ? parseInt(userId) : undefined,
-        },
-        include: {
-          sampleDetails: true,
-        },
-      });
-      await updateSampleDetails(tx, sampleDetails, data, parseInt(userId));
-    } else {
-      data = await tx.sample.update({
-        where: {
-          id: parseInt(id),
-        },
-        data: {
-          address,
-          contactPersonName,
-          // fabricId: fabricId ? parseInt(fabricId) : undefined,
-          userId: merchandId ? parseInt(merchandId) : undefined,
-
-          updatedById: userId ? parseInt(userId) : undefined,
-          partyId: partyId ? parseInt(partyId) : undefined,
-          // styleId: styleId ? parseInt(styleId) : undefined,
-
-          companyId: companyId ? parseInt(companyId) : undefined,
-          active: active && JSON.parse(active) ? JSON.parse(active) : undefined,
-          branchId: branchId ? parseInt(branchId) : undefined,
-          phone,
-          validDate: validDate ? new Date(validDate) : undefined,
-        },
-        include: {
-          sampleDetails: true,
-        },
-      });
-      await updateSampleDetailsBySampleFollow(tx, sampleDetails, data, userId);
-    }
+    // if (sampleUpdateMerchandiser) {
+    //   data = await tx.sample.update({
+    //     where: {
+    //       id: parseInt(id),
+    //     },
+    //     data: {
+    //       remarks,
+    //       sampleSubmitBy: sampleSubmitBy ? sampleSubmitBy : undefined,
+    //       sampleSubmitWay: sampleSubmitWay ? sampleSubmitWay : undefined,
+    //       updatedById: userId ? parseInt(userId) : undefined,
+    //     },
+    //     include: {
+    //       sampleDetails: true,
+    //     },
+    //   });
+    //   await updateSampleDetails(tx, sampleDetails, data, parseInt(userId));
+    // } else {
+    data = await tx.sample.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        address,
+        contactPersonName,
+        userId: merchandId ? parseInt(merchandId) : undefined,
+        updatedById: userId ? parseInt(userId) : undefined,
+        partyId: partyId ? parseInt(partyId) : undefined,
+        companyId: companyId ? parseInt(companyId) : undefined,
+        active: active && JSON.parse(active) ? JSON.parse(active) : undefined,
+        branchId: branchId ? parseInt(branchId) : undefined,
+        phone,
+        validDate: validDate ? new Date(validDate) : undefined,
+      },
+      include: {
+        sampleDetails: true,
+      },
+    });
+    await updateSampleDetailsBySampleFollow(tx, sampleDetails, data, userId);
+    // }
   });
 
 

@@ -45,17 +45,12 @@ export function ReusableSearchableInput({
   };
 
   const handleDelete = (itemId, e) => {
-    // e.stopPropagation();
     onDeleteItem(itemId);
   };
 
 
   return (
-
-
     <>
-
-
       <Modal
         isOpen={openModel}
         onClose={() => setOpenModel(false)}
@@ -120,13 +115,11 @@ export function ReusableSearchableInput({
                 <div
                   key={item.id}
                   className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
-                  onClick={() => setSearchTerm(item.id)}
+                  onClick={() => { setSearchTerm(item.id); setIsDropdownOpen(false) }}
                 >
                   <div>
                     <div className="font-medium">{item.name}</div>
-                    {/* {item.code && (
-                    <div className="text-xs text-slate-500">Code: {item.code}</div>
-                  )} */}
+
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button

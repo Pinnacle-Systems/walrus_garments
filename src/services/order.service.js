@@ -6,34 +6,96 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 const prisma = new PrismaClient()
 
-async function getNextDocId(branchId, shortCode, startTime, endTime) {
-    let lastObject = await prisma.order.findFirst({
-        where: {
-            branchId: parseInt(branchId),
-            AND: [
-                {
-                    createdAt: {
-                        gte: startTime
 
-                    }
-                },
-                {
-                    createdAt: {
-                        lte: endTime
-                    }
-                }
-            ],
-        },
-        orderBy: {
-            id: 'desc'
-        }
-    });
-    const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
-    if (lastObject) {
-        newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+function findIsNumber(docId) {
+    const parts = docId?.split('/');
+    const last = parts[parts?.length - 1];
+
+    console.log(last, "lastttt")
+
+    if (last == "Drift") {
+        return false
     }
-    return newDocId
+    else {
+        return true
+    }
+
+    // return !isNaN(Number(last));
+}
+
+async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, docId, isUpdate) {
+
+    if (saveType) {
+        return "Draft Save"
+    }
+    else if (isUpdate == "drift") {
+        let lastObject = await prisma.order.findFirst({
+            where: {
+                branchId: parseInt(branchId),
+                // docId: {
+                //     not: findIsNumber(docId)
+                // },
+                draftSave: false,
+                AND: [
+                    {
+                        createdAt: {
+                            gte: startTime
+
+                        }
+                    },
+                    {
+                        createdAt: {
+                            lte: endTime
+                        }
+                    }
+                ],
+            },
+            orderBy: {
+                id: 'desc'
+            }
+        });
+
+
+
+        console.log(lastObject, "lastObjectlasttttt")
+        const branchObj = await getTableRecordWithId(branchId, "branch")
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
+        if (lastObject) {
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        }
+        return newDocId
+    }
+    else {
+        let lastObject = await prisma.order.findFirst({
+            where: {
+                branchId: parseInt(branchId),
+                AND: [
+                    {
+                        createdAt: {
+                            gte: startTime
+
+                        }
+                    },
+                    {
+                        createdAt: {
+                            lte: endTime
+                        }
+                    }
+                ],
+            },
+            orderBy: {
+                id: 'desc'
+            }
+        });
+
+        const branchObj = await getTableRecordWithId(branchId, "branch")
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
+        if (lastObject) {
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        }
+        return newDocId
+    }
+
 }
 
 const xprisma = prisma.$extends({
@@ -120,8 +182,6 @@ async function getOne(id) {
                 }
             },
             orderDetails: true
-
-
         }
 
     })
@@ -163,11 +223,11 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 
 
 async function create(req) {
-    const { userId, branchId, partyId, finYearId, packingCoverType,
+    const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
+    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
 
     let data;
@@ -183,8 +243,8 @@ async function create(req) {
                     createdById: parseInt(userId),
                     contactPersonName,
                     address,
-                    phone,
-                    validDate: validDate ? new Date(validDate) : undefined,
+                    phone, notes, term, orderBy,
+                    validDate: validDate ? new Date(validDate) : undefined, draftSave: Boolean(draftSave),
                     orderDetails: {
                         createMany: {
                             data: JSON.parse(orderDetails || []).map(temp => {
@@ -227,10 +287,12 @@ async function create(req) {
 
 
 const update = async (id, body) => {
-    const { userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate,
+    const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate, notes, term, orderBy,
     } = body;
 
-
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
 
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
@@ -241,6 +303,7 @@ const update = async (id, body) => {
         data = await tx.order.update({
             where: { id: parseInt(id) },
             data: {
+                docId: draftSave ? docIdNumber : dataFound?.docId,
                 partyId: partyId ? parseInt(partyId) : undefined,
                 packingCoverType,
                 branchId: branchId ? parseInt(branchId) : undefined,
@@ -248,7 +311,7 @@ const update = async (id, body) => {
                 address,
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId),
+                updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
                 orderDetails: {
                     deleteMany: {},
                     createMany: {

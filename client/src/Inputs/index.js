@@ -1,13 +1,13 @@
+
 import validator from "validator";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MultiSelect } from "react-multi-select-component";
 import Select from "react-dropdown-select";
 import { findFromList } from "../Utils/helper";
 import "./index.css";
-import { TextField } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { setLastTab, setOpenPartyModal } from "../redux/features/openModel";
+import { FormControl, MenuItem, TextField } from "@mui/material";
 import { push } from "../redux/features/opentabs";
+import { useDispatch } from "react-redux";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -35,7 +35,50 @@ export const handleOnChange = (event, setValue) => {
     );
   });
 };
+export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
+  return (
+    <label
+      style={{ fontSize: 11 }}
+      className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
+        }`}
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        disabled={readOnly}
+        className="accent-blue-600"
+      />
+      <span className="break-words text-xs text-wrap w-full">{label}</span>
+    </label>
+  );
+};
+export const handleOnChangeforpassword = (event, setValue) => {
+  const inputValue = event.target.value;
+  const inputSelectionStart = event.target.selectionStart;
+  const inputSelectionEnd = event.target.selectionEnd;
 
+  const LowerCaseValue = inputValue.toLowerCase();
+
+  const valueBeforeCursor = LowerCaseValue.slice(0, inputSelectionStart);
+  const valueAfterCursor = LowerCaseValue.slice(inputSelectionEnd);
+
+  setValue(
+    valueBeforeCursor +
+    inputValue.slice(inputSelectionStart, inputSelectionEnd) +
+    valueAfterCursor
+  );
+
+  // Set the cursor position to the end of the input value
+  setTimeout(() => {
+    event.target.setSelectionRange(
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+    );
+  });
+};
 export const MultiSelectDropdown = ({
   name,
   selected,
@@ -47,14 +90,14 @@ export const MultiSelectDropdown = ({
   className = "",
   inputClass,
 }) => {
+  console.log(options, "oiptiosn");
   return (
     <div
-      className={`md:grid-cols-3 items-center z-0  ${className}`}
+      className={`m-1  md:grid-cols-3 items-center z-0 md:my-0.5 md:py-3 data ${className}`}
     >
-      <label className={`text-xs text-slate-800 group-hover:text-blue-600 md:text-start flex mb-1 ${labelName}`}>{name}</label>
+      <label className={`md:text-start flex ${labelName}`}>{name}</label>
       <MultiSelect
-        className={`focus:outline-none   rounded text-black text-xs border border-slate-300 ${inputClass}`}
-        // className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
+        className={`focus:outline-none  border border-gray-500 rounded text-black  ${inputClass}`}
         options={options}
         value={selected}
         onChange={readOnly ? () => { } : setSelected}
@@ -63,22 +106,53 @@ export const MultiSelectDropdown = ({
     </div>
   );
 };
-
-// export const TextInput = ({ name, type, value, setValue, readOnly, className, inputClass, required = false, disabled = false, tabIndex = null, onBlur = null }) => {
-//     return (
-//         <div className='input-group grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1 data gap-1'>
-//             <label className={`md:text-start flex ${className}`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label>
-//             <input onBlur={onBlur} tabIndex={tabIndex ? tabIndex : undefined} type={type} disabled={disabled}
-//                 required={required} className={`${"input-field focus:outline-none md:col-span-2 border-gray-500 border rounded"} ${inputClass}`} value={value} onChange={(e) => { type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue) }} readOnly={readOnly}
-//                 placeholder={`${name}`}
-//             />
-//         </div>
-//     )
-// }
-
 export const TextInput = ({
   name,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+}) => {
+  return (
+    <div className={`mb-3 ${width}`}>
+      {name && (
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          {required ? <RequiredLabel name={name} /> : name}
+        </label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+          type === "number"
+            ? setValue(e.target.value)
+            : handleOnChange(e, setValue)
+        }
+        onBlur={onBlur}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${className}`}
+      />
+    </div>
+  );
+};
 
+export const PasswordTextInput = ({
+  name,
   type,
   value,
   setValue,
@@ -95,18 +169,18 @@ export const TextInput = ({
       <div className="group input-group  text-sm">
         <label
           htmlFor="title"
-          className="input-label group-hover:text-blue-600  font-weight: 100 text-xs mb-1"
+          className="input-label group-hover:text-blue-600  font-weight: 100 "
         >
           <span className="flex items-center gap-2  font-weight: 100">
             {required ? <RequiredLabel name={name} /> : `${name}`}
           </span>
         </label>
-        <input
+        <TextField
           id={name}
           variant="standard"
           name={`${name}`}
-          className="w-full px-2 py-1 h-7 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
-          // className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm text-black shadow-sm w-full h-7 ${className}`}
+          className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+          // placeholder={`${name}`}
 
           sx={{
             "& .MuiInputBase-input": { fontSize: "12px" },
@@ -124,7 +198,7 @@ export const TextInput = ({
           onChange={(e) => {
             type === "number"
               ? setValue(e.target.value)
-              : handleOnChange(e, setValue);
+              : handleOnChangeforpassword(e, setValue);
           }}
           readOnly={readOnly}
         />
@@ -167,25 +241,60 @@ export const LongTextInput = ({
   );
 };
 
-export const DisabledInput = ({ name, type, value, className = "", textClassName = "", tabIndex = null }) => {
+export const DisabledInput = ({
+  name,
+  type,
+  value,
+  className = "",
+  textClassName = "",
+  tabIndex = null,
+}) => {
   return (
-    <div className={`flex flex-col mb-4 ${className}`}>
-      {/* <label className={`text-gray-900 text-sm mb-1 ${className}`}>{name}</label> */}
+    <div
+      className={`grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1  font-size:11.5px ${className}`}
+    >
       <label
-        htmlFor="title"
-        className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
-      >{name}</label>
+        className={`md:text-start flex ${className} input-label group-hover:text-blue-600 `}
+      >
+        {name}
+      </label>
       <input
         tabIndex={tabIndex ? tabIndex : undefined}
         type={type}
-        className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-xs text-black shadow-sm w-full h-7 ${textClassName}`}
+        className={`input-field ${textClassName}  p-0.5 focus:outline-none md:col-span-1 border-b border-b-gray-500 group-hover:text-blue-600  text-xs  w-32`}
         value={value}
         disabled
       />
     </div>
-  )
-}
+  );
+};
 
+export const SpecialInput = ({
+  name,
+  type,
+  value,
+  className = "",
+  textClassName = "",
+  tabIndex = null,
+}) => {
+  return (
+    <div
+      className={`flex flex-col  md:my-0.5 md:px-1  font-size:16.5px ${className}  gap-4 border-b border-b-gray-500 w-32 `}
+    >
+      <label
+        className={`md:text-start flex ${className}  group-hover:text-blue-600  w-32`}
+      >
+        {name}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        className={` ${textClassName}   focus:outline-none md:col-span-1  group-hover:text-blue-600  text-xs  w-32`}
+        value={value}
+      />
+    </div>
+  );
+};
 
 export const FloatingLabelInput = ({
   label,
@@ -255,100 +364,106 @@ export const TextArea = ({
   readOnly,
   required = false,
   disabled = false,
-  rows = 2,
+  rows = 3,
   cols = 30,
   tabIndex = null,
+  label = null,
+  inputClass = "",
+  onBlur = null,
 }) => {
   return (
-    <div className=" grid-cols-1 md:grid-cols-3 md:my-1 md:px-1 data">
-      <label className="md:text-start flex">
-        {required ? <RequiredLabel name={name} /> : `${name}`}
-      </label>
+    <div className="mb-3 w-full">
+      {name && (
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
+        </label>
+      )}
+
       <textarea
-        tabIndex={tabIndex ? tabIndex : undefined}
+        id={name}
         name={name}
+        rows={rows}
+        cols={cols}
+        tabIndex={tabIndex ?? undefined}
         disabled={disabled}
         required={required}
-        className="focus:outline-none md:col-span-2 border border-gray-500 rounded"
-        cols={cols}
-        rows={rows}
-        value={value}
-        onChange={(e) => {
-          handleOnChange(e, setValue);
-        }}
         readOnly={readOnly}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={onBlur}
+        placeholder={name}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${inputClass}`}
       ></textarea>
     </div>
   );
 };
+
+
 export const DropdownInput = ({
   name,
+  beforeChange = () => { },
   onBlur = null,
-  options = [],
+  options,
   value,
   setValue,
-  defaultValue = "",
+  defaultValue,
   className = "",
   readOnly = false,
   required = false,
   disabled = false,
-  clear = true,
+  clear = false,
   tabIndex = null,
   autoFocus = false,
-  masterName = "",
-  lastTab,
-  setAliasName,
+  width = "full",
 }) => {
-  const dispatch = useDispatch();
-
   const handleOnChange = (e) => {
-    const selectedValue = e.target.value;
-    if (selectedValue === "__create_new__") {
-      dispatch(setOpenPartyModal(true));
-      dispatch(setLastTab(lastTab));
-      dispatch(push({ name: masterName }));
-    } else {
-      setValue(selectedValue);
-    }
+    setValue(e.target.value);
   };
 
-  return (
-    <div className={`flex flex-col mb-4 `}>
-      {/* <label className={`input-label group-hover:text-blue-600  font-weight: 100 text-xs`}>
-        {required ? <RequiredLabel name={name} /> : name}
-      </label> */}
-      <label
-        htmlFor="title"
-        className="input-label group-hover:text-blue-600  font-weight: 100 text-xs mb-1"
-      >  {required ? <RequiredLabel name={name} /> : name}</label>
+  const isDisabled = readOnly || disabled;
 
+  return (
+    <div className={`mb-3 ${width}`}>
+      {name && (
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          {required ? <RequiredLabel name={name} /> : name}
+        </label>
+      )}
       <select
         onBlur={onBlur}
         autoFocus={autoFocus}
-        tabIndex={tabIndex || undefined}
+        tabIndex={tabIndex ?? undefined}
         defaultValue={defaultValue}
         required={required}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm appearance-none
+          ${isDisabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400 cursor-pointer"}
+          ${className}`}
         value={value}
-        name={name}
-        onChange={handleOnChange}
-        disabled={readOnly || disabled}
-        // className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm text-black shadow-sm w-full h-7 `}
-        className="w-full px-2 py-1 h-7 border border-slate-300 rounded-lg shadow-sm focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs"
-
-      // className="text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400"
+        onChange={(e) => {
+          beforeChange();
+          handleOnChange(e);
+        }}
+        disabled={isDisabled}
       >
-        {clear && (
-          <option value="" disabled>
-            -- Select {name} --
-          </option>
-        )}
-        {masterName && (
-          <option value="__create_new__" className="text-blue-600 font-semibold bg-gray-100">
-            + Create New
-          </option>
-        )}
-        {options.map((option, index) => (
-          <option key={index} value={option.value}>
+        <option value="" hidden={!clear}>
+          Select {name || "option"}
+        </option>
+        {options?.map((option, index) => (
+          <option
+            key={index}
+            value={option.value}
+            className="text-xs py-1" // Smaller option text
+          >
             {option.show}
           </option>
         ))}
@@ -357,89 +472,60 @@ export const DropdownInput = ({
   );
 };
 
+export const DropdownInputForm = ({
+  name,
+  beforeChange = () => { },
+  onBlur = null,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className,
+  readOnly,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+  autoFocus = false,
+  width = "32",
+}) => {
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
 
-
-// export const DropdownInput = ({
-//     name,
-//     beforeChange = () => { },
-//     onBlur = null,
-//     options = [],
-//     value,
-//     setValue,
-//     defaultValue,
-//     className = "",
-//     readOnly = false,
-//     required = false,
-//     disabled = false,
-//     clear = false,
-//     tabIndex = null,
-//     autoFocus = false,
-//     width
-// }) => {
-
-//     const handleChange = (e) => {
-//         beforeChange();
-//         setValue(e.target.value);
-//     };
-
-//     return (
-//         <div className={`group input-group ${className}`}>
-//             <FormControl
-//                 variant="standard"
-//                 className="w-full"
-//                 sx={{
-//                     "& .MuiInputBase-input": { fontSize: "12px", padding: "1.5px" },
-//                     "& .MuiInputBase-input.Mui-disabled": {
-//                         color: "#333",
-//                         WebkitTextFillColor: "#333",
-//                     },
-//                 }}
-//             >
-//                 <label className="input-label group-hover:text-blue-600 text-normal">
-//                     <span className="flex items-center gap-2">
-//                         {required ? <RequiredLabel name={name} /> : name}
-//                     </span>
-//                 </label>
-
-//                 <Select
-//                     name="name"
-//                     value={value}
-//                     onChange={handleChange}
-//                     onBlur={onBlur}
-//                     defaultValue={defaultValue}
-//                     required={required}
-//                     disabled={readOnly || disabled}
-//                     autoFocus={autoFocus}
-//                     tabIndex={tabIndex ?? undefined}
-//                     className="rounded border-none mt-0"
-//                     sx={{
-//                         "& .MuiInputBase-input": { fontSize: "12px" },
-//                         "& .MuiInputBase-input.Mui-disabled": {
-//                             color: "#333",
-//                             WebkitTextFillColor: "#333",
-//                         },
-//                     }}
-//                 >
-//                     {clear && (
-//                         <MenuItem value="">
-//                             <em>Select</em>
-//                         </MenuItem>
-//                     )}
-
-//                     {options.map((option, index) => (
-//                         <MenuItem
-//                             key={index}
-//                             value={option.value}
-//                             sx={{ fontSize: "12px" }}
-//                         >
-//                             {option.show}
-//                         </MenuItem>
-//                     ))}
-//                 </Select>
-//             </FormControl>
-//         </div>
-//     );
-// };
+  return (
+    <div className="input-group items-center md:my-1 md:px-1 data ">
+      <label className={`md:text-start flex  text-xs ${className}`}>
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <select
+        onBlur={onBlur}
+        autoFocus={autoFocus}
+        tabIndex={tabIndex ? tabIndex : undefined}
+        defaultValue={defaultValue}
+        id="dd"
+        required={required}
+        name="name"
+        className={` md:col-span-2 col-span-1 px-2 py-1.5  focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300 w-${width}`}
+        value={value}
+        onChange={(e) => {
+          beforeChange();
+          handleOnChange(e);
+        }}
+        disabled={readOnly}
+      >
+        <option value="" hidden={!clear}>
+          Select
+        </option>
+        {options?.map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 export const LongDropdownInput = ({
   name,
@@ -463,20 +549,18 @@ export const LongDropdownInput = ({
         {required ? <RequiredLabel name={name} /> : `${name}`}
       </label>
       <select
-        tabIndex={tabIndex ? tabIndex : undefined}
+        tabIndex={tabIndex || undefined}
         defaultValue={defaultValue}
         id="dd"
         required={required}
         name="name"
         className={`border border-gray-500 h-6 rounded ${className} col-span-10`}
         value={value}
-        onChange={(e) => {
-          handleOnChange(e);
-        }}
-        disabled={readOnly}
+        onChange={handleOnChange}
+        disabled={readOnly || disabled}
       >
         <option value="">Select</option>
-        {options.map((option, index) => (
+        {(Array.isArray(options) ? options : []).map((option, index) => (
           <option key={index} value={option.value}>
             {option.show}
           </option>
@@ -592,53 +676,91 @@ export const DateInput = ({
   name,
   value,
   setValue,
-  readOnly = false,
+  readOnly,
   required = false,
   type = "date",
   disabled = false,
   tabIndex = null,
   inputClass = "",
-  inputHead = "",
-}) => (
-  <div className={`flex flex-col mb-4`}>
-    {/* <label htmlFor={name} className={`text-gray-700 font-medium mb-1 ${inputHead} `} style={{ fontSize: "10px" }}>
-      {required ? <RequiredLabel name={name} /> : name}
-    </label> */}
+  inputHead = null,
+}) => {
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <label
+        htmlFor={name}
+        className={`text-xs font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+          }`}
+      >
+        {inputHead ?? name}
+      </label>
 
+      <div className="relative">
+        <input
+          id={name}
+          name={name}
+          type={type}
+          tabIndex={tabIndex}
+          disabled={disabled}
+          required={required}
+          readOnly={readOnly}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={`
+            w-full px-2 py-1 text-[12px] 
+            border border-gray-300 rounded-md
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            transition-all duration-200
+            text-gray-700
+            ${readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+            ${inputClass}
+          `}
+        />
+      </div>
+    </div>
+  );
+};
 
-    <label
-      htmlFor="title"
-      className="input-label group-hover:text-blue-600  font-weight: 100 text-xs "
-    > {required ? <RequiredLabel name={name} /> : name}</label>
+export const DateInputNew = ({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  type = "",
+  disabled = false,
+  tabIndex = null,
+  inputClass,
+  inputHead,
+}) => {
+  console.log(type, "type");
 
-
-
-    <input
-      id={name}
-      name={name}
-      type={type}
-      value={value}
-      onChange={(e) =>
-        type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue)
-      }
-      variant="standard"
-      required={required}
-      disabled={readOnly || disabled}
-      tabIndex={tabIndex || undefined}
-      readOnly={readOnly}
-      className={`bg-white text-gray-900 px-2 py-1 focus:outline-none border border-gray-400 rounded-md text-sm  shadow-sm w-full h-7 ${inputClass}`}
-      // className={`text-xs border-0 border-b-2 border-gray-400 bg-transparent px-1  focus:outline-none focus:border-blue-400 ${inputClass}`}
-      sx={{
-        "& .MuiInputBase-input": { fontSize: "12px" },
-        "& .MuiInputBase-input.Mui-disabled": {
-          color: "#333",
-          WebkitTextFillColor: "#333",
-        },
-      }}
-    />
-  </div>
-);
-
+  const today = new Date().toISOString().split("T")[0];
+  return (
+    <div className="   grid-cols-1 md:grid-cols-3 items-center  md:px-1 w-24">
+      <label
+        htmlFor="id"
+        className={`md:text-start flex  pb-[3px] text-xs ${inputHead} font-semibold group-hover:text-blue-600`}
+      >
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        disabled={disabled}
+        required={required}
+        min={type === "date" ? today : undefined}
+        className={`focus:outline-none md:col-span-2 border border-gray-400 text-xs p-0.5  rounded-md w-24 ${inputClass}`}
+        id="id"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+        }}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+};
 
 export const LongDateInput = ({
   name,
@@ -672,24 +794,6 @@ export const LongDateInput = ({
     </div>
   );
 };
-export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
-  return (
-    <label
-      style={{ fontSize: 11 }}
-      className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
-        }`}
-    >
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={readOnly}
-        className="accent-blue-600"
-      />
-      <span className="break-words text-xs text-wrap w-full">{label}</span>
-    </label>
-  );
-};
 
 export const CheckBox = ({
   name,
@@ -704,10 +808,13 @@ export const CheckBox = ({
   const handleOnChange = (e) => {
     setValue(!value);
   };
-  console.log("value", value);
+
   return (
-    <div className="items-center md:my-1 md:px-1 data  ">
-      <label htmlFor="id" className={`md:text-start items-center ${className}`}>
+    <div className="items-center md:my-1 md:px-1 data text-xs ">
+      <label
+        htmlFor="id"
+        className={`md:text-start items-center ${className}  text-xs`}
+      >
         <input
           tabIndex={tabIndex ? tabIndex : undefined}
           type="checkbox"
@@ -750,7 +857,23 @@ export const DropdownWithSearch = ({
   setValue,
   readOnly,
   onCreateNew = null,
+  optionName,
+  masterName = "",
 }) => {
+  console.log(options, "options");
+
+  const dispatch = useDispatch();
+
+  function handleChange(e) {
+    if (e.target.value === "create_new_Vendor") {
+      dispatch(
+        push({ name: "PARTY MASTER", projectForm: true, projectId: true })
+      );
+    } else {
+      setValue(e.target.value);
+    }
+  }
+
   const [currentIndex, setCurrentIndex] = useState("");
   useEffect(() => setCurrentIndex(new Date()), []);
   useEffect(() => {
@@ -784,44 +907,32 @@ export const DropdownWithSearch = ({
     };
   }, [currentIndex]);
 
-  // const ItemRenderer = ({ item, itemIndex, props, state, methods }) =>
-  //     <div onClick={() => methods.addItem(item)} tabIndex={0} className='hover:bg-blue-500'>{item.name}</div>
-
-  // const ContentRenderer = ({ state }) =>
-  //     <div tabIndex={0} className='hover:bg-blue-500'>{`${state?.values[0]}1`}</div>
-
   return (
-    <div
-      id={`dropdown${currentIndex}`}
-      className={`${className} ${"bg-white text-black"}`}
-    >
-      <Select
-        searchBy="name"
-        options={options || []}
-        key={value}
-        create={onCreateNew ? true : false}
-        onCreateNew={onCreateNew}
-        // ContentRenderer={ContentRenderer}
-        // itemRenderer={ItemRenderer}
-        className={`${className} ${"text-black"}`}
+    <div id={`dropdown${currentIndex}`} className={`${className} px-2`}>
+      <select
+        className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
         disabled={readOnly}
-        labelField="name"
-        valueField="id"
-        multi={false}
-        values={
-          value
-            ? [
-              {
-                id: value,
-                name: findFromList(value, options || [], "name"),
-              },
-            ]
-            : []
-        }
-        onChange={(value) => {
-          setValue(value[0] ? value[0]?.id : "");
+        value={value || ""}
+        onChange={(e) => {
+          // setValue(e.target.value)
+          handleChange(e);
         }}
-      />
+      >
+        {!value && <option value="">Select {optionName}</option>}
+        {/* {masterName !== "" && (
+                    <option
+                        value="create_new_Vendor"
+                        className="text-blue-600 font-semibold"
+                    >
+                        + Create New Vendor
+                    </option>
+                )} */}
+        {(options || []).map((option) => (
+          <option key={option.id} value={option.id} classname>
+            {option.name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 };
@@ -830,11 +941,11 @@ export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center  justify-center overflow-auto bg-gray-800 bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center  justify-center overflow-auto bg-gray-800 bg-opacity-50 mb-5">
       <div className={`relative bg-white rounded-lg ${widthClass}`}>
         {onClose ? (
           <button
-            className="absolute top-3 right-5 m-4 text-red-600 hover:text-red-800 bg-white rounded-xl  focus:outline-none "
+            className="absolute top-0 hover:bg-red-400 right-0 m-4 text-gray-600 hover:text-gray-800 focus:outline-none mb-5"
             onClick={onClose}
           >
             <svg

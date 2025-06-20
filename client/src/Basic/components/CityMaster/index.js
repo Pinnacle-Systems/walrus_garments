@@ -47,16 +47,16 @@ export default function Form() {
     };
     const { data: stateList, isLoading: isStateLoading, isFetching: isStateFetching } = useGetStateQuery({ params });
     const { data: allData, isLoading, isFetching } = useGetCityQuery({ params, searchParams: searchValue });
- const lastTapName =  useSelector((state)=>state.party.lastTab)    
-  console.log(lastTapName,"lastTapName")
-  const openPartyModal = useSelector((state) => state.party.openPartyModal);
-    console.log(openPartyModal,"openPartyModel")
- useEffect(() => {
-    if (openPartyModal) {
-      setForm(true); 
-      setId('')
-    }
-  }, [openPartyModal]);
+    const lastTapName = useSelector((state) => state.party.lastTab)
+
+    const openPartyModal = useSelector((state) => state.party.openPartyModal);
+
+    useEffect(() => {
+        if (openPartyModal) {
+            setForm(true);
+            setId('')
+        }
+    }, [openPartyModal]);
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -86,9 +86,9 @@ export default function Form() {
     }, [id]);
 
 
-   useEffect(() => {
-    syncFormWithDb(singleData?.data);
-}, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+    useEffect(() => {
+        syncFormWithDb(singleData?.data);
+    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
         name, code, active, state, id
@@ -107,22 +107,22 @@ export default function Form() {
         setSearchValue("");
     };
 
-    const handleSubmitCustom = async (callback, data, text,exit=false) => {
+    const handleSubmitCustom = async (callback, data, text, exit = false) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             toast.success(text + "Successfully");
-             onNew()
+            onNew()
             setId('')
-            if(exit){
-                      setForm(false)
-                    }
-                    if(exit){
-                      if (openPartyModal === true) {
-                        dispatch(push({ name: lastTapName }));
-                      }
-                         dispatch(setOpenPartyModal(false));
-                    }
+            if (exit) {
+                setForm(false)
+            }
+            if (exit) {
+                if (openPartyModal === true) {
+                    dispatch(push({ name: lastTapName }));
+                }
+                dispatch(setOpenPartyModal(false));
+            }
             dispatch({
                 type: `StateMaster/invalidateTags`,
                 payload: ['State'],
@@ -134,34 +134,34 @@ export default function Form() {
     };
 
 
-  const saveData = () => {
-    if (!validateData(data)) {
-        toast.error("Please fill all required fields...!", {
-        position: "top-center",
-      });
-      return;
-    }
-       if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
-    } else {
-      console.log("hit");
-      handleSubmitCustom(addData, data, "Added");
-    }
-  };
-  const saveExitData = () => {
-    if (!validateData(data)) {
-        toast.error("Please fill all required fields...!", {
-        position: "top-center",
-      });
-      return;
-    }
-       if (id) {
-      handleSubmitCustom(updateData, data, "Updated", true);
-    } else {
-      console.log("hit");
-      handleSubmitCustom(addData, data, "Added",true);
-    }
-  };
+    const saveData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+                position: "top-center",
+            });
+            return;
+        }
+        if (id) {
+            handleSubmitCustom(updateData, data, "Updated");
+        } else {
+            console.log("hit");
+            handleSubmitCustom(addData, data, "Added");
+        }
+    };
+    const saveExitData = () => {
+        if (!validateData(data)) {
+            toast.error("Please fill all required fields...!", {
+                position: "top-center",
+            });
+            return;
+        }
+        if (id) {
+            handleSubmitCustom(updateData, data, "Updated", true);
+        } else {
+            console.log("hit");
+            handleSubmitCustom(addData, data, "Added", true);
+        }
+    };
 
     const deleteData = async () => {
         if (id) {
@@ -196,7 +196,7 @@ export default function Form() {
         }
     };
 
-   
+
 
     function onDataClick(id) {
         setId(id);
@@ -233,25 +233,35 @@ export default function Form() {
                         loading={
                             isLoading || isFetching
                         } />
+
+
+
                     <div>
-                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false);if (openPartyModal === true) {
-                                                             console.log("isCalled")
-                                                                      dispatch(push({ name: lastTapName }));
-                                                                    }; dispatch(setOpenPartyModal(false)); setErrors({}); }}>
+
+
+
+
+
+                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => {
+                            setForm(false); if (openPartyModal === true) {
+                                console.log("isCalled")
+                                dispatch(push({ name: lastTapName }));
+                            }; dispatch(setOpenPartyModal(false)); setErrors({});
+                        }}>
                             <MastersForm
                                 onNew={onNew}
                                 onClose={() => {
                                     setForm(false);
                                     setSearchValue("");
-                                      if (openPartyModal === true) {
-                                                        dispatch(push({ name: lastTapName }));
-                                                      }
+                                    if (openPartyModal === true) {
+                                        dispatch(push({ name: lastTapName }));
+                                    }
                                     setId(false);
                                 }}
                                 model={MODEL}
                                 childRecord={childRecord.current}
                                 saveData={saveData}
-                                saveExitData ={saveExitData}
+                                saveExitData={saveExitData}
                                 setReadOnly={setReadOnly}
                                 deleteData={deleteData}
                                 readOnly={readOnly}
@@ -271,17 +281,17 @@ export default function Form() {
                                         </div>
                                         <div className="flex flex-wrap w-full justify-between">
                                             <div className="mb-3 w-[48%]">
-                                                <DropdownInput name="State" 
-                                              options={
-                                                Array.isArray(stateList?.data)
-                                                  ? dropDownListObject(
-                                                      id ? stateList.data : stateList.data.filter(item => item?.active),
-                                                      "name",
-                                                      "id"
-                                                    )
-                                                  : []
-                                              }
-                                                 value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                <DropdownInput name="State"
+                                                    options={
+                                                        Array.isArray(stateList?.data)
+                                                            ? dropDownListObject(
+                                                                id ? stateList.data : stateList.data.filter(item => item?.active),
+                                                                "name",
+                                                                "id"
+                                                            )
+                                                            : []
+                                                    }
+                                                    value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                             </div>
                                             <div className="mb-3 w-[48%]">
                                                 <DisabledInput name="Country" width={"w-[150px]"} type="text" value={countryFromState()} disabled={(childRecord.current > 0)} />

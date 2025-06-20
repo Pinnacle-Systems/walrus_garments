@@ -3,16 +3,16 @@ import { ColorMaster, EmployeeCategoryMaster, PartyMaster } from "../../../Basic
 
 
 
-const DynamicRenderer = ({ onCloseForm, componentName, editingItem }) => {
+const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, editingItem }) => {
 
     const COMPONENTS = {
-        PartyMaster: () => <PartyMaster partyId={editingItem} onCloseForm={onCloseForm} />,
+        PartyMaster: () => <PartyMaster partyId={editingItem} onCloseForm={onCloseForm} openModelForAddress={openModelForAddress} />,
         EmployeeCategoryMaster: () => <EmployeeCategoryMaster />,
         ColorMaster: () => <ColorMaster />,
     };
 
     const ComponentToRender = COMPONENTS[componentName];
-    console.log(ComponentToRender, "ComponentToRender")
+
     return ComponentToRender ? <ComponentToRender /> : <div>Not found</div>;
 };
 

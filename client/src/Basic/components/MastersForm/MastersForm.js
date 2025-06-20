@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
   NewButton,
@@ -8,18 +9,20 @@ import {
   CloseButton,
   PrintButtonOnly,
   SearchButton,
-  OpenTable,
-  SaveExitButton,
+  OpenTable
 } from "../../../UiComponents/Buttons/Buttons";
 import toast from "react-hot-toast";
 import secureLocalStorage from "react-secure-storage";
 import { useGetPagePermissionsByIdQuery } from "../../../redux/services/PageMasterService";
 
+
+
+
 const MastersForm = ({
   model,
   saveData,
-  saveExitData,
   setReadOnly,
+  masterClass,
   deleteData,
   onClose = null,
   onSearch = null,
@@ -32,11 +35,15 @@ const MastersForm = ({
   readOnly,
   emptyErrors,
   newForm,
-  step,
+  step
 }) => {
-  const openTabs = useSelector((state) => state.openTabs);
-  const activeTab = openTabs.tabs.find((tab) => tab.active);
-  const currentPageId = activeTab.id;
+
+
+  const openTabs = useSelector((state) => state?.openTabs);
+
+  const activeTab = openTabs?.tabs?.find(tab => tab.active);
+
+  const currentPageId = activeTab?.id
 
   const userRoleId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userRoleId"
@@ -45,10 +52,7 @@ const MastersForm = ({
     data: currentPagePermissions,
     isLoading,
     isFetching,
-  } = useGetPagePermissionsByIdQuery(
-    { currentPageId, userRoleId },
-    { skip: !(currentPageId && userRoleId) }
-  );
+  } = useGetPagePermissionsByIdQuery({ currentPageId, userRoleId }, { skip: !(currentPageId && userRoleId) });
 
   const IsSuperAdmin = () => {
     return JSON.parse(
@@ -65,6 +69,7 @@ const MastersForm = ({
       )
     );
   };
+
 
   const isCurrentFinYearActive = () => {
     return Boolean(
@@ -84,8 +89,10 @@ const MastersForm = ({
     } else {
       if (isCurrentFinYearActive()) {
         if (IsDefaultAdmin()) {
+          console.log("Hit Masterform")
           callback();
-        } else if (currentPagePermissions.data[type]) {
+
+        } else if (currentPagePermissions?.data[type]) {
           callback();
         } else {
           toast.error(`No Permission to ${type}...!`, {
@@ -93,83 +100,56 @@ const MastersForm = ({
           });
         }
       } else {
-        toast.error("Past Fin Year Only can view!", {
-          position: "top-center",
-        });
+        toast.error(" Past Fin Year Only can view!", { position: "top-center" });
       }
     }
   };
 
   return (
-    <div className="p-4  bg-[#f1f1f0] ">
-      <div className="w-full max-w-6xl mx-auto  rounded-lg shadow-sm">
+    <div className="h-full px-6 py-4  bg-gray-50 rounded-md shadow-inner overflow-auto ">
+      <div className="flex flex-col h-full">
+        {model && (
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">{model}</h2>
+        )}
 
-        <div className="bg-[#f1f1f0] px-4 py-2">
-          {model && (
-            <h4 className="text-lg font-semibold text-slate-800">
-              {model}
-            </h4>
-          )}
+        <div className="bg-white rounded-md p-3 shadow-md mb-3">
+          {children}
         </div>
 
-        {/* Content Section - Reduced padding */}
-        <div className="p-4">
-          <div className="space-y-4">
-            {children}
-          </div>
+        <div className={`${"flex justify-between items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
+          <CloseButton
+            onClick={() => {
+              onClose();
+              emptyErrors();
+            }}
+          />
+          {!readOnly ? (
+            <SaveButton
 
-          {/* Action Buttons - More compact */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex flex-wrap justify-between items-center gap-2">
-              <div className="flex gap-2">
-                {/* <CloseButton
-                  onClick={() => {
-                    onClose();
-                    emptyErrors();
-                  }}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors duration-200 text-sm"
-                /> */}
-              </div>
-
-              <div className="flex flex-wrap gap-x-2 ">
-                {!readOnly ? (
-                  <>
-                    <SaveButton
-                      onClick={() => {
-                        hasPermission(saveData, "edit");
-                      }}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 text-sm"
-                    />
-                    <SaveExitButton
-                      onClick={() => {
-                        hasPermission(saveExitData, "edit");
-                      }}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors duration-200 text-sm"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <DeleteButton
-                      onClick={() => {
-                        hasPermission(deleteData, "delete");
-                      }}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200 text-sm"
-                    />
-                    <EditButton
-                      onClick={() => {
-                        hasPermission(setReadOnly, "edit");
-                      }}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-md transition-colors duration-200 text-sm"
-                    />
-                  </>
-                )}
-              </div>
+              onClick={() => {
+                hasPermission(saveData, "edit");
+              }}
+            />
+          ) : (
+            <div className="flex space-x-3">
+              <DeleteButton
+                onClick={() => {
+                  hasPermission(deleteData, "delete");
+                }}
+              />
+              <EditButton
+                onClick={() => {
+                  hasPermission(setReadOnly, "edit");
+                }}
+              />
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
+
 };
+
 
 export default MastersForm;

@@ -10,7 +10,6 @@ import {
 
 import { FiSave, FiPlusCircle, FiMail, FiPrinter, FiX, FiCopy, FiShare2 } from "react-icons/fi";
 import AddressForm from "../../../Shocks/CommonReport/AddressForm";
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
     useGetOrderQuery,
@@ -20,24 +19,16 @@ import {
     useDeleteOrderMutation,
 } from "../../../redux/uniformService/OrderService";
 import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-
 import { toast } from "react-toastify";
-
 import moment from "moment";
 import { getCommonParams, renameFile } from "../../../Utils/helper";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-
-import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
-import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
-import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
-import { useGetYarnNeedleMasterQuery } from "../../../redux/uniformService/YarnNeedleMasterservices";
-import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/FiberContentMasterServices";
-import { getImageUrlPath } from "../../../helper";
-import { useGetMachineQuery } from "../../../redux/services/MachineMasterService";
 import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
-import { dropDownListObject } from "../../../Utils/contructObject";
+import DynamicRenderer from "./DynamicComponent";
+import Modal from "../../../UiComponents/Modal";
+import { DropdownInput, TextInput } from "../../../Inputs";
+import Swal from "sweetalert2";
+import "../../../../src/swapStyle.css";
 
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData }) => {
     const [suppliers, setSuppliers] = useState([
@@ -48,6 +39,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [showExtraCharge, setShowExtraCharge] = useState(false)
     const [showDiscount, setShowDiscount] = useState(false)
     const [isEditing, setIsEditing] = useState(false);
+    const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
 
     const handleAdd = () => {
@@ -57,7 +49,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             setIsEditing(false);
         }
     };
-    const [addressForm, setAddressForm] = useState(false)
+    const [addressForm, setAddressForm] = useState(false);
+    const [notes, setNotes] = useState("");
+    const [orderBy, setOrderBy] = useState("")
     const [showAddressPopup, setShowAddressPopup] = useState(false)
     const handleAddSupplier = (newName) => {
         if (!suppliers.includes(newName)) {
@@ -65,18 +59,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         }
     };
 
-
-
-
-
-    const [docId, setDocId] = useState("")
-
-
+    const [docId, setDocId] = useState("New")
     const [active, setActive] = useState(true);
-
     const [validDate, setValidDate] = useState()
-
-    const [tempOrderDetails, setTempOrderDetails] = useState([]);
     const [phone, setPhone] = useState()
     const [address, setAddress] = useState()
     const [contactPersonName, setContactPersonName] = useState("");
@@ -85,48 +70,28 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [date, setDate] = useState("");
     const childRecord = useRef(0);
     const { branchId, userId, companyId, finYearId } = getCommonParams()
-    const [printModalOpen, setPrintModalOpen] = useState(false)
+    const [openModelForAddress, setOpenModelForAddress] = useState(false)
     const [packingCoverType, setPackingCoverType] = useState("")
-    const [loading, setLoading] = useState(false);
 
-
-
-    const [isLogo, setIsLogo] = useState(false)
     const params = {
         branchId, userId, finYearId
     };
     const { data: supplierList } =
         useGetPartyQuery({ params: { ...params } });
 
-    const { data: socksMaterialData } =
-        useGetSocksMaterialQuery({ params: { ...params } });
-
-
-    const { data: socksTypeData } =
-        useGetSocksTypeQuery({ params: { ...params } });
-
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
-    const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
-    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-    const { data: machineList } = useGetMachineQuery({ params: { ...params } });
-    const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
 
-    const {
-        data: colorlist,
-        isLoading: isColorListLoading,
-        isFetching: isColorListFetching,
-    } = useGetColorMasterQuery({ params });
+    // const getNextDocId = useCallback(() => {
+    //     if (id || isLoading || isFetching) return
+    //     if (allData?.nextDocId) {
+    //         setDocId(allData.nextDocId)
+    //     }
+    // }, [allData, isLoading, isFetching, id])
+
+    // useEffect(getNextDocId, [getNextDocId])
 
 
-    const getNextDocId = useCallback(() => {
-        if (id || isLoading || isFetching) return
-        if (allData?.nextDocId) {
-            setDocId(allData.nextDocId)
-        }
-    }, [allData, isLoading, isFetching, id])
 
-    useEffect(getNextDocId, [getNextDocId])
 
     const {
         data: singleData,
@@ -140,19 +105,13 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =
         useGetPartyByIdQuery(partyId, { skip: !partyId });
-
-
-    console.log(singleData, "singggg")
-
     const syncFormWithDb = useCallback((data) => {
         if (id) {
             setReadOnly(readOnly ? readOnly : false);
         }
-
         if (data?.docId) {
             setDocId(data?.docId)
         }
-
         setDate(data?.createdAt ? moment(data?.createdAt).format("YYYY-MM-DD") : moment(new Date()).format("YYYY-MM-DD"));
         setPartyId(data?.partyId ? data?.partyId : "");
         setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
@@ -161,6 +120,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         setValidDate(data?.validDate ? moment(data?.validDate).format("YYYY-MM-DD") : "");
         setOrderDetails(data?.orderDetails ? data?.orderDetails : []);
         setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "");
+        setNotes(data?.notes ? data?.notes : "")
+        setOrderBy(data?.orderBy ? data?.orderBy : "");
+        setTerm(data?.term ? data?.term : "")
 
     }, [id]);
 
@@ -172,12 +134,15 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    const data = {
-        branchId, id, userId, companyId,
+    let data = {
+        branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(j => j.styleId && j.socksMaterialId && j.socksTypeId && j.qty)
     }
+
+
+
 
     const validateData = (data) => {
 
@@ -188,7 +153,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         return false
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             const formData = new FormData();
             for (let key in data) {
@@ -212,9 +177,30 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                 returnData = await callback(formData).unwrap();
             }
             if (returnData.statusCode === 0) {
-                setId(returnData?.data?.id);
-                syncFormWithDb(undefined);
-                toast.success(text + "Successfully");
+                if (nextProcess == "new") {
+                    syncFormWithDb(undefined);
+                }
+                else {
+                    onClose()
+                }
+
+                // setId(returnData?.data?.id);
+
+
+
+                Swal.fire({
+                    title: text + "  " + "Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000, // time in milliseconds (2000ms = 2 seconds)
+                    showConfirmButton: false, // hides the OK button
+                    // timerProgressBar: true, // shows a progress bar
+                    didOpen: () => {
+                        Swal.showLoading(); // optional: show loading spinner
+                    }
+                });
+                // toast.success(text + "Successfully");
+
             } else {
                 toast.error(returnData?.message);
             }
@@ -224,7 +210,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             toast.info("Please fill all required fields...!", { position: "top-center" })
             return
@@ -232,11 +218,20 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
-        if (id) {
-            console.log(id, "ididi")
-            handleSubmitCustom(updateData, data, "Updated");
+        if (nextProcess == "draft" && !id) {
+
+
+            handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
+        }
+        else if (id && nextProcess == "draft") {
+
+            handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+        }
+        else if (id) {
+
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -299,7 +294,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         "Size",
         "S.Mea",
         "Qty",
-        "Wt.socks",
         "Edit/Del"
     ]
 
@@ -308,11 +302,27 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         await removeData(itemId).unwrap();
     }
 
+    function getTotalQty() {
+        let qty = orderDetails?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+        return parseInt(qty)
+    }
+
     return (
         <>
+
+
+            <Modal
+                isOpen={openModelForAddress}
+                onClose={() => setOpenModelForAddress(false)}
+                widthClass={"w-[10%] h-[10%]"}
+            >
+                <DynamicRenderer openModelForAddress={openModelForAddress} componentName={"PartyMaster"}
+                    editingItem={editingItem} onCloseForm={() => { setOpenModelForAddress(false); setShowAddressPopup(true) }} />
+            </Modal>
+
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Order</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Order Information</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -328,7 +338,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
-                                Document Details
+                                Order Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Order.No" readOnly value={docId} />
@@ -341,13 +351,13 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2">Party Details</h2>
+                            <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
 
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
                                         <ReusableSearchableInput
-                                            label="Party" ReusableSearchableInput
+                                            label="Party"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
                                             optionList={supplierList?.data}
@@ -359,8 +369,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                     </div>
 
 
-                                    <ReusableDropdown
-                                        label="Packing.Cover"
+                                    <DropdownInput
+                                        name="Packing Cover"
                                         options={packingCover}
                                         value={packingCoverType}
                                         setValue={setPackingCoverType}
@@ -378,11 +388,10 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         <div className="relative">
                                             <input
                                                 type="text"
-                                                className="w-full pl-2.5 pr-8 py-1 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                                 placeholder="Select address"
                                                 readOnly
                                                 value={address}
-
                                                 onClick={() => setShowAddressPopup(true)}
                                             />
                                             <div
@@ -408,42 +417,35 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                                                     <div className="p-4  bg-white max-h-[60vh] overflow-y-auto">
                                                         <div className="space-y-3">
-                                                            {/* <div
-                                                                className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
-                                                                onClick={() => {
-                                                                    setShowAddressPopup(false);
-                                                                }}
-                                                            >
-                                                                <h4 className="font-medium text-slate-800">Main Office</h4>
-                                                                <p className="text-sm text-slate-600 mt-1">123 Business St, Suite 100, San Francisco, CA 94107</p>
-                                                            </div>
 
-                                                            <div
-                                                                className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
-                                                                onClick={() => {
-                                                                    setShowAddressPopup(false);
-                                                                }}
-                                                            >
-                                                                <h4 className="font-medium text-slate-800">Warehouse</h4>
-                                                                <p className="text-sm text-slate-600 mt-1">456 Industrial Ave, Oakland, CA 94601</p>
-                                                            </div> */}
-                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.ShippingAddress?.map((item, index) => (
+                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.partyBranch?.map((item, index) => (
 
                                                                 <div key={index}
                                                                     className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
                                                                     onClick={() => {
-                                                                        setAddress(item?.address);
+                                                                        setAddress(item?.branchAddress);
                                                                         setShowAddressPopup(false)
 
                                                                     }}
                                                                 >
-                                                                    <h4 className="font-medium text-slate-800">{item?.aliasName}</h4>
-                                                                    <p className="text-sm text-slate-600 mt-1">{item?.address}</p>
+                                                                    <h4 className="font-medium text-slate-800">{item?.branchName}</h4>
+                                                                    <p className="text-sm text-slate-600 mt-1">{item?.branchAddress}</p>
                                                                 </div>
                                                             ))}
-                                                        </div>{console.log(address, "adresss")}
+                                                        </div>
 
-                                                        <button onClick={() => setAddressForm(true)} className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                                        <button onClick={() => {
+
+                                                            if (!partyId) {
+                                                                toast.error("Choose PartyId");
+                                                                return
+                                                            }
+                                                            setEditingItem(partyId);
+                                                            setOpenModelForAddress(true)
+                                                            setShowAddressPopup(false)
+
+
+                                                        }} className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
                                                             <HiPlus className="w-4 h-4 mr-2" />
                                                             <span>Add New Address</span>
                                                         </button>
@@ -461,7 +463,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                 </div>
                                             </div>
                                         )}
-                                        {addressForm && <AddressForm setAddressForm={setAddressForm} />}
+                                        {/* {addressForm &&
+                                          
+
+                                            <AddressForm setAddressForm={setAddressForm} />
+
+                                        } */}
 
                                     </div>
                                 </div>
@@ -474,49 +481,48 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-1 gap-y-2 gap-x-3">
-                                <ReusableInput
-                                    label="Contact Person"
+                            <div className="grid grid-cols-1 gap-x-3">
+                                <TextInput
+                                    name="Contact Person"
                                     placeholder="Contact name"
+                                    value={contactPersonName}
+                                    setValue={setContactPersonName}
+                                // onChange={(e) => setContactPersonName(e.target.value)}
                                 />
-                                <ReusableInput
-                                    label="Phone"
+                                <TextInput
+                                    name="Phone"
                                     placeholder="Contact name"
+                                    value={phone}
+                                    setValue={setPhone}
+                                // onChange={(e) => setPhone(e.target.value)}
                                 />
-                                {/* <ReusableInput
-                                    label=""
-                                    placeholder="Contact name"
-                                /> */}
+
                             </div>
                         </div>
                     </div>
 
-                    <OrderItems readOnly={readOnly} itemHeading={itemHeading} setOrderDetails={setOrderDetails} orderDetails={orderDetails} />
+                    <OrderItems readOnly={readOnly} itemHeading={itemHeading} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id} />
                     <div className="grid grid-cols-3 gap-3">
-                        <div className="border border-slate-200 p-3 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">
-                                Terms & Conditions
-                            </h2>
-
-                            <div className="flex items-center bg-white border border-gray-300 focus-within:border-indigo-500 rounded-md px-2 py-1 shadow-sm transition-colors">
-                                <input
-                                    type="text"
-                                    value={term}
-                                    onChange={(e) => setTerm(e.target.value)}
-                                    className="text-sm px-2 outline-none w-full"
-                                    placeholder="Enter term..."
-                                    onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                                />
-                                <button
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                            <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
+                            <textarea
+                                value={term}
+                                onChange={(e) => {
+                                    setTerm(e.target.value)
+                                }}
+                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                placeholder="Additional notes..."
+                            />
+                            {/* <button
                                     onClick={handleAdd}
                                     className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
                                     title="Confirm"
                                 >
                                     <HiCheck className="w-5 h-5" />
-                                </button>
-                            </div>
+                                </button> */}
+                        </div>
 
-                            <div className="mt-3 space-y-1.5">
+                        {/* <div className="mt-3 space-y-1.5">
                                 <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
                                     <span>Payment due within 30 days</span>
                                     <button className="text-red-400 hover:text-red-500">
@@ -529,34 +535,52 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         <HiTrash className="w-4 h-4" />
                                     </button>
                                 </div>
-                            </div>
-                        </div>
+                            </div> */}
 
-                        <div className="border border-slate-200 p-3 bg-white rounded-md shadow-sm">
+
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
                             <textarea
-                                className="w-full px-2.5 py-2 text-xs border border-slate-300 rounded-md h-24 focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                value={notes}
+                                onChange={(e) => {
+                                    setNotes(e.target.value)
+                                }}
+                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                 placeholder="Additional notes..."
                             />
                         </div>
 
                         {/* Pricing Summary (Grand Total) Section */}
-                        <div className="border border-slate-200 p-3 bg-white rounded-md shadow-sm">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-semibold text-slate-800 mb-2 text-base">
-                                Pricing Summary
+                                Qty Summary
                             </h2>
 
                             <div className="space-y-1.5">
                                 <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Subtotal</span>
-                                    <span className="font-medium">$1,250.00</span>
+                                    <span className="text-slate-600">Total Qty</span>
+                                    <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
                                 </div>
 
-                                <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
+
+
+                                <div className="flex justify-between py-1 text-sm">
+                                    <span className="text-slate-600">Order By</span>
+                                    <input
+                                        type="text"
+                                        className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                                        placeholder="Order By"
+
+                                        value={orderBy}
+                                        onChange={(e) => setOrderBy(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
                                     <span className="text-slate-800 font-semibold">Grand Total</span>
                                     <span className="font-bold text-indigo-700">$1,200.00</span>
-                                </div>
-                                <div className="flex gap-5 items-center mb-1 text-xs">
+                                </div> */}
+                                {/* <div className="flex gap-5 items-center mb-1 text-xs">
                                     <button
                                         className="text-green-600 text-[14px] hover:text-white hover:bg-green-600 border border-green-700 px-2 py-1 rounded-md  flex items-center"
                                         onClick={() => setShowDiscount(true)}
@@ -571,7 +595,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         <HiPlus className=" w-2.5 h-2.5 mr-1" />
                                         <span> Extra Charge</span>
                                     </button>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
@@ -656,13 +680,17 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}
                         <div className="flex gap-2 flex-wrap">
-                            <button className="bg-indigo-600 text-white px-4 py-1 rounded-md hover:bg-indigo-700 flex items-center text-sm">
+                            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <FiSave className="w-4 h-4 mr-2" />
-                                Save
+                                Save & New
                             </button>
-                            <button className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Save & Next
+                                Save & Close
+                            </button>
+                            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                Draft Save
                             </button>
                         </div>
 

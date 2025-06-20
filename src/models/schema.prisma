@@ -82,6 +82,7 @@ model Company {
   FiberContent       FiberContent[]
   Certificate        Certificate[]
   Order              Order[]
+  Sample             Sample[]
 }
 
 model Subscription {
@@ -147,6 +148,7 @@ model Branch {
   OnlineSalesReturn                      OnlineSalesReturn[]
   CreditDebitNote                        CreditDebitNote[]
   Order                                  Order[]
+  Sample                                 Sample[]
 }
 
 model UserOnBranch {
@@ -252,6 +254,9 @@ model User {
   CreditDebitNoteUpdatedBy            CreditDebitNote[]            @relation(name: "updatedBy")
   Order                               Order[]                      @relation(name: "createdBy")
   UpdatedOrder                        Order[]                      @relation(name: "updatedBy")
+  SampleCreatedBy                     Sample[]                     @relation(name: "createdBy")
+  SampleUpdatedBy                     Sample[]                     @relation(name: "updatedBy")
+  Sample                              Sample[]
 }
 
 model Employee {
@@ -443,7 +448,7 @@ model Party {
   code                       String?
   aliasName                  String?
   displayName                String?
-  address                    String?
+  address                    String?                      @db.LongText
   image                      Bytes?                       @db.LongBlob
   City                       City?                        @relation(fields: [cityId], references: [id])
   cityId                     Int?
@@ -516,6 +521,39 @@ model Party {
   payTermDay                 String?
   mailId                     String?
   CertificateDetail          CertificateDetail[]
+  Sample                     Sample[]
+  partyBranch                PartyBranch[]
+}
+
+model PartyBranch {
+  id                   Int                    @id @default(autoincrement())
+  branchName           String?
+  branchCode           String?
+  branchContact        String?
+  branchEmail          String?                @db.LongText
+  Party                Party?                 @relation(fields: [partyId], references: [id])
+  partyId              Int?
+  active               Boolean                @default(true)
+  branchAddress        String?                @db.LongText
+  partyShippingAddress PartyShippingAddress[]
+  partyContactDetails  PartyContactDetails[]
+}
+
+model PartyShippingAddress {
+  id            Int          @id @default(autoincrement())
+  PartyBranch   PartyBranch? @relation(fields: [partyBranchId], references: [id])
+  partyBranchId Int?
+  address       String?      @db.LongText
+  aliasName     String?      @db.LongText
+}
+
+model PartyContactDetails {
+  id                Int          @id @default(autoincrement())
+  contactPersonName String?
+  mobileNo          String?
+  email             String?
+  PartyBranch       PartyBranch? @relation(fields: [partyBranchId], references: [id], onDelete: Cascade)
+  partyBranchId     Int?
 }
 
 model CertificateDetail {
@@ -981,6 +1019,7 @@ model PayTerm {
   Company              Company                @relation(fields: [companyId], references: [id])
   companyId            Int
   active               Boolean                @default(true)
+  aliasName            String?
   DirectInwardOrReturn DirectInwardOrReturn[]
   BillEntry            BillEntry[]
 }
@@ -2719,7 +2758,12 @@ model Order {
   active            Boolean        @default(true)
   FinYear           FinYear?       @relation(fields: [finYearId], references: [id])
   finYearId         Int?
+  notes             String?        @db.LongText
+  term              String?        @db.LongText
+  orderBy           String?
+  draftSave         Boolean?       @default(false)
   orderDetails      OrderDetails[]
+  Sample            Sample[]
 }
 
 model OrderDetails {
@@ -2846,4 +2890,34 @@ model PartyKYC {
   documents          String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model Sample {
+  id                Int       @id @default(autoincrement())
+  docId             String
+  Company           Company?  @relation(fields: [companyId], references: [id])
+  companyId         Int?
+  Branch            Branch?   @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  createdBy         User      @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int
+  updatedBy         User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Party             Party?    @relation(fields: [partyId], references: [id])
+  partyId           Int?
+  Order             Order?    @relation(fields: [orderId], references: [id])
+  orderId           Int?
+  validDate         DateTime?
+  address           String?   @db.LongText
+  phone             String?
+  contactPersonName String?
+  active            Boolean?  @default(true)
+  remarks           String?   @db.LongText
+  notes             String?   @db.LongText
+  term              String?   @db.LongText
+  sampleSubmitBy    String?
+  User              User?     @relation(fields: [userId], references: [id])
+  userId            Int?
 }

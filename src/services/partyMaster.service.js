@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { exclude, getRemovedItems } from '../utils/helper.js';
+import { parse } from 'path';
 
 
 const prisma = new PrismaClient()
@@ -18,7 +19,7 @@ async function get(req) {
         include: {
 
             PartyOnAccessoryItems: true,
-
+            partyBranch: true,
 
             City: {
                 select: {
@@ -49,6 +50,7 @@ async function getOne(id) {
         include: {
             PartyOnProcess: true,
             PartyOnAccessoryItems: true,
+            partyBranch: true,
             City: {
                 select: {
                     name: true,
@@ -56,13 +58,13 @@ async function getOne(id) {
                 }
             },
 
-            ShippingAddress: {
-                select: {
-                    id: true,
-                    address: true,
-                    aliasName: true
-                }
-            },
+            // ShippingAddress: {
+            //     select: {
+            //         id: true,
+            //         address: true,
+            //         aliasName: true
+            //     }
+            // },
             ContactDetails: {
                 select: {
                     id: true,
@@ -138,7 +140,7 @@ async function kycForm(body) {
         documents,
         userId,
     } = body;
-    console.log(documents, "documents")
+
     try {
         const newKYC = await prisma.partyKYC.create({
             data: {
@@ -169,18 +171,18 @@ async function kycForm(body) {
 
 
 async function create(body) {
-    const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails,
+    const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
-        cinNo, faxNo, website, mail, certificate,
+        cinNo, faxNo, website, mail, certificate, address,
         gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
 
         companyId, active, userId } = await body
     let data;
-    console.log(certificate, "mailId")
+
     data = await prisma.party.create(
         {
             data: {
-                name, code, aliasName, displayName, isSupplier, isBuyer, isClient, isAcc, isGy, isDy,
+                name, code, aliasName, displayName, isSupplier, isBuyer, isClient, isAcc, isGy, isDy, address,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
                 panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
                 cinNo, faxNo, website, payTermDay, mailId: mail,
@@ -188,28 +190,20 @@ async function create(body) {
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId), active, yarn, fabric,
                 accessoryGroup,
-                PartyOnAccessoryItems: accessoryItemList ? {
-                    createMany: {
-                        data: accessoryItemList.map(item => { return { accessoryItemId: item } })
-                    }
-                } : undefined,
-                PartyOnProcess: processDetails ? {
-                    createMany: {
-                        data: processDetails.map(item => { return { processId: item } })
-                    }
-                } : undefined
-                ,
 
-                ShippingAddress: {
-                    createMany: shippingAddress ? {
-                        data: shippingAddress?.map((temp) => {
-                            let newItem = {}
-                            newItem["address"] = temp["address"] ? temp["address"] : null;
-                            newItem["aliasName"] = temp["aliasName"] ? temp["aliasName"] : null;
-                            return newItem
-                        })
-                    } : undefined
-                },
+                // partyBranch: {
+                //     createMany: partyBranch ? {
+                //         data: partyBranch?.map((temp) => {
+                //             let newItem = {}
+                //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
+                //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+                //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+                //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+                //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+                //             return newItem
+                //         })
+                //     } : undefined
+                // },
                 ContactDetails: contactDetails ? {
                     createMany: {
                         data: contactDetails.map(item => {
@@ -222,29 +216,24 @@ async function create(body) {
                         })
                     }
                 } : undefined,
-
             }
         }
     )
-
-
     return { statusCode: 0, data };
-
-
 }
 
 async function update(id, body) {
-    const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails,
+    const { name, code, aliasName, displayName, address, isSupplier, isBuyer, isClient, igst, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, accessoryGroup, accessoryItemList, payTermDay,
-        cinNo, faxNo, email, website, mail, shippingAddress, contactDetails, isContactOnly = false, isGy, isDy, isAcc,
-        gstNo, isLeadForm = false,
-        companyId, active, userId } = await body
+        cinNo, faxNo, email, website, mail, shippingAddress, contactDetails, isForPartyBranch = false, isGy, isDy, isAcc,
+        gstNo, isLeadForm = false, partyShippingAddress, partyContactDetails, branchEmail, branchName, branchCode, branchAddress, branchContact,
+        companyId, active, userId, partyId } = await body
 
     let data;
 
     const dataFound = await prisma.party.findUnique({
         where: {
-            id: parseInt(id)
+            id: partyId ? parseInt(partyId) : parseInt(id)
         },
         include: {
 
@@ -252,13 +241,6 @@ async function update(id, body) {
                 select: {
                     name: true,
                     state: true
-                }
-            },
-            ShippingAddress: {
-                select: {
-                    id: true,
-                    address: true,
-                    aliasName: true
                 }
             },
             ContactDetails: {
@@ -269,180 +251,81 @@ async function update(id, body) {
                     email: true
                 }
             }
-
-
-
         }
     })
 
     if (!dataFound) return NoRecordFound("party");
 
 
-
-    if (isContactOnly) {
+    if (isForPartyBranch) {
         await prisma.$transaction(async (tx) => {
-            data = await prisma.party.update({
-                where: {
-                    id: parseInt(id),
-                },
+            data = await prisma.partyBranch.create({
                 data: {
-                    name, code, aliasName, displayName, address, isSupplier, isBuyer, payTermDay,
-                    cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
-                    panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website, isIgst: igst ? igst : false,
-                    gstNo, yarn, fabric, mailId: mail,
-                    createdById: userId ? parseInt(userId) : undefined,
-                    companyId: companyId ? parseInt(companyId) : undefined, active,
-                    accessoryGroup,
-                    PartyOnAccessoryItems: accessoryItemList ? {
-                        deleteMany: {},
-                        createMany: {
-                            data: accessoryItemList.map(item => { return { accessoryItemId: item } })
-                        }
-                    } : undefined,
-                    PartyOnProcess: processDetails ? {
-                        deleteMany: {},
-                        createMany: {
-                            data: processDetails.map(item => { return { processId: item } })
-                        }
-                    } : undefined
+                    branchEmail, branchName, branchCode, branchAddress, branchContact, partyId: parseInt(partyId)
+                    // partyBranch: {
+                    //     deleteMany: {},
+                    //     createMany: partyBranch ? {
+                    //         data: partyBranch?.map((temp) => {
+                    //             let newItem = {}
+                    //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
+                    //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+                    //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+                    //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+                    //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+                    //             return newItem
+                    //         })
+                    //     } : undefined
+                    // },
                 }
-
-
             })
         })
+        return { statusCode: 0, data };
     }
-    else {
 
-        await prisma.$transaction(async (tx) => {
-            data = await prisma.party.update({
-                where: {
-                    id: parseInt(id),
-                },
-                data: {
-                    name, code, aliasName, displayName, address, isBuyer, isSupplier, isIgst: igst ? igst : false, isClient,
-                    cityId: cityId ? parseInt(cityId) : undefined, yarn, fabric, isAcc, isDy, isGy,
-                    pincode: pincode ? parseInt(pincode) : undefined,
-                    panNo, tinNo, cstNo, cstDate: cstDate ? new Date(cstDate) : undefined,
-                    cinNo, faxNo, email, website, payTermDay,
-                    gstNo, mailId: mail,
-                    createdById: userId ? parseInt(userId) : undefined,
-                    companyId: companyId ? parseInt(companyId) : undefined, active,
-                    accessoryGroup,
-                    PartyOnAccessoryItems: accessoryItemList ? {
-                        deleteMany: {},
-                        createMany: {
-                            data: accessoryItemList.map(item => { return { accessoryItemId: item } })
-                        }
-                    } : undefined,
-                    PartyOnProcess: processDetails ? {
-                        deleteMany: {},
-                        createMany: {
-                            data: processDetails.map(item => { return { processId: item } })
-                        }
-                    } : undefined
-                }
-
-            })
-
-            const oldShippingAddressIds = dataFound?.ShippingAddress?.map(item => parseInt(item.id));
-            const oldContactDetailsIds = dataFound?.ContactDetails?.map(item => parseInt(item.id));
-            const currentShippingAddressIds = shippingAddress?.filter(i => i?.id)?.map(item => parseInt(item.id));
-            const currentContactDetailsIds = contactDetails?.filter(i => i?.id)?.map(item => parseInt(item.id));
-            const removedShippingAddress = getRemovedItems(oldShippingAddressIds, currentShippingAddressIds);
-            const removedContactDetails = getRemovedItems(oldContactDetailsIds, currentContactDetailsIds);
-            await tx.ShippingAddress?.deleteMany({
-                where: {
-                    id: {
-                        in: removedShippingAddress
-                    }
-                }
-            })
-            await tx.ContactDetails?.deleteMany({
-                where: {
-                    id: {
-                        in: removedContactDetails
-                    }
-                }
-            })
-
-
-            await (async function updateShippingAddress() {
-                const promises = shippingAddress?.map(async (h) => {
-
-                    if (h?.id) {
-                        await tx.ShippingAddress.update({
-                            where: {
-                                id: parseInt(h.id)
-                            },
-                            data: {
-                                supplierId: parseInt(data?.id),
-                                address: h.address,
-                                aliasName: h.aliasName ? h.aliasName : null
-                            }
-                        })
-                    }
-
-                    else {
-                        await tx.ShippingAddress.create({
-
-                            data: {
-                                supplierId: parseInt(data?.id),
-                                address: h.address,
-                                aliasName: h.aliasName ? h.aliasName : null
-                            }
-                        })
-
-                    }
-
-
-                })
-                return Promise.all(promises)
-            }())
-
-
-            await (async function updateContactDetails() {
-                const promises = contactDetails?.map(async (h) => {
-
-                    if (h?.id) {
-                        await tx.ContactDetails.update({
-                            where: {
-                                id: parseInt(h.id)
-                            },
-                            data: {
-                                partyId: parseInt(data?.id),
-                                contactPersonName: h.contactPersonName,
-                                mobileNo: h.mobileNo ? h.mobileNo : "",
-                                email: h.email ? h.email : ""
-
-                            }
-                        })
-                    }
-
-                    else {
-
-                        await tx.ContactDetails.create({
-
-                            data: {
-                                partyId: parseInt(data?.id),
+    await prisma.$transaction(async (tx) => {
+        data = await prisma.party.update({
+            where: {
+                id: parseInt(id),
+            },
+            data: {
+                name, code, aliasName, address, isBuyer, isSupplier,
+                isClient,
+                cityId: cityId ? parseInt(cityId) : undefined, isAcc, isDy, isGy,
+                pincode: pincode ? parseInt(pincode) : undefined,
+                panNo, faxNo, email, payTermDay,
+                cstNo,
+                gstNo, mailId: mail,
+                createdById: userId ? parseInt(userId) : undefined,
+                companyId: companyId ? parseInt(companyId) : undefined, active,
+                ContactDetails: contactDetails?.length > 0 ? {
+                    deleteMany: {},
+                    createMany: {
+                        data: contactDetails.map(h => {
+                            return {
                                 contactPersonName: h.contactPersonName,
                                 mobileNo: h.mobileNo ? h.mobileNo : "",
                                 email: h.email ? h.email : ""
                             }
                         })
-
                     }
-
-
-                })
-                return Promise.all(promises)
-            }())
-
+                } : undefined,
+                // partyBranch: {
+                //     deleteMany: {},
+                //     createMany: partyBranch ? {
+                //         data: partyBranch?.map((temp) => {
+                //             let newItem = {}
+                //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
+                //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+                //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+                //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+                //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+                //             return newItem
+                //         })
+                //     } : undefined
+                // },
+            }
         })
-
-
-    }
-
+    })
     return { statusCode: 0, data };
 };
 
@@ -455,6 +338,18 @@ async function remove(id) {
     return { statusCode: 0, data };
 }
 
+async function removePartyBranch(partyBranchId) {
+
+    console.log(partyBranchId, "partyBranchId")
+
+    const data = await prisma.partyBranch.delete({
+        where: {
+            id: parseInt(partyBranchId)
+        },
+    })
+    return { statusCode: 0, data };
+}
+
 export {
     get,
     getOne,
@@ -462,5 +357,6 @@ export {
     create,
     kycForm,
     update,
-    remove
+    remove,
+    removePartyBranch,
 }

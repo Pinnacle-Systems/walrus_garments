@@ -20,9 +20,11 @@ export const dropDownFinYear = (data) => {
 
 export const dropDownListMergedObject = (data) => {
     let Data = data ? data : []
+
+    console.log(data, "datatata")
     const outputData = []
     for (let i of Data) {
-        outputData.push({ show: i.name + " / " + i.state.name, value: i["id"] })
+        outputData.push({ show: i?.name + " / " + i.state.name, value: i["id"] })
     }
     return outputData
 }
