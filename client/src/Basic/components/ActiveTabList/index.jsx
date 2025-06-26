@@ -5,6 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
+import { PurchaseInward } from "../../../Uniform/Components";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -54,7 +55,6 @@ const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
 const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
 const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
-const Fabric = lazy(() => import("../../../Uniform/Components/SampleDashboard/Fabric"));
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
@@ -112,6 +112,7 @@ const ActiveTabList = () => {
     "YARN NEEDLE MASTER": <YarnNeedle />,
     "SAMPLE ENTRY": <Sample />,
     "SAMPLE FOLLOW": <SampleFollow />,
+    "PURCHASE INWARD" : <PurchaseInward/>,
 
   };
 

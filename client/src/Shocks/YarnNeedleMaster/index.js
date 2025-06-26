@@ -3,11 +3,14 @@ import secureLocalStorage from 'react-secure-storage';
 import toast from 'react-hot-toast';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
-import { DropdownInput, Modal, TextInput, ToggleButton } from '../../Inputs';
+import { DropdownInput, TextInput, ToggleButton } from '../../Inputs';
 import { useAddMachineMutation, useDeleteMachineMutation, useGetMachineByIdQuery, useGetMachineQuery, useUpdateMachineMutation } from '../../redux/services/MachineMasterService';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
 import { useAddYarnNeedleMasterMutation, useDeleteYarnNeedleMasterMutation, useGetYarnNeedleMasterByIdQuery, useGetYarnNeedleMasterQuery, useUpdateYarnNeedleMasterMutation } from '../../redux/uniformService/YarnNeedleMasterservices';
+import { Check, Plus } from 'lucide-react';
+import Modal from '../../UiComponents/Modal';
+import Swal from 'sweetalert2';
 
 
 
@@ -54,7 +57,7 @@ export default function Form() {
 
             return;
         } else {
-            setReadOnly(true)
+            // setReadOnly(true)
             setName(data?.name || "");
             // setAliasName(data?.aliasName || "");
             setActive(id ? (data?.active ?? false) : true);
@@ -89,7 +92,17 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+              Swal.fire({
+                    title: text + "  " + "Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false, 
+                    didOpen: () => {
+                        Swal.showLoading(); 
+                    }
+                });
 
         } catch (error) {
             console.log("handle")
@@ -101,9 +114,9 @@ export default function Form() {
             toast.error("Please fill all required fields...!", { position: "top-center" })
             return
         }
-        // if (!window.confirm("Are you sure save the details ...?")) {
-        //     return
-        // }
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return
+        }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated")
         } else {
@@ -111,11 +124,11 @@ export default function Form() {
         }
     }
 
-    const deleteData = async () => {
+    const deleteData = async ( id ) => {
         if (id) {
-            // if (!window.confirm("Are you sure to delete...?")) {
-            //     return
-            // }
+            if (!window.confirm("Are you sure to delete...?")) {
+                return
+            }
             try {
                 let deldata = await removeData(id).unwrap();
                 if (deldata?.statusCode == 1) {
@@ -123,7 +136,17 @@ export default function Form() {
                     return
                 }
                 setId("");
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                   Swal.fire({
+                    title: "Deleted" + "  " + "Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false, 
+                    didOpen: () => {
+                        Swal.showLoading(); 
+                    }
+                });
                 setForm(false);
             } catch (error) {
                 toast.error("something went wrong")
@@ -162,9 +185,19 @@ export default function Form() {
         <div onKeyDown={handleKeyDown} className='px-5'>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1 text-xl'>Yarn Needle Master</h5>
-                <div className='flex items-center'>
-                    <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                </div>
+                 <div className="flex items-center gap-4">
+                                        <button
+                                          onClick={() => {
+                                            setForm(true);
+                                            onNew();
+                                          }}
+                                          className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                                        >
+                                          <Plus size={16} />
+                                          Yarn Needle  Master 
+                                        </button>
+                                
+                              </div>
             </div>
             <div className='w-full flex items-start'>
 
@@ -175,6 +208,8 @@ export default function Form() {
                     onDataClick={onDataClick}
                     // setOpenTable={setOpenTable}
                     tableHeaders={tableHeaders}
+                    setReadOnly={setReadOnly}
+                    deleteData={deleteData}
                     tableDataNames={tableDataNames}
                     data={allData?.data}
                 // loading={
@@ -183,7 +218,7 @@ export default function Form() {
                 />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                    {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
@@ -217,7 +252,7 @@ export default function Form() {
 
                                         </div>
 
-                                        {/* <div className='mb-3 ml-5 w-[40%]'>
+                                        <div className='mb-3 ml-5 w-[40%]'>
                                             <DropdownInput
                                                 setAliasName={setAliasName}
                                                 name={"Machine"}
@@ -241,7 +276,7 @@ export default function Form() {
                                         <div className='mb-3 w-[20%]'>
                                             <TextInput name="Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                                        </div> */}
+                                        </div>
 
                                     </div>
                                     <div className='mt-2'>
@@ -251,8 +286,126 @@ export default function Form() {
                                 </div>
                             </fieldset>
                         </MastersForm>
-                    </Modal>}
+                    </Modal>} */}
+        {form && (
+                                    <Modal  
+                                        isOpen={form}
+                                        form={form}
+                                        widthClass={"w-[35%] max-w-6xl h-[40vh]"}
+                                        onClose={() => {
+                                        setForm(false);
+                                        setErrors({});
+                                        }}
+                                    >
+                                        <div className="h-full flex flex-col bg-[f1f1f0]">
+                                        <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+                                            <div className="flex items-center gap-2">
+                                            <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                                {id ? (!readOnly ? "Edit Yarn Needle" : "Yarn Needle Master ") : "Add New Yarn Needle"}
+                                            </h2>
+                                            
+                                            </div>
+                                            <div className="flex gap-2">
+                                            <div>
+                                                {readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                    setForm(false);
+                                                    setSearchValue("");
+                                                    setId(false);
+                                                    }}
+                                                    className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={saveData}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                                                >
+                                                    <Check size={14} />
+                                                    {id ? "Update" : "Save"}
+                                                </button>
+                                                )}
+                                            </div>
+                                            </div>
+                                        </div>
 
+                                        <div className="flex-1 overflow-auto p-3">
+                                            <div className="grid grid-cols-1  gap-3  h-full">
+                                        
+                                            <fieldset className=' rounded '>
+
+                               <div className='p-2'>
+                                    <div className='flex'>
+                                        <div className='mb-3 '>
+                                            <TextInput name="Yarn Needle Name" type="text" value={name} setValue={setName}
+                                                required={true}
+                                                readOnly={readOnly}
+                                                disabled={(childRecord.current > 0)}
+                                                onBlur={(e) => {
+                                                    if (aliasName) return;
+                                                    setAliasName(e.target.value);
+                                                }}
+                                            />
+
+                                        </div>
+
+                                        {/* <div className='mb-3 ml-5 w-[40%]'>
+                                            <DropdownInput
+                                                setAliasName={setAliasName}
+                                                name={"Machine"}
+                                                options={
+                                                    Array.isArray(MachineList?.data)
+                                                        ? dropDownListObject(
+                                                            id ? MachineList.data : MachineList.data.filter(item => item?.active),
+                                                            "name",
+                                                            "id"
+                                                        )
+                                                        : []
+                                                }
+
+                                                type="text" value={machineId} setValue={setMachineId} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                onBlur={(e) => {
+                                                    if (aliasName) return;
+                                                    setAliasName();
+                                                }}
+                                            />
+                                        </div> */}
+                                        {/* <div className='mb-3 w-[20%]'>
+                                            <TextInput name="Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                                        </div> */}
+
+                                    </div>
+                                    <div className='mt-2'>
+                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                                            </div>
+                                        </div>
+                                </div>
+                                                
+                                
+
+
+                                            
+
+
+
+
+
+                                    </Modal>
+            )}
                 </div>
             </div>
         </div>

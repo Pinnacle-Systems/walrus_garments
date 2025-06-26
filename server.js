@@ -102,12 +102,12 @@ app.use("/salesBill", salesBill);
 app.use("/purchaseReturn", purchaseReturn)
 app.use("/salesReturn", salesReturn)
 app.use('/uom', uom),
-  app.use('/quotes', quotes),
-  app.use('/lead', lead)
+app.use('/quotes', quotes),
+app.use('/lead', lead)
 app.use('/project', project),
-  app.use('/invoice', invoice),
-  app.use('/projectPayment', projectPayment),
-  app.use("/orderImport", orderImport);
+app.use('/invoice', invoice),
+app.use('/projectPayment', projectPayment),
+app.use("/orderImport", orderImport);
 app.use("/sample", sample);
 app.use("/color", color);
 app.use("/fabric", fabric);

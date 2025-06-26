@@ -149,7 +149,10 @@ const Mastertable = ({
                                                             <div className="flex gap-2">
 
                                                                 <button
-                                                                    onClick={() => onDataClick(dataObj?.id)}
+                                                                    onClick={() => {
+                                                                        onDataClick(dataObj?.id)
+                                                                        setReadOnly(true);                                                                    
+                                                                    }}
                                                                     className="text-blue-800 flex items-center gap-1 px-2 mx-2 py-1.5 bg-blue-50 rounded"
                                                                 >
                                                                     👁 <span className="text-xs">view</span>
@@ -166,11 +169,10 @@ const Mastertable = ({
                                                                     ✏️ <span className="text-xs">edit</span>
                                                                 </button>
 
-                                                                {/* Delete */}
                                                                 <button
                                                                     onClick={() => {
-                                                                        onDataClick(dataObj?.id);
-                                                                        deleteData();
+                                                                        // onDataClick(dataObj?.id);
+                                                                        deleteData(dataObj?.id);
                                                                     }}
                                                                     className="text-red-800 flex items-center gap-1 mx-2 px-2 py-1.5 bg-red-50 rounded"
                                                                 >

@@ -11,11 +11,14 @@ import {
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, ToggleButton, Modal } from "../../../Inputs";
+import { TextInput, CheckBox, ToggleButton } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from "../MastersForm/MastersForm";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { Check, Plus } from "lucide-react";
+import Modal from "../../../UiComponents/Modal";
+import Swal from "sweetalert2";
 
 const MODEL = "Department Master";
 
@@ -34,14 +37,14 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
 
-    console.log(form, "form")
+    console.log(readOnly, "readOnly")
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
     const { data: allData, isLoading, isFetching } = useGetDepartmentQuery({ params, searchParams: searchValue });
-    console.log(allData, "allData")
+    console.log(id, "id")
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -60,7 +63,8 @@ export default function Form() {
             setCode("");
             setActive(id ? (data?.active ?? true) : false);
         } else {
-            setReadOnly(true);
+            // setReadOnly(true);
+
             setName(data?.name || "");
             setCode(data?.code || "");
             setActive(id ? (data?.active ?? false) : true);
@@ -69,13 +73,14 @@ export default function Form() {
     },
         [id]
     );
+    console.log(id,readOnly,"idreadonly")
 
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        name, code, active, companyId: 1
+        name, code, active, companyId: 1 , id
     }
 
     const validateData = (data) => {
@@ -89,13 +94,29 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+               Swal.fire({
+                                            title: text + "  " + "Successfully",
+                                            icon: "success",
+                                            draggable: true,
+                                            timer: 1000, 
+                                            showConfirmButton: false, 
+                                           
+                                            didOpen: () => {
+                                                Swal.showLoading(); 
+                                            }
+                                        });
+            setForm(false);
         } catch (error) {
             console.log("handle");
+            setForm(false);
+            
         }
     };
 
     const saveData = () => {
+        if(readOnly) return toast.info("Turn On Edit Mode !..")
+
         if (!validateData(data)) {
             toast.error("Please fill all required fields...!", {
                 position: "top-center",
@@ -112,10 +133,13 @@ export default function Form() {
         }
     };
 
-    const deleteData = async () => {
+    const deleteData = async (id) => {
+        
         if (id) {
+             setForm(false)
             if (!window.confirm("Are you sure to delete...?")) {
-                return;
+               
+                return false;
             }
             try {
                 const deldata = await removeData(id).unwrap();
@@ -125,10 +149,22 @@ export default function Form() {
                     return
                 }
                 setId("");
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                   Swal.fire({
+                                                title: "Deleted" + "  " + "Successfully",
+                                                icon: "success",
+                                                draggable: true,
+                                                timer: 1000, 
+                                                showConfirmButton: false, 
+                                              
+                                                didOpen: () => {
+                                                    Swal.showLoading();
+                                                }
+                                            });
                 setForm(false)
             } catch (error) {
                 toast.error("something went wrong");
+                    setForm(false)
             }
         }
     };
@@ -162,9 +198,19 @@ export default function Form() {
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1'>Department Master</h5>
-                <div className='flex items-center'>
-                    <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                </div>
+               <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              setForm(true);
+                              onNew();
+                            }}
+                            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add New Department
+                          </button>
+                  
+                        </div>
             </div>
             <div className='w-full flex items-start'>
                 <Mastertable
@@ -172,7 +218,6 @@ export default function Form() {
                     searchValue={searchValue}
                     setSearchValue={setSearchValue}
                     onDataClick={onDataClick}
-                    // setOpenTable={setOpenTable}
                     tableHeaders={tableHeaders}
                     tableDataNames={tableDataNames}
                     data={allData?.data}
@@ -183,43 +228,120 @@ export default function Form() {
                     deleteData={deleteData}
                 />
             </div>
-            {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%]  h-[45%]"} onClose={() => { setForm(false); setErrors({}); }}>
-                <MastersForm
-                    onNew={onNew}
-                    onClose={() => {
+        
+         {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => {
+            setForm(false);
+            setErrors({});
+          }}
+        >
+          <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Department Master" : "Department Master") : "Add New Department"}
+                </h2>
+              
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
                         setForm(false);
                         setSearchValue("");
                         setId(false);
-                    }}
-                    model={MODEL}
-                    childRecord={childRecord.current}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                    readOnly={readOnly}
-                    emptyErrors={() => setErrors({})}
-                >
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                    <fieldset className=' rounded mt-2'>
-                        <div className=''>
-                            <div className="flex flex-wrap">
-                                <div className='mb-3 w-[48%]'>
-                                    <TextInput name="Department Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                </div>
-                                <div className='mb-3 w-[20%] ml-6'>
-                                    <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                </div>
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                   
 
-                            </div>
-                            <div className='mb-3'>
-                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                            </div>
+                    <div className="space-y-2 w-[50%]">
+                      {/* <TextInput
+                        ref={input1Ref}
+                        name="Full Name"
+                        value={name}
+                        setValue={setName}
+                        required={true}
+                        readOnly={readOnly}
+                        disabled={childRecord.current > 0}
+                        onKeyDown={(e) => handleKeyNext(e, input2Ref)}
+                      /> */}
+                        <TextInput 
+                            // ref={input1Ref}
+                            name="Department Name" 
+                            type="text" 
+                            value={name} 
+                            setValue={setName}
+                            required={true} 
+                            readOnly={readOnly}
+                            disabled={childRecord?.current > 0}
+                            // onKeyDown={(e) => handleKeyNext(e, input2Ref)}
+                          />
 
+                      {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
+
+                        <div className="">
+                          <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly}   disabled={childRecord.current > 0}/>
+                           </div>
+                        <div>
+                          <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}   disabled={childRecord.current > 0}  />
                         </div>
-                    </fieldset>
-                </MastersForm>
-            </Modal>}
+                        
+                    </div>
+                  </div>
 
+                
+                </div>
+
+
+                      
+
+
+                     
+
+                     
+
+
+              </div>
+            </div>
+
+
+          </div>
+
+      
+       
+        </Modal>
+      )}
         </div>
     )
 }

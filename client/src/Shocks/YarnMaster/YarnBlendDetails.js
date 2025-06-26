@@ -25,7 +25,7 @@ const YarnBlendDetails = ({ yarnBlend, setYarnBlend, readOnly, params, id }) => 
     }, [yarnBlend, readOnly])
 
     const addRow = () => {
-        if (yarnBlend.length >= yarnBlendList.data.length) {
+        if (yarnBlend.length >= yarnBlendList?.data?.length) {
             toast.error("No More Blends", { position: 'top-center' })
             return
         }

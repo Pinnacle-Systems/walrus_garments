@@ -21,7 +21,7 @@ import {
 import { statusDropdown } from "../../../Utils/DropdownData";
 import MastersForm from "../MastersForm/MastersForm";
 import {
-  Modal,
+
   ToggleButton,
   DateInput,
   DropdownInput,
@@ -42,6 +42,7 @@ import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaChevronRight } from "react-icons/fa6";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import AddBranch from "./AddBranch";
+import Modal from "../../../UiComponents/Modal";
 
 const MODEL = "Party Master";
 
@@ -614,7 +615,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[65%]"}`}
+          widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[95%]"}`}
           onClose={() => {
             setForm(false);
             onCloseForm();
@@ -704,6 +705,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
                             name="type"
                             checked={isClient}
                             onChange={() => handleChange('client')}
+                            readOnly
                           />
 
                           <label className="text-xs">Client</label>

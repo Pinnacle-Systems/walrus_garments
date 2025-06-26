@@ -8,16 +8,16 @@ import {
     ReusableInput,
 } from "./CommonInput";
 
-import { FiSave, FiPlusCircle, FiMail, FiPrinter, FiX, FiCopy, FiShare2 } from "react-icons/fi";
+import { FiSave, FiPlusCircle, FiMail, FiPrinter, FiX, FiCopy, FiShare2, FiEdit2 } from "react-icons/fi";
 import AddressForm from "../../../Shocks/CommonReport/AddressForm";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
-    useAddSampleMutation,
-    useDeleteSampleMutation,
-    useGetSampleByIdQuery,
-    useGetSampleQuery,
-    useUpdateSampleMutation,
-} from "../../../redux/uniformService/SampleService";
+    useGetOrderQuery,
+    useGetOrderByIdQuery,
+    useAddOrderMutation,
+    useUpdateOrderMutation,
+    useDeleteOrderMutation,
+} from "../../../redux/uniformService/OrderService";
 import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import moment from "moment";
@@ -26,8 +26,12 @@ import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
+import { DropdownInput, DropdownWithSearch,  TextInput } from "../../../Inputs";
+import Swal from "sweetalert2";
+import "../../../../src/swapStyle.css";
+import { useAddSampleMutation, useGetSampleByIdQuery, useGetSampleQuery, useUpdateSampleMutation } from "../../../redux/uniformService/SampleService";
 
-const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData }) => {
+const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData , orderData , setOrderId  , orderId }) => {
     const [suppliers, setSuppliers] = useState([
         "Supplier One",
         "Supplier Two",
@@ -38,6 +42,7 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
     const [isEditing, setIsEditing] = useState(false);
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
+    const [newSampleEntry,setNewSampleEntry] = useState(false)
 
     const handleAdd = () => {
         if (term.trim()) {
@@ -46,6 +51,8 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
             setIsEditing(false);
         }
     };
+
+
     const [addressForm, setAddressForm] = useState(false);
     const [notes, setNotes] = useState("");
     const [orderBy, setOrderBy] = useState("")
@@ -56,13 +63,13 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
         }
     };
 
-    const [docId, setDocId] = useState("")
+    const [docId, setDocId] = useState("New")
     const [active, setActive] = useState(true);
     const [validDate, setValidDate] = useState()
     const [phone, setPhone] = useState()
     const [address, setAddress] = useState()
     const [contactPersonName, setContactPersonName] = useState("");
-    const [searchValue, setSearchValue] = useState("");
+
     const [partyId, setPartyId] = useState("");
     const [date, setDate] = useState("");
     const childRecord = useRef(0);
@@ -76,11 +83,9 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
     const { data: supplierList } =
         useGetPartyQuery({ params: { ...params } });
 
-    const {
-        data: allData,
-        isLoading,
-        isFetching,
-    } = useGetSampleQuery({ params, searchParams: searchValue });
+    // const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
+        const { data: allData, isLoading, isFetching } = useGetSampleQuery({ params, searchParams: '' });
+
 
     const getNextDocId = useCallback(() => {
         if (id || isLoading || isFetching) return
@@ -91,59 +96,73 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
 
     useEffect(getNextDocId, [getNextDocId])
 
+
+
+
+    const {
+        data: singleOrderData,
+        isFetching: isSingleOrderFetching,
+        isLoading: isSingleOrderLoading,
+    } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    // const [addData] = useAddOrderMutation();
+    // const [updateData] = useUpdateOrderMutation();
+    const [removeData] = useDeletePartyMutation();
+
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetSampleByIdQuery(id, { skip: !id });
-    const [addData] = useAddSampleMutation();
+    const [addData] = useAddSampleMutation()
     const [updateData] = useUpdateSampleMutation();
-    const [removeData] = useDeleteSampleMutation();
 
 
-    const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =
-        useGetPartyByIdQuery(partyId, { skip: !partyId });
+    const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =  useGetPartyByIdQuery(partyId, { skip: !partyId });
 
-
-
-    console.log(allData?.data, "allalala")
-    const syncFormWithDb = useCallback((data) => {
-        if (id) {
+    const syncFormWithDb = useCallback((data , sampleDetails) => {
+        if (id ||  orderId) {
             setReadOnly(readOnly ? readOnly : false);
         }
-
         if (data?.docId) {
             setDocId(data?.docId)
         }
-
         setDate(data?.createdAt ? moment(data?.createdAt).format("YYYY-MM-DD") : moment(new Date()).format("YYYY-MM-DD"));
         setPartyId(data?.partyId ? data?.partyId : "");
         setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
         setPhone(data?.phone ? data?.phone : "");
         setAddress(data?.address ? data?.address : "");
         setValidDate(data?.validDate ? moment(data?.validDate).format("YYYY-MM-DD") : "");
-        setSampleDetails(data?.sampleDetails ? data?.sampleDetails : []);
+        setSampleDetails(sampleDetails ? sampleDetails: []);
+
+
         setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "");
         setNotes(data?.notes ? data?.notes : "")
         setOrderBy(data?.orderBy ? data?.orderBy : "");
         setTerm(data?.term ? data?.term : "")
 
-    }, [id]);
+    }, [orderId,id]);
 
     useEffect(() => {
-        if (id) {
-            syncFormWithDb(singleData?.data);
-        } else {
+        if (orderId) {
+            syncFormWithDb(singleOrderData?.data, singleOrderData?.data?.orderDetails);
+        } 
+        else if(id){
+             syncFormWithDb(singleData?.data ,  singleData?.data?.sampleDetails);
+            }
+           
+        else {
             syncFormWithDb(undefined);
         }
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData , singleData ,isSingleFetching , isSingleLoading  , id]);
 
-    const data = {
-        branchId, id, userId, companyId, notes, term, orderBy,
+    let data = {
+        branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, sampleDetails: sampleDetails?.filter(j => j.styleId && j.socksMaterialId && j.socksTypeId && j.qty)
+        partyId, finYearId, phone, contactPersonName, address, validDate, sampleDetails
     }
+
+
 
     const validateData = (data) => {
 
@@ -154,7 +173,7 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
         return false
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             const formData = new FormData();
             for (let key in data) {
@@ -178,9 +197,30 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                 returnData = await callback(formData).unwrap();
             }
             if (returnData.statusCode === 0) {
-                setId(returnData?.data?.id);
-                syncFormWithDb(undefined);
-                toast.success(text + "Successfully");
+                if (nextProcess == "new") {
+                    syncFormWithDb(undefined);
+                }
+                else {
+                    onClose()
+                }
+
+                // setId(returnData?.data?.id);
+
+
+
+                Swal.fire({
+                    title: text + "  " + "Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000, // time in milliseconds (2000ms = 2 seconds)
+                    showConfirmButton: false, // hides the OK button
+                    // timerProgressBar: true, // shows a progress bar
+                    didOpen: () => {
+                        Swal.showLoading(); // optional: show loading spinner
+                    }
+                });
+                // toast.success(text + "Successfully");
+
             } else {
                 toast.error(returnData?.message);
             }
@@ -190,7 +230,7 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             toast.info("Please fill all required fields...!", { position: "top-center" })
             return
@@ -198,11 +238,20 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
-        if (id) {
-            console.log(id, "ididi")
-            handleSubmitCustom(updateData, data, "Updated");
+        if (nextProcess == "draft" && !id) {
+
+
+            handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
+        }
+        else if (id && nextProcess == "draft") {
+
+            handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+        }
+        else if (id) {
+
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -238,14 +287,14 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
     }, [setSampleDetails, sampleDetails])
 
 
-    useEffect(() => {
-        if (id) return
-        if (!singleSupplier?.data || isSingleSupplierLoading || isSingleSupplierFetching) return
-        if (!partyId) return
-        setPhone(singleSupplier?.data?.contactMobile ? singleSupplier?.data.contactMobile : "")
-        setContactPersonName(singleSupplier?.data?.contactPersonName ? singleSupplier?.data.contactPersonName : "");
-        setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
-    }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
+    // useEffect(() => {
+    //     if (id) return
+    //     if (!singleSupplier?.data || isSingleSupplierLoading || isSingleSupplierFetching) return
+    //     if (!partyId) return
+    //     setPhone(singleSupplier?.data?.contactMobile ? singleSupplier?.data.contactMobile : "")
+    //     setContactPersonName(singleSupplier?.data?.contactPersonName ? singleSupplier?.data.contactPersonName : "");
+    //     setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
+    // }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
 
 
     let itemHeading = [
@@ -265,7 +314,6 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
         "Size",
         "S.Mea",
         "Qty",
-
         "Edit/Del"
     ]
 
@@ -292,9 +340,6 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                     editingItem={editingItem} onCloseForm={() => { setOpenModelForAddress(false); setShowAddressPopup(true) }} />
             </Modal>
 
-
-
-
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Sample Entry</h1>
@@ -313,20 +358,38 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
-                                Document Details
+                                Order Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Order.No" readOnly value={docId} />
-
-                                <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <ReusableInput label="Due Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
+                                <ReusableInput label="Order.No" readOnly value={docId}   />
+                                <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true}  />
+                                <ReusableInput label="Due Date" type="date" value={validDate} setValue={setValidDate}  />
+                                    <DropdownWithSearch
+                                        name="Orders"
+                                        options={orderData?.data}
+                                        value={orderId}
+                                        setValue={setOrderId}
+                                        disabled={newSampleEntry ? false : true} 
+                                        labelField={"docId"}
+                                        label={"Orders"} 
+                                      
+                                    />
+                               <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                                        <span>New Sample Entry</span>
+                                        <input
+                                            type="checkbox"
+                                            onClick={() => setNewSampleEntry(!newSampleEntry)}
+                                            disabled={orderId}
+                                        />
+                                        </div>
+     
                             </div>
                         </div>
 
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2">Party Details</h2>
+                            <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
 
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
@@ -344,11 +407,12 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                     </div>
 
 
-                                    <ReusableDropdown
-                                        label="Packing.Cover"
+                                    <DropdownInput
+                                        name="Packing Cover"
                                         options={packingCover}
                                         value={packingCoverType}
                                         setValue={setPackingCoverType}
+                                        
 
                                     />
 
@@ -363,17 +427,22 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                         <div className="relative">
                                             <input
                                                 type="text"
-                                                className="w-full pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                                 placeholder="Select address"
-                                                readOnly
+                                                disabled={true}
                                                 value={address}
-
                                                 onClick={() => setShowAddressPopup(true)}
-                                            />
+                                                />
+
                                             <div
                                                 className="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-slate-400 hover:text-indigo-600 transition-colors"
-                                                onClick={() => setShowAddressPopup(true)}
-                                            >
+                                                onClick={() => {
+                                                    if(!readOnly){
+                                                        setShowAddressPopup(true)
+                                                     } 
+                                                    }}
+                                                >
+
                                                 <HiLocationMarker className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -394,18 +463,19 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                                     <div className="p-4  bg-white max-h-[60vh] overflow-y-auto">
                                                         <div className="space-y-3">
 
-                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.ShippingAddress?.map((item, index) => (
+                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.partyBranch?.map((item, index) => (
 
                                                                 <div key={index}
+                                                                    aria-disabled
                                                                     className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
                                                                     onClick={() => {
-                                                                        setAddress(item?.address);
+                                                                        setAddress(item?.branchAddress);
                                                                         setShowAddressPopup(false)
 
                                                                     }}
                                                                 >
-                                                                    <h4 className="font-medium text-slate-800">{item?.aliasName}</h4>
-                                                                    <p className="text-sm text-slate-600 mt-1">{item?.address}</p>
+                                                                    <h4 className="font-medium text-slate-800">{item?.branchName}</h4>
+                                                                    <p className="text-sm text-slate-600 mt-1">{item?.branchAddress}</p>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -419,9 +489,10 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                                             setEditingItem(partyId);
                                                             setOpenModelForAddress(true)
                                                             setShowAddressPopup(false)
+                                                        }}
+                                                            disabled
 
-
-                                                        }} className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                                         className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
                                                             <HiPlus className="w-4 h-4 mr-2" />
                                                             <span>Add New Address</span>
                                                         </button>
@@ -457,14 +528,22 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-1 gap-y-2 gap-x-3">
-                                <ReusableInput
-                                    label="Contact Person"
+                            <div className="grid grid-cols-1 gap-x-3">
+                                <TextInput
+                                    name="Contact Person"
                                     placeholder="Contact name"
+                                    value={contactPersonName}
+                                    setValue={setContactPersonName}
+                                    // disabled={true}
                                 />
-                                <ReusableInput
-                                    label="Phone"
+                                <TextInput
+                                    name="Phone"
                                     placeholder="Contact name"
+                                    value={phone}
+                                    setValue={setPhone}
+                                    // disabled={true}
+
+                                // onChange={(e) => setPhone(e.target.value)}
                                 />
 
                             </div>
@@ -476,12 +555,14 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
                             <textarea
+                                // disabled={true}
                                 value={term}
                                 onChange={(e) => {
                                     setTerm(e.target.value)
                                 }}
                                 className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                 placeholder="Additional notes..."
+
                             />
                             {/* <button
                                     onClick={handleAdd}
@@ -511,6 +592,7 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
                             <textarea
+                                // disabled={true}
                                 value={notes}
                                 onChange={(e) => {
                                     setNotes(e.target.value)
@@ -519,6 +601,7 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                 placeholder="Additional notes..."
                             />
                         </div>
+
 
                         {/* Pricing Summary (Grand Total) Section */}
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
@@ -540,11 +623,11 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                                         type="text"
                                         className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                         placeholder="Order By"
-
                                         value={orderBy}
                                         onChange={(e) => setOrderBy(e.target.value)}
-                                    />
+                                        />
                                 </div>
+                                        
 
                                 {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
                                     <span className="text-slate-800 font-semibold">Grand Total</span>
@@ -650,21 +733,31 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}
                         <div className="flex gap-2 flex-wrap">
-                            <button className="bg-indigo-600 text-white px-4 py-1 rounded-md hover:bg-indigo-700 flex items-center text-sm">
+                            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <FiSave className="w-4 h-4 mr-2" />
-                                Save
+                                Save & New
                             </button>
-                            <button className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Save & Next
+                                Save & Close
+                            </button>
+                            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                Draft Save
                             </button>
                         </div>
 
                         {/* Right Buttons */}
                         <div className="flex gap-2 flex-wrap">
-                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                                 <FiShare2 className="w-4 h-4 mr-2" />
                                 Email
+                            </button> */}
+                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                                onClick={() =>  setReadOnly(false)}
+                            >
+                                <FiEdit2   className="w-4 h-4 mr-2" />
+                                Edit
                             </button>
                             <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                                 <FaWhatsapp className="w-4 h-4 mr-2" />
@@ -684,4 +777,4 @@ const OrderFormUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, s
     );
 };
 
-export default OrderFormUi;
+export default SampleEntryUi;

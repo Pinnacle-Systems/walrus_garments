@@ -11,7 +11,7 @@ import {
 import FormReport from "../../Basic/components/FormReportTemplate";
 
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, Modal, ToggleButton } from "../../Inputs";
+import { TextInput, CheckBox,  ToggleButton } from "../../Inputs";
 import ReportTemplate from "../../Basic/components/ReportTemplate";
 import FormHeader from "../../Basic/components/FormHeader";
 import MastersForm from "../../Basic/components/MastersForm/MastersForm";
@@ -20,6 +20,9 @@ import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { statusDropdown } from "../../Utils/DropdownData";
 import setOpenPartyModal from "../../redux/features/opentabs";
+import { Check, Plus } from "lucide-react";
+import Modal from "../../UiComponents/Modal";
+import Swal from "sweetalert2";
 
 const MODEL = "Socks Material";
 
@@ -57,7 +60,7 @@ export default function Form() {
 
     const syncFormWithDb = useCallback(
         (data) => {
-            if (id) setReadOnly(true);
+            // if (id) setReadOnly(true);
             setName(data?.name ? data.name : "");
             // setAccessory(data?.isAccessory ? data.isAccessory : false);
             setActive(id ? (data?.active ? data.active : false) : true);
@@ -85,9 +88,19 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId("")
+            setId(returnData?.data?.id)
             syncFormWithDb(undefined)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+             Swal.fire({
+                                    title: text + "  " + "Successfully",
+                                    icon: "success",
+                                    draggable: true,
+                                    timer: 1000,
+                                    showConfirmButton: false, 
+                                    didOpen: () => {
+                                        Swal.showLoading(); 
+                                    }
+                                });
         } catch (error) {
             console.log("handle");
         }
@@ -126,7 +139,7 @@ export default function Form() {
         }
     };
 
-    const deleteData = async () => {
+    const deleteData = async (id ) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
@@ -134,7 +147,17 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                   Swal.fire({
+                                    title: "Deleted" + "  " + "Successfully",
+                                    icon: "success",
+                                    draggable: true,
+                                    timer: 1000,
+                                    showConfirmButton: false, 
+                                    didOpen: () => {
+                                        Swal.showLoading(); 
+                                    }
+                                });
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -193,9 +216,19 @@ export default function Form() {
             >
                 <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                     <h5 className='my-1'>Socks Material</h5>
-                    <div className='flex items-center'>
-                        <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                    </div>
+                    <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              setForm(true);
+                              onNew();
+                            }}
+                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add New ShocksMaterial
+                          </button>
+                  
+                        </div>
                 </div>
                 <div className='w-full flex items-start'>
                     <Mastertable
@@ -205,6 +238,9 @@ export default function Form() {
                         onDataClick={onDataClick}
                         // setOpenTable={setOpenTable}
                         tableHeaders={tableHeaders}
+                        readOnly={readOnly}
+                        setReadOnly={setReadOnly}
+                        deleteData={deleteData}
                         tableDataNames={tableDataNames}
                         data={allData?.data}
                         loading={
@@ -218,7 +254,7 @@ export default function Form() {
 
 
 
-                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => {
+                        {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => {
                             setForm(false); if (openPartyModal === true) {
 
                                 dispatch(push({ name: lastTapName }));
@@ -264,8 +300,106 @@ export default function Form() {
                                     </div>
                                 </fieldset>
                             </MastersForm>
-                        </Modal>}
+                        </Modal>} */}
+                         {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => {
+            setForm(false);
+            setErrors({});
+          }}
+        >
+          <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit ShocksMaterial " : "ShocksMaterial Master") : "Add New ShocksMaterial "}
+                </h2>
+              
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                   
+                    <fieldset className=' rounded mt-2'>
+                       
+                                    <div className=''>
+                                        <div className="flex flex-wrap w-full ">
+                                            <div className="mb-3 w-[48%]">
+                                                <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                                            </div>
+
+                                        </div>
+
+                                        <div >
+                                            <div className="mb-3">
+                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                            </div>
+
+                                        </div>
+                                    </div>
+                    </fieldset>
+
+                  </div>
+
+                
+                </div>
+
+
+                      
+
+
+                     
+
+                     
+
+
+              </div>
+            </div>
+
+
+          </div>
+
+      
+       
+        </Modal>
+      )}
                     </div>
                 </div>
 

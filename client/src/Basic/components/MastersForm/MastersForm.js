@@ -11,9 +11,9 @@ import {
   SearchButton,
   OpenTable
 } from "../../../UiComponents/Buttons/Buttons";
-import toast from "react-hot-toast";
 import secureLocalStorage from "react-secure-storage";
 import { useGetPagePermissionsByIdQuery } from "../../../redux/services/PageMasterService";
+import { toast } from "react-toastify";
 
 
 
@@ -78,7 +78,33 @@ const MastersForm = ({
       )
     );
   };
+console.log(readOnly,"readOnly",IsDefaultAdmin())
+  // const hasPermission = (callback, type) => {
+  //   if (childRecordValidationActions.includes(type) && childRecord !== 0) {
+  //     toast.error("Child Record Exists", { position: "top-center" });
+  //     return;
+  //   }
+  //   if (IsSuperAdmin()) {
+  //     callback();
+  //   } else {
+  //     if (isCurrentFinYearActive()) {
+  //       if (IsDefaultAdmin()) {
+  //         console.log("Hit Masterform")
+  //         callback();
 
+  //       } else if (currentPagePermissions?.data[type]) {
+  //         console.log("hit")
+  //         callback();
+  //       } else {
+  //         toast.error(`No Permission to ${type}...!`, {
+  //           position: "top-center",
+  //         });
+  //       }
+  //     } else {
+  //       toast.error(" Past Fin Year Only can view!", { position: "top-center" });
+  //     }
+  //   }
+  // };
   const hasPermission = (callback, type) => {
     if (childRecordValidationActions.includes(type) && childRecord !== 0) {
       toast.error("Child Record Exists", { position: "top-center" });
@@ -89,22 +115,21 @@ const MastersForm = ({
     } else {
       if (isCurrentFinYearActive()) {
         if (IsDefaultAdmin()) {
-          console.log("Hit Masterform")
           callback();
-
-        } else if (currentPagePermissions?.data[type]) {
+        } else if (currentPagePermissions.data[type]) {
           callback();
         } else {
-          toast.error(`No Permission to ${type}...!`, {
+          toast.info(`No Permission to ${type}...!`, {
             position: "top-center",
           });
+              
+       
         }
       } else {
-        toast.error(" Past Fin Year Only can view!", { position: "top-center" });
+        toast.info(" Past Fin Year Only can view!", { position: "top-center" });
       }
     }
   };
-
   return (
     <div className="h-full px-6 py-4  bg-gray-50 rounded-md shadow-inner overflow-auto ">
       <div className="flex flex-col h-full">
@@ -123,27 +148,33 @@ const MastersForm = ({
               emptyErrors();
             }}
           />
-          {!readOnly ? (
+       
             <SaveButton
+        onClick={() => {
+          hasPermission(saveData, "save");
+        }}
 
-              onClick={() => {
-                hasPermission(saveData, "edit");
-              }}
             />
-          ) : (
+          
             <div className="flex space-x-3">
-              <DeleteButton
+              {/* <DeleteButton
                 onClick={() => {
                   hasPermission(deleteData, "delete");
                 }}
-              />
-              <EditButton
-                onClick={() => {
-                  hasPermission(setReadOnly, "edit");
-                }}
-              />
+              /> */}
+              {readOnly && (
+                    <EditButton
+                      onClick={() => {
+                        hasPermission(setReadOnly, "edit");
+                        if(!readOnly){
+                          toast.info("You Can Edit The Datas !..")
+                        }
+                      }}
+                    />
+                        )}
+            
             </div>
-          )}
+        
         </div>
       </div>
     </div>

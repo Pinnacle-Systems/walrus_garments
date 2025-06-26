@@ -305,7 +305,7 @@ export const groupBy = function (xs, key) {
 };
 
 export function sumArray(arr, property) {
-  return arr.reduce((total, current) => parseFloat(total) + parseFloat(current[property]), 0)
+  return arr?.reduce((total, current) => parseFloat(total) + parseFloat(current[property]), 0)
 }
 
 export function getBalanceBillQty(inwardQty, returnQty, alreadyBilledQty) {

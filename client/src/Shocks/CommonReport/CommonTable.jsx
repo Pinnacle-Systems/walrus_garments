@@ -12,10 +12,10 @@ const CommonTable = ({
   rowActions = true
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const totalPages = Math?.ceil(data?.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
 
 
@@ -45,7 +45,7 @@ const CommonTable = ({
             <FaChevronLeft className="inline" />
           </button>
 
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
             let pageNum;
             if (totalPages <= 5) {
               pageNum = i + 1;
@@ -108,10 +108,10 @@ const CommonTable = ({
         <thead className="bg-gray-200 text-gray-800">
           <tr>
 
-            {columns.map((column, index) => (
+            {columns?.map((column, index) => (
               <th
                 key={index}
-                className={`px-4 py-2 text-left font-medium ${index < columns.length - 1 ? 'border-r border-white/50' : ''} text-[13px]`}
+                className={`px-4 py-2 text-left font-medium ${index < columns?.length - 1 ? 'border-r border-white/50' : ''} text-[13px]`}
               >
                 {column.header}
               </th>
@@ -121,15 +121,15 @@ const CommonTable = ({
             )}
           </tr>
         </thead>
-        <tbody>{console.log(currentItems, "currentItems")}
-          {currentItems.length === 0 ? (
+        <tbody>
+          {currentItems?.length === 0 ? (
             <tr>
               <td colSpan={columns.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
                 {emptyStateMessage}
               </td>
             </tr>
           ) : (
-            currentItems.map((item, index) => (
+            currentItems?.map((item, index) => (
               <tr
                 key={item.id}
                 className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
@@ -172,7 +172,7 @@ const CommonTable = ({
                       )}
                       {onDelete && (
                         <button
-                          className="text-red-600 text-red-800 flex items-center gap-1 mx-2 px-2 py-1.5 bg-red-50 rounded"
+                          className=" text-red-800 flex items-center gap-1 mx-2 px-2 py-1.5 bg-red-50 rounded"
                           onClick={() => onDelete(item.id)}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

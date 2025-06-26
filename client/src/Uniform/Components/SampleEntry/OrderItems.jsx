@@ -16,13 +16,15 @@ import { useGetMachineQuery } from "../../../redux/services/MachineMasterService
 import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
 import TableGridItems from './TableGridItems';
 import Modal from "../../../UiComponents/Modal";
+import { FaInfoCircle } from 'react-icons/fa';
 
-export default function OrderItems({ readOnly, itemHeading, setOrderDetails, orderDetails, id }) {
+export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetails, id }) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [tableDataView, setTableDataView] = useState(false)
     const [currentItem, setCurrentItem] = useState();
     const [currentIndex, setCurrentIndex] = useState("");
-    const [gridEditableIndex, setGridEditableIndex] = useState(null)
+    const [gridEditableIndex, setGridEditableIndex] = useState(null);
+    const [tooltipVisible, setTooltipVisible] = useState(false);
     const params = {
         branchId, userId, finYearId
     };
@@ -49,7 +51,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
     function addNewRow() {
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setOrderDetails(prev => [
+        setSampleDetails(prev => [
             ...prev,
             {
                 yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
@@ -59,12 +61,18 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
         ]);
     }
 
+
+
+
+
+    console.log(sampleDetails,"sampleDetails")
+
     function handleInputChange(value, index, field) {
+        setSampleDetails(sampleDetails => {
+            const newBlend = structuredClone(sampleDetails);
+            if(field === "qty"){
 
-        console.log("kii", value, index, field)
-
-        setOrderDetails(orderDetails => {
-            const newBlend = structuredClone(orderDetails);
+            }
             newBlend[index][field] = value;
             return newBlend
         }
@@ -78,23 +86,18 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
     function deleteRow(index) {
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setOrderDetails(prev => prev.filter((_, i) => i !== index))
+        setSampleDetails(prev => prev.filter((_, i) => i !== index))
     }
 
     function handleEdit(index) {
+         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
+            setGridEditableIndex(index)
 
-        console.log(index, "indexxxxxx")
-        setGridEditableIndex(index)
     }
-
-
-    console.log(gridEditableIndex, "griddd")
 
     function handleView(index) {
         setCurrentIndex(index)
         setTableDataView(true)
-        // setCurrentItem(itemData)
-
     }
 
 
@@ -104,30 +107,30 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
             <Modal
                 isOpen={tableDataView}
                 onClose={() => setTableDataView(false)}
-                widthClass={"px-2 h-[20%] w-[90%]"}
+                widthClass={"px-2 h-[37%] w-[50%]"}
             >
-                <TableGridItems id={id} gridEditableIndex={gridEditableIndex} orderDetails={orderDetails} handleInputChange={handleInputChange} item={currentItem} index={currentIndex} Yarnlist={Yarnlist} machineList={machineList} socksMaterialData={socksMaterialData}
+                <TableGridItems id={id} gridEditableIndex={gridEditableIndex} orderDetails={sampleDetails} handleInputChange={handleInputChange} item={currentItem} index={currentIndex} Yarnlist={Yarnlist} machineList={machineList} socksMaterialData={socksMaterialData}
                     colorlist={colorlist} socksTypeData={socksTypeData}
-                    readOnly={readOnly}
+                    readOnly={readOnly} styleList={styleList?.data}
 
                 />
             </Modal>
 
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">Item List</h2>
-                    <div className="flex gap-2 items-center">
+                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+                    {/* <div className="flex gap-2 items-center">
 
                         <button
                             onClick={() => {
                                 addNewRow()
                             }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-sm"
+                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
                         >
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
                         </button>
-                    </div>
+                    </div> */}
 
                 </div>
 
@@ -136,9 +139,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800">
                             <tr>
-
                                 <th
-
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     S.No
@@ -151,7 +152,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                 </th>
                                 <th
 
-                                    className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Image
                                 </th>
@@ -189,31 +190,42 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Qty
+                                    OrderQty
                                 </th>
+                                 <th
 
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    SampleQty
+                                </th>
+                                    <th
+
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    SampleWeight
+                                </th>
                                 <th
 
-                                    className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    View/Edit/Del
+                                    Actions
                                 </th>
                                 {/* ))} */}
                             </tr>
                         </thead>
-                        <tbody>{console.log(orderDetails, "orderDetails")}
+                        <tbody>
 
-                            {(orderDetails ? orderDetails : []).map((item, index) =>
+                            {(sampleDetails ? sampleDetails : []).map((item, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer " >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                    <td className=" border border-gray-300 text-[11px] ">
+                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
-                                            // disabled={readOnly}
+                                            // disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "styleId") } }}
-                                            className='text-left rounded py-2 h-full w-full'
+                                            className='text-left rounded  h-full w-full'
                                             value={item?.styleId}
 
-                                            disabled={(id ? gridEditableIndex !== index : false)}
+                                            // disabled={(id ? gridEditableIndex !== index : false)}
                                             onChange={(e) => handleInputChange(e.target.value, index, "styleId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "styleId")
@@ -239,8 +251,10 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                                 <input
                                                     title=" "
                                                     type="file"
-                                                    disabled={(id ? gridEditableIndex !== index : false)}
-                                                    className='text-left w-full rounded py-1 h-full text-xs'
+                                                    // disabled={(id ? gridEditableIndex !== index : false)}
+                                                //   disabled={true}
+
+                                                    className='text-left w-full rounded h-full text-xs'
                                                     onChange={(e) =>
                                                         e.target.files[0] ? handleInputChange(renameFile(e.target.files[0]), index, "filePath") : () => { }
                                                     }
@@ -254,7 +268,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                                         {VIEW}
                                                     </button>
                                                     {!readOnly &&
-                                                        <button className="text-xs" onClick={() => { handleInputChange('', index, "filePath") }}>{CLOSE_ICON}</button>
+                                                        <button className="text-xs"  onClick={() => { handleInputChange('', index, "filePath") }}>{CLOSE_ICON}</button>
                                                     }
                                                 </>
                                             }
@@ -310,11 +324,11 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                 </td> */}
 
 
-                                    <td className="w-40 border border-gray-300 text-[11px] ">
+                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
-                                            disabled={(id ? gridEditableIndex !== index : false)}
+                                            // disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "fiberContentId") } }}
-                                            className='text-left w-full rounded py-2 h-full'
+                                            className='text-left w-full rounded  h-full'
                                             value={item?.fiberContentId}
 
                                             onChange={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
@@ -345,11 +359,11 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                     </textarea>
 
                                 </td> */}
-                                    <td className="w-40 border border-gray-300 text-[11px] ">
+                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
-                                            disabled={readOnly}
+                                            //  disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "socksMaterialId") } }}
-                                            className='text-left w-full rounded py-1 h-full'
+                                            className='text-left w-full rounded  h-full'
                                             value={item?.socksMaterialId}
 
                                             onChange={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
@@ -368,11 +382,11 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
                                         </select>
                                     </td>
-                                    <td className=" w-40  border border-gray-300 text-[11px] ">
+                                    <td className=" w-40  border border-gray-300 text-[11px] py-0.5">
                                         <select
-                                            disabled={readOnly}
+                                            // disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "socksTypeId") } }}
-                                            className='text-left w-full rounded py-1 h-full'
+                                            className='text-left w-full rounded h-full'
                                             value={item?.socksTypeId}
 
                                             onChange={(e) => handleInputChange(e.target.value, index, "socksTypeId")}
@@ -469,11 +483,11 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
 
 
-                                    <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300">
+                                    <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5">
                                         <select
-                                            disabled={(id ? gridEditableIndex !== index : false)}
+                                            // disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                            className='text-left w-full rounded py-2 h-full'
+                                            className='text-left w-full rounded h-full'
                                             value={item?.sizeId}
 
                                             onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
@@ -492,10 +506,10 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
                                         </select>
                                     </td>
-                                    <td className="w-40  border border-gray-300 text-[11px] ">
-                                        <input className='text-right w-full h-full p-2'
+                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] ">
+                                        <input className='text-right w-full h-full'
                                             type="text"
-                                            readOnly={(id ? gridEditableIndex !== index : false)}
+                                            // disabled={true}
                                             value={item?.measurements || 0}
                                             onChange={(e) => { handleInputChange(e.target.value, index, "measurements") }}
                                             onFocus={(e) => { e.target.select() }} min={0}
@@ -504,44 +518,76 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                     </td>
 
 
-                                    <td className="w-40 border-blue-gray-200 text-[11px] text-right border border-gray-300">
-                                        <input className='text-right w-full h-full p-2 '
+                                    <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                        <input className='text-right w-full h-full '
                                             type="number"
-                                            readOnly={(id ? gridEditableIndex !== index : false)}
+                                            // disabled={true}
                                             value={item?.qty}
                                             onChange={(e) => { handleInputChange(e.target.value, index, "qty") }} onFocus={(e) => { e.target.select() }} min={0}
                                         />
 
                                     </td>
 
+                          <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                        <input className='text-right w-full h-full '
+                                            type="number"
+                                            disabled={readOnly}
+                                            value={item?.sampleQty}
+                                            onChange={(e) => { handleInputChange(e.target.value, index, "sampleQty") }} onFocus={(e) => { e.target.select() }} min={0}
+                                        />
+
+                                    </td>
+                                 <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                        <input className='text-right w-full h-full '
+                                            type="number"
+                                            disabled={readOnly}
+                                            value={item?.sampleWeight}
+                                            onChange={(e) => { handleInputChange(e.target.value, index, "sampleWeight") }} onFocus={(e) => { e.target.select() }} min={0}
+                                        />
+
+                                    </td>
 
 
-
-
-                                    <td className="w-40 px-4 py-1 text-center">
+                                    <td className="w-16 px-1 py-1 text-center">
                                         <div className="flex space-x-2  justify-center">
 
                                             <button
                                                 onClick={() => handleView(index)}
-                                                className="text-blue-800 flex items-center gap-1 px-2 mx-2 py-1.5 bg-blue-50 rounded"
+                                                onMouseEnter={() => setTooltipVisible(true)}
+                                                onMouseLeave={() => setTooltipVisible(false)}
+                                                className="text-blue-800 flex items-center  bg-blue-50 rounded"
                                             >
-                                                👁 <span className="text-xs">view</span>
+                                                👁 <span className="text-xs"></span>
                                             </button>
-
-                                            <button
+                                            <span className="tooltip-text">View</span>
+                                            {/* <button
+                                                disabled={true}
                                                 onClick={() => handleEdit(index)}
-                                                className="text-green-600 hover:text-green-800 bg-green-50 px-2 py-1 rounded text-xs flex items-center gap-1"
+                                                className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiPencil className="w-4 h-4" />
-                                                Edit
-                                            </button>
-                                            <button
+
+                                            </button> */}
+                                            {/* <span className="tooltip-text">Edit</span> */}
+                                            {/* <button
+                                                 disabled={true}
                                                 onClick={() => deleteRow(index)}
-                                                className="text-red-600 hover:text-red-800 bg-red-50 px-2 py-1 rounded text-xs flex items-center gap-1"
+                                                className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiTrash className="w-4 h-4" />
-                                                Delete
+
                                             </button>
+                                            <span className="tooltip-text">Delete</span> */}
+
+                                            {/* {tooltipVisible && (
+                                                <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                                    <div className="flex items-start">
+                                                        <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                                        <span>View</span>
+                                                    </div>
+                                                    <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                                </div>
+                                            )} */}
                                         </div>
                                     </td>
                                 </tr>

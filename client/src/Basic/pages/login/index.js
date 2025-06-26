@@ -9,8 +9,9 @@ import { generateSessionId } from '../../../Utils/helper';
 import Modal from '../../../UiComponents/Modal';
 import BranchAndFinYearForm from '../../components/BranchAndFinyear';
 import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
-import toast from 'react-hot-toast';
+
 import { UserIcon as User, LockClosedIcon as Lock,} from '@heroicons/react/outline';
+import { toast } from 'react-toastify';
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;

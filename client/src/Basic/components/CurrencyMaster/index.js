@@ -11,11 +11,14 @@ import {
 } from '../../../redux/services/CurrencyMasterServices';
 import toast from 'react-hot-toast';
 import { statusDropdown } from '../../../Utils/DropdownData';
-import { Modal, TextInput, ToggleButton } from '../../../Inputs';
+import {  TextInput, ToggleButton } from '../../../Inputs';
 import MastersForm from '../MastersForm/MastersForm';
 import Mastertable from '../MasterTable/Mastertable';
 import { useDispatch, useSelector } from 'react-redux';
 import { setOpenPartyModal } from '../../../redux/features/openModel';
+import { Check, Plus } from 'lucide-react';
+import Modal from '../../../UiComponents/Modal';
+import Swal from 'sweetalert2';
 
 
 const MODEL = "Currency Master";
@@ -73,7 +76,7 @@ export default function Form() {
 
 
             } else {
-                setReadOnly(true);
+                // setReadOnly(true);
                 setName(data?.name || "");
                 setCode(data?.code || "");
                 setActive(id ? (data?.active ?? false) : true);
@@ -101,11 +104,21 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+            setForm(false);
+             Swal.fire({
+                        title: text + "  " + "Successfully",
+                        icon: "success",
+                        draggable: true,
+                        timer: 1000,
+                        showConfirmButton: false, 
+                        didOpen: () => {
+                            Swal.showLoading(); 
+                        }
+                    });
               if (openPartyModal === true) {
                     dispatch(push({ name: lastTapName }));
                   }
-
         } catch (error) {
             console.log("handle");
         }
@@ -153,7 +166,17 @@ export default function Form() {
                     return
                 }
                 setId("");
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                  Swal.fire({
+                        title: "Deleted" + "  " + "Successfully",
+                        icon: "success",
+                        draggable: true,
+                        timer: 1000,
+                        showConfirmButton: false, 
+                        didOpen: () => {
+                            Swal.showLoading(); 
+                        }
+                    });
                 setForm(false)
             } catch (error) {
                 toast.error("something went wrong");
@@ -190,9 +213,19 @@ export default function Form() {
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1'>Currency Master</h5>
-                <div className='flex items-center'>
-                    <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                </div>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              setForm(true);
+                              onNew();
+                            }}
+                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add New Currency 
+                          </button>
+                  
+                        </div>
             </div>
             <div className='w-full flex items-start'>
 
@@ -202,14 +235,15 @@ export default function Form() {
                     setSearchValue={setSearchValue}
                     onDataClick={onDataClick}
                     // setOpenTable={setOpenTable}
+                    setReadOnly={setReadOnly}
+                    deleteData={deleteData}
                     tableHeaders={tableHeaders}
                     tableDataNames={tableDataNames}
                     data={allData?.data}
-                // loading={ isLoading || isFetching } 
                 />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); if (openPartyModal === true) {
+                    {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); if (openPartyModal === true) {
                                      console.log("isCalled")
                                               dispatch(push({ name: lastTapName }));
                                             }; dispatch(setOpenPartyModal(false)); setErrors({}); }}>
@@ -249,12 +283,103 @@ export default function Form() {
                                         </div>
                                     </div>
                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                    {/* <CheckBox name="Active" value={active} setValue={setActive} readOnly={readOnly} /> */}
                                 </div>
                             </fieldset>
                         </MastersForm>
-                    </Modal>}
+                    </Modal>} */}
+ {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => {
+            setForm(false);
+            setErrors({});
+          }}
+        >
+          <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Currency Master" : "Employee Currency Master") : "Add New Currency "}
+                </h2>
+              
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                   
+                     
+                                <div className=''>
+                                    <div className='flex'>
+                                        <div className='mb-3 w-[48%]'>
+                                            <TextInput name="Currency Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                                        </div>
+                                        <div className='mb-3 ml-5 w-[20%]'>
+                                            <TextInput name="Code" type="text" value={code} setValue={setCode} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        </div>
+                                    </div>
+                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                </div>
+
+                  </div>
+
+                
+                </div>
+
+
+                      
+
+
+                     
+
+                     
+
+
+              </div>
+            </div>
+
+
+          </div>
+
+      
+       
+        </Modal>
+      )}
                 </div>
             </div>
         </div>

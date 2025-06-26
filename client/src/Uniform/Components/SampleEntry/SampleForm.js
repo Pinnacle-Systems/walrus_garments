@@ -35,7 +35,7 @@ import { useGetMachineQuery } from "../../../redux/services/MachineMasterService
 
 const MODEL = "Order";
 
-const OrderForm = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose }) => {
+const SampleForm = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose }) => {
 
 
     const [isForOrderImportItems, setIsForOrderImportItems] = useState(false)
@@ -813,4 +813,4 @@ const OrderForm = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId
 }
 
 
-export default OrderForm
+export default SampleForm;

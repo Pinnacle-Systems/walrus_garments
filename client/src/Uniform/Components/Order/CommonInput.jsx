@@ -12,7 +12,8 @@ export function ReusableSearchableInput({
   optionList,
   component,
   setSearchTerm,
-  searchTerm
+  searchTerm,
+  readOnly
 
 }) {
   // const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +78,7 @@ export function ReusableSearchableInput({
                 setIsDropdownOpen(true);
               }}
               onFocus={() => setIsDropdownOpen(true)}
+              disabled={readOnly}
             />
           </div>
 
@@ -84,6 +86,7 @@ export function ReusableSearchableInput({
             <button
               className="h-full px-3 py-1.5 border border-green-500 rounded-md
               hover:bg-green-500 text-green-600 hover:text-white transition-colors flex items-center justify-center"
+              disabled={readOnly}
               onClick={() => {
                 // openAddModal();
                 // setIsDropdownOpen(false);
@@ -93,6 +96,7 @@ export function ReusableSearchableInput({
               onMouseEnter={() => setTooltipVisible(true)}
               onMouseLeave={() => setTooltipVisible(false)}
               aria-label="Add supplier"
+
             >
               <FaPlus className="text-sm" />
             </button>

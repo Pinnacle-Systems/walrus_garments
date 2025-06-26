@@ -44,10 +44,10 @@ import { PLUS } from "../../../icons";
 import SampleDetailsForm from "./SampleDetailsForm";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import ViewImage from "./ViewImage";
-import PrintFormat from "../../PrintFormat-Sample";
+// import PrintFormat from "../../PrintFormat-Sample";
 import { useGetUserQuery } from "../../../redux/services/UsersMasterService";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
-
+let PrintFormat;
 const MODEL = "Sample Entry";
 
 export default function Form({ }) {

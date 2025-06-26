@@ -46,7 +46,8 @@ const FormHeader = ({
     sessionStorage.getItem("sessionId") + "userRoleId"
   );
   const {
-    data: currentPagePermissions,
+    data: 
+    currentPagePermissions,
     isLoading,
     isFetching,
   } = useGetPagePermissionsByIdQuery({ currentPageId, userRoleId }, { skip: !(currentPageId && userRoleId) });
@@ -139,11 +140,10 @@ const FormHeader = ({
 
             {saveData && <SaveButton onClick={saveData} />}
 
-            {deleteData && (
               <DeleteButton
                 onClick={() => hasPermission(deleteData, "delete")}
               />
-            )}
+            
 
             {openReport && <SearchButton onClick={openReport} />}
 

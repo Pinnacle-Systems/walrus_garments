@@ -79,6 +79,8 @@ export const handleOnChangeforpassword = (event, setValue) => {
     );
   });
 };
+
+
 export const MultiSelectDropdown = ({
   name,
   selected,
@@ -192,7 +194,7 @@ export const PasswordTextInput = ({
           onBlur={onBlur}
           tabIndex={tabIndex ? tabIndex : undefined}
           type={type}
-          disabled={readOnly}
+          // disabled={readOnly}
           required={required}
           value={value}
           onChange={(e) => {
@@ -462,7 +464,7 @@ export const DropdownInput = ({
           <option
             key={index}
             value={option.value}
-            className="text-xs py-1" // Smaller option text
+            className="text-xs py-1" 
           >
             {option.show}
           </option>
@@ -856,23 +858,14 @@ export const DropdownWithSearch = ({
   value,
   setValue,
   readOnly,
-  onCreateNew = null,
-  optionName,
-  masterName = "",
+  disabled,
+  labelField ,
+  label,
 }) => {
   console.log(options, "options");
 
   const dispatch = useDispatch();
 
-  function handleChange(e) {
-    if (e.target.value === "create_new_Vendor") {
-      dispatch(
-        push({ name: "PARTY MASTER", projectForm: true, projectId: true })
-      );
-    } else {
-      setValue(e.target.value);
-    }
-  }
 
   const [currentIndex, setCurrentIndex] = useState("");
   useEffect(() => setCurrentIndex(new Date()), []);
@@ -908,28 +901,31 @@ export const DropdownWithSearch = ({
   }, [currentIndex]);
 
   return (
-    <div id={`dropdown${currentIndex}`} className={`${className} px-2`}>
+    <div id={`dropdown${currentIndex}`} className={`${className}mb-2`}>
+      {label && (
+        <label className="block text-xs text-slate-500 mb-1">
+          {label}
+        </label>
+      )}
       <select
-        className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-        disabled={readOnly}
+        // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+             className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+          } ${className}`}
+        disabled={disabled}
+        readOnly={readOnly}
         value={value || ""}
         onChange={(e) => {
-          // setValue(e.target.value)
-          handleChange(e);
+          setValue(e.target.value)
         }}
       >
-        {!value && <option value="">Select {optionName}</option>}
-        {/* {masterName !== "" && (
-                    <option
-                        value="create_new_Vendor"
-                        className="text-blue-600 font-semibold"
-                    >
-                        + Create New Vendor
-                    </option>
-                )} */}
+        {/* {!value && <option value="">Select {optionName}</option>} */}
+      
+        <option value={""}>Select</option>
         {(options || []).map((option) => (
           <option key={option.id} value={option.id} classname>
-            {option.name}
+            {option[labelField]}
           </option>
         ))}
       </select>
@@ -975,14 +971,13 @@ export const ToggleButton = ({
   setActive,
   required,
   readOnly,
-  form,
+  disabled = false,
 }) => {
   const [isToggled, setIsToggled] = useState(false);
 
   useEffect(() => {
     if (value) {
       setIsToggled(true);
-      console.log("here");
     } else {
       setIsToggled(false);
     }
@@ -1004,6 +999,7 @@ export const ToggleButton = ({
                   setActive(!value);
                 }
               }}
+              disabled={disabled}
               required
             />
             <div className="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 peer transition duration-300"></div>

@@ -1,51 +1,50 @@
 import { useState } from 'react';
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+
+import SampleForm from './SampleForm';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
-import { useDeleteOrderMutation } from '../../../redux/uniformService/OrderService';
+import { useDeleteOrderMutation, useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import { getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
-import OrderFormUi from './orderFormUi';
-import {
-    useGetSampleQuery,
-} from "../../../redux/uniformService/SampleService";
-import {
-
-    useGetPartyQuery,
-} from "../../../redux/services/PartyMasterService";
-
-
-
+import SampleEntryUi from './sampeEntryFormUi';
+import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
+import {  useGetSampleQuery } from '../../../redux/uniformService/SampleService';
 
 
 const SampleEntry = () => {
+    const [sampleDetails, setSampleDetails] = useState([]);
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-
+    const [selectedStatus, setSelectedStatus] = useState('all');
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
+    const [orderId,setOrderId] = useState("")
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [readOnly, setReadOnly] = useState(false);
-    const [sampleDetails, setSampleDetails] = useState([]);
     const params = {
-        branchId,
+        branchId, userId, finYearId
     };
+    const { data: orderData } = useGetOrderQuery({ params });
+    const { data: sampleEntryData } = useGetSampleQuery({ params });
 
-
-
-
-    const { data: sampleData } = useGetSampleQuery({ params });
     const { data: partyData } = useGetPartyQuery({ params })
     const [removeData] = useDeleteOrderMutation();
-    const columns = [
 
+    const columns = [
         {
-            header: 'Order No.',
+            header: 'S.No',
+            accessor: (item, index) => index + 1,
+            cellClass: () => 'font-medium text-gray-900'
+        },
+        {
+            header: 'Sample No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
         },
         {
-            header: 'Order Date',
-            accessor: (item) => item.docDate
+            header: 'Sample Date',
+            accessor: (item) => item.createdAt
         },
         {
             header: 'Party',
@@ -62,51 +61,30 @@ const SampleEntry = () => {
             accessor: (item) => item.phone,
             cellClass: () => 'text-gray-800 uppercase'
         },
-
-        // {
-        //     header: 'Taxable (₹)',
-        //     accessor: (item) => item.taxable
-        // },
-        // {
-        //     header: 'Amount (₹)',
-        //     accessor: (item) => item.amount,
-        //     cellClass: () => 'font-semibold'
-        // },
-        // {
-        //     header: 'Status',
-        //     accessor: (item) => (
-        //         <div className="flex items-center">
-        //             <span className={`w-2 h-2 rounded-full mr-1 ${item.status === 'pending' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
-        //             <span className={`capitalize ${item.status === 'pending' ? 'text-yellow-600' : 'text-green-600'}`}>
-        //                 {item.status}
-        //             </span>
-        //         </div>
-        //     )
-        // }
     ];
 
 
 
-    const handleView = (orderId) => {
-        if (!orderId) return
-        setId(orderId)
+    const handleView = (id) => {
+
+        setId(id)
         setShowManufacturer(true)
         setReadOnly(true);
     };
 
-    const handleEdit = (orderId) => {
-        setId(orderId)
+    const handleEdit = (id) => {
+        setId(id)
         setShowManufacturer(true)
         setReadOnly(false);
     };
 
-    const handleDelete = async (orderId) => {
-        if (orderId) {
+    const handleDelete = async (id) => {
+        if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                await removeData(orderId)
+                await removeData(id)
                 setId("");
                 onNew();
                 toast.success("Deleted Successfully");
@@ -126,12 +104,12 @@ const SampleEntry = () => {
     return (
         <>
             {showManufacturer ? (
-                <OrderFormUi sampleDetails={sampleDetails} setSampleDetails={setSampleDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-                    partyData={partyData?.data}
+                <SampleEntryUi sampleDetails={sampleDetails} setSampleDetails={setSampleDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+                    partyData={partyData?.data} orderData={orderData} orderId={orderId} setOrderId={setOrderId}
                 />
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800">Sample Entry</h1>
+                    <h1 className="text-2xl font-bold text-gray-800"> Sample Entry</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select
@@ -163,7 +141,7 @@ const SampleEntry = () => {
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                         <CommonTable
                             columns={columns}
-                            data={sampleData?.data || []}
+                            data={sampleEntryData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

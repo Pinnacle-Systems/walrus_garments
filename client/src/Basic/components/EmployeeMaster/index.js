@@ -122,6 +122,8 @@ export default function Form() {
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
+   const finYearId =  secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
+
   const {
     data: cityList,
     isLoading: cityLoading,
@@ -129,7 +131,7 @@ export default function Form() {
   } = useGetCityQuery({ params });
 
   const { data: employeeCategoryList } = useGetEmployeeCategoryQuery({
-    params: companyId,
+    params: companyId,finYearId
   });
 
   const { data: departmentList } = useGetDepartmentQuery({ params });
@@ -140,8 +142,8 @@ export default function Form() {
   } = useGetEmployeeQuery({ params, searchParams: searchValue });
 
   const isCurrentEmployeeDoctor = (employeeCategory) =>
-    employeeCategoryList.data
-      .find((cat) => parseInt(cat.id) === parseInt(employeeCategory))
+    employeeCategoryList?.data
+      ?.find((cat) => parseInt(cat.id) === parseInt(employeeCategory))
       ?.name?.toUpperCase() === "DOCTOR";
   const {
     data: singleData,
@@ -162,6 +164,7 @@ export default function Form() {
   }, [allData, isLoading, isFetching, id]);
 
   useEffect(getRegNo, id[(getRegNo, id)]);
+  console.log(readOnly,"readOnly")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -339,10 +342,19 @@ export default function Form() {
       console.log("handle");
     }
   };
-  console.log(employeeCategoryList?.data, "employeeCategoryList?.data")
+  
+  const validateData = (data) => {
+    if (data.name && data.dob  && data.gender  && data.employeeCategory && data.department  &&  data.joiningDate  &&  data.mobile && data.localAddress) {
+      return true;
+    }
+    return false;
+  }
 
   const saveData = () => {
-
+    //  if (!validateData(data)) {
+    //       toast.error("Please fill all required fields...!", { position: "top-center" })
+    //       return
+    //     }
     if (!JSON.parse(active)) {
       setLeavingForm(true);
     } else {
@@ -353,9 +365,10 @@ export default function Form() {
       }
     }
   };
-  const deleteData = async () => {
+  const deleteData = async (id) => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
+        setForm(false);
         return;
       }
       try {
@@ -485,7 +498,6 @@ export default function Form() {
   console.log(data, "data")
   return (
     <div onKeyDown={handleKeyDown} className="p-1 ">
-      {/* Header Section */}
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h1 className="text-2xl font-bold text-gray-800">
           Employee Master
@@ -652,7 +664,7 @@ export default function Form() {
                       type="button"
                       onClick={saveData}
                       className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-              border border-green-600 flex items-center gap-1 text-xs"
+                  border border-green-600 flex items-center gap-1 text-xs"
                     >
                       <Check size={14} />
                       {id ? "Update" : "Save"}

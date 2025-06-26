@@ -90,16 +90,7 @@ async function get(req) {
       id: "desc",
     },
     include: {
-      // Style: {
-      //   select: {
-      //     name: true,
-      //   },
-      // },
-      // Fabric: {
-      //   select: {
-      //     name: true,
-      //   },
-      // },
+     
       Party: {
         select: {
           name: true,
@@ -107,45 +98,7 @@ async function get(req) {
           contactMobile: true,
         },
       },
-      // sampleDetails: {
-      //   select: {
-      //     id: true,
-      //     sizeId: true,
-      //     comment: true,
-      //     filePath: true,
-      //     colorId: true,
-      //     Fabric: true,
-      //     fabricId: true,
-      //     itemId: true,
-      //     sampleId: true,
-      //     Color: true,
-      //     Size: true,
-      //     Item: true,
-      //     ItemType: true,
-      //     itemTypeId: true,
-      //     pattern: true,
-      //     printing: true,
-      //     stitching: true,
-      //     ironingAndPacking: true,
-      //     embroiding: true,
-      //     cutting: true,
-      //     embroidingDate: true,
-      //     printingDate: true,
-      //     cuttingDate: true,
-      //     ironingAndPackingDate: true,
-      //     stitchingDate: true,
-      //     patternDate: true,
-      //     printingFilePath: true,
-      //     embroidingFilePath: true,
-      //     ironingAndPackingFilePath: true,
-      //     patternUserId: true,
-      //     cuttingUserId: true,
-      //     printingUserId: true,
-      //     embroidingUserId: true,
-      //     stitchingUserId: true,
-      //     ironingAndPackingUserId: true,
-      //   },
-      // },
+
     },
   });
   data = await manualFilterSearchData(searchBillDate, searchValidDate, data);
@@ -163,34 +116,7 @@ async function get(req) {
 
 
 
-  // if (JSON.parse(isDashboard)) {
-  //   if (JSON.parse(isCompletedReport)) {
-  //     data = data?.filter(
-  //       (i) =>
-  //         i.sampleDetails?.every(
-  //           (val) =>
-  //             val.cutting == true ||
-  //             val.printing == true ||
-  //             val.stitching == true ||
-  //             val.embroiding == true ||
-  //             val.ironingAndPacking == true ||
-  //             val.pattern == true
-  //         ) && i.sampleSubmitBy
-  //     );
-  //   } else if (JSON.parse(isWipOnly)) {
-  //     data = data?.filter((i) =>
-  //       i.sampleDetails?.some(
-  //         (val) =>
-  //           val.cutting == false ||
-  //           val.printing == false ||
-  //           val.stitching == false ||
-  //           val.embroiding == false ||
-  //           val.ironingAndPacking == false ||
-  //           val.pattern == false
-  //       )
-  //     );
-  //   }
-  // }
+
 
 
   return { statusCode: 0, nextDocId: newDocId, data, totalCount };
@@ -203,60 +129,12 @@ async function getOne(id) {
       id: parseInt(id),
     },
     include: {
-      Style: {
-        select: {
-          name: true,
-        },
-      },
-      Fabric: {
-        select: {
-          name: true,
-        },
-      },
-      User: {
-        select: {
-          username: true,
-        },
-      },
-      sampleDetails: {
-        select: {
-          id: true,
-          sizeId: true,
-          comment: true,
-          filePath: true,
-          colorId: true,
-          fabricId: true,
-          Fabric: true,
-          itemId: true,
-          sampleId: true,
-          Color: true,
-          Size: true,
-          Item: true,
-          ItemType: true,
-          itemTypeId: true,
-          pattern: true,
-          printing: true,
-          stitchingUserId: true,
-          stitching: true,
-          ironingAndPacking: true,
-          embroiding: true,
-          cutting: true,
-          embroidingDate: true,
-          printingDate: true,
-          cuttingDate: true,
-          ironingAndPackingDate: true,
-          stitchingDate: true,
-          patternDate: true,
-          printingFilePath: true,
-          embroidingFilePath: true,
-          ironingAndPackingFilePath: true,
-          patternUserId: true,
-          cuttingUserId: true,
-          printingUserId: true,
-          embroidingUserId: true,
-          ironingAndPackingUserId: true,
-        },
-      },
+      Party: {
+                  select: {
+                      name: true
+                  }
+              },
+             sampleDetails : true,   
     },
   });
   if (!data) return NoRecordFound("party");
@@ -330,6 +208,7 @@ async function create(body) {
     companyId,
     sampleSizeGrid,
   } = await body;
+  console.log(sampleDetails,"sampleDetails")
   let data;
   let newDocId = await getNextDocId(branchId);
   data = await prisma.sample.create({
@@ -349,25 +228,40 @@ async function create(body) {
       phone,
       validDate: validDate ? new Date(validDate) : undefined,
       sampleDetails: {
-        createMany: sampleDetails
-          ? {
-            data: JSON.parse(sampleDetails || []).map((temp) => ({
-              itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
-              itemTypeId: temp.itemTypeId
-                ? parseInt(temp.itemTypeId)
-                : undefined,
-              colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
-              fabricId: temp.fabricId ? parseInt(temp.fabricId) : undefined,
-              sizeId: temp.sizeId ? parseInt(temp.sizeId) : undefined,
-              comment: temp.comment ? temp.comment : "",
-              filePath: temp.filePath ? temp.filePath : undefined,
-            })),
-          }
-          : undefined,
-      },
+          createMany: {
+                  data: JSON.parse(sampleDetails || []).map(temp => {
+                      let newItem = {}
+                      newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : null;
+                      newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : null;
+                      newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : null;
+                      newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : null;
+                      newItem["sampleQty"] = temp["sampleQty"] ? parseFloat(temp["sampleQty"]) : null;
+                      newItem["sampleWeight"] = temp["sampleWeight"] ? parseFloat(temp["sampleWeight"]) : null;
+                      newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : null;
+                      newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) :null;
+                      newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : null;
+                      newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : null;
+                      newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : null;
+                      newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : null;
+                      newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : null;
+                      newItem["description"] = temp["description"] ? temp["description"] : null;
+                      newItem["measurements"] = temp["measurements"] ? temp["measurements"] : null;
+                      newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : null;
+                      newItem["filePath"] = temp["filePath"] ? temp["filePath"] : null;
 
-    },
-  });
+
+                      return newItem
+                  }
+     
+          
+                            )
+                        }
+          
+                      },
+          
+                    },
+                  });
+
   return { statusCode: 0, data };
 }
 

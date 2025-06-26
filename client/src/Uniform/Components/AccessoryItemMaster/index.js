@@ -164,81 +164,81 @@ export default function Form() {
     ]
     const tableDataNames = ["dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE']
 
-    if (!form)
-        return (
-            <ReportTemplate
-                heading={MODEL}
-                tableHeaders={tableHeaders}
-                tableDataNames={tableDataNames}
-                loading={
-                    isLoading || isFetching
-                }
-                setForm={setForm}
-                data={allData?.data}
-                onClick={onDataClick}
-                onNew={onNew}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-            />
-        );
+    // if (!form)
+    //     return (
+    //         <ReportTemplate
+    //             heading={MODEL}
+    //             tableHeaders={tableHeaders}
+    //             tableDataNames={tableDataNames}
+    //             loading={
+    //                 isLoading || isFetching
+    //             }
+    //             setForm={setForm}
+    //             data={allData?.data}
+    //             onClick={onDataClick}
+    //             onNew={onNew}
+    //             searchValue={searchValue}
+    //             setSearchValue={setSearchValue}
+    //         />
+    //     );
 
-    return (
-        <div
-            onKeyDown={handleKeyDown}
-            className="md:items-start md:justify-items-center grid h-full bg-theme"
-        >
-            <div className="flex flex-col frame w-full h-full">
-                <FormHeader
-                    onNew={onNew}
-                    onClose={() => {
-                        setForm(false);
-                        setSearchValue("");
-                    }}
-                    model={MODEL}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
+    // return (
+    //     <div
+    //         onKeyDown={handleKeyDown}
+    //         className="md:items-start md:justify-items-center grid h-full bg-theme"
+    //     >
+    //         <div className="flex flex-col frame w-full h-full">
+    //             <FormHeader
+    //                 onNew={onNew}
+    //                 onClose={() => {
+    //                     setForm(false);
+    //                     setSearchValue("");
+    //                 }}
+    //                 model={MODEL}
+    //                 saveData={saveData}
+    //                 setReadOnly={setReadOnly}
+    //                 deleteData={deleteData}
 
-                />
-                <div className="flex-1 grid grid-cols-4 gap-x-2 overflow-clip">
-                    <div className="col-span-3 overflow-auto">
-                        <div className='col-span-3 grid overflow-auto'>
-                            <div className='mr-1 md:ml-2 mb-4'>
-                                <fieldset className='frame my-1 border border-gray-500 p-2'>
-                                    <legend className='sub-heading'>Accessory Item Info</legend>
-                                    <div className='flex my-2 gap-10 font-semibold justify-evenly items-center'>
-                                        <TextInput className={"text-sm"} name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        <DropdownInput className={"text-sm"} name="Item Type" options={dropDownListObject(id ? AccessoryGroupList.data : AccessoryGroupList.data.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                        <CheckBox className={"text-sm"} name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-                                    </div>
-                                </fieldset>
-                            </div>
-                            <div className='mr-1 md:ml-2'>
-                                <fieldset className='frame my-1 border-gray-500 p-2'>
-                                    <legend className='sub-heading'>Party Supply Details</legend>
-                                    <div className='grid my-2 justify-items-center items-center px-10'>
-                                        <PartySupplyDetails readOnly={readOnly} partySuppliesItem={partySuppliesItem} setPartySuppliesItem={setPartySuppliesItem}
-                                            partyDetails={partyData ? partyData.data : []} />
-                                    </div>
-                                </fieldset>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="frame hidden md:block overflow-x-hidden">
-                        <FormReport
-                            searchValue={searchValue}
-                            setSearchValue={setSearchValue}
-                            setId={setId}
-                            tableHeaders={tableHeaders}
-                            tableDataNames={tableDataNames}
-                            data={allData?.data}
-                            loading={
-                                isLoading || isFetching
-                            }
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+    //             />
+    //             <div className="flex-1 grid grid-cols-4 gap-x-2 overflow-clip">
+    //                 <div className="col-span-3 overflow-auto">
+    //                     <div className='col-span-3 grid overflow-auto'>
+    //                         <div className='mr-1 md:ml-2 mb-4'>
+    //                             <fieldset className='frame my-1 border border-gray-500 p-2'>
+    //                                 <legend className='sub-heading'>Accessory Item Info</legend>
+    //                                 <div className='flex my-2 gap-10 font-semibold justify-evenly items-center'>
+    //                                     <TextInput className={"text-sm"} name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+    //                                     <DropdownInput className={"text-sm"} name="Item Type" options={dropDownListObject(id ? AccessoryGroupList.data : AccessoryGroupList.data.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+    //                                     <CheckBox className={"text-sm"} name="Active" readOnly={readOnly} value={active} setValue={setActive} />
+    //                                 </div>
+    //                             </fieldset>
+    //                         </div>
+    //                         <div className='mr-1 md:ml-2'>
+    //                             <fieldset className='frame my-1 border-gray-500 p-2'>
+    //                                 <legend className='sub-heading'>Party Supply Details</legend>
+    //                                 <div className='grid my-2 justify-items-center items-center px-10'>
+    //                                     <PartySupplyDetails readOnly={readOnly} partySuppliesItem={partySuppliesItem} setPartySuppliesItem={setPartySuppliesItem}
+    //                                         partyDetails={partyData ? partyData.data : []} />
+    //                                 </div>
+    //                             </fieldset>
+    //                         </div>
+    //                     </div>
+    //                 </div>
+    //                 <div className="frame hidden md:block overflow-x-hidden">
+    //                     <FormReport
+    //                         searchValue={searchValue}
+    //                         setSearchValue={setSearchValue}
+    //                         setId={setId}
+    //                         tableHeaders={tableHeaders}
+    //                         tableDataNames={tableDataNames}
+    //                         data={allData?.data}
+    //                         loading={
+    //                             isLoading || isFetching
+    //                         }
+    //                     />
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
 }

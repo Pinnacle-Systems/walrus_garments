@@ -6,7 +6,7 @@ import { useGetYarnBlendMasterQuery } from '../../redux/uniformService/YarnBlend
 import { useGetYarnTypeMasterQuery } from '../../redux/uniformService/YarnTypeMasterServices';
 import { useAddYarnMasterMutation, useDeleteYarnMasterMutation, useGetYarnMasterByIdQuery, useGetYarnMasterQuery, useUpdateYarnMasterMutation } from '../../redux/uniformService/YarnMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
-import { DropdownInput, LongTextInput, Modal, TextInput, ToggleButton } from '../../Inputs';
+import { DropdownInput, LongTextInput, TextInput, ToggleButton } from '../../Inputs';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
@@ -15,6 +15,8 @@ import YarnBlendDetails from './YarnBlendDetails';
 import { useDispatch, useSelector } from "react-redux";
 import { setOpenPartyModal } from '../../redux/features/openModel';
 import { push } from '../../redux/features/opentabs';
+import { Check, Plus } from 'lucide-react';
+import Modal from '../../UiComponents/Modal';
 const MODEL = 'Yarn Master'
 
 export default function Form() {
@@ -23,7 +25,7 @@ export default function Form() {
 
     const [id, setId] = useState("");
     const [aliasName, setAliasName] = useState("");
-    const [yarnBlendDetails, setYarnBlendDetails] = useState("");
+    const [yarnBlendDetails, setYarnBlendDetails] = useState([]);
     const [yarnTypeId, setYarnTypeId] = useState("");
     const [hsn, setHsn] = useState("");
     const [countsId, setCountsId] = useState("");
@@ -72,7 +74,7 @@ export default function Form() {
     const [removeData] = useDeleteYarnMasterMutation();
 
     const syncFormWithDb = useCallback((data) => {
-        if (id) setReadOnly(true);
+        // if (id) setReadOnly(true);
         if (id) setAliasName(data?.aliasName ? data?.aliasName : "");
         setContentId(data?.contentId ? data?.contentId : "");
         setYarnBlendDetails(data?.YarnOnYarnBlend ? data?.YarnOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
@@ -265,15 +267,19 @@ export default function Form() {
         {/* Header Section */}
         <div className="flex justify-between items-center border-b">
           <h2 className="text-xl font-semibold text-gray-800"> Yarn Master</h2>
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white rounded shadow transition"
-          >
-            + New
-          </button>
+           <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              setForm(true);
+                              onNew();
+                            }}
+                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add Yarn Master 
+                          </button>
+                  
+                </div>
         </div>
       
         {/* Table Section */}
@@ -284,6 +290,8 @@ export default function Form() {
             setSearchValue={setSearchValue}
             onDataClick={onDataClick}
             tableHeaders={tableHeaders}
+            setReadOnly={setReadOnly}
+            deleteData={deleteData}
             tableDataNames={tableDataNames}
             data={allData?.data}
             loading={isLoading || isFetching}
@@ -291,7 +299,7 @@ export default function Form() {
         </div>
       
         {/* Modal Form */}
-        {form && (
+        {/* {form && (
   <Modal
     isOpen={form}
     form={form}
@@ -325,7 +333,6 @@ export default function Form() {
       emptyErrors={() => setErrors({})}
     >
      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-  {/* Left - Yarn Detail */}
   <fieldset className="border rounded shadow-sm ">
     <legend className="text-sm font-medium text-gray-700"> Yarn Details</legend>
 
@@ -361,7 +368,6 @@ export default function Form() {
     />
   </fieldset>
 
-  {/* Right - Yarn Blend Detail */}
   <fieldset className="border rounded  shadow-sm ">
     <legend className="text-sm font-medium text-gray-700 "> Yarn Blend Details</legend>
 
@@ -426,7 +432,6 @@ export default function Form() {
     />
   </fieldset>
 
-  {/* Bottom - Blend Table */}
   <div className="lg:col-span-2 border rounded  shadow-sm">
     <h3 className="text-sm font-medium text-gray-700 mb-4"> Blend Table</h3>
     <YarnBlendDetails
@@ -441,8 +446,186 @@ export default function Form() {
 
     </MastersForm>
   </Modal>
-)}
+)} */}
+   {form && (
+                                    <Modal
+                                        isOpen={form}
+                                        form={form}
+                                        widthClass={"w-[65%] max-w-6xl h-[65vh]"}
+                                        onClose={() => {
+                                        setForm(false);
+                                        setErrors({});
+                                        }}
+                                    >
+                                        <div className="h-full flex flex-col bg-[f1f1f0]">
+                                        <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+                                            <div className="flex items-center gap-2">
+                                            <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                                {id ? (!readOnly ? "Edit Content" : "Content Master ") : "Add New Content"}
+                                            </h2>
+                                            
+                                            </div>
+                                            <div className="flex gap-2">
+                                            <div>
+                                                {readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                    setForm(false);
+                                                    setSearchValue("");
+                                                    setId(false);
+                                                    }}
+                                                    className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={saveData}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                                                >
+                                                    <Check size={14} />
+                                                    {id ? "Update" : "Save"}
+                                                </button>
+                                                )}
+                                            </div>
+                                            </div>
+                                        </div>
 
+                                        <div className="flex-1 overflow-auto p-3">
+                                            <div className="grid grid-cols-4  gap-3  h-full">
+                                        
+                                                 <fieldset className="border rounded shadow-sm ">
+    <legend className="text-sm font-medium text-gray-700 mb-3"> Yarn Details</legend>
+
+                  <TextInput
+                    readOnly
+                    name="Yarn Name"
+                    className="w-full"
+                    type="text"
+                    value={calculateYarnName()}
+                    disabled={childRecord.current > 0}
+                  />
+
+                  <TextInput
+                    name="Alias Name"
+                    className="w-full"
+                    type="text"
+                    value={aliasName}
+                    setValue={setAliasName}
+                    readOnly={readOnly}
+                    required
+                    disabled={childRecord.current > 0}
+                  />
+
+                  <TextInput
+                    name="HSN Code"
+                    className="w-full"
+                    type="text"
+                    value={hsn}
+                    setValue={setHsn}
+                    readOnly={readOnly}
+                    required
+                    disabled={childRecord.current > 0}
+                  />
+                    <ToggleButton
+                    name="Status"
+                    options={statusDropdown}
+                    value={active}
+                    setActive={setActive}
+                    required
+                    readOnly={readOnly}
+                  />
+  </fieldset>
+
+  <fieldset className="border rounded  shadow-sm ">
+    <legend className="text-sm font-medium text-gray-700 mb-3"> Yarn Blend Details</legend>
+
+    <DropdownInput
+      name="Content"
+      options={dropDownListObject(
+        id ? contentList?.data : contentList?.data?.filter(i => i.active),
+        'name',
+        'id'
+      )}
+      value={contentId}
+      setValue={setContentId}
+      required
+      readOnly={readOnly}
+      disabled={childRecord.current > 0}
+    />
+
+    <DropdownInput
+      name="Counts"
+      options={dropDownListObject(
+        id ? countsList?.data : countsList?.data?.filter(i => i.active),
+        'name',
+        'id'
+      )}
+      value={countsId}
+      setValue={setCountsId}
+      readOnly={readOnly}
+      required
+      disabled={childRecord.current > 0}
+    />
+
+    <DropdownInput
+      name="Yarn Type"
+      options={dropDownListObject(
+        id ? YarnTypeList?.data : YarnTypeList?.data?.filter(i => i.active),
+        'name',
+        'id'
+      )}
+      value={yarnTypeId}
+      setValue={setYarnTypeId}
+      readOnly={readOnly}
+      required
+      disabled={childRecord.current > 0}
+    />
+
+    <TextInput
+      name="Gst %"
+      value={taxPercent}
+      setValue={setTaxPercent}
+      readOnly={readOnly}
+      required
+      disabled={childRecord.current > 0}
+    />
+
+  
+  </fieldset>
+    <div className="lg:col-span-2 border rounded  shadow-sm mb-3">
+    <h3 className="text-sm font-medium text-gray-700 mb-4"> Blend Table</h3>
+    <YarnBlendDetails
+      id={id}
+      params={params}
+      yarnBlend={yarnBlendDetails}
+      setYarnBlend={setYarnBlendDetails}
+      readOnly={readOnly}
+    />
+  </div>
+
+
+                                            </div>
+                                        </div>
+                                </div>
+                                                
+                                
+
+
+                                            
+
+
+
+
+
+                                    </Modal>
+            )}
       </div>
       
     )

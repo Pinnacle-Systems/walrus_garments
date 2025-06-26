@@ -257,17 +257,18 @@ model User {
   SampleCreatedBy                     Sample[]                     @relation(name: "createdBy")
   SampleUpdatedBy                     Sample[]                     @relation(name: "updatedBy")
   Sample                              Sample[]
+
 }
 
 model Employee {
   id                 Int               @id @default(autoincrement())
-  name               String
-  email              String            @unique
-  regNo              String            @unique
-  chamberNo          String
+  name               String?
+  email              String?            @unique
+  regNo              String?            @unique
+  chamberNo          String?
   department         Department?       @relation(fields: [departmentId], references: [id])
   departmentId       Int?
-  joiningDate        DateTime
+  joiningDate        DateTime?
   fatherName         String?
   dob                DateTime?
   gender             Gender?
@@ -275,7 +276,7 @@ model Employee {
   bloodGroup         BloodGroup?
   panNo              String?
   consultFee         String?
-  salaryPerMonth     String
+  salaryPerMonth     String?
   commissionCharges  String?
   mobile             BigInt?
   accountNo          String?
@@ -284,24 +285,26 @@ model Employee {
   degree             String?
   specialization     String?
   localAddress       String?
-  localCity          City              @relation("localCity", fields: [localCityId], references: [id])
-  localCityId        Int
+  localCity          City?              @relation("localCity", fields: [localCityId], references: [id])
+  localCityId        Int?
   localPincode       Int?
   permAddress        String?
   permCity           City?             @relation("permCity", fields: [permCityId], references: [id])
   permCityId         Int?
   permPincode        Int?
-  active             Boolean           @default(true)
+  active             Boolean?           @default(true)
   image              Bytes?            @db.LongBlob
   Branch             Branch?           @relation(fields: [branchId], references: [id])
   branchId           Int?
   EmployeeCategory   EmployeeCategory? @relation(fields: [employeeCategoryId], references: [id])
   employeeCategoryId Int?
-  permanent          Boolean           @default(false)
+  permanent          Boolean?           @default(false)
   leavingReason      String?
   leavingDate        DateTime?
-  canRejoin          Boolean           @default(true)
+  canRejoin          Boolean?           @default(true)
   rejoinReason       String?
+  createdAt                DateTime?                   @default(now())
+  updatedAt                DateTime?                   @updatedAt
   User               User[]
 }
 
@@ -317,12 +320,12 @@ model FinYear {
 
 model EmployeeCategory {
   id              Int        @id @default(autoincrement())
-  name            String
-  code            String
+  name            String?
+  code            String?
   Branch          Branch?    @relation(fields: [branchId], references: [id])
   branchId        Int?
-  active          Boolean    @default(true)
-  defaultCategory Boolean    @default(false)
+  active          Boolean?    @default(true)
+  defaultCategory Boolean?   @default(false)
   Employee        Employee[]
 }
 
@@ -791,6 +794,9 @@ model Color {
   OrderDetails                              OrderDetails[]
   footOrderDetails                          OrderDetails[]                              @relation(name: "footOrderDetails")
   stripesOrderDetails                       OrderDetails[]                              @relation(name: "stripesOrderDetails")
+  sampleDetails                             sampleDetails[]
+  footSampleDetails                          sampleDetails[]                              @relation(name: "footSampleDetails")
+  stripesSampleDetails                       sampleDetails[]                              @relation(name: "stripesSampleDetails")
 }
 
 model UnitOfMeasurement {
@@ -937,6 +943,8 @@ model PoInwardReturnItems {
   stockId                Int?            @unique
 }
 
+//  Both Inward Return And Direct Inward
+
 model DirectInwardOrReturn {
   id                  Int              @id @default(autoincrement())
   inwardOrReturn      P_InwardOrReturn
@@ -1022,6 +1030,7 @@ model PayTerm {
   aliasName            String?
   DirectInwardOrReturn DirectInwardOrReturn[]
   BillEntry            BillEntry[]
+
 }
 
 enum DiscountTypes {
@@ -1182,6 +1191,7 @@ model Size {
   PriceTemplateStyleSizeDetails             PriceTemplateStyleSizeDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
   OrderDetails                              OrderDetails[]
+  sampleDetails                             sampleDetails[]
 }
 
 model SocksMaterial {
@@ -1191,6 +1201,7 @@ model SocksMaterial {
   Company      Company?       @relation(fields: [companyId], references: [id])
   companyId    Int?
   OrderDetails OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model SizeTemplate {
@@ -1403,6 +1414,7 @@ model Style {
   PriceTemplateStyleWiseDetails             PriceTemplateStyleWiseDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
   OrderDetails                              OrderDetails[]
+  sampleDetails                             sampleDetails[]
 }
 
 model StyleOnColor {
@@ -2764,6 +2776,7 @@ model Order {
   draftSave         Boolean?       @default(false)
   orderDetails      OrderDetails[]
   Sample            Sample[]
+  sampleDetails     sampleDetails[]
 }
 
 model OrderDetails {
@@ -2806,6 +2819,7 @@ model Machine {
   active       Boolean?       @default(true)
   YarnNeedle   YarnNeedle[]
   OrderDetails OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model ShippingAddress {
@@ -2832,6 +2846,7 @@ model SocksType {
   Company      Company?       @relation(fields: [companyId], references: [id])
   companyId    Int?
   OrderDetails OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model Measurement {
@@ -2851,6 +2866,7 @@ model FiberContent {
   active       Boolean?       @default(true)
   fiberBlend   FiberBlend[]
   OrderDetails OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model FiberBlend {
@@ -2870,6 +2886,7 @@ model YarnNeedle {
   machineId    Int?
   aliasName    String?
   OrderDetails OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model PartyKYC {
@@ -2920,4 +2937,44 @@ model Sample {
   sampleSubmitBy    String?
   User              User?     @relation(fields: [userId], references: [id])
   userId            Int?
+  sampleDetails     sampleDetails[]
 }
+
+model sampleDetails {
+  id              Int             @id @default(autoincrement())
+  sample            Sample?        @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  sampleId          Int?
+  sampleQty               Int?
+  sampleWeight            Float?
+  Order           Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int?
+  yarnNeedleId    Int?
+  yarnNeedle      YarnNeedle?    @relation(fields: [yarnNeedleId], references: [id])
+  machineId       Int?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  fiberContentId  Int?
+  fiberContent    FiberContent?  @relation(fields: [fiberContentId], references: [id])
+  description     String?        @db.LongText
+  orderQty             Float?
+  qty             Float?
+  socksMaterialId Int?
+  socksMaterial   SocksMaterial? @relation(fields: [socksMaterialId], references: [id])
+  measurements    String?
+  sizeId          Int?
+  size            Size?          @relation(fields: [sizeId], references: [id])
+  styleId         Int?
+  style           Style?         @relation(fields: [styleId], references: [id])
+  legcolorId      Int?
+  legcolor        Color?         @relation(fields: [legcolorId], references: [id])
+  footcolorId     Int?
+  footcolor       Color?         @relation("footSampleDetails", fields: [footcolorId], references: [id])
+  stripecolorId   Int?
+  stripecolor     Color?         @relation("stripesSampleDetails", fields: [stripecolorId], references: [id])
+  noOfStripes     String?
+  socksTypeId     Int?
+  socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
+  filePath        String?        @db.LongText
+}
+
+
+

@@ -10,18 +10,21 @@ import {
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, Modal, ToggleButton } from "../../../Inputs";
+import { TextInput, CheckBox,  ToggleButton } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from "../MastersForm/MastersForm";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { Check, Plus } from "lucide-react";
+import Modal from "../../../UiComponents/Modal";
+import Swal from "sweetalert2";
 
 const MODEL = "Employee Category Master";
 export default function Form() {
-    const [form, setForm] = useState(false);
-
+    
     //  const [openTable,setOpenTable] = useState(false);
-
+    
+    const [form, setForm] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [name, setName] = useState("");
@@ -88,10 +91,22 @@ export default function Form() {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             syncFormWithDb(undefined)
-            toast.success(text + "Successfully");
-
+            // toast.success(text + "Successfully");
+            Swal.fire({
+                                            title: text + "  " + "Successfully",
+                                            icon: "success",
+                                            draggable: true,
+                                            timer: 1000, // time in milliseconds (2000ms = 2 seconds)
+                                            showConfirmButton: false, // hides the OK button
+                                            // timerProgressBar: true, // shows a progress bar
+                                            didOpen: () => {
+                                                Swal.showLoading(); // optional: show loading spinner
+                                            }
+                                        });
+            setForm(false);
         } catch (error) {
             console.log("handle");
+            setForm(false);
         }
     };
 
@@ -112,7 +127,7 @@ export default function Form() {
         }
     };
 
-    const deleteData = async () => {
+    const deleteData = async (id) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
@@ -125,10 +140,22 @@ export default function Form() {
                     return
                 }
                 setId("");
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                                                title: "Deleted" + "  " + "Successfully",
+                                                icon: "success",
+                                                draggable: true,
+                                                timer: 1000, // time in milliseconds (2000ms = 2 seconds)
+                                                showConfirmButton: false, // hides the OK button
+                                                // timerProgressBar: true, // shows a progress bar
+                                                didOpen: () => {
+                                                    Swal.showLoading(); // optional: show loading spinner
+                                                }
+                                            });
                 setForm(false)
             } catch (error) {
                 toast.error("something went wrong");
+                setForm(false);
             }
         }
     };
@@ -161,9 +188,19 @@ export default function Form() {
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1'>Employee Category Master</h5>
-                <div className='flex items-center'>
-                    <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                </div>
+              <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => {
+                              setForm(true);
+                              onNew();
+                            }}
+                            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add New Employee Category
+                          </button>
+                  
+                        </div>
             </div>
             <div className='w-full flex items-start'>
 
@@ -184,7 +221,7 @@ export default function Form() {
                 />
 
                 <div>
-                    {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
+                    {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
                         <MastersForm
                             onNew={onNew}
                             onClose={() => {
@@ -236,8 +273,119 @@ export default function Form() {
                             </fieldset>
                         </MastersForm>
 
-                    </Modal>}
+                    </Modal>} */}
+ {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => {
+            setForm(false);
+            setErrors({});
+          }}
+        >
+          <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Employee Category Master" : "Employee Category Master") : "Add New Employee Category"}
+                </h2>
+              
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={saveData}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1  gap-3  h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                   
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <TextInput
+                                        name="Category Name"
+                                        type="text"
+                                        value={name}
+                                        setValue={setName}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                    />
+
+                                    <TextInput
+                                        name="Code"
+                                        type="text"
+                                        value={code}
+                                        setValue={setCode}
+                                        required={true}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                    />
+                                </div>
+
+                                <div className="mt-4">
+                                    <ToggleButton
+                                        name="Status"
+                                        options={statusDropdown}
+                                        value={active}
+                                        setActive={setActive}
+                                        required={true}
+                                        readOnly={readOnly}
+                                    />
+                                </div>
+                  </div>
+
+                
+                </div>
+
+
+                      
+
+
+                     
+
+                     
+
+
+              </div>
+            </div>
+
+
+          </div>
+
+      
+       
+        </Modal>
+      )}
                 </div>
             </div>
         </div>

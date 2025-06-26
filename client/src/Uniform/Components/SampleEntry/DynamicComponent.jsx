@@ -12,7 +12,7 @@ const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, edit
     };
 
     const ComponentToRender = COMPONENTS[componentName];
-    console.log(ComponentToRender, "ComponentToRender")
+
     return ComponentToRender ? <ComponentToRender /> : <div>Not found</div>;
 };
 
