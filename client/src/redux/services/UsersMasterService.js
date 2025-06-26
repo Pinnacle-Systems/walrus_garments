@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { USERS_API} from "../../Api";
+import { USERS_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,10 +11,10 @@ const userMasterApi = createApi({
   tagTypes: ["User"],
   endpoints: (builder) => ({
     getUser: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: USERS_API +"/search/"+searchParams,
+            url: USERS_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
