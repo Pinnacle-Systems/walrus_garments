@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import secureLocalStorage from "react-secure-storage";
 import axios from "axios";
@@ -305,8 +305,8 @@ const Login = () => {
                 type="submit"
                 disabled={isSubmitting}
                 className={`w-full py-3.5 px-4 rounded-lg font-medium text-white transition-all duration-300 ${isSubmitting
-                    ? 'bg-teal-600 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md hover:shadow-teal-400/30'
+                  ? 'bg-teal-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md hover:shadow-teal-400/30'
                   }`}
               >
                 {isSubmitting ? (

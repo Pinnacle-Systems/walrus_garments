@@ -38,14 +38,6 @@ const AccessoryDirectItem = ({ uomList, sizeList, accessoryList,
 
     if (isLoading || isFetching) return <Loader />
 
-
-
-    // const poItem = data.data
-    // let poQty = parseFloat(poItem.qty).toFixed(3)
-    // let cancelQty = poItem.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
-    // let alreadyInwardedQty = poItem.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
-    // let alreadyReturnedQty = poItem.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
-    // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty)).toFixed(3)
     return (
         <tr key={item.poItemsId} className='table-row'>
             <td className='text-left   table-data'>{index + 1}</td>
@@ -57,17 +49,10 @@ const AccessoryDirectItem = ({ uomList, sizeList, accessoryList,
             <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
             <td className='text-left px-1 table-data'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
             <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-
             <td className='text-right px-1  table-data'>{item?.stockQty || 0}</td>
-
             <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-
-
             <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-
             <td className='text-right px-1  table-data'>{item?.allowedReturnQty || 0}</td>
-
-
             <td className='   table-data text-right'>
                 <input
                     onKeyDown={e => {

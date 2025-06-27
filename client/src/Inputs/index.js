@@ -122,7 +122,7 @@ export const TextInput = ({
   width = "full",
 }) => {
   return (
-    <div className={`mb-3 ${width}`}>
+    <div className={`mb-2 ${width}`}>
       {name && (
         <label className="block text-xs font-medium text-gray-600 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
@@ -431,7 +431,7 @@ export const DropdownInput = ({
   const isDisabled = readOnly || disabled;
 
   return (
-    <div className={`mb-3 ${width}`}>
+    <div className={`mb-2 ${width}`}>
       {name && (
         <label className="block text-xs font-medium text-gray-600 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
@@ -464,7 +464,7 @@ export const DropdownInput = ({
           <option
             key={index}
             value={option.value}
-            className="text-xs py-1" 
+            className="text-xs py-1"
           >
             {option.show}
           </option>
@@ -859,7 +859,7 @@ export const DropdownWithSearch = ({
   setValue,
   readOnly,
   disabled,
-  labelField ,
+  labelField,
   label,
 }) => {
   console.log(options, "options");
@@ -909,7 +909,7 @@ export const DropdownWithSearch = ({
       )}
       <select
         // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-             className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
@@ -921,7 +921,7 @@ export const DropdownWithSearch = ({
         }}
       >
         {/* {!value && <option value="">Select {optionName}</option>} */}
-      
+
         <option value={""}>Select</option>
         {(options || []).map((option) => (
           <option key={option.id} value={option.id} classname>
