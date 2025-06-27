@@ -81,14 +81,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
 
-    // const getNextDocId = useCallback(() => {
-    //     if (id || isLoading || isFetching) return
-    //     if (allData?.nextDocId) {
-    //         setDocId(allData.nextDocId)
-    //     }
-    // }, [allData, isLoading, isFetching, id])
-
-    // useEffect(getNextDocId, [getNextDocId])
 
 
 
@@ -395,16 +387,16 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                 disabled={readOnly}
                                                 value={address}
                                                 onClick={() => setShowAddressPopup(true)}
-                                                />
+                                            />
 
                                             <div
                                                 className="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-slate-400 hover:text-indigo-600 transition-colors"
                                                 onClick={() => {
-                                                    if(!readOnly){
+                                                    if (!readOnly) {
                                                         setShowAddressPopup(true)
-                                                     } 
-                                                    }}
-                                                >
+                                                    }
+                                                }}
+                                            >
 
                                                 <HiLocationMarker className="w-4 h-4" />
                                             </div>
@@ -716,9 +708,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 Email
                             </button> */}
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                onClick={() =>  setReadOnly(false)}
+                                onClick={() => setReadOnly(false)}
                             >
-                                <FiEdit2   className="w-4 h-4 mr-2" />
+                                <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>
                             <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">

@@ -1,0 +1,236 @@
+import { useState } from 'react';
+import { HiPlus, HiPencil, HiTrash } from 'react-icons/hi';
+import { toast } from 'react-toastify';
+import { getImageUrlPath } from "../../../helper";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
+import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
+import { useGetYarnNeedleMasterQuery } from "../../../redux/uniformService/YarnNeedleMasterservices";
+import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/FiberContentMasterServices";
+import { getCommonParams, renameFile } from '../../../Utils/helper';
+import { useGetMachineQuery } from "../../../redux/services/MachineMasterService";
+import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
+import TableGridItems from './TableGridItems';
+import Modal from "../../../UiComponents/Modal";
+import { FaInfoCircle } from 'react-icons/fa';
+import FabricDirectInwardItems from './FabricDirectInwardItems';
+import AccessoryDirectInwardItems from './AccessoryDirectInwardItems';
+import FabricInwardItems from './FabricInwardItems';
+import AccessoryInwardItems from './AccessoryInwardItems';
+
+export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id }) {
+    const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const [tableDataView, setTableDataView] = useState(false)
+    const [currentItem, setCurrentItem] = useState();
+    const [currentIndex, setCurrentIndex] = useState("");
+    const [gridEditableIndex, setGridEditableIndex] = useState(null);
+
+    const params = {
+        branchId, userId, finYearId
+    };
+    const { data: supplierList } =
+        useGetPartyQuery({ params: { ...params } });
+
+    const { data: socksMaterialData } =
+        useGetSocksMaterialQuery({ params: { ...params } });
+
+
+    const { data: socksTypeData } =
+        useGetSocksTypeQuery({ params: { ...params } });
+
+    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
+    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
+    const { data: machineList } = useGetMachineQuery({ params: { ...params } });
+
+
+    const {
+        data: colorlist,
+        isLoading: isColorListLoading,
+        isFetching: isColorListFetching,
+    } = useGetColorMasterQuery({ params });
+
+    function openPreview(filePath) {
+        window.open(filePath instanceof File ? URL.createObjectURL(filePath) : getImageUrlPath(filePath))
+    }
+
+    function handleEdit(index) {
+        setGridEditableIndex(index)
+    }
+
+    function handleView(index) {
+        setCurrentIndex(index)
+        setTableDataView(true)
+    }
+
+
+
+    const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
+        const newBlend = structuredClone(directInwardReturnItems);
+        newBlend[index][field] = value
+        newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
+        newBlend[index]["fabricId"] = poItem?.fabricId
+        newBlend[index]["colorId"] = poItem?.colorId
+        newBlend[index]["gaugeId"] = poItem?.gaugeId
+        newBlend[index]["gsmId"] = poItem?.gsmId
+        newBlend[index]["fDiaId"] = poItem?.fDiaId
+        newBlend[index]["designId"] = poItem?.designId
+        newBlend[index]["discountAmount"] = poItem?.discountAmount
+        newBlend[index]["discountType"] = poItem?.discountType
+        newBlend[index]["kDiaId"] = poItem?.kDiaId
+        newBlend[index]["loopLengthId"] = poItem?.loopLengthId
+        newBlend[index]["poId"] = poItem?.poId
+        newBlend[index]["price"] = poItem?.price
+        newBlend[index]["taxPercent"] = poItem?.tax
+        newBlend[index]["uomId"] = poItem?.uomId
+        newBlend[index]["poQty"] = poItem?.qty
+        newBlend[index]["alreadyInwardedQty"] = poItem?.alreadyInwardedQty ? parseFloat(poItem.alreadyInwardedQty).toFixed(3) : "0.000";
+        newBlend[index]["alreadyInwardedRolls"] = poItem?.alreadyInwardedRolls ? parseInt(poItem.alreadyInwardedRolls) : "0";
+        newBlend[index]["alreadyReturnedQty"] = poItem?.alreadyReturnedQty ? parseFloat(poItem.alreadyReturnedQty).toFixed(3) : "0.000";
+        newBlend[index]["alreadyReturnedRolls"] = poItem?.alreadyReturnedData?._sum?.noOfRolls ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls) : "0";
+        newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
+        newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
+        newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
+        newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
+        newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
+        if (field === "qty") {
+            if (parseFloat(balanceQty) < parseFloat(value)) {
+                toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                return
+            }
+        }
+        setDirectInwardReturnItems(newBlend);
+    };
+
+    function handleInputChangeLotNo(value, index, lotIndex, field, stockQty, allowedReturnQty) {
+        const balanceQty = Math.min(stockQty, allowedReturnQty);
+        setDirectInwardReturnItems(inwardItems => {
+            const newBlend = structuredClone(inwardItems);
+            if (!newBlend[index]["returnLotDetails"]) return inwardItems
+            if (field == "qty") {
+                if (parseFloat(balanceQty) < parseFloat(value)) {
+                    toast.info("Return Qty Can not be more than balance Qty", { position: 'top-center' })
+                    return newBlend
+                }
+            }
+            newBlend[index]["returnLotDetails"][lotIndex][field] = value;
+            if (field == "noOfRolls") {
+                let totalValue = newBlend[index]["returnLotDetails"].reduce((accumulator, currentValue) => accumulator + parseInt(currentValue?.noOfRolls), 0);
+                newBlend[index][field] = totalValue;
+            }
+            if (field == "qty") {
+                let totalValue = parseFloat(newBlend[index]["returnLotDetails"].reduce((accumulator, currentValue) => accumulator + parseFloat(currentValue?.qty), 0)).toFixed(3);
+                newBlend[index][field] = totalValue;
+            }
+            return newBlend
+        });
+    }
+    function addNewLotNo(index) {
+        setDirectInwardReturnItems(inwardItems => {
+            const newBlend = structuredClone(inwardItems);
+            if (!newBlend[index]) return inwardItems
+            if (newBlend[index]["returnLotDetails"]) {
+                newBlend[index]["returnLotDetails"] = [
+                    ...newBlend[index]["returnLotDetails"],
+                    { lotNo: "", qty: "0.000", noOfRolls: 0 }]
+            } else {
+                newBlend[index]["returnLotDetails"] = [{ lotNo: "", qty: "0.000", noOfRolls: 0 }]
+            }
+            return newBlend
+        })
+    }
+    function removeLotNo(index, lotIndex) {
+        setDirectInwardReturnItems(inwardItems => {
+            const newBlend = structuredClone(inwardItems);
+            if (!newBlend[index]["returnLotDetails"]) return inwardItems
+            newBlend[index]["returnLotDetails"] = newBlend[index]["returnLotDetails"].filter((_, index) => index != lotIndex)
+            return newBlend
+        })
+    }
+
+    function addNewRow() {
+
+    }
+
+
+    return (
+
+        <>
+            <Modal
+                isOpen={tableDataView}
+                onClose={() => setTableDataView(false)}
+                widthClass={"px-2 h-[37%] w-[50%]"}
+            >
+                <TableGridItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo} id={id} gridEditableIndex={gridEditableIndex} directInwardReturnItems={directInwardReturnItems}
+                    item={currentItem} index={currentIndex} Yarnlist={Yarnlist} machineList={machineList} socksMaterialData={socksMaterialData}
+                    colorlist={colorlist} socksTypeData={socksTypeData}
+                    readOnly={readOnly} styleList={styleList?.data}
+                />
+            </Modal>
+
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+                <div className="flex justify-between items-center mb-2">
+                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+                    <div className="flex gap-2 items-center">
+
+                        <button
+                            onClick={() => {
+                                addNewRow()
+                            }}
+                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+                        >
+                            <HiPlus className="w-3 h-3 mr-1" />
+                            Add Item
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex 
+                    h-[330px] w-full overflow-auto'>
+                    <legend className='sub-heading'>Return Details</legend>
+                    {
+
+                        poInwardOrDirectInward == "DirectReturn" &&
+
+                        (
+                            transType.toLowerCase().includes("yarn")
+                                ?
+                                <FabricDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
+                                    handleInputChangeLotNo={handleInputChangeLotNo}
+                                    storeId={storeId} removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
+                                    inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                                :
+                                <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
+                                    transType={transType} inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems}
+                                    readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                        )
+
+                    }
+                    {
+                        poInwardOrDirectInward == "PurchaseReturn" &&
+                        (
+                            transType.toLowerCase().includes("yarn")
+                                ?
+                                <FabricInwardItems storeId={storeId} removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
+                                    inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                                :
+                                <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType} inwardItems={directInwardReturnItems}
+                                    setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                        )
+
+                    }
+                </fieldset>
+            </div>
+        </>
+
+
+
+    );
+}
+
+

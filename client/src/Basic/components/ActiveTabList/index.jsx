@@ -35,6 +35,7 @@ const PageGroupMaster = lazy(() => import("../../components/PageGroupMaster"));
 const CompanyMaster = lazy(() => import("../../components/CompanyMaster"));
 const Dashboard = lazy(() => import("../../components/Dashboard"));
 const PurchaseOrder = lazy(() => import("../../../Uniform/Components/PurchaseOrder"));
+const PurchaseReturn = lazy(() => import("../../../Uniform/Components/PurchaseReturnCancel"));
 const UomMaster = lazy(() => import("../../components/Uommaster"));
 const MeasurementMaster = lazy(() => import("../../components/MeasurementMaster"));
 const AccessoryGroupMaster = lazy(() => import("../../../Shocks/AccessoryGroupMaster"));
@@ -112,7 +113,8 @@ const ActiveTabList = () => {
     "YARN NEEDLE MASTER": <YarnNeedle />,
     "SAMPLE ENTRY": <Sample />,
     "SAMPLE FOLLOW": <SampleFollow />,
-    "PURCHASE INWARD" : <PurchaseInward/>,
+    "PURCHASE INWARD": <PurchaseInward />,
+    "PURCHASE RETURN": <PurchaseReturn />,
 
   };
 

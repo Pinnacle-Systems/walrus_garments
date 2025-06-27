@@ -8,16 +8,7 @@ export default function TableGridItems({ styleList, id, gridEditableIndex, readO
     const item = orderDetails[index]
     return (
 
-
-
         <>
-
-
-
-
-
-
-
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
 
                 <div className="space-y-1 bg-[#f1f1f0]">

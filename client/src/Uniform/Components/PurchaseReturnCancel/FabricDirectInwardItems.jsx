@@ -13,7 +13,7 @@ import { useGetLoopLengthQuery } from '../../../redux/uniformService/LoopLengthM
 import FabricDirectItem from './FabricDirectItem';
 
 
-const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
+const FabricDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, removeLotNo, addNewLotNo, inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
 
 
     const { data: fabricList } =
@@ -21,8 +21,6 @@ const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, remove
 
     const { data: colorList } =
         useGetColorMasterQuery({ params: { ...params } });
-
-
     const { data: uomList } =
         useGetUomQuery({ params });
 
@@ -52,98 +50,6 @@ const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, remove
             return total + parseInt(current?._sum?.noOfRolls)
         }, 0)
         return noOfRolls || 0
-    }
-
-
-    const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
-        const newBlend = structuredClone(inwardItems);
-        newBlend[index][field] = value
-        newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
-        newBlend[index]["fabricId"] = poItem?.fabricId
-        newBlend[index]["colorId"] = poItem?.colorId
-        newBlend[index]["gaugeId"] = poItem?.gaugeId
-        newBlend[index]["gsmId"] = poItem?.gsmId
-        newBlend[index]["fDiaId"] = poItem?.fDiaId
-        newBlend[index]["designId"] = poItem?.designId
-        newBlend[index]["discountAmount"] = poItem?.discountAmount
-        newBlend[index]["discountType"] = poItem?.discountType
-        newBlend[index]["kDiaId"] = poItem?.kDiaId
-        newBlend[index]["loopLengthId"] = poItem?.loopLengthId
-        newBlend[index]["poId"] = poItem?.poId
-        newBlend[index]["price"] = poItem?.price
-        newBlend[index]["taxPercent"] = poItem?.tax
-        newBlend[index]["uomId"] = poItem?.uomId
-        newBlend[index]["poQty"] = poItem?.qty
-        // newBlend[index]["cancelQty"] = poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000";
-        newBlend[index]["alreadyInwardedQty"] = poItem?.alreadyInwardedQty ? parseFloat(poItem.alreadyInwardedQty).toFixed(3) : "0.000";
-        newBlend[index]["alreadyInwardedRolls"] = poItem?.alreadyInwardedRolls ? parseInt(poItem.alreadyInwardedRolls) : "0";
-        newBlend[index]["alreadyReturnedQty"] = poItem?.alreadyReturnedQty ? parseFloat(poItem.alreadyReturnedQty).toFixed(3) : "0.000";
-        newBlend[index]["alreadyReturnedRolls"] = poItem?.alreadyReturnedData?._sum?.noOfRolls ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls) : "0";
-        newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
-        newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
-        newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
-
-        // newBlend[index]["stockQty"] = parseFloat(findStockQty(poItem?.stockData)).toFixed(3)
-        // newBlend[index]["stockRolls"] = parseInt(findStockRolls(poItem?.stockData))
-
-        newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
-        newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
-        if (field === "qty") {
-            if (parseFloat(balanceQty) < parseFloat(value)) {
-                toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
-                return
-            }
-        }
-        setInwardItems(newBlend);
-    };
-
-    function handleInputChangeLotNo(value, index, lotIndex, field, stockQty, allowedReturnQty) {
-
-
-        const balanceQty = Math.min(stockQty, allowedReturnQty);
-
-        setInwardItems(inwardItems => {
-            const newBlend = structuredClone(inwardItems);
-            if (!newBlend[index]["returnLotDetails"]) return inwardItems
-            if (field == "qty") {
-                if (parseFloat(balanceQty) < parseFloat(value)) {
-                    toast.info("Return Qty Can not be more than balance Qty", { position: 'top-center' })
-                    return newBlend
-                }
-            }
-            newBlend[index]["returnLotDetails"][lotIndex][field] = value;
-            if (field == "noOfRolls") {
-                let totalValue = newBlend[index]["returnLotDetails"].reduce((accumulator, currentValue) => accumulator + parseInt(currentValue?.noOfRolls), 0);
-                newBlend[index][field] = totalValue;
-            }
-            if (field == "qty") {
-                let totalValue = parseFloat(newBlend[index]["returnLotDetails"].reduce((accumulator, currentValue) => accumulator + parseFloat(currentValue?.qty), 0)).toFixed(3);
-                newBlend[index][field] = totalValue;
-            }
-            return newBlend
-        });
-    }
-    function addNewLotNo(index) {
-        setInwardItems(inwardItems => {
-            const newBlend = structuredClone(inwardItems);
-            if (!newBlend[index]) return inwardItems
-            if (newBlend[index]["returnLotDetails"]) {
-                newBlend[index]["returnLotDetails"] = [
-                    ...newBlend[index]["returnLotDetails"],
-                    { lotNo: "", qty: "0.000", noOfRolls: 0 }]
-            } else {
-                newBlend[index]["returnLotDetails"] = [{ lotNo: "", qty: "0.000", noOfRolls: 0 }]
-            }
-            return newBlend
-        })
-    }
-    function removeLotNo(index, lotIndex) {
-        setInwardItems(inwardItems => {
-            const newBlend = structuredClone(inwardItems);
-            if (!newBlend[index]["returnLotDetails"]) return inwardItems
-            newBlend[index]["returnLotDetails"] = newBlend[index]["returnLotDetails"].filter((_, index) => index != lotIndex)
-            return newBlend
-        })
     }
 
     return (
@@ -185,9 +91,7 @@ const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, remove
                             <th className='w-12 table-data'>
                                 Uom
                             </th>
-                            {/* <th className='w-12 table-data'>
-                                Stock Rolls
-                            </th> */}
+
                             <th className='w-12 table-data'>
                                 Stock qty
                             </th>
@@ -203,9 +107,7 @@ const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, remove
                             <th className="table-data w-14">
                                 A. Return Qty
                             </th>
-                            {/* <th className='table-data'>
-                                Allowed Return Rolls
-                            </th> */}
+
                             <th className='table-data'>
                                 Allowed Return Qty
                             </th>
@@ -248,8 +150,6 @@ const FabricDirectInwardItems = ({ inwardItems, setInwardItems, readOnly, remove
                                 <td className="table-data   "></td>
                                 <td className="table-data   "></td>
                                 <td className="table-data   "></td>
-
-
                                 <td className="table-data   "></td>
                                 <td className="table-data    "></td>
                                 <td className="table-data    "></td>

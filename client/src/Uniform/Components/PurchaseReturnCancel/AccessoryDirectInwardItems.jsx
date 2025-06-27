@@ -87,7 +87,7 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
                             }
                         </tr>
                     </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems, "inwardItems")}
+                    <tbody className='overflow-y-auto  h-full w-full'>
                         {inwardItems.map((item, index) => <AccessoryDirectItem sizeList={sizeList} accessoryList={accessoryList}
                             uomList={uomList}
                             colorList={colorList}

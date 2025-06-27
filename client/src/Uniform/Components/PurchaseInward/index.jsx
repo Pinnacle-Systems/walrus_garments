@@ -101,12 +101,12 @@ const PurchaseInward = () => {
     return (
         <>
             {showManufacturer ? (
-                <PurchaseInwardForm 
-                onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-                    //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+                <PurchaseInwardForm
+                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+                //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
                 //     partyData={partyData?.data}
                 />
-               
+
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
                     <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
