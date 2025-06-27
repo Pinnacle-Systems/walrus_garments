@@ -149,6 +149,7 @@ model Branch {
   CreditDebitNote                        CreditDebitNote[]
   Order                                  Order[]
   Sample                                 Sample[]
+  DirectReturnOrPoReturn                 DirectReturnOrPoReturn[]
 }
 
 model UserOnBranch {
@@ -257,6 +258,9 @@ model User {
   SampleCreatedBy                     Sample[]                     @relation(name: "createdBy")
   SampleUpdatedBy                     Sample[]                     @relation(name: "updatedBy")
   Sample                              Sample[]
+  DirectReturnOrPoReturnCreatedBy       DirectReturnOrPoReturn[]       @relation(name: "createdBy")
+  DirectReturnOrPoReturnUpdatedBy       DirectReturnOrPoReturn[]       @relation(name: "updatedBy")
+                
 
 }
 
@@ -526,6 +530,7 @@ model Party {
   CertificateDetail          CertificateDetail[]
   Sample                     Sample[]
   partyBranch                PartyBranch[]
+  DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
 }
 
 model PartyBranch {
@@ -642,6 +647,7 @@ model Yarn {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model YarnOnYarnBlend {
@@ -683,6 +689,7 @@ model Fabric {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   FiberBlend                    FiberBlend[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model FabricOnYarnBlend {
@@ -704,6 +711,7 @@ model AccessoryGroup {
   PoItems       PoItems[]
   DirectItems   DirectItems[]
   Stock         Stock[]
+  DirectReturnItems       DirectReturnItems[]
 }
 
 model AccessoryItem {
@@ -719,6 +727,7 @@ model AccessoryItem {
   PoItems               PoItems[]
   DirectItems           DirectItems[]
   Stock                 Stock[]
+  DirectReturnItems     DirectReturnItems[]
 }
 
 model Accessory {
@@ -738,6 +747,7 @@ model Accessory {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 enum AccessoryCategory {
@@ -801,6 +811,7 @@ model Color {
   sampleDetails                             sampleDetails[]
   footSampleDetails                          sampleDetails[]                              @relation(name: "footSampleDetails")
   stripesSampleDetails                       sampleDetails[]                              @relation(name: "stripesSampleDetails")
+  DirectReturnItems                         DirectReturnItems[]
 }
 
 model UnitOfMeasurement {
@@ -828,6 +839,7 @@ model UnitOfMeasurement {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   PrintingJobWorkDet                        PrintingJobWorkDet[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+  DirectReturnItems                         DirectReturnItems[]
 }
 
 enum DeliveryType {
@@ -904,6 +916,7 @@ model PoItems {
   fDiaId              Int?
   PoInwardReturnItems PoInwardReturnItems[]
   BillEntryItems      BillEntryItems[]
+  DirectReturnItems   DirectReturnItems[]
 }
 
 model PInwardOrReturn {
@@ -1027,6 +1040,7 @@ model DirectItems {
   lotNo                  String?
   lotNoCommonIndex       Int?
   BillEntryItems         BillEntryItems[]
+  DirectReturnItems      DirectReturnItems[]
 }
 
 model PayTerm {
@@ -1039,6 +1053,7 @@ model PayTerm {
   aliasName            String?
   DirectInwardOrReturn DirectInwardOrReturn[]
   BillEntry            BillEntry[]
+  DirectReturnOrPoReturn  DirectReturnOrPoReturn[]
 
 }
 
@@ -1070,6 +1085,7 @@ model TaxTemplate {
   FinishedGoodsSales   FinishedGoodsSales[]
   PrintingJobWork      PrintingJobWork[]
   CreditDebitNote      CreditDebitNote[]
+  DirectReturnOrPoReturn      DirectReturnOrPoReturn[]
 }
 
 model TaxTemplateDetails {
@@ -1097,6 +1113,7 @@ model Gauge {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model Design {
@@ -1113,6 +1130,7 @@ model Design {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model LoopLength {
@@ -1129,6 +1147,7 @@ model LoopLength {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model Gsm {
@@ -1145,6 +1164,8 @@ model Gsm {
   RawMaterials                  RawMaterials[]
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
+  DirectReturnItems             DirectReturnItems[]
+
 }
 
 model Dia {
@@ -1172,6 +1193,8 @@ model Dia {
   RawMaterialsSalesDetailsFDia      RawMaterialsSalesDetails[]      @relation(name: "fDia")
   RawMaterialOpeningStockItemsKDia  RawMaterialOpeningStockItems[]  @relation(name: "kDia")
   RawMaterialOpeningStockItemsFDia  RawMaterialOpeningStockItems[]  @relation(name: "fDia")
+  DirectReturnItemsKDia                   DirectReturnItems[]                   @relation(name: "kDiaReturnItem")
+  DirectReturnItemsFDia                   DirectReturnItems[]                   @relation(name: "fDiaReturnItem")
 }
 
 model Size {
@@ -1201,6 +1224,7 @@ model Size {
   OnlineSalesDetails                        OnlineSalesDetails[]
   OrderDetails                              OrderDetails[]
   sampleDetails                             sampleDetails[]
+  DirectReturnItems                         DirectReturnItems[]
 }
 
 model SocksMaterial {
@@ -1335,6 +1359,7 @@ model Location {
   StockTransferFinishedGoods StockTransferFinishedGoods[]
   OnlineSales                OnlineSales[]
   OnlineSalesReturn          OnlineSalesReturn[]
+  DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
 }
 
 enum ProcessIO {
@@ -2990,4 +3015,97 @@ model sampleDetails {
 }
 
 
+model DirectReturnOrPoReturn {
+  id                     Int          @id @default(autoincrement())
+  poInwardOrDirectInward String?
+  dcNo                   String?
+  dcDate                 DateTime?    @db.Date
+  Store                  Location?    @relation(fields: [storeId], references: [id])
+  poType                 String?
+  supplier               Party?       @relation(fields: [supplierId], references: [id])
+  supplierId             Int?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  createdBy              User?        @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  Branch                 Branch?      @relation(fields: [branchId], references: [id])
+  branchId               Int?
+  active                 Boolean      @default(true)
+  storeId                Int?
+  docId                  String
+  PayTerm                PayTerm?     @relation(fields: [payTermId], references: [id])
+  payTermId              Int?
+  TaxTemplate            TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId          Int?
+  discountType           String?
+  discountValue          Float?       @default(0)
+  vehicleNo              String?
+  specialInstructions    String?      @db.LongText
+  remarks                String?      @db.LongText
+  directReturnItems DirectReturnItems[]
 
+}
+
+model DirectReturnItems {
+  id                       Int                    @id @default(autoincrement())
+  DirectReturnOrPoReturn   DirectReturnOrPoReturn @relation(fields: [directReturnOrPoReturnId], references: [id], onDelete: Cascade)
+  Fabric                   Fabric?                @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId                 Int?
+  Yarn                     Yarn?                  @relation(fields: [yarnId], references: [id])
+  yarnId                   Int?
+  Accessory                Accessory?             @relation(fields: [accessoryId], references: [id])
+  accessoryId              Int?
+  AccessoryGroup           AccessoryGroup?        @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId         Int?
+  AccessoryItem            AccessoryItem?         @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId          Int?
+  Color                    Color?                 @relation(fields: [colorId], references: [id])
+  colorId                  Int?
+  Uom                      UnitOfMeasurement?                    @relation(fields: [uomId], references: [id])
+  uomId                    Int?
+  Design                   Design?                @relation(fields: [designId], references: [id])
+  Gauge                    Gauge?                 @relation(fields: [gaugeId], references: [id])
+  LoopLength               LoopLength?            @relation(fields: [loopLengthId], references: [id])
+  Gsm                      Gsm?                   @relation(fields: [gsmId], references: [id])
+  price                    Float
+  discountType             String?
+  discountValue            Float                  @default(0)
+  taxPercent               Float                  @default(0)
+  Size                     Size?                  @relation(fields: [sizeId], references: [id])
+  designId                 Int?
+  gaugeId                  Int?
+  loopLengthId             Int?
+  gsmId                    Int?
+  sizeId                   Int?
+  KDia                     Dia?                   @relation("kDiaReturnItem", fields: [kDiaId], references: [id])
+  kDiaId                   Int?
+  FDia                     Dia?                   @relation("fDiaReturnItem", fields: [fDiaId], references: [id])
+  fDiaId                   Int?
+  directReturnOrPoReturnId Int
+  weightPerBag             Float?
+  noOfBags                 Int?
+  noOfRolls                Int?
+  qty                      Float?
+  PoItem                   PoItems?               @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId                Int?
+  DirectItems              DirectItems?           @relation(fields: [directItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  directItemsId            Int?
+  alreadyInwardedQty       Float?
+  alreadyReturnedQty       Float?
+  balanceQty               Float?
+  cancelQty                Float?
+  poNo                     String?
+  poQty                    Float?
+  returnLotDetails         ReturnLotDetails[]
+}
+
+model ReturnLotDetails {
+  id                  Int               @id @default(autoincrement())
+  DirectReturnItems   DirectReturnItems @relation(fields: [directReturnItemsId], references: [id], onDelete: Cascade)
+  directReturnItemsId Int
+  lotNo               String?
+  qty                 Float?
+  noOfRolls           Int?
+}
