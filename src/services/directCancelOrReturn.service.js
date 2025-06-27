@@ -67,7 +67,7 @@ async function get(req) {
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     if (pagination) {
         data = await prisma.directReturnOrPoReturn.findMany({
             where: {

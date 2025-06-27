@@ -12,7 +12,7 @@ import { useGetStateQuery } from "../../../redux/services/StateMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, DisabledInput, Modal, ToggleButton } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, DisabledInput,  ToggleButton } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import Loader from "../Loader";
@@ -23,6 +23,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 import { useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
+import Modal from "../../../UiComponents/Modal";
 const MODEL = "City Master";
 
 export default function Form() {
@@ -239,10 +240,10 @@ export default function Form() {
                         loading={
                             isLoading || isFetching
                         } />
-
-
-
                     <div>
+
+
+
 
 
 

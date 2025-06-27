@@ -286,16 +286,7 @@ export default function Form() {
                    
 
                     <div className="space-y-2 w-[50%]">
-                      {/* <TextInput
-                        ref={input1Ref}
-                        name="Full Name"
-                        value={name}
-                        setValue={setName}
-                        required={true}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        onKeyDown={(e) => handleKeyNext(e, input2Ref)}
-                      /> */}
+                      
                         <TextInput 
                             // ref={input1Ref}
                             name="Department Name" 

@@ -19,11 +19,13 @@ const PurchaseInward = () => {
     const [id, setId] = useState("");
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [readOnly, setReadOnly] = useState(false);
+    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
+    
     const params = {
         branchId, userId, finYearId
     };
     const [orderDetails, setOrderDetails] = useState([])
-    const { data: PurchaseInward } = useGetDirectInwardOrReturnQuery({ params });
+  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
     // const { data: partyData } = useGetPartyQuery({ params })
     // const [removeData] = useDeleteOrderMutation();
     const columns = [
@@ -33,22 +35,22 @@ const PurchaseInward = () => {
             cellClass: () => 'font-medium text-gray-900'
         },
         {
-            header: 'Order No.',
+            header: 'Inward No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
         },
         {
-            header: 'Order Date',
-            accessor: (item) => item.docDate
+            header: 'Inward Date',
+            accessor: (item) => item.dcDate
         },
         {
-            header: 'Party',
-            accessor: (item) => item.Party?.name,
+            header: 'Supplier',
+            accessor: (item) => item.supplier?.name,
             cellClass: () => 'uppercase'
         },
         {
-            header: 'ContactPerson',
-            accessor: (item) => item.contactPersonName,
+            header: 'Po Type',
+            accessor: (item) => item.poType,
             cellClass: () => 'text-gray-800 uppercase'
         },
         {
@@ -139,7 +141,7 @@ const PurchaseInward = () => {
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                         <CommonTable
                             columns={columns}
-                            data={PurchaseInward?.data || []}
+                            data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

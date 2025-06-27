@@ -25,10 +25,9 @@ function getInwardOrReturnShortCode(poInwardOrDirectInward) {
 async function getNextDocId(branchId, poInwardOrDirectInward, shortCode, startTime, endTime) {
 
 
-
     let lastObject = await prisma.directInwardOrReturn.findFirst({
         where: {
-            poInwardOrDirectInward,
+            // poInwardOrDirectInward,
             branchId: parseInt(branchId),
             AND: [
                 {
@@ -72,7 +71,8 @@ async function get(req) {
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    console.log(finYearDate,"finYearDate")
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     if (pagination) {
         data = await prisma.directInwardOrReturn.findMany({
             where: {
@@ -91,7 +91,7 @@ async function get(req) {
                 ] : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
-                poInwardOrDirectInward,
+                // poInwardOrDirectInward,
                 docId: Boolean(searchDocId) ?
                     {
                         contains: searchDocId
@@ -105,12 +105,11 @@ async function get(req) {
                 id: "desc",
             },
             include: {
-                supplier: {
-                    select: {
-                        aliasName: true,
-                        name: true,
+                    supplier:{
+                        select :{
+                            name : true
+                        }
                     }
-                }
             }
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
@@ -134,11 +133,20 @@ async function get(req) {
                 ] : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
-                poInwardOrDirectInward,
+                // poInwardOrDirectInward,
+            },
+            include :{
+                supplier:{
+                    select:{
+                        name : true,
+                        id: true,
+                        aliasName:true
+                    }
+                }
             }
         });
     }
-    let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startTime, finYearDate?.endTime);
+    let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
     return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
@@ -889,18 +897,18 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 
     await tx.stock.create({
         data: {
-            itemType: poType,
-            inOrOut: poInwardOrDirectInward,
-            branchId: parseInt(branchId),
+            itemType: poType ? poType : undefined,
+            inOrOut: poInwardOrDirectInward ? poInwardOrDirectInward : undefined,
+            branchId: branchId ?  parseInt(branchId) : undefined,
             sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
             accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
             accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
             accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
             colorId: item?.colorId ? parseInt(item.colorId) : undefined,
             uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-            storeId: parseInt(storeId),
-            qty: parseFloat(item.qty),
-            price: parseFloat(item.price)
+            storeId: item?.storeId ? parseInt(storeId) : undefined,
+            qty: item?.qty  ? parseFloat(item?.qty)  : undefined,
+            price: item.price  ? parseFloat(item.price) : undefined,
         }
     })
 
@@ -909,6 +917,7 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 
 
 async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directItems, poType, poInwardOrDirectInward, storeId, branchId) {
+    console.log(poType == "DyedFabric","condition")
     let promises
     if (poType == "DyedFabric") {
 
@@ -942,21 +951,21 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
 
     }
     else {
-
+// console.log(directItems,"directItems")
         promises = directItems.map(async (item, index) => {
             const data = await tx.directItems.create({
                 data: {
-                    directInwardOrReturnId: parseInt(directInwardOrReturnId),
-                    accessoryId: parseInt(item["accessoryId"]),
-                    accessoryGroupId: parseInt(item["accessoryGroupId"]),
-                    accessoryItemId: parseInt(item["accessoryItemId"]),
+                    directInwardOrReturnId: directInwardOrReturnId ?    parseInt(directInwardOrReturnId)  : undefined,
+                    accessoryId: item?.accessoryId ? parseInt(item["accessoryId"]) : undefined,
+                    accessoryGroupId : item["accessoryGroupId"]  ?  parseInt(item["accessoryGroupId"]) : undefined,
+                    accessoryItemId: item["accessoryItemId"] ?  parseInt(item["accessoryItemId"]) : undefined,
                     sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                     uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
-                    poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
+                    // poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                     // Stock: {
@@ -975,6 +984,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                     //         price: parseFloat(item.price)
                     //     }
                     // }
+                    
                 },
             })
             await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
@@ -1001,22 +1011,25 @@ async function create(body) {
 
         data = await tx.directInwardOrReturn.create({
             data: {
-                poType, poInwardOrDirectInward,
-                supplierId: parseInt(supplierId),
-                branchId: parseInt(branchId),
-                storeId: parseInt(storeId),
+                poType,
+                poInwardOrDirectInward : poInwardOrDirectInward ?  poInwardOrDirectInward : undefined ,
+                supplierId: supplierId ? parseInt(supplierId) : undefined,
+                branchId:branchId ?  parseInt(branchId) : undefined,
+                // : parseInt(storeId),
                 dcNo,
-                payTermId: parseInt(payTermId),
+                payTermId:payTermId ?  parseInt(payTermId)  : undefined,
                 dcDate: dcDate ? new Date(dcDate) : undefined,
                 active,
                 createdById: parseInt(userId),
                 vehicleNo, specialInstructions, remarks,
-                docId
+                docId,
 
             },
         })
+        console.log(directInwardReturnItems,"directItems")
+
         await createDirectInwardReturnItems(tx, data.id, directInwardReturnItems, poType, poInwardOrDirectInward, storeId, branchId)
-        // await dataIntegrityValidation(tx, processValid);
+        await dataIntegrityValidation(tx, processValid);
     })
     return { statusCode: 0, data };
 }

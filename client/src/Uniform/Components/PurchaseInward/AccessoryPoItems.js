@@ -1,19 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { DELETE, PLUS } from '../../../icons';
-import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/AccessoryMasterServices';
-import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
-import { useGetUomQuery } from '../../../redux/services/UomMasterService';
-
-import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
-import { toast } from "react-toastify"
-import { Loader } from '../../../Basic/components';
-import { VIEW } from '../../../icons';
-import TaxDetailsFullTemplate from '../TaxDetailsCompleteTemplate';
-
-import Modal from '../../../UiComponents/Modal';
-import { priceWithTax } from '../../../Utils/helper';
-import { useGetAccessoryGroupMasterQuery } from '../../../redux/uniformService/AccessoryGroupMasterServices';
-import { useGetAccessoryItemMasterQuery } from '../../../redux/uniformService/AccessoryItemMasterServices';
+import { useEffect, useState } from "react";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetAccessoryItemMasterQuery } from "../../../redux/uniformService/AccessoryItemMasterServices";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { Loader } from "lucide-react";
+import { DELETE, PLUS } from "../../../icons";
+import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 
 const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplierOutside, taxTypeId }) => {
 
@@ -30,9 +24,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     };
 
     useEffect(() => {
-        if (poItems.length >= 12) return
+        if (poItems?.length >= 1) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 12 - prev.length }, i => {
+            let newArray = Array.from({ length: 1 - prev.length }, i => {
                 return { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
             })
             return [...prev, ...newArray]
@@ -40,11 +34,11 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
         )
     }, [setPoItems, poItems])
 
-    const addRow = () => {
+    const addNewRow = () => {
         const newRow = { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 };
         setPoItems([...poItems, newRow]);
     };
-    const handleDeleteRow = id => {
+    const deleteRow = id => {
         setPoItems(yarnBlend => yarnBlend.filter((row, index) => index !== parseInt(id)));
     };
     const { data: accessoryGroupList } =
@@ -68,24 +62,24 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
 
     function findAccessoryItemName(id) {
         if (!accessoryList) return 0
-        let acc = accessoryList.data.find(item => parseInt(item.id) === parseInt(id))
+        let acc = accessoryList?.data?.find(item => parseInt(item.id) === parseInt(id))
         return acc ? acc.accessoryItem.name : null
     }
 
     function findAccessoryGroupName(id) {
         if (!accessoryList) return 0
-        let acc = accessoryList.data.find(item => parseInt(item.id) === parseInt(id))
+        let acc = accessoryList?.data?.find(item => parseInt(item.id) === parseInt(id))
         return acc ? acc.accessoryItem.AccessoryGroup.name : null
     }
 
     function findYarnTax(id) {
         if (!accessoryList) return 0
-        let yarnItem = accessoryList.data.find(item => parseInt(item.id) === parseInt(id))
+        let yarnItem = accessoryList?.data?.find(item => parseInt(item.id) === parseInt(id))
         return yarnItem?.taxPercent ? yarnItem.taxPercent : 0
     }
 
     function getTotals(field) {
-        const total = poItems.reduce((accumulator, current) => {
+        const total = poItems?.reduce((accumulator, current) => {
             return accumulator + parseFloat(current[field] ? current[field] : 0)
         }, 0)
         return parseFloat(total)
@@ -117,7 +111,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
 
 
     function getGross(field1, field2) {
-        const total = poItems.reduce((accumulator, current) => {
+        const total = poItems?.reduce((accumulator, current) => {
             return accumulator + parseFloat(current[field1] && current[field2] ? current[field1] * current[field2] : 0)
         }, 0)
         return parseFloat(total)
@@ -130,48 +124,122 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     return (
         <>
 
-            <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
+            {/* <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
                 <TaxDetailsFullTemplate taxTypeId={taxTypeId} currentIndex={currentSelectedIndex}
                     readOnly={readOnly}
                     poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside} />
-            </Modal>
-            <div className={` relative w-full overflow-y-auto p-3`}>
-                <table className=" border border-gray-500 text-xs table-auto w-full">
-                    <thead className='bg-blue-200 top-0 border border-gray-500'>
-                        <tr>
-                            <th className="table-data  w-2 text-center">S.no</th>
-
-                            <th className="table-data  w-36">Accessory Group</th>
-                            <th className="table-data  w-36">Accessory Item</th>
-
-                            <th className="table-data ">Accessory Name<span className="text-red-500">*</span></th>
-                            <th className="table-data ">Colors<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-20">Size</th>
-                            <th className="table-data  w-20">UOM<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Quantity<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Price<span className="text-red-500">*</span></th>
-
-                            <th className="table-data  w-16">Gross</th>
-                            <th className="table-data  w-16">Tax</th>
-                            <th className="table-data  w-16">PriceWith Tax</th>
-                            {readOnly ?
-                                "" :
-                                <th className='w-20  bg-green-600 text-white'>
-                                    <div onClick={addRow}
-                                        className='hover:cursor-pointer py-2 flex items-center justify-center bg-green-600 text-white'>
-                                        {PLUS}
-                                    </div>
-                                </th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>
-                        {poItems?.map((row, index) => (
-                            <tr key={index} className="w-full table-row">
-                                <td className="table-data  w-2 text-left px-1">
+            </Modal> */}
+               <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="font-medium text-slate-700">List Of Items</h2>
+                            <div className="flex gap-2 items-center">
+        
+                                <button
+                                    onClick={() => {
+                                        addNewRow()
+                                    }}
+                                    className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+                                >
+                                    <HiPlus className="w-3 h-3 mr-1" />
+                                    Add Item
+                                </button>
+                            </div>
+        
+                        </div>
+              <div className={` relative w-full overflow-y-auto py-1`}>
+                <table className="w-full border-collapse table-fixed">
+                                <thead className="bg-gray-200 text-gray-800">
+                                    <tr>
+                                        <th
+                                            className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            S.No
+                                        </th>
+                                        <th
+        
+                                            className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Accessory Group
+                                        </th>
+                                        <th
+        
+                                            className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Accessory Item
+                                        </th>
+                                        <th
+        
+                                            className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Accessory Name
+                                        </th>
+                                       
+                                        <th
+        
+                                            className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Colors
+                                        </th>
+                                        <th
+        
+                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Size
+                                        </th>
+                                        <th
+        
+                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            UOM
+                                        </th>
+                                        <th
+        
+                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Quantity
+                                        </th>
+          <th
+        
+                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Price
+                                        </th>
+                                        <th
+        
+                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Gross
+                                        </th>
+                                         <th
+        
+                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                             Tax
+                                        </th>
+                                           <th
+        
+                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                             Price With Tax
+                                        </th>
+                                         <th
+        
+                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                            Actions
+                                        </th>
+                                        {/* ))} */}
+                                    </tr>
+                                </thead>
+         
+                          <tbody>
+                  
+                                 {poItems?.map((row, index) => (
+                            <tr key={index} className="border border-blue-gray-200 cursor-pointer">
+                                <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                                     {index + 1}
                                 </td>
-                                <td className=' border border-gray-500'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
@@ -192,7 +260,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className=' border border-gray-500'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
@@ -213,7 +281,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='border border-gray-400'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
@@ -253,7 +321,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         disabled={true}
                                     />
                                 </td> */}
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
@@ -274,7 +342,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
                                         disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
@@ -295,7 +363,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
                                         disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
@@ -316,7 +384,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -340,7 +408,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                     />
 
                                 </td>
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -362,7 +430,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                     />
                                 </td>
 
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         type="number"
                                         onFocus={(e) => e.target.select()}
@@ -371,7 +439,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         disabled={true}
                                     />
                                 </td>
-                                <td className='table-data '>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         type="number"
                                         onKeyDown={e => {
@@ -395,7 +463,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         }
                                     />
                                 </td>
-                                <td className='table-data'>
+                                <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         type="number"
                                         onFocus={(e) => e.target.select()}
@@ -405,36 +473,57 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         disabled={true}
                                     />
                                 </td>
-                                {readOnly
-                                    ?
-                                    ""
-                                    :
-                                    <td className=''>
-                                        <div tabIndex={-1} onClick={() => handleDeleteRow(index)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
-                                            {DELETE}
-                                        </div>
-                                    </td>
-                                }
+                                  <td className="w-16 px-1 py-1 text-center">
+                                                                                  <div className="flex space-x-2  justify-center">
+                                          
+                                                                                      <button
+                                                                                          // onClick={() => handleView(index)}
+                                                                                          // onMouseEnter={() => setTooltipVisible(true)}
+                                                                                          // onMouseLeave={() => setTooltipVisible(false)}
+                                                                                          className="text-blue-800 flex items-center  bg-blue-50 rounded"
+                                                                                      >
+                                                                                          👁 <span className="text-xs"></span>
+                                                                                      </button>
+                                                                                      <span className="tooltip-text">View</span>
+                                                                                      <button
+                                                                                          // onClick={() => handleEdit(index)}
+                                                                                          className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                                                                                      >
+                                                                                          <HiPencil className="w-4 h-4" />
+                                          
+                                                                                      </button>
+                                                                                      <span className="tooltip-text">Edit</span>
+                                                                                      <button
+                                                                                          onClick={() => deleteRow(index)}
+                                                                                          className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                                                                      >
+                                                                                          <HiTrash className="w-4 h-4" />
+                                          
+                                                                                      </button>
+                                                                                      <span className="tooltip-text">Delete</span>
+                                          
+                                                                                      {/* {tooltipVisible && (
+                                                                                          <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                                                                              <div className="flex items-start">
+                                                                                                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                                                                                  <span>View</span>
+                                                                                              </div>
+                                                                                              <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                                                                          </div>
+                                                                                      )} */}
+                                                                                  </div>
+                                                                              </td>
+                                          
+                             
                             </tr>
-                        ))}
-                        <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
-                            <td className="table-data text-center w-10 font-bold" colSpan={7}>Total</td>
-                            <td className="table-data text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
-                            <td className="table-data  w-10"></td>
-
-
-                            <td className="table-data text-right px-1  w-10">{getGross("qty", "price").toFixed(2)} </td>
-                            <td className="table-data   w-10"></td>
-                            <td className="table-data text-right px-1  w-10">{getTotalAmount("qty", "price", "taxPercent").toFixed(2)} </td>
-                            {!readOnly &&
-                                <td className="table-data w-10"></td>
-                            }
-                        </tr>
-                    </tbody>
+                        ))}            
+                         </tbody>
                 </table>
-            </div>
+              </div>
+               </div>
         </>
     )
 }
 
 export default AccessoryPoItems
+

@@ -33,12 +33,12 @@ const YarnPoItems = ({
     if (field === "yarnId") {
       newBlend[index]["taxPercent"] = findYarnTax(value);
     }
-    if (field !== "qty") {
-      newBlend[index]["qty"] = (
-        parseFloat(newBlend[index]["noOfBags"]) *
-        parseFloat(newBlend[index]["weightPerBag"])
-      ).toFixed(3);
-    }
+    // if (field !== "qty") {
+    //   newBlend[index]["qty"] = (
+    //     parseFloat(newBlend[index]["noOfBags"]) *
+    //     parseFloat(newBlend[index]["weightPerBag"])
+    //   ).toFixed(3);
+    // }
     setPoItems(newBlend);
   };
   console.log(poItems, "poItems");
@@ -231,12 +231,12 @@ const YarnPoItems = ({
                                 >
                                     UOM
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Lot Det.
-                                </th>
+                                </th> */}
                                 <th
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
@@ -268,12 +268,12 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
-                                 <th
+                                 {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                     View Tax
-                                </th>
+                                </th> */}
                                  <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -704,7 +704,7 @@ const YarnPoItems = ({
           
           
           
-                                              <td className=" py-0.5 px-3 border border-gray-300 overflow-x-auto">
+                                              <td className="py-0.5 border border-gray-300 text-[11px]">
                                                      <select
                                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                                         disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
@@ -747,11 +747,11 @@ const YarnPoItems = ({
                                                </select>
                                               </td>
                       
-                                        <td className='w-40 border border-gray-300 text-[11px] py-0.5'>
+                                        {/* <td className='w-40 border border-gray-300 text-[11px] py-0.5'>
                                                 <button onClick={() => (index)} className='w-full'>
                                                     {VIEW}
                                                 </button>
-                                            </td>
+                                            </td> */}
           
                                   <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                       <input
@@ -762,8 +762,9 @@ const YarnPoItems = ({
                                               min={"0"}
                                               type="number"
                                               onFocus={(e) => e.target.select()}
-                                              className="text-right rounded py-1 w-16 px-1 table-data-input"
-                                              value={sumArray(row?.lotDetails ? row?.lotDetails : [], "noOfBags")}
+                                              className="text-right rounded py-1 w-full px-1 table-data-input"
+                                              // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "noOfBags")}
+                                              value={row?.noOfBags}
                                               // disabled={true}
                                               inputMode='decimal'
                                               onChange={(e) => {
@@ -777,33 +778,30 @@ const YarnPoItems = ({
 
                                                 />
                                      </td>
+                                      <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            <input
+                                                onKeyDown={e => {
+                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                                                }}
+                                                min={"0"}
+                                                type="number"
+                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                onFocus={(e) => e.target.select()}
+                                                // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
+                                                value={row?.qty}
+                                                // disabled={true}
+                                                onChange={(e) =>
+                                                    handleInputChange(e.target.value, index, "qty")
+                                                }
+                                                onBlur={(e) => {
+                                                    handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
+                                                }
+                                                }
+                                                />
+                                      </td>
                                             
-          
-          
-          
-          
-                                             <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5">
-                                                    <input
-                                                        onKeyDown={e => {
-                                                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                            if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
-                                                        }}
-                                                        min={"0"}
-                                                        type="number"
-                                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
-                                                        onFocus={(e) => e.target.select()}
-                                                        value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                                        // disabled={true}
-                                                        onChange={(e) =>
-                                                            handleInputChange(e.target.value, index, "qty")
-                                                        }
-                                                        onBlur={(e) => {
-                                                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
-                                                        }
-                                                        }
-                                                        />
-                                              </td>
-                                              <td className="w-40 py-0.5 border border-gray-300 text-[11px] ">
+                                              <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                                     <input
                                                           onKeyDown={e => {
                                                               if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -826,6 +824,7 @@ const YarnPoItems = ({
                                                  />
 
                                              </td>
+          
                                             <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
 
                                                 {priceWithTax(row.price, row.taxPercent).toFixed(2)}
@@ -842,21 +841,21 @@ const YarnPoItems = ({
                                                 />
                                             </td>
                                                         
-                                                    <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
-                                                        <button
-                                                            className="text-center rounded py-1 w-20"
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter") {
-                                                                    setCurrentSelectedIndex(index);
-                                                                }
-                                                            }}
-                                                            onClick={() => {
-                                                                if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
-                                                                setCurrentSelectedIndex(index)
-                                                            }}>
-                                                            {VIEW}
-                                                        </button>
-                                                    </td>
+                                              {/* <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
+                                                  <button
+                                                      className="text-center rounded py-1 w-20"
+                                                      onKeyDown={(e) => {
+                                                          if (e.key === "Enter") {
+                                                              setCurrentSelectedIndex(index);
+                                                          }
+                                                      }}
+                                                      onClick={() => {
+                                                          if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
+                                                          setCurrentSelectedIndex(index)
+                                                      }}>
+                                                      {VIEW}
+                                                  </button>
+                                              </td> */}
                                  
           
                                               <td className="w-16 px-1 py-1 text-center">
@@ -899,6 +898,9 @@ const YarnPoItems = ({
                                                       )} */}
                                                   </div>
                                               </td>
+          
+          
+          
                                           </tr>
                                       )}
                                   </tbody>

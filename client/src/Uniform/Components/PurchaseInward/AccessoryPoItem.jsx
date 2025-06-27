@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react'
-import { useGetPoItemByIdQuery } from '../../../redux/uniformService/PoServices'
-import { Loader } from '../../../Basic/components'
-import { DELETE } from '../../../icons'
-import { findFromList, substract } from '../../../Utils/helper'
+import { useEffect } from "react"
+import { useGetPoItemByIdQuery } from "../../../redux/uniformService/PoServices"
+import { Loader } from "lucide-react"
+import { findFromList } from "../../../Utils/helper"
+import { DELETE } from "../../../icons"
+
 
 const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, removeItem, purchaseInwardId }) => {
-    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item.poItemsId, purchaseInwardId }, { skip: !item.poItemsId })
+    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId }, { skip: !item?.poItemsId })
 
     console.log(data, "data")
 
@@ -49,12 +50,12 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
         <tr key={item.poItemsId} className='table-row'>
             <td className='text-left   table-data'>{index + 1}</td>
             <td className='text-left px-1 table-data'>{item?.poNo}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+            <td className='text-left px-1 table-data'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='text-left   table-data'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='text-left   table-data'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            <td className='text-left px-1 table-data'>{findFromList(item?.colorId, colorList?.data, "name")} </td>
+            <td className='text-left px-1 table-data'>{findFromList(item?.sizeId, sizeList?.data, "name")} </td>
+            <td className='text-left px-1 table-data'>{findFromList(item?.uomId, uomList?.data, "name")} </td>
             <td className='text-right px-1  table-data'>{item?.poQty || 0}</td>
             <td className='text-right px-1  table-data'>{item?.cancelQty || 0}</td>
             <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
@@ -71,7 +72,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     type="number"
                     className="text-right rounded   w-full py-1 table-data-input"
                     autoFocus={index === 0}
-                    value={item.qty}
+                    value={item?.qty}
                     disabled={readOnly}
                     onChange={(event) => {
                         if (event.target.value < 0) return
@@ -92,10 +93,10 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                 />
             </td>
             <td className='text-right  w-12 table-data'>{parseFloat(item?.price).toFixed(2)}</td>
-            <td className='text-right   table-data'>{!item.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item.qty : "0.000")).toFixed(2)}</td>
+            <td className='text-right   table-data'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
             {!readOnly &&
                 <td className='table-data w-12'>
-                    <div tabIndex={-1} onClick={() => removeItem(item.poItemsId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
+                    <div tabIndex={-1} onClick={() => removeItem(item?.poItemsId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                         {DELETE}
                     </div>
                 </td>

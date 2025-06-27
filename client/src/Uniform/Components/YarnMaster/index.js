@@ -18,6 +18,9 @@ import { toast } from "react-toastify";
 import { TextInput, LongTextInput, DropdownInput, LongDisabledInput, CheckBox, DisabledInput } from "../../../Inputs";
 import ReportTemplate from "../../../Basic/components/ReportTemplate";
 import { dropDownListObject, } from '../../../Utils/contructObject';
+import Mastertable from "../../../Basic/components/MasterTable/Mastertable";
+import Modal from "../../../UiComponents/Modal";
+import MastersForm from "../../../Basic/components/MastersForm/MastersForm";
 const MODEL = "Yarn Master";
 
 
@@ -76,7 +79,7 @@ console.log(yarnBlendDetails,"yarnBlendDetails")
     const [removeData] = useDeleteYarnMasterMutation();
 
     const syncFormWithDb = useCallback((data) => {
-        if (id) setReadOnly(true);
+        // if (id) setReadOnly(true);
         if (id) setAliasName(data?.aliasName ? data?.aliasName : "");
         setContentId(data?.contentId ? data?.contentId : "");
         setYarnBlendDetails(data?.YarnOnYarnBlend ? data?.YarnOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
@@ -212,47 +215,155 @@ console.log(yarnBlendDetails,"yarnBlendDetails")
     const tableDataNames = ['dataObj.aliasName', 'dataObj.active ? ACTIVE : INACTIVE']
 
 
-    if (!form)
-        return (
-            <ReportTemplate
-                heading={MODEL}
-                tableHeaders={tableHeaders}
-                tableDataNames={tableDataNames}
-                loading={
-                    isLoading || isFetching
-                }
-                setForm={setForm}
-                data={allData?.data}
+    // if (!form)
+    //     return (
+    //         <ReportTemplate
+    //             heading={MODEL}
+    //             tableHeaders={tableHeaders}
+    //             tableDataNames={tableDataNames}
+    //             loading={
+    //                 isLoading || isFetching
+    //             }
+    //             setForm={setForm}
+    //             data={allData?.data}
+    //             saveData={saveData}
+    //             onClick={onDataClick}
+    //             onNew={onNew}
+    //             searchValue={searchValue}
+    //             setSearchValue={setSearchValue}
+    //         />
+    //     );
 
-                onClick={onDataClick}
-                onNew={onNew}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-            />
-        );
+    // return (
+    //     <div
+    //         onKeyDown={handleKeyDown}
+    //         className="md:items-start md:justify-items-center grid h-full bg-theme"
+    //     >
+    //         <div className="flex flex-col frame w-full h-full">
+    //             <FormHeader
+    //                 onNew={onNew}
+    //                 onClose={() => {
+    //                     setForm(false);
+    //                     setSearchValue("");
+    //                 }}
+    //                 model={MODEL}
+    //                 saveData={saveData}
+    //                 setReadOnly={setReadOnly}
+    //                 deleteData={deleteData}
+    //             // childRecord={childRecord.current}
+    //             />
+    //             <div className="flex-1 grid md:grid-cols-2">
+    //                 <div className="border-l w-[800px] h-[570px] overflow-auto">
+    //                     <div className='col-span-3 mr-1 md:ml-5'>
+                            // <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-5 md:w-[650px] flex h-[300px] overflow-auto border border-gray-600'>
+                            //     <legend className='sub-heading'>Yarn Blend Details</legend>
+                            //     <div className='flex flex-col justify-start gap-3 flex-1'>
+                            //         <div className="md:grid md:grid-cols-3">
+                            //             {/* <DropdownInput name="Content" options={dropDownListObject(id ? contentList.data : contentList.data.filter(item => item.active), "name", "id")} value={contentId} setValue={(value) => { setContentId(value); }} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                            //             <DropdownInput name="Counts" options={dropDownListObject(id ? countsList.data : countsList.data.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                            //             <DropdownInput name="Yarn Type" options={dropDownListObject(id ? YarnTypeList.data : YarnTypeList.data.filter(item => item.active), "name", "id")} value={yarnTypeId} setValue={(value) => { setYarnTypeId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} /> */}
+                            //             <TextInput name={"Gst %"} value={taxPercent} setValue={setTaxPercent} readOnly={readOnly} required disabled={(childRecord.current > 0)} />
+                            //             <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
+                            //         </div>
+                            //         <YarnBlendDetails id={id} params={params} yarnBlend={yarnBlendDetails} setYarnBlend={setYarnBlendDetails} readOnly={readOnly} />
+                            //     </div>  
+                            // </fieldset>
+                            // <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 w-[650px] flex border border-gray-600'>
+                            //     <legend className='sub-heading'>Yarn Details</legend>
+                            //     <div className='flex flex-col justify-start gap-3 p-3 flex-1'>
+                            //         <LongTextInput  name="Yarn Name" className={'focus:outline-none  md:col-span-2 h-6 w-[500px] border border-gray-500 rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
+                            //         <div className="flex">
+                            //             <LongTextInput name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 w-[450px] border border-gray-500 rounded'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                            //             <LongTextInput name="HSN Code" className={'focus:outline-none md:col-span-2 h-6 w-[150px] border border-gray-500 rounded'} type="text" value={hsn} setValue={setHsn} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                            //         </div>
+                            //     </div>
+                            // </fieldset>
 
-    return (
-        <div
-            onKeyDown={handleKeyDown}
-            className="md:items-start md:justify-items-center grid h-full bg-theme"
-        >
-            <div className="flex flex-col frame w-full h-full">
-                <FormHeader
-                    onNew={onNew}
-                    onClose={() => {
-                        setForm(false);
-                        setSearchValue("");
-                    }}
-                    model={MODEL}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                // childRecord={childRecord.current}
-                />
-                <div className="flex-1 grid md:grid-cols-2">
-                    <div className="border-l w-[800px] h-[570px] overflow-auto">
-                        <div className='col-span-3 mr-1 md:ml-5'>
-                            <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-5 md:w-[650px] flex h-[300px] overflow-auto border border-gray-600'>
+    //                     </div>
+    //                 </div>
+    //                 <div className="frame overflow-x-hidden">
+    //                     <FormReport
+    //                         searchValue={searchValue}
+    //                         setSearchValue={setSearchValue}
+    //                         setId={setId}
+    //                         tableHeaders={tableHeaders}
+    //                         tableDataNames={tableDataNames}
+    //                         data={allData?.data ? allData?.data : []}
+    //                         loading={
+    //                             isLoading || isFetching
+    //                         }
+    //                     />
+    //                 </div>
+    //             </div>
+    //         </div>
+
+    //     </div>
+    // );
+
+      return (
+            <>
+                <div
+                    onKeyDown={handleKeyDown}
+    
+                >
+                    <div className='w-full flex justify-between mb-2 items-center px-0.5'>
+                        <h5 className='my-1'>City Master</h5>
+                        <div className='flex items-center'>
+                            <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
+                        </div>
+                    </div>
+                    <div className='w-full flex items-start'>
+                        <Mastertable
+                            header={'City list'}
+                            searchValue={searchValue}
+                            setSearchValue={setSearchValue}
+                            onDataClick={onDataClick}
+                            // setOpenTable={setOpenTable}
+                            tableHeaders={tableHeaders}
+                            tableDataNames={tableDataNames}
+                            data={allData?.data}
+                            loading={
+                                isLoading || isFetching
+                            } />
+                        <div>
+    
+    
+    
+    
+    
+    
+    
+    
+                            {form === true && 
+                            <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"}
+                             onClose={() => {
+                                // setForm(false);
+                                //  if (openPartyModal === true) {
+                                //     dispatch(push({ name: lastTapName }));
+                                // };
+                                //  dispatch(setOpenPartyModal(false)); setErrors({});
+                            }}>
+                                <MastersForm
+                                    onNew={onNew}
+                                    onClose={() => {
+                                        setForm(false);
+                                        setSearchValue("");
+                                        // if (openPartyModal === true) {
+                                        //     dispatch(push({ name: lastTapName }));
+                                        // }
+                                        setId(false);
+                                    }}
+                                    model={MODEL}
+                                    childRecord={childRecord.current}
+                                    saveData={saveData}
+                                    // saveExitData={saveExitData}
+                                    setReadOnly={setReadOnly}
+                                    deleteData={deleteData}
+                                    readOnly={readOnly}
+                                    // emptyErrors={() => setErrors({})}
+                                >
+    
+                                  <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-5 md:w-[650px] flex h-[300px] overflow-auto border border-gray-600'>
                                 <legend className='sub-heading'>Yarn Blend Details</legend>
                                 <div className='flex flex-col justify-start gap-3 flex-1'>
                                     <div className="md:grid md:grid-cols-3">
@@ -275,25 +386,16 @@ console.log(yarnBlendDetails,"yarnBlendDetails")
                                     </div>
                                 </div>
                             </fieldset>
-
+                                </MastersForm>
+                            </Modal>
+                            
+                            }
+    
                         </div>
                     </div>
-                    <div className="frame overflow-x-hidden">
-                        <FormReport
-                            searchValue={searchValue}
-                            setSearchValue={setSearchValue}
-                            setId={setId}
-                            tableHeaders={tableHeaders}
-                            tableDataNames={tableDataNames}
-                            data={allData?.data ? allData?.data : []}
-                            loading={
-                                isLoading || isFetching
-                            }
-                        />
-                    </div>
+    
+    
                 </div>
-            </div>
-
-        </div>
-    );
+            </>
+        );
 }

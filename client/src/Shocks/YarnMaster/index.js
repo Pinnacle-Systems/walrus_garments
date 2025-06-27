@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
-import toast from 'react-hot-toast';
 import { useGetContentMasterQuery } from '../../redux/uniformService/ContentMasterServices';
 import { useGetYarnBlendMasterQuery } from '../../redux/uniformService/YarnBlendMasterServices';
 import { useGetYarnTypeMasterQuery } from '../../redux/uniformService/YarnTypeMasterServices';
@@ -17,6 +16,7 @@ import { setOpenPartyModal } from '../../redux/features/openModel';
 import { push } from '../../redux/features/opentabs';
 import { Check, Plus } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
+import { toast } from 'react-toastify';
 const MODEL = 'Yarn Master'
 
 export default function Form() {
@@ -180,14 +180,14 @@ export default function Form() {
 
     const saveData = () => {
          console.log("click button work")
-        if (!validatePercentage()) {
-            toast.error("Yarn Blend equal to 100...!", { position: "top-center" })
-            return
-        }
-        if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", { position: "top-center" })
-            return
-        }
+        // if (!validatePercentage()) {
+        //     toast.error("Yarn Blend equal to 100...!", { position: "top-center" })
+        //     return
+        // }
+        // if (!validateData(data)) {
+        //     toast.error("Please fill all required fields...!", { position: "top-center" })
+        //     return
+        // }
 
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");

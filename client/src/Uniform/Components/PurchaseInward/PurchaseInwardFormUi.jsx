@@ -1,51 +1,27 @@
-import { useRef, useState } from "react";
-import { getCommonParams } from "../../../Utils/helper";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, TextInput } from "../../../Inputs";
 import { poTypes } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { toast } from "react-toastify";
 import YarnPoItems from "../PurchaseOrder/YarnPoItems";
-import Consolidation from "../Consolidation";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
+import { useAddDirectInwardOrReturnMutation, useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useGetDirectInwardOrReturnQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
+import moment from "moment";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+import AccessoryPoItems from "./AccessoryPoItems";
+
 
 const  PurchaseInwardForm = ({ onClose }) => {
 
-//   const [readOnly, setReadOnly] = useState(false);
-//   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
-//   const [docId, setDocId] = useState("")
-//   const [id, setId] = useState("");
-//   const [date, setDate] = useState();
-//   const [taxTemplateId, setTaxTemplateId] = useState("");
-//   const [payTermId, setPayTermId] = useState("");
-//   const [dcDate, setDcDate] = useState("");
 
-//   const [transType, setTransType] = useState("DyedFabric");
-//   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-//   const [supplierId, setSupplierId] = useState("");
-
-//   const [discountType, setDiscountType] = useState("Percentage");
-//   const [discountValue, setDiscountValue] = useState(0);
-
-//   const [locationId, setLocationId] = useState('');
-
-//   const [storeId, setStoreId] = useState("")
-
-//   const [dcNo, setDcNo] = useState("")
-
-//   const [formReport, setFormReport] = useState(false);
-
-//   const [searchValue, setSearchValue] = useState("");
-
-//   const [vehicleNo, setVehicleNo] = useState("");
-//   const [remarks, setRemarks] = useState("");
-//   const [specialInstructions, setSpecialInstructions] = useState("")
-//   const [inwardItemSelection, setInwardItemSelection] = useState(false)
 
 
   const [id,setId]  = useState('')
@@ -53,7 +29,7 @@ const  PurchaseInwardForm = ({ onClose }) => {
   const [docId,setDocId] = useState("")
   const [ date,setDate] = useState("")
   const [readOnly,setReadOnly] = useState('')
-  const [transType, setTransType] = useState("DyedFabric");
+  const [transType, setTransType] = useState("GreyYarn");
   const [dcNo,setDcNo] = useState("")
   const [dcDate,setDcDate] = useState('')
   const [supplierId,setSupplierId] = useState('')
@@ -70,112 +46,121 @@ const  PurchaseInwardForm = ({ onClose }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
+    const [notes, setNotes] = useState("");
+    const [orderBy, setOrderBy] = useState("")
+    const [showAddressPopup, setShowAddressPopup] = useState(false)
+    const [ vehicleNo,setVehicleNo] =  useState("")
+    const [specialInstructions,setSpecialInstructions] = useState('')
+    const [remarks,setRemarks]  = useState("")
+    const [searchValue,setSearchValue] = useState("")
+    const [discountType,setDiscountType]  =  useState("")
+    const [discountValue,setDiscountValue]  = useState("")
 
-        const [notes, setNotes] = useState("");
-        const [orderBy, setOrderBy] = useState("")
-        const [showAddressPopup, setShowAddressPopup] = useState(false)
 
-//   const childRecord = useRef(0);
-  const { branchId, companyId } = getCommonParams()
+  const childRecord = useRef(0);
+  const { branchId, companyId , userId  , finYearId} = getCommonParams()
 
-//   const branchIdFromApi = useRef(branchId);
+  const branchIdFromApi = useRef(branchId);
 
   const params = {
-    branchId, companyId
+    branchId, companyId 
   };
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { ...params } });
 
 
-//  const { data: taxTypeList } =
-//    useGetTaxTemplateQuery({ params: { ...params } });
+ const { data: taxTypeList } =
+   useGetTaxTemplateQuery({ params: { ...params } });
 
-//   const { data: supplierDetails } =
-//     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+  const { data: supplierDetails } =
+    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
   const { data: payTermList } =
     useGetPaytermMasterQuery({ params: { ...params } });
 
-//   const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
+  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
-//   const getNextDocId = useCallback(() => {
-//     if (isLoading || isFetching) return
-//     if (id) return
-//     if (allData?.nextDocId) {
-//       setDocId(allData.nextDocId)
-//     }
-//   }, [allData, isLoading, isFetching, id])
+  const getNextDocId = useCallback(() => {
+    if (isLoading || isFetching) return
+    if (id) return
+    if (allData?.nextDocId) {
+      setDocId(allData.nextDocId)
+    }
+  }, [allData, isLoading, isFetching, id])
 
-//   useEffect(getNextDocId, [getNextDocId])
+  useEffect(getNextDocId, [getNextDocId])
 
-//   const {
-//     data: singleData,
-//     isFetching: isSingleFetching,
-//     isLoading: isSingleLoading,
-//   } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
 
-//   const [addData] = useAddDirectInwardOrReturnMutation();
-//   const [updateData] = useUpdateDirectInwardOrReturnMutation();
-//   const [removeData] = useDeleteDirectInwardOrReturnMutation();
+  const [addData] = useAddDirectInwardOrReturnMutation();
+  const [updateData] = useUpdateDirectInwardOrReturnMutation();
+  const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
-  // const syncFormWithDb = useCallback((data) => {
-  //   const today = new Date()
-  //   if (id) {
-  //     setReadOnly(true);
-  //   } else {
-  //     setReadOnly(false);
-  //   }
-  //   setTransType(data?.poType ? data.poType : "DyedFabric");
-  //   setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
-  //   setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-  //   setDirectInwardReturnItems(data?.directItems ? data.directItems : []);
-  //   if (data?.docId) {
-  //     setDocId(data?.docId)
-  //   }
-  //   if (data?.date) setDate(data?.date);
-  //   // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-  //   setPayTermId(data?.payTermId ? data?.payTermId : "");
-  //   setSupplierId(data?.supplierId ? data?.supplierId : "");
-  //   setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
-  //   setDcNo(data?.dcNo ? data.dcNo : "")
-  //   setLocationId(data?.Store ? data.Store.locationId : "")
-  //   setStoreId(data?.storeId ? data.storeId : "")
-  //   setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
-  //   setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
-  //   setRemarks(data?.remarks ? data?.remarks : "")
-  //   if (data?.branchId) {
-  //     branchIdFromApi.current = data?.branchId
-  //   }
-  // }, [id]);
+  const syncFormWithDb = useCallback((data) => {
+    const today = new Date()
+    if (id) {
+      setReadOnly(true);
+    } else {
+      setReadOnly(false);
+    }
+    setTransType(data?.poType ? data.poType : "GreyYarn");
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
+    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+    setDirectInwardReturnItems(data?.directItems ? data.directItems : []);
+    if (data?.docId) {
+      setDocId(data?.docId)
+    }
+    if (data?.date) setDate(data?.date);
+    // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
+    setPayTermId(data?.payTermId ? data?.payTermId : "");
+    setSupplierId(data?.supplierId ? data?.supplierId : "");
+    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
+    setDcNo(data?.dcNo ? data.dcNo : "")
+    setLocationId(data?.Store ? data.Store.locationId : "")
+    setStoreId(data?.storeId ? data.storeId : "")
+    setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
+    setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
+    setRemarks(data?.remarks ? data?.remarks : "")
+    if (data?.branchId) {
+      branchIdFromApi.current = data?.branchId
+    }
+  }, [id]);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     syncFormWithDb(singleData?.data);
-  //   } else {
-  //     syncFormWithDb(undefined);
-  //   }
-  // }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+  useEffect(() => {
+    if (id) {
+      syncFormWithDb(singleData?.data);
+    } else {
+      syncFormWithDb(undefined);
+    }
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  // const data = {
-  //   poType: transType,
-  //   poInwardOrDirectInward,
-  //   supplierId, dcDate,
+  const data = {
+    docId,
+    poType: transType,
+    poInwardOrDirectInward,
+    supplierId, dcDate,
+    payTermId,
+    branchId, id, userId,
+    storeId,
+    directInwardReturnItems,
+    discountType,
+    discountValue,
+    dcNo,
+    remarks,
+    specialInstructions,
+    vehicleNo,
+    finYearId
+}
 
-  //   payTermId,
-  //   branchId, id, userId,
-  //   storeId,
-  //   directInwardReturnItems: directInwardReturnItems?.filter(po => po.fabricId || po.accessoryId),
-  //   discountType,
-  //   discountValue,
-  //   dcNo,
-  //   remarks,
-  //   specialInstructions,
-  //   vehicleNo,
-  //   finYearId
-  // }
+console.log(data,"data")
+
 
   // function isSupplierOutside() {
   //   if (supplierDetails) {
@@ -218,38 +203,38 @@ const  PurchaseInwardForm = ({ onClose }) => {
 
   // }
 
-  // const handleSubmitCustom = async (callback, data, text) => {
-  //   try {
-  //     let returnData;
-  //     if (text === "Updated") {
-  //       returnData = await callback(data).unwrap();
-  //     } else {
-  //       returnData = await callback(data).unwrap();
-  //     }
-  //     if (returnData.statusCode === 1) {
-  //       toast.error(returnData.message);
-  //     } else {
-  //       toast.success(text + "Successfully");
-  //       setId("")
-  //       syncFormWithDb(undefined)
-  //     }
-  //   } catch (error) {
-  //     console.log("handle");
-  //   }
-  // };
+  const handleSubmitCustom = async (callback, data, text) => {
+    try {
+      let returnData;
+      if (text === "Updated") {
+        returnData = await callback(data).unwrap();
+      } else {
+        returnData = await callback(data).unwrap();
+      }
+      if (returnData.statusCode === 1) {
+        toast.error(returnData.message);
+      } else {
+        toast.success(text + "Successfully");
+        setId("")
+        syncFormWithDb(undefined)
+      }
+    } catch (error) {
+      console.log("handle");
+    }
+  };
 
 
-  // const saveData = () => {
-  //   if (!validateData(data)) {
-  //     toast.info("Please fill all required fields...!", { position: "top-center" })
-  //     return
-  //   }
-  //   if (id) {
-  //     handleSubmitCustom(updateData, data, "Updated");
-  //   } else {
-  //     handleSubmitCustom(addData, data, "Added");
-  //   }
-  // }
+//   const saveData = () => {
+//     if (!validateData(data)) {
+//       toast.info("Please fill all required fields...!", { position: "top-center" })
+//       return
+//     }
+//     if (id) {
+//       handleSubmitCustom(updateData, data, "Updated");
+//     } else {
+//       handleSubmitCustom(addData, data, "Added");
+//     }
+//   }
 
   // const deleteData = async () => {
   //   if (id) {
@@ -267,21 +252,21 @@ const  PurchaseInwardForm = ({ onClose }) => {
   //   }
   // };
 
-  // const handleKeyDown = (event) => {
-  //   let charCode = String.fromCharCode(event.which).toLowerCase();
-  //   if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-  //     event.preventDefault();
-  //     saveData();
-  //   }
-  // };
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
 
-  // const onNew = () => {
-  //   setId("");
-  //   setSearchValue("");
-  //   setReadOnly(false);
-  //   syncFormWithDb(undefined)
-  //   getNextDocId()
-  // };
+  const onNew = () => {
+    setId("");
+    setSearchValue("");
+    setReadOnly(false);
+    syncFormWithDb(undefined)
+    getNextDocId()
+  };
 
   // const tableHeadings = ["PoNo", "PoDate", "PoType", "DueDate", "Supplier"]
   // const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
@@ -298,9 +283,13 @@ const  PurchaseInwardForm = ({ onClose }) => {
       finalSupplier = allSuppliers.filter(s => s.yarn)
     } else if (transType.toLowerCase().includes("fabric")) {
       finalSupplier = allSuppliers.filter(s => s.fabric)
-    } else {
-      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems.length > 0)
-    }
+    } 
+    else if (transType.toLowerCase().includes("accessory")) {
+      finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
+    } 
+    // else {
+    //   finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems.length > 0)
+    // }
     return finalSupplier
   }
   let supplierListBasedOnSupply = filterSupplier()
@@ -318,61 +307,66 @@ const  PurchaseInwardForm = ({ onClose }) => {
 
   // }
 
-  // useEffect(() => {
-  //   if (id) return
-  //   setDirectInwardReturnItems([]);
-  //   setSupplierId("")
-  // }, [transType])
+  useEffect(() => {
+    if (id) return
+    setDirectInwardReturnItems([]);
+    setSupplierId("")
+  }, [transType])
 
-  // const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
+  const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
-  // const storeOptions = locationData ?
-  //   locationData.data.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
-  //   [];
+  const storeOptions = locationData ?
+    locationData.data.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
+    [];
 
-  // function removeItem(id) {
-  //   setDirectInwardReturnItems(directInwardItems => {
-  //     let newItems = structuredClone(directInwardItems);
-  //     newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
-  //     return newItems
-  //   });
-  // }
+  function removeItem(id) {
+    setDirectInwardReturnItems(directInwardItems => {
+      let newItems = structuredClone(directInwardItems);
+      newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
+      return newItems
+    });
+  }
 
 
   // if (!branchList || !locationData) return <Loader />
 
-  // let taxItems = transType !== "Accessory" ? directInwardReturnItems.map(item => {
-  //   let newItem = structuredClone(item)
-  //   newItem["qty"] = sumArray(newItem?.inwardLotDetails ? newItem?.inwardLotDetails : [], "qty")
-  //   return newItem
-  // }) : directInwardReturnItems
+  let taxItems = transType !== "Accessory" ? directInwardReturnItems.map(item => {
+    let newItem = structuredClone(item)
+    newItem["qty"] = sumArray(newItem?.inwardLotDetails ? newItem?.inwardLotDetails : [], "qty")
+    return newItem
+  }) : directInwardReturnItems
 
-    // const saveData = (nextProcess) => {
-    //     if (!validateData(data)) {
-    //         toast.info("Please fill all required fields...!", { position: "top-center" })
-    //         return
-    //     }
-    //     if (!window.confirm("Are you sure save the details ...?")) {
-    //         return
-    //     }
-    //     if (nextProcess == "draft" && !id) {
+    const saveData = (nextProcess) => {
+        // if (!validateData(data)) {
+        //     toast.info("Please fill all required fields...!", { position: "top-center" })
+        //     return
+        // }
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return
+        }
+        if (nextProcess == "draft" && !id) {
 
 
-    //         handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
-    //     }
-    //     else if (id && nextProcess == "draft") {
+            handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
+        }
+        else if (id && nextProcess == "draft") {
 
-    //         handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
-    //     }
-    //     else if (id) {
+            handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+        }
+        else if (id) {
 
-    //         handleSubmitCustom(updateData, data, "Updated", nextProcess);
-    //     } else {
-    //         handleSubmitCustom(addData, data, "Added", nextProcess);
-    //     }
-    // }
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+        } else {
+            handleSubmitCustom(addData, data, "Added", nextProcess);
+        }
+    }
     
-    let saveData;
+        function getTotalQty() {
+        let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+        return parseInt(qty)
+    }
+
+
   return (
       <>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
@@ -411,7 +405,6 @@ const  PurchaseInwardForm = ({ onClose }) => {
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
-                                {/* Inward Details */}
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
                             <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
@@ -452,18 +445,30 @@ const  PurchaseInwardForm = ({ onClose }) => {
                             </div>
                    </div>
                    <fieldset>
-
+                   {transType.toLowerCase().includes("yarn")  ? 
                     <YarnPoItems 
                     // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
                     poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} 
                     />
+                    :
+                    (
+                          transType.toLowerCase().includes("fabric")
+                            ?
+                            // <FabricPoItems 
+                            // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
+                            // />
+                            <></>
+                            :
+                            <AccessoryPoItems  poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly}
+                            //  id={id} transType={transType} taxTypeId={taxTemplateId} params={params}  isSupplierOutside={isSupplierOutside()} 
+                             />
+                        )
+                   }         
                    </fieldset>
-                   {/* <fieldset>
-                     <Consolidation/>
-                   </fieldset> */}
+               
                      <div className="grid grid-cols-3 gap-3">
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                                               <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
+                                               <h2 className="font-medium text-slate-700 mb-2 text-base">Terms & Conditions</h2>
                                                <textarea
                                                    readOnly={readOnly}
                                                    value={term}
@@ -474,29 +479,10 @@ const  PurchaseInwardForm = ({ onClose }) => {
                                                    placeholder="Additional notes..."
                    
                                                />
-                                               {/* <button
-                                                       onClick={handleAdd}
-                                                       className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
-                                                       title="Confirm"
-                                                   >
-                                                       <HiCheck className="w-5 h-5" />
-                                                   </button> */}
+                                             
                                            </div>
                    
-                                           {/* <div className="mt-3 space-y-1.5">
-                                                   <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                                       <span>Payment due within 30 days</span>
-                                                       <button className="text-red-400 hover:text-red-500">
-                                                           <HiTrash className="w-4 h-4" />
-                                                       </button>
-                                                   </div>
-                                                   <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                                       <span>Late fee of 2% per month</span>
-                                                       <button className="text-red-400 hover:text-red-500">
-                                                           <HiTrash className="w-4 h-4" />
-                                                       </button>
-                                                   </div>
-                                               </div> */}
+                                      
                    
                    
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
@@ -522,7 +508,7 @@ const  PurchaseInwardForm = ({ onClose }) => {
                                                <div className="space-y-1.5">
                                                    <div className="flex justify-between py-1 text-sm">
                                                        <span className="text-slate-600">Total Qty</span>
-                                                       {/* <span className="font-medium">{parseInt(getTotalQty())}   No's</span> */}
+                                                       <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
                                                    </div>
                    
                    

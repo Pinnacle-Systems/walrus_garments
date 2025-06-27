@@ -33,7 +33,7 @@ const Report = ({
   onClick,
   onNew,
   onClose = null,
-  isLead
+  isLead,saveData
 }) => {
   return (
     <div className="flex flex-col w-full h-[95%] overflow-auto">

@@ -702,6 +702,8 @@ model AccessoryGroup {
   active        Boolean         @default(true)
   AccessoryItem AccessoryItem[]
   PoItems       PoItems[]
+  DirectItems   DirectItems[]
+  Stock         Stock[]
 }
 
 model AccessoryItem {
@@ -715,6 +717,8 @@ model AccessoryItem {
   Accessory             Accessory[]
   PartyOnAccessoryItems PartyOnAccessoryItems[]
   PoItems               PoItems[]
+  DirectItems           DirectItems[]
+  Stock                 Stock[]
 }
 
 model Accessory {
@@ -947,24 +951,24 @@ model PoInwardReturnItems {
 
 model DirectInwardOrReturn {
   id                  Int              @id @default(autoincrement())
-  inwardOrReturn      P_InwardOrReturn
+  inwardOrReturn      P_InwardOrReturn?
   dcNo                String?
   dcDate              DateTime?        @db.Date
   Store               Location?        @relation(fields: [storeId], references: [id])
-  poType              PoTypes
-  supplier            Party            @relation(fields: [supplierId], references: [id])
-  supplierId          Int
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-  createdBy           User             @relation("createdBy", fields: [createdById], references: [id])
-  createdById         Int
+  poType              PoTypes?
+  supplier            Party?            @relation(fields: [supplierId], references: [id])
+  supplierId          Int?
+  createdAt           DateTime?         @default(now())
+  updatedAt           DateTime?         @updatedAt
+  createdBy           User?             @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
   updatedBy           User?            @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById         Int?
-  Branch              Branch           @relation(fields: [branchId], references: [id])
-  branchId            Int
+  Branch              Branch?           @relation(fields: [branchId], references: [id])
+  branchId            Int?
   active              Boolean          @default(true)
   storeId             Int?
-  docId               String
+  docId               String?
   PayTerm             PayTerm?         @relation(fields: [payTermId], references: [id])
   payTermId           Int?
   TaxTemplate         TaxTemplate?     @relation(fields: [taxTemplateId], references: [id])
@@ -974,30 +978,35 @@ model DirectInwardOrReturn {
   vehicleNo           String?
   specialInstructions String?          @db.LongText
   remarks             String?          @db.LongText
+  poInwardOrDirectInward String?
   DirectItems         DirectItems[]
 }
 
 model DirectItems {
   id                     Int                  @id @default(autoincrement())
-  DirectInwardOrReturn   DirectInwardOrReturn @relation(fields: [directInwardOrReturnId], references: [id])
+  DirectInwardOrReturn   DirectInwardOrReturn? @relation(fields: [directInwardOrReturnId], references: [id])
   Fabric                 Fabric?              @relation(fields: [fabricId], references: [id], onDelete: Cascade)
   fabricId               Int?
   Yarn                   Yarn?                @relation(fields: [yarnId], references: [id])
   yarnId                 Int?
   Accessory              Accessory?           @relation(fields: [accessoryId], references: [id])
   accessoryId            Int?
+  AccessoryGroup        AccessoryGroup?      @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId       Int?
+  AccessoryItem          AccessoryItem?       @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId        Int?            
   Color                  Color?               @relation(fields: [colorId], references: [id])
   colorId                Int?
-  Uom                    UnitOfMeasurement    @relation(fields: [uomId], references: [id])
-  uomId                  Int
+  Uom                    UnitOfMeasurement?    @relation(fields: [uomId], references: [id])
+  uomId                  Int?
   Design                 Design?              @relation(fields: [designId], references: [id])
   Gauge                  Gauge?               @relation(fields: [gaugeId], references: [id])
   LoopLength             LoopLength?          @relation(fields: [loopLengthId], references: [id])
   Gsm                    Gsm?                 @relation(fields: [gsmId], references: [id])
-  price                  Float
-  discountType           DiscountTypes
-  discountValue          Float                @default(0)
-  taxPercent             Float                @default(0)
+  price                  Float?
+  discountType           DiscountTypes?
+  discountValue          Float?                @default(0)
+  taxPercent             Float?                @default(0)
   Size                   Size?                @relation(fields: [sizeId], references: [id])
   designId               Int?
   gaugeId                Int?
@@ -1008,13 +1017,13 @@ model DirectItems {
   kDiaId                 Int?
   FDia                   Dia?                 @relation("fDiaDirectItem", fields: [fDiaId], references: [id])
   fDiaId                 Int?
-  directInwardOrReturnId Int
-  Stock                  Stock                @relation(fields: [stockId], references: [id])
-  stockId                Int                  @unique
+  directInwardOrReturnId Int?
+  Stock                  Stock?                @relation(fields: [stockId], references: [id])
+  stockId                Int?                  @unique
   weightPerBag           Float?
   noOfBags               Int?
   noOfRolls              Int?
-  qty                    Float
+  qty                    Float?
   lotNo                  String?
   lotNoCommonIndex       Int?
   BillEntryItems         BillEntryItems[]
@@ -1231,18 +1240,22 @@ enum DiaMeasurement {
 
 model Stock {
   id                                        Int                                      @id @default(autoincrement())
-  itemType                                  PoTypes
-  inOrOut                                   P_InwardOrReturn
+  itemType                                  PoTypes?
+  inOrOut                                   P_InwardOrReturn?
   Fabric                                    Fabric?                                  @relation(fields: [fabricId], references: [id])
   fabricId                                  Int?
   Yarn                                      Yarn?                                    @relation(fields: [yarnId], references: [id])
   yarnId                                    Int?
   Accessory                                 Accessory?                               @relation(fields: [accessoryId], references: [id])
   accessoryId                               Int?
+  accessoryGroup   AccessoryGroup?   @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  accessoryItem    AccessoryItem?    @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
   Color                                     Color?                                   @relation(fields: [colorId], references: [id])
   colorId                                   Int?
-  Uom                                       UnitOfMeasurement                        @relation(fields: [uomId], references: [id])
-  uomId                                     Int
+  Uom                                       UnitOfMeasurement?                        @relation(fields: [uomId], references: [id])
+  uomId                                     Int?
   Design                                    Design?                                  @relation(fields: [designId], references: [id])
   designId                                  Int?
   Gauge                                     Gauge?                                   @relation(fields: [gaugeId], references: [id])
@@ -1257,16 +1270,16 @@ model Stock {
   kDiaId                                    Int?
   FDia                                      Dia?                                     @relation("fDiaStock", fields: [fDiaId], references: [id])
   fDiaId                                    Int?
-  qty                                       Float
-  price                                     Float
+  qty                                       Float?
+  price                                     Float?
   noOfRolls                                 Int?                                     @default(0)
   noOfBags                                  Int?                                     @default(0)
-  Store                                     Location                                 @relation(fields: [storeId], references: [id])
-  Branch                                    Branch                                   @relation(fields: [branchId], references: [id])
-  storeId                                   Int
-  branchId                                  Int
+  Store                                     Location?                                 @relation(fields: [storeId], references: [id])
+  Branch                                    Branch?                                   @relation(fields: [branchId], references: [id])
+  storeId                                   Int?
+  branchId                                  Int?
   Process                                   Process?                                 @relation(fields: [processId], references: [id])
-  active                                    Boolean                                  @default(true)
+  active                                    Boolean?                                  @default(true)
   processId                                 Int?
   lotNo                                     String?
   PoInwardReturnItems                       PoInwardReturnItems?
