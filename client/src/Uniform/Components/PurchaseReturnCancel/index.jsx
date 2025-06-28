@@ -66,12 +66,12 @@ export default function Form() {
       cellClass: () => 'font-medium text-gray-900'
     },
     {
-      header: 'Order No.',
+      header: 'Doc.Id',
       accessor: (item) => item.docId,
       cellClass: () => 'font-medium text-gray-900'
     },
     {
-      header: 'Order Date',
+      header: 'Doc Date',
       accessor: (item) => item.docDate
     },
     {

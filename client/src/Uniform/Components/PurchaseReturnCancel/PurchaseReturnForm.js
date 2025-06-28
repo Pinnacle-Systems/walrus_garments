@@ -45,8 +45,6 @@ import ReturnItems from "./ReturnItems";
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
 
-    console.log(allData, "alldatata")
-
 
     const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("")
@@ -70,7 +68,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [showDiscount, setShowDiscount] = useState(false)
     const [term, setTerm] = useState("");
     const [notes, setNotes] = useState("");
-    const [orderBy, setOrderBy] = useState("")
+    const [approvedBy, setApprovedBy] = useState("")
 
 
     const branchIdFromApi = useRef(branchId);
@@ -120,8 +118,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         } else {
             setReadOnly(false);
         }
-        setTransType(data?.poType ? data.poType : "DyedFabric");
-        setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectReturn")
+        setTransType(data?.poType ? data.poType : "DyedYarn");
+        setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
         setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
         if (data?.docId) {
@@ -433,14 +431,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                         </div>
                     </div>
-
-
-
-
-
-                    <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId} removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} />
-
-
+                    <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
+                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} />
                     <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
@@ -479,14 +471,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 </div>
 
                                 <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Order By</span>
+                                    <span className="text-slate-600">Approved By</span>
                                     <input
                                         type="text"
                                         className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                         placeholder="Order By"
                                         readOnly
-                                        value={orderBy}
-                                        onChange={(e) => setOrderBy(e.target.value)}
+                                        value={approvedBy}
+                                        onChange={(e) => setApprovedBy(e.target.value)}
                                     />
                                 </div>
                             </div>

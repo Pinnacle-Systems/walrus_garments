@@ -510,7 +510,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   }
 
   function addNewBranch() {
-
     setPartyBranch((prev) => [...prev, { branchName: "", branchCode: "", branchEmail: "", branchContact: "", branchAddress: "" }]);
   }
 
@@ -606,9 +605,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     setClient(type === 'client');
   };
 
-
-
-
   if (partyId) {
     return (
       <>
@@ -686,10 +682,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
                     </h3>
                     <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-
-
                         <div className="grid grid-cols-2 ml-2  items-center gap-1">
-
                           <input
                             type="radio"
                             name="type"

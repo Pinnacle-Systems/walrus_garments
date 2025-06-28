@@ -4,11 +4,11 @@ import { Loader } from '../../../Basic/components'
 import { DELETE, VIEW } from '../../../icons'
 import { findFromList, substract, sumArray } from '../../../Utils/helper'
 import Modal from '../../../UiComponents/Modal'
-import { FabricLotGrid } from './LotGrid'
+import { FabricLotGrid, YarnLotGrid } from './LotGrid'
 import { toast } from 'react-toastify'
 import { useGetDirectItemByIdQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices'
 
-const FabricDirectItem = ({ fabricList, uomList,
+const YarnDirectItem = ({ fabricList, uomList,
     colorList, gaugeList, designList, gsmList,
     loopLengthList, storeId,
     diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo }) => {
@@ -25,7 +25,7 @@ const FabricDirectItem = ({ fabricList, uomList,
         const poItem = data?.data
 
         if (data?.data) {
-            // handleInputChange([{ lotNo: "", qty: "0.000", noOfRolls: 0 }], index, "returnLotDetails", 0, poItem);
+
             handleInputChange(poItem?.alreadyInwardLotWiseData, index, "returnLotDetails", 0, poItem);
 
         }
@@ -44,7 +44,7 @@ const FabricDirectItem = ({ fabricList, uomList,
     return (
         <>
             <Modal widthClass={"max-h-[600px] overflow-auto"} onClose={onClose} isOpen={lotGrid}>
-                <FabricLotGrid value={item}
+                <YarnLotGrid value={item}
                     readOnly={readOnly}
                     onClose={onClose}
                     addNewLotNo={addNewLotNo}
@@ -146,4 +146,4 @@ const FabricDirectItem = ({ fabricList, uomList,
     )
 }
 
-export default FabricDirectItem
+export default YarnDirectItem

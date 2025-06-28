@@ -78,7 +78,7 @@ const MastersForm = ({
       )
     );
   };
-console.log(readOnly,"readOnly",IsDefaultAdmin())
+
   // const hasPermission = (callback, type) => {
   //   if (childRecordValidationActions.includes(type) && childRecord !== 0) {
   //     toast.error("Child Record Exists", { position: "top-center" });
@@ -122,8 +122,8 @@ console.log(readOnly,"readOnly",IsDefaultAdmin())
           toast.info(`No Permission to ${type}...!`, {
             position: "top-center",
           });
-              
-       
+
+
         }
       } else {
         toast.info(" Past Fin Year Only can view!", { position: "top-center" });
@@ -141,40 +141,40 @@ console.log(readOnly,"readOnly",IsDefaultAdmin())
           {children}
         </div>
 
-        <div className={`${"flex justify-between items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
+        <div className={`${"flex justify-around items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
           <CloseButton
             onClick={() => {
               onClose();
               emptyErrors();
             }}
           />
-       
-            <SaveButton
-        onClick={() => {
-          hasPermission(saveData, "save");
-        }}
 
-            />
-          
-            <div className="flex space-x-3">
-              {/* <DeleteButton
+          <SaveButton
+            onClick={() => {
+              hasPermission(saveData, "save");
+            }}
+
+          />
+
+          <div className="flex space-x-3">
+            {/* <DeleteButton
                 onClick={() => {
                   hasPermission(deleteData, "delete");
                 }}
               /> */}
-              {readOnly && (
-                    <EditButton
-                      onClick={() => {
-                        hasPermission(setReadOnly, "edit");
-                        if(!readOnly){
-                          toast.info("You Can Edit The Datas !..")
-                        }
-                      }}
-                    />
-                        )}
-            
-            </div>
-        
+            {readOnly && (
+              <EditButton
+                onClick={() => {
+                  hasPermission(setReadOnly, "edit");
+                  if (!readOnly) {
+                    toast.info("You Can Edit The Datas !..")
+                  }
+                }}
+              />
+            )}
+
+          </div>
+
         </div>
       </div>
     </div>

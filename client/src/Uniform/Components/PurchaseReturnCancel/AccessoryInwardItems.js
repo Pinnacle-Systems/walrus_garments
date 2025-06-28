@@ -5,7 +5,7 @@ import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/Access
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 
-const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
+const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
 
 
     const { data: colorList } =
@@ -19,7 +19,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
         useGetUomQuery({ params });
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
-        const newBlend = structuredClone(inwardItems);
+        const newBlend = structuredClone(directInwardReturnItems);
         newBlend[index][field] = value;
 
         if (poItem) {
@@ -53,7 +53,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                 return
             }
         }
-        setInwardItems(newBlend);
+        setDirectInwardReturnItems(newBlend);
     };
     return (
         <>
@@ -82,20 +82,11 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                             }
                         </tr>
                     </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems, "inwardItems")}
-                        {inwardItems.map((item, index) => <AccessoryPoItem sizeList={sizeList} accessoryList={accessoryList}
+                    <tbody className='overflow-y-auto  h-full w-full'>
+                        {directInwardReturnItems?.map((item, index) => <AccessoryPoItem sizeList={sizeList} accessoryList={accessoryList}
                             uomList={uomList} storeId={storeId}
                             colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 8 - inwardItems.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 16 }).map(i =>
-                                    <td className="table-data   "></td>
-                                )}
-                                {!readOnly &&
-                                    <td className="table-data w-14"></td>
-                                }
-                            </tr>)
-                        }
+
                     </tbody>
                 </table>
             </div>
