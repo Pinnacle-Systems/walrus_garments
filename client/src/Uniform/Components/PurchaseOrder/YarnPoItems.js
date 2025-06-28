@@ -268,12 +268,12 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
-                                 {/* <th
+                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                     View Tax
-                                </th> */}
+                                </th>
                                  <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -840,7 +840,31 @@ const YarnPoItems = ({
                                                     disabled={true}
                                                 />
                                             </td>
-                                                        
+                                                <td className='table-data '>
+                                                <select
+                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "discountType") } }}
+
+
+                                                    disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
+                                                    className='text-left w-full rounded py-1 table-data-input'
+                                                    value={row.discountType}
+                                                    onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
+                                                    onBlur={(e) => {
+
+                                                        handleInputChange(e.target.value, index, "discountType")
+
+                                                    }
+                                                    }
+                                                >
+                                                    <option hidden>
+                                                    </option>
+                                                    {(discountTypes || []).map((blend) =>
+                                                        <option value={blend.value} key={blend.value}>
+                                                            {blend.show}
+                                                        </option>
+                                                    )}
+                                                </select>
+                                            </td>        
                                               {/* <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
                                                   <button
                                                       className="text-center rounded py-1 w-20"

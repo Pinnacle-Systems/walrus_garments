@@ -253,9 +253,11 @@ export async function getPoItems(req) {
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate,
         isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, stockStoreId
     } = req.query
+
     let data;
 
     let totalCount;
+     console.log(pagination,"pagination")
     if (pagination) {
         data = await prisma.poItems.findMany({
             where: {
@@ -297,6 +299,8 @@ export async function getPoItems(req) {
             data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
         }
     } else {
+   
+
         data = await prisma.poItems.findMany({
             where: {
                 branchId: branchId ? parseInt(branchId) : undefined,
@@ -304,6 +308,7 @@ export async function getPoItems(req) {
             }
         });
     }
+    console.log(data,"data")
     return { statusCode: 0, data, totalCount };
 }
 
@@ -322,6 +327,7 @@ export async function getAllDataPoItems(data, poType) {
 
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType) {
+    console.log("getPoItemById")
 
 
 
@@ -361,7 +367,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             Fabric: {
                 select: {
                     aliasName: true,
-                    name: true,
+                    // name: true,
                 }
             },
             Gauge: {
@@ -420,7 +426,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
 
 
-    const alreadyInwardedData = await prisma.directItems.aggregate({
+    const alreadyInwardedData = await prisma?.directItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
             DirectInwardOrReturn: {
@@ -436,9 +442,10 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             noOfRolls: true
         }
     });
+    console.log(alreadyInwardedData,"alreadyInwardedData")
 
 
-    const alreadyReturnedData = await prisma.directReturnItems.aggregate({
+    const alreadyReturnedData = await prisma?.directReturnItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
             DirectReturnOrPoReturn: {
@@ -455,6 +462,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
         }
     });
 
+    console.log(alreadyReturnedData,"alreadyReturnedData")
 
 
     const alreadyCancelData = await prisma.cancelItems.aggregate({
@@ -472,6 +480,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
         }
     });
+    console.log(alreadyCancelData,"alreadyCancelData")
 
 
     async function getLotWiseDatas(inwardData) {
@@ -516,62 +525,62 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
     // let stockQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     // let stockRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
-    let alreadyInwardLotWiseData = [];
+//     let alreadyInwardLotWiseData = [];
 
 
 
-    let inwardLotDetailsdata = `select lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from poItems
- left join directItems on directItems.poitemsid=poItems.id left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id
- WHERE  poItems.ID=${id}
- group By lotNo`
+//     let inwardLotDetailsdata = `select lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from poItems
+//  left join directItems on directItems.poitemsid=poItems.id left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id
+//  WHERE  poItems.ID=${id}
+//  group By lotNo`
 
-    inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
-
-
-
-    for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
-        let inwardData = inwardLotDetailsdata[i]
-        alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
-    }
-    const poItemObj = getStockObject(data.Po.transType, data)
+//     inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
 
 
-    let stockData;
-    if (data.Po.transType === "Accessory") {
-        stockData = await prisma.stock.aggregate({
-            where: {
-                ...poItemObj,
-                storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
-                id: {
-                    lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
-                },
 
-            },
-            _sum: {
-                qty: true,
-                noOfBags: true,
-                noOfRolls: true
-            }
-        });
-    } else {
-        stockData = await prisma.stock.groupBy({
-            where: {
-                ...poItemObj,
-                storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
-                id: {
-                    lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
-                },
+//     for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
+//         let inwardData = inwardLotDetailsdata[i]
+//         alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
+//     }
+//     const poItemObj = getStockObject(data.Po.transType, data)
 
-            },
-            by: ["yarnId", "colorId", "uomId", "fabricId", "gaugeId", "loopLengthId", "designId", "gsmId", "kDiaId", "fDiaId", "sizeId", "storeId", "branchId", "lotNo"],
-            _sum: {
-                qty: true,
-                noOfBags: true,
-                noOfRolls: true
-            }
-        });
 
-    }
+    // let stockData;
+    // if (data.Po.transType === "Accessory") {
+    //     stockData = await prisma.stock.aggregate({
+    //         where: {
+    //             ...poItemObj,
+    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
+    //             id: {
+    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
+    //             },
+
+    //         },
+    //         _sum: {
+    //             qty: true,
+    //             noOfBags: true,
+    //             noOfRolls: true
+    //         }
+    //     });
+    // } else {
+    //     stockData = await prisma.stock.groupBy({
+    //         where: {
+    //             ...poItemObj,
+    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
+    //             id: {
+    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
+    //             },
+
+    //         },
+    //         by: ["yarnId", "colorId", "uomId", "fabricId", "gaugeId", "loopLengthId", "designId", "gsmId", "kDiaId", "fDiaId", "sizeId", "storeId", "branchId", "lotNo"],
+    //         _sum: {
+    //             qty: true,
+    //             noOfBags: true,
+    //             noOfRolls: true
+    //         }
+    //     });
+
+    // }
 
 
 
@@ -591,8 +600,8 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             alreadyReturnedQty,
             alreadyReturnedData,
             alreadyCancelData,
-            stockData,
-            alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(val => parseFloat(val?.stockQty) !== 0),
+            // stockData,
+            // alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(val => parseFloat(val?.stockQty) !== 0),
 
         }
     };

@@ -62,9 +62,9 @@ const PurchaseInward = () => {
 
 
 
-    const handleView = (orderId) => {
+    const handleView = (id) => {
 
-        setId(orderId)
+        setId(id)
         setShowManufacturer(true)
         setReadOnly(true);
     };
@@ -102,7 +102,7 @@ const PurchaseInward = () => {
         <>
             {showManufacturer ? (
                 <PurchaseInwardForm
-                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId}
                 //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
                 //     partyData={partyData?.data}
                 />

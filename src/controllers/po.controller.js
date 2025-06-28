@@ -21,6 +21,8 @@ async function getOne(req, res, next) {
 }
 
 export async function getPoItemById(req, res, next) {
+        console.log("getPoItemById")
+
     try {
         res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType));
         console.log(res.statusCode);
@@ -30,6 +32,7 @@ export async function getPoItemById(req, res, next) {
 }
 
 export async function getPoItems(req, res, next) {
+    console.log("getPoItems ")
     try {
         res.json(await _getPoItems(req));
         console.log(res.statusCode);

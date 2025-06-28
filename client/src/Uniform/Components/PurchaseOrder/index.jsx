@@ -261,7 +261,7 @@ console.log(poItems,"poItems")
     setSupplierId("")
   }, [transType, id])
 
-  const allSuppliers = supplierList ? supplierList.data : []
+  const allSuppliers = supplierList ? supplierList?.data : []
   console.log(allSuppliers, "allSuppliers")
   function filterSupplier() {
     let finalSupplier = []

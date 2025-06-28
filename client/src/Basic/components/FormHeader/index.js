@@ -103,9 +103,9 @@ const FormHeader = ({
   };
   return (
     <>
-      {isLoading || isFetching ? (
+      {/* {isLoading || isFetching ? (
         <div></div>
-      ) : (
+      ) : ( */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-4 py-2 border-b border-gray-300 bg-white shadow-sm">
 
           {model ? (
@@ -152,7 +152,7 @@ const FormHeader = ({
             {onClose && <CloseButton onClick={onClose} />}
           </div>
         </div>
-      )}
+      {/* )} */}
     </>
 
   );

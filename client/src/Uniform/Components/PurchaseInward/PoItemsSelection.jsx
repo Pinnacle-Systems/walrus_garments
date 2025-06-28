@@ -6,13 +6,17 @@ import { findFromList } from '../../../Utils/helper';
 
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
+import YarnPoItemSelection from './YarnPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(i => i.poItemsId));
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i.poItemsId));
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
+    console.log(inwardItems,"inwardItems");
+console.log(localInwardItems,"localInwardItems")
 
+    
     const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
         useGetPartyQuery({ params: { companyId, active: true } });
 
@@ -47,9 +51,9 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     function handleSelectAllChange(value, poItems) {
         if (value) {
-            poItems.forEach(item => addItem(item.id, item))
+            poItems?.forEach(item => addItem(item.id, item))
         } else {
-            poItems.forEach(item => removeItem(item.id))
+            poItems?.forEach(item => removeItem(item.id))
         }
     }
 
@@ -115,12 +119,12 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                     {
                         <>
 
-                            {transtype.includes("Fabric") ?
+                            {/* {transtype.includes("Fabric") ? */}
 
-                                <FabricPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                                :
-                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                            }
+                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                            {/* //     :
+                            //     <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                            // } */}
                         </>
                     }
 

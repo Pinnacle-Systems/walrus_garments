@@ -35,6 +35,8 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
         useGetSocksMaterialQuery({ params: { ...params } });
 
 
+        console.log(orderDetails,"orderDetails")
+
     const { data: socksTypeData } =
         useGetSocksTypeQuery({ params: { ...params } });
     const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });

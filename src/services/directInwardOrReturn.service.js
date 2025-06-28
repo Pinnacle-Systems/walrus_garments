@@ -775,7 +775,7 @@ async function getOne(id) {
                 }
             },
             PayTerm: true,
-            directItems: {
+            DirectItems: {
                 select: {
                     id: true,
                     Fabric: true,
@@ -814,12 +814,12 @@ async function getOne(id) {
                     noOfRolls: true,
                     qty: true,
 
-                    alreadyReturnedQty: true,
-                    balanceQty: true,
-                    cancelQty: true,
-                    poNo: true,
-                    poQty: true,
-                    inwardLotDetails: true,
+                    // alreadyReturnedQty: true,
+                    // balanceQty: true,
+                    // cancelQty: true,
+                    // poNo: true,
+                    // poQty: true,
+                    // inwardLotDetails: true,
                     poItemsId: true,
                 }
             }

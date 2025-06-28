@@ -150,6 +150,7 @@ model Branch {
   Order                                  Order[]
   Sample                                 Sample[]
   DirectReturnOrPoReturn                 DirectReturnOrPoReturn[]
+  PurchaseCancel                         PurchaseCancel[]
 }
 
 model UserOnBranch {
@@ -258,8 +259,10 @@ model User {
   SampleCreatedBy                     Sample[]                     @relation(name: "createdBy")
   SampleUpdatedBy                     Sample[]                     @relation(name: "updatedBy")
   Sample                              Sample[]
-  DirectReturnOrPoReturnCreatedBy       DirectReturnOrPoReturn[]       @relation(name: "createdBy")
-  DirectReturnOrPoReturnUpdatedBy       DirectReturnOrPoReturn[]       @relation(name: "updatedBy")
+  DirectReturnOrPoReturnCreatedBy     DirectReturnOrPoReturn[]     @relation(name: "createdBy")
+  DirectReturnOrPoReturnUpdatedBy     DirectReturnOrPoReturn[]     @relation(name: "updatedBy")
+  PurchaseCancelCreatedBy             PurchaseCancel[]             @relation(name: "createdBy")
+  PurchaseCancelUpdatedBy             PurchaseCancel[]             @relation(name: "updatedBy")
                 
 
 }
@@ -531,6 +534,7 @@ model Party {
   Sample                     Sample[]
   partyBranch                PartyBranch[]
   DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
+  PurchaseCancel             PurchaseCancel[]
 }
 
 model PartyBranch {
@@ -648,6 +652,7 @@ model Yarn {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 model YarnOnYarnBlend {
@@ -690,6 +695,7 @@ model Fabric {
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   FiberBlend                    FiberBlend[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 model FabricOnYarnBlend {
@@ -712,6 +718,7 @@ model AccessoryGroup {
   DirectItems   DirectItems[]
   Stock         Stock[]
   DirectReturnItems       DirectReturnItems[]
+  CancelItems             CancelItems[]
 }
 
 model AccessoryItem {
@@ -728,6 +735,7 @@ model AccessoryItem {
   DirectItems           DirectItems[]
   Stock                 Stock[]
   DirectReturnItems     DirectReturnItems[]
+  CancelItems           CancelItems[]
 }
 
 model Accessory {
@@ -748,6 +756,7 @@ model Accessory {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 enum AccessoryCategory {
@@ -812,6 +821,7 @@ model Color {
   footSampleDetails                          sampleDetails[]                              @relation(name: "footSampleDetails")
   stripesSampleDetails                       sampleDetails[]                              @relation(name: "stripesSampleDetails")
   DirectReturnItems                         DirectReturnItems[]
+  CancelItems                               CancelItems[]
 }
 
 model UnitOfMeasurement {
@@ -840,6 +850,7 @@ model UnitOfMeasurement {
   PrintingJobWorkDet                        PrintingJobWorkDet[]
   OnlineSalesDetails                        OnlineSalesDetails[]
   DirectReturnItems                         DirectReturnItems[]
+  CancelItems                               CancelItems[]
 }
 
 enum DeliveryType {
@@ -917,6 +928,9 @@ model PoItems {
   PoInwardReturnItems PoInwardReturnItems[]
   BillEntryItems      BillEntryItems[]
   DirectReturnItems   DirectReturnItems[]
+  directItems         DirectItems[]
+  CancelItems         CancelItems[]
+
 }
 
 model PInwardOrReturn {
@@ -992,7 +1006,7 @@ model DirectInwardOrReturn {
   specialInstructions String?          @db.LongText
   remarks             String?          @db.LongText
   poInwardOrDirectInward String?
-  DirectItems         DirectItems[]
+  directItems         DirectItems[]
 }
 
 model DirectItems {
@@ -1039,8 +1053,11 @@ model DirectItems {
   qty                    Float?
   lotNo                  String?
   lotNoCommonIndex       Int?
+  PoItem                 PoItems?             @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId              Int?
   BillEntryItems         BillEntryItems[]
   DirectReturnItems      DirectReturnItems[]
+  InwardLotDetails       InwardLotDetails[]
 }
 
 model PayTerm {
@@ -1114,6 +1131,7 @@ model Gauge {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 model Design {
@@ -1131,6 +1149,7 @@ model Design {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 model LoopLength {
@@ -1148,6 +1167,7 @@ model LoopLength {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 }
 
 model Gsm {
@@ -1165,6 +1185,7 @@ model Gsm {
   RawMaterialsSalesDetails      RawMaterialsSalesDetails[]
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
+  CancelItems                   CancelItems[]
 
 }
 
@@ -1193,8 +1214,10 @@ model Dia {
   RawMaterialsSalesDetailsFDia      RawMaterialsSalesDetails[]      @relation(name: "fDia")
   RawMaterialOpeningStockItemsKDia  RawMaterialOpeningStockItems[]  @relation(name: "kDia")
   RawMaterialOpeningStockItemsFDia  RawMaterialOpeningStockItems[]  @relation(name: "fDia")
-  DirectReturnItemsKDia                   DirectReturnItems[]                   @relation(name: "kDiaReturnItem")
-  DirectReturnItemsFDia                   DirectReturnItems[]                   @relation(name: "fDiaReturnItem")
+  DirectReturnItemsKDia             DirectReturnItems[]                   @relation(name: "kDiaReturnItem")
+  DirectReturnItemsFDia             DirectReturnItems[]                   @relation(name: "fDiaReturnItem")
+  CancelItemsKDia                   CancelItems[]                   @relation(name: "kDiaCancelItem")
+  CancelItemsFDia                   CancelItems[]                   @relation(name: "fDiaCancelItem")
 }
 
 model Size {
@@ -1225,6 +1248,7 @@ model Size {
   OrderDetails                              OrderDetails[]
   sampleDetails                             sampleDetails[]
   DirectReturnItems                         DirectReturnItems[]
+  CancelItems                               CancelItems[]
 }
 
 model SocksMaterial {
@@ -1322,6 +1346,8 @@ model Stock {
   RawMaterialOpeningStockItems              RawMaterialOpeningStockItems?            @relation(fields: [rawMaterialOpeningStockItemsId], references: [id], onDelete: Cascade)
   rawMaterialOpeningStockItemsId            Int?                                     @unique
   createdAt                                 DateTime?                                @default(now())
+  InwardLotDetails                          InwardLotDetails?                      @relation(fields: [inwardLotDetailsId], references: [id], onDelete: Cascade)
+  inwardLotDetailsId                         Int?  
 }
 
 model Location {
@@ -3108,4 +3134,76 @@ model ReturnLotDetails {
   lotNo               String?
   qty                 Float?
   noOfRolls           Int?
+}
+
+model PurchaseCancel {
+  id                     Int           @id @default(autoincrement())
+  poInwardOrDirectInward String?
+  poType                 String?
+  supplier               Party?        @relation(fields: [supplierId], references: [id])
+  supplierId             Int?
+  createdAt              DateTime?      @default(now())
+  updatedAt              DateTime?      @updatedAt
+  createdBy              User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  Branch                 Branch?       @relation(fields: [branchId], references: [id])
+  branchId               Int?
+  active                 Boolean?       @default(true)
+  docId                  String?
+  remarks                String?       @db.LongText
+  cancelItems            CancelItems[]
+  
+}
+
+model CancelItems {
+  id               Int             @id @default(autoincrement())
+  PurchaseCancel   PurchaseCancel? @relation(fields: [purchaseCancelId], references: [id], onDelete: Cascade)
+  Fabric           Fabric?         @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId         Int?
+  Yarn             Yarn?           @relation(fields: [yarnId], references: [id])
+  yarnId           Int?
+  Accessory        Accessory?      @relation(fields: [accessoryId], references: [id])
+  accessoryId      Int?
+  AccessoryGroup   AccessoryGroup? @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  AccessoryItem    AccessoryItem?  @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  Color            Color?          @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  Uom              UnitOfMeasurement?             @relation(fields: [uomId], references: [id])
+  uomId            Int
+  Design           Design?         @relation(fields: [designId], references: [id])
+  Gauge            Gauge?          @relation(fields: [gaugeId], references: [id])
+  LoopLength       LoopLength?     @relation(fields: [loopLengthId], references: [id])
+  Gsm              Gsm?            @relation(fields: [gsmId], references: [id])
+  price            Float
+  Size             Size?           @relation(fields: [sizeId], references: [id])
+  designId         Int?
+  gaugeId          Int?
+  loopLengthId     Int?
+  gsmId            Int?
+  sizeId           Int?
+  KDia             Dia?            @relation("kDiaCancelItem", fields: [kDiaId], references: [id])
+  kDiaId           Int?
+  FDia             Dia?            @relation("fDiaCancelItem", fields: [fDiaId], references: [id])
+  fDiaId           Int?
+  purchaseCancelId Int?
+  qty              Float?
+  PoItem           PoItems?        @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId        Int?
+  poNo             String?
+  poQty            Float?
+}
+
+
+model InwardLotDetails {
+  id            Int         @id @default(autoincrement())
+  DirectItems   DirectItems @relation(fields: [directItemsId], references: [id], onDelete: Cascade)
+  directItemsId Int
+  lotNo         String?
+  qty           Float?
+  noOfRolls     Int?
+  Stock         Stock[]
 }

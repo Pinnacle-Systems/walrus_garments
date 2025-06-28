@@ -3,13 +3,12 @@ import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, TextInput } from "../../../Inputs";
-import { poTypes } from "../../../Utils/DropdownData";
+import { directOrPo, poTypes } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { toast } from "react-toastify";
-import YarnPoItems from "../PurchaseOrder/YarnPoItems";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { useAddDirectInwardOrReturnMutation, useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useGetDirectInwardOrReturnQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
@@ -17,7 +16,10 @@ import moment from "moment";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import AccessoryPoItems from "./AccessoryPoItems";
-const  PurchaseInwardForm = ({ onClose }) => {
+import Modal from "../../../UiComponents/Modal";
+import PoItemsSelection from "./PoItemsSelection";
+import YarnPoItems from "./YarnPoItems";
+const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
 
 
     //   const [readOnly, setReadOnly] = useState(false);
@@ -49,10 +51,8 @@ const  PurchaseInwardForm = ({ onClose }) => {
     //   const [vehicleNo, setVehicleNo] = useState("");
     //   const [remarks, setRemarks] = useState("");
     //   const [specialInstructions, setSpecialInstructions] = useState("")
-    //   const [inwardItemSelection, setInwardItemSelection] = useState(false)
 
 
-  const [id,setId]  = useState('')
   const [validDate,setValidDate] =  useState('')
   const [docId,setDocId] = useState("")
   const [ date,setDate] = useState("")
@@ -68,6 +68,7 @@ const  PurchaseInwardForm = ({ onClose }) => {
   const [inwardItemSelection, setInwardItemSelection] = useState(false)
   const [directInwardReturnItems,   setDirectInwardReturnItems] = useState([]);
 
+    console.log(directInwardReturnItems,"directInwardReturnItems");
 
     const [showExtraCharge, setShowExtraCharge] = useState(false)
     const [showDiscount, setShowDiscount] = useState(false)
@@ -141,7 +142,7 @@ const  PurchaseInwardForm = ({ onClose }) => {
     setTransType(data?.poType ? data.poType : "GreyYarn");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDirectInwardReturnItems(data?.directItems ? data.directItems : []);
+    setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
@@ -296,15 +297,16 @@ console.log(data,"data")
     getNextDocId()
   };
 
-    // const tableHeadings = ["PoNo", "PoDate", "PoType", "DueDate", "Supplier"]
-    // const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
-    // useEffect(() => {
-    //   if (id) return
-    //   setDirectInwardReturnItems([])
-    // }, [transType, id])
+    const tableHeadings = ["PoNo", "PoDate", "PoType", "DueDate", "Supplier"]
+    const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
+    useEffect(() => {
+      if (id) return
+      setDirectInwardReturnItems([])
+    }, [transType, id])
 
     const allSuppliers = supplierList ? supplierList.data : []
 
+    console.log(allSuppliers,"allSuppliers")
   function filterSupplier() {
     let finalSupplier = []
     if (transType.toLowerCase().includes("yarn")) {
@@ -397,6 +399,12 @@ console.log(data,"data")
 
   return (
       <>
+        <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
+        <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
+          supplierId={supplierId}
+          inwardItems={directInwardReturnItems}
+          setInwardItems={setDirectInwardReturnItems} />
+      </Modal>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Purchse Inward </h1>
@@ -421,13 +429,17 @@ console.log(data,"data")
                         <div className="grid grid-cols-2 gap-1">
                             <ReusableInput label="Doc. Id" readOnly value={docId} />
                             <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                            <DropdownInput name="Po Type"
-
+                                <DropdownInput name="Inward Type"
+                            beforeChange={() => { setDirectInwardReturnItems([]) }}
+                            options={directOrPo}
+                            value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+                             <DropdownInput name="Po Type"
                                 options={poTypes}
                                 value={transType}
                                 setValue={setTransType}
                                 required={true}
                                 readOnly={readOnly} />
+
                         </div>
                     </div>
 
@@ -435,9 +447,11 @@ console.log(data,"data")
                             <h2 className="font-medium text-slate-700 mb-2">
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
+                          
                             <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
                             <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
                             <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+                            <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
                         </div>
 
                     </div>
@@ -448,26 +462,28 @@ console.log(data,"data")
                             {/* Inward Details */}
                         </h2>
                         <div className="grid grid-cols-2 gap-1">
-                            <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
                             <DropdownInput name="Location"
                                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                                 value={locationId}
                                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                                 required={true} readOnly={id || readOnly} />
-                            {(!readOnly && poInwardOrDirectInward == "PurchaseInward") &&
+                                 <DropdownInput name="Store"
+                            options={dropDownListObject(id ? storeOptions : storeOptions.filter(item => item.active), "storeName", "id")}
+                            value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
+                            {/* {(!readOnly && poInwardOrDirectInward == "PurchaseInward") && */}
                                 < div className="">
                                     <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                         onClick={() => {
-                                            if (!supplierId) {
-                                                toast.info("Please Select Suppplier", { position: "top-center" })
-                                                return
-                                            }
+                                            // if (!supplierId) {
+                                            //     toast.info("Please Select Suppplier", { position: "top-center" })
+                                            //     return
+                                            // }
                                             setInwardItemSelection(true)
                                         }}
                                     >Select Items
                                     </button>
                                 </div>
-                            }
+                            {/* } */}
                         </div>
 
                             </div>
