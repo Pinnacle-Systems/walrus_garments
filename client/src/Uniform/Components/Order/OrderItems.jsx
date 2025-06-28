@@ -188,7 +188,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                 >
                                     Actions
                                 </th>
-                                {/* ))} */}
+
                             </tr>
                         </thead>
                         <tbody>
@@ -536,16 +536,6 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
                                             </button>
                                             <span className="tooltip-text">Delete</span>
-
-                                            {/* {tooltipVisible && (
-                                                <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                    <div className="flex items-start">
-                                                        <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                        <span>View</span>
-                                                    </div>
-                                                    <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                </div>
-                                            )} */}
                                         </div>
                                     </td>
                                 </tr>

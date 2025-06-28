@@ -21,6 +21,8 @@ import FabricDirectInwardItems from './FabricDirectInwardItems';
 import AccessoryDirectInwardItems from './AccessoryDirectInwardItems';
 import FabricInwardItems from './FabricInwardItems';
 import AccessoryInwardItems from './AccessoryInwardItems';
+import YarnInwardItems from './YarnInwardItems';
+import YarnDirectInwardItems from './YarnDirectInwardItems';
 
 export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id }) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -154,28 +156,25 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
     function addNewRow() {
 
     }
+    function handleEdit(index) {
+        setGridEditableIndex(index)
+    }
+
+    function handleView(index) {
+        setCurrentIndex(index)
+        setTableDataView(true)
+    }
 
 
     return (
 
         <>
-            <Modal
-                isOpen={tableDataView}
-                onClose={() => setTableDataView(false)}
-                widthClass={"px-2 h-[37%] w-[50%]"}
-            >
-                <TableGridItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo} id={id} gridEditableIndex={gridEditableIndex} directInwardReturnItems={directInwardReturnItems}
-                    item={currentItem} index={currentIndex} Yarnlist={Yarnlist} machineList={machineList} socksMaterialData={socksMaterialData}
-                    colorlist={colorlist} socksTypeData={socksTypeData}
-                    readOnly={readOnly} styleList={styleList?.data}
-                />
-            </Modal>
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[150px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
-
                         <button
                             onClick={() => {
                                 addNewRow()
@@ -200,13 +199,13 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         (
                             transType.toLowerCase().includes("yarn")
                                 ?
-                                <FabricDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
+                                <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                                     handleInputChangeLotNo={handleInputChangeLotNo}
                                     storeId={storeId} removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
-                                    inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                                    directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                                 :
                                 <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
-                                    transType={transType} inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems}
+                                    transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
                                     readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         )
 
@@ -216,11 +215,15 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         (
                             transType.toLowerCase().includes("yarn")
                                 ?
-                                <FabricInwardItems storeId={storeId} removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
-                                    inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                                <YarnInwardItems purchaseInwardId={id} removeItem={removeItem} handleEdit={handleEdit}
+                                    storeId={storeId} handleView={handleView}
+                                    transType={transType} directInwardReturnItems={directInwardReturnItems}
+                                    setDirectInwardReturnItems={setDirectInwardReturnItems}
+                                    readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                                 :
-                                <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType} inwardItems={directInwardReturnItems}
-                                    setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                                <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType}
+                                    directInwardReturnItems={directInwardReturnItems}
+                                    setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         )
 
                     }
