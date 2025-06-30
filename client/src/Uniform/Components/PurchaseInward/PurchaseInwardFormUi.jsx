@@ -19,41 +19,13 @@ import AccessoryPoItems from "./AccessoryPoItems";
 import Modal from "../../../UiComponents/Modal";
 import PoItemsSelection from "./PoItemsSelection";
 import YarnPoItems from "./YarnPoItems";
+import YarnInwardPoItems from "./YarnInwardItem";
+import AccessoryInwardItems from "./AccessoryInwardItems";
 const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
 
 
-    //   const [readOnly, setReadOnly] = useState(false);
-    //   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
-    //   const [docId, setDocId] = useState("")
-    //   const [id, setId] = useState("");
-    //   const [date, setDate] = useState();
-    //   const [taxTemplateId, setTaxTemplateId] = useState("");
-    //   const [payTermId, setPayTermId] = useState("");
-    //   const [dcDate, setDcDate] = useState("");
-
-    //   const [transType, setTransType] = useState("DyedFabric");
-    //   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-    //   const [supplierId, setSupplierId] = useState("");
-
-    //   const [discountType, setDiscountType] = useState("Percentage");
-    //   const [discountValue, setDiscountValue] = useState(0);
-
-    //   const [locationId, setLocationId] = useState('');
-
-    //   const [storeId, setStoreId] = useState("")
-
-    //   const [dcNo, setDcNo] = useState("")
-
-    //   const [formReport, setFormReport] = useState(false);
-
-    //   const [searchValue, setSearchValue] = useState("");
-
-    //   const [vehicleNo, setVehicleNo] = useState("");
-    //   const [remarks, setRemarks] = useState("");
-    //   const [specialInstructions, setSpecialInstructions] = useState("")
 
 
-  const [validDate,setValidDate] =  useState('')
   const [docId,setDocId] = useState("")
   const [ date,setDate] = useState("")
   const [readOnly,setReadOnly] = useState('')
@@ -68,7 +40,7 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
   const [inwardItemSelection, setInwardItemSelection] = useState(false)
   const [directInwardReturnItems,   setDirectInwardReturnItems] = useState([]);
 
-    console.log(directInwardReturnItems,"directInwardReturnItems");
+    // console.log(directInwardReturnItems,"directInwardReturnItems");
 
     const [showExtraCharge, setShowExtraCharge] = useState(false)
     const [showDiscount, setShowDiscount] = useState(false)
@@ -131,6 +103,13 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
   const [addData] = useAddDirectInwardOrReturnMutation();
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
   const [removeData] = useDeleteDirectInwardOrReturnMutation();
+
+
+      useEffect(() => {
+      if (id) return
+      console.log(directInwardReturnItems,"hit",id)
+      setDirectInwardReturnItems([])
+    }, [transType,id])
 
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
@@ -299,10 +278,9 @@ console.log(data,"data")
 
     const tableHeadings = ["PoNo", "PoDate", "PoType", "DueDate", "Supplier"]
     const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
-    useEffect(() => {
-      if (id) return
-      setDirectInwardReturnItems([])
-    }, [transType, id])
+
+
+
 
     const allSuppliers = supplierList ? supplierList.data : []
 
@@ -395,7 +373,12 @@ console.log(data,"data")
         let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
         return parseInt(qty)
     }
-
+  function isSupplierOutside() {
+    if (supplierDetails) {
+      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
+    }
+    return false
+  }
 
   return (
       <>
@@ -489,13 +472,40 @@ console.log(data,"data")
                             </div>
                    </div>
                    <fieldset>
-                   {transType.toLowerCase().includes("yarn")  ? 
-                    <YarnPoItems 
-                    // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
-                    poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} 
-                    />
+                      {
+
+                        poInwardOrDirectInward == "DirectInward" &&
+                        (transType.toLowerCase().includes("yarn")
+                          ?
+                          <YarnPoItems 
+                            poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems}                           />
+                          :
+                          
+                            // transType.toLowerCase().includes("fabric")
+                            //   ?
+                            //   <FabricPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                            //   :
+                              <AccessoryPoItems
+                              //  id={id} transType={transType}  params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
+                               />
+                          
+                        )
+                      }
+                   
+                   
+                      {
+
+                        
+                    poInwardOrDirectInward == "PurchaseInward" &&
+                   (
+                    
+                    transType.toLowerCase().includes("yarn")  ? 
+                          <YarnInwardPoItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} 
+                          removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
+                               readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+                          />
                     :
-                    (
+                    
                           transType.toLowerCase().includes("fabric")
                             ?
                             // <FabricPoItems 
@@ -503,10 +513,10 @@ console.log(data,"data")
                             // />
                             <></>
                             :
-                            <AccessoryPoItems  poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly}
+                            <AccessoryInwardItems  poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly}
                             //  id={id} transType={transType} taxTypeId={taxTemplateId} params={params}  isSupplierOutside={isSupplierOutside()} 
                              />
-                        )
+                   )
                    }         
                    </fieldset>
                

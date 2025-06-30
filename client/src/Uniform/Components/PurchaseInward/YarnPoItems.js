@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
+import { YarnLotGrid } from "./LotGrid";
 
 const YarnPoItems = ({
   id,
@@ -25,7 +26,8 @@ const YarnPoItems = ({
   taxTypeId,
   greyFilter,
 }) => {
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
+     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
+    const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
 
   const handleInputChange = (value, index, field) => {
     const newBlend = structuredClone(poItems);
@@ -165,27 +167,96 @@ const YarnPoItems = ({
           dispatch(setLastTab(activeTab));
           dispatch(push({ name: masterName }));
    }
-
+       function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
+        setPoItems(poItems => {
+            const newBlend = structuredClone(poItems);
+            if (!newBlend[index]["lotDetails"]) return poItems
+            newBlend[index]["lotDetails"][lotIndex][field] = value;
+            let totalQtyExcludeCurrentIndex = sumArray(newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex), "qty")
+            if ((field === "weightPerBag" || field === "noOfBags") && newBlend[index]["lotDetails"][lotIndex]["noOfBags"] && newBlend[index]["lotDetails"][lotIndex]["weightPerBag"]) {
+                let tempInwardQty = (parseFloat(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * parseFloat(newBlend[index]["lotDetails"][lotIndex]["weightPerBag"])).toFixed(3)
+                let currentOverAllQty = parseFloat(tempInwardQty) + parseFloat(totalQtyExcludeCurrentIndex)
+                // if (parseFloat(balanceQty) < parseFloat(currentOverAllQty)) {
+                //     toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                //     return poItems
+                // }
+                newBlend[index]["lotDetails"][lotIndex]["qty"] = tempInwardQty
+            }
+            if (field === "qty") {
+                // let currentOverAllQty = parseFloat(value) + parseFloat(totalQtyExcludeCurrentIndex)
+                // if (parseFloat(balanceQty) < parseFloat(currentOverAllQty)) {
+                //     toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                //     return poItems
+                // }
+                let qty = parseInt(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * parseFloat(newBlend[index]["lotDetails"][lotIndex]["weightPerBag"])
+                let excessQty = parseInt(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * 2
+                if ((qty + excessQty) < parseFloat(value)) {
+                    toast.info("Excess Qty Cannot be More than 2kg Per Bag", { position: 'top-center' })
+                    return poItems
+                }
+            }
+            return newBlend
+        });
+    }
+ function addNewLotNo(index, weightPerBag) {
+        setPoItems(poItems => {
+            const newBlend = structuredClone(poItems);
+            if (!newBlend[index]) return poItems
+            if (newBlend[index]["lotDetails"]) {
+                newBlend[index]["lotDetails"] = [
+                    ...newBlend[index]["lotDetails"],
+                    { lotNo: "", qty: "0.000", noOfBags: 0, weightPerBag }]
+            } else {
+                newBlend[index]["lotDetails"] = [{ lotNo: "", qty: "0.000", noOfBags: 0, weightPerBag }]
+            }
+            return newBlend
+        })
+    }
+    function removeLotNo(index, lotIndex) {
+        setPoItems(poItems => {
+            const newBlend = structuredClone(poItems);
+            if (!newBlend[index]["lotDetails"]) return poItems
+            newBlend[index]["lotDetails"] = newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex)
+            return newBlend
+        })
+    }
+    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? poItems[currentSelectedLotGrid] : ""
+    let taxItems = poItems?.map(item => {
+        let newItem = structuredClone(item)
+        newItem["qty"] = sumArray(newItem.lotDetails, "qty")
+        return newItem
+    })
+    let lotNoArr = selectedRow?.lotDetails ? selectedRow.lotDetails.map(item => item.lotNo) : []
+    let isLotNoUnique = new Set(lotNoArr).size == lotNoArr.length
+    function onClose() {
+        if (!isLotNoUnique) {
+            toast.info("Lot No Should be Unique", { position: "top-center" })
+            return
+        }
+        setCurrentSelectedLotGrid(false)
+    }
    
-
+    console.log(poItems[currentSelectedLotGrid],"poItems[currentSelectedLotGrid]",currentSelectedLotGrid)
 
   return (
     <>
-    {console.log("YarnPoiTemns")}
-      {/* <Modal
-        isOpen={Number.isInteger(currentSelectedIndex)}
-        onClose={() => setCurrentSelectedIndex("")}
-      >
-        <TaxDetailsFullTemplate
-          readOnly={readOnly}
-          setCurrentSelectedIndex={setCurrentSelectedIndex}
-          taxTypeId={taxTypeId}
-          currentIndex={currentSelectedIndex}
-          poItems={poItems}
-          handleInputChange={handleInputChange}
-          isSupplierOutside={isSupplierOutside}
-        />
-      </Modal> */}
+      <Modal widthClass={"max-h-[600px] overflow-auto"} onClose={onClose} isOpen={Number.isInteger(currentSelectedLotGrid)}>
+                <YarnLotGrid
+                    isDirect
+                    readOnly={readOnly}
+                    onClose={onClose}
+                    addNewLotNo={addNewLotNo}
+                    removeLotNo={removeLotNo}
+                    handleInputChangeLotNo={handleInputChangeLotNo}
+                    index={currentSelectedLotGrid}
+                    lotDetails={selectedRow?.lotDetails ? selectedRow?.lotDetails : []}
+                    inwardLotDetails={selectedRow?.inwardLotDetails ? selectedRow?.inwardLotDetails : []} />
+            </Modal>
+            {/* <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
+                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex}
+                    taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={taxItems}
+                    handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside} />
+            </Modal> */}
       
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
@@ -355,7 +426,7 @@ const YarnPoItems = ({
                                               </td>
                       
                                         {/* <td className='w-40 border border-gray-300 text-[11px] py-0.5'>
-                                                <button onClick={() => (index)} className='w-full'>
+                                                <button onClick={() => setCurrentSelectedLotGrid(index)} className='w-full'>
                                                     {VIEW}
                                                 </button>
                                             </td> */}
