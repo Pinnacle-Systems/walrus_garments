@@ -6,6 +6,7 @@ import { findFromList } from '../../../Utils/helper';
 
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
+import YarnPoItemSelection from './YarnPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(i => i.poItemsId));
@@ -90,9 +91,9 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                     {
                         <>
 
-                            {transtype.includes("Fabric") ?
+                            {transtype.toLowerCase().includes("yarn") ?
 
-                                <FabricPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
                                 :
                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
                             }
@@ -102,7 +103,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                 </div>
             </div>
-            <div className='flex justify-end gap-4 mt-3'>
+            <div className='flex justify-end gap-4 '>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>

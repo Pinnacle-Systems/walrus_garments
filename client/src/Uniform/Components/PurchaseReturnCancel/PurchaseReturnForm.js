@@ -39,7 +39,7 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
-import { ReusableInput } from "../Order/CommonInput";
+import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
 import ReturnItems from "./ReturnItems";
 
 
@@ -69,6 +69,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [term, setTerm] = useState("");
     const [notes, setNotes] = useState("");
     const [approvedBy, setApprovedBy] = useState("")
+    const [suppliers, setSuppliers] = useState([
+        "Supplier One",
+        "Supplier Two",
+        "Supplier Three",
+    ]);
 
 
     const branchIdFromApi = useRef(branchId);
@@ -262,16 +267,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setDirectInwardReturnItems([])
     }, [transType, id])
 
-    const allSuppliers = supplierList ? supplierList.data : []
+    console.log(supplierList?.data, "allsupliers", transType, "transType")
+
+
 
     function filterSupplier() {
         let finalSupplier = []
         if (transType.toLowerCase().includes("yarn")) {
-            finalSupplier = allSuppliers.filter(s => s.yarn)
-        } else if (transType.toLowerCase().includes("fabric")) {
-            finalSupplier = allSuppliers.filter(s => s.fabric)
+            finalSupplier = supplierList?.data?.filter(s => (s.isDy || s.isGy))
         } else {
-            finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems.length > 0)
+            finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
         }
         return finalSupplier
     }
@@ -321,6 +326,13 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
         return parseInt(qty)
     }
+
+    const handleAddSupplier = (newName) => {
+        if (!suppliers.includes(newName)) {
+            setSuppliers([...suppliers, newName]);
+        }
+    };
+
 
     return (
         <>
@@ -391,9 +403,23 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Supplier Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-x-1">
+                            <div className="grid grid-cols-2 gap-2">
 
-                                <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                                <div className="col-span-2">{console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")}
+                                    <ReusableSearchableInput
+                                        label="Party"
+                                        component="PartyMaster"
+                                        placeholder="Search Parties..."
+                                        optionList={supplierListBasedOnSupply}
+                                        onAddItem={handleAddSupplier}
+                                        onDeleteItem={onDeleteItem}
+                                        setSearchTerm={setSupplierId}
+                                        searchTerm={supplierId}
+                                        readOnly={readOnly}
+                                    />
+                                </div>
+
+                                {/* <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} /> */}
 
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
@@ -418,7 +444,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     < div className="">
                                         <button className="p-1.5 mt-2 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                             onClick={() => {
-                                                if (!supplierId || !transType || !storeId) {
+                                                if (!supplierId || !transType) {
                                                     toast.info("Please Select Suppplier and Store", { position: "top-center" })
                                                     return
                                                 }

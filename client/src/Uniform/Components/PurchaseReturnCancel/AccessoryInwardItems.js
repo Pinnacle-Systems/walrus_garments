@@ -59,7 +59,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
         <>
             <div className={`relative w-full overflow-auto py-1`}>
                 <table className="border border-gray-500 text-xs table-auto w-full  ">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
+                    <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='h-8 '>
                             <th className="table-data w-5  text-center">S.no</th>
                             <th className="table-data  w-16 text-center">Po.no</th>
@@ -75,10 +75,9 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             <th className="table-data  w-14"> A. Return Qty</th>
                             <th className="table-data  w-14">Bal. Qty</th>
                             <th className="table-data  w-14">Rtn.Qty</th>
-                            <th className="table-data  w-14">Po Price</th>
-                            <th className="table-data  w-14">Gross</th>
+
                             {!readOnly &&
-                                <th className='table-data border  w-12'>Delete</th>
+                                <th className='table-data border  w-12'>Action</th>
                             }
                         </tr>
                     </thead>
@@ -86,7 +85,16 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                         {directInwardReturnItems?.map((item, index) => <AccessoryPoItem sizeList={sizeList} accessoryList={accessoryList}
                             uomList={uomList} storeId={storeId}
                             colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-
+                        {Array.from({ length: 3 - directInwardReturnItems.length }).map(i =>
+                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                {Array.from({ length: 14 }).map(i =>
+                                    <td className="table-data   "></td>
+                                )}
+                                {!readOnly &&
+                                    <td className="table-data w-14"></td>
+                                }
+                            </tr>)
+                        }
                     </tbody>
                 </table>
             </div>
