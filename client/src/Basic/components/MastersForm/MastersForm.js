@@ -131,17 +131,17 @@ const MastersForm = ({
     }
   };
   return (
-    <div className="h-full px-6 py-4  bg-gray-50 rounded-md shadow-inner overflow-auto ">
+    <div className="h-full px-6 py-3  bg-gray-50 rounded-md shadow-inner overflow-auto ">
       <div className="flex flex-col h-full">
         {model && (
           <h2 className="text-xl font-semibold text-gray-800 mb-2">{model}</h2>
         )}
 
-        <div className="bg-white rounded-md p-3 shadow-md mb-3">
+        <div className="bg-white rounded-md p-2 shadow-md ">
           {children}
         </div>
 
-        <div className={`${"flex justify-around items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
+        <div className={`${"flex gap-x-5 items-center mt-auto pt-3 pb-3 border-t  border-gray-200 "} "${masterClass}" `}>
           <CloseButton
             onClick={() => {
               onClose();

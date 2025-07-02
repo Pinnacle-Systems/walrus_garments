@@ -6,7 +6,7 @@ import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMaste
 import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/AccessoryMasterServices';
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
 
-const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params }) => {
+const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirectInwardReturnItems, readOnly, removeItem, purchaseInwardId, params }) => {
 
     const { data: colorList } =
         useGetColorMasterQuery({ params: { ...params } });
@@ -19,7 +19,7 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
         useGetUomQuery({ params });
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
-        const newBlend = structuredClone(inwardItems);
+        const newBlend = structuredClone(directInwardReturnItems);
         newBlend[index][field] = value;
 
         if (poItem) {
@@ -43,9 +43,6 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
             newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
             newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
             newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
-
-
-
             newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
         }
@@ -57,16 +54,16 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
                 return
             }
         }
-        setInwardItems(newBlend);
+        setDirectInwardReturnItems(newBlend);
     };
     return (
         <>
             <div className={`relative w-full overflow-auto py-1`}>
                 <table className="border border-gray-500 text-xs table-auto w-full  ">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
+                    <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='h-8 '>
                             <th className="table-data w-5  text-center">S.no</th>
-                            <th className="table-data  w-16 text-center">Po.no</th>
+                            <th className="table-data  w-16 text-center">Doc.no</th>
                             <th className="table-data  ">Accessory Name</th>
                             <th className="table-data  ">Accessory Items</th>
                             <th className="table-data  ">Accessory Group</th>
@@ -74,11 +71,9 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
                             <th className="table-data  ">Size</th>
                             <th className="table-data   ">UOM</th>
                             <th className="table-data  w-14">Stock.Qty</th>
-
                             <th className="table-data  w-14"> Alr.In Qty</th>
                             <th className="table-data  w-14"> Alr.Rtn.Qty</th>
                             <th className="table-data  w-14"> Allo.Rtn.Qty</th>
-
                             <th className="table-data  w-14">Rtn.Qty</th>
                             <th className="table-data  w-14">Price</th>
                             <th className="table-data  w-14">Gross</th>
@@ -88,11 +83,11 @@ const AccessoryDirectInwardItems = ({ storeId, inwardItems, setInwardItems, read
                         </tr>
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>
-                        {inwardItems.map((item, index) => <AccessoryDirectItem sizeList={sizeList} accessoryList={accessoryList}
+                        {directInwardReturnItems?.map((item, index) => <AccessoryDirectItem sizeList={sizeList} accessoryList={accessoryList}
                             uomList={uomList}
                             colorList={colorList}
                             item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 8 - inwardItems.length }).map(i =>
+                        {Array.from({ length: 3 - directInwardReturnItems.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                 {Array.from({ length: 15 }).map(i =>
                                     <td className="table-data   "></td>

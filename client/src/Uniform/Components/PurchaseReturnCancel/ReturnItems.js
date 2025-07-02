@@ -167,15 +167,12 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
 
     return (
-
         <>
-
-
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[150px] overflow-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
-                        <button
+                        {/* <button
                             onClick={() => {
                                 addNewRow()
                             }}
@@ -183,14 +180,11 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         >
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
-                        </button>
+                        </button> */}
                     </div>
-
                 </div>
-
-
                 <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex 
-                    h-[330px] w-full overflow-auto'>
+                    max-h-[250px] w-full overflow-auto'>
                     <legend className='sub-heading'>Return Details</legend>
                     {
 

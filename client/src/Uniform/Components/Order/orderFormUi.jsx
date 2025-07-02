@@ -81,10 +81,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
 
-
-
-
-
     const {
         data: singleData,
         isFetching: isSingleFetching,

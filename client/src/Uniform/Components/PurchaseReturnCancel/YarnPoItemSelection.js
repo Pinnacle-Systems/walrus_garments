@@ -7,7 +7,7 @@ import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange }) => {
+const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -30,18 +30,20 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
             isPurchaseInwardFilter: true
         }
     })
-    const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
+
+
     useEffect(() => {
         if (poItems?.totalCount) {
             setTotalCount(poItems?.totalCount)
         }
     }, [poItems, isPoItemsFetching, isPoItemsLoading])
 
+    const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
     return (
         <div className="flex flex-col w-full h-[80%]">
-            <div className="md:flex md:items-center md:justify-between page-heading p-1">
-                <div className="heading text-center md:mx-10"> Purchase Order Items </div>
-                <div className=" sub-heading justify-center md:justify-start items-center">
+            <div className=" w-full flex justify-around  bg-gray-700 p-1">
+                <div className=" text-white ml-5"> Purchase Order Items </div>
+                <div className="  ml-20">
                     <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
                     <select value={dataPerPage}
                         onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
@@ -53,24 +55,25 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                 <div
                     className="min-h-[400px]"
                 >
-                    <table className="table-auto text-center w-full">
+                    <table className=" text-center w-full table-fixed">
                         <thead className="border-2 table-header">
-                            <tr className='h-2 table-row'>
-                                <th className='w-10'>
+                            <tr className='h-2'>
+                                <th className='w-7'>
                                     <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
                                         checked={getSelectAll(poItems?.data ? poItems.data : [])}
                                     />
                                 </th>
                                 <th
-                                    className="border-2  top-0 stick-bg">
+                                    className="border-2  top-0 stick-bg w-12">
                                     S. no.
                                 </th>
                                 <th
-                                    className="border-2  top-0 stick-bg grid"
+                                    className="border-2  top-0 stick-bg w-48"
                                 >
-                                    <label>Po.No</label><input
+                                    <label>Po.No</label>
+                                    <input
                                         type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
                                         placeholder="Search"
                                         value={poNo}
                                         onChange={(e) => {
@@ -82,89 +85,52 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                     className="border-2  top-0 stick-bg"
                                 >
                                     <label>Po.Date</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>Fabric</label>
                                     {/* <input
                                         type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
                                         placeholder="Search"
-                                        value={searchPoDate}
+                                        value={searchDueDate}
                                         onChange={(e) => {
-                                            setPoDate(e.target.value);
+                                            setDueDate(e.target.value);
                                         }}
                                     /> */}
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory Item</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory Group</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
                                     <label>Color</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
+
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
-                                    <label>Size</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
+                                    <label>Design</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>Gauge</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>LL</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>GSM</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>K-Dia</label>
+
+                                </th>
+                                <th className="border-2  top-0 stick-bg">
+                                    <label>F-Dia</label>
+
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Uom</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
 
+                                </th>
                             </tr>
                         </thead>
                         {isLoadingIndicator ?
@@ -177,7 +143,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                             </tbody>
                             :
                             <tbody className="border-2">
-                                {(poItems?.data || []).map((dataObj, index) => (
+                                {poItems?.data?.filter(val => val.balanceQty !== 0)?.map((dataObj, index) => (
                                     <tr
                                         key={dataObj.id}
                                         className="border-2 table-row "
@@ -189,12 +155,15 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                         <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
                                         <td className='py-1'> {dataObj.Po.docId}</td>
                                         <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.Po.createdAt)} </td>
-                                        <td className='py-1'> {dataObj?.Accessory?.aliasName}</td>
-                                        <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.name}</td>
-                                        <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.AccessoryGroup?.name}</td>
-                                        <td className='py-1'> {dataObj?.Color?.name}</td>
-                                        <td className='py-1'> {dataObj?.Size?.name}</td>
-                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
+                                        <td className='py-1'> {dataObj.Fabric.name}</td>
+                                        <td className='py-1'> {dataObj.Color.name}</td>
+                                        <td className='py-1'> {dataObj.Design.name}</td>
+                                        <td className='py-1'> {dataObj.Gauge.name}</td>
+                                        <td className='py-1'> {dataObj.LoopLength.name}</td>
+                                        <td className='py-1'> {dataObj.Gsm.name}</td>
+                                        <td className='py-1'> {dataObj.KDia.name}</td>
+                                        <td className='py-1'> {dataObj.FDia.name}</td>
+                                        <td className='py-1'> {dataObj.Uom.name}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -222,4 +191,4 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
 
 }
 
-export default AccessoryPoItemSelection
+export default YarnPoItemSelection

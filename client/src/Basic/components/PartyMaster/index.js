@@ -84,8 +84,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [priceTemplateId, setPriceTemplateId] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [active, setActive] = useState(true);
-  const [isSupplier, setSupplier] = useState(true);
-  const [isClient, setClient] = useState(true);
+  const [isSupplier, setSupplier] = useState();
+  const [isClient, setClient] = useState();
   const [itemsPopup, setItemsPopup] = useState(false);
   const [backUpItemsList, setBackUpItemsList] = useState([]);
   const [shippingAddress, setShippingAddress] = useState([]);
@@ -155,18 +155,18 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [removeData] = useDeletePartyMutation();
   const [removeBranchData] = useDeletePartyBranchMutation();
 
+
+  console.log(singleData?.data, "adatasinglelel")
+
   const syncFormWithDb = useCallback(
     (data) => {
-
       if (id || partyId) {
         if (openModelForAddress || partyId) {
           setReadOnly(false);
-
         }
         else {
           setReadOnly(true);
         }
-
       } else {
         setReadOnly(false);
       }
@@ -199,8 +199,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       setCity(data?.cityId || "");
       setCurrency(data?.currencyId || "");
       setActive(id ? data?.active : true);
-      setSupplier(data?.yarn || false);
-      setClient(data?.fabric || false);
+
+
       setAccessoryGroup(data?.accessoryGroup || false);
       setAccessoryItemList(
         data?.PartyOnAccessoryItems
@@ -611,7 +611,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[95%]"}`}
+          widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[65%]"}`}
           onClose={() => {
             setForm(false);
             onCloseForm();
@@ -670,7 +670,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
             readOnly={readOnly}
             emptyErrors={() => setErrors({})}
           >
-            <div className="space-y-4 bg-[#f1f1f0] p-2">
+            <div className="space-y-2 bg-[#f1f1f0] p-2">
               {/* {step === 1 && ( */}
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
 
@@ -1289,7 +1289,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
               <MastersForm
 
-                masterClass={"pb-2"}
+                masterClass={"pb-1"}
                 onNew={onNew}
                 onClose={() => {
                   setForm(false);
@@ -1306,7 +1306,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
                 readOnly={readOnly}
                 emptyErrors={() => setErrors({})}
               >
-                <div className="space-y-4 bg-[#f1f1f0] p-2">
+                <div className="space-y-2 bg-[#f1f1f0] p-2">
                   {/* {step === 1 && ( */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
 
@@ -1320,7 +1320,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
                           <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
 
 
-                            <div className="grid grid-cols-2 ml-2  items-center gap-1">
+                            <div className="grid grid-cols-2 ml-2  items-center gap-1">{console.log(isClient, "isclient", isSupplier, "issippluer")}
 
                               <input
                                 type="radio"

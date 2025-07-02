@@ -340,8 +340,6 @@ async function remove(id) {
 
 async function removePartyBranch(partyBranchId) {
 
-    console.log(partyBranchId, "partyBranchId")
-
     const data = await prisma.partyBranch.delete({
         where: {
             id: parseInt(partyBranchId)

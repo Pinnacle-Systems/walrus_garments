@@ -18,20 +18,20 @@ const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, remo
 
 
 
-    useEffect(() => {
-        if (directInwardReturnItems?.length >= 1) return
-        setDirectInwardReturnItems(prev => {
-            let newArray = Array.from({ length: 1 - prev.length }, () => {
-                return {
-                    yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
-                    measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-                    stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
-                }
-            })
-            return [...prev, ...newArray]
-        }
-        )
-    }, [setDirectInwardReturnItems, directInwardReturnItems])
+    // useEffect(() => {
+    //     if (directInwardReturnItems?.length >= 1) return
+    //     setDirectInwardReturnItems(prev => {
+    //         let newArray = Array.from({ length: 1 - prev.length }, () => {
+    //             return {
+    //                 yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
+    //                 measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+    //                 stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
+    //             }
+    //         })
+    //         return [...prev, ...newArray]
+    //     }
+    //     )
+    // }, [setDirectInwardReturnItems, directInwardReturnItems])
 
     const { data: fabricList } =
         useGetFabricMasterQuery({ params });
@@ -73,75 +73,29 @@ const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, remo
         <>
             <div className={`relative w-full overflow-y-auto py-1`}>
                 <table className="table-data text-xs table-auto border border-gray-500  w-full">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
+                    <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='h-8'>
-                            <th className='text-center w-8 table-data '>
-                                S.no
-                            </th>
-                            <th className='text-center w-24 table-data'>
-                                DI.no
-                            </th>
-                            <th className='w-24 table-data'>
-                                Fabric Name
-                            </th>
-                            <th className='w-16 table-data'>
-                                Color
-                            </th>
-                            <th className='w-16 table-data'>
-                                Design
-                            </th>
-                            <th className='w-12 table-data'>
-                                Gauge
-                            </th>
-                            <th className='w-12 table-data'>
-                                LL
-                            </th>
-                            <th className='w-12 table-data'>
-                                Gsm
-                            </th>
-                            <th className='w-12 table-data'>
-                                K-Dia
-                            </th>
-                            <th className='w-12 table-data'>
-                                F-Dia
-                            </th>
-                            <th className='w-12 table-data'>
-                                Uom
-                            </th>
+                            <th className="table-data  w-9 text-center">S.no</th>
+                            <th className="table-data  w-20 text-center">Doc.no</th>
+                            <th className="table-data w-20">Items</th>
+                            <th className="table-data w-20">Colors</th>
+                            <th className="table-data  w-16">UOM</th>
+                            <th className="table-data  w-14">Stock.Qty</th>
+                            <th className="table-data  w-12">Already Inwarded Qty</th>
+                            <th className="table-data  w-14"> Alr.Rtn.Qty</th>
+                            <th className="table-data  w-14"> Allo.Rtn.Qty</th>
 
-                            <th className='w-12 table-data'>
-                                Stock qty
-                            </th>
-                            <th className='table-data'>
-                                A. Inwarded Rolls
-                            </th>
-                            <th className='table-data'>
-                                A. Inwarded qty
-                            </th>
-                            <th className="table-data w-14">
-                                A. Return Rolls
-                            </th>
-                            <th className="table-data w-14">
-                                A. Return Qty
-                            </th>
+                            <th className="table-data  w-12">No. of Bags<span className="text-red-500">*</span></th>
+                            <th className="table-data  w-12">Weight Per Bag<span className="text-red-500">*</span></th>
+                            <th className="table-data  w-12">Inward Qty</th>
+                            <th className="table-data  w-12">Price</th>
+                            <th className="table-data  w-12">Gross</th>
+                            <th
 
-                            <th className='table-data'>
-                                Allowed Return Qty
+                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                            >
+                                Actions
                             </th>
-                            <th className="table-data  w-10">Lot Det.<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">No. of Rolls<span className="text-red-500">*</span></th>
-                            <th className='table-data w-16'>
-                                Return Qty
-                            </th>
-                            <th className='w-12 table-data'>
-                                Price
-                            </th>
-                            <th className='w-16 table-data'>
-                                Gross
-                            </th>
-                            {!readOnly &&
-                                <th className='table-data table-data w-12'>Delete</th>
-                            }
                         </tr>
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>
@@ -152,7 +106,16 @@ const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, remo
                             diaList={diaList}
                             item={item} handleInputChangeLotNo={handleInputChangeLotNo} stockId={item.stockId} noOfRolls={item.noOfRolls} removeItem={removeItem} key={item.poItemsId}
                             qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
-
+                        {Array.from({ length: 3 - directInwardReturnItems.length }).map(i =>
+                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                {Array.from({ length: 14 }).map(i =>
+                                    <td className="table-data   "></td>
+                                )}
+                                {!readOnly &&
+                                    <td className="table-data w-14"></td>
+                                }
+                            </tr>)
+                        }
 
                     </tbody>
                 </table>
