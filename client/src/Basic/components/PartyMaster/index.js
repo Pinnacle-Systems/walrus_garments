@@ -306,6 +306,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       if (text === "Updated") {
         returnData = await callback({ id, body: data }).unwrap();
       } else {
+        console.log("add")
         returnData = await callback(data).unwrap();
       }
       toast.success(text + "Successfully");
@@ -415,8 +416,9 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     }
   };
 
-  const deleteData = async () => {
-    if (id) {
+  const deleteData = async ( id ) => {
+    console.log(id)
+    
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
@@ -445,7 +447,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       } catch (error) {
         toast.error("something went wrong");
       }
-    }
+    
   };
 
 

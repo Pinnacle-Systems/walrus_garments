@@ -15,6 +15,7 @@ import { useGetLoopLengthQuery } from "../../../redux/uniformService/LoopLengthM
 import { useGetDiaQuery } from "../../../redux/uniformService/DiaMasterServices";
 import PurchaseYarnPoItems from "./YarnPoItem";
 import { HiPlus } from "react-icons/hi";
+import { useGetPoQuery } from "../../../redux/uniformService/PoServices";
 
 const YarnInwardPoItems = ({
   id,
@@ -49,6 +50,9 @@ const YarnInwardPoItems = ({
    
        const { data: diaList } =
            useGetDiaQuery({ params });
+
+                const { data: poList } =
+           useGetPoQuery({ params });
    
    console.log(inwardItems, "inwardItems")
    
@@ -85,7 +89,27 @@ const YarnInwardPoItems = ({
            }
            setInwardItems(newBlend);
        };
-
+  useEffect(() => {
+    if(id) return
+    if (inwardItems?.length >= 1) return;
+    setInwardItems((prev) => {
+      let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+        return {
+          yarnId: "",
+          qty: "0.00",
+          tax: "0",
+          colorId: "",
+          uomId: "",
+          price: "0.00",
+          discountValue: "0.00",
+          noOfBags: "0",
+          discountType: "",
+          weightPerBag: "0.00",
+        };
+      });
+      return [...prev, ...newArray];
+    });
+  }, [transType, setInwardItems, inwardItems]);
      const addNewRow = () => {
        const newRow = {
          yarnId: "",
@@ -96,6 +120,7 @@ const YarnInwardPoItems = ({
          price: "",
          discountTypes: "",
          discountValue: "0.00",
+         noOfBags : "0.00"
        };
        setInwardItems([...inwardItems, newRow]);
      };
@@ -193,9 +218,14 @@ const YarnInwardPoItems = ({
                                 >
                                     S.No
                                 </th>
+                                  <th
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Po.No
+                                </th>
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Items
                                 </th>
@@ -207,7 +237,7 @@ const YarnInwardPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
                                 </th>
@@ -217,58 +247,81 @@ const YarnInwardPoItems = ({
                                 >
                                     Po Qty
                                 </th> */}
-                                <th
+                                {/* <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Lot Det.
-                                </th>
+                                </th> */}
                             
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Quantity
+                                  Po Quantity
                                 </th>
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    No Of Bags
+                                    Cancel Qty
                                 </th>
-                                {/* <th
+                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Price(with Tax)
+                                    Already Inward Qty
                                 </th>
 
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Gross
+                                        Already Return Qty
                                 </th>
-                                 {/* <th
+                                  <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    View Tax
-                                </th> */}
+                                    Balance Qty
+                                </th> 
+                                      <th
+
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                   No Of Bags
+                                </th> 
+                                      <th
+
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Inward Qty
+                                </th> 
+                                      <th
+
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Po Price
+                                </th> 
+                                      <th
+
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                   Gross
+                                </th> 
                                  <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Actions
                                 </th>
-                                {/* ))} */}
                             </tr>
                         </thead>
                                   <tbody className='overflow-y-auto  h-full w-full'>
                                                      {(inwardItems || [])?.map((item, index) => <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
                                                          colorList={colorList} deleteRow={deleteRow} designList={designList} gsmList={gsmList}
                                                          loopLengthList={loopLengthList}
-                                                         diaList={diaList}
+                                                         diaList={diaList} poList={poList}
                                                          removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
                                                          removeItem={removeItem} key={item.poItemsId}
                                                          item={item} index={index} handleInputChange={handleInputChange}

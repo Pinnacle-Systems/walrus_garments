@@ -3,12 +3,13 @@ import { useGetPoItemByIdQuery } from "../../../redux/uniformService/PoServices"
 import { Loader } from "lucide-react"
 import { findFromList } from "../../../Utils/helper"
 import { DELETE } from "../../../icons"
+import { HiPencil, HiTrash } from "react-icons/hi"
 
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, removeItem, purchaseInwardId }) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId }) => {
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId }, { skip: !item?.poItemsId })
 
-    console.log(data, "data")
+    console.log(item, "item")
 
     useEffect(() => {
         if (purchaseInwardId) return
@@ -48,21 +49,22 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
     // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty)).toFixed(3)
     return (
         <tr key={item.poItemsId} className='table-row'>
-            <td className='text-left   table-data'>{index + 1}</td>
-            <td className='text-left px-1 table-data'>{item?.poNo}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='text-left   table-data'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='text-left   table-data'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item?.colorId, colorList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item?.sizeId, sizeList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item?.uomId, uomList?.data, "name")} </td>
-            <td className='text-right px-1  table-data'>{item?.poQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.cancelQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.balanceQty || 0}</td>
+            <td className='w-12 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
+            <td className='w-12 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+            <td className='w-12 border border-gray-300 text-[11px]'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.colorId, colorList?.data, "name")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.sizeId, sizeList?.data, "name")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.uomId, uomList?.data, "name")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.poQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.cancelQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyInwardedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyReturnedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.balanceQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.poQty || 0}</td>
 
-            <td className='   table-data text-right'>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -92,12 +94,47 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     }}
                 />
             </td>
-            <td className='text-right  w-12 table-data'>{parseFloat(item?.price).toFixed(2)}</td>
-            <td className='text-right   table-data'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{parseFloat(item?.price).toFixed(2)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
             {!readOnly &&
-                <td className='table-data w-12'>
-                    <div tabIndex={-1} onClick={() => removeItem(item?.poItemsId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
-                        {DELETE}
+                 <td className="py-0.5 border border-gray-300 text-[11px]">
+                    <div className="flex space-x-2  justify-center">
+
+                        <button
+                            // onClick={() => handleView(index)}
+                            // onMouseEnter={() => setTooltipVisible(true)}
+                            // onMouseLeave={() => setTooltipVisible(false)}
+                            className="text-blue-800 flex items-center  bg-blue-50 rounded"
+                        >
+                            👁 <span className="text-xs"></span>
+                        </button>
+                        <span className="tooltip-text">View</span>
+                        <button
+                            // onClick={() => handleEdit(index)}
+                            className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                        >
+                            <HiPencil className="w-4 h-4" />
+
+                        </button>
+                        <span className="tooltip-text">Edit</span>
+                        <button
+                            onClick={() => deleteRow(index)}
+                            className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                        >
+                            <HiTrash className="w-4 h-4" />
+
+                        </button>
+                        <span className="tooltip-text">Delete</span>
+
+                        {/* {tooltipVisible && (
+                            <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                <div className="flex items-start">
+                                    <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                    <span>View</span>
+                                </div>
+                                <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                            </div>
+                        )} */}
                     </div>
                 </td>
             }

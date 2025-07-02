@@ -433,7 +433,7 @@ console.log(poItems,"poItems")
                         </div>
                       </div>
 
-                    </fieldset>
+                    </fieldset>{console.log(poItems,"poItems")}
 
                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[370px] px-1 w-full overflow-auto'>
                       <legend className='sub-heading'>Purchase Details</legend>

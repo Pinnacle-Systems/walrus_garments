@@ -357,7 +357,7 @@ export const updateManyStockWithId = async (tx, poType, inwardOrReturn, items) =
 }
 export const getDateFromDateTimeYear = (dateTime) => moment.utc(dateTime).format("YYYY-MM-DD")
 export const balanceQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => {
-
+    console.log(poQty, cancelQty, inwardQty, returnQty,"poQty, cancelQty, inwardQty, returnQty")
   return Math.abs(substract(substract(poQty ? parseFloat(poQty) : 0, ((cancelQty ? parseFloat(cancelQty) : 0) + (inwardQty ? parseFloat(inwardQty) : 0))), substract(inwardQty ? parseFloat(inwardQty) : 0, returnQty ? parseFloat(returnQty) : 0)))
 }
 
@@ -370,7 +370,7 @@ export const balanceCancelQtyCalculation = (poQty, cancelQty, inwardQty, returnQ
 export function substract(num1, num2) {
   let n1 = parseFloat(num1) * 1000;
   let n2 = parseFloat(num2) * 1000;
-  let result = (n1 - n2) / 1000
+  let result = (n1 - n2) / 1000;
   return result;
 }
 

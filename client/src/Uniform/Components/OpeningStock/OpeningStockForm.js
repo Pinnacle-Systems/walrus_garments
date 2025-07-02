@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
-import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
+import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, TextInput } from "../../../Inputs";
 import { directOrPo, poTypes } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
@@ -17,11 +17,13 @@ import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServi
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import AccessoryPoItems from "./AccessoryPoItems";
 import Modal from "../../../UiComponents/Modal";
-import PoItemsSelection from "./PoItemsSelection";
+import PoItemsSelection from "../PurchaseInward/PoItemsSelection";
+import YarnInwardPoItems from "../PurchaseInward/YarnInwardItem";
 import YarnPoItems from "./YarnPoItems";
-import YarnInwardPoItems from "./YarnInwardItem";
-import AccessoryInwardItems from "./AccessoryInwardItems";
-const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
+import { useAddRawMaterialOpeningStockMutation, useGetRawMaterialOpeningStockByIdQuery, useGetRawMaterialOpeningStockQuery, useUpdateRawMaterialOpeningStockMutation } from "../../../redux/uniformService/RawMaterialOpeningStockServices";
+
+
+const  OpeningStockForm = ({ onClose  , id  , setId }) => {
 
 
 
@@ -29,7 +31,7 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
   const [docId,setDocId] = useState("")
   const [ date,setDate] = useState("")
   const [readOnly,setReadOnly] = useState('')
-  const [transType, setTransType] = useState("GreyYarn");
+  const [rawMaterialType, setRawMaterialType] = useState("GreyYarn");
   const [dcNo,setDcNo] = useState("")
   const [dcDate,setDcDate] = useState('')
   const [supplierId,setSupplierId] = useState('')
@@ -38,7 +40,7 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
   const [storeId, setStoreId] = useState("")
   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
   const [inwardItemSelection, setInwardItemSelection] = useState(false)
-  const [directInwardReturnItems,   setDirectInwardReturnItems] = useState([]);
+  const [rawMaterialOpeningStockItems,   setRawMaterialOpeningStockItems] = useState([]);
 
     // console.log(directInwardReturnItems,"directInwardReturnItems");
 
@@ -56,12 +58,7 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
     const [searchValue,setSearchValue] = useState("")
     const [discountType,setDiscountType]  =  useState("")
     const [discountValue,setDiscountValue]  = useState("")
-    const [partyId,setPartyId]  =  useState('')
-    const [suppliers, setSuppliers] = useState([
-        "Supplier One",
-        "Supplier Two",
-        "Supplier Three",
-    ]);
+
 
   const childRecord = useRef(0);
   const { branchId, companyId , userId  , finYearId} = getCommonParams()
@@ -85,7 +82,7 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
     const { data: payTermList } =
         useGetPaytermMasterQuery({ params: { ...params } });
 
-  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
+  const { data: allData, isLoading, isFetching } = useGetRawMaterialOpeningStockQuery({ params: { branchId, poInwardOrDirectInward } });
 
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -103,18 +100,18 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+  } = useGetRawMaterialOpeningStockByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddDirectInwardOrReturnMutation();
-  const [updateData] = useUpdateDirectInwardOrReturnMutation();
+  const [addData] = useAddRawMaterialOpeningStockMutation();
+  const [updateData] = useUpdateRawMaterialOpeningStockMutation();
   const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
 
       useEffect(() => {
       if (id) return
-      console.log(directInwardReturnItems,"hit",id)
-      setDirectInwardReturnItems([])
-    }, [transType,id])
+      console.log(rawMaterialOpeningStockItems,"hit",id)
+      setRawMaterialOpeningStockItems([])
+    }, [rawMaterialType,id])
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems,"data?.DirectItems")
@@ -124,10 +121,10 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
     } else {
       setReadOnly(false);
     }
-    setTransType(data?.poType ? data.poType : "GreyYarn");
+    setRawMaterialType(data?.poType ? data.poType : "GreyYarn");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
+    setRawMaterialOpeningStockItems(data?.RawMaterialOpeningStockItems ? data.RawMaterialOpeningStockItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
@@ -157,13 +154,13 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
 
   const data = {
     docId,
-    poType: transType,
+     rawMaterialType,
     poInwardOrDirectInward,
     supplierId, dcDate,
     payTermId,
     branchId, id, userId,
     storeId,
-    directInwardReturnItems,
+     rawMaterialOpeningStockItems,
     discountType,
     discountValue,
     dcNo,
@@ -176,16 +173,15 @@ const  PurchaseInwardForm = ({ onClose  , id  , setId }) => {
 console.log(data,"data")
 
 
+    // function isSupplierOutside() {
+    //   if (supplierDetails) {
+    //     return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
+    //   }
+    //   return false
+    // }
 
 
-    const handleAddSupplier = (newName) => {
-        if (!suppliers.includes(newName)) {
-            setSuppliers([...suppliers, newName]);
-        }
-    };
-   async function onDeleteItem(itemId) {
-        await removeData(itemId).unwrap();
-    }
+
     // const validateData = (data) => {
     //   let mandatoryFields = ["uomId", "colorId", "price"];
     //   let lotMandatoryFields = ["qty"]
@@ -291,16 +287,16 @@ console.log(data,"data")
 
     const allSuppliers = supplierList ? supplierList.data : []
 
-    console.log(transType.toLowerCase().includes("yarn"),"condition",transType)
+    console.log(rawMaterialType.toLowerCase().includes("yarn"),"condition",rawMaterialType)
 
   function filterSupplier() {
     let finalSupplier = []
-    if (transType.toLowerCase().includes("yarn")) {
+    if (rawMaterialType.toLowerCase().includes("yarn")) {
       finalSupplier = allSuppliers.filter(s => s.yarn)
-    } else if (transType.toLowerCase().includes("fabric")) {
+    } else if (rawMaterialType.toLowerCase().includes("fabric")) {
       finalSupplier = allSuppliers.filter(s => s.fabric)
     } 
-    else if (transType.toLowerCase() === "accessory" ) {
+    else if (rawMaterialType.toLowerCase() === "accessory" ) {
       finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
     } 
     else {
@@ -326,9 +322,9 @@ console.log(data,"data")
 
   useEffect(() => {
     if (id) return
-    setDirectInwardReturnItems([]);
+    setRawMaterialOpeningStockItems([]);
     setSupplierId("")
-  }, [transType])
+  }, [rawMaterialType])
 
   const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
@@ -337,7 +333,7 @@ console.log(data,"data")
     [];
 
   function removeItem(id) {
-    setDirectInwardReturnItems(directInwardItems => {
+    setRawMaterialOpeningStockItems(directInwardItems => {
       let newItems = structuredClone(directInwardItems);
       newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
       return newItems
@@ -347,11 +343,11 @@ console.log(data,"data")
 
     // if (!branchList || !locationData) return <Loader />
 
-  let taxItems = transType !== "Accessory" ? directInwardReturnItems.map(item => {
+  let taxItems = rawMaterialType !== "Accessory" ? rawMaterialOpeningStockItems.map(item => {
     let newItem = structuredClone(item)
     newItem["qty"] = sumArray(newItem?.inwardLotDetails ? newItem?.inwardLotDetails : [], "qty")
     return newItem
-  }) : directInwardReturnItems
+  }) : rawMaterialOpeningStockItems
 
     const saveData = (nextProcess) => {
         // if (!validateData(data)) {
@@ -379,7 +375,7 @@ console.log(data,"data")
     }
     
         function getTotalQty() {
-        let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+        let qty = rawMaterialOpeningStockItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
         return parseInt(qty)
     }
   function isSupplierOutside() {
@@ -392,14 +388,14 @@ console.log(data,"data")
   return (
       <>
         <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
-        <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
+        <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={rawMaterialType}
           supplierId={supplierId}
-          inwardItems={directInwardReturnItems}
-          setInwardItems={setDirectInwardReturnItems} />
+          inwardItems={rawMaterialOpeningStockItems}
+          setInwardItems={setRawMaterialOpeningStockItems} />
       </Modal>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchse Inward </h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Stock Details</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -416,53 +412,46 @@ console.log(data,"data")
 
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                         <h2 className="font-medium text-slate-700 mb-2">
-                            Inward Details
+                            Stock Details
                         </h2>
                         <div className="grid grid-cols-2 gap-1">
                             <ReusableInput label="Doc. Id" readOnly value={docId} />
                             <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <DropdownInput name="Inward Type"
+                                {/* <DropdownInput name="Inward Type"
                             beforeChange={() => { setDirectInwardReturnItems([]) }}
                             options={directOrPo}
-                            value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
-                             <DropdownInput name="Po Type"
-                                options={poTypes}
-                                value={transType}
-                                setValue={setTransType}
-                                required={true}
-                                readOnly={readOnly} />
-
+                            value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} /> */}
+                            
                         </div>
                     </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
                           
-                               <ReusableSearchableInput
-                                            label="Party"
-                                            component="PartyMaster"
-                                            placeholder="Search Parties..."
-                                            optionList={supplierList?.data}
-                                            onAddItem={handleAddSupplier}
-                                            onDeleteItem={onDeleteItem}
-                                            setSearchTerm={setPartyId}
-                                            searchTerm={partyId}
-                                            readOnly={readOnly}
-                                        />                            <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+                            <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                            <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
                             <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
                         </div>
 
-                    </div>
+                    </div> */}
 
 
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                         <h2 className="font-medium text-slate-700 mb-2">
                             {/* Inward Details */}
                         </h2>
+                   
+
                         <div className="grid grid-cols-2 gap-1">
+                                <DropdownInput name="Raw Material Type"
+                                options={poTypes}
+                                value={rawMaterialType}
+                                setValue={setRawMaterialType}
+                                required={true}
+                                readOnly={readOnly} />
                             <DropdownInput name="Location"
                                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                                 value={locationId}
@@ -492,23 +481,34 @@ console.log(data,"data")
                         </div>
 
                             </div>
+                              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                    <h2 className="font-medium text-slate-700 mb-2">
+                                        {/* Inward Details */}
+                                    </h2>
+                   
+
+                                <div className="grid grid-cols-2 gap-1">
+                                </div>
+                                    
+                            </div>
                    </div>
                    <fieldset>
+                                
+                                  
+                            
+
                       {
 
-                        poInwardOrDirectInward == "DirectInward" &&
-                        (transType.toLowerCase().includes("yarn")
+                       
+                        (rawMaterialType.toLowerCase().includes("yarn")
                           ?
                           <YarnPoItems 
-                            poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems}                           />
+                            poItems={rawMaterialOpeningStockItems} setPoItems={setRawMaterialOpeningStockItems}                           />
                           :
                           
-                            // transType.toLowerCase().includes("fabric")
-                            //   ?
-                            //   <FabricPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                            //   :
+                        
                               <AccessoryPoItems
-                              poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems}
+                              poItems={rawMaterialOpeningStockItems} setPoItems={setRawMaterialOpeningStockItems}
                               //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
                                />
                           
@@ -516,31 +516,7 @@ console.log(data,"data")
                       }
                    
                    
-                      {
-
-                        
-                    poInwardOrDirectInward == "PurchaseInward" &&
-                   (
-                    
-                    transType.toLowerCase().includes("yarn")  ? 
-                          <YarnInwardPoItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} 
-                          removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
-                               readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-                          />
-                    :
-                    
-                          transType.toLowerCase().includes("fabric")
-                            ?
-                            // <FabricPoItems 
-                            // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
-                            // />
-                            <></>
-                            :
-                            <AccessoryInwardItems  inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly}
-                            //  id={id} transType={transType} taxTypeId={taxTemplateId} params={params}  isSupplierOutside={isSupplierOutside()} 
-                             />
-                   )
-                   }         
+                     
                    </fieldset>
                
                      <div className="grid grid-cols-3 gap-3">
@@ -751,4 +727,4 @@ console.log(data,"data")
     );
 }
 
-export default PurchaseInwardForm;
+export default OpeningStockForm;

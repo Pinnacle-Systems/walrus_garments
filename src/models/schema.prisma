@@ -1045,16 +1045,23 @@ model DirectItems {
   FDia                   Dia?                 @relation("fDiaDirectItem", fields: [fDiaId], references: [id])
   fDiaId                 Int?
   directInwardOrReturnId Int?
-  Stock                  Stock?                @relation(fields: [stockId], references: [id])
-  stockId                Int?                  @unique
+  // Stock                  Stock?                @relation(fields: [stockId], references: [id])
+  // stockId                Int?                  @unique
   weightPerBag           Float?
   noOfBags               Int?
   noOfRolls              Int?
   qty                    Float?
   lotNo                  String?
   lotNoCommonIndex       Int?
+  Stock                  Stock[]
   PoItem                 PoItems?             @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   poItemsId              Int?
+   alreadyInwardedQty     Float?
+  alreadyReturnedQty     Float?
+  balanceQty             Float?
+  cancelQty              Float?
+  poNo                   String?
+  poQty                  Float?
   BillEntryItems         BillEntryItems[]
   DirectReturnItems      DirectReturnItems[]
   inwardLotDetails       InwardLotDetails[]
@@ -1330,9 +1337,9 @@ model Stock {
   active                                    Boolean?                                  @default(true)
   processId                                 Int?
   lotNo                                     String?
-  PoInwardReturnItems                       PoInwardReturnItems?
-  DirectItems                               DirectItems?
-  RawMaterials                              RawMaterials?
+  PoInwardReturnItems                       PoInwardReturnItems[]
+  DirectItems                               DirectItems[]
+  RawMaterials                              RawMaterials[]
   ProgramInwardLotDetails                   ProgramInwardLotDetail?                  @relation(fields: [programInwardLotDetailsId], references: [id], onDelete: Cascade)
   programInwardLotDetailsId                 Int?                                     @unique
   ProcessDeliveryReturnRawMaterialDetails   ProcessDeliveryReturnRawMaterialDetails? @relation(fields: [processDeliveryReturnRawMaterialDetailsId], references: [id], onDelete: Cascade)
@@ -2429,12 +2436,12 @@ model RawMaterialOpeningStock {
   createdById                  Int
   updatedBy                    User?                          @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById                  Int?
-  rawMaterialType              PoTypes
-  Branch                       Branch                         @relation(fields: [branchId], references: [id])
-  Store                        Location                       @relation(fields: [storeId], references: [id])
-  storeId                      Int
+  rawMaterialType              PoTypes?
+  Branch                       Branch?                         @relation(fields: [branchId], references: [id])
+  Store                        Location?                       @relation(fields: [storeId], references: [id])
+  storeId                      Int?
   RawMaterialOpeningStockItems RawMaterialOpeningStockItems[]
-  branchId                     Int
+  branchId                     Int?
 }
 
 model RawMaterialOpeningStockItems {
@@ -3204,6 +3211,6 @@ model InwardLotDetails {
   directItemsId Int
   lotNo         String?
   qty           Float?
-  noOfRolls     Int?
+  noOfBags      Int?
   Stock         Stock[]
 }

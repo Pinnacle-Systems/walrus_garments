@@ -255,9 +255,9 @@ export async function getPoItems(req) {
     } = req.query
 
     let data;
+    console.log(poType,"poType")
 
     let totalCount;
-     console.log(pagination,"pagination")
     if (pagination) {
         data = await prisma.poItems.findMany({
             where: {
@@ -286,12 +286,13 @@ export async function getPoItems(req) {
         data = await getAllDataPoItems(data, poType)
         if (isPurchaseInwardFilter) {
 
-            data = data.filter(item => parseFloat(balanceQtyCalculation(item.qty, item.alreadyCancelData._sum.qty, item.alreadyInwardedData._sum.qty, item.alreadyReturnedData._sum.qty)) > 0)
+            data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
             data = data?.filter(j => parseFloat(j.balanceQty) > 0)
+
         }
 
         if (isPurchaseCancelFilter) {
-            data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item.qty, item.alreadyCancelData._sum.qty, item.alreadyInwardedData._sum.qty, item.alreadyReturnedData._sum.qty)) > 0)
+            data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
 
 
         }
@@ -308,7 +309,6 @@ export async function getPoItems(req) {
             }
         });
     }
-    console.log(data,"data")
     return { statusCode: 0, data, totalCount };
 }
 
@@ -327,7 +327,7 @@ export async function getAllDataPoItems(data, poType) {
 
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType) {
-    console.log("getPoItemById")
+    console.log(purchaseInwardReturnId,"purchaseInwardReturnId",id)
 
 
 
@@ -362,6 +362,11 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             Uom: {
                 select: {
                     name: true
+                }
+            },
+            Yarn : {
+                select :{
+                    aliasName : true,
                 }
             },
             Fabric: {

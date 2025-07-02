@@ -57,10 +57,13 @@ const AccessoryPoItems = ({
           taxPercent: "0.000",
           sizeId: "",
           uomId: "",
-          qty: "",
+         
           price: "",
           discountType: "Percentage",
           discountValue: 0,
+          noOfBags : 0.00,
+          weightPerBag: 0.00,
+
         };
       });
       return [...prev, ...newArray];

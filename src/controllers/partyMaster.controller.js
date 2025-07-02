@@ -56,6 +56,7 @@ export async function upload(req, res, next) {
 
 async function create(req, res, next) {
     try {
+        console.log("create")
         res.json(await _create(req.body));
         console.log(res.statusCode);
     } catch (error) {

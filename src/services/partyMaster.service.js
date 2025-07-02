@@ -171,6 +171,7 @@ async function kycForm(body) {
 
 
 async function create(body) {
+    console.log("Hit")
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
         cinNo, faxNo, website, mail, certificate, address,
@@ -210,11 +211,11 @@ async function create(body) {
                             let newItem = {};
                             newItem["contactPersonName"] = item["contactPersonName"];
                             newItem["mobileNo"] = item["mobileNo"];
-
                             newItem["email"] = item["email"];
                             return newItem
                         })
                     }
+
                 } : undefined,
             }
         }

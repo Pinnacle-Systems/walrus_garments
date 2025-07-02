@@ -55,9 +55,9 @@ const YarnPoItems = ({
           uomId: "",
           price: "0.00",
           discountValue: "0.00",
-          noOfBags: "0",
+          noOfBags: 0.00,
           discountType: "",
-          weightPerBag: "0.00",
+          weightPerBag: 0.00,
         };
       });
       return [...prev, ...newArray];
@@ -74,6 +74,7 @@ const YarnPoItems = ({
       price: "",
       discountTypes: "",
       discountValue: "0.00",
+      noOfBags : "0.00"
     };
     setPoItems([...poItems, newRow]);
   };

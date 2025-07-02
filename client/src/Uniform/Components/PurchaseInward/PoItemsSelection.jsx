@@ -25,8 +25,8 @@ console.log(localInwardItems,"localInwardItems")
     if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id, obj) {
-        // console.log(obj,"obj")
-        setInwardItems([])
+        console.log(obj,"obj")
+        // setInwardItems([])
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(obj);
@@ -36,22 +36,24 @@ console.log(localInwardItems,"localInwardItems")
     function removeItem(id) {
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            newItems = newItems.filter(item => parseInt(item) !== parseInt(id))
+            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
             return newItems
         });
     }
 
-
+    function isItemAdded(id) {
+        console.log(localInwardItems,"isChecked",localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
+        return localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
+    }
     function handleChange(id, obj) {
+        console.log("Hit",id,obj)
         if (isItemAdded(id, obj)) {
             removeItem(id)
         } else {
             addItem(id, obj)
         }
     }
-    function isItemAdded(id) {
-        return localInwardItems.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
-    }
+
 
     function handleSelectAllChange(value, poItems) {
         if (value) {
@@ -72,8 +74,8 @@ console.log(localInwardItems,"localInwardItems")
             let newInwardItems = localInwardItems.filter(item => {
                 return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
             })
-
-            return [...oldInwardItems, ...newInwardItems.map(poItem => {
+console.log([...oldInwardItems, ...newInwardItems],"...oldInwardItems, ...newInwardItems")
+            return [...oldInwardItems, ...newInwardItems?.map(poItem => {
                 return {
 
                     poItemsId: poItem?.id,
@@ -92,9 +94,8 @@ console.log(localInwardItems,"localInwardItems")
                     price: poItem?.price,
                     taxPercent: poItem?.tax,
                     uomId: poItem?.uomId,
-                    poQty: poItem?.qty,
-                    noOfBags:poItem?.noOfBags,
-                    yarnId:poItem?.yarnId, 
+                    poQty: poItem?.poQty,
+                     yarnId:poItem?.yarnId, 
                     cancelQty: poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000",
                     alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000",
                     alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000",
@@ -104,6 +105,7 @@ console.log(localInwardItems,"localInwardItems")
         });
         setInwardItemSelection(false);
     }
+    console.log(inwardItems,"inwardItems")
 
     function handleCancel() {
         setLocalInwardItems([]);
@@ -126,12 +128,13 @@ console.log(localInwardItems,"localInwardItems")
                     {
                         <>
 
-                            {/* {transtype.includes("Fabric") ? */}
+                            
+                             {transtype.includes("Yarn")  ? 
 
                                 <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                            {/* //     :
-                            //     <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                            // } */}
+                                 :
+                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                             }
                         </>
                     }
 

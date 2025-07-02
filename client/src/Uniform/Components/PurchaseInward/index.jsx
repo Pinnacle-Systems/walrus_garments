@@ -34,10 +34,16 @@ const PurchaseInward = () => {
             accessor: (item, index) => index + 1,
             cellClass: () => 'font-medium text-gray-900'
         },
+        
         {
             header: 'Inward No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
+        },
+           {
+            header: 'InwardType',
+            accessor: (item) => item.poInwardOrDirectInward,
+            cellClass: () => 'text-gray-800 uppercase'
         },
         {
             header: 'Inward Date',
@@ -53,11 +59,7 @@ const PurchaseInward = () => {
             accessor: (item) => item.poType,
             cellClass: () => 'text-gray-800 uppercase'
         },
-        {
-            header: 'Contact',
-            accessor: (item) => item.phone,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
+     
     ];
 
 

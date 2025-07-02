@@ -31,9 +31,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
         }
     });
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/ROS/1`
+    let newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/OST/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/ROS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/OST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }

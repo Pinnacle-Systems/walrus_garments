@@ -157,11 +157,11 @@ const MastersForm = ({
           />
 
           <div className="flex space-x-3">
-            {/* <DeleteButton
+            <DeleteButton
                 onClick={() => {
                   hasPermission(deleteData, "delete");
                 }}
-              /> */}
+              />
             {readOnly && (
               <EditButton
                 onClick={() => {

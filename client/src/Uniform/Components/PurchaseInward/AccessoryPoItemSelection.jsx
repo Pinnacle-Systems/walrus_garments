@@ -177,11 +177,11 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                             </tbody>
                             :
                             <tbody className="border-2">
-                                {poItems.data.map((dataObj, index) => (
+                                {poItems?.data?.map((dataObj, index) => (
                                     <tr
-                                        key={dataObj.id}
+                                        key={dataObj?.id}
                                         className="border-2 table-row "
-                                        onClick={() => handleChange(dataObj.id)}
+                                        onClick={() => handleChange(dataObj?.id,dataObj)}
                                     >
                                         <td className='py-1'>
                                             <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />

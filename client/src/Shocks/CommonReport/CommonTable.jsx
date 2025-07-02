@@ -124,7 +124,7 @@ const CommonTable = ({
         <tbody>
           {currentItems?.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+              <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
                 {emptyStateMessage}
               </td>
             </tr>
@@ -135,7 +135,7 @@ const CommonTable = ({
                 className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                   }`}
               >
-                {columns.map((column, colIndex) => (
+                {columns?.map((column, colIndex) => (
                   <td
                     key={colIndex}
                     className={`px-4 py-1 ${colIndex < columns.length - 1 ? 'border-r border-gray-200' : ''} h-8 ${column.cellClass ? column.cellClass(item) : ''
