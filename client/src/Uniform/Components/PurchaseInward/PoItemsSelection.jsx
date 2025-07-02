@@ -9,7 +9,9 @@ import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i.poItemsId));
+    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i.poItemsId));
+        const [localInwardItems, setLocalInwardItems] = useState([]);
+
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -23,6 +25,8 @@ console.log(localInwardItems,"localInwardItems")
     if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id, obj) {
+        // console.log(obj,"obj")
+        setInwardItems([])
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(obj);
@@ -62,6 +66,7 @@ console.log(localInwardItems,"localInwardItems")
     }
 
     function handleDone() {
+        setInwardItemSelection([])
         setInwardItems(prevInwardItems => {
             let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.poItemsId))
             let newInwardItems = localInwardItems.filter(item => {
@@ -88,6 +93,8 @@ console.log(localInwardItems,"localInwardItems")
                     taxPercent: poItem?.tax,
                     uomId: poItem?.uomId,
                     poQty: poItem?.qty,
+                    noOfBags:poItem?.noOfBags,
+                    yarnId:poItem?.yarnId, 
                     cancelQty: poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000",
                     alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000",
                     alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000",

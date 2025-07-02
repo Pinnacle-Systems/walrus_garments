@@ -1006,7 +1006,7 @@ model DirectInwardOrReturn {
   specialInstructions String?          @db.LongText
   remarks             String?          @db.LongText
   poInwardOrDirectInward String?
-  directItems         DirectItems[]
+  DirectItems         DirectItems[]
 }
 
 model DirectItems {
@@ -1057,7 +1057,7 @@ model DirectItems {
   poItemsId              Int?
   BillEntryItems         BillEntryItems[]
   DirectReturnItems      DirectReturnItems[]
-  InwardLotDetails       InwardLotDetails[]
+  inwardLotDetails       InwardLotDetails[]
 }
 
 model PayTerm {

@@ -936,7 +936,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                    poNo: item["poNo"] ? item["poNo"] : undefined,
+                    // poNo: item["poNo"] ? item["poNo"] : undefined,
                     noOfRolls: item["noOfRolls"] ? parseInt(item["noOfRolls"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
@@ -966,7 +966,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                     // poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                    poNo: item["poNo"] ? item["poNo"] : undefined,
+                    // poNo: item["poNo"] ? item["poNo"] : undefined,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                     // Stock: {
                     //     create: {
@@ -984,6 +984,8 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                     //         price: parseFloat(item.price)
                     //     }
                     // }
+                    
+                    
                     
                 },
             })

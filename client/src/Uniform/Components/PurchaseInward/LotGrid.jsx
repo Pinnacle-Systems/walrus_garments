@@ -5,6 +5,9 @@ import { sumArray } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 
 export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo, index, balanceQty, balanceBags, readOnly, addNewLotNo, removeLotNo, onClose }) {
+    
+
+
     return (
         <table className='table-fixed w-[500px]'>
             <thead className='border text-sm'>
@@ -19,7 +22,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                 }
             </thead>
             <tbody>
-                {inwardLotDetails.map((item, lotIndex) =>
+                {inwardLotDetails?.map((item, lotIndex) =>
                     <tr className='table-row' key={lotIndex}>
                         <td className='text-center table-data'>
                             <input
@@ -170,13 +173,14 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
 
 export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index, readOnly, addNewLotNo, removeLotNo, onClose, balanceQty, isDirect }) {
 
+    console.log(inwardLotDetails,"inwardLotDetailsfromLotGrid")
 
 
     return (
         <table className='table-fixed w-[500px]'>
             <thead className='border text-sm'>
                 <th className='table-data text-center'>Lot No</th>
-                <th className='table-data  text-center'>No. Of Rolls</th>
+                <th className='table-data  text-center'>No. Of Bags</th>
                 <th className='table-data text-center'>Qty</th>
                 {!readOnly &&
                     <th className='table-data text-center'>
@@ -185,7 +189,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                 }
             </thead>
             <tbody>
-                {inwardLotDetails?.map((item, lotIndex) =>
+                {(inwardLotDetails  ||  [])?.map((item, lotIndex) =>
                     <tr className='table-row' key={lotIndex}>
                         <td className='text-center table-data'>
                             <input
@@ -196,7 +200,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                 }}
                                 type="text"
                                 className="text-right rounded py-1   w-full table-data-input"
-                                value={item.lotNo}
+                                value={item?.lotNo}
                                 disabled={readOnly}
                                 onChange={(event) => {
                                     handleInputChangeLotNo(event.target.value, index, lotIndex, "lotNo", balanceQty);
@@ -207,19 +211,19 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                    if (e.key === "Delete") { handleInputChangeLotNo(0, index, lotIndex, "noOfRolls", balanceQty); }
+                                    if (e.key === "Delete") { handleInputChangeLotNo(0, index, lotIndex, "noOfBags", balanceQty); }
                                 }}
                                 min={"0"}
                                 type="number"
                                 className="text-right rounded py-1   w-full table-data-input"
-                                value={item.noOfRolls}
+                                value={item.noOfBags}
                                 disabled={readOnly}
                                 onChange={(event) => {
                                     if (!event.target.value) {
-                                        handleInputChangeLotNo(0, index, lotIndex, "noOfRolls", balanceQty);
+                                        handleInputChangeLotNo(0, index, lotIndex, "noOfBags", balanceQty);
                                         return
                                     }
-                                    handleInputChangeLotNo(event.target.value, index, lotIndex, "noOfRolls", balanceQty);
+                                    handleInputChangeLotNo(event.target.value, index, lotIndex, "noOfBags", balanceQty);
                                 }}
                             />
                         </td>
@@ -259,7 +263,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                 )}
                 <tr className='table-row'>
                     <td>Total</td>
-                    <td className='text-right'>{sumArray(inwardLotDetails, "noOfRolls")}</td>
+                    <td className='text-right'>{sumArray(inwardLotDetails, "noOfBags")}</td>
                     <td className='text-right'>{(sumArray(inwardLotDetails, "qty")).toFixed(3)}</td>
                     {!readOnly &&
                         <td></td>

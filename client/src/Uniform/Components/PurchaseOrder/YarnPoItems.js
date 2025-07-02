@@ -237,12 +237,7 @@ const YarnPoItems = ({
                                 >
                                     Lot Det.
                                 </th> */}
-                                <th
-
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    No. of Bags
-                                </th>
+                          
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -753,31 +748,6 @@ const YarnPoItems = ({
                                                 </button>
                                             </td> */}
           
-                                  <td className="w-40 border border-gray-300 text-[11px] py-0.5">
-                                      <input
-                                              onKeyDown={e => {
-                                                  if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                  if (e.key === "Delete") { handleInputChange("0", index, "noOfBags") }
-                                              }}
-                                              min={"0"}
-                                              type="number"
-                                              onFocus={(e) => e.target.select()}
-                                              className="text-right rounded py-1 w-full px-1 table-data-input"
-                                              // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "noOfBags")}
-                                              value={row?.noOfBags}
-                                              // disabled={true}
-                                              inputMode='decimal'
-                                              onChange={(e) => {
-                                                  handleInputChange(e.target.value, index, "noOfBags")
-                                              }
-                                                  }
-                                                  onBlur={(e) => {
-                                                      handleInputChange(parseFloat(e.target.value), index, "noOfBags")
-                                                  }
-                                                  }
-
-                                                />
-                                     </td>
                                       <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={e => {
@@ -840,7 +810,7 @@ const YarnPoItems = ({
                                                     disabled={true}
                                                 />
                                             </td>
-                                                <td className='table-data '>
+                                                <td className='w-16 px-1 py-1 text-center text-[11px]'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "discountType") } }}
 
