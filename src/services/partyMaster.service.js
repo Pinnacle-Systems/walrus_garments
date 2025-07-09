@@ -330,8 +330,7 @@ async function update(id, body) {
                     createMany: partyBranch ? {
                         data: partyBranch?.map((temp) => {
                             let newItem = {}
-                            newItem["brancType"] = temp["brancType"] ? temp["brancType
-                                "] : null;
+                            newItem["brancType"] = temp["brancType"] ? temp["brancType"] : null;
                             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
                             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
                             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
