@@ -5,15 +5,15 @@ import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
-import PurchaseInwardForm from './PurchaseInwardFormUi';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
+import PurchaseInwardForm from '../PurchaseInward/PurchaseInwardFormUi';
 
 
 
 
 
-const PurchaseInward = () => {
+const PurchaseCancel = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
     const [selectedStatus, setSelectedStatus] = useState('all');
@@ -158,4 +158,4 @@ const PurchaseInward = () => {
     );
 };
 
-export default PurchaseInward;
+export default PurchaseCancel;

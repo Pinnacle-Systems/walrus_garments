@@ -1,8 +1,8 @@
 import React from 'react';
 
-const Modal = ({ isOpen, onClose, children, widthClass }) => {
+const Modal = ({ isOpen, onClose, children, widthClass  }) => {
+  // console.log(isSupplier,"isOpen")
   if (!isOpen) return null;
-  console.log(onClose ? true : false,"onClose")
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
       <div className={`relative bg-white rounded-lg p-7 ${widthClass}`}>

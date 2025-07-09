@@ -275,12 +275,12 @@ async function getSearch(req) {
 
 async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poInwardOrDirectInward, storeId, branchId) {
     let promises
-    if (poType == "DyedFabric") {
+    if (poType == "DyedYarn"  ||  poType == "GreyYarn"   ) {
 
         promises = cancelItems.map(async (item, index) => {
             const data = await tx.cancelItems.create({
                 data: {
-                    purchaseCancelId: parseInt(purchaseCancelId),
+                    // purchaseCancelId: parseInt(purchaseCancelId),
                     fabricId: item["fabricId"] ? parseInt(item["fabricId"]) : undefined,
                     designId: item["designId"] ? parseInt(item["designId"]) : undefined,
                     gaugeId: item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
@@ -288,7 +288,7 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
                     gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
                     kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
                     fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-                    uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+                    // uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
 
@@ -296,7 +296,7 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
                     poNo: item["poNo"] ? item["poNo"] : undefined,
 
                     price: item["price"] ? parseFloat(item["price"]) : 0,
-                    poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    // poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
 
                 }
             })
@@ -312,19 +312,19 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
         promises = cancelItems.map(async (item, index) => {
             const data = await tx.cancelItems.create({
                 data: {
-                    purchaseCancelId: parseInt(purchaseCancelId),
+                    // purchaseCancelId: parseInt(purchaseCancelId),
                     accessoryId: parseInt(item["accessoryId"]),
                     accessoryGroupId: parseInt(item["accessoryGroupId"]),
                     accessoryItemId: parseInt(item["accessoryItemId"]),
                     sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                    uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+                    // uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
 
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
-                    poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    // poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
 
                 }
             })

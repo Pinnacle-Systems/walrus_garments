@@ -145,11 +145,11 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange }) 
                                             <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
                                         </td>
                                         <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                                        <td className='py-1'> {dataObj.Po.docId}</td>
-                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.Po.createdAt)} </td>
-                                        <td className='py-1'> {dataObj.Yarn.aliasName}</td>
-                                        <td className='py-1'> {dataObj.Color.name}</td>
-                                        <td className='py-1'> {dataObj.Uom.name}</td>
+                                        <td className='py-1'> {dataObj?.Po?.docId}</td>
+                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Po?.createdAt)} </td>
+                                        <td className='py-1'> {dataObj?.Yarn?.aliasName}</td>
+                                        <td className='py-1'> {dataObj?.Color?.name}</td>
+                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
                                     </tr>
                                 ))}
                             </tbody>

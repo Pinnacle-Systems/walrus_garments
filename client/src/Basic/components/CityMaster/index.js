@@ -292,7 +292,7 @@ export default function Form() {
                                                     options={
                                                         Array.isArray(stateList?.data)
                                                             ? dropDownListObject(
-                                                                id ? stateList.data : stateList.data.filter(item => item?.active),
+                                                                id ? stateList?.data : stateList?.data?.filter(item => item?.active),
                                                                 "name",
                                                                 "id"
                                                             )

@@ -6,14 +6,14 @@ import { findFromList } from '../../../Utils/helper';
 
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
-import FabricInwardItemSelection from './FabricInwardItemSelection';
+import YarnInwardItemSelection from './YarnInwardItemSelection';
 import AccessoryInwardItemSelection from './AccessoryInwardItemSelection';
 
 const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, storeId }) => {
 
 
 
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(i => i.poItemsId));
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -24,6 +24,7 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
+        console.log(id,"id")
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(id);
@@ -65,9 +66,12 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     function handleDone() {
         setInwardItems(prevInwardItems => {
             let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.poItemsId))
+            console.log(oldInwardItems,"oldInwardItems")
             let newInwardItems = localInwardItems.filter(item => {
                 return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
             })
+console.log(localInwardItems,"localInwardItems")
+            console.log([...oldInwardItems, ...newInwardItems],"inwardIOtems")
 
             return [...oldInwardItems, ...newInwardItems.map(i => { return { poItemsId: i } })]
         });
@@ -95,9 +99,9 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
                     {
                         <>
 
-                            {transtype.includes("Fabric") ?
+                            {transtype.includes("Yarn") ?
 
-                                <FabricInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
+                                <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
                                 :
                                 <AccessoryInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
                             }

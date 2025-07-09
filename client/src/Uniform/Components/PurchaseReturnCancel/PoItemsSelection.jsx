@@ -9,7 +9,12 @@ import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(i => i.poItemsId));
+    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.poItemsId));
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
+
+    console.log(localInwardItems,"localInwardItems")
+    // console.log(inwardItems,"inwardItems")
+
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -43,7 +48,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         }
     }
     function isItemAdded(id) {
-        return localInwardItems.findIndex(item => parseInt(item) === parseInt(id)) !== -1
+        return localInwardItems?.findIndex(item => parseInt(item) === parseInt(id)) !== -1
     }
 
     function handleSelectAllChange(value, poItems) {
@@ -60,15 +65,28 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     function handleDone() {
         setInwardItems(prevInwardItems => {
-            let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.poItemsId))
-            let newInwardItems = localInwardItems.filter(item => {
-                return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
-            })
 
-            return [...oldInwardItems, ...newInwardItems.map(i => { return { poItemsId: i } })]
+            let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item?.poItemsId))
+            let newInwardItems = localInwardItems?.filter(item => {
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
+            })
+            console.log(...oldInwardItems,"...oldInwardItems")
+            console.log( ...newInwardItems," ...newInwardItems");
+            
+            return [...oldInwardItems, ...newInwardItems?.map(i => { return { poItemsId: i } })]
         });
         setInwardItemSelection(false);
     }
+     
+
+
+
+
+     
+
+
+
+
 
     function handleCancel() {
         setLocalInwardItems([]);

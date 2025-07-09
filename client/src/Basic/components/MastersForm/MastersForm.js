@@ -9,7 +9,8 @@ import {
   CloseButton,
   PrintButtonOnly,
   SearchButton,
-  OpenTable
+  OpenTable,
+  New
 } from "../../../UiComponents/Buttons/Buttons";
 import secureLocalStorage from "react-secure-storage";
 import { useGetPagePermissionsByIdQuery } from "../../../redux/services/PageMasterService";
@@ -155,7 +156,13 @@ const MastersForm = ({
             }}
 
           />
+           <New
+            onClick={() => {
+              hasPermission(saveData, "new");
+            }}
 
+          />
+            
           <div className="flex space-x-3">
             <DeleteButton
                 onClick={() => {

@@ -4,7 +4,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { LongDropdownInput, DisabledInput, DropdownInput, DateInput, TextInput } from "../../../Inputs";
+import {  DropdownInput, DateInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
@@ -31,12 +31,8 @@ import {
 import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { directOrPo, directOrPoreturn, poTypes } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
-import FabricDirectInwardItems from "./FabricDirectInwardItems";
-import AccessoryDirectInwardItems from "./AccessoryDirectInwardItems";
-import { PDFViewer } from "@react-pdf/renderer";
-import PrintFormat from "../PurchaseReturnCancel/PrintFormat-PR/index";
-import tw from "../../../Utils/tailwind-react-pdf";
-import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
+
+import {  FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
@@ -45,13 +41,12 @@ import ReturnItems from "./ReturnItems";
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
 
-
     const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("")
     const [date, setDate] = useState();
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState("");
-    const [transType, setTransType] = useState("DyedFabric");
+    const [transType, setTransType] = useState("DyedYarn");
     const [supplierId, setSupplierId] = useState("");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
@@ -75,6 +70,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         "Supplier Three",
     ]);
 
+    console.log(storeId,"storeId")
 
     const branchIdFromApi = useRef(branchId);
     const params = {
@@ -125,8 +121,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
         setTransType(data?.poType ? data.poType : "DyedYarn");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
-        setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-        setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
+        // setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+        // setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
         if (data?.docId) {
             setDocId(data?.docId)
         }
@@ -160,7 +156,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         payTermId,
         branchId, id, userId,
         storeId,
-        directReturnItems: directInwardReturnItems.filter(po => po.fabricId || po.accessoryId),
+        directReturnItems: directInwardReturnItems.filter(po => po.yarnId || po.accessoryId),
         discountType,
         discountValue,
         dcNo,
@@ -218,10 +214,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const saveData = () => {
 
-        if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", { position: "top-center" })
-            return
-        }
+        // if (!validateData(data)) {
+        //     toast.info("Please fill all required fields...!", { position: "top-center" })
+        //     return
+        // }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");
         } else {
@@ -267,17 +263,20 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setDirectInwardReturnItems([])
     }, [transType, id])
 
-    console.log(supplierList?.data, "allsupliers", transType, "transType")
 
 
-
+console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
     function filterSupplier() {
         let finalSupplier = []
-        if (transType.toLowerCase().includes("yarn")) {
+        if (transType === "DyedYarn" ||  transType  === "GreyYarn") {
             finalSupplier = supplierList?.data?.filter(s => (s.isDy || s.isGy))
-        } else {
-            finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
+        } 
+          if (transType === "Accessory") {
+            finalSupplier = supplierList?.data?.filter(s => (s.isAcc))
         }
+        // else {
+        //     finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
+        // }
         return finalSupplier
     }
     let supplierListBasedOnSupply = filterSupplier()
@@ -314,7 +313,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     }
 
 
-    if (!branchList || !locationData) return <Loader />
+    // if (!branchList || !locationData) return <Loader />
 
 
 
@@ -343,7 +342,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             supplierId={supplierId}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems}
-                            storeId={storeId} />
+                            // storeId={storeId} 
+                            />
                         :
                         <InwardItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
                             supplierId={supplierId}
@@ -354,9 +354,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
             </Modal>
 
-            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchse Return </h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Purchse Return</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -405,7 +405,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             </h2>
                             <div className="grid grid-cols-2 gap-2">
 
-                                <div className="col-span-2">{console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")}
+                                <div className="col-span-2">
                                     <ReusableSearchableInput
                                         label="Party"
                                         component="PartyMaster"
@@ -419,9 +419,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     />
                                 </div>
 
-                                {/* <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} /> */}
+                                <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
 
-                                <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required /> */}
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             </div>
 
@@ -444,10 +444,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     < div className="">
                                         <button className="p-1.5 mt-2 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                             onClick={() => {
-                                                if (!supplierId || !transType) {
-                                                    toast.info("Please Select Suppplier and Store", { position: "top-center" })
-                                                    return
-                                                }
+                                                // if (!supplierId || !transType) {
+                                                //     toast.info("Please Select Suppplier and Store", { position: "top-center" })
+                                                //     return
+                                                // }
                                                 setInwardItemSelection(true)
                                             }}
                                         >Select Items</button>
@@ -457,8 +457,12 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                         </div>
                     </div>
+
+                    
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} />
+
+                        
                     <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>

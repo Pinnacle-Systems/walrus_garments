@@ -26,9 +26,12 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
 import { deliveryTypes } from "../../../Utils/DropdownData";
 
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import Consolidation from "./Cosolidation";
 import { useSelector } from "react-redux";
+import CommonTable from "../../../Shocks/CommonReport/CommonTable";
+import { FaPlus } from "react-icons/fa6";
+import PurchaseOrderForm from "./PurchaseOrderForm";
 const MODEL = "Purchase Order";
 
 
@@ -45,7 +48,6 @@ export default function Form() {
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
-console.log(poItems,"poItems")
   const [transType, setTransType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
 
@@ -62,7 +64,9 @@ console.log(poItems,"poItems")
   const [deliveryToId, setDeliveryToId] = useState("")
 
   const childRecord = useRef(0);
-
+  const [purchaseOrderForm,setPurchaseOrderForm]  = useState("")
+const [selectedPeriod, setSelectedPeriod] = useState('this-month');
+    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
   const { branchId, companyId, finYearId, userId } = getCommonParams()
 
   const branchIdFromApi = useRef(branchId);
@@ -82,6 +86,7 @@ console.log(poItems,"poItems")
 
   const { data: payTermList } =
     useGetPaytermMasterQuery({ params: { ...params } });
+    
   const handlePrint = () => {
     setPrintModalOpen(true);
   };
@@ -245,13 +250,6 @@ console.log(poItems,"poItems")
     }
   };
 
-  const onNew = () => {
-    setId("");
-    setSearchValue("");
-    setReadOnly(false);
-    syncFormWithDb(undefined)
-    getNextDocId()
-  };
 
   const tableHeadings = ["PoNo", "PoDate", "transType", "DueDate", "Supplier"]
   const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
@@ -284,182 +282,345 @@ console.log(poItems,"poItems")
     const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
 
    console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
+  const columns = [
+        {
+            header: 'S.No',
+            accessor: (item, index) => index + 1,
+            cellClass: () => 'font-medium text-gray-900'
+        },
+        
+        {
+            header: 'Inward No.',
+            accessor: (item) => item.docId,
+            cellClass: () => 'font-medium text-gray-900'
+        },
+           {
+            header: 'TransType',
+            accessor: (item) => item.transType,
+            cellClass: () => 'text-gray-800 uppercase'
+        },
+        {
+            header: 'Inward Date',
+            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
+        },
+        {
+            header: 'Supplier',
+            accessor: (item) => findFromList(item.supplierId, supplierList?.data ,"name"),
+            cellClass: () => 'uppercase'
+        },
+           {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },
+      {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) => item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },   {
+            header: '',
+            accessor: (item) =>  item.ff,
+            cellClass: () => 'uppercase'
+        },
+   
+      ];
+
+   
+   
+   
+
+       const handleView = (id) => {
+   
+           setId(id)
+           setPurchaseOrderForm(true)
+           setReadOnly(true);
+       };
+   
+       const handleEdit = (orderId) => {
+           setId(orderId)
+           setPurchaseOrderForm(true)
+           setReadOnly(false);
+       };
+   
+       const handleDelete = async (orderId) => {
+           if (orderId) {
+               if (!window.confirm("Are you sure to delete...?")) {
+                   return;
+               }
+               try {
+                   // await removeData(orderId)
+                   setId("");
+                   onNew();
+                   toast.success("Deleted Successfully");
+               } catch (error) {
+                   toast.error("something went wrong");
+               }
+           }
+   
+       };
+       const onNew = () => {
+           setId("");
+           setReadOnly(false);
+          //  setOrderDetails([]);
+   
+       }
+   
+
   return (
-    <div
-      onKeyDown={handleKeyDown}
-      className="md:items-start md:justify-items-center grid h-full bg-theme overflow-auto">
+//     <div
+//       onKeyDown={handleKeyDown}
+//       className="md:items-start md:justify-items-center grid h-full bg-theme overflow-auto">
 
-      <Modal isOpen={formReport} onClose={() => setFormReport(false)} widthClass={"px-2 h-[90%] w-[90%]"}>
-        <PurchaseOrderFormReport
-          heading={MODEL}
-          tableHeaders={tableHeadings}
-          tableDataNames={tableDataNames}
-          loading={
-            isLoading || isFetching
-          }
-          tableWidth="100%"
-          data={allData?.data}
-          onClick={(id) => {
-            setId(id);
-            setFormReport(false);
-          }
-          }
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-        />
-      </Modal>
-      <Modal
-        isOpen={printModalOpen}
-        onClose={() => setPrintModalOpen(false)}
-        widthClass={"w-[90%] h-[90%]"}
-      >
-        <PDFViewer style={tw("w-full h-full")}>
-          <PrintFormat
-            data={id ? singleData?.data : "Null"}
-            singleData={id ? singleData?.data : "Null"}
-            date={id ? singleData?.data?.selectedDate : date}
-            docId={docId ? docId : ""}
+//       <Modal isOpen={formReport} onClose={() => setFormReport(false)} widthClass={"px-2 h-[90%] w-[90%]"}>
+//         <PurchaseOrderFormReport
+//           heading={MODEL}
+//           tableHeaders={tableHeadings}
+//           tableDataNames={tableDataNames}
+//           loading={
+//             isLoading || isFetching
+//           }
+//           tableWidth="100%"
+//           data={allData?.data}
+//           onClick={(id) => {
+//             setId(id);
+//             setFormReport(false);
+//           }
+//           }
+//           searchValue={searchValue}
+//           setSearchValue={setSearchValue}
+//         />
+//       </Modal>
+//       <Modal
+//         isOpen={printModalOpen}
+//         onClose={() => setPrintModalOpen(false)}
+//         widthClass={"w-[90%] h-[90%]"}
+//       >
+//         <PDFViewer style={tw("w-full h-full")}>
+//           <PrintFormat
+//             data={id ? singleData?.data : "Null"}
+//             singleData={id ? singleData?.data : "Null"}
+//             date={id ? singleData?.data?.selectedDate : date}
+//             docId={docId ? docId : ""}
 
-          />
-        </PDFViewer>
-      </Modal>
+//           />
+//         </PDFViewer>
+//       </Modal>
 
 
-      <div className="flex flex-col frame w-full h-full">
-        <FormHeader
-          onNew={onNew}
-          model={MODEL}
-          saveData={saveData}
-          setReadOnly={setReadOnly}
-          deleteData={deleteData}
-          onPrint={id ? handlePrint : null}
-          openReport={() => { setFormReport(true) }}
-          childRecord={childRecord.current}
-        />
-        <div className="flex-1 grid gap-x-2">
-          <div className="col-span-3 grid overflow-auto">
-            <div className='col-span-3 grid overflow-auto'>
-              <div className='mr-1'>
-                <div className={`grid`}>
-                  <div className={"flex flex-col"}>
-                    <fieldset className="border border-gray-600 rounded-tr-lg rounded-bl-lg px-4 py-3 w-full">
-                      <legend className="text-sm font-semibold text-gray-700 px-2">Purchase Info</legend>
+//       <div className="flex flex-col frame w-full h-full">
+//         <FormHeader
+//           onNew={onNew}
+//           model={MODEL}
+//           saveData={saveData}
+//           setReadOnly={setReadOnly}
+//           deleteData={deleteData}
+//           onPrint={id ? handlePrint : null}
+//           openReport={() => { setFormReport(true) }}
+//           childRecord={childRecord.current}
+//         />
+//         <div className="flex-1 grid gap-x-2">
+//           <div className="col-span-3 grid overflow-auto">
+//             <div className='col-span-3 grid overflow-auto'>
+//               <div className='mr-1'>
+//                 <div className={`grid`}>
+//                   <div className={"flex flex-col"}>
+//                     <fieldset className="border border-gray-600 rounded-tr-lg rounded-bl-lg px-4 py-3 w-full">
+//                       <legend className="text-sm font-semibold text-gray-700 px-2">Purchase Info</legend>
 
-                      <div className="grid grid-cols-10 gap-x-4 gap-y-3 mt-2">
-                        <div className="col-span-1">
-                          <DisabledInput name="Po no." value={docId} required />
+//                       <div className="grid grid-cols-10 gap-x-4 gap-y-3 mt-2">
+//                         <div className="col-span-1">
+//                           <DisabledInput name="Po no." value={docId} required />
+//                         </div>
+
+//                         <div className="col-span-1">
+//                           <DateInput
+//                             name="Po Date"
+//                             value={date}
+//                             type="date"
+//                             required
+//                             readOnly={readOnly}
+//                             disabled
+//                           />
+//                         </div>
+
+//                         <div className="col-span-1 pt-0.5">
+//                           <DropdownInput
+//                             name="Po Type"
+//                             options={poTypes}
+//                             value={transType}
+//                             setValue={setTransType}
+//                             required
+//                             readOnly={readOnly}
+//                           />
+//                         </div>
+
+//                         <div className="col-span-2 pt-0.5">
+//                           <DropdownInput
+//                             name="Supplier"
+//                             options={dropDownListObject(supplierListBasedOnSupply, "name", "id")}
+//                             value={supplierId}
+//                             setValue={setSupplierId}
+//                             required
+//                             readOnly={readOnly}
+//                             masterName="PARTY MASTER"
+//                             lastTab={activeTab}
+//                           />
+//                         </div>
+
+//                         <div className="col-span-1">
+//                           <DateInput
+//                             name="Due Date"
+//                             value={dueDate}
+//                             setValue={setDueDate}
+//                             required
+//                             readOnly={readOnly}
+//                           />
+//                         </div>
+
+//                         <div className="col-span-1 pt-0.5">
+//                         <DisabledInput 
+//   name="Pay Terms" 
+//   value={payTermDay} 
+//   required 
+// />
+
+//                         </div>
+
+//                         <div className="col-span-1 pt-0.5">
+//                           <DropdownInput
+//                             name="Delivery Type"
+//                             options={deliveryTypes}
+//                             value={deliveryType}
+//                             setValue={setDeliveryType}
+//                             required
+//                             readOnly={readOnly}
+//                           />
+//                         </div>
+
+//                         <div className="col-span-2 pt-0.5">
+//                           <DropdownInput
+//                             name="Delivery To"
+//                             options={
+//                               deliveryType === "ToSelf"
+//                                 ? dropDownListObject(branchList?.data || [], "branchName", "id")
+//                                 : dropDownListObject(clientDetail, "name", "id")
+//                             }
+//                             masterName="PARTY MASTER"
+//                             lastTab={activeTab}
+//                             value={deliveryToId}
+//                             setValue={setDeliveryToId}
+//                             required
+//                             readOnly={readOnly}
+//                           />
+//                         </div>
+//                       </div>
+
+//                     </fieldset>{console.log(poItems,"poItems")}
+
+//                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[370px] px-1 w-full overflow-auto'>
+//                       <legend className='sub-heading'>Purchase Details</legend>
+//                       {transType.toLowerCase().includes("GreyYarn".toLowerCase())
+//                         ?
+//                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+//                         :
+//                         (
+//                           transType.toLowerCase().includes("DyedYarn".toLowerCase())
+//                             ?
+//                             <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+//                             :
+//                             <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+//                         )
+//                       }
+//                       <Consolidation readOnly={readOnly} remarks={remarks} setRemarks={setRemarks}
+//                       />
+//                     </fieldset>
+
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+
+
+
+  <>
+            {purchaseOrderForm ? (
+                <PurchaseOrderForm
+                    onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId} readOnly={readOnly} setReadOnly={setReadOnly}
+                //  orderDetails={orderDetails} setOrderDetails={setOrderDetails}  id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+                //     partyData={partyData?.data}
+                />
+
+            ) : (
+                <div className="p-2 bg-[#F1F1F0] min-h-screen">
+                    <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
+                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={selectedPeriod}
+                                onChange={(e) => setSelectedPeriod(e.target.value)}
+                                className="px-3 py-1.5 border rounded-md text-sm"
+                            >
+                                <option value="this-month">This Month</option>
+                                <option value="last-month">Last Month</option>
+                            </select>
+                            <select
+                                value={selectedFinYear}
+                                onChange={(e) => setSelectedFinYear(e.target.value)}
+                                className="px-3 py-1.5 border rounded-md text-sm"
+                            >
+                                <option value="2023-2024">2023-2024</option>
+                                <option value="2022-2023">2022-2023</option>
+                            </select>
+
                         </div>
+                        <button
+                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
+                            onClick={() => { setPurchaseOrderForm(true); onNew() }}
+                        >
+                            <FaPlus /> Create New
+                        </button>
+                    </div>
 
-                        <div className="col-span-1">
-                          <DateInput
-                            name="Po Date"
-                            value={date}
-                            type="date"
-                            required
-                            readOnly={readOnly}
-                            disabled
-                          />
-                        </div>
-
-                        <div className="col-span-1 pt-0.5">
-                          <DropdownInput
-                            name="Po Type"
-                            options={poTypes}
-                            value={transType}
-                            setValue={setTransType}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div>
-
-                        <div className="col-span-2 pt-0.5">
-                          <DropdownInput
-                            name="Supplier"
-                            options={dropDownListObject(supplierListBasedOnSupply, "name", "id")}
-                            value={supplierId}
-                            setValue={setSupplierId}
-                            required
-                            readOnly={readOnly}
-                            masterName="PARTY MASTER"
-                            lastTab={activeTab}
-                          />
-                        </div>
-
-                        <div className="col-span-1">
-                          <DateInput
-                            name="Due Date"
-                            value={dueDate}
-                            setValue={setDueDate}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div>
-
-                        <div className="col-span-1 pt-0.5">
-                        <DisabledInput 
-  name="Pay Terms" 
-  value={payTermDay} 
-  required 
-/>
-
-                        </div>
-
-                        <div className="col-span-1 pt-0.5">
-                          <DropdownInput
-                            name="Delivery Type"
-                            options={deliveryTypes}
-                            value={deliveryType}
-                            setValue={setDeliveryType}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div>
-
-                        <div className="col-span-2 pt-0.5">
-                          <DropdownInput
-                            name="Delivery To"
-                            options={
-                              deliveryType === "ToSelf"
-                                ? dropDownListObject(branchList?.data || [], "branchName", "id")
-                                : dropDownListObject(clientDetail, "name", "id")
-                            }
-                            masterName="PARTY MASTER"
-                            lastTab={activeTab}
-                            value={deliveryToId}
-                            setValue={setDeliveryToId}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div>
-                      </div>
-
-                    </fieldset>{console.log(poItems,"poItems")}
-
-                    <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[370px] px-1 w-full overflow-auto'>
-                      <legend className='sub-heading'>Purchase Details</legend>
-                      {transType.toLowerCase().includes("GreyYarn".toLowerCase())
-                        ?
-                        <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        :
-                        (
-                          transType.toLowerCase().includes("DyedYarn".toLowerCase())
-                            ?
-                            <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                            :
-                            <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        )
-                      }
-                      <Consolidation readOnly={readOnly} remarks={remarks} setRemarks={setRemarks}
-                      />
-                    </fieldset>
-
-                  </div>
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                        <CommonTable
+                            columns={columns}
+                            data={allData?.data || []}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            itemsPerPage={10}
+                        />
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            )}
+        </>
   );
 }

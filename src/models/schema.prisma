@@ -545,7 +545,8 @@ model PartyBranch {
   branchEmail          String?                @db.LongText
   Party                Party?                 @relation(fields: [partyId], references: [id])
   partyId              Int?
-  active               Boolean                @default(true)
+  active               Boolean?                @default(true)
+  isMainBranch         Boolean?                @default(false)
   branchAddress        String?                @db.LongText
   partyShippingAddress PartyShippingAddress[]
   partyContactDetails  PartyContactDetails[]
@@ -3214,3 +3215,11 @@ model InwardLotDetails {
   noOfBags      Int?
   Stock         Stock[]
 }
+
+model RawMaterial {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  active       Boolean?   @default(false)
+  aliasName    String?
+}
+

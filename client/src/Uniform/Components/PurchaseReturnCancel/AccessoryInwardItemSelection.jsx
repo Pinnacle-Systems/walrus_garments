@@ -40,7 +40,7 @@ const AccessoryInwardItemSelection = ({ poType, supplierId, isItemAdded, handleC
     }, [poItems, isPoItemsFetching, isPoItemsLoading])
 
     return (
-        <div className="flex flex-col w-full h-[80%]">{console.log(poItems, "poItemsaccessory")}
+        <div className="flex flex-col w-full h-[80%]">
             <div className="md:flex md:items-center md:justify-between page-heading p-1">
                 <div className="heading text-center md:mx-10"> Purchase Order Items </div>
                 <div className=" sub-heading justify-center md:justify-start items-center">

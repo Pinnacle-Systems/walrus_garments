@@ -88,7 +88,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
 
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
-                                    <label>Fabric</label>
+                                    <label>Yarn</label>
                                     {/* <input
                                         type="text"
                                         className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
@@ -153,17 +153,17 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                             <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
                                         </td>
                                         <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                                        <td className='py-1'> {dataObj.Po.docId}</td>
-                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.Po.createdAt)} </td>
-                                        <td className='py-1'> {dataObj.Fabric.name}</td>
-                                        <td className='py-1'> {dataObj.Color.name}</td>
-                                        <td className='py-1'> {dataObj.Design.name}</td>
-                                        <td className='py-1'> {dataObj.Gauge.name}</td>
-                                        <td className='py-1'> {dataObj.LoopLength.name}</td>
-                                        <td className='py-1'> {dataObj.Gsm.name}</td>
-                                        <td className='py-1'> {dataObj.KDia.name}</td>
-                                        <td className='py-1'> {dataObj.FDia.name}</td>
-                                        <td className='py-1'> {dataObj.Uom.name}</td>
+                                        <td className='py-1'> {dataObj?.Po?.docId}</td>
+                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Po?.createdAt)} </td>
+                                        <td className='py-1'> {dataObj?.Fabric?.name}</td>
+                                        <td className='py-1'> {dataObj?.Color?.name}</td>
+                                        <td className='py-1'> {dataObj?.Design?.name}</td>
+                                        <td className='py-1'> {dataObj?.Gauge?.name}</td>
+                                        <td className='py-1'> {dataObj?.LoopLength?.name}</td>
+                                        <td className='py-1'> {dataObj?.Gsm?.name}</td>
+                                        <td className='py-1'> {dataObj?.KDia?.name}</td>
+                                        <td className='py-1'> {dataObj?.FDia?.name}</td>
+                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
                                     </tr>
                                 ))}
                             </tbody>

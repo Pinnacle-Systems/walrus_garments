@@ -46,21 +46,21 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
                             <th className="table-data">Colors</th>
                             <th className="table-data">UOM</th>
                             <th className="table-data">Po.Qty</th>
-                            <th className="table-data">Po.Bags</th>
+                            {/* <th className="table-data">Po.Bags</th>
                             <th className="table-data">A.Can Qty</th>
                             <th className="table-data ">A.Can Bags</th>                         
                             <th className="table-data">A.In. Qty</th>
-                            <th className="table-data">A.In. Bags</th>
+                            <th className="table-data">A.In. Bags</th> */}
 
-                            <th className="table-data ">A.Rtn Qty</th>
-                            <th className="table-data ">A.Rtn Bags</th>
+                            <th className="table-data ">Already Return Qty</th>
+                            {/* <th className="table-data ">A.Rtn Bags</th> */}
 
-                            <th className="table-data  "> Bal Qty</th>  
-                            <th className="table-data  "> Bal Bags</th>  
+                            <th className="table-data  "> Balance  Qty</th>  
+                            {/* <th className="table-data  "> Bal Bags</th>   */}
                                 
-                            <th className="table-data  ">Can. Bags<span className="text-red-500">*</span></th>
+                            {/* <th className="table-data  ">Can. Bags<span className="text-red-500">*</span></th> */}
                             {/* <th className="table-data  ">Wt/Bag<span className="text-red-500">*</span></th> */}
-                            <th className="table-data  ">Can Qty</th>
+                            <th className="table-data  ">Cancel Qty</th>
                            
 
                             {!readOnly &&
@@ -71,9 +71,9 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
                     <tbody className='overflow-y-auto  h-full w-full'>
                         
                         {inwardItems.map((item, index) => <YarnPoItem readOnly={readOnly} noOfBags={item.noOfBags} weightPerBag={item.weightPerBag} purchaseInwardId={purchaseInwardId} removeItem={removeItem} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 8 - inwardItems.length }).map(i =>
+                        {Array.from({ length: 1 - inwardItems.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row' key={i}>
-                            {Array.from({ length: 17}).map(i =>
+                            {Array.from({ length: 9}).map(i =>
                                 <td className="table-data   "></td>
                             )}
                             {!readOnly &&

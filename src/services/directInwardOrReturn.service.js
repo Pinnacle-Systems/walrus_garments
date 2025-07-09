@@ -157,24 +157,25 @@ export async function getDirectItems(req) {
         isPurchaseCancelFilter = false, isPurchaseReturnFilter = false } = req.query
     let data;
     let totalCount;
+    console.log(pagination,"pagination")
     if (pagination) {
         data = await prisma.directItems.findMany({
             where: {
-                DirectInwardOrReturn:
-                {
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    docId: Boolean(searchDocId) ?
-                        {
-                            contains: searchDocId
-                        }
-                        : undefined,
-                    supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    storeId: storeId ? parseInt(storeId) : undefined,
-                    poType,
-                    supplier: {
-                        aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-                    }
-                },
+                // DirectInwardOrReturn:
+                // {
+                //     branchId: branchId ? parseInt(branchId) : undefined,
+                //     docId: Boolean(searchDocId) ?
+                //         {
+                //             contains: searchDocId
+                //         }
+                //         : undefined,
+                //     supplierId: supplierId ? parseInt(supplierId) : undefined,
+                //     storeId: storeId ? parseInt(storeId) : undefined,
+                //     poType,
+                //     supplier: {
+                //         aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                //     }
+                // },
             },
             include: {
                 DirectInwardOrReturn: {
@@ -261,19 +262,20 @@ export async function getDirectItems(req) {
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
         // data = await getAllDataPoItems(data)
         data = await getAllDataDirectItems(data, storeId)
-
+        
 
         if (isDirectInwardFilter) {
             data = data?.filter(val => val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward")?.filter(item => balanceReturnQtyCalculation(item.qty, 0, item.alreadyInwardedQty, item.alreadyReturnedData._sum?.qty) > 0)
         }
 
-        if (isPurchaseCancelFilter) {
-            data = data.filter(item => balanceQtyCalculation(item.qty, item.alreadyCancelData._sum?.qty, item.alreadyInwardedData._sum?.qty, item.alreadyReturnedData._sum?.qty) > 0)
-        }
-        if (isPurchaseReturnFilter) {
-            data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum?.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
-        }
-    } else {
+        // if (isPurchaseCancelFilter) {
+        //     data = data.filter(item => balanceQtyCalculation(item.qty, item.alreadyCancelData._sum?.qty, item.alreadyInwardedData._sum?.qty, item.alreadyReturnedData._sum?.qty) > 0)
+        // }
+        // if (isPurchaseReturnFilter) {
+        //     data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum?.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+        // }
+    } 
+    else {
         data = await prisma.directItems.findMany({
             where: {
                 branchId: branchId ? parseInt(branchId) : undefined,
@@ -345,12 +347,12 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
                     name: true
                 }
             },
-            Fabric: {
-                select: {
-                    aliasName: true,
-                    name: true,
-                }
-            },
+            // Fabric: {
+            //     select: {
+            //         aliasName: true,
+            //         name: true,
+            //     }
+            // },
             Gauge: {
                 select: {
                     name: true
@@ -422,6 +424,8 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
         }
     });
 
+    console.log(alreadyReturnedData,"alreadyReturnedData")
+
 
 
     const alreadyReturnedLotWiseData = await prisma.directReturnItems.groupBy({
@@ -448,31 +452,33 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
     let alreadyInwardLotWiseData = [];
     let inwardQty = parseFloat(data?.qty || 0).toFixed(3)
     let alreadyInwardedQty = data?.qty ? parseFloat(data?.qty).toFixed(3) : "0.000";
-    let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum?.qty).toFixed(3) : "0.000";
     let alreadyInwardedRolls = data?.noOfRolls ? parseInt(data?.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum?.noOfRolls) : "0";
+    let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum?.qty).toFixed(3) : "0.000";
 
     let balanceQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
+    console.log(alreadyInwardedQty,"alreadyInwardedQty",alreadyReturnedQty,"alreadyReturnedQty")
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
+    console.log(substract(alreadyInwardedQty, alreadyReturnedQty),"allowedReturnQty")
 
     let stockQty = parseFloat((await getStockQty(data?.DirectInwardOrReturn?.storeId, data?.DirectInwardOrReturn?.poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockQty || 0)
     let stockRolls = parseInt((await getStockQty(data?.DirectInwardOrReturn?.storeId, data?.DirectInwardOrReturn?.poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
 
 
 
-    let inwardLotDetailsdata = `select directItemsID, lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from directItems
-    left join DirectInwardOrReturn on  DirectInwardOrReturn.id=directItems.directInwardOrReturnId left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id  
-    WHERE  directItems.poitemsid is null and DirectInwardOrReturn.poinwardordirectinward="DirectInward"
-    group By lotNo ,directItemsID`
+    // let inwardLotDetailsdata = `select directItemsID, lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from directItems
+    // left join DirectInwardOrReturn on  DirectInwardOrReturn.id=directItems.directInwardOrReturnId left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id  
+    // WHERE  directItems.poitemsid is null and DirectInwardOrReturn.poinwardordirectinward="DirectInward"
+    // group By lotNo ,directItemsID`
 
-    inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
+    // inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
 
 
-    for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
-        let inwardData = inwardLotDetailsdata[i]
-        alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
-    }
+    // for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
+    //     let inwardData = inwardLotDetailsdata[i]
+    //     alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
+    // }
 
 
 
@@ -581,18 +587,9 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
         let sql;
 
 
+           console.log("hitstock",itemType == "Accessory",colorId,uomId,sizeId,accessoryId,storeId)
 
-        if (itemType == "DyedFabric") {
-            sql = `select 
-            sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-            where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId}
-             and gsmId=${gsmId}  and 
-            fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
-            storeId=${storeId}
-                    `
-        }
-        else {
-
+        if (itemType == "Accessory") {
             sql = `select
             sum(qty) as stockQty from stock
             where colorId=${colorId} and uomId=${uomId} 
@@ -600,6 +597,11 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
             accessoryId=${accessoryId} and  
             storeId=${storeId} 
                     `
+        }
+        else {
+
+         sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+        where colorId=${colorId} and uomId=${uomId} ;`
         }
 
         const stockData = await prisma.$queryRawUnsafe(sql);
@@ -895,6 +897,7 @@ async function createLotGridItems(tx, directItemsId, inwardLotDetails, item, poT
 
 
 async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+    console.log(storeId,"storeId")
 
     await tx.stock.create({
         data: {
@@ -907,7 +910,7 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
             accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
             colorId: item?.colorId ? parseInt(item.colorId) : undefined,
             uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-            storeId: item?.storeId ? parseInt(storeId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
             qty: item?.qty  ? parseFloat(item?.qty)  : undefined,
             price: item.price  ? parseFloat(item.price) : undefined,
         }
@@ -935,12 +938,14 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
                         storeId: storeId ?  parseInt(storeId) : undefined,
                         qty: (item.qty) ? parseFloat(item.qty) : undefined,
                         price:item.price ?  parseFloat(item.price) : undefined,
+
         }
     })
+    console.log("Eror")
 }
 
 async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directItems, poType, poInwardOrDirectInward, storeId, branchId) {
-    console.log(poType == "DyedFabric","condition")
+    console.log(poType == "GreyYarn" ||  poType == "DyedYarn","condition")
     let promises
     if (poType == "GreyYarn" ||  poType == "DyedYarn") {
 
@@ -1060,7 +1065,7 @@ async function create(body) {
         // console.log(directInwardReturnItems,"directItems")
 
         await createDirectInwardReturnItems(tx, data.id, directInwardReturnItems, poType, poInwardOrDirectInward, storeId, branchId)
-        await dataIntegrityValidation(tx, processValid);
+        // await dataIntegrityValidation(tx, processValid); 
     })
     return { statusCode: 0, data };
 }

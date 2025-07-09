@@ -175,10 +175,26 @@ async function create(body) {
     const { name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
         cinNo, faxNo, website, mail, certificate, address,
-        gstNo, currencyId, costCode, igst, shippingAddress, contactDetails, accessoryGroup, accessoryItemList,
+        gstNo, currencyId, costCode, igst, branchInfo, contactDetails, accessoryGroup, rawMaterial,
+        material,materialActive,
 
         companyId, active, userId } = await body
+        
+        console.log(rawMaterial,"rawMaterial")
+
     let data;
+            if(rawMaterial){
+                data = await prisma.RawMaterial.create (
+                    {
+                        data :{
+                            name : material  ?  material  : undefined ,
+                            active :   materialActive  ? materialActive : false
+                        }
+                    }
+                )
+            }       
+else{
+
 
     data = await prisma.party.create(
         {
@@ -192,19 +208,19 @@ async function create(body) {
                 companyId: parseInt(companyId), active, yarn, fabric,
                 accessoryGroup,
 
-                // partyBranch: {
-                //     createMany: partyBranch ? {
-                //         data: partyBranch?.map((temp) => {
-                //             let newItem = {}
-                //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
-                //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
-                //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
-                //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
-                //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
-                //             return newItem
-                //         })
-                //     } : undefined
-                // },
+                PartyBranch: {
+                    createMany: partyBranch ? {
+                        data: branchInfo?.map((temp) => {
+                            let newItem = {}
+                            newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
+                            newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+                            newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+                            newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+                            newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+                            return newItem
+                        })
+                    } : undefined
+                },
                 ContactDetails: contactDetails ? {
                     createMany: {
                         data: contactDetails.map(item => {
@@ -220,6 +236,7 @@ async function create(body) {
             }
         }
     )
+    }
     return { statusCode: 0, data };
 }
 
@@ -232,56 +249,54 @@ async function update(id, body) {
 
     let data;
 
-    const dataFound = await prisma.party.findUnique({
-        where: {
-            id: partyId ? parseInt(partyId) : parseInt(id)
-        },
-        include: {
+    // const dataFound = await prisma.party.findUnique({
+    //     where: {
+    //         id: partyId ? parseInt(partyId) : parseInt(id)
+    //     },
+    //     include: {
 
-            City: {
-                select: {
-                    name: true,
-                    state: true
-                }
-            },
-            ContactDetails: {
-                select: {
-                    id: true,
-                    contactPersonName: true,
-                    mobileNo: true,
-                    email: true
-                }
-            }
-        }
-    })
-
-    if (!dataFound) return NoRecordFound("party");
+    //         City: {
+    //             select: {
+    //                 name: true,
+    //                 state: true
+    //             }
+    //         },
+    //         ContactDetails: {
+    //             select: {
+    //                 id: true,
+    //                 contactPersonName: true,
+    //                 mobileNo: true,
+    //                 email: true
+    //             }
+    //         }
+    //     }
+    // })
 
 
-    if (isForPartyBranch) {
-        await prisma.$transaction(async (tx) => {
-            data = await prisma.partyBranch.create({
-                data: {
-                    branchEmail, branchName, branchCode, branchAddress, branchContact, partyId: parseInt(partyId)
-                    // partyBranch: {
-                    //     deleteMany: {},
-                    //     createMany: partyBranch ? {
-                    //         data: partyBranch?.map((temp) => {
-                    //             let newItem = {}
-                    //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
-                    //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
-                    //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
-                    //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
-                    //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
-                    //             return newItem
-                    //         })
-                    //     } : undefined
-                    // },
-                }
-            })
-        })
-        return { statusCode: 0, data };
-    }
+
+        // await prisma.$transaction(async (tx) => {
+        //     data = await prisma.partyBranch.create({
+        //         data: {
+        //             branchEmail, branchName, branchCode, branchAddress, branchContact, partyId: parseInt(partyId) ,
+        //             PartyBranch: {
+        //                 deleteMany: {},
+        //                 createMany: partyBranch ? {
+        //                     data: partyBranch?.map((temp) => {
+        //                         let newItem = {}
+        //                         newItem["branchType"] = temp["branchType"] ? temp["branchEmail"] : null;
+        //                         newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+        //                         newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+        //                         newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+        //                         newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+        //                         return newItem
+        //                     })
+        //                 } : undefined
+        //             },
+        //         }
+        //     })
+        // })
+        // return { statusCode: 0, data };
+    
 
     await prisma.$transaction(async (tx) => {
         data = await prisma.party.update({
@@ -310,20 +325,21 @@ async function update(id, body) {
                         })
                     }
                 } : undefined,
-                // partyBranch: {
-                //     deleteMany: {},
-                //     createMany: partyBranch ? {
-                //         data: partyBranch?.map((temp) => {
-                //             let newItem = {}
-                //             newItem["branchEmail"] = temp["branchEmail"] ? temp["branchEmail"] : null;
-                //             newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
-                //             newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
-                //             newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
-                //             newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
-                //             return newItem
-                //         })
-                //     } : undefined
-                // },
+                partyBranch: {
+                    deleteMany: {},
+                    createMany: partyBranch ? {
+                        data: partyBranch?.map((temp) => {
+                            let newItem = {}
+                            newItem["brancType"] = temp["brancType"] ? temp["brancType
+                                "] : null;
+                            newItem["branchName"] = temp["branchName"] ? temp["branchName"] : null;
+                            newItem["branchCode"] = temp["branchCode"] ? temp["branchCode"] : null;
+                            newItem["branchAddress"] = temp["branchAddress"] ? temp["branchAddress"] : null;
+                            newItem["branchContact"] = temp["branchContact"] ? parseInt(temp["branchContact"]) : null;
+                            return newItem
+                        })
+                    } : undefined
+                },
             }
         })
     })

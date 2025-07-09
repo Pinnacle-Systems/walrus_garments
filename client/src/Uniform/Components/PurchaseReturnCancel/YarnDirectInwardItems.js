@@ -12,11 +12,10 @@ import { useGetDiaQuery } from '../../../redux/uniformService/DiaMasterServices'
 import { useGetLoopLengthQuery } from '../../../redux/uniformService/LoopLengthMasterServices';
 import FabricDirectItem from './FabricDirectItem';
 import YarnDirectItem from './YarnDirectItem';
+import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 
 
-const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, removeLotNo, addNewLotNo, directInwardReturnItems, setDirectInwardReturnItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
-
-
+const YarnDirectInwardItems = ({ deleteRow, handleInputChange,  directInwardReturnItems, setDirectInwardReturnItems, readOnly, params, storeId }) => {
 
     // useEffect(() => {
     //     if (directInwardReturnItems?.length >= 1) return
@@ -31,18 +30,21 @@ const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, remo
     //         return [...prev, ...newArray]
     //     }
     //     )
+    //     console.log(directInwardReturnItems,"Initail Render")
     // }, [setDirectInwardReturnItems, directInwardReturnItems])
 
-    const { data: fabricList } =
-        useGetFabricMasterQuery({ params });
+
+
+    // const { data: yarnList } =
+    //     useGetFabricMasterQuery({ params });
 
     const { data: colorList } =
         useGetColorMasterQuery({ params: { ...params } });
     const { data: uomList } =
         useGetUomQuery({ params });
 
-    const { data: gaugeList } =
-        useGetGaugeQuery({ params });
+    const { data: yarnList } =
+        useGetYarnMasterQuery({ params });
 
     const { data: designList } =
         useGetdesignQuery({ params });
@@ -71,54 +73,116 @@ const YarnDirectInwardItems = ({ handleInputChangeLotNo, handleInputChange, remo
 
     return (
         <>
-            <div className={`relative w-full overflow-y-auto py-1`}>
-                <table className="table-data text-xs table-auto border border-gray-500  w-full">
-                    <thead className='bg-gray-300 border border-gray-500 top-0'>
-                        <tr className='h-8'>
-                            <th className="table-data  w-9 text-center">S.no</th>
-                            <th className="table-data  w-20 text-center">Doc.no</th>
-                            <th className="table-data w-20">Items</th>
-                            <th className="table-data w-20">Colors</th>
-                            <th className="table-data  w-16">UOM</th>
-                            <th className="table-data  w-14">Stock.Qty</th>
-                            <th className="table-data  w-12">Already Inwarded Qty</th>
-                            <th className="table-data  w-14"> Alr.Rtn.Qty</th>
-                            <th className="table-data  w-14"> Allo.Rtn.Qty</th>
-
-                            <th className="table-data  w-12">No. of Bags<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-12">Weight Per Bag<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-12">Inward Qty</th>
-                            <th className="table-data  w-12">Price</th>
-                            <th className="table-data  w-12">Gross</th>
-                            <th
-
-                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                            >
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>
-                        {directInwardReturnItems.map((item, index) => <YarnDirectItem
-                            fabricList={fabricList} uomList={uomList} storeId={storeId}
-                            colorList={colorList} gaugeList={gaugeList} designList={designList} gsmList={gsmList}
-                            loopLengthList={loopLengthList}
-                            diaList={diaList}
-                            item={item} handleInputChangeLotNo={handleInputChangeLotNo} stockId={item.stockId} noOfRolls={item.noOfRolls} removeItem={removeItem} key={item.poItemsId}
-                            qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
-                        {Array.from({ length: 3 - directInwardReturnItems.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 14 }).map(i =>
-                                    <td className="table-data   "></td>
-                                )}
-                                {!readOnly &&
-                                    <td className="table-data w-14"></td>
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+                       
+                  <div className={` relative w-full overflow-y-auto py-1`}>
+                    <table className="w-full border-collapse table-fixed">
+                                    <thead className="bg-gray-200 text-gray-800">
+                                        <tr>
+                                            <th
+                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                S.No
+                                            </th>
+   <th
+            
+                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Po No
+                                            </th>
+                                            <th
+            
+                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Yarn
+                                            </th>
+                                            <th
+            
+                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Color
+                                            </th>
+                                            <th
+            
+                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                UOM
+                                            </th>
+                                            <th
+            
+                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Stock Qty
+                                            </th>
+                                            <th
+            
+                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Allowed Return Qty
+                                            </th>
+                                                         <th
+    
+                                            className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                            No. of Bags
+                                            </th>
+                                            <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                               Weight Per Bag
+                                            </th>
+                                            <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                               
+                                            >
+                                                Return Qty
+                                            </th>
+                                            <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Price
+                                            </th>
+            
+                                            <th
+            
+                                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Gross
+                                            </th>
+                                             <th
+            
+                                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                  
+                       <tbody className='overflow-y-auto  h-full w-full'>
+                                {(directInwardReturnItems || [])?.map((item, index) => <YarnDirectItem yarnList={yarnList} uomList={uomList}
+                                    colorList={colorList} deleteRow={deleteRow}
+                                    // poList={poList}
+                                    //  handleInputChangeLotNo={handleInputChangeLotNo}
+                                    key={item.poItemsId}
+                                    item={item} index={index} handleInputChange={handleInputChange}
+                                    // purchaseInwardId={purchaseInwardId}
+                                     readOnly={readOnly} />)}
+                                {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
+                                    <tr className='w-12 border border-gray-300 text-[11px]  h-8 text-center p-0.5'>
+                                        {Array.from({ length: 12 }).map(i =>
+                                            <td className=" table-data "></td>
+                                        )}
+                                        {!readOnly &&
+                                            <td className="table-data w-10"></td>
+                                        }
+                                    </tr>)
                                 }
-                            </tr>)
-                        }
-
-                    </tbody>
+                            </tbody>
                 </table>
+            </div>
             </div>
         </>
     )

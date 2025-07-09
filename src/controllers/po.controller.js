@@ -21,7 +21,7 @@ async function getOne(req, res, next) {
 }
 
 export async function getPoItemById(req, res, next) {
-        console.log("getPoItemById")
+        console.log(req.params,"getPoItemById")
 
     try {
         res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType));

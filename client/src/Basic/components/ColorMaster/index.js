@@ -195,59 +195,23 @@ export default function Form() {
             </div>
             <div className='w-full flex items-start'>
 
-                <Mastertable
-                    header={'Color list'}
-                    searchValue={searchValue}
-                    setSearchValue={setSearchValue}
-                    onDataClick={onDataClick}
-                    // setOpenTable={setOpenTable}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                    tableHeaders={tableHeaders}
-                    tableDataNames={tableDataNames}
-                    data={allData?.data}
-                    loading={
-                        isLoading || isFetching
-                    } />
+                    <Mastertable
+                        header={'Color list'}
+                        searchValue={searchValue}
+                        setSearchValue={setSearchValue}
+                        onDataClick={onDataClick}
+                        // setOpenTable={setOpenTable}
+                        setReadOnly={setReadOnly}
+                        deleteData={deleteData}
+                        tableHeaders={tableHeaders}
+                        tableDataNames={tableDataNames}
+                        data={allData?.data}
+                        loading={
+                            isLoading || isFetching
+                        } />
 
                 <div>
-                    {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => { setForm(false); setErrors({}); }}>
-                        <MastersForm
-                            onNew={onNew}
-                            onClose={() => {
-                                setForm(false);
-                                setSearchValue("");
-                                setId(false);
-                            }}
-                            model={MODEL}
-                            childRecord={childRecord.current}
-                            saveData={saveData}
-                            setReadOnly={setReadOnly}
-                            deleteData={deleteData}
-                            readOnly={readOnly}
-                            emptyErrors={() => setErrors({})}
-                        >
-
-                            <fieldset className=' rounded mt-2'>
-
-                                <div className=''>
-                                    <div className='flex justify-between'>
-                                        <div>
-                                            <div className="mb-3 w-[48%]">
-                                                <TextInput name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                            </div>
-
-                                        </div>
-                                        <div className={`h-20 w-32 `} style={{ backgroundColor: pantone }}></div>
-                                    </div>
-
-                                    <div className='mb-5'>
-                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </MastersForm>
-                    </Modal>} */}
+                  
  {form && (
         <Modal
           isOpen={form}
@@ -311,7 +275,7 @@ export default function Form() {
                                             </div>
 
                                         </div>
-                                        <div className={`h-20 w-32 `} style={{ backgroundColor: pantone }}></div>
+                                        <div className={`h-20 w-32`} style={{ backgroundColor: pantone }}></div>
                                     </div>
 
                                     <div className='mb-5'>

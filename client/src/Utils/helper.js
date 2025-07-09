@@ -199,6 +199,7 @@ export function findFromListReturnsItem(id, list) {
 }
 
 export function isBetweenRange(startValue, endValue, value) {
+  console.log(startValue, endValue, value,"startValue, endValue, value")
   return (parseFloat(startValue) <= parseFloat(value)) && (parseFloat(value) <= parseFloat(endValue))
 }
 
@@ -210,7 +211,9 @@ export function substract(num1, num2) {
 }
 
 export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
+  console.log(inwardedQty,"inwardedQty",returnedQty,"returnedQty",stockQty,"stockQty")
   let balanceReturnQty = parseFloat(inwardedQty) + parseFloat(returnedQty);
+  console.log(balanceReturnQty < stockQty,"balanceReturnQty",stockQty)
   return (balanceReturnQty < parseFloat(stockQty)) ? balanceReturnQty : parseFloat(stockQty)
 }
 

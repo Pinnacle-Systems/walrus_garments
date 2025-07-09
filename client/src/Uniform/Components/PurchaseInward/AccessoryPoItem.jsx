@@ -62,8 +62,35 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
             <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyInwardedQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyReturnedQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.balanceQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.poQty || 0}</td>
-
+ <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                    <input
+                        type="number"
+                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "noOfRolls")}
+                        value={item?.noOfBags ? item?.noOfBags : 0}
+                        // disabled={true}
+                        onChange={(event) => {
+                            if (event.target.value < 0) return
+                            if (!event.target.value) {
+                                handleInputChange(0, index, "noOfBags");
+                                return
+                            }
+                            handleInputChange(event.target.value, index, "noOfBags", item?.balanceQty);
+                        }}
+                        onKeyDown={e => {
+                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                            if (e.key === "Delete") { handleInputChange("0", index, "noOfBags") }
+                        }}
+                        min={"0"}
+                        onBlur={(e) => {
+                            if (!e.target.value) {
+                                handleInputChange(0.000, index, "noOfBags", item?.balanceQty);
+                                return
+                            }
+                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "noOfBags", item?.balanceQty)
+                        }}
+                    />
+                </td>   
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
@@ -94,8 +121,8 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     }}
                 />
             </td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{parseFloat(item?.price).toFixed(2)}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
             {!readOnly &&
                  <td className="py-0.5 border border-gray-300 text-[11px]">
                     <div className="flex space-x-2  justify-center">

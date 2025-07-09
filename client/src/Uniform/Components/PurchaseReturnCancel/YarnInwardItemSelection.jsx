@@ -8,7 +8,7 @@ import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPagi
 import { useGetDirectInwardOrReturnQuery, useGetDirectItemsQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 
 
-const FabricInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId }) => {
+const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -221,23 +221,23 @@ const FabricInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChan
                                     <tr
                                         key={dataObj.id}
                                         className="border-2 table-row "
-                                        onClick={() => handleChange(dataObj.id)}
+                                        onClick={() => handleChange(dataObj?.id)}
                                     >
                                         <td className='py-1'>
                                             <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
                                         </td>
                                         <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                                        <td className='py-1'> {dataObj.DirectInwardOrReturn.docId}</td>
-                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.DirectInwardOrReturn.createdAt)} </td>
-                                        <td className='py-1'> {dataObj.Fabric.name}</td>
-                                        <td className='py-1'> {dataObj.Color.name}</td>
-                                        <td className='py-1'> {dataObj.Design.name}</td>
-                                        <td className='py-1'> {dataObj.Gauge.name}</td>
-                                        <td className='py-1'> {dataObj.LoopLength.name}</td>
-                                        <td className='py-1'> {dataObj.Gsm.name}</td>
-                                        <td className='py-1'> {dataObj.KDia.name}</td>
-                                        <td className='py-1'> {dataObj.FDia.name}</td>
-                                        <td className='py-1'> {dataObj.Uom.name}</td>
+                                        <td className='py-1'> {dataObj?.DirectInwardOrReturn?.docId}</td>
+                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.DirectInwardOrReturn?.createdAt)} </td>
+                                        <td className='py-1'> {dataObj?.Fabric?.name}</td>
+                                        <td className='py-1'> {dataObj?.Color?.name}</td>
+                                        <td className='py-1'> {dataObj?.Design?.name}</td>
+                                        <td className='py-1'> {dataObj?.Gauge?.name}</td>
+                                        <td className='py-1'> {dataObj?.LoopLength?.name}</td>
+                                        <td className='py-1'> {dataObj?.Gsm?.name}</td>
+                                        <td className='py-1'> {dataObj?.KDia?.name}</td>
+                                        <td className='py-1'> {dataObj?.FDia?.name}</td>
+                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -265,4 +265,4 @@ const FabricInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChan
 
 }
 
-export default FabricInwardItemSelection
+export default YarnInwardItemSelection

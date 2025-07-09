@@ -139,7 +139,7 @@ async function get(req) {
 
 
     let docId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime)) : "";
-    console.log(data, "data")
+    // console.log(data, "data")
     return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
@@ -156,6 +156,7 @@ async function getOne(id) {
           include: {
             Fabric: true,
             Yarn: true,
+            Color:true,
             Accessory: true,
             Color: true,
             Uom: true,
@@ -255,7 +256,6 @@ export async function getPoItems(req) {
     } = req.query
 
     let data;
-    console.log(poType,"poType")
 
     let totalCount;
     if (pagination) {
@@ -264,41 +264,45 @@ export async function getPoItems(req) {
                 Po:
                 {
                     branchId: branchId ? parseInt(branchId) : undefined,
-                    docId: Boolean(searchDocId) ?
-                        {
-                            contains: searchDocId
-                        }
-                        : undefined,
-                    supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    transType: poType,
-                    supplier: {
-                        aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-                    }
+                    // docId: Boolean(searchDocId) ?
+                    //     {
+                    //         contains: searchDocId
+                    //     }
+                    //     : undefined,
+                    // supplierId: supplierId ? parseInt(supplierId) : undefined,
+                    // transType: poType,
+                    // supplier: {
+                    //     aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                    // }
                 },
             },
             include: {
                 Po: true,
             }
         });
+            console.log(data,"poType")
+
         data = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, data)
         totalCount = data.length
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
         data = await getAllDataPoItems(data, poType)
-        if (isPurchaseInwardFilter) {
+        
+        // if (isPurchaseInwardFilter) {
+            
+        //     data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
+        //     console.log(data,"data")
+        //     data = data?.filter(j => parseFloat(j.balanceQty) > 0)
 
-            data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
-            data = data?.filter(j => parseFloat(j.balanceQty) > 0)
+        // }
 
-        }
-
-        if (isPurchaseCancelFilter) {
-            data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
+        // if (isPurchaseCancelFilter) {
+        //     data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
 
 
-        }
-        if (isPurchaseReturnFilter) {
-            data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
-        }
+        // }
+        // if (isPurchaseReturnFilter) {
+        //     data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+        // }
     } else {
    
 
@@ -327,7 +331,7 @@ export async function getAllDataPoItems(data, poType) {
 
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType) {
-    console.log(purchaseInwardReturnId,"purchaseInwardReturnId",id)
+    console.log(purchaseInwardReturnId,"purchaseInwardReturnId",storeId)
 
 
 
@@ -499,7 +503,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             noOfRolls: 0,
             alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotRolls,
             alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty,
-            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockQty || 0),
+            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId))?.stockQty || 0),
 
             allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty || 0))
         }
@@ -520,17 +524,18 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
+    console.log(alreadyInwardedQty,alreadyReturnedQty,"alreadyReturnedQty")
 
 
 
-    let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockQty || 0)
+    let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,data?.yarnId))?.stockQty || 0)
     let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
 
 
 
     // let stockQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     // let stockRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
-//     let alreadyInwardLotWiseData = [];
+    let alreadyInwardLotWiseData = [];
 
 
 
@@ -623,20 +628,27 @@ async function getLotWiseReturnRolls(lotNo, poItemsId) {
 
 }
 
-async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId) {
+async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId , yarnId) {
     let sql;
 
+            console.log("itemTypePOID",itemType == "Accessory",colorId,uomId,sizeId,accessoryId,storeId)
 
-    if (itemType == "DyedFabric") {
-        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId} and gsmId=${gsmId}  and fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
-        storeId=${storeId};
+    // if (itemType == "DyedFabric") {
+    //     sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+    //     where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId} and gsmId=${gsmId}  and fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
+    //     storeId=${storeId};
+    //             `
+    // }
+
+      if (itemType == "Accessory") {
+
+        sql = `select sum(qty) as stockQty, sum(noOfRolls) as stockRolls  from stock
+        where colorId=${colorId} and uomId=${uomId}  and sizeId=${sizeId} and accessoryId=${accessoryId} and  storeId=${storeId}; 
                 `
     }
     else {
-        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId}  and sizeId=${sizeId} and accessoryId=${accessoryId} and  storeId=${storeId}; 
-                `
+         sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+        where colorId=${colorId} and uomId=${uomId} ;`
     }
 
     const stockData = await prisma.$queryRawUnsafe(sql);

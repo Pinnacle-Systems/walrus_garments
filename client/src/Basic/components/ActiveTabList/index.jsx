@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
-import {  OpeningStock, PurchaseInward } from "../../../Uniform/Components";
+import {  OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -115,7 +115,8 @@ const ActiveTabList = () => {
     "SAMPLE FOLLOW": <SampleFollow />,
     "PURCHASE INWARD": <PurchaseInward />,
     "PURCHASE RETURN": <PurchaseReturn />,
-    "OPENING STOCK" : <OpeningStock/>
+    "OPENING STOCK" : <OpeningStock/>,
+    "PURCHASE ORDER CANCEL" : <PurchaseCancel/>
 
   };
 

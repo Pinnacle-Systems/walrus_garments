@@ -28,7 +28,7 @@ import {
   useGetDirectCancelOrReturnByIdQuery, useGetDirectCancelOrReturnQuery, useUpdateDirectCancelOrReturnMutation
 }
   from "../../../redux/uniformService/DirectCancelOrReturnServices";
-import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { directOrPo, directOrPoreturn, poTypes } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 import FabricDirectInwardItems from "./FabricDirectInwardItems";
@@ -72,52 +72,48 @@ export default function Form() {
     },
     {
       header: 'Doc Date',
-      accessor: (item) => item.docDate
+      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
     },
     {
       header: 'Party',
-      accessor: (item) => item.Party?.name,
+      accessor: (item) => findFromList(item.supplierId, partyData?.data ,"name"),
       cellClass: () => 'uppercase'
     },
     {
-      header: 'ContactPerson',
-      accessor: (item) => item.contactPersonName,
+      header: 'Inward Type',
+      accessor: (item) => item.poInwardOrDirectInward,
       cellClass: () => 'text-gray-800 uppercase'
     },
-    {
-      header: 'Contact',
-      accessor: (item) => item.phone,
-      cellClass: () => 'text-gray-800 uppercase'
-    },
+ 
   ];
 
 
 
-  const handleView = (orderId) => {
+  const handleView = (id) => {
 
-    setId(orderId)
-    setShowManufacturer(true)
+    setId(id);
+    setShowManufacturer(true);
     setReadOnly(true);
   };
 
-  const handleEdit = (orderId) => {
-    setId(orderId)
-    setShowManufacturer(true)
+  const handleEdit = (id) => {
+    setId(id);
+    setShowManufacturer(true);
     setReadOnly(false);
   };
 
-  const handleDelete = async (orderId) => {
-    if (orderId) {
+  const handleDelete = async (id) => {
+    if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
       try {
-        await removeData(orderId)
+        await removeData(id)
         setId("");
         onNew();
         toast.success("Deleted Successfully");
       } catch (error) {
-        toast.error("something went wrong");
+        toast.error("Something went wrong");
       }
     }
 
@@ -129,7 +125,7 @@ export default function Form() {
 
   }
 
-
+console.log(directInwardReturnItems,'directInwardReturnItems')
   return (
     <>
       {showManufacturer ? (
@@ -138,7 +134,7 @@ export default function Form() {
         />
 
       ) : (
-        <div className="p-2 bg-[#F1F1F0] min-h-screen">
+        <div className="p-2 bg-[#F1F1F0] ">
           <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
           <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
             <div className="flex items-center gap-2">

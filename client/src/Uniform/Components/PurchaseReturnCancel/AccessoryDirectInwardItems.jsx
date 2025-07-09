@@ -5,8 +5,26 @@ import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/AccessoryMasterServices';
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
+import { useEffect } from 'react';
 
-const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirectInwardReturnItems, readOnly, removeItem, purchaseInwardId, params }) => {
+const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params }) => {
+
+
+        // useEffect(() => {
+        //     if (directInwardReturnItems?.length >= 1) return
+        //     setDirectInwardReturnItems(prev => {
+        //         let newArray = Array.from({ length: 1 - prev.length }, () => {
+        //             return {
+        //                 yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
+        //                 measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+        //                 stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
+        //             }
+        //         })
+        //         return [...prev, ...newArray]
+        //     }
+        //     )
+        // }, [setDirectInwardReturnItems, directInwardReturnItems])
+    
 
     const { data: colorList } =
         useGetColorMasterQuery({ params: { ...params } });
@@ -58,27 +76,28 @@ const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirec
     };
     return (
         <>
-            <div className={`relative w-full overflow-auto py-1`}>
-                <table className="border border-gray-500 text-xs table-auto w-full  ">
-                    <thead className='bg-gray-300 border border-gray-500 top-0'>
+            <div className={` bg-white rounded-md shadow-sm max-h-[250px] overflow-auto`}>
+                <table className="w-full border-collapse table-fixed">
+                    <thead className='bg-gray-200 text-gray-800'>
                         <tr className='h-8 '>
-                            <th className="table-data w-5  text-center">S.no</th>
-                            <th className="table-data  w-16 text-center">Doc.no</th>
-                            <th className="table-data  ">Accessory Name</th>
-                            <th className="table-data  ">Accessory Items</th>
-                            <th className="table-data  ">Accessory Group</th>
-                            <th className="table-data  ">Colors</th>
-                            <th className="table-data  ">Size</th>
-                            <th className="table-data   ">UOM</th>
-                            <th className="table-data  w-14">Stock.Qty</th>
-                            <th className="table-data  w-14"> Alr.In Qty</th>
-                            <th className="table-data  w-14"> Alr.Rtn.Qty</th>
-                            <th className="table-data  w-14"> Allo.Rtn.Qty</th>
-                            <th className="table-data  w-14">Rtn.Qty</th>
-                            <th className="table-data  w-14">Price</th>
-                            <th className="table-data  w-14">Gross</th>
-                            {!readOnly &&
-                                <th className='table-data border  w-12'>Delete</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px]">S.no</th>
+                            <th className="w-32 px-4 py-2 text-center font-medium text-[13px]">Doc.no</th>
+                            <th className="w-32 px-4 py-2 text-center font-medium text-[13px] ">Accessory Name</th>
+                            <th className="w-32 px-4 py-2 text-center font-medium text-[13px] ">Accessory Items</th>
+                            <th className="w-32 px-4 py-2 text-center font-medium text-[13px] ">Accessory Group</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] ">Colors</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] ">Size</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px]  ">UOM</th>
+                            {/* <th className="w-16 px-4 py-2 text-center font-medium text-[13px] ">Stock Qty</th> */}
+                            {/* <th className="w-32 px-4 py-2 text-center font-medium text-[13px] "> Alr.In Qty</th>
+                            <th className="w-32 px-4 py-2 text-center font-medium text-[13px] "> Alr.Rtn.Qty</th> */}
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] "> Allowed Return Qty</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] ">Return Qty</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] ">Price</th>
+                            <th className="w-12 px-4 py-2 text-center font-medium text-[13px] ">Gross</th>
+                            {!readOnly &&                             
+                            
+                            <th className='w-12 px-4 py-2 text-center font-medium text-[13px]'>Actions</th>
                             }
                         </tr>
                     </thead>
@@ -86,10 +105,10 @@ const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirec
                         {directInwardReturnItems?.map((item, index) => <AccessoryDirectItem sizeList={sizeList} accessoryList={accessoryList}
                             uomList={uomList}
                             colorList={colorList}
-                            item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 3 - directInwardReturnItems.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 15 }).map(i =>
+                            item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
+                        {Array.from({ length: 1 - directInwardReturnItems.length }).map(i =>
+                            <tr className=' text-gray-800 h-8 border border-gray-600'>
+                                {Array.from({ length: 12 }).map(i =>
                                     <td className="table-data   "></td>
                                 )}
                                 {!readOnly &&

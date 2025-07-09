@@ -21,7 +21,7 @@ import {
 import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import moment from "moment";
-import { getCommonParams, renameFile } from "../../../Utils/helper";
+import { getCommonParams } from "../../../Utils/helper";
 import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
@@ -123,11 +123,14 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     let data = {
+
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(j => j.styleId && j.socksMaterialId && j.socksTypeId && j.qty)
+  
     }
+
 
 
 

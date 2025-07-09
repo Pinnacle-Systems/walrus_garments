@@ -433,7 +433,7 @@ export const DropdownInput = ({
   return (
     <div className={`mb-2 ${width}`}>
       {name && (
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+        <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -508,7 +508,7 @@ export const DropdownInputForm = ({
         id="dd"
         required={required}
         name="name"
-        className={` md:col-span-2 col-span-1 px-2 py-1.5  focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300 w-${width}`}
+        className={` md:col-span-2 col-span-1 px-3  focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300 w-${width}`}
         value={value}
         onChange={(e) => {
           beforeChange();
@@ -1012,3 +1012,9 @@ export const ToggleButton = ({
     </div>
   );
 };
+
+
+const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+export function isValidPAN(pan) {
+  return panRegex.test(pan.toUpperCase());
+}

@@ -73,31 +73,35 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
         newBlend[index][field] = value
-        newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
-        newBlend[index]["fabricId"] = poItem?.fabricId
-        newBlend[index]["colorId"] = poItem?.colorId
-        newBlend[index]["gaugeId"] = poItem?.gaugeId
-        newBlend[index]["gsmId"] = poItem?.gsmId
-        newBlend[index]["fDiaId"] = poItem?.fDiaId
-        newBlend[index]["designId"] = poItem?.designId
-        newBlend[index]["discountAmount"] = poItem?.discountAmount
-        newBlend[index]["discountType"] = poItem?.discountType
-        newBlend[index]["kDiaId"] = poItem?.kDiaId
-        newBlend[index]["loopLengthId"] = poItem?.loopLengthId
-        newBlend[index]["poId"] = poItem?.poId
-        newBlend[index]["price"] = poItem?.price
-        newBlend[index]["taxPercent"] = poItem?.tax
-        newBlend[index]["uomId"] = poItem?.uomId
-        newBlend[index]["poQty"] = poItem?.qty
-        newBlend[index]["alreadyInwardedQty"] = poItem?.alreadyInwardedQty ? parseFloat(poItem.alreadyInwardedQty).toFixed(3) : "0.000";
-        newBlend[index]["alreadyInwardedRolls"] = poItem?.alreadyInwardedRolls ? parseInt(poItem.alreadyInwardedRolls) : "0";
-        newBlend[index]["alreadyReturnedQty"] = poItem?.alreadyReturnedQty ? parseFloat(poItem.alreadyReturnedQty).toFixed(3) : "0.000";
-        newBlend[index]["alreadyReturnedRolls"] = poItem?.alreadyReturnedData?._sum?.noOfRolls ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls) : "0";
-        newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
-        newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
-        newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
-        newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
-        newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
+        console.log(poItem,"poItem")
+        if(poItem){
+
+            newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
+            newBlend[index]["yarnId"] = poItem?.yarnId
+            newBlend[index]["colorId"] = poItem?.colorId
+            newBlend[index]["gaugeId"] = poItem?.gaugeId
+            newBlend[index]["gsmId"] = poItem?.gsmId
+            newBlend[index]["fDiaId"] = poItem?.fDiaId
+            newBlend[index]["designId"] = poItem?.designId
+            newBlend[index]["discountAmount"] = poItem?.discountAmount
+            newBlend[index]["discountType"] = poItem?.discountType
+            newBlend[index]["kDiaId"] = poItem?.kDiaId
+            newBlend[index]["loopLengthId"] = poItem?.loopLengthId
+            newBlend[index]["poId"] = poItem?.poId
+            newBlend[index]["price"] = poItem?.price
+            newBlend[index]["taxPercent"] = poItem?.tax
+            newBlend[index]["uomId"] = poItem?.uomId
+            newBlend[index]["poQty"] = poItem?.qty
+            newBlend[index]["alreadyInwardedQty"] = poItem?.alreadyInwardedQty ? parseFloat(poItem.alreadyInwardedQty).toFixed(3) : "0.000";
+            newBlend[index]["alreadyInwardedRolls"] = poItem?.alreadyInwardedRolls ? parseInt(poItem.alreadyInwardedRolls) : "0";
+            newBlend[index]["alreadyReturnedQty"] = poItem?.alreadyReturnedQty ? parseFloat(poItem.alreadyReturnedQty).toFixed(3) : "0.000";
+            newBlend[index]["alreadyReturnedRolls"] = poItem?.alreadyReturnedData?._sum?.noOfRolls ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls) : "0";
+            newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
+            newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
+            newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
+            newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
+            newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
+        }
         if (field === "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
                 toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
@@ -106,6 +110,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         }
         setDirectInwardReturnItems(newBlend);
     };
+    console.log(directInwardReturnItems,  "directInwardReturnItems")
 
     function handleInputChangeLotNo(value, index, lotIndex, field, stockQty, allowedReturnQty) {
         const balanceQty = Math.min(stockQty, allowedReturnQty);
@@ -153,9 +158,29 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         })
     }
 
-    function addNewRow() {
 
-    }
+  const addNewRow = () => {
+     const newRow = {
+       yarnId: "",
+       qty: "",
+       tax: "0",
+       colorId: "",
+       uomId: "",
+       price: "",
+       discountTypes: "",
+       discountValue: "0.00",
+       noOfBags : "0.00"
+     };
+     setDirectInwardReturnItems([...directInwardReturnItems, newRow]);
+   };
+
+
+     const deleteRow = (id) => {
+    setDirectInwardReturnItems((yarnBlend) =>
+      yarnBlend?.filter((row, index) => index !== parseInt(id))
+    );
+  };
+
     function handleEdit(index) {
         setGridEditableIndex(index)
     }
@@ -168,11 +193,11 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
     return (
         <>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+            <div className="p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    <div className="flex gap-2 items-center">
-                        {/* <button
+                    {/* <div className="flex gap-2 items-center">
+                        <button
                             onClick={() => {
                                 addNewRow()
                             }}
@@ -180,12 +205,12 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         >
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
-                        </button> */}
-                    </div>
+                        </button>
+                    </div> */}
                 </div>
-                <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex 
+                <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
                     max-h-[250px] w-full overflow-auto'>
-                    <legend className='sub-heading'>Return Details</legend>
+                   
                     {
 
                         poInwardOrDirectInward == "DirectReturn" &&
@@ -194,8 +219,8 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                             transType.toLowerCase().includes("yarn")
                                 ?
                                 <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
-                                    handleInputChangeLotNo={handleInputChangeLotNo}
-                                    storeId={storeId} removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
+                                    handleInputChangeLotNo={handleInputChangeLotNo} 
+                                    storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
                                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                                 :
                                 <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
@@ -205,18 +230,18 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                     }
                     {
-                        poInwardOrDirectInward == "PurchaseReturn" &&
+                        poInwardOrDirectInward === "PurchaseReturn" &&
                         (
                             transType.toLowerCase().includes("yarn")
                                 ?
-                                <YarnInwardItems purchaseInwardId={id} removeItem={removeItem} handleEdit={handleEdit}
+                                <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
                                     storeId={storeId} handleView={handleView}
                                     transType={transType} directInwardReturnItems={directInwardReturnItems}
                                     setDirectInwardReturnItems={setDirectInwardReturnItems}
                                     readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                                 :
                                 <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType}
-                                    directInwardReturnItems={directInwardReturnItems}
+                                    directInwardReturnItems={directInwardReturnItems} deleteRow={deleteRow}
                                     setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         )
 
