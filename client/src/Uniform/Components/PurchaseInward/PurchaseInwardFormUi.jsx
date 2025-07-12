@@ -410,7 +410,7 @@ console.log(data,"data")
                 </div>
 
             </div>
-            <div className="space-y-3 h-full ">
+            <div className="space-y-3 h-full mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 

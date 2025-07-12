@@ -31,7 +31,8 @@ import {
   counts,
   Machine, socksMaterial,
   currency, socksType, measurement, fibercontent,
-  yarnNeedle,certificate
+  yarnNeedle,certificate,
+  branchType
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -162,6 +163,7 @@ app.use("/measurement", measurement);
 app.use("/fiberContent", fibercontent);
 app.use("/fiberContent", fibercontent);
 app.use("/yarnNeedle", yarnNeedle);
+app.use("/branchType" ,branchType)
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

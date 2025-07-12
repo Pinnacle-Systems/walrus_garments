@@ -16,20 +16,25 @@ import MastersForm from '../MastersForm/MastersForm';
 import { findFromList } from '../../../Utils/helper';
 import { useAddPartyMutation, useUpdatePartyMutation } from '../../../redux/services/PartyMasterService';
 import { toast } from "react-toastify";
-import { HiPlus } from 'react-icons/hi';
+import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
 import { Check } from 'lucide-react';
+import { useGetbranchTypeQuery } from '../../../redux/uniformService/BranchTypeMaster';
 
 const AddBranch = ({ partyData, partyId,
     branchType,setBranchType,branchInfo,handleInputbranch,id,setBranchInfo , deleteBranch,
-    branchEmail, setBranchEmail, setBranchAddress, branchName, setBranchName, branchCode, setBranchCode, branchAddress, branchContact, setBranchContact, setBranchModelOpen, childRecord, saveExitData, setReadOnly, deleteData, readOnly,
+    branchEmail, setBranchEmail, setBranchAddress, branchName, setBranchName
+    , setBranchCode, branchAddress, branchContact, setBranchContact, setBranchModelOpen, 
+    childRecord, saveExitData, setReadOnly, branchTypeData, readOnly,
     partyBranch, name
 }) => {
     const MODEL = " Branch Info";
     const [addData] = useAddPartyMutation();
     const [updateData] = useUpdatePartyMutation();
 
+    
+
     const data = {
-        branchAddress, branchCode, branchContact, branchEmail, branchName, partyId, isForPartyBranch: true
+        branchInfo, partyId, isForPartyBranch: true
     };
 
     console.log(branchInfo,"branchInfo")
@@ -121,7 +126,7 @@ const AddBranch = ({ partyData, partyId,
         setBranchInfo(prev => {
             let newArray = Array.from({ length: 1 - prev.length }, () => {
                 return {
-                        address : "",
+                        address : "" , branchName : ''
                 }
             })
             return [...prev, ...newArray]
@@ -138,138 +143,53 @@ const AddBranch = ({ partyData, partyId,
     return (
         <>
       
-                {/* <div className="space-y-4 bg-[#f1f1f0] p-2">
-
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
-
-
-                            <div className="space-y-2">
-                                <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-1 shadow-xs ">
-                             
-                                    <div className="grid grid-cols-1 gap-x-2  md:grid-cols-2 lg:grid-cols-5 mt-1">
-
-                                       <div className='col-span-2' >
-                                        <TextInput name="Party Name" type="text" value={partyId ? findFromList(partyId, partyData?.data, "name") : name } disabled={"true"} />
-                                        </div> 
-                             <div className='col-span-2' >
-
-                                        <TextInput name="Branch Name" type="text" value={branchName} setValue={setBranchName} required={true} readOnly={readOnly} />
-                             </div>
-                            
-                                            <DropdownInput
-                                            name="Branch Type"
-                                            //   options={dropDownListMergedObject(
-                                            //     id
-                                            //       ? cityList?.data
-                                            //       : cityList?.data?.filter((item) => item.active),
-                                            //     "name",
-                                            //     "id"
-                                            //   )}
-                                            masterName="BRANCH MASTER"
-                                            //   lastTab={activeTab}
-                                            value={branchType}
-                                            setValue={setBranchType}
-                                            required={true}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                            className="focus:ring-2 focus:ring-blue-100"
-                                            />
-
-                                         
-
-                                       <div className='col-span-2 flex flex-row gap-2'>
-                                        <TextInput name="Branch Code" type="text" value={branchCode} setValue={setBranchCode} required={true} readOnly={readOnly} />
-                                        <TextInput name="Contact" type="text" value={branchContact} setValue={setBranchContact} required={true} readOnly={readOnly} />
-                                        </div> 
-                                        <div className='col-span-2'>
-
-                                        <TextArea name="Address"
-                                        inputClass='h-8'
-                                        type="text" value={branchAddress} setValue={setBranchAddress} required={true} readOnly={readOnly} />
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                     
-                    </div>
-
-                </div> */}
-            
-        
-         {/* {form && (
-        <Modal
-        //   isOpen={form}
-          form={form}
-          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-          onClose={() => {
-            setForm(false);
-            setErrors({});
-          }}
-        > */}
+           
           <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-              <div className="flex items-center gap-2">
-                
+            {/* <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white"> */}
+              {/* <div className="flex items-center gap-2">
                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
                   {id ? (!readOnly ? "Edit Branch Master" : "Branch Master") : "Add New Branch"}
                 </h2>
+              </div> */}
+                
               
-              </div>
               <div className="flex gap-2">
-                <div>
+                {/* <div>
                   {readOnly && (
                     <button
                       type="button"
                       onClick={() => {
-                        // setForm(false);
-                        // setSearchValue("");
-                        // setId(false);
+                    
                       }}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Cancel
                     </button>
                   )}
-                </div>
-                  <div className="flex gap-2">
-                  {!readOnly && (
-                    <button
-                      type="button"
-                      onClick={saveData}
-                      className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs"
-                    >
-                      {/* <Check size={14} />
-                      {id ? "Update" : "Save"} */}
-                      View
-                    </button>
-                  )}
-                </div>
+                </div> */}
+{/*                 
                 <div className="flex gap-2">
                   {!readOnly && (
                     <button
                       type="button"
-                      onClick={saveData}
+                      onClick={() => setBranchModelOpen(false)}
                       className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                     >
-                      <Check size={14} />
-                      {id ? "Update" : "Save"}
+             
+                      Done
                     </button>
                   )}
-                </div>
+                </div> */}
               </div>
-            </div>
+            {/* </div> */}
 
-            <div className="flex-1 overflow-auto p-3">
+            {/* <div className="flex-1 overflow-auto p-3">
               <div className="grid grid-cols-1  gap-3  h-full">
                 <div className="lg:col-span- space-y-3">
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                             <div className="overflow-hidden rounded-md border border-gray-200">
+                             <div className="overflow-hidden rounded-md ">
                               <div className="flex justify-between items-center mb-2">
-                                        <h2 className="font-medium text-slate-700">Branch List</h2>
                                         <div className="flex gap-2 items-center">
                     
                                             <button
@@ -311,13 +231,26 @@ const AddBranch = ({ partyData, partyId,
                                       />
                                     </td>
                                     <td className="px-3 py-1.5">
-                                      <input
-                                        type="text"
-                                        className="w-28 rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-                                        value={item?.branchType}
-                                        disabled={readOnly}
-                                        onChange={(e) => handleInputbranch(e.target.value, index, "branchType")}
-                                      />
+                                        <select
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputbranch("", index, "branchType") } }}
+                                        className=" rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                                            value={item?.branchType}
+
+                                            onChange={(e) => handleInputbranch(e.target.value, index, "branchType")}
+                                            onBlur={(e) => {
+                                                handleInputbranch((e.target.value), index, "branchType")
+                                            }}
+                                        >
+
+                                            <option>
+                                                select
+                                            </option>
+                                            {branchTypeData?.data?.map(size =>
+                                                <option value={size.id || ""} key={size.id}   >
+                                                    {size?.name}
+                                                </option>)}
+
+                                        </select>
                                     </td>
                                        <td className="px-3 py-1.5">
                                       <input
@@ -394,11 +327,213 @@ const AddBranch = ({ partyData, partyId,
 
 
               </div>
-            </div>
+            </div> */}
+     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[470px] overflow-auto">
+                <div className="flex justify-between items-center mb-2">
+                   <h2 className="font-bold text-xs text-slate-700"> <span className="font-bold text-lg text-slate-700">  Party : </span>   {name}</h2>
+                    <div className="flex gap-2 items-center">
+
+                        <button
+                            onClick={() => {
+                                addNewRow()
+                            }}
+                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+                        >
+                            <HiPlus className="w-3 h-3 mr-1" />
+                            Add Item
+                        </button>
+                    </div>
+
+                </div>
+  <div className="overflow-x-auto">
+
+                    <table className="w-full border-collapse table-fixed">
+                        <thead className="bg-gray-200 text-gray-800">
+                            <tr>
+                                <th
+                                    className={`w-9 px-2 py-2 text-left font-medium text-[13px] `}
+                                >
+                                    S.No
+                                </th>
+                                <th
+
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    BranchName
+                                </th>
+                                <th
+
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    BranchType
+                                </th>
+                                <th
+
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    BranchEmail
+                                </th>
+                                <th
+
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    BranchAddress
+                                </th>
+                                <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                     Person Name
+                                </th>
+                                <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Designation
+                                </th>
+                               
+                                <th
+
+                                    className={`w-14 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Contact Number
+                                </th>
+
+                                <th
+
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Actions
+                                </th>
+
+                            </tr>
+                        </thead>
+                            <tbody>
+                        
+                                                    {(branchInfo ? branchInfo : []).map((item, index) =>
+                                                          <tr className="border border-blue-gray-200 cursor-pointer p-3" >
+                                                                     <td className="w-3  text-center border border-gray-300 text-[11px] px-2">
+                                                                      {parseInt(index)  +  1 }
+                                                      
+                                                            </td>         
+                                                            <td className="w-40  py-0.5 border-blue-gray-200 text-[13px] text-right border border-gray-300">
+                                                              <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input  text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '                                                                   
+                                                                    value={item?.branchName}
+                                                                       type="text"
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "branchName") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>       
+                                                              <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                        <select
+                                                                      onKeyDown={e => { if (e.key === "Delete") { handleInputbranch("", index, "branchType") } }}
+                                                                      disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={item.branchType} onChange={(e) => handleInputbranch(e.target.value, index, "branchType")}
+                                                                      onBlur={(e) => {
+                                                                          handleInputbranch((e.target.value), index, "branchType")
+                                                                      }
+                                                                      }
+                                                      >
+
+                                                                    <option hidden>
+                                                                    </option>
+                                                                    {(id ? branchTypeData?.data : branchTypeData?.data?.filter(item => item.active))?.map((blend) =>
+                                                                        <option value={blend.id} key={blend.id}>
+                                                                            {blend.name}
+                                                                        </option>
+                                                                    )}
+                                                       </select>
+                                                            </td>         <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                  <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '
+                                                                    type="text"
+                                                                    value={item?.branchAddress}
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "branchAddress") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>         <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                  <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '
+                                                                    type="text"
+                                                                    value={item?.contactPersonName}
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "contactPersonName") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>     
+                                                                <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                  <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '
+                                                                    type="text"
+                                                                    value={item?.qty}
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "qty") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>
+                                                                            <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                  <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '
+                                                                    type="text"
+                                                                    value={item?.Designation	}
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "Designation	") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>
+                                                                <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                                                  <textarea className='text-left rounded py-1 w-full h-full px-1 table-data-input text-xs  
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none '
+                                                                    type="text"
+                                                                    value={item?.ContactNumber}
+                                                                    onChange={(e) => { handleInputbranch(e.target.value, index, "ContactNumber") }} onFocus={(e) => { e.target.select() }} min={0}
+                                                                />
+                        
+                                                            </td>
+                                                     
+                                                               <td className="w-16 px-1 py-1 text-center">
+                                        <div className="flex space-x-2  justify-center">
+
+                                            {/* <button
+                                                // onClick={() => handleView(index)}
+                                                // onMouseEnter={() => setTooltipVisible(true)}
+                                                // onMouseLeave={() => setTooltipVisible(false)}
+                                                className="text-blue-800 flex items-center  bg-blue-50 rounded"
+                                            >
+                                                👁 <span className="text-xs"></span>
+                                            </button>
+                                            <span className="tooltip-text">View</span>
+                                            <button
+                                                // onClick={() => handleEdit(index)}
+                                                className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                                            >
+                                                <HiPencil className="w-4 h-4" />
+
+                                            </button> */}
+                                            <span className="tooltip-text">Edit</span>
+                                            <button
+                                                onClick={() => deleteBranch(index)}
+                                                className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                            >
+                                                <HiTrash className="w-4 h-4" />
+
+                                            </button>
+                                            <span className="tooltip-text">Delete</span>
+                                        </div>
+                                    </td>
+                                                          </tr>
+                                                    )}
+                                                </tbody>
+                    </table>
 
 
+                </div>
           </div>
 
+          </div>
       
        
         {/* </Modal>

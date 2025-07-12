@@ -18,9 +18,8 @@ import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useSelector } from "react-redux";
 
-const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly})  => {
+const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , allData})  => {
 
-    console.log(readOnly,":readOnly")
 
     const today = new Date()
       const componentRef = useRef();
@@ -59,7 +58,6 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
         const params = {
     branchId, companyId 
   };
-  const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
 
 
   
@@ -68,7 +66,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
       if (allData?.nextDocId) {
         setDocId(allData.nextDocId)
       }
-    }, [allData, isLoading, isFetching, id])
+    }, [allData, id])
   
     useEffect(getNextDocId, [getNextDocId])
   
@@ -257,7 +255,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
 
             </div>
             <div className="space-y-3 h-full py-3">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
                     <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -265,7 +263,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
                             Inward Details
                         </h2> */}
                         <div className="grid grid-cols-2 gap-1">
-                            <ReusableInput label="Doc. Id" readOnly value={docId} />
+                            <ReusableInput label="Doc. Id" readOnly value={docId}  />
                             <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
                                 {/* <DropdownInput name="Inward Type"
                             beforeChange={() => { setDirectInwardReturnItems([]) }}
@@ -375,7 +373,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
                          
                         </div>
 
-                            </div>
+                       </div>
                    </div>
                              <fieldset className=''>                      
                        {transType.toLowerCase().includes("GreyYarn".toLowerCase())
@@ -396,7 +394,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
                
                      <div className="grid grid-cols-3 gap-3">
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                                               <h2 className="font-medium text-slate-700 mb-2 text-base">Terms & Conditions</h2>
+                                               <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
                                                <textarea
                                                    readOnly={readOnly}
                                                 //    value={term}
@@ -414,7 +412,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
                    
                    
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                                               <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
+                                               <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
                                                <textarea
                                                    readOnly={readOnly}
                                                 //    value={notes}
@@ -429,20 +427,20 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly}) 
                    
                                            {/* Pricing Summary (Grand Total) Section */}
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                                               <h2 className="font-semibold text-slate-800 mb-2 text-base">
+                                               <h2 className="font-bold text-slate-800 mb-2 text-base">
                                                    Qty Summary
                                                </h2>
                    
                                                <div className="space-y-1.5">
                                                    <div className="flex justify-between py-1 text-sm">
-                                                       <span className="text-slate-600">Total Qty</span>
-                                                       <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
+                                                       <span className="text-slate-800 font-bold">Total Qty</span>
+                                                       <span className="font-bold">{parseInt(getTotalQty())}   No's</span>
                                                    </div>
                    
                    
                    
                                                    <div className="flex justify-between py-1 text-sm">
-                                                       <span className="text-slate-600">Order By</span>
+                                                       <span className="text-slate-600 font-bold">Order By</span>
                                                        <input
                                                            type="text"
                                                            className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"

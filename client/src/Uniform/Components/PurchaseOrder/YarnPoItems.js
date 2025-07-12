@@ -190,7 +190,7 @@ const YarnPoItems = ({
       
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+                    <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
 
                         <button
@@ -207,7 +207,7 @@ const YarnPoItems = ({
                 </div>
       <div className={` relative w-full overflow-y-auto py-1`}>
         <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800">
+                        <thead className="bg-gray-200 text-gray-900">
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -251,12 +251,12 @@ const YarnPoItems = ({
                                 >
                                     Price
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Price(with Tax)
-                                </th>
+                                </th> */}
 
                                 <th
 
@@ -264,12 +264,12 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
-                                 <th
+                                 {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    View Tax
-                                </th>
+                                    DiscountType
+                                </th> */}
                                  <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -796,13 +796,13 @@ const YarnPoItems = ({
 
                                              </td>
           
-                                            <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
+                                            {/* <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
 
-                                                {priceWithTax(row.price, row.taxPercent).toFixed(2)}
+                                                {priceWithTax(row.price * ).toFixed(2)}
 
-                                            </td>
+                                            </td> */}
 
-                                            <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
+                                            {/* <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
                                                 <input
                                                     type="number"
                                                     onFocus={(e) => e.target.select()}
@@ -810,14 +810,14 @@ const YarnPoItems = ({
                                                     value={(!row.price || !row.price) ? 0 : (parseFloat(sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")) * parseFloat(row.price)).toFixed(2)}
                                                     disabled={true}
                                                 />
-                                            </td>
-                                                <td className='w-16 px-1 py-1 text-center text-[11px]'>
+                                            </td> */}
+                                              {/* <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "discountType") } }}
 
 
                                                     disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
-                                                    className='text-left w-full rounded py-1 table-data-input'
+                                                      className="text-right rounded py-1 w-full px-1 table-data-input"
                                                     value={row.discountType}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
                                                     onBlur={(e) => {
@@ -835,7 +835,17 @@ const YarnPoItems = ({
                                                         </option>
                                                     )}
                                                 </select>
-                                            </td>        
+                                            </td> 
+                                                    */}
+                                              <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                                      <input
+                                                          type="number"
+                                                          onFocus={(e) => e.target.select()}
+                                                          className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                                          value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(2)}
+                                                          disabled={true}
+                                                      />
+                                                  </td>
                                               {/* <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
                                                   <button
                                                       className="text-center rounded py-1 w-20"
@@ -853,7 +863,7 @@ const YarnPoItems = ({
                                               </td> */}
                                  
           
-                                              <td className="w-16 px-1 py-1 text-center">
+                                              <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                                   <div className="flex space-x-2  justify-center">
           
                                                       <button

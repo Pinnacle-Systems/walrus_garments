@@ -70,7 +70,7 @@ export function ReusableSearchableInput({
             <input
               className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
               focus:border-indigo-300 focus:outline-none transition-all duration-200
-              hover:border-slate-400"
+              hover:border-slate-400 text-gray-800"
               placeholder={placeholder}
               value={findFromList(searchTerm, optionList, "name")}
               onChange={(e) => {
@@ -266,7 +266,7 @@ export function ReusableInput(
   return (
     <div className="mb-2">
       {label && (
-        <label className="block text-xs font-bold text-slate-700 mb-1">
+        <label className="block  font-bold text-slate-700 mb-1 text-ms">
           {label}
         </label>
       )}

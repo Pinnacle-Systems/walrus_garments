@@ -51,6 +51,7 @@ import sizeTemplateApi from "./uniformService/SizeTemplateMasterServices";
 import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
 import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
+import branchTypeMasterApi from "./uniformService/BranchTypeMaster";
 
 const commonReducers = {
   openTabs, party,
@@ -141,6 +142,7 @@ const commonReducers = {
   measurementMaster: MeasurementMasterApi.reducer,
   fiberContentMaster: FiberContentMasterApi.reducer,
   YarnNeedleMaster: YarnNeedleMasterApi.reducer,
+  branchTypeMaster : branchTypeMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -230,6 +232,7 @@ SocksTypeApi.middleware,
 MeasurementMasterApi.middleware,
 FiberContentMasterApi.middleware,
 YarnNeedleMasterApi.middleware,
+branchTypeMasterApi.middleware
 ];
 
 

@@ -59,12 +59,23 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
 
 
   const retrieveAllowedPages = useCallback(() => {
+    const defaultAdminRaw = secureLocalStorage.getItem(
+  sessionStorage.getItem("sessionId") + "defaultAdmin"
+);
+
+let defaultAdmin = false;
+try {
+  if (typeof defaultAdminRaw === "string") {
+    defaultAdmin = JSON.parse(defaultAdminRaw);
+  } else {
+    defaultAdmin = defaultAdminRaw;
+  }
+} catch (e) {
+  console.error("Failed to parse defaultAdmin:", e);
+  defaultAdmin = false;
+}
     if (
-      JSON.parse(
-        secureLocalStorage.getItem(
-          sessionStorage.getItem("sessionId") + "defaultAdmin"
-        )
-      )
+      defaultAdmin
     ) {
       axios({
         method: "get",
@@ -200,7 +211,7 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
 
 
           <div className="nav-item flex justify-between gap-3 items-center">
-            <PageSearch pageList={allowedPages} />
+            {/* <PageSearch pageList={allowedPages} /> */}
             <div
               className="text-lg"
               onClick={() => { setIsGlobalOpen(true) }}>

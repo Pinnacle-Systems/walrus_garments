@@ -8,6 +8,8 @@ import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/D
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import PurchaseInwardForm from '../PurchaseInward/PurchaseInwardFormUi';
+import { useGetPurchaseCancelQuery } from '../../../redux/uniformService/PurchaseCancelServices';
+import PurchaseCancelForm from './PurchaseCancelForm';
 
 
 
@@ -27,7 +29,7 @@ const PurchaseCancel = () => {
         branchId, userId, finYearId
     };
     const [orderDetails, setOrderDetails] = useState([])
-  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
+  const { data: allData, isLoading, isFetching } = useGetPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
     const { data: partyData } = useGetPartyQuery({ params })
     // const [removeData] = useDeleteOrderMutation();
     const columns = [
@@ -38,15 +40,11 @@ const PurchaseCancel = () => {
         },
         
         {
-            header: 'Inward No.',
+            header: 'Doc No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
         },
-           {
-            header: 'InwardType',
-            accessor: (item) => item.poInwardOrDirectInward,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
+       
         {
             header: 'Inward Date',
             accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
@@ -105,7 +103,7 @@ const PurchaseCancel = () => {
     return (
         <>
             {showManufacturer ? (
-                <PurchaseInwardForm
+                <PurchaseCancelForm
                     onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId}
                 //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
                 //     partyData={partyData?.data}
@@ -113,7 +111,7 @@ const PurchaseCancel = () => {
 
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Purchase Cancel</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select

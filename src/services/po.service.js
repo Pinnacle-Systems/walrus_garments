@@ -11,24 +11,25 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.po.findFirst({
         where: {
             branchId: parseInt(branchId),
-            AND: [
-                {
-                    createdAt: {
-                        gte: startTime
+            // AND: [
+            //     {
+            //         createdAt: {
+            //             gte: startTime
 
-                    }
-                },
-                {
-                    createdAt: {
-                        lte: endTime
-                    }
-                }
-            ],
+            //         }
+            //     },
+            //     {
+            //         createdAt: {
+            //             lte: endTime
+            //         }
+            //     }
+            // ],
         },
         orderBy: {
             id: 'desc'
         }
     });
+    console.log(branchId, shortCode, startTime, endTime,"branchId, shortCode, startTime, endTime")
     const branchObj = await getTableRecordWithId(branchId, "branch")
     let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PO/1`
     if (lastObject) {
@@ -55,7 +56,8 @@ async function get(req) {
     const { startTime: startDateStartTime } = getDateTimeRange(startDate);
     const { endTime: endDateEndTime } = getDateTimeRange(endDate);
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    console.log(finYearDate,"")
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let data = await prisma.po.findMany({
         where: {
             AND: [
@@ -63,12 +65,12 @@ async function get(req) {
                     AND: (finYearDate) ? [
                         {
                             createdAt: {
-                                gte: finYearDate.startTime
+                                gte: finYearDate.startDateStartTime
                             }
                         },
                         {
                             createdAt: {
-                                lte: finYearDate.endTime
+                                lte: finYearDate.endDateEndTime
                             }
                         }
                     ] : undefined,
@@ -138,7 +140,7 @@ async function get(req) {
 
 
 
-    let docId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime)) : "";
+    let docId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
     // console.log(data, "data")
     return { statusCode: 0, data, nextDocId: docId, totalCount };
 }

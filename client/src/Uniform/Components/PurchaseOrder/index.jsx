@@ -11,7 +11,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 import { useGetTaxTemplateQuery } from '../../../redux/services/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DisabledInput, DropdownInput, DateInput } from "../../../Inputs";
+import { DisabledInput, DropdownInput, DateInput, ReusableTable } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 import { poTypes } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
@@ -286,65 +286,28 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
         {
             header: 'S.No',
             accessor: (item, index) => index + 1,
-            cellClass: () => 'font-medium text-gray-900'
+            className: 'font-medium text-gray-900 w-12  text-center'
         },
         
         {
-            header: 'Inward No.',
+            header: 'Inward No',
             accessor: (item) => item.docId,
-            cellClass: () => 'font-medium text-gray-900'
+            className: 'font-medium text-gray-900 w-20'
         },
            {
             header: 'TransType',
             accessor: (item) => item.transType,
-            cellClass: () => 'text-gray-800 uppercase'
+           className:  'text-gray-800 uppercase w-24'
         },
         {
             header: 'Inward Date',
-            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
+            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
+             className:  'text-gray-800 uppercase w-24'
         },
         {
             header: 'Supplier',
             accessor: (item) => findFromList(item.supplierId, supplierList?.data ,"name"),
-            cellClass: () => 'uppercase'
-        },
-           {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },
-      {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) => item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
-        },   {
-            header: '',
-            accessor: (item) =>  item.ff,
-            cellClass: () => 'uppercase'
+             className:  'text-gray-800 uppercase w-72'
         },
    
       ];
@@ -391,189 +354,13 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
    
 
   return (
-//     <div
-//       onKeyDown={handleKeyDown}
-//       className="md:items-start md:justify-items-center grid h-full bg-theme overflow-auto">
-
-//       <Modal isOpen={formReport} onClose={() => setFormReport(false)} widthClass={"px-2 h-[90%] w-[90%]"}>
-//         <PurchaseOrderFormReport
-//           heading={MODEL}
-//           tableHeaders={tableHeadings}
-//           tableDataNames={tableDataNames}
-//           loading={
-//             isLoading || isFetching
-//           }
-//           tableWidth="100%"
-//           data={allData?.data}
-//           onClick={(id) => {
-//             setId(id);
-//             setFormReport(false);
-//           }
-//           }
-//           searchValue={searchValue}
-//           setSearchValue={setSearchValue}
-//         />
-//       </Modal>
-//       <Modal
-//         isOpen={printModalOpen}
-//         onClose={() => setPrintModalOpen(false)}
-//         widthClass={"w-[90%] h-[90%]"}
-//       >
-//         <PDFViewer style={tw("w-full h-full")}>
-//           <PrintFormat
-//             data={id ? singleData?.data : "Null"}
-//             singleData={id ? singleData?.data : "Null"}
-//             date={id ? singleData?.data?.selectedDate : date}
-//             docId={docId ? docId : ""}
-
-//           />
-//         </PDFViewer>
-//       </Modal>
-
-
-//       <div className="flex flex-col frame w-full h-full">
-//         <FormHeader
-//           onNew={onNew}
-//           model={MODEL}
-//           saveData={saveData}
-//           setReadOnly={setReadOnly}
-//           deleteData={deleteData}
-//           onPrint={id ? handlePrint : null}
-//           openReport={() => { setFormReport(true) }}
-//           childRecord={childRecord.current}
-//         />
-//         <div className="flex-1 grid gap-x-2">
-//           <div className="col-span-3 grid overflow-auto">
-//             <div className='col-span-3 grid overflow-auto'>
-//               <div className='mr-1'>
-//                 <div className={`grid`}>
-//                   <div className={"flex flex-col"}>
-//                     <fieldset className="border border-gray-600 rounded-tr-lg rounded-bl-lg px-4 py-3 w-full">
-//                       <legend className="text-sm font-semibold text-gray-700 px-2">Purchase Info</legend>
-
-//                       <div className="grid grid-cols-10 gap-x-4 gap-y-3 mt-2">
-//                         <div className="col-span-1">
-//                           <DisabledInput name="Po no." value={docId} required />
-//                         </div>
-
-//                         <div className="col-span-1">
-//                           <DateInput
-//                             name="Po Date"
-//                             value={date}
-//                             type="date"
-//                             required
-//                             readOnly={readOnly}
-//                             disabled
-//                           />
-//                         </div>
-
-//                         <div className="col-span-1 pt-0.5">
-//                           <DropdownInput
-//                             name="Po Type"
-//                             options={poTypes}
-//                             value={transType}
-//                             setValue={setTransType}
-//                             required
-//                             readOnly={readOnly}
-//                           />
-//                         </div>
-
-//                         <div className="col-span-2 pt-0.5">
-//                           <DropdownInput
-//                             name="Supplier"
-//                             options={dropDownListObject(supplierListBasedOnSupply, "name", "id")}
-//                             value={supplierId}
-//                             setValue={setSupplierId}
-//                             required
-//                             readOnly={readOnly}
-//                             masterName="PARTY MASTER"
-//                             lastTab={activeTab}
-//                           />
-//                         </div>
-
-//                         <div className="col-span-1">
-//                           <DateInput
-//                             name="Due Date"
-//                             value={dueDate}
-//                             setValue={setDueDate}
-//                             required
-//                             readOnly={readOnly}
-//                           />
-//                         </div>
-
-//                         <div className="col-span-1 pt-0.5">
-//                         <DisabledInput 
-//   name="Pay Terms" 
-//   value={payTermDay} 
-//   required 
-// />
-
-//                         </div>
-
-//                         <div className="col-span-1 pt-0.5">
-//                           <DropdownInput
-//                             name="Delivery Type"
-//                             options={deliveryTypes}
-//                             value={deliveryType}
-//                             setValue={setDeliveryType}
-//                             required
-//                             readOnly={readOnly}
-//                           />
-//                         </div>
-
-//                         <div className="col-span-2 pt-0.5">
-//                           <DropdownInput
-//                             name="Delivery To"
-//                             options={
-//                               deliveryType === "ToSelf"
-//                                 ? dropDownListObject(branchList?.data || [], "branchName", "id")
-//                                 : dropDownListObject(clientDetail, "name", "id")
-//                             }
-//                             masterName="PARTY MASTER"
-//                             lastTab={activeTab}
-//                             value={deliveryToId}
-//                             setValue={setDeliveryToId}
-//                             required
-//                             readOnly={readOnly}
-//                           />
-//                         </div>
-//                       </div>
-
-//                     </fieldset>{console.log(poItems,"poItems")}
-
-//                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-1 border border-gray-600 md:pb-5 flex h-[370px] px-1 w-full overflow-auto'>
-//                       <legend className='sub-heading'>Purchase Details</legend>
-//                       {transType.toLowerCase().includes("GreyYarn".toLowerCase())
-//                         ?
-//                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-//                         :
-//                         (
-//                           transType.toLowerCase().includes("DyedYarn".toLowerCase())
-//                             ?
-//                             <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-//                             :
-//                             <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-//                         )
-//                       }
-//                       <Consolidation readOnly={readOnly} remarks={remarks} setRemarks={setRemarks}
-//                       />
-//                     </fieldset>
-
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
 
 
 
   <>
             {purchaseOrderForm ? (
                 <PurchaseOrderForm
-                    onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId} readOnly={readOnly} setReadOnly={setReadOnly}
+                    onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
                 //  orderDetails={orderDetails} setOrderDetails={setOrderDetails}  id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
                 //     partyData={partyData?.data}
                 />
@@ -610,7 +397,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <CommonTable
+                        <ReusableTable
                             columns={columns}
                             data={allData?.data || []}
                             onView={handleView}

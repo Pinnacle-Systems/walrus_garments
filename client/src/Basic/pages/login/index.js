@@ -116,9 +116,13 @@ const Login = () => {
                     result.data.userInfo.role.companyId
                   );
                   secureLocalStorage.setItem(
-                    sessionStorage.getItem("sessionId") + "defaultAdmin",
-                    JSON.stringify(result.data.userInfo.role.defaultRole)
-                  );
+                  sessionStorage.getItem("sessionId") + "defaultAdmin",
+                  JSON.stringify(result.data.userInfo.role.defaultRole)
+                    );
+
+
+
+
                   secureLocalStorage.setItem(
                     sessionStorage.getItem("sessionId") + "userRoleId",
                     result.data.userInfo.roleId

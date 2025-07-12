@@ -535,6 +535,8 @@ model Party {
   partyBranch                PartyBranch[]
   DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
   PurchaseCancel             PurchaseCancel[]
+  BranchType                 BranchType[]
+  RawMaterial                RawMaterial[]
 }
 
 model PartyBranch {
@@ -1007,6 +1009,7 @@ model DirectInwardOrReturn {
   specialInstructions String?          @db.LongText
   remarks             String?          @db.LongText
   poInwardOrDirectInward String?
+  draftSave            Boolean?        @default(false)
   DirectItems         DirectItems[]
 }
 
@@ -3220,6 +3223,18 @@ model RawMaterial {
   id           Int       @id @default(autoincrement())
   name         String?
   active       Boolean?   @default(false)
+  Party        Party?       @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId      Int?
   aliasName    String?
 }
 
+model BranchType {
+  id           Int       @id @default(autoincrement())
+  name         String?
+  Party        Party?       @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId      Int?
+  active       Boolean?   @default(false)
+  aliasName    String?
+  isMainBranch Boolean?     @default(false)
+
+}

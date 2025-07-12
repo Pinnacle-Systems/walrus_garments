@@ -45,6 +45,18 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
+     getPartyMaterialById: builder.query({
+      query: (id) => {
+        return {
+          url: `${PARTY_API}/${id}/materialId`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Party"],
+    }),
     addParty: builder.mutation({
       query: (payload) => ({
         url: PARTY_API,
@@ -91,7 +103,14 @@ const partyMasterApi = createApi({
     }),
     deletePartyBranch: builder.mutation({
       query: (partyBranchId) => ({
-        url: `${PARTY_API}/${partyBranchId}`,
+        url: `${PARTY_API}/${partyBranchId}/"partybranch"`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Party"],
+    }),
+      deletePartyMaterial: builder.mutation({
+      query: (Material) => ({
+        url: `${PARTY_API}/${Material}/material`,
         method: "DELETE",
       }),
       invalidatesTags: ["Party"],
@@ -102,11 +121,14 @@ const partyMasterApi = createApi({
 export const {
   useGetPartyQuery,
   useGetPartyByIdQuery,
+  useGetPartyMaterialByIdQuery,
+
   useAddPartyMutation,
   useAddPartykycMutation,
   useUpdatePartyMutation,
   useDeletePartyMutation,
   useDeletePartyBranchMutation,
+  useDeletePartyMaterialMutation,
   useUploadMutation,
 } = partyMasterApi;
 

@@ -44,3 +44,5 @@ export { default as Dispatched } from './Dispatched';
 export { default as GeneralPurchase } from "./PurchaseGeneral"
 export { default as OpeningStock } from "./OpeningStock"
 export { default as SampleEntry } from "./SampleEntry";
+export { default as BranchType } from "./BranchTypeMaster";
+

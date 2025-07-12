@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
-import {  OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
+import {  BranchType, OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -116,7 +116,8 @@ const ActiveTabList = () => {
     "PURCHASE INWARD": <PurchaseInward />,
     "PURCHASE RETURN": <PurchaseReturn />,
     "OPENING STOCK" : <OpeningStock/>,
-    "PURCHASE ORDER CANCEL" : <PurchaseCancel/>
+    "PURCHASE ORDER CANCEL" : <PurchaseCancel/>,
+    "BRANCH TYPE MASTER"  : <BranchType/>
 
   };
 

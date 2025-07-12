@@ -111,7 +111,7 @@ const Mastertable = ({
                                         <table className="min-w-full text-normal border-collapse text-[12px]">
                                             <thead className="bg-gray-200 text-gray-800">
                                                 <tr>
-                                                    {tableHeaders?.filter((heading) => heading !== " ")?.map((column, index) => (
+                                                    {tableHeaders.map((column, index) => (
                                                         <th
                                                             key={index}
                                                             className={`px-4 py-2 text-left font-medium border-white/50 ${index < tableHeaders.length - 1
@@ -135,7 +135,7 @@ const Mastertable = ({
                                                         className={`hover:bg-gray-50 transition-colors border-b border-gray-200 ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                                             } cursor-pointer`}
                                                     >
-                                                        {tableDataNames?.filter(data => data !== " ")?.map((data, idx) => (
+                                                        {tableDataNames?.map((data, idx) => (
                                                             <td
                                                                 key={idx}
                                                                 className={`h-[32px] text-[12px] border-r border-gray-200 px-4`}

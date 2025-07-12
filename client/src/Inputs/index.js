@@ -8,6 +8,7 @@ import "./index.css";
 import { FormControl, MenuItem, TextField } from "@mui/material";
 import { push } from "../redux/features/opentabs";
 import { useDispatch } from "react-redux";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -93,18 +94,56 @@ export const MultiSelectDropdown = ({
   inputClass,
 }) => {
   console.log(options, "oiptiosn");
+ const customSelectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '22px',
+    height: '22px',
+    fontSize: '12px',
+    borderRadius: '0.5rem', // rounded-lg
+    outline: 'none',
+    transition: 'all 150ms', // transition-all duration-150
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+    padding: '0.25rem', // p-1
+    borderColor: state.isFocused ? '#3b82f6' : '#cbd5e1', // focus:border-blue-500
+    boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : undefined, // focus:ring-1 focus:ring-blue-500
+    '&:hover': {
+      borderColor: '#94a3b8'
+    }
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    height: '22px',
+    padding: '0 8px'
+  }),
+  input: (provided) => ({
+    ...provided,
+    margin: '0px',
+  }),
+  indicatorsContainer: (provided) => ({
+    ...provided,
+    height: '22px',
+  }),
+  option: (provided) => ({
+    ...provided,
+    fontSize: '14px',
+    padding: '8px 12px'
+  }),
+};
+
   return (
     <div
-      className={`m-1  md:grid-cols-3 items-center z-0 md:my-0.5 md:py-3 data ${className}`}
+      className={`m-1  md:grid-cols-3 items-center z-0 data  ${className}`}
     >
       <label className={`md:text-start flex ${labelName}`}>{name}</label>
-      <MultiSelect
-        className={`focus:outline-none  border border-gray-500 rounded text-black  ${inputClass}`}
-        options={options}
-        value={selected}
-        onChange={readOnly ? () => { } : setSelected}
-        labelledBy="Select"
-      />
+          <MultiSelect
+            className="text-xs  min-h-[28px] p-0.5 rounded-md shadow-sm  focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150"
+            options={options}
+            value={selected}
+            onChange={readOnly ? () => {} : setSelected}
+            labelledBy="Select"
+          />
+
     </div>
   );
 };
@@ -124,7 +163,7 @@ export const TextInput = ({
   return (
     <div className={`mb-2 ${width}`}>
       {name && (
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+        <label className="block text-xs font-bold text-gray-600 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -376,7 +415,7 @@ export const TextArea = ({
   return (
     <div className="mb-3 w-full">
       {name && (
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+        <label className="block text-xs font-bold text-gray-600 mb-1">
           {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
         </label>
       )}
@@ -423,6 +462,7 @@ export const DropdownInput = ({
   tabIndex = null,
   autoFocus = false,
   width = "full",
+  country
 }) => {
   const handleOnChange = (e) => {
     setValue(e.target.value);
@@ -445,10 +485,10 @@ export const DropdownInput = ({
         required={required}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm appearance-none
-          ${isDisabled
-            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-            : "bg-white hover:border-gray-400 cursor-pointer"}
+          transition-all duration-150 shadow-sm
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-100 cursor-not-allowed"
+            : "bg-white text-gray-900 hover:border-gray-400"}
           ${className}`}
         value={value}
         onChange={(e) => {
@@ -457,14 +497,14 @@ export const DropdownInput = ({
         }}
         disabled={isDisabled}
       >
-        <option value="" hidden={!clear}>
+        <option value="" hidden={!clear} className="text-gray-800">
           Select {name || "option"}
         </option>
         {options?.map((option, index) => (
           <option
             key={index}
             value={option.value}
-            className="text-xs py-1"
+            className="text-xs py-1 text-gray-800"
           >
             {option.show}
           </option>
@@ -653,7 +693,7 @@ export const CurrencyInput = ({
         type="number"
         disabled={disabled}
         required={required}
-        className="input-field focus:outline-none md:col-span-2 border rounded"
+        className=" focus:outline-none md:col-span-2  rounded"
         min="1"
         step="any"
         id="id"
@@ -1006,7 +1046,7 @@ export const ToggleButton = ({
             <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-6 transition-transform duration-300 shadow-sm"></div>
           </label>
 
-          <span className="text-xs ml-2">{value ? "Active" : "Inactive"}</span>
+          <span className="ml-2 block text-xs font-bold text-gray-600">{value ? "Active" : "Inactive"}</span>
         </div>
       </div>
     </div>
@@ -1018,3 +1058,198 @@ const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 export function isValidPAN(pan) {
   return panRegex.test(pan.toUpperCase());
 }
+
+
+export const ReusableTable = ({
+  columns,
+  data,
+  itemsPerPage = 10,
+  onView,
+  onEdit,
+  onDelete,
+  emptyStateMessage = 'No data available',
+  rowActions = true,
+  width
+})  => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math?.ceil(data?.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
+
+
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const Pagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
+        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data.length)} of {data.length} entries
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+          >
+            <FaChevronLeft className="inline" />
+          </button>
+
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                  ? 'bg-indigo-800 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <span className="px-3 py-1">...</span>
+          )}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                ? 'bg-indigo-800 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+            >
+              {totalPages}
+            </button>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+          >
+            <FaChevronRight className="inline" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-[#F1F1F0] rounded-xl shadow-sm overflow-hidden">
+      <table className=" border-collapse">
+        <thead className="bg-gray-200 text-gray-800">
+          <tr>
+
+            {columns?.map((column, index) => (
+              <th
+                key={index}
+                className={`${column.cellClass ? column.cellClass  : "" } py-2  font-medium   ${ column.header  !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
+             
+              >
+                {column.header}
+              </th>
+            ))}
+            {rowActions && (
+              <th className="px-4 py-2 text-center font-medium text-[13px] justify-end">Actions</th>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {currentItems?.length === 0 ? (
+            <tr>
+              <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+                {emptyStateMessage}
+              </td>
+            </tr>
+          ) : (
+            currentItems?.map((item, index) => (
+              <tr
+                key={item.id}
+                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                  }`}
+              >
+                {columns?.map((column, colIndex) => (
+                  <td
+                    key={colIndex}
+                    className={` ${column.className ? column.className  : "" } h-8 ` }
+                  >
+                    {column.accessor(item, index)}
+                  </td>
+                ))}
+                {rowActions && (
+                  <td className=" w-[40px] border-gray-200 border-l  h-8 justify-end">
+                    <div className="flex">
+                      {onView && (
+                        <button
+                          className="text-blue-600  flex items-center  px-2  bg-blue-50 rounded"
+                          onClick={() => onView(item.id)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          className="text-green-600  px-2  bg-green-50 rounded"
+                          onClick={() => onEdit(item.id)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                          </svg>
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          className=" text-red-800 flex items-center gap-1 mx-2  bg-red-50 rounded"
+                          onClick={() => onDelete(item.id)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {/* <span className="text-xs">delete</span> */}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+      <Pagination />
+    </div>
+
+
+  );
+};
