@@ -93,7 +93,9 @@ export const MultiSelectDropdown = ({
   className = "",
   inputClass,
 }) => {
-  console.log(options, "oiptiosn");
+  console.log(options, "options");
+    console.log(selected, "selected");
+
  const customSelectStyles = {
   control: (provided, state) => ({
     ...provided,
@@ -105,7 +107,7 @@ export const MultiSelectDropdown = ({
     transition: 'all 150ms', // transition-all duration-150
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
     padding: '0.25rem', // p-1
-    borderColor: state.isFocused ? '#3b82f6' : '#cbd5e1', // focus:border-blue-500
+    borderColor: state.isFocused ? '' : '#cbd5e1', // focus:border-blue-500
     boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : undefined, // focus:ring-1 focus:ring-blue-500
     '&:hover': {
       borderColor: '#94a3b8'
@@ -133,16 +135,48 @@ export const MultiSelectDropdown = ({
 
   return (
     <div
-      className={`m-1  md:grid-cols-3 items-center z-0 data  ${className}`}
+      className={`m-1  md:grid-cols-2 items-center z-0 data  ${className}`}
     >
-      <label className={`md:text-start flex ${labelName}`}>{name}</label>
-          <MultiSelect
-            className="text-xs  min-h-[28px] p-0.5 rounded-md shadow-sm  focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150"
-            options={options}
-            value={selected}
-            onChange={readOnly ? () => {} : setSelected}
-            labelledBy="Select"
-          />
+      <label className={`md:text-start   block text-xs font-bold text-slate-700 mb-1${labelName}`}>{name}</label>
+     <MultiSelect
+  options={options}
+  value={selected}
+  onChange={readOnly ? () => {} : setSelected}
+  labelledBy="Select"
+  hasSelectAll={false}
+  styles={{
+    container: (base) => ({
+      ...base,
+      fontSize: "12px",
+      minHeight: "28px",
+    }),
+    control: (base) => ({
+      ...base,
+      padding: "2px",
+      borderRadius: "10px",
+      boxShadow: "none",
+      border: "1px solid #ccc",
+      minHeight: "28px",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "12px",
+      backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
+      padding: "4px 8px",
+    }),
+    chips: (base) => ({
+      ...base,
+      fontSize: "12px",
+      padding: "2px 4px",
+    }),
+    searchBox: (base) => ({
+      ...base,
+      fontSize: "12px",
+      padding: "2px",
+    }),
+  }}
+/>
+
 
     </div>
   );
@@ -943,7 +977,7 @@ export const DropdownWithSearch = ({
   return (
     <div id={`dropdown${currentIndex}`} className={`${className}mb-2`}>
       {label && (
-        <label className="block text-xs text-slate-500 mb-1">
+        <label className="block text-xs font-bold text-gray-600 mb-1">
           {label}
         </label>
       )}
@@ -1077,7 +1111,7 @@ export const ReusableTable = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
-
+console.log(data,"commonTable")
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -1091,7 +1125,7 @@ export const ReusableTable = ({
     return (
       <div className="flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data.length)} of {data.length} entries
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data?.length)} of {data?.length} entries
         </div>
         <div className="flex gap-1">
           <button
@@ -1171,7 +1205,7 @@ export const ReusableTable = ({
             {columns?.map((column, index) => (
               <th
                 key={index}
-                className={`${column.cellClass ? column.cellClass  : "" } py-2  font-medium   ${ column.header  !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
+                className={` ${column.className ? column.className  : "" } py-2  font-medium   ${ column.header  !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
              
               >
                 {column.header}

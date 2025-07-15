@@ -25,7 +25,7 @@ export function ReusableSearchableInput({
   const [openModel, setOpenModel] = useState(false)
   const { openAddModal } = modal || {};
 
-
+console.log(optionList,"optionList")
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {

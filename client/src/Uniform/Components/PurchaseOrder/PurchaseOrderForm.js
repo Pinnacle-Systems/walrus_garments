@@ -115,9 +115,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
       const activeTab = useSelector((state) =>
         state.openTabs.tabs.find((tab) => tab.active).name
       );
-//    async function onDeleteItem(itemId) {
-//         await removeData(itemId).unwrap();
-//     }
+
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const { data: supplierDetails } =
@@ -135,6 +133,18 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
         let qty = poItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
         return parseInt(qty)
     }
+
+const partyFilter = (data) => {
+  console.log(data, "data");
+
+  return data?.filter((party) =>
+    party?.PartyMaterials?.some((material) => {
+      console.log(material.name?.toLowerCase() === transType?.toLowerCase(), "material");
+      return material.name?.toLowerCase() === transType?.toLowerCase();
+    })
+  );
+};
+
 
     const syncFormWithDb = useCallback((data) => {
     //   if (id) {
@@ -179,7 +189,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
         syncFormWithDb(undefined);
       }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
-    const data = {
+    let data = {
     transType, supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
@@ -190,6 +200,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
     finYearId
   }
  const handleSubmitCustom = async (callback, data, text) => {
+  console.log(callback,"callback")
     try {
       let returnData;
       if (text === "Updated") {
@@ -217,6 +228,8 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
             return
         }
         if (nextProcess == "draft" && !id) {
+      console.log(nextProcess,"nextProcess")
+
             handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
           }
 
@@ -243,7 +256,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
       </Modal> */}
             <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchse Order </h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Purchase Order </h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -258,13 +271,29 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
-                    <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
+                    <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
                         {/* <h2 className="font-medium text-slate-700 mb-2">
                             Inward Details
                         </h2> */}
-                        <div className="grid grid-cols-2 gap-1">
+                        {/* <div className="grid grid-cols-3 gap-1 "> */}
+                          <div className="w-28">
+
                             <ReusableInput label="Doc. Id" readOnly value={docId}  />
+                          </div>
+                            <div className="w-28">
+
                             <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                            </div>
+                                    <div className="w-28">
+                           <ReusableInput
+                            label="Due Date"
+                            value={dueDate}
+                            setValue={setDueDate}
+                            required
+                            type={"date"}
+                            readOnly={readOnly}
+                          />
+                        {/* </div> */}
                                 {/* <DropdownInput name="Inward Type"
                             beforeChange={() => { setDirectInwardReturnItems([]) }}
                             options={directOrPo}
@@ -275,60 +304,47 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                                 setValue={setTransType}
                                 required={true}
                                 readOnly={readOnly} /> */}
-                                   <div className="col-span-1">
-                           <ReusableInput
-                            label="Due Date"
-                            value={dueDate}
-                            setValue={setDueDate}
-                            required
-                            type={"date"}
-                            readOnly={readOnly}
-                          />
-                        </div>
+                  
 
                         </div>
                     </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                            </h2>
-                            <div className="grid grid-cols-2 gap-1">
-                                <div className="col-span-2">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
+                         
+                            <div className="w-48 ">
+                            <DropdownInput name="Po Type"
+                                  options={poTypes}
+                                  value={transType}
+                                  setValue={setTransType}
+                                  required={true}
+                                  readOnly={readOnly} />
+                          </div>
+                           <div className="w flex flex-row gap-8">
 
-                                
-                                
-                                 <ReusableSearchableInput
-                                            label="Party"
+                            <ReusableSearchableInput
+                                            label="Supplier"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
-                                            optionList={supplierList?.data}
+                                            optionList={partyFilter(supplierList?.data)  }
                                             onAddItem={handleAddSupplier}
                                             // onDeleteItem={onDeleteItem}
                                             setSearchTerm={setPartyId}
                                             searchTerm={partyId}
                                             readOnly={readOnly}
+                                            disable ={!transType}
                                         /> 
-                                        </div>
-                                          <DropdownInput name="Po Type"
-                                options={poTypes}
-                                value={transType}
-                                setValue={setTransType}
-                                required={true}
-                                readOnly={readOnly} />
-                              <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}                             readOnly={readOnly}
- />
-                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required /> */}
-                            {/* <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} /> */}
-                            {/* <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} /> */}
+                   
                         </div>
+                                     
+                                   
+
+                               
 
                     </div>
 
 
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2">
-                            {/* Inward Details */}
-                        </h2>
+                      
                         <div className="grid grid-cols-2 gap-1">
                           
                             {/* <DropdownInput name="Location"
@@ -343,7 +359,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                             value={storeId} setValue={setStoreId} required={true} 
                             readOnly={id || readOnly}
                              /> */}
-                              <div className="col-span-1 pt-0.5">
+                              {/* <div className="col-span-1 pt-0.5">
                            <DropdownInput
                             name="Delivery Type"
                             options={deliveryTypes}
@@ -352,9 +368,12 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                             required
                             readOnly={readOnly}
                           />
-                        </div>
+                        </div> */}
+                          
+                                                      <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}                             readOnly={readOnly}
+ />
 
-                        <div className="col-span-1 pt-0.5">
+                        {/* <div className="col-span-1 pt-0.5">
                           <DropdownInput
                             name="Delivery To"
                             options={
@@ -370,7 +389,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                             readOnly={readOnly}
                           />
                         </div>
-                         
+                          */}
                         </div>
 
                        </div>
@@ -415,9 +434,9 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
                                                <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
                                                <textarea
                                                    readOnly={readOnly}
-                                                //    value={notes}
+                                                         //    value={notes}
                                                    onChange={(e) => {
-                                                    //    setNotes(e.target.value)
+                                                       //    setNotes(e.target.value)
                                                    }}
                                                    className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                                    placeholder="Additional notes..."

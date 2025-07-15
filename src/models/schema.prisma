@@ -537,6 +537,8 @@ model Party {
   PurchaseCancel             PurchaseCancel[]
   BranchType                 BranchType[]
   RawMaterial                RawMaterial[]
+  PartyMaterials             PartyMaterials[]
+  PartyContactDetails        PartyContactDetails[]
 }
 
 model PartyBranch {
@@ -550,8 +552,13 @@ model PartyBranch {
   active               Boolean?                @default(true)
   isMainBranch         Boolean?                @default(false)
   branchAddress        String?                @db.LongText
+  contactperson        String?
+  contact              String?
+  designation          String?
+  BranchType         BranchType?                 @relation(fields: [branchTypeId], references: [id])
+  branchTypeId           Int?                 
   partyShippingAddress PartyShippingAddress[]
-  partyContactDetails  PartyContactDetails[]
+
 }
 
 model PartyShippingAddress {
@@ -562,13 +569,25 @@ model PartyShippingAddress {
   aliasName     String?      @db.LongText
 }
 
+model PartyMaterials{
+  id            Int          @id @default(autoincrement())
+  name          String?
+  Party         Party?       @relation(fields: [partyId], references: [id])
+  partyId       Int?
+  value         Int?    
+  isMainBranch  Boolean?     @default(false)
+
+}
+
 model PartyContactDetails {
   id                Int          @id @default(autoincrement())
   contactPersonName String?
   mobileNo          String?
   email             String?
-  PartyBranch       PartyBranch? @relation(fields: [partyBranchId], references: [id], onDelete: Cascade)
-  partyBranchId     Int?
+  Designation       String?
+  department        String?
+  Party                Party?                 @relation(fields: [partyId], references: [id])
+  partyId              Int?
 }
 
 model CertificateDetail {
@@ -3236,5 +3255,5 @@ model BranchType {
   active       Boolean?   @default(false)
   aliasName    String?
   isMainBranch Boolean?     @default(false)
-
+  PartyBranch     PartyBranch[]
 }

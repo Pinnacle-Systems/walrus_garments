@@ -32,6 +32,7 @@ import { useSelector } from "react-redux";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa6";
 import PurchaseOrderForm from "./PurchaseOrderForm";
+import { Loader } from "../../../Basic/components";
 const MODEL = "Purchase Order";
 
 
@@ -309,6 +310,11 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
             accessor: (item) => findFromList(item.supplierId, supplierList?.data ,"name"),
              className:  'text-gray-800 uppercase w-72'
         },
+           {
+            header: '',
+            accessor: (item) => item.none,
+             className:  'w-[55%]'
+        },
    
       ];
 
@@ -352,6 +358,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
    
        }
    
+       if(isLoading  ||  isFetching ) return <Loader/>
 
   return (
 

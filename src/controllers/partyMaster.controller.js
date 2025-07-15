@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client'
 import {
     get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload,
     kycForm as kycFormService, removePartyBranch as _removePartyBranch , removePartyMaterial as _removePartyMaterial , getMaterialOne  as _getMaterialOne
+    ,updateMaterial  as  _updateMaterial
+
 } from '../services/partyMaster.service.js';
 import multer from 'multer';
 
@@ -178,6 +180,25 @@ async function removePartyMaterial(req, res, next) {
     }
 }
 
+async function updateMaterial(req, res, next) {
+    console.log(req.params,"s")
+    try {
+        res.json(await _updateMaterial(req.params.id, req.body));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: error.message })
+        }
+    }
+}
+
 
 export {
     get,
@@ -189,5 +210,6 @@ export {
     remove,
     removePartyBranch,
     removePartyMaterial,
-    getMaterialOne
+    getMaterialOne,
+    updateMaterial
 };

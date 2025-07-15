@@ -757,7 +757,7 @@ const YarnPoItems = ({
                                                 }}
                                                 min={"0"}
                                                 type="number"
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
                                                 onFocus={(e) => e.target.select()}
                                                 // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                 value={row?.qty}
@@ -780,7 +780,7 @@ const YarnPoItems = ({
                                                           }}
                                                           min={"0"}
                                                           type="number"
-                                                          className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                                          className="text-right rounded py-1 w-full px-1 table-data-input"
                                                           onFocus={(e) => e.target.select()}
                                                           value={(!row.price) ? 0 : row.price}
                                                           disabled={readOnly}

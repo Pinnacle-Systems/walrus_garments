@@ -88,3 +88,5 @@ export const MEASUREMENT_API = "measurement"
 export const FIBER_CONTENT_API = "fiberContent"
 export const YARN_NEEDLE_APT = "yarnNeedle"
 export const BRANCH_TYPE_MASTER = "branchType"
+export const MATERIAL_MASTER_API = "branchType"
+

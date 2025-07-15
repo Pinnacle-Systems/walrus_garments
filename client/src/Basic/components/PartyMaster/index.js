@@ -46,10 +46,16 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 import AddBranch from "./AddBranch";
 import Modal from "../../../UiComponents/Modal";
 import RawMaterial from "./AddRawMaterial";
-import { Check, Plus } from "lucide-react";
+import { BracesIcon, Check, LayoutGrid, Plus, Table } from "lucide-react";
 import Mastertable from "../MasterTable/Mastertable";
 import { useGetbranchTypeQuery } from "../../../redux/uniformService/BranchTypeMaster";
 import { useGetCountriesQuery, useGetCountryByIdQuery } from "../../../redux/services/CountryMasterService";
+import Swal from "sweetalert2";
+import Loader from "../Loader";
+import { faL } from "@fortawesome/free-solid-svg-icons";
+import { FaInfoCircle, FaPlus } from "react-icons/fa";
+import AddContactPersonDetails from "./ContactPersonDetails";
+import ContactPersonDetails from "./ContactPersonDetails";
 
 const MODEL = "Party Master";
 
@@ -72,11 +78,9 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [pincode, setPincode] = useState("");
-  const [contactPersonName, setContactPersionName] = useState("");
   const [igst, setIgst] = useState(false);
   const [gstNo, setGstNo] = useState("");
   const [costCode, setCostCode] = useState("");
-  const [contactMobile, setContactMobile] = useState("");
   const [isGy, setIsGy] = useState(false);
   const [isDy, setIsDy] = useState(false);
   const [isAcc, setIsAcc] = useState(false);
@@ -97,18 +101,34 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [backUpItemsList, setBackUpItemsList] = useState([]);
   const [shippingAddress, setShippingAddress] = useState([]);
   const [contactDetails, setContactDetails] = useState([]);
+      const [contactNumber, setContactNumber] = useState("")
+  const [contactPersonName, setContactPersonName] = useState("")
+
+
   const [certificate, setCertificate] = useState([])
   const [searchValue, setSearchValue] = useState("");
   const [email, setEmail] = useState("")
   const [addressOnlyRead, setAddressOnlyRead] = useState(true)
   const [errors, setErrors] = useState({});
   const [image, setImage] = useState({});
+  const [partyCode,setPartyCode] = useState("");
+    const [landMark,setlandMark] = useState("");
+    const [contactPerson,setContactPerson] = useState("");
+    const [contact,setContact] = useState("");
+    const [bankname,setBankName] = useState("");
+    const [bankBranchName,setBankBranchName] = useState("");
+    const [ifscCode,setIfscCode] = useState("");
+
   const [branchModelOpen, setBranchModelOpen] = useState(false);
   const [branchName, setBranchName] = useState("");
   const [branchCode, setBranchCode] = useState("");
   const [branchAddress, setBranchAddress] = useState("");
   const [branchContact, setBranchContact] = useState("");
+    const [branchContactPerson, setBranchcontactPerson] = useState("");
   const [branchEmail, setBranchEmail] = useState("");
+  const [openingHours,setopeningHours]  =  useState("")
+  const [branchWebsite,setBranchWebsite]  = useState("")
+  const [ branchForm,setBranchForm ]  =  useState(true)
   const [partyBranch, setPartyBranch] = useState([])
   const [rawMaterial,setRawMaterial]  = useState(false)
   const [material,setMaterial] =  useState("")
@@ -118,6 +138,12 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [branchInfo,setBranchInfo]  = useState([]);
   const [selected, setSelected] = useState([]);
   const [materialForm,setMaterialForm] = useState(false)
+  const [view, setView] = useState("Customer");
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [isContactPerson,setIsContactPerson]  = useState(false)
+  const [designation,setDesignation]  = useState("")
+   const [department,SetDepartment ] = useState("")
+  
   const childRecord = useRef(0);
   const dispatch = useDispatch();
   const [country,setCountry]  = useState("")
@@ -163,7 +189,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     }
   }, [openPartyModal]);
 
-        console.log( useSelector((state) => state),"conditipon")
 
 
   const {
@@ -178,7 +203,15 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [removeBranchData] = useDeletePartyBranchMutation();
 
 
-  console.log(id || partyId, "condition")
+let filterParty ;
+if(view == "Customer"){
+  filterParty  =  allData?.data?.filter(item  => item.isClient)
+}
+if(view  ===  "Supplier"){
+    filterParty  =  allData?.data?.filter(item  => item.isSupplier)
+  }
+
+  console.log(selected,"selected")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -210,7 +243,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       setCinNo(data?.cinNo || "");
       setFaxNo(data?.faxNo || "");
       setCinNo(data?.cinNo || "");
-      setContactPersionName(data?.contactPersionName || "");
+      setContactPersonName(data?.contactPersonName || "");
       setGstNo(data?.gstNo || "");
       setCostCode(data?.costCode || "");
       setCstDate(
@@ -237,6 +270,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       setPriceTemplateId(data?.priceTemplateId || "");
       setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
       setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
+      // setContactPersonName
       setSupplier(data?.isSupplier || false);
       setClient(data?.isClient || false);
       setBranchAddress(data?.branchAddress ? data?.branchAddress : "")
@@ -255,11 +289,22 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
           })
           : []
       );
+      // setSelected(data?.PartyMaterials ? data?.PartyMaterials  : []  )
+setSelected(
+  data?.PartyMaterials
+    ? data.PartyMaterials.map((item) => ({
+        label: item.name,
+        value: item.value,
+        id:item.id,
+      }))
+    : []
+);
     },
 
     [id]
   );
 
+  
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
@@ -281,11 +326,9 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     faxNo,
     email,
     website,
-    contactPersonName,
     igst,
     currencyId: currency,
     costCode,
-    contactMobile,
     gstNo,
     active,
     isSupplier,
@@ -304,14 +347,18 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     priceTemplateId,
     image,
     isAcc,
-    branchInfo : branchInfo?.filter(item  => item.branchName !== "") , mail,
     isGy,
     isDy,
     partyBranch,
-    rawMaterial,
-    material,
-    materialActive,
-    isForPartyBranch: true
+    
+    
+    
+    branchInfo : branchInfo?.filter(item  => item.branchName !== "") , mail,
+    partyMaterials : selected,   material,  materialActive, rawMaterial,
+     branchAddress,branchContact,branchContactPerson,branchEmail,branchName,branchType,branchWebsite,openingHours,
+    contact,department,designation,
+    contactPersonName,
+
   };
 
   const [sendKycEmail, { isLoadingMail }] = useSendKycEmailMutation();
@@ -330,6 +377,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     return false;
   };
 
+
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
       let returnData;
@@ -339,7 +387,12 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
         console.log("add")
         returnData = await callback(data).unwrap();
       }
-      toast.success(text + "Successfully");
+          Swal.fire({
+        icon: 'success',
+        title: `${text || 'Saved'} Successfully`,
+        showConfirmButton: false,
+        timer: 2000
+      });
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -371,7 +424,11 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error("Something went wrong during submission");
+            Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
     }
   };
 
@@ -415,14 +472,13 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     accessoryItemsMasterList,
   ]);
 
-  console.log(id,"id")
 const SaveBranch  = (   )  => {
  if (id) {
       handleSubmitCustom(updateData, data, "Updated");
-      setRawMaterial(false)
+      // setRawMaterial(false)
     } else {
       handleSubmitCustom(addData, data, "Added");
-            setRawMaterial(false)
+            // setRawMaterial(false)
 
     }
 }
@@ -642,7 +698,7 @@ const SaveBranch  = (   )  => {
                    return;
                }
                try {
-                   // await removeData(orderId)
+                   await removeData(orderId)
                    setId("");
                    onNew();
                    toast.success("Deleted Successfully");
@@ -675,12 +731,17 @@ const SaveBranch  = (   )  => {
       className:  'text-gray-800 uppercase w-72'
 
     },
-      
+          {
+      header: '',
+      accessor: (item) => item.nonme    ,
+        cellClass: () => 'font-medium text-gray-900',
+      className:  'text-gray-800 uppercase w-[60%]'
+
+    },
 
   ];
 
   const handleChange = (type) => {
-    console.log(type,"type");
     
     setSupplier(type == 'supplier');
     setClient(type == 'client');
@@ -688,7 +749,14 @@ const SaveBranch  = (   )  => {
     
     
   };
-  console.log(country,"country")
+    const handleFun = () => {
+           console.log("Hit")
+        console.log(branchForm,"bg")
+
+      setBranchForm(false)
+    console.log(branchForm,"branch")
+    
+  };
     const options = allData?.materialData
 
     const handleCheckboxChange = (value) => {
@@ -699,6 +767,8 @@ const SaveBranch  = (   )  => {
     );
   };
 
+       if(isLoading  ||  isFetching ) return <Loader/>
+console.log(singleData,"singleData")
 
   if (partyId) {
     return (
@@ -731,14 +801,14 @@ const SaveBranch  = (   )  => {
 
 
 
-                <AddBranch partyData={allData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                <AddBranch singleData={singleData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
                   branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
                   branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} onNew={onNew}
                   setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
                   deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
                   handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
-                  shippingAddress={shippingAddress} setForm={setForm} 
-                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  id={id}
+                  shippingAddress={shippingAddress} setForm={setForm} branchForm={branchForm}  setBranchForm={setBranchForm}
+                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  id={id} handleFun={handleFun}
                   partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen} name={name}
                   branchType={branchType} setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
                 />
@@ -772,17 +842,18 @@ const SaveBranch  = (   )  => {
 
                   />
               </Modal>
-          <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+                
+       <div className="h-full flex flex-col bg-[f1f1f0] ">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                  {id ? (!readOnly ? "Edit Party Master" : "Party Master") : "Add New Party"}
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Customer/supplier" : "Customer/supplier Master") : "Add New Customer/supplier Master"}
                 </h2>
-              
+             
               </div>
               <div className="flex gap-2">
                 <div>
-                  {readOnly && (
+                  {!readOnly && (
                     <button
                       type="button"
                       onClick={() => {
@@ -797,7 +868,6 @@ const SaveBranch  = (   )  => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                      
                   {!readOnly && (
                     <button
                       type="button"
@@ -813,57 +883,84 @@ const SaveBranch  = (   )  => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-3 bg-[#f1f1f0] h-full">
-              <div className="grid grid-cols-1  gap-3  h-full">
-                <div className="lg:col-span- space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                   
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              
 
-                   <div className="space-y-2 h-full bg-[#f1f1f0] p-2">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
+               
 
-                    <div className="space-y-2 h-full bg-[#f1f1f0]">
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Basic Details</h3>
+                    {/* <div className="space-y-2"> */}
+                          <div className="grid grid-cols-2">     
+                      <div className="flex flex-row items-center gap-2 mt-2 mb-2">
+                           <div className="flex items-center gap-2 ">
+                                                   <input
+                                                     type="radio"
+                                                     name="type"
+                                                     checked={isClient}
+                                                     onChange={() => handleChange('client')}
+                                                   />
+                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
+                                                 </div>
+                                                         <div className="flex flex-row gap-2">
 
-                      <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  shadow-xs">
-                        <h3 className="mb-1 text-sm font-semibold text-gray-900">
-                          Party Type
-                        </h3>
-                        <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
-                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                        <div className="col-span-1 flex items-center gap-4 ml-2">
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="radio"
-                              name="type"
-                              checked={isSupplier}
-                              onChange={() => handleChange('supplier')}
-                            />
-                            <label className="text-xs">Supplier</label>
-                          </div>
-                            </div>
-                          <div className="col-span-1 flex items-center gap-4 ml-2">
-
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="radio"
-                              name="type"
-                              checked={isClient}
-                              onChange={() => handleChange('client')}
-                            />
-                            <label className="text-xs">Client</label>
-                          </div>
-                        </div>
-                     {isSupplier && (
-                        <div className="col-span-1">
-                      <button  className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs" onClick={() => setRawMaterial(true)}>
-                                    Add Material
-                                  </button>
-                        </div>
-                         )}  
-
-                      <div className="col-span-2 flex items-center">
-                        <ToggleButton
+                                                    <input
+                                                      type="radio"
+                                                      name="type"
+                                                      checked={isSupplier}
+                                                      onChange={() => handleChange('supplier')}
+                                                    />
+                                                    <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
+                                                      </div>
+                      </div>
+                      <div className="col-span-2">
+                         <TextArea
+                                                   name={isSupplier ? "Supplier Name" : "Customer Name"}
+                                                   type="text"
+                                                   value={name}
+                                                   inputClass="h-8" 
+                       
+                                                   setValue={setName}
+                                                   required={true}
+                                                   readOnly={readOnly}
+                                                   disabled={childRecord.current > 0}
+                                                   onBlur={(e) => {
+                                                     if (aliasName) return;
+                                                     setAliasName(e.target.value);
+                                                   }}
+                     
+                                                   className="focus:ring-2 focus:ring-blue-100"
+                                                 />
+                      </div>
+                       <div className="col-span-2">
+                            <TextArea
+                                name="Alias Name"
+                                type="text"
+                                inputClass="h-8" 
+                                value={aliasName}
+                                setValue={setAliasName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100"
+                              />
+                      </div>
+                       <div>
+                          <TextInput
+                                name="Party Code"
+                                type="number"
+                                // value={contact}
+        
+                                // setValue={setContact}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                              />
+                      </div>
+                      <div className="mt-5 ml-3">
+                              <ToggleButton
                           name="Status"
                           options={statusDropdown}
                           value={active}
@@ -875,253 +972,389 @@ const SaveBranch  = (   )  => {
                           inactiveClass="text-gray-500"
                         />
                       </div>
-
-  {/* Checkboxes: Only shown if Supplier is selected */}
-  {isSupplier && (
-    <div className="col-span-6 grid grid-cols-1 sm:grid-cols-6 gap-2 mt-2">
-      {options?.map((item, index) => (
-        <label key={index} className="flex items-center gap-2 py-1 text-sm">
-          <input
-            type="checkbox"
-            checked={selected.includes(item)}
-            onChange={() => handleCheckboxChange(item)}
-          />
-          <span>{item.name}</span>
-        </label>
-      ))}
-    </div>
-  )}
-</div>
-
-                        </div>
+                         
+     <div className="mt-5 ml-3">
+                       
                       </div>
+                                              
+                                                    
+                                                       
+                                                  </div>
+                
+                      <div className="grid grid-cols-2 gap-2">
+                         
 
-                      <div className="space-y-2">
-                        <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-1 shadow-xs ">
-                          <div className="grid grid-cols-1 gap-x-2  md:grid-cols-2 lg:grid-cols-5 ">
-                            <div className="col-span-2">
-
-                            <TextArea
-                              name={isSupplier ? "Supplier Name" : "Customer Name"}
-                              type="text"
-                              value={name}
-                              inputClass="h-8" 
-  
-                              setValue={setName}
-                              required={true}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              onBlur={(e) => {
-                                if (aliasName) return;
-                                setAliasName(e.target.value);
-                              }}
-
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                            </div>
-       
-                  <div className="col-span-2">
-                            <TextArea
-                              name="Alias Name"
-                              type="text"
-                              inputClass="h-8" 
-                              value={aliasName}
-                              setValue={setAliasName}
-                              required={true}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
+              
+                      </div>
+                    {/* </div> */}
                   </div>
+
+        
+                </div>
+                   <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
+                 <div className="space-y-2">
+                 
+
+                        <TextInput
+                                  name="Party Email"
+                                  type="number"
+                                  value={email}
+          
+                                  setValue={setEmail}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  className="focus:ring-2 focus:ring-blue-100 w-10"
+                                />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2 flex flex-row gap-4 mt-2">
+                           <div className="w-72">
+                                                  
+                              <TextInput
+                                            name="Contact Person"
+                                            type="text"
+                                            // value={contact}
+                    
+                                            // setValue={setContact}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />
+                                           </div>
+                    <div className="relative inline-block">
+                                <button
+                                  className="w-9 h-9 border border-green-500 rounded-md mt-3
+                                            hover:bg-green-500 text-green-600 hover:text-white
+                                            transition-colors flex items-center justify-center"
+                                  disabled={readOnly}
+                                  onClick={() => {
+                                    // openAddModal();
+                                    // setIsDropdownOpen(false);
+                                    // setEditingItem("new");
+                                    // setOpenModel(true);
+                                    setIsContactPerson(true)
+                                  }}
+                                  onMouseEnter={() => setTooltipVisible(true)}
+                                  onMouseLeave={() => setTooltipVisible(false)}
+                                  aria-label="Add supplier"
+                                >
+                                  <FaPlus className="text-sm" />
+                                </button>
+
+                                    {tooltipVisible && (
+                                      <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                        <div className="flex items-start">
+                                          <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                          <span>Click to add a new Contact Person</span>
+                                        </div>
+                                        <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                      </div>
+                                    )}
+                      </div>
+                       
+  </div> 
+                                       <TextInput
+                                              name="Designation"
+                                              type="text"
+                                              // value={contact}
+                      
+                                              // setValue={setContact}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                             <TextInput
+                                              name="Department"
+                                              type="text"
+                                              // value={contact}
+                      
+                                              // setValue={setContact}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                                  <TextInput
+                                                                    name="Contact Number"
+                                                                    type="number"
+                                                                    // value={contact}
+                                            
+                                                                    // setValue={setContact}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />
+                                                                              {/* <TextInput
+                                                                    name="Fax"
+                                                                    type="number"
+                                                                    // value={contact}
+                                            
+                                                                    // setValue={setContact}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />     */}
+                                                                          <TextInput
+                                                                    name="Website"
+                                                                    type="number"
+                                                                    // value={contact}
+                                            
+                                                                    // setValue={setContact}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />
+                                                                    
+                                                                                    
+                      </div>
+                    </div> 
+                  </div>
+
+     
+                </div>
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
+                 <div className="space-y-2">
+                 
+
+                      <div className="grid grid-cols-2 gap-2">
+                   
                                   <DropdownInput
-                              name="City/State Name"
-                              options={dropDownListMergedObject(
+                                                      name="City/State Name"
+                                                      options={dropDownListMergedObject(
+                                                        id
+                                                          ? cityList?.data
+                                                          : cityList?.data?.filter((item) => item.active),
+                                                        "name",
+                                                        "id"
+                                                      )}
+                                                      country={country}
+                                                      masterName="CITY MASTER"
+                                                      lastTab={activeTab}
+                                                      value={city}
+                                                      setValue={setCity}
+                                                      required={true}
+                                                      readOnly={readOnly}
+                                                      disabled={childRecord.current > 0}
+                                                      className="focus:ring-2 focus:ring-blue-100"
+                                                    />
+                                                               <TextInput
+                                                            name="Land Mark"
+                                                            type="number"
+                                                            // value={pincode}
+                                                            required={true}
+                                    
+                                                            // setValue={setPincode}
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          /> 
+                                                          <div className="col-span-2">
+
+                                                          <TextArea name="Address"
+                                                          inputClass="h-10" value={address} 
+                                                          setValue={setAddress} required={true}
+                                                            readOnly={readOnly} d
+                                                            isabled={(childRecord.current > 0)} />
+                                                          </div>
+
+                                                     
+                                                      <div className="mb-11">
+
+                                                     <TextInput
+                                                            name="Pincode"
+                                                            type="number"
+                                                            value={pincode}
+                                                            required={true}
+                                    
+                                                            setValue={setPincode}
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          />         
+                                                      </div>
+                                                                                           
+                      </div>
+                    </div> 
+                  </div>
+
+
+                </div>
+              
+
+                    <div className="lg:col-span-4 space-y-3">
+                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                        <h3 className="font-medium text-gray-800 mb-2 text-sm">Business Details</h3>
+                        <div className="space-y-2">
+
+                          <div className="grid grid-cols-2 gap-2">
+                              
+
+                        <DropdownInput
+                              name="Currency"
+                              options={dropDownListObject(
                                 id
-                                  ? cityList?.data
-                                  : cityList?.data?.filter((item) => item.active),
+                                  ? currencyList?.data ?? []
+                                  : currencyList?.data?.filter(
+                                    (item) => item.active
+                                  ) ?? [],
                                 "name",
                                 "id"
                               )}
-                              masterName="CITY MASTER"
                               lastTab={activeTab}
-                              value={city}
-                              setValue={setCity}
-                              required={true}
+                              masterName="CURRENCY MASTER"
+                              value={currency}
+                              setValue={setCurrency}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100"
                             />
-                      
-
-
-                  <div className="col-span-2 flex flex-row gap-2">
-                        <div className="w-28">
-                              <TextInput
-                                      name="Pan No"
-                                      type="pan_no"
-                                      value={panNo}
-                                      setValue={setPanNo}
-                                      readOnly={readOnly}
-                                      disabled={childRecord.current > 0}
-                                      className="focus:ring-2 focus:ring-blue-100"
-                                    />                           
-                        </div>
-
-                            <TextInput
-                              name="GST No"
-                              type="text"
-                              value={gstNo}
-                              setValue={setGstNo}
-                              readOnly={readOnly}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                            <TextInput
-                              name="CST No"
-                              type="text"
-                              value={cstNo}
-                              setValue={setCstNo}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                     
-                   </div>
-                         
-
-
-
-
-  <div className="flex flxe-row gap-2 col-span-3">
-            <div className="w-20">
-                    <DropdownInput
-                      name="Currency"
-                      options={dropDownListObject(
-                        id
-                          ? currencyList?.data ?? []
-                          : currencyList?.data?.filter(
-                            (item) => item.active
-                          ) ?? [],
-                        "name",
-                        "id"
-                      )}
-                      lastTab={activeTab}
-                      masterName="CURRENCY MASTER"
-                      value={currency}
-                      setValue={setCurrency}
-                      readOnly={readOnly}
-                      disabled={childRecord.current > 0}
-                      className="focus:ring-2 focus:ring-blue-100"
-                    />
-              </div>
-                    
-
-                <div className="w-20">
-
-                      <DropdownInput
-                        name="PayTerm"
-                        options={dropDownListObject(
-                          id
-                            ? payTermList?.data
-                            : payTermList?.data?.filter((item) => item.active),
-                          "aliasName",
-                          "id"
-                        )}
-                        value={payTermDay}
-                        setValue={setPayTermDay}
-                        // required={true}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-                    </div>
-                <div className="w-20">
-                  
-                      <TextInput
-                        name="Pincode"
-                        type="number"
-                        value={pincode}
-                         required={true}
-
-                        setValue={setPincode}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100 w-10"
-                      />
-                </div>
-                     <div className="w-96">
-
-                                 <TextArea name="Address"
-                                  inputClass="h-10" value={address} 
-                                  setValue={setAddress} required={true}
-                                   readOnly={readOnly} d
-                                   isabled={(childRecord.current > 0)} />
-                            </div>   
-                  
-                         
-  </div>
-                                  
-
-
-
-                            <button
-                              onClick={() => {  
-                                setBranchModelOpen(true)
-                                // if(id){
-                                //   setId("")
-                                // }
-                                } }
-                              readOnly={readOnly}
-                              className="mt-4 flex items-center pl-3 h-9 w-24 rounded-md bg-blue-600  text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-3 w-3"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                              </svg>
-                              Add Branch
-                            </button>
-
-                            {/* <TextInput
-                              name="PayTerm Days"
-                              type="name"
-                              value={payTermDay}
-                              setValue={setPayTermDay}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            /> */}
-
+                                            
+                                  <DropdownInput
+                                    name="PayTerm"
+                                    options={dropDownListObject(
+                                      id
+                                        ? payTermList?.data
+                                        : payTermList?.data?.filter((item) => item.active),
+                                      "aliasName",
+                                      "id"
+                                    )}
+                                    value={payTermDay}
+                                    setValue={setPayTermDay}
+                                    // required={true}
+                                    readOnly={readOnly}
+                                    disabled={childRecord.current > 0}
+                                    className="focus:ring-2 focus:ring-blue-100"
+                                  />
+                                                                      <TextInput
+                                                          name="Pan No"
+                                                          type="pan_no"
+                                                          value={panNo}
+                                                          setValue={setPanNo}
+                                                          readOnly={readOnly}
+                                                          disabled={childRecord.current > 0}
+                                                          className="focus:ring-2 focus:ring-blue-100"
+                                                  /> 
+                                                        <TextInput
+                                                                                name="GST No"
+                                                                                type="text"
+                                                                                value={gstNo}
+                                                                                setValue={setGstNo}
+                                                                                readOnly={readOnly}
+                                                                                className="focus:ring-2 focus:ring-blue-100"
+                                                                              />
+                                  <TextInput
+                                                    name="CST No"
+                                                    type="text"
+                                                    value={cstNo}
+                                                    setValue={setCstNo}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                    className="focus:ring-2 focus:ring-blue-100"
+                                                  />
+                                                    <TextInput
+                                                    name="CIN No"
+                                                    type="text"
+                                                    value={cstNo}
+                                                    setValue={setCstNo}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                    className="focus:ring-2 focus:ring-blue-100"
+                                                  />
+                                                  
                           </div>
                         </div>
                       </div>
 
-                    </div>
-                  </div>
-     
-                </div>
-                  </div>
-
-                
-                </div>
-
-
                       
+                    </div>
+                    <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
+                 <div className="space-y-2">
+                 
 
+                        <TextInput
+                                  name="Bank Name"
+                                  type="number"
+                                  // value={contact}
+          
+                                  // setValue={setContact}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  className="focus:ring-2 focus:ring-blue-100 w-10"
+                                />
+                      <div className="grid grid-cols-2 gap-2">
+                              <TextInput
+                                            name="Branch Name"
+                                            type="text"
+                                            // value={contact}
+                    
+                                            // setValue={setContact}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />
+                                       <TextInput
+                                              name="Account Number"
+                                              type="text"
+                                              // value={contact}
+                      
+                                              // setValue={setContact}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                                  <TextInput
+                                                        name="IFSC CODE"
+                                                        type="number"
+                                                        // value={contact}
+                                
+                                                        // setValue={setContact}
+                                                        readOnly={readOnly}
+                                                        disabled={childRecord.current > 0}
+                                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                      />
+                                                                
+                                                                    
+                                                                                    
+                      </div>
+                    </div> 
+                  </div>
 
-                     
-
-                     
-
+     
+                   </div>
+                                                     
+<div className="relative h-40 w-full justify-end mt-16"> {/* Set desired height */}
+  <div className="absolute bottom-0 right-0  ">
+    <button
+      onClick={() => setBranchModelOpen(true)}
+      readOnly={readOnly}
+      className="flex items-center pl-3 h-7 w-24 rounded-md bg-blue-600 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-2 w-3"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Add Branch
+    </button>
+  </div>
+</div>
 
               </div>
             </div>
 
 
           </div>
-
       
        
         </Modal>
@@ -1135,23 +1368,47 @@ const SaveBranch  = (   )  => {
     return (
       <div onKeyDown={handleKeyDown}>
         
+            <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto mt-1">
 
           <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-                <h5 className='my-1'>Party Master</h5>
+                    <h1 className="text-2xl font-bold text-gray-800">Customer/Supplier Master </h1>
                <div className="flex items-center gap-4">
                           <button
                             onClick={() => {
                               setForm(true);
                               onNew();
                             }}
-                            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                           >
                             <Plus size={16} />
-                            Add New Master
+                            Add New Customer/Supplier
                           </button>
-                  
+                  <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setView("Customer")}
+                                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Customer"
+                                    ? "bg-indigo-100 text-indigo-600"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                  }`}
+                              >
+                                <Table size={16} />
+                                Customer
+                              </button>
+                              <button
+                                onClick={() => setView("Supplier")}
+                                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Supplier"
+                                    ? "bg-indigo-100 text-indigo-600"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                  }`}
+                              >
+                                <LayoutGrid size={16} />
+                                Supplier
+                              </button>
+                              
+                            </div>
                         </div>
             </div>
+             </div>
                 {/* <Mastertable
                     // header={'Party list'}
                     searchValue={searchValue}
@@ -1166,13 +1423,13 @@ const SaveBranch  = (   )  => {
                     setReadOnly={setReadOnly}
                     deleteData={deleteData}
                 /> */}
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
                         <ReusableTable
                             columns={columns}
-                            data={allData?.data || []}
+                            data={filterParty || []}
                             onView={handleView}
                             onEdit={handleEdit}
-                            onDelete={handleDelete}
+                            onDelete={deleteData}
                             itemsPerPage={10}
                         />
                     </div>
@@ -1191,7 +1448,7 @@ const SaveBranch  = (   )  => {
         <Modal
           isOpen={form}
           form={form}
-          widthClass={"w-[70%] max-w-6xl h-[68%]"}
+          widthClass={"w-[90%] h-[95%]"}
           onClose={() => {
             setForm(false);
             setErrors({});
@@ -1200,7 +1457,7 @@ const SaveBranch  = (   )  => {
               <Modal
                 isOpen={branchModelOpen}
                 form={form}
-                widthClass={`${"w-[95%] h-[80%]"}`}
+                widthClass={` ${branchForm  ?  "w-[60%] h-[80%]" : "w-[90%] h-[90%]" } `}
                 setBranchModelOpen={setBranchModelOpen}
                 onClose={() => {
                   setBranchModelOpen(false)
@@ -1209,17 +1466,24 @@ const SaveBranch  = (   )  => {
 
 
 
-                <AddBranch partyData={allData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                <AddBranch 
+                  
+                singleData={singleData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
                   branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
-                  branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} onNew={onNew}
+                  branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} 
+                  branchContactPerson={branchContactPerson} setBranchcontactPerson={setBranchcontactPerson}  branchWebsite={branchWebsite}
+                  setBranchWebsite={setBranchWebsite}  openingHours={openingHours}   setopeningHours={setopeningHours}
+                  onNew={onNew}  branchType={branchType} handleFun={handleFun}
                   setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
                   deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
                   handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
-                  shippingAddress={shippingAddress} setForm={setForm} 
+                  shippingAddress={shippingAddress} setForm={setForm}   onClose={() => {
+                  setBranchModelOpen(false) 
+                }}    branchForm={branchForm}  setBranchForm={setBranchForm}
                    removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  id={id}
                   partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen} name={name}
-                  branchType={branchType} setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
-                  branchTypeData = {branchTypeData}
+                   setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
+                  branchTypeData = {branchTypeData} cityList={cityList}
                 />
 
 
@@ -1238,6 +1502,7 @@ const SaveBranch  = (   )  => {
              
               >
                   <RawMaterial    
+                  addData={addData}  updateData={updateData}
                       SaveBranch={SaveBranch}
                       material={material}
                       setMaterial={setMaterial}
@@ -1251,17 +1516,42 @@ const SaveBranch  = (   )  => {
 
                   />
               </Modal>
-          <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+                     <Modal
+                    isOpen={isContactPerson}
+                    widthClass={`${"w-[30%] h-[80%]"}`}
+                    setIsContactPerson={setIsContactPerson}
+                    onClose={() => {
+                      setIsContactPerson(false)
+                      // setMaterialForm(false)
+                      }}
+                      allData ={allData}
+             
+              >
+                  <ContactPersonDetails    
+                     partyData={singleData?.data}   contactNumber={contactNumber} setContactNumber={setContactNumber} 
+                     contactPersonName={contactPersonName}  setContactPersonName={setContactPersonName}  designation={designation}
+                     setDesignation={setDesignation} department={SetDepartment}  
+                      setIsContactPerson={setIsContactPerson}
+                       branchForm={branchForm}  
+                       setBranchForm={setBranchForm}
+                        onClose={() => {
+                        setIsContactPerson(false) 
+                      }}
+
+                  />
+              </Modal>
+         
+       <div className="h-full flex flex-col bg-[f1f1f0] ">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                  {id ? (!readOnly ? "Edit Party Master" : "Party Master") : "Add New Party"}
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Customer/supplier" : "Customer/supplier Master") : "Add New Customer/supplier"}
                 </h2>
-              
+             
               </div>
               <div className="flex gap-2">
                 <div>
-                  {readOnly && (
+                  {!readOnly && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1276,7 +1566,6 @@ const SaveBranch  = (   )  => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                      
                   {!readOnly && (
                     <button
                       type="button"
@@ -1292,54 +1581,44 @@ const SaveBranch  = (   )  => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-3 bg-[#f1f1f0] h-full">
-              <div className="grid grid-cols-1  gap-3  h-full">
-                <div className="lg:col-span- space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                   
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              
 
-                   <div className="space-y-2 h-full bg-[#f1f1f0] p-2">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
+               
 
-                    <div className="space-y-2 h-full bg-[#f1f1f0]">
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Basic Details</h3>
+                    {/* <div className="space-y-2"> */}
+                    <div className="grid grid-cols-2">     
+                      <div className="flex flex-row items-center gap-2 mt-2 mb-2">
+                           <div className="flex items-center gap-2 ">
+                                                   <input
+                                                     type="radio"
+                                                     name="type"
+                                                     checked={isClient}
+                                                     onChange={() => handleChange('client')}
+                                                   />
+                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
+                                        </div>
+                             <div className="flex flex-row gap-2">
 
-                      <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  shadow-xs">
-                        {/* <h3 className="mb-1 text-sm font-semibold text-gray-900">
-                          Party Type
-                        </h3> */}
-                        <div className={`space-y-2 ${readOnly ? "opacity-80" : ""}`}>
-                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                        <div className="col-span-1 flex items-center gap-4 ml-2">
-                          <div className="col-span-1 flex items-center gap-4 ml-2">
-
-                              <div className="flex items-center gap-2 mt-2">
-                                <input
-                                  type="radio"
-                                  name="type"
-                                  checked={isClient}
-                                  onChange={() => handleChange('client')}
-                                />
-                                <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
-                              </div>
-                            <div className="flex items-center gap-2 mt-2">
-                            <input
-                              type="radio"
-                              name="type"
-                              checked={isSupplier}
-                              onChange={() => handleChange('supplier')}
-                            />
-                            <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
-                          </div>
-                         </div>
-                  
-                            </div>
-                     
-                        <div className="col-span-4 flex flex-row">
+                                  <input
+                                    type="radio"
+                                    name="type"
+                                    checked={isSupplier}
+                                    onChange={() => handleChange('supplier')}
+                                  />
+                                  <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
+                                </div>
+                                  <div className="col-span-4 flex flex-row">
                          
                         {isSupplier && (
-                            <div className="w-80">
+                            <div className="w-60">
 
                                   <MultiSelectDropdown 
+                                  // name={"Material List"}
                                     options={multiSelectOption(allData ? allData?.materialData : [], "name", "id")}
                                     labelName="name"
                                     setSelected={setSelected}
@@ -1350,43 +1629,20 @@ const SaveBranch  = (   )  => {
                                 
                      {isSupplier && (
                         <div className="mt-3 px-3">
-                      <button  className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs" onClick={() => setRawMaterial(true)}>
-                                    Add Material
+                      <button  className="w-7 h-6 border border-green-500 rounded-md mt-2
+                                            hover:bg-green-500 text-green-600 hover:text-white
+                                            transition-colors flex items-center justify-center" onClick={() => setRawMaterial(true)}>
+                                   <FaPlus className="text-sm w-3 h-4 " />
                                   </button>
                         </div>
                          )} 
 
                         </div>     
-                         <div>
-                          
-                      <div className="col-span-1 flex items-center mt-2 justify-end" >
-                        <ToggleButton
-                          name="Status"
-                          options={statusDropdown}
-                          value={active}
-                          setActive={setActive}
-                          required={true}
-                          readOnly={readOnly}
-                          className="bg-gray-100 p-1 rounded-lg"
-                          activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
-                          inactiveClass="text-gray-500"
-                        />
                       </div>
-                         </div>
+                    
 
-
-</div>
-
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="rounded-xl border border-gray-100 bg-[#f1f1f0]  p-1 shadow-xs ">
-                          <div className="grid grid-cols-1 gap-x-2  md:grid-cols-2 lg:grid-cols-5 ">
-                            <div className="col-span-2">
-
-                            <TextArea
+                      <div className="col-span-2">
+                         <TextArea
                               name={isSupplier ? "Supplier Name" : "Customer Name"}
                               type="text"
                               value={name}
@@ -1403,222 +1659,433 @@ const SaveBranch  = (   )  => {
 
                               className="focus:ring-2 focus:ring-blue-100"
                             />
-                            </div>
-       
-                  <div className="col-span-2">
+                      </div>
+                       <div className="col-span-2">
                             <TextArea
-                              name="Alias Name"
-                              type="text"
-                              inputClass="h-8" 
-                              value={aliasName}
-                              setValue={setAliasName}
-                              required={true}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                  </div>
-                   <div className="">
-                    <DropdownInput
-                      name="Currency"
-                      options={dropDownListObject(
-                        id
-                          ? currencyList?.data ?? []
-                          : currencyList?.data?.filter(
-                            (item) => item.active
-                          ) ?? [],
-                        "name",
-                        "id"
-                      )}
-                      lastTab={activeTab}
-                      masterName="CURRENCY MASTER"
-                      value={currency}
-                      setValue={setCurrency}
-                      readOnly={readOnly}
-                      disabled={childRecord.current > 0}
-                      className="focus:ring-2 focus:ring-blue-100"
-                    />
-              </div>
-                    
-                  <div className="col-span-3 flex flex-row gap-2">
-
-                <div className="w-36">
-
-                      <DropdownInput
-                        name="PayTerm"
-                        options={dropDownListObject(
-                          id
-                            ? payTermList?.data
-                            : payTermList?.data?.filter((item) => item.active),
-                          "aliasName",
-                          "id"
-                        )}
-                        value={payTermDay}
-                        setValue={setPayTermDay}
-                        // required={true}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100"
-                      />
-                    </div>
-                          
-
-
-                        <div className="w-28">
-                              <TextInput
-                                      name="Pan No"
-                                      type="pan_no"
-                                      value={panNo}
-                                      setValue={setPanNo}
-                                      readOnly={readOnly}
-                                      disabled={childRecord.current > 0}
-                                      className="focus:ring-2 focus:ring-blue-100"
-                                    />                           
-                        </div>
-
-                            <TextInput
-                              name="GST No"
-                              type="text"
-                              value={gstNo}
-                              setValue={setGstNo}
-                              readOnly={readOnly}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                            <TextInput
-                              name="CST No"
-                              type="text"
-                              value={cstNo}
-                              setValue={setCstNo}
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
-                            />
-                     
-                   </div>
+                                name="Alias Name"
+                                type="text"
+                                inputClass="h-8" 
+                                value={aliasName}
+                                setValue={setAliasName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100"
+                              />
+                      </div>
+                       <div>
+                          <TextInput
+                                name="Party Code"
+                                type="number"
+                                value={partyCode}
+        
+                                setValue={setPartyCode}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                              />
+                      </div>
+                      <div className="mt-5 ml-3">
+                              <ToggleButton
+                          name="Status"
+                          options={statusDropdown}
+                          value={active}
+                          setActive={setActive}
+                          required={true}
+                          readOnly={readOnly}
+                          className="bg-gray-100 p-1 rounded-lg"
+                          activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
+                          inactiveClass="text-gray-500"
+                        />
+                      </div>
                          
+     <div className="mt-5 ml-3">
+                       
+                      </div>
+                                              
+                                                    
+                                                       
+                                                  </div>
+                
+                  
+                  </div>
+
+        
+                  </div>
+                   <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
+                 <div className="space-y-2">
+                 
+
+                      <div className="grid grid-cols-2 gap-2">
+                   
+                                  <DropdownInput
+                                                      name="City/State Name"
+                                                      options={dropDownListMergedObject(
+                                                        id
+                                                          ? cityList?.data
+                                                          : cityList?.data?.filter((item) => item.active),
+                                                        "name",
+                                                        "id"
+                                                      )}
+                                                      country={country}
+                                                      masterName="CITY MASTER"
+                                                      lastTab={activeTab}
+                                                      value={city}
+                                                      setValue={setCity}
+                                                      required={true}
+                                                      readOnly={readOnly}
+                                                      disabled={childRecord.current > 0}
+                                                      className="focus:ring-2 focus:ring-blue-100"
+                                                    />
+                                                               <TextInput
+                                                            name="Land Mark"
+                                                            type="text"
+                                                            value={landMark}
+                                                            required={true}
+                                    
+                                                            setValue={setlandMark}
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          /> 
+                                                          <div className="col-span-2">
+
+                                                          <TextArea name="Address"
+                                                          inputClass="h-10" value={address} 
+                                                          setValue={setAddress} required={true}
+                                                            readOnly={readOnly} d
+                                                            isabled={(childRecord.current > 0)} />
+                                                          </div>
+
+                                                     
+                                                      <div className="mb-11">
+
+                                                     <TextInput
+                                                            name="Pincode"
+                                                            type="number"
+                                                            value={pincode}
+                                                            required={true}
+                                    
+                                                            setValue={setPincode}
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          />         
+                                                      </div>
+                                                                                           
+                      </div>
+                    </div> 
+                  </div>
 
 
-  <div className="flex flxe-row gap-2 col-span-2">
-    {/* <div>
-                      <DropdownInput name="Country"
-                            options={
-                                Array.isArray(countrytList?.data)
-                                    ? dropDownListObject(
-                                        id ? countrytList?.data : countrytList?.data?.filter(item => item?.active),
-                                        "name",
-                                        "id"
-                                    )
-                                    : []
-                            }
-                      value={country} setValue={setCountry} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                </div>
+                   <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
+                 <div className="space-y-2">
+                 
 
-    </div> */}
-                  <DropdownInput
-                              name="City/State Name"
-                              options={dropDownListMergedObject(
+                        <TextInput
+                                  name="Party Email"
+                                  type="text"
+                                  value={email}
+          
+                                  setValue={setEmail}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  className="focus:ring-2 focus:ring-blue-100 w-10"
+                                />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2 flex flex-row gap-4 mt-2">
+                           <div className="w-72">
+                                                  
+                              <TextInput
+                                            name="Contact Person"
+                                            type="text"
+                                            value={contactPersonName}
+                    
+                                            setValue={setContactPersonName}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />
+                                           </div>
+                    <div className="relative inline-block">
+                                <button
+                                  className="w-7 h-6 border border-green-500 rounded-md mt-6
+                                            hover:bg-green-500 text-green-600 hover:text-white
+                                            transition-colors flex items-center justify-center"
+                                  disabled={readOnly}
+                                  onClick={() => {
+                                    // openAddModal();
+                                    // setIsDropdownOpen(false);
+                                    // setEditingItem("new");
+                                    // setOpenModel(true);
+                                    setIsContactPerson(true)
+                                  }}
+                                  onMouseEnter={() => setTooltipVisible(true)}
+                                  onMouseLeave={() => setTooltipVisible(false)}
+                                  aria-label="Add supplier"
+                                >
+                                  <FaPlus className="text-sm" />
+                                </button>
+
+                                    {tooltipVisible && (
+                                      <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                        <div className="flex items-start">
+                                          <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                          <span>Click to add a new Contact Person</span>
+                                        </div>
+                                        <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                      </div>
+                                    )}
+                      </div>
+                       
+  </div> 
+                                       <TextInput
+                                              name="Designation"
+                                              type="text"
+                                              value={designation}  
+                      
+                                              setValue={setDesignation}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                             <TextInput
+                                              name="Department"
+                                              type="text"
+                                              value={department}
+                      
+                                              setValue={SetDepartment} 
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                                  <TextInput
+                                                                    name="Contact Number"
+                                                                    type="number"
+                                                                    value={contact} 
+                                            
+                                                                    setValue={setContact}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />
+                                                                              {/* <TextInput
+                                                                    name="Fax"
+                                                                    type="number"
+                                                                    // value={contact}
+                                            
+                                                                    // setValue={setContact}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />     */}
+                                                                          <TextInput
+                                                                    name="Website"
+                                                                    type="text"
+                                                                    value={website}
+                                            
+                                                                    setValue={setWebsite}
+                                                                    readOnly={readOnly}
+                                                                    disabled={childRecord.current > 0}
+                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                  />
+                                                                    
+                                                                                    
+                      </div>
+                    </div> 
+                  </div>
+
+     
+                </div>
+               
+              
+
+                    <div className="lg:col-span-4 space-y-3">
+                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                        <h3 className="font-medium text-gray-800 mb-2 text-sm">Business Details</h3>
+                        <div className="space-y-2">
+
+                          <div className="grid grid-cols-2 gap-2">
+                              
+
+                        <DropdownInput
+                              name="Currency"
+                              options={dropDownListObject(
                                 id
-                                  ? cityList?.data
-                                  : cityList?.data?.filter((item) => item.active),
+                                  ? currencyList?.data ?? []
+                                  : currencyList?.data?.filter(
+                                    (item) => item.active
+                                  ) ?? [],
                                 "name",
                                 "id"
                               )}
-                              country={country}
-                              masterName="CITY MASTER"
                               lastTab={activeTab}
-                              value={city}
-                              setValue={setCity}
-                              required={true}
+                              masterName="CURRENCY MASTER"
+                              value={currency}
+                              setValue={setCurrency}
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
                               className="focus:ring-2 focus:ring-blue-100"
                             />
-                {/* <div className="w-20">
-                  
-                      <TextInput
-                        name="Pincode"
-                        type="number"
-                        value={pincode}
-                         required={true}
-
-                        setValue={setPincode}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100 w-10"
-                      />
-                </div> */}
-                       
-  </div>
-
-
-             
-                  <div className="flex flxe-row gap-2 col-span-2">
-  
-                                 <div className="w-96">
-
-                                 <TextArea name="Address"
-                                  inputClass="h-10" value={address} 
-                                  setValue={setAddress} required={true}
-                                   readOnly={readOnly} d
-                                   isabled={(childRecord.current > 0)} />
-                            </div>   
-                       </div>
-                                  
-  <div className="flex flxe-row gap-2 col-span-2">
-
-                <div className="w-20">
-                  
-                      <TextInput
-                        name="Pincode"
-                        type="number"
-                        value={pincode}
-                         required={true}
-
-                        setValue={setPincode}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className="focus:ring-2 focus:ring-blue-100 w-10"
-                      />
-                </div>
-                       
-  </div>
-
-                          <div className="mt-2">
-                            <button
-                              onClick={() => {  
-                                setBranchModelOpen(true)
-                                // if(id){
-                                //   setId("")
-                                // }
-                                } }
-                              readOnly={readOnly}
-                              className="mt-4 flex items-center pl-3 h-9 w-24 rounded-md bg-blue-600  text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-3 w-3"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                              </svg>
-                              Add Branch
-                            </button>
-                            </div>      
-
-                       
-
+                                            
+                                  <DropdownInput
+                                    name="PayTerm"
+                                    options={dropDownListObject(
+                                      id
+                                        ? payTermList?.data
+                                        : payTermList?.data?.filter((item) => item.active),
+                                      "aliasName",
+                                      "id"
+                                    )}
+                                    value={payTermDay}
+                                    setValue={setPayTermDay}
+                                    // required={true}
+                                    readOnly={readOnly}
+                                    disabled={childRecord.current > 0}
+                                    className="focus:ring-2 focus:ring-blue-100"
+                                  />
+                                                                      <TextInput
+                                                          name="Pan No"
+                                                          type="pan_no"
+                                                          value={panNo}
+                                                          setValue={setPanNo}
+                                                          readOnly={readOnly}
+                                                          disabled={childRecord.current > 0}
+                                                          className="focus:ring-2 focus:ring-blue-100"
+                                                  /> 
+                                                        <TextInput
+                                                                                name="GST No"
+                                                                                type="text"
+                                                                                value={gstNo}
+                                                                                setValue={setGstNo}
+                                                                                readOnly={readOnly}
+                                                                                className="focus:ring-2 focus:ring-blue-100"
+                                                                              />
+                                  <TextInput
+                                                    name="CST No"
+                                                    type="text"
+                                                    value={cstNo}
+                                                    setValue={setCstNo}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                    className="focus:ring-2 focus:ring-blue-100"
+                                                  />
+                                                    <TextInput
+                                                    name="CIN No"
+                                                    type="text"
+                                                    value={cinNo}
+                                                    setValue={setCinNo}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                    className="focus:ring-2 focus:ring-blue-100"
+                                                  />
+                                                  
                           </div>
                         </div>
                       </div>
 
+                      
                     </div>
-                  </div>
-     
-                </div>
+                    <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
+                 <div className="space-y-2">
+                 
+
+                        <TextInput
+                                  name="Bank Name"
+                                  type="text"
+                                  value={bankname}
+          
+                                  setValue={setBankName}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  className="focus:ring-2 focus:ring-blue-100 w-10"
+                                />
+                      <div className="grid grid-cols-2 gap-2">
+                              <TextInput
+                                            name="Branch Name"
+                                            type="text"
+                                            value={bankBranchName}
+                    
+                                            setValue={setBankBranchName}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />
+                                       <TextInput
+                                              name="Account Number"
+                                              type="text"
+                                              // value={contact}
+                      
+                                              // setValue={setContact}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            />
+                                                  <TextInput
+                                                        name="IFSC CODE"
+                                                        type="text"
+                                                        value={ifscCode}
+                                
+                                                        setValue={setIfscCode}
+                                                        readOnly={readOnly}
+                                                        disabled={childRecord.current > 0}
+                                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                      />
+                                                                
+                                                                    
+                                                                                    
+                      </div>
+                    </div> 
                   </div>
 
-                
-                </div>
+     
+                   </div>
+                                                     
+<div className="relative h-40 w-full justify-end mt-16"> {/* Set desired height */}
+  <div className="absolute bottom-0 right-0  ">
+    <button
+      onClick={() => setBranchModelOpen(true)}
+      readOnly={readOnly}
+      className="flex items-center pl-3 h-7 w-24 rounded-md bg-blue-600 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-2 w-3"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Add Branch
+    </button>
+  </div>
+</div>
+
+              </div>
+            </div>
+
+
+          </div>
+      
+       
+        </Modal>
+        )}   
+        </div>
+    );
+  }
+
+}
 
 
                       
@@ -1629,20 +2096,5 @@ const SaveBranch  = (   )  => {
                      
 
 
-              </div>
-            </div>
-
-
-          </div>
-
-      
-       
-        </Modal>
-        )}   
-        </div>
-    );
-  }
-
-}
 
 

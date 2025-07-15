@@ -135,7 +135,7 @@ label {
   }
 
   .data {
-    @apply text-xs rounded-lg;
+    @apply text-xs rounded-xl text-gray-600 h-10 mt-3;
   }
 
   .stick-bg {

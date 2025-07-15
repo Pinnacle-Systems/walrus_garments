@@ -94,6 +94,16 @@ const partyMasterApi = createApi({
       },
       invalidatesTags: ["Party"],
     }),
+        updatePartyMaterial: builder.mutation({
+      query: ({ materialId, body }) => {
+        return {
+          url: `${PARTY_API}/${materialId}/materialId`,
+          method: "PUT",
+          body,
+        };
+      },
+      invalidatesTags: ["Party"],
+    }),
     deleteParty: builder.mutation({
       query: (id) => ({
         url: `${PARTY_API}/${id}`,
@@ -109,8 +119,8 @@ const partyMasterApi = createApi({
       invalidatesTags: ["Party"],
     }),
       deletePartyMaterial: builder.mutation({
-      query: (Material) => ({
-        url: `${PARTY_API}/${Material}/material`,
+      query: (materialId) => ({
+        url: `${PARTY_API}/${materialId}/material`,
         method: "DELETE",
       }),
       invalidatesTags: ["Party"],
@@ -126,6 +136,7 @@ export const {
   useAddPartyMutation,
   useAddPartykycMutation,
   useUpdatePartyMutation,
+  useUpdatePartyMaterialMutation,
   useDeletePartyMutation,
   useDeletePartyBranchMutation,
   useDeletePartyMaterialMutation,
