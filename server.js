@@ -32,6 +32,10 @@ import {
   Machine, socksMaterial,
   currency, socksType, measurement, fibercontent,
   yarnNeedle,certificate,
+  
+  partyBranch,
+  partyBranchContact,
+  partyContact,
   branchType
 } from './src/routes/index.js';
 
@@ -163,7 +167,10 @@ app.use("/measurement", measurement);
 app.use("/fiberContent", fibercontent);
 app.use("/fiberContent", fibercontent);
 app.use("/yarnNeedle", yarnNeedle);
-app.use("/branchType" ,branchType)
+app.use("/partyBranch",partyBranch)
+app.use("/branchType",branchType)
+app.use("/partyBranchContact",partyBranchContact)
+app.use("/partyContact",partyContact)
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {
