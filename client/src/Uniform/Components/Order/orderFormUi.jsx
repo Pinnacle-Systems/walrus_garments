@@ -26,11 +26,11 @@ import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
-import { DropdownInput, TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 
-const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData }) => {
+const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData  , setShowOrderForm}) => {
     const [suppliers, setSuppliers] = useState([
         "Supplier One",
         "Supplier Two",
@@ -41,6 +41,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [isEditing, setIsEditing] = useState(false);
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
+    const [options,setOptions] =  useState("")
 
     const handleAdd = () => {
         if (term.trim()) {
@@ -72,6 +73,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const { branchId, userId, companyId, finYearId } = getCommonParams()
     const [openModelForAddress, setOpenModelForAddress] = useState(false)
     const [packingCoverType, setPackingCoverType] = useState("")
+    const [yarnItems,setYarnItems]  = useState([])
 
     const params = {
         branchId, userId, finYearId
@@ -175,8 +177,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     onClose()
                 }
 
-                // setId(returnData?.data?.id);
-
+                setId(returnData?.data?.id);
+                setShowOrderForm(false)
 
 
                 Swal.fire({
@@ -245,11 +247,17 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     useEffect(() => {
         if (orderDetails?.length >= 1) return
         setOrderDetails(prev => {
-            let newArray = Array.from({ length: 1 - prev.length }, () => {
+            let newArray = Array?.from({ length: 1 - prev?.length }, () => {
                 return {
                     yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
                     measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
                     stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
+                     orderSizeDetails : [ {
+                                 qty : "" , sizeMeasurement : ""  , sizeId : ""
+
+                          }],
+                          orderYarnDetails: [{ yarnId : "" }]
+
                 }
             })
             return [...prev, ...newArray]
@@ -265,7 +273,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         setPhone(singleSupplier?.data?.contactMobile ? singleSupplier?.data.contactMobile : "")
         setContactPersonName(singleSupplier?.data?.contactPersonName ? singleSupplier?.data.contactPersonName : "");
         setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
+         setOptions(singleSupplier?.data?.PartyContactDetails)
     }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
+
+    
+
+
 
 
     let itemHeading = [
@@ -290,7 +303,24 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
     async function onDeleteItem(itemId) {
-        await removeData(itemId).unwrap();
+        try{
+
+            await removeData(itemId).unwrap();
+              Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    timer: 1000, 
+                 
+                });
+        }
+        catch(error){
+                                Swal.fire({
+                                          icon: 'error',
+                                          title: 'Submission error',
+                                          text: error.data?.message || 'Something went wrong!',
+                                        });
+        }
+               
     }
 
     function getTotalQty() {
@@ -360,7 +390,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         />
                                     </div>
 
-
+{/* 
                                     <DropdownInput
                                         name="Packing Cover"
                                         options={packingCover}
@@ -368,7 +398,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         setValue={setPackingCoverType}
                                         disabled={readOnly}
 
-                                    />
+                                    /> */}
 
 
 
@@ -454,7 +484,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                         <button
                                                             onClick={() => setShowAddressPopup(false)}
                                                             className="px-4 py-1 bg-white hover:bg-red-600 text-red-600  hover:text-white border border-red-600 
-             text-red-700 rounded-md hover:bg-red-700 transition-colors"
+              rounded-md  transition-colors"
                                                         >
                                                             Cancel
                                                         </button>
@@ -462,12 +492,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                 </div>
                                             </div>
                                         )}
-                                        {/* {addressForm &&
-                                          
-
-                                            <AddressForm setAddressForm={setAddressForm} />
-
-                                        } */}
+                                
 
                                     </div>
                                 </div>
@@ -481,30 +506,52 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 Contact Details
                             </h2>
                             <div className="grid grid-cols-1 gap-x-3">
-                                <TextInput
+                                {/* <TextInput
                                     name="Contact Person"
                                     placeholder="Contact name"
                                     value={contactPersonName}
                                     setValue={setContactPersonName}
                                     readOnly={readOnly}
                                 // onChange={(e) => setContactPersonName(e.target.value)}
+                                /> */}
+                                <DropdownWithSearch
+                                    options={partyId  ?  options  :  []}
+                                    labelField={"contactPersonName"}
+                                    label={"Contact Person Name"}
+                                    value={contactPersonName}
+                                    setValue={setContactPersonName}
+                                
                                 />
                                 <TextInput
                                     name="Phone"
-                                    placeholder="Contact name"
                                     value={phone}
                                     setValue={setPhone}
                                     readOnly={readOnly}
+                                    disabled={true}
 
-                                // onChange={(e) => setPhone(e.target.value)}
+                                // onChan
+                                // ge={(e) => setPhone(e.target.value)}
                                 />
+                                 {/* <DropdownWithSearch
+                                    options={partyId  ?  options  :  []}
+                                    labelField={"mobileNo"}
+                                    label={"Contact Person Name"}
+                                    value={contactPersonName}
+                                    setValue={setContactPersonName}
+                                
+                                /> */}
 
                             </div>
                         </div>
                     </div>
+                             <fieldset className=''>                      
 
-                    <OrderItems readOnly={readOnly} itemHeading={itemHeading} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id} />
-                    <div className="grid grid-cols-3 gap-3">
+                    <OrderItems readOnly={readOnly} itemHeading={itemHeading} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
+                    yarnItems={yarnItems} setYarnItems={setYarnItems}
+                    />
+                       </fieldset>
+               
+                    {/* <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
                             <textarea
@@ -517,29 +564,10 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 placeholder="Additional notes..."
 
                             />
-                            {/* <button
-                                    onClick={handleAdd}
-                                    className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
-                                    title="Confirm"
-                                >
-                                    <HiCheck className="w-5 h-5" />
-                                </button> */}
+                          
                         </div>
 
-                        {/* <div className="mt-3 space-y-1.5">
-                                <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                    <span>Payment due within 30 days</span>
-                                    <button className="text-red-400 hover:text-red-500">
-                                        <HiTrash className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                    <span>Late fee of 2% per month</span>
-                                    <button className="text-red-400 hover:text-red-500">
-                                        <HiTrash className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div> */}
+            
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
@@ -556,7 +584,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                         </div>
 
 
-                        {/* Pricing Summary (Grand Total) Section */}
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-semibold text-slate-800 mb-2 text-base">
                                 Qty Summary
@@ -582,26 +609,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                     />
                                 </div>
 
-                                {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
-                                    <span className="text-slate-800 font-semibold">Grand Total</span>
-                                    <span className="font-bold text-indigo-700">$1,200.00</span>
-                                </div> */}
-                                {/* <div className="flex gap-5 items-center mb-1 text-xs">
-                                    <button
-                                        className="text-green-600 text-[14px] hover:text-white hover:bg-green-600 border border-green-700 px-2 py-1 rounded-md  flex items-center"
-                                        onClick={() => setShowDiscount(true)}
-                                    >
-                                        <HiMinus className="w-2.5 h-2.5 mr-1" />
-                                        <span>Add Discount</span>
-                                    </button>
-                                    <button
-                                        className="text-indigo-600 text-[14px] hover:text-white hover:bg-indigo-600 border border-indigo-700 px-2 py-1 rounded-md flex items-center"
-                                        onClick={() => setShowExtraCharge(true)}
-                                    >
-                                        <HiPlus className=" w-2.5 h-2.5 mr-1" />
-                                        <span> Extra Charge</span>
-                                    </button>
-                                </div> */}
                             </div>
                         </div>
 
@@ -681,7 +688,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}

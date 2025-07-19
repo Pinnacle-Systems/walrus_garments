@@ -377,6 +377,7 @@ model City {
   doctorLocalCity Employee[] @relation(name: "localCity")
   doctorPermCity  Employee[] @relation(name: "permCity")
   Party           Party[]
+  PartyBranch      PartyBranch[]
 }
 
 model Department {
@@ -495,6 +496,11 @@ model Party {
   isSupplier                 Boolean?                     @default(false)
   isClient                   Boolean?                     @default(false)
   isIgst                     Boolean?                     @default(false)
+  bankName                   String?
+  branchName                 String?
+  accountnumber              String?
+  ifsccode                   String?
+
   PoSupplier                 Po[]                         @relation(name: "supplier")
   PoDelivery                 Po[]                         @relation(name: "deliveryTo")
   PInwardOrReturn            PInwardOrReturn[]
@@ -539,26 +545,51 @@ model Party {
   RawMaterial                RawMaterial[]
   PartyMaterials             PartyMaterials[]
   PartyContactDetails        PartyContactDetails[]
+  BranchContactDetails       BranchContactDetails[]
 }
 
 model PartyBranch {
   id                   Int                    @id @default(autoincrement())
   branchName           String?
+  branchAliasName      String?
   branchCode           String?
-  branchContact        String?
-  branchEmail          String?                @db.LongText
-  Party                Party?                 @relation(fields: [partyId], references: [id])
-  partyId              Int?
   active               Boolean?                @default(true)
-  isMainBranch         Boolean?                @default(false)
+  City                  City?                       @relation(fields: [branchCityId], references: [id])
+  branchCityId          Int?           
+  branchLandMark        String?      
   branchAddress        String?                @db.LongText
-  contactperson        String?
-  contact              String?
-  designation          String?
-  BranchType         BranchType?                 @relation(fields: [branchTypeId], references: [id])
+  branchPincode        String?
+  branchEmail          String?                @db.LongText
+  branchContactPerson        String?
+  branchDesignation          String?
+  branchDepartment         String?
+  branchContact            String?
+  branchWebsite            String?
+  branchAccountNumber      String?
+  branchBankname           String?
+  branchIfscCode           String?
+  branchBankBranchName      String?
+  Party                   Party?                 @relation(fields: [partyId], references: [id])
+  partyId                Int?
+  isMainBranch           Boolean?                @default(false)
+  BranchType             BranchType?                 @relation(fields: [branchTypeId], references: [id])
   branchTypeId           Int?                 
   partyShippingAddress PartyShippingAddress[]
+  BranchContactDetails      BranchContactDetails[]
 
+}
+
+model BranchContactDetails {
+  id                Int          @id @default(autoincrement())
+  PartyBranch        PartyBranch?                 @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  Party               Party?                 @relation(fields: [partyId], references: [id])
+  partyId            Int?
+  contactPersonName String?
+  mobileNo          String?
+  email             String?
+  designation       String?
+  department        String?
 }
 
 model PartyShippingAddress {
@@ -2902,7 +2933,31 @@ model OrderDetails {
   socksTypeId     Int?
   socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
   filePath        String?        @db.LongText
+  orderSizeDetails      orderSizeDetails[]
+  orderYarnDetails      orderYarnDetails[]
 }
+
+model orderSizeDetails {
+  id                      Int            @id @default(autoincrement())
+  size                    String?
+  sizeId                  Int?
+  sizeMeasurement         String?
+  qty                     Float?
+  OrderDetails            OrderDetails?         @relation( fields: [orderdetailsId], references: [id],onDelete: Cascade)
+  orderdetailsId          Int?
+}
+
+model orderYarnDetails {
+  id                      Int            @id @default(autoincrement())
+  yarncategoryId            Int?
+  yarnId                    Int?
+  count                     String?
+  yarnKneedleId             Int?
+
+  OrderDetails            OrderDetails?         @relation( fields: [orderdetailsId], references: [id],onDelete: Cascade)
+  orderdetailsId          Int?
+}
+
 
 model Machine {
   id           Int            @id @default(autoincrement())

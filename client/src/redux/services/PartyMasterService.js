@@ -57,6 +57,30 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
+        getPartyContactById: builder.query({
+      query: (id) => {
+        return {
+          url: `${PARTY_API}/${id}/contactId`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Party"],
+    }),
+    getPartyBranchById: builder.query({
+      query: (id) => {
+        return {
+          url: `${PARTY_API}/${id}/partybranch`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Party"],
+    }),
     addParty: builder.mutation({
       query: (payload) => ({
         url: PARTY_API,
@@ -104,6 +128,16 @@ const partyMasterApi = createApi({
       },
       invalidatesTags: ["Party"],
     }),
+      updatePartyContact: builder.mutation({
+      query: ({ id, body }) => {
+        return {
+          url: `${PARTY_API}/${id}/contactId`,
+          method: "PUT",
+          body,
+        };
+      },
+      invalidatesTags: ["Party"],
+    }),
     deleteParty: builder.mutation({
       query: (id) => ({
         url: `${PARTY_API}/${id}`,
@@ -125,21 +159,35 @@ const partyMasterApi = createApi({
       }),
       invalidatesTags: ["Party"],
     }),
+       deletePartyContact: builder.mutation({
+      query: (id) => ({
+        url: `${PARTY_API}/${id}/contactId`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Party"],
+    }),
   }),
 });
 
 export const {
   useGetPartyQuery,
+
   useGetPartyByIdQuery,
+  useGetPartyBranchByIdQuery,
   useGetPartyMaterialByIdQuery,
+  useGetPartyContactByIdQuery,
 
   useAddPartyMutation,
   useAddPartykycMutation,
+
   useUpdatePartyMutation,
   useUpdatePartyMaterialMutation,
+  useUpdatePartyContactMutation,
+
   useDeletePartyMutation,
   useDeletePartyBranchMutation,
   useDeletePartyMaterialMutation,
+  useDeletePartyContactMutation,
   useUploadMutation,
 } = partyMasterApi;
 

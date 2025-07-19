@@ -20,6 +20,8 @@ import {
   CurrencyMasterApi,
   emailkycUpdateApi ,
   machineMasterApi,
+  partyBranchContactMasterApi,
+  partyContactMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -52,6 +54,7 @@ import ContentMasterApi from "./uniformService/ContentMasterServices";
 import CountsMasterApi from "./uniformService/CountsMasterServices";
 import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 import branchTypeMasterApi from "./uniformService/BranchTypeMaster";
+import partyBranchMasterApi from "./services/PartyBranchMasterService";
 
 const commonReducers = {
   openTabs, party,
@@ -143,6 +146,9 @@ const commonReducers = {
   fiberContentMaster: FiberContentMasterApi.reducer,
   YarnNeedleMaster: YarnNeedleMasterApi.reducer,
   branchTypeMaster : branchTypeMasterApi.reducer,
+  partyBranchMaster : partyBranchMasterApi.reducer,
+  partyBranchContactMaster : partyBranchContactMasterApi.reducer,
+  partyContactMaster : partyContactMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -232,7 +238,10 @@ SocksTypeApi.middleware,
 MeasurementMasterApi.middleware,
 FiberContentMasterApi.middleware,
 YarnNeedleMasterApi.middleware,
-branchTypeMasterApi.middleware
+branchTypeMasterApi.middleware,
+partyBranchMasterApi.middleware,
+partyBranchContactMasterApi.middleware,
+partyContactMasterApi.middleware
 ];
 
 

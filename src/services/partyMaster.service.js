@@ -54,13 +54,20 @@ async function getOne(id) {
             PartyOnAccessoryItems: true,
             City: {
                 select: {
+                    id :true,
                     name: true,
                     state: true
+                }
+            },
+            Currency :{
+                select :{
+                    name : true ,
                 }
             },
             PartyMaterials :true,
             partyBranch : true ,
              PartyContactDetails :true,
+             BranchContactDetails : true,
 
 
 
@@ -167,18 +174,18 @@ async function create(body) {
     const { companyId, active, userId,name, code, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
         cinNo, faxNo, website, mail,  address,
-        gstNo, currencyId, costCode, igst, branchInfo, isForPartyBranch, accessoryGroup, rawMaterial,
+        gstNo, currencyId, costCode, igst, contactNumber, alterContactNumber, email, rawMaterial,
         material,materialActive,partyMaterials,
         branchName,branchCode ,branchType , branchEmail , branchAddress , branchContactPerson , branchContact , 
-        contactPersonName,department ,contact,designation ,
+        contactPersonName,department ,contact,designation ,isContact , id , isBranch ,branchStateValues ,isBranchContact ,
 
  } = await body
         
- console.log(rawMaterial,"rawMaterial")
+ console.log(rawMaterial,isContact,isBranch,"branchStateValues",isBranchContact)
 
     let data;
             if(rawMaterial){
-                data = await prisma.RawMaterial.create (
+                data = await prisma.rawMaterial.create (
                     {
                         data :{
                             name : material  ?  material  : undefined ,
@@ -187,31 +194,64 @@ async function create(body) {
                     }
                 )
             }       
-    //         if(isBranch){
-    //              data = await prisma.partyBranch.create(
-    //     {
-    //         data: {
-               
-    //             partyId : id ? id : null,
-    //             branchName: branchName || null,
-    //             branchCode: branchCode || null,
-    //             branchTypeId: branchType ? parseInt(branchType)  :  undefined,
-    //             branchEmail: branchEmail || null,
-    //             branchAddress: branchAddress || null,
-    //             contactperson: branchContactPerson || null,
-    //             contact: branchContact ||  null,
-    //             designation: designation || null,
+    else if(isContact){
+                 data = await prisma.partyContactDetails.create (
+                    {
+                        data :{
+                            contactPersonName: contactPersonName || null,
+                            mobileNo: contact || null,
+                            Designation: designation || null,
+                            department: department || null,
+                            partyId  : id ? parseInt(id)  : undefined
+                        }
+                    }
+                )
+    }
+    else if(isBranch){
+                  data = await prisma.PartyBranch.create (
+                    {
+                        data :{
+                                    partyId : id|| undefined,
+                          
+                                    branchName: branchStateValues?.branchName || undefined,
+                                    branchAliasName: branchStateValues?.branchAliasName || undefined,
+                                    branchCode: branchStateValues?.branchCode || undefined,
+                                    active: branchStateValues?.active || false,
+                                    branchCityId: branchStateValues?.branchCityId || undefined,
+                                    branchLandMark: branchStateValues?.branchLandMark || undefined,
+                                    branchAddress: branchStateValues?.branchAddress || undefined,
+                                    branchPincode: branchStateValues?.branchPincode || undefined,
+                                    branchEmail: branchStateValues?.branchEmail || undefined,
+                                    branchContactPerson: branchStateValues?.branchContactPerson || undefined,
+                                    branchDesignation: branchStateValues?.branchContactDesignation || undefined,
+                                    branchDepartment: branchStateValues?.branchContactDesignation || undefined,
+                                    branchContact: branchStateValues?.branchContact || undefined,
+                                    branchWebsite: branchStateValues?.branchWebsite || undefined,
+                                    branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
+                                    branchBankname: branchStateValues?.branchBankname || undefined,
+                                    branchIfscCode: branchStateValues?.branchIfscCode || undefined,
+                                    branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
+                                    isMainBranch: branchStateValues?.isMainBranch || undefined,
+                                    branchTypeId: branchStateValues?.branchTypeId || undefined,
 
-    //         }
-             
-    //     }
-    // )
-
-
-            
-             
-          
-    //         }
+                        }
+                    }
+                )
+    }
+    if(isBranchContact){
+            data = await prisma.BranchContactDetails.create (
+                    {
+                        data :{
+                            contactPersonName: contactPersonName || null,
+                            mobileNo: contact || null,
+                            Designation: designation || null,
+                            department: department || null,
+                            partyId  : id ? parseInt(id)  : undefined ,
+                            branchId : branchId ? parseInt(branchId) : undefined 
+                        }
+                    }
+                )
+    }
 else{
 
 
@@ -224,7 +264,7 @@ else{
                 cinNo, faxNo, website, payTermDay, mailId: mail,
                 gstNo, currencyId: currencyId ? parseInt(currencyId) : undefined, costCode, isIgst: igst ? igst : false,
                 createdById: userId ? parseInt(userId) : undefined,
-                companyId: parseInt(companyId), active, yarn, fabric ,
+                companyId: parseInt(companyId), active, yarn, fabric ,payTermDay   ,
                 
 
              partyBranch: partyBranch
@@ -232,14 +272,29 @@ else{
                                 createMany: {
                                     data: [
                                     {
-                                        branchName: branchName || null,
-                                        branchCode: branchCode || null,
-                                        branchTypeId: branchType ? parseInt(branchType)  :  undefined,
-                                        branchEmail: branchEmail || null,
-                                        branchAddress: branchAddress || null,
-                                        contactperson: branchContactPerson || null,
-                                        contact: branchContact ||  null,
-                                        designation: designation || null,
+                                      branchName: branchStateValues?.branchName || undefined,
+                                    branchAliasName: branchStateValues?.branchAliasName || undefined,
+                                    branchCode: branchStateValues?.branchCode || undefined,
+                                    active: branchStateValues?.active || false,
+                                    branchCityId: branchStateValues?.branchCityId || undefined,
+                                    branchLandMark: branchStateValues?.branchLandMark || undefined,
+                                    branchAddress: branchStateValues?.branchAddress || undefined,
+                                    branchPincode: branchStateValues?.branchPincode || undefined,
+                                    branchEmail: branchStateValues?.branchEmail || undefined,
+                                    branchContactPerson: branchStateValues?.branchContactPerson || undefined,
+                                    branchDesignation: branchStateValues?.branchDesignation || undefined,
+                                    branchDepartment: branchStateValues?.branchDepartment || undefined,
+                                    branchContact: branchStateValues?.branchContact || undefined,
+                                    branchWebsite: branchStateValues?.branchWebsite || undefined,
+                                    branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
+                                    branchBankname: branchStateValues?.branchBankname || undefined,
+                                    branchIfscCode: branchStateValues?.branchIfscCode || undefined,
+                                    branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
+                                    partyId: branchStateValues?.partyId || undefined,
+                                    isMainBranch: branchStateValues?.isMainBranch || undefined,
+                                    BranchType: branchStateValues?.BranchType || undefined,
+                                    branchTypeId: branchStateValues?.branchTypeId || undefined,
+
                                     },
                                     ],
                                 },
@@ -251,9 +306,10 @@ else{
                         data: [
                         {
                             contactPersonName: contactPersonName || null,
-                            mobileNo: contact || null,
+                            mobileNo: contactNumber || null,
                             Designation: designation || null,
                             department: department || null,
+                            email : email ? email : undefined,
                         },
                         ],
                     },
@@ -386,12 +442,13 @@ async function update(id, body) {
                     state: true
                 }
             },
-            ContactDetails: {
-                select: {
-                    id: true,
-                    contactPersonName: true,
-                    mobileNo: true,
-                    email: true
+            PartyContactDetails :{
+                select :{
+                    contactPersonName  : true ,
+                    mobileNo  : true  ,
+                    department  :  true  ,
+                    Designation  : true  ,
+
                 }
             }
         }
@@ -412,11 +469,13 @@ await prisma.$transaction(async (tx) => {
             cstNo,
             gstNo, mailId: mail,
             createdById: userId ? parseInt(userId) : undefined,
-            companyId: companyId ? parseInt(companyId) : undefined, active,
-            
+            companyId: companyId ? parseInt(companyId) : undefined, active,payTermDay, email
+        
 
+        }   
             
-        }
+     
+
     })
 
 
@@ -503,9 +562,68 @@ async function removePartyMaterial(partyBranchId) {
     })
     return { statusCode: 0, data };
 }
+
+async function removePartyContact(id) {
+
+    const data = await prisma.partyContactDetails.delete({
+        where: {
+            id: parseInt(id)
+        },
+    })
+    return { statusCode: 0, data };
+}
 async function getMaterialOne(id) {
     const childRecord = 0;
     const data = await prisma.rawMaterial.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+  
+    })
+    if (!data) return NoRecordFound("party");
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
+
+async function getContactOne(id) {
+    const childRecord = 0;
+    const data = await prisma.partyContactDetails.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+  
+    })
+    if (!data) return NoRecordFound("party");
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
+
+async function updateContact(id, body) {
+    console.log(body,'body',id)
+    const { contactPersonName,designation , department  , contactNumber} = await body
+    const dataFound = await prisma.partyContactDetails.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+    if (!dataFound) return NoRecordFound("contact");
+    const data = await prisma.partyContactDetails.update({
+        where: {
+            id: parseInt(id),
+        },
+        data: {
+            contactPersonName : contactPersonName ,
+            mobileNo  : contactNumber  ? contactNumber  : undefined,
+             Designation  : designation   ? designation : undefined ,
+            department : department ? department : undefined ,
+            
+        }
+    })
+    return { statusCode: 0, data };
+};
+
+
+async function getPartyBranchOne(id) {
+    const childRecord = 0;
+    const data = await prisma.PartyBranch.findUnique({
         where: {
             id: parseInt(id)
         },
@@ -525,6 +643,10 @@ export {
     remove,
     removePartyBranch,
     removePartyMaterial,
+    removePartyContact,
     updateMaterial,
-    getMaterialOne
+    getMaterialOne,
+    getContactOne,
+    updateContact,
+    getPartyBranchOne
 }

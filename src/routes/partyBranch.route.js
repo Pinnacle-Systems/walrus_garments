@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/branchType.controller.js';
+import { get, getOne, getSearch, create, update, remove } from '../controllers/partyBranch.controller.js';
 
 
 router.post('/', create);

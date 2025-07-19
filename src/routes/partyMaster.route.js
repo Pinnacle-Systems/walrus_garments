@@ -4,6 +4,7 @@ import multerUpload from '../utils/multerUpload.js';
 
 import { get, getOne, getSearch, create, update, remove, upload, kycFormController, removePartyBranch ,removePartyMaterial , getMaterialOne ,
 updateMaterial
+,getContactOne , updateContact ,  removePartyContact  , getPartyBranchOne
 
  } from '../controllers/partyMaster.controller.js';
 
@@ -24,13 +25,30 @@ router.put('/:id', update);
 
 router.delete('/:id', remove);
 
+
+router.get('/:id/partybranch', getPartyBranchOne);
+
 router.delete('/:id/partybranch', removePartyBranch);
 
-router.delete('/:id/material' , removePartyMaterial);
+
+
 
 router.get('/:id/materialId', getMaterialOne);
 
 router.put('/:id/materialId', updateMaterial);
+
+router.delete('/:id/material' , removePartyMaterial);
+
+
+
+
+router.get('/:id/contactId', getContactOne);
+
+router.put('/:id/contactId', updateContact);
+
+router.delete('/:id/contactId' , removePartyContact);
+
+
 
 
 export default router;

@@ -1,7 +1,7 @@
 import { ReusableTable, TextInput, ToggleButton } from "../../../Inputs"
 import MastersForm from "../MastersForm/MastersForm";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import { Check } from "lucide-react";
+import { Check, Eye } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { toast } from "react-toastify";
@@ -13,22 +13,18 @@ import Swal from "sweetalert2";
 const RawMaterial  = ( {material ,setMaterial, id , readOnly , setRawMaterial   , materialActive , setMaterialActive 
     ,form ,allData , setMaterialForm , materialForm ,setMaterialId ,materialId , addData } ) => {
 
+          const {
+            data: singleData,
+            isFetching: isSingleFetching,
+            isLoading: isSingleLoading,
+          } = useGetPartyMaterialByIdQuery(materialId, { skip: !materialId });
+
+          const [removeData] = useDeletePartyMaterialMutation()
+          const [updateData]  =  useUpdatePartyMaterialMutation()
 
 
-    const onNew = () => {
-        setMaterial("");
-        setMaterialId('')
-    }
 
 
-    const {
-      data: singleData,
-      isFetching: isSingleFetching,
-      isLoading: isSingleLoading,
-    } = useGetPartyMaterialByIdQuery(materialId, { skip: !materialId });
-
-    const [removeData] = useDeletePartyMaterialMutation()
-    const [updateData]  =  useUpdatePartyMaterialMutation()
   const data = {
     
     material,
@@ -36,7 +32,13 @@ const RawMaterial  = ( {material ,setMaterial, id , readOnly , setRawMaterial   
     rawMaterial :true,
     materialId
   };
-  console.log(materialId,"materialId")
+
+      const onNew = () => {
+        setMaterial("");
+        setMaterialId('')
+    }
+
+  console.log(materialActive,"materialActive")
 
 
     const syncFormWithDb = useCallback(
@@ -102,9 +104,18 @@ const RawMaterial  = ( {material ,setMaterial, id , readOnly , setRawMaterial   
                                 toast.error(deldata?.message)
                                 return
                               }
-                              toast.success("Deleted Successfully");
+                              Swal.fire({
+                                  icon: 'success',
+                                  title: `Deleted Successfully`,
+                                  showConfirmButton: false,
+                                  timer: 2000
+                                });
                             } catch (error) {
-                              toast.error("something went wrong")
+                              Swal.fire({
+                                  icon: 'error',
+                                  title: 'Submission error',
+                                  text: error.data?.message || 'Something went wrong!',
+                                });
                             }
                    }
            
@@ -112,16 +123,20 @@ const RawMaterial  = ( {material ,setMaterial, id , readOnly , setRawMaterial   
 
 
                 const handleSubmitCustom = async (callback, data, text, exit = false) => {
-                  console.log(callback,"callback")
                    try {
                      let returnData;
                      if (text === "Updated") {
                                       console.log(materialId,"materialIddddd")
 
                        returnData = await callback({ materialId, body: data }).unwrap();
+                            setMaterialId(returnData?.data?.id)
+                            setMaterialForm(false)
+
                      } else {
-                       console.log("add")
                        returnData = await callback(data).unwrap();
+                       setMaterialId(returnData?.data?.id)
+                        setMaterialForm(false)
+
                      }
                          Swal.fire({
                        icon: 'success',
@@ -129,6 +144,7 @@ const RawMaterial  = ( {material ,setMaterial, id , readOnly , setRawMaterial   
                        showConfirmButton: false,
                        timer: 2000
                      });
+
                     //  dispatch({
                     //    type: `accessoryItemMaster/invalidateTags`,
                     //    payload: ["AccessoryItemMaster"],
@@ -218,11 +234,10 @@ const SaveBranch  = (   )  => {
    
                    <div className="h-full flex flex-col bg-[#f1f1f0]">
 
-  {/* Sticky Header */}
-  <div className="sticky top-0 mt-3 z-10 bg-white shadow-sm border-b py-3 px-4 mx-3 flex justify-between items-center rounded-t-md">
+  <div className="sticky top-0 mt-3 z-10 bg-white shadow-sm border-b py-3 px-4 mx-4 flex justify-between items-center rounded-t-md">
     <div className="flex items-center gap-2">
       <h2 className="text-base sm:text-lg font-semibold text-gray-800 tracking-tight">
-        {id ? (!readOnly ? "✏️ Edit Material Master" : "📄 Material Master") : "➕ Add New Material"}
+        {id ? (!readOnly ? " Edit Material Master" : " Material Master") : "Add New Material"}
       </h2>
     </div>
 
@@ -231,7 +246,7 @@ const SaveBranch  = (   )  => {
         <button
           type="button"
           onClick={() => setRawMaterial(false)}
-          className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-600 rounded hover:bg-red-600 hover:text-white transition"
+          className="px-1 py-1 text-xs font-medium text-red-600 border border-red-600 rounded hover:bg-red-600 hover:text-white transition"
         >
           Cancel
         </button>
@@ -240,21 +255,16 @@ const SaveBranch  = (   )  => {
       <button
         type="button"
         onClick={() => setMaterialForm(false)}
-        className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-600 rounded flex items-center gap-1 hover:bg-red-600 hover:text-white transition"
+        className="px-2 py-1 text-xs font-medium  item-center  text-blue-600 border border-blue-600 rounded flex items-center gap-1 hover:bg-blue-600 hover:text-white transition"
       >
-        ← Back
+        <Eye className="w-4 h-4" />
+        
+         view
       </button>
 
       {!readOnly && (
-        // <button
-        //   type="button"
-        //   onClick={SaveBranch}
-        //   className="px-3 py-1.5 text-xs font-medium text-green-600 border border-green-600 rounded flex items-center gap-1 hover:bg-green-600 hover:text-white transition"
-        // >
-        //   <Check size={14} />
-        //   {materialId ? "Update" : "Save"}
-        // </button>
-         <button
+       
+             <button
                 onClick={SaveBranch}
 
                  className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
@@ -280,7 +290,7 @@ const SaveBranch  = (   )  => {
             readOnly={readOnly}
           />
 
-          <div className="flex items-center">
+          <div className="flex items-center mt-2">
             <ToggleButton
               name="Status"
               options={statusDropdown}
@@ -301,43 +311,10 @@ const SaveBranch  = (   )  => {
 
                </>
               : 
-              //  <div className=" flex flex-col bg-[f1f1f0] p-3 h-[90%] ">
-                                 
-              //                          <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-              //                              <div className="flex items-center gap-2">
-                                        
-              //              <h1 className="text-xl font-bold text-gray-800">Materials List</h1>
-                   
-              //                              </div>
-              //                              <button
-              //                                  className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
-              //                                  onClick={() => {
-              //                                    setMaterialForm(true)
-              //                                    onNew() }}
-              //                              >
-              //                                  <FaPlus /> Create New
-              //                              </button>
-              //                          </div>
-              //                   <>
-              //                   <div className=" h-[80%] overflow-y-auto">
+            
+              <div className="flex flex-col bg-[#f1f1f0] p-4 h-[100%] rounded-md">
 
-              //                   <ReusableTable
-              //                       columns={columns}
-              //                       data={allData?.materialData || []}
-              //                       onView={handleView}
-              //                       onEdit={handleEdit}
-              //                       onDelete={handleDelete}
-              //                       itemsPerPage={10}
-              //                   />
-              //                   </div>
-              //                   </>
-                         
-                               
-              //     </div>
-              <div className="flex flex-col bg-[#f1f1f0] p-4 h-[90%] rounded-md">
-
-  {/* Header */}
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 p-3 bg-white rounded-md shadow-md border border-gray-200">
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 p-2 bg-white rounded-md shadow-md border border-gray-200">
     <div className="flex items-center gap-2">
       <h1 className="text-lg sm:text-xl font-semibold text-gray-800 tracking-tight">
          Materials List

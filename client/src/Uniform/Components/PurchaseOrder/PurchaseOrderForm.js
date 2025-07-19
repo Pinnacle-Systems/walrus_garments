@@ -135,15 +135,34 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
     }
 
 const partyFilter = (data) => {
-  console.log(data, "data");
+  if (!data || !transType) return [];
 
-  return data?.filter((party) =>
-    party?.PartyMaterials?.some((material) => {
-      console.log(material.name?.toLowerCase() === transType?.toLowerCase(), "material");
-      return material.name?.toLowerCase() === transType?.toLowerCase();
+  const cleanTransType = transType.toLowerCase().trim();
+  console.log("Looking for material:", cleanTransType);
+  console.log(data?.data, "Original Data");
+
+  return data?.data
+    ?.map((party) => {
+      const matchedMaterials = party?.PartyMaterials?.filter((material) => {
+        const match = material?.name?.toLowerCase().includes(cleanTransType);
+        console.log(`Material: ${material?.name}, Match: ${match}`);
+        return match;
+      });
+
+      if (matchedMaterials.length > 0) {
+        return {
+          ...party,
+          PartyMaterials: matchedMaterials, // only matching ones
+        };
+      }
+
+      return null;
     })
-  );
+    .filter(Boolean); // Remove nulls
 };
+
+
+
 
 
     const syncFormWithDb = useCallback((data) => {
@@ -271,7 +290,7 @@ const partyFilter = (data) => {
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
-                    <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
+                    <div className="border  border-slate-100 justify-between p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
                         {/* <h2 className="font-medium text-slate-700 mb-2">
                             Inward Details
                         </h2> */}
@@ -309,7 +328,7 @@ const partyFilter = (data) => {
                         </div>
                     </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
+                        <div className="border border-slate-200 justify-between p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
                          
                             <div className="w-48 ">
                             <DropdownInput name="Po Type"
@@ -325,7 +344,7 @@ const partyFilter = (data) => {
                                             label="Supplier"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
-                                            optionList={partyFilter(supplierList?.data)  }
+                                            optionList={partyFilter(supplierList)}
                                             onAddItem={handleAddSupplier}
                                             // onDeleteItem={onDeleteItem}
                                             setSearchTerm={setPartyId}
@@ -370,7 +389,7 @@ const partyFilter = (data) => {
                           />
                         </div> */}
                           
-                                                      <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}                             readOnly={readOnly}
+           <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}                             readOnly={readOnly}
  />
 
                         {/* <div className="col-span-1 pt-0.5">

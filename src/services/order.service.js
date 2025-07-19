@@ -146,7 +146,17 @@ async function get(req) {
                     name: true
                 }
             },
-            orderDetails: true
+            orderDetails: {
+                select  :{
+                    fiberContentId : true ,
+                    id : true , 
+                    orderId : true  ,
+                    socksMaterialId  : true ,
+                    styleId : true ,
+                    orderSizeDetails  : true  ,
+                    orderYarnDetails  : true ,
+                }
+            }
 
         },
 
@@ -181,7 +191,19 @@ async function getOne(id) {
                     name: true
                 }
             },
-            orderDetails: true
+                   orderDetails: {
+                select  :{
+                    fiberContentId : true ,
+                    id : true , 
+                    orderId : true  ,
+                    socksMaterialId  : true ,
+                    styleId : true ,
+                    socksTypeId : true,
+                    sizeId : true,
+                    orderSizeDetails  : true  ,
+                    orderYarnDetails  : true ,
+                }
+            }
         }
 
     })
@@ -228,52 +250,69 @@ async function create(req) {
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
+let orderDetailsParsed = [];
 
+
+console.log(orderDetails,"orderDetails");
 
     let data;
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.order.create(
-            {
-                data: {
-                    docId,
-                    packingCoverType,
-                    partyId: partyId ? parseInt(partyId) : undefined,
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    createdById: parseInt(userId),
-                    contactPersonName,
-                    address,
-                    phone, notes, term, orderBy,
-                    validDate: validDate ? new Date(validDate) : undefined, draftSave: Boolean(draftSave),
-                    orderDetails: {
-                        createMany: {
-                            data: JSON.parse(orderDetails || []).map(temp => {
-                                let newItem = {}
-                                newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : "";
-                                newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : "";
-                                newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : "";
-                                newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : "";
-                                newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : "";
-                                newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : "";
-                                newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : "";
-                                newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : "";
-                                newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : "";
-                                newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : "";
-                                newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : "";
-                                newItem["description"] = temp["description"] ? temp["description"] : "";
-                                newItem["measurements"] = temp["measurements"] ? temp["measurements"] : "";
-                                newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : "";
-                                newItem["filePath"] = temp["filePath"] ? temp["filePath"] : "";
+data = await tx.order.create({
+  data: {
+    docId,
+    packingCoverType,
+    partyId: partyId ? parseInt(partyId) : undefined,
+    branchId: branchId ? parseInt(branchId) : undefined,
+    createdById: parseInt(userId),
+    contactPersonName,
+    address,
+    phone,
+    notes,
+    term,
+    orderBy,
+    validDate: validDate ? new Date(validDate) : undefined,
+    draftSave: Boolean(draftSave),
 
-                                return newItem
-                            }
-                            )
-                        }
-                    }
+    orderDetails: orderDetails?.length > 0
+      ? {
+          create: JSON.parse(orderDetails).map((item) => ({
+            styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+            fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+            socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+            socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
 
+            orderSizeDetails: item?.orderSizeDetails?.length > 0
+              ? {
+                  createMany: {
+                    data: item.orderSizeDetails.map((sub) => ({
+                      size: sub?.sizeId || undefined,
+                      sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                      sizeMeasurement: sub?.sizeMeasurement || undefined,
+                      qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                    })),
+                  },
                 }
-            }
-        )
+              : undefined,
+
+            orderYarnDetails: item?.orderYarnDetails?.length > 0
+              ? {
+                  createMany: {
+                    data: item.orderYarnDetails.map((yarn) => ({
+                      yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                      yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                      count: yarn?.count ?  yarn?.count  :  undefined,
+                      yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                    })),
+                  },
+                }
+              : undefined,
+          })),
+        }
+      : undefined,
+  },
+});
+
 
 
 
@@ -294,14 +333,20 @@ const update = async (id, body) => {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
-
+console.log(orderDetails,"orderDetails")
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
     if (!dataFound) return { statusCode: 404, message: "No record found for order" };
 
     let data;
     await prisma.$transaction(async (tx) => {
         data = await tx.order.update({
-            where: { id: parseInt(id) },
+            where: {
+                 id: parseInt(id) ,
+                  
+                },
+                include: {
+                        PoItems: true
+                    },
             data: {
                 docId: draftSave ? docIdNumber : dataFound?.docId,
                 partyId: partyId ? parseInt(partyId) : undefined,
@@ -312,33 +357,45 @@ const update = async (id, body) => {
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
                 updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                orderDetails: {
-                    deleteMany: {},
-                    createMany: {
-                        data: JSON.parse(orderDetails || []).map(temp => {
-                            let newItem = {}
-                            newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : "";
-                            newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : "";
-                            newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : "";
-                            newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : "";
-                            newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : "";
-                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : "";
-                            newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : "";
-                            newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : "";
-                            newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : "";
-                            newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : "";
-                            newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : "";
-                            newItem["description"] = temp["description"] ? temp["description"] : "";
-                            newItem["measurements"] = temp["measurements"] ? temp["measurements"] : "";
-                            newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : "";
-                            newItem["filePath"] = temp["filePath"] ? temp["filePath"] : "";
-                            return newItem
+                // orderDetails: {
+                //     deleteMany: {},
+                //     createMany: {
+                //         data: JSON.parse(orderDetails || []).map(temp => {
+                //             let newItem = {}
+                //             newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : "";
+                //             newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : "";
+                //             newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : "";
+                //             newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : "";
+                //             newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : "";
+                //             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : "";
+                //             newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : "";
+                //             newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : "";
+                //             newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : "";
+                //             newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : "";
+                //             newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : "";
+                //             newItem["description"] = temp["description"] ? temp["description"] : "";
+                //             newItem["measurements"] = temp["measurements"] ? temp["measurements"] : "";
+                //             newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : "";
+                //             newItem["filePath"] = temp["filePath"] ? temp["filePath"] : "";
+                //             return newItem
+                //         }
+                //         )
+                //     }
+                // }
+                        orderDetails: {
+                                   deleteMany: {},
+                                        
+                                   create :  orderDetails?.length  >  0   ?  
+                                JSON.parse(orderDetails)?.map(item => ({
+                                                styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+                                                }))   :  []
+
                         }
-                        )
-                    }
-                }
-            },
-        });
+
+
+
+                                    },
+                                });
 
 
     });

@@ -153,8 +153,8 @@ console.log(optionList,"optionList")
                   openAddModal();
                 }}
               >
-                <FaPlus className="text-xs" />
-                Create "{searchTerm}"
+                {/* <FaPlus className="text-xs" />
+                Create "{searchTerm}" */}
               </button>
             )}
           </div>

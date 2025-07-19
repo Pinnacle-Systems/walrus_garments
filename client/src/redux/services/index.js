@@ -40,8 +40,8 @@ export { default as TaxTermMasterApi } from './TaxTermMasterServices'
 export { default as TaxTemplateApi } from './TaxTemplateServices'
 export { default as TermsAndConditionsMasterApi } from "./TermsAndConditionsService";
 export { default as machineMasterApi } from "./MachineMasterService"
-
-
+export {default as partyBranchContactMasterApi }  from "./PartyBranchContactMasterService"
+export  {default as partyContactMasterApi  }   from "./PartyContactMasterService"
 
 
 

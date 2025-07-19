@@ -46,7 +46,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 import AddBranch from "./AddBranch";
 import Modal from "../../../UiComponents/Modal";
 import RawMaterial from "./AddRawMaterial";
-import { BracesIcon, Check, LayoutGrid, Plus, Table } from "lucide-react";
+import { BracesIcon, Check, LayoutGrid, Paperclip, Plus, Table } from "lucide-react";
 import Mastertable from "../MasterTable/Mastertable";
 import { useGetbranchTypeQuery } from "../../../redux/uniformService/BranchTypeMaster";
 import { useGetCountriesQuery, useGetCountryByIdQuery } from "../../../redux/services/CountryMasterService";
@@ -54,8 +54,9 @@ import Swal from "sweetalert2";
 import Loader from "../Loader";
 import { faL } from "@fortawesome/free-solid-svg-icons";
 import { FaInfoCircle, FaPlus } from "react-icons/fa";
-import AddContactPersonDetails from "./ContactPersonDetails";
-import ContactPersonDetails from "./ContactPersonDetails";
+import AddContactPersonDetails from "./PartyContactDetails";
+import ContactPersonDetails from "./PartyContactDetails";
+import ArtDesignReport from "./ArtDesign/ArtDesignReport";
 
 const MODEL = "Party Master";
 
@@ -101,7 +102,13 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [backUpItemsList, setBackUpItemsList] = useState([]);
   const [shippingAddress, setShippingAddress] = useState([]);
   const [contactDetails, setContactDetails] = useState([]);
-      const [contactNumber, setContactNumber] = useState("")
+  const [contactNumber, setContactNumber] = useState("")
+  const [alterContactNumber, setAlterContactNumber] = useState("")
+
+    const [formReport, setFormReport] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+
+
   const [contactPersonName, setContactPersonName] = useState("")
 
 
@@ -113,7 +120,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [image, setImage] = useState({});
   const [partyCode,setPartyCode] = useState("");
     const [landMark,setlandMark] = useState("");
-    const [contactPerson,setContactPerson] = useState("");
+    const [accountNumber,setAccountNumber] = useState("");
     const [contact,setContact] = useState("");
     const [bankname,setBankName] = useState("");
     const [bankBranchName,setBankBranchName] = useState("");
@@ -128,6 +135,17 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [branchEmail, setBranchEmail] = useState("");
   const [openingHours,setopeningHours]  =  useState("")
   const [branchWebsite,setBranchWebsite]  = useState("")
+  const [branchAliasName, setBranchAliasName] = useState('');
+const [branchActive, setBranchActive] = useState(true); 
+const [branchCity, setBranchCity] = useState('');
+const [branchLandMark, setBranchLandMark] = useState('');
+const [branchPincode, setBranchPincode] = useState('');
+const [branchContactDesignation, setBranchcontactDesignation] = useState('');
+const [branchContactDepartment, setBranchcontactDepartment] = useState('');
+const [branchBankname, setBranchBankName] = useState('');
+const [branchBankBranchName, setBranchBankBranchName] = useState('');
+const [branchAccountNumber, setBranchAccountNumber] = useState('');
+const [branchIfscCode, setBranchIfscCode] = useState('');
   const [ branchForm,setBranchForm ]  =  useState(true)
   const [partyBranch, setPartyBranch] = useState([])
   const [rawMaterial,setRawMaterial]  = useState(false)
@@ -138,11 +156,67 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [branchInfo,setBranchInfo]  = useState([]);
   const [selected, setSelected] = useState([]);
   const [materialForm,setMaterialForm] = useState(false)
-  const [view, setView] = useState("Customer");
+  const [view, setView] = useState("all");
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [isContactPerson,setIsContactPerson]  = useState(false)
   const [designation,setDesignation]  = useState("")
-   const [department,SetDepartment ] = useState("")
+   const [department,setDepartment ] = useState("")
+const [contactPersonEmail,setContactPersonEmail]  = useState("")
+const[tooltipVisibleForMaterial,setTooltipVisibleForMaterial] =  useState("")
+const [branchAlterContact ,setBranchAlterContact] =  useState("")
+const [ branchContactPersonEmail , setBranchContactPersonEmail ] = useState("")
+
+   const branchState = {
+      branchModelOpen,
+  setBranchModelOpen,
+  branchName,
+  setBranchName,
+
+  branchAddress,
+  setBranchAddress,
+  branchContact,
+  setBranchContact,
+  branchContactPerson,
+  setBranchcontactPerson,
+  branchEmail,
+  setBranchEmail,
+  openingHours,
+  setopeningHours,
+  branchWebsite,
+  setBranchWebsite,
+branchAlterContact,
+setBranchAlterContact,
+branchContactPersonEmail,
+setBranchContactPersonEmail,
+
+  branchAliasName,
+  setBranchAliasName,
+  branchCode,
+  setBranchCode,
+  branchActive,
+  setBranchActive,
+  branchCity,
+  setBranchCity,
+  branchLandMark,
+  setBranchLandMark,
+  branchPincode,
+  setBranchPincode,
+  branchContactDesignation,
+  setBranchcontactDesignation,
+  branchContactDepartment,
+  setBranchcontactDepartment,
+  branchBankname,
+  setBranchBankName,
+  branchBankBranchName,
+  setBranchBankBranchName,
+  branchAccountNumber,
+  setBranchAccountNumber,
+  branchIfscCode,
+  setBranchIfscCode,
+  branchType,setBranchType
+};
+
+
   
   const childRecord = useRef(0);
   const dispatch = useDispatch();
@@ -180,7 +254,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     (state) => state.openTabs.tabs.find((tab) => tab.active).name
   );
 
-          const { data: branchTypeData } = useGetbranchTypeQuery({ });
 
   useEffect(() => {
     if (openPartyModal) {
@@ -190,9 +263,11 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   }, [openPartyModal]);
 
 
-
+console.log(id,"id")
   const {
     data: singleData,
+    refetch,
+
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetPartyByIdQuery(id, { skip: !id });
@@ -204,12 +279,19 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
 
 let filterParty ;
+
+
+  
 if(view == "Customer"){
   filterParty  =  allData?.data?.filter(item  => item.isClient)
 }
 if(view  ===  "Supplier"){
     filterParty  =  allData?.data?.filter(item  => item.isSupplier)
   }
+if(view  ==  "all"){
+   filterParty  =  allData?.data
+}
+
 
   console.log(selected,"selected")
 
@@ -225,6 +307,8 @@ if(view  ===  "Supplier"){
       // } else {
       //   setReadOnly(false);
       // }]
+      let contactdetails = data?.PartyContactDetails?.[0]
+      console.log(contactDetails,"contactDetails")
       if(materialId){
         setMaterial()
       }
@@ -254,8 +338,8 @@ if(view  ===  "Supplier"){
       setPincode(data?.pincode || "");
       setWebsite(data?.website || "");
       setEmail(data?.email || "");
-      setCity(data?.cityId || "");
-      setCurrency(data?.currencyId || "");
+      setCity(data?.City?.id || "");
+      setCurrency(data?.Currency?.name || "");
       setActive(id ? data?.active : true);
 
 
@@ -270,7 +354,10 @@ if(view  ===  "Supplier"){
       setPriceTemplateId(data?.priceTemplateId || "");
       setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
       setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
-      // setContactPersonName
+      setContactPersonName(contactdetails?.contactPersonName  ? contactdetails?.contactPersonName : undefined )
+      setContact(contactdetails?.mobileNo  ?  contactdetails?.mobileNo  : undefined )
+      setDesignation(contactdetails?.Designation  ?  contactdetails?.Designation  : undefined)
+      setDepartment(contactdetails?.department   ?  contactdetails?.department   : undefined  )
       setSupplier(data?.isSupplier || false);
       setClient(data?.isClient || false);
       setBranchAddress(data?.branchAddress ? data?.branchAddress : "")
@@ -350,14 +437,39 @@ setSelected(
     isGy,
     isDy,
     partyBranch,
+    contactNumber,
+    alterContactNumber,
+  
     
     
     
     branchInfo : branchInfo?.filter(item  => item.branchName !== "") , mail,
     partyMaterials : selected,   material,  materialActive, rawMaterial,
-     branchAddress,branchContact,branchContactPerson,branchEmail,branchName,branchType,branchWebsite,openingHours,
-    contact,department,designation,
-    contactPersonName,
+ branchStateValues : {
+  branchModelOpen,
+            branchName,
+            branchAddress,
+            branchContact,
+            branchContactPerson,
+            branchEmail,
+            openingHours,
+            branchWebsite,
+
+            branchAliasName,
+            branchCode,
+            branchActive,
+            branchCity,
+            branchLandMark,
+            branchPincode,
+            branchContactDesignation,
+            branchContactDepartment,
+            branchBankname,
+            branchBankBranchName,
+            branchAccountNumber,
+            branchIfscCode,
+},
+
+    contact,department,designation,contactPersonName,contactPersonEmail
 
   };
 
@@ -377,9 +489,25 @@ setSelected(
     return false;
   };
 
+      console.log(attachments,"attachments")
 
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
+         const formData = new FormData();
+      for (let key in data) {
+        if (key === 'attachments') {
+          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? (console.log(i.filePath.name,"filepath")) : i.filePath }))));
+          data[key].forEach(option => {
+           
+            if (option?.filePath instanceof File) {
+              formData.append('file', option.filePath);
+            }
+          });
+        } 
+      }
+      console.log(formData,"formData")
+       data.attachmentsFormData = formData;
+      
       let returnData;
       if (text === "Updated") {
         returnData = await callback({ id, body: data }).unwrap();
@@ -406,8 +534,9 @@ setSelected(
         payload: ["Currency"],
       });
 
-      setId(returnData.data.id);
+      setId(returnData?.data?.id);
       onNew();
+      setForm(false)
       setStep(1);
       if (exit) {
         // setForm(false);
@@ -488,13 +617,22 @@ const SaveBranch  = (   )  => {
        if(isSupplier){
         console.log(selected.length  <= 0 ,"condiion")
         if(selected.length   <= 0  ){
-          toast.info("Choose One Raw Material")
+                 Swal.fire({
+        icon: 'error',
+        title: `Select One Material...!`,
+        showConfirmButton: false,
+        timer: 3000
+      });
           return false
         }
     }
       if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", {
-        position: "top-center",
+ 
+         Swal.fire({
+        icon: 'warning',
+        title: `Please fill all required fields...!`,
+        showConfirmButton: false,
+        timer: 3000
       });
       return;
     }
@@ -548,10 +686,19 @@ const SaveBranch  = (   )  => {
           payload: ["Currency"],
         });
         syncFormWithDb(undefined);
-        toast.success("Deleted Successfully");
+         Swal.fire({
+                             icon: 'success',
+                             title: `Deleted Successfully`,
+                             showConfirmButton: false,
+                             timer: 2000
+                           });
         setForm(false);
       } catch (error) {
-        toast.error("something went wrong");
+              Swal.fire({
+                            icon: 'error',
+                            title: 'Submission error',
+                            text: error.data?.message || 'Something went wrong!',
+                          });
       }
     
   };
@@ -598,10 +745,7 @@ const SaveBranch  = (   )  => {
     syncFormWithDb(undefined);
   };
 
-  function onDataClick(id) {
-    setId(id);
-    setForm(true);
-  }
+
   function handleInputbranch(value, index, field) {
     console.log(value,"value")
     const newBlend = structuredClone(branchInfo);
@@ -621,10 +765,7 @@ const SaveBranch  = (   )  => {
     setBranchInfo(newBlend);
   }
 
-  // function deleteBranch(id) {
-    // setBranchInfo((prev) => prev?.filter((v, i) => parseInt(v?.id) !== parseInt(id)));
-    // // deletePartyBranchData(id)
-  // }
+ 
 
       function deleteBranch(index , id) {
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
@@ -701,9 +842,18 @@ const SaveBranch  = (   )  => {
                    await removeData(orderId)
                    setId("");
                    onNew();
-                   toast.success("Deleted Successfully");
+                     Swal.fire({
+                             icon: 'success',
+                             title: `Deleted Successfully`,
+                             showConfirmButton: false,
+                             timer: 2000
+                           });
                } catch (error) {
-                   toast.error("something went wrong");
+                   Swal.fire({
+                            icon: 'error',
+                            title: 'Submission error',
+                            text: error.data?.message || 'Something went wrong!',
+                          });
                }
            }
    
@@ -725,8 +875,8 @@ const SaveBranch  = (   )  => {
 
     },
     {
-      header: 'Alias Name',
-      accessor: (item) => item.aliasName    ,
+      header: 'Address',
+      accessor: (item) => item.address    ,
         cellClass: () => 'font-medium text-gray-900',
       className:  'text-gray-800 uppercase w-72'
 
@@ -776,7 +926,7 @@ console.log(singleData,"singleData")
          <Modal
           isOpen={form}
           form={form}
-           widthClass={`${"w-[75%] "} ${isAddressExpanded ? "h-[95%]" : "h-[60%]"}`}
+           widthClass={`${"w-[85%] "} ${isAddressExpanded ? "h-[95%]" : "h-[97%]"}`}
                 onClose={() => {
                   setForm(false);
                   onCloseForm();
@@ -792,7 +942,7 @@ console.log(singleData,"singleData")
               <Modal
                 isOpen={branchModelOpen}
                 form={form}
-                widthClass={`${"w-[95%] h-[70%]"}`}
+                widthClass={`${"w-[90%] h-[90%]"}`}
                 setBranchModelOpen={setBranchModelOpen}
                 onClose={() => {
                   setBranchModelOpen(false)
@@ -801,16 +951,23 @@ console.log(singleData,"singleData")
 
 
 
-                <AddBranch singleData={singleData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                <AddBranch 
+                                singleData={singleData} partyId={id}  branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
                   branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
-                  branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} onNew={onNew}
-                  setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
+                  branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} 
+                  branchContactPerson={branchContactPerson} setBranchcontactPerson={setBranchcontactPerson}  branchWebsite={branchWebsite}
+                  setBranchWebsite={setBranchWebsite}  openingHours={openingHours}   setopeningHours={setopeningHours}
+                  onNew={onNew}  branchType={branchType} handleFun={handleFun}
+                  setPartyId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
                   deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
                   handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
-                  shippingAddress={shippingAddress} setForm={setForm} branchForm={branchForm}  setBranchForm={setBranchForm}
-                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  id={id} handleFun={handleFun}
+                  shippingAddress={shippingAddress} setForm={setForm}   onClose={() => {
+                  setBranchModelOpen(false) 
+                }}    branchForm={branchForm}  setBranchForm={setBranchForm}
+                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  
                   partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen} name={name}
-                  branchType={branchType} setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
+                   setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
+                 cityList={cityList}  branchState={branchState} refetch={refetch} 
                 />
 
 
@@ -843,15 +1000,53 @@ console.log(singleData,"singleData")
                   />
               </Modal>
                 
-       <div className="h-full flex flex-col bg-[f1f1f0] ">
+ <div className="h-full flex flex-col bg-[f1f1f0] ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  {id ? (!readOnly ? "Edit Customer/supplier" : "Customer/supplier Master") : "Add New Customer/supplier Master"}
+                <h2 className="text-md font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Customer/Supplier" : "Customer/Supplier Master") : "Add New Customer/Supplier"}
                 </h2>
              
               </div>
+
+
               <div className="flex gap-2">
+                 <div className="  ">
+    <button
+      onClick={() => {
+        if(name ){
+
+          setBranchModelOpen(true)
+          setBranchForm(false)
+        }
+        else{
+ Swal.fire({
+                             icon: 'warning',
+                             title: `Enter ${isSupplier ? "Supplier Details" : "Customer Details"} `,
+                             showConfirmButton: false,
+                             timer: 2000
+                           });
+        }
+
+      }}
+      readOnly={readOnly}
+            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Add Branch
+    </button>
+  </div>
                 <div>
                   {!readOnly && (
                     <button
@@ -861,7 +1056,7 @@ console.log(singleData,"singleData")
                         setSearchValue("");
                         setId(false);
                       }}
-                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                      className="px-2 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Cancel
                     </button>
@@ -872,7 +1067,7 @@ console.log(singleData,"singleData")
                     <button
                       type="button"
                       onClick={saveData}
-                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                      className="px-2 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                     >
                       <Check size={14} />
@@ -889,11 +1084,10 @@ console.log(singleData,"singleData")
 
                
 
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Basic Details</h3>
-                    {/* <div className="space-y-2"> */}
-                          <div className="grid grid-cols-2">     
+                    <div className="grid grid-cols-2">     
                       <div className="flex flex-row items-center gap-2 mt-2 mb-2">
                            <div className="flex items-center gap-2 ">
                                                    <input
@@ -903,36 +1097,83 @@ console.log(singleData,"singleData")
                                                      onChange={() => handleChange('client')}
                                                    />
                                                    <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
-                                                 </div>
-                                                         <div className="flex flex-row gap-2">
+                                        </div>
+                             <div className="flex flex-row gap-2">
 
-                                                    <input
-                                                      type="radio"
-                                                      name="type"
-                                                      checked={isSupplier}
-                                                      onChange={() => handleChange('supplier')}
-                                                    />
-                                                    <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
-                                                      </div>
+                                  <input
+                                    type="radio"
+                                    name="type"
+                                    checked={isSupplier}
+                                    onChange={() => handleChange('supplier')}
+                                  />
+                                  <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
+                                </div>
+                                  <div className="col-span-4 flex flex-row">
+                         
+                        {isSupplier && (
+                            <div className="w-48">
+
+                                  <MultiSelectDropdown 
+                                  // name={"Material List"}
+                                    options={multiSelectOption(allData ? allData?.materialData : [], "name", "id")}
+                                    labelName="name"
+                                    setSelected={setSelected}
+                                    selected={selected}
+                                    />
+                            </div>
+                                                  )}
+                                
+             {isSupplier && (
+  <div className="mt-3 px-3 relative inline-block">
+    {/* Button */}
+    <button
+      className="w-7 h-6 border border-green-500 rounded-md mt-2
+                hover:bg-green-500 text-green-600 hover:text-white
+                transition-colors flex items-center justify-center"
+      onClick={() => setRawMaterial(true)}
+      onMouseEnter={() => setTooltipVisibleForMaterial(true)}
+      onMouseLeave={() => setTooltipVisibleForMaterial(false)}
+    >
+      <FaPlus className="text-sm w-3 h-4" />
+    </button>
+
+    {/* Tooltip (shown below and right-aligned to button) */}
+    {tooltipVisibleForMaterial && (
+      <div className="absolute left-full top-0 ml-2 mt-1 w-56 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg z-10">
+        <div className="flex items-start">
+          <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+          <span>Click to add a new Material</span>
+        </div>
+        {/* Tooltip arrow */}
+        <div className="absolute top-2 -left-1 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+      </div>
+    )}
+  </div>
+)}
+
+
+                        </div>     
                       </div>
+                    
+
                       <div className="col-span-2">
                          <TextArea
-                                                   name={isSupplier ? "Supplier Name" : "Customer Name"}
-                                                   type="text"
-                                                   value={name}
-                                                   inputClass="h-8" 
-                       
-                                                   setValue={setName}
-                                                   required={true}
-                                                   readOnly={readOnly}
-                                                   disabled={childRecord.current > 0}
-                                                   onBlur={(e) => {
-                                                     if (aliasName) return;
-                                                     setAliasName(e.target.value);
-                                                   }}
-                     
-                                                   className="focus:ring-2 focus:ring-blue-100"
-                                                 />
+                              name={isSupplier ? "Supplier Name" : "Customer Name"}
+                              type="text"
+                              value={name}
+                              inputClass="h-8" 
+  
+                              setValue={setName}
+                              required={true}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              onBlur={(e) => {
+                                if (aliasName) return;
+                                setAliasName(e.target.value);
+                              }}
+
+                              className="focus:ring-2 focus:ring-blue-100"
+                            />
                       </div>
                        <div className="col-span-2">
                             <TextArea
@@ -947,18 +1188,30 @@ console.log(singleData,"singleData")
                                 className="focus:ring-2 focus:ring-blue-100"
                               />
                       </div>
-                       <div>
+                       <div className="col-span-1">
                           <TextInput
                                 name="Party Code"
-                                type="number"
-                                // value={contact}
+                                type="text"
+                                value={partyCode}
         
-                                // setValue={setContact}
+                                setValue={setPartyCode}
                                 readOnly={readOnly}
                                 disabled={childRecord.current > 0}
                                 className="focus:ring-2 focus:ring-blue-100 w-10"
                               />
                       </div>
+                          {/* <div className="col-span-1">
+                          <DateInput
+                                name="Date of Registration"
+                                
+                                value={partyCode}
+        
+                                setValue={setPartyCode}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                              />
+                      </div> */}
                       <div className="mt-5 ml-3">
                               <ToggleButton
                           name="Status"
@@ -981,50 +1234,138 @@ console.log(singleData,"singleData")
                                                        
                                                   </div>
                 
-                      <div className="grid grid-cols-2 gap-2">
-                         
-
-              
-                      </div>
-                    {/* </div> */}
+                  
                   </div>
 
         
+                  </div>
+                   <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
+                 <div className="space-y-2">
+                 
+
+                      <div className="grid grid-cols-2 gap-2">
+         
+                              <div className="col-span-2">
+                                
+                                <TextArea name="Address"
+                                  inputClass="h-10" value={address} 
+                                  setValue={setAddress} required={true}
+                                    readOnly={readOnly} d
+                                    isabled={(childRecord.current > 0)} />
+                              </div>
+                                        <TextInput
+                                                            name="Land Mark"
+                                                            type="text"
+                                                            value={landMark}
+                                    
+                                                            setValue={setlandMark}
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          /> 
+                                  <DropdownInput
+                                    name="City/State Name"
+                                    options={dropDownListMergedObject(
+                                      id
+                                        ? cityList?.data
+                                        : cityList?.data?.filter((item) => item.active),
+                                      "name",
+                                      "id"
+                                    )}
+                                    country={country}
+                                    masterName="CITY MASTER"
+                                    lastTab={activeTab}
+                                    value={city}
+                                    setValue={setCity}
+                                    required={true}
+                                    readOnly={readOnly}
+                                    disabled={childRecord.current > 0}
+                                    className="focus:ring-2 focus:ring-blue-100"
+                                  />
+                                                      
+                                    <div className="col-span-2 flex flex-row gap-3">                        
+                                      <div className="w-24">
+
+                                      <TextInput
+                                            name="Pincode"
+                                            type="number"
+                                            value={pincode}
+                                            required={true}
+                    
+                                            setValue={setPincode}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />         
+                                      </div>
+                                      <div className="w-64"> 
+                                            <TextInput
+                                        name={"Email"}
+                                        type="text"
+                                        value={email}
+                
+                                        setValue={setEmail}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                      />
+                                      <div>
+                                       
+
+                                      </div>
+
+                                      </div>
+                                    </div> 
+                                     <div>
+                                                       <TextInput
+                                        name={"Contact Number"}
+                                        type="text"
+                                        value={email}
+                
+                                        setValue={setEmail}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                      />
+                                        </div>    
+
+                                                     
+                                                                     
+
+                                                                                           
+                      </div>
+                    </div> 
+                  </div>
+
+
                 </div>
                    <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[330px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
                  <div className="space-y-2">
                  
 
-                        <TextInput
-                                  name="Party Email"
-                                  type="number"
-                                  value={email}
-          
-                                  setValue={setEmail}
-                                  readOnly={readOnly}
-                                  disabled={childRecord.current > 0}
-                                  className="focus:ring-2 focus:ring-blue-100 w-10"
-                                />
+                      
                       <div className="grid grid-cols-2 gap-2">
                         <div className="col-span-2 flex flex-row gap-4 mt-2">
-                           <div className="w-72">
+                           <div className="w-96">
                                                   
                               <TextInput
-                                            name="Contact Person"
+                                            name="Contact Person Name"
                                             type="text"
-                                            // value={contact}
+                                            value={contactPersonName}
                     
-                                            // setValue={setContact}
+                                            setValue={setContactPersonName}
                                             readOnly={readOnly}
                                             disabled={childRecord.current > 0}
                                             className="focus:ring-2 focus:ring-blue-100 w-10"
                                           />
                                            </div>
-                    <div className="relative inline-block">
+                      <div className="relative inline-block">
                                 <button
-                                  className="w-9 h-9 border border-green-500 rounded-md mt-3
+                                  className="w-7 h-6 border border-green-500 rounded-md mt-6
                                             hover:bg-green-500 text-green-600 hover:text-white
                                             transition-colors flex items-center justify-center"
                                   disabled={readOnly}
@@ -1033,6 +1374,7 @@ console.log(singleData,"singleData")
                                     // setIsDropdownOpen(false);
                                     // setEditingItem("new");
                                     // setOpenModel(true);
+                                    setBranchForm(false)
                                     setIsContactPerson(true)
                                   }}
                                   onMouseEnter={() => setTooltipVisible(true)}
@@ -1054,12 +1396,12 @@ console.log(singleData,"singleData")
                       </div>
                        
   </div> 
-                                       <TextInput
+             <TextInput
                                               name="Designation"
                                               type="text"
-                                              // value={contact}
+                                              value={designation}  
                       
-                                              // setValue={setContact}
+                                              setValue={setDesignation}
                                               readOnly={readOnly}
                                               disabled={childRecord.current > 0}
                                               className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1067,23 +1409,60 @@ console.log(singleData,"singleData")
                                              <TextInput
                                               name="Department"
                                               type="text"
-                                              // value={contact}
+                                              value={department}
                       
-                                              // setValue={setContact}
+                                              setValue={setDepartment} 
                                               readOnly={readOnly}
                                               disabled={childRecord.current > 0}
                                               className="focus:ring-2 focus:ring-blue-100 w-10"
                                             />
-                                                  <TextInput
-                                                                    name="Contact Number"
-                                                                    type="number"
-                                                                    // value={contact}
+                                                <div className='col-span-2'>
+                                  
+                                                                        <TextInput
+                                                                            name="Email"
+                                                                            type="text"
+                                                                            value={branchEmail}
+                                                    
+                                                                            setValue={setBranchEmail}
+                                                                            readOnly={readOnly}
+                                                                            disabled={childRecord.current > 0}
+                                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                          />
+                                                                        </div>
+                                                                                    <div className='col-span-1'>
+                                
+                                                              <TextInput
+                                                                name="Contact Number"
+                                                                type="number"
+                                                                value={contactNumber} 
+                                                                setValue={setContactNumber}
+                                        
+                                                                readOnly={readOnly}
+                                                                disabled={childRecord.current > 0}
+                                                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                          />
+                                                                          </div>  
+                                                              <div className='col-span-1'>
+                                                                        <TextInput
+                                                                                      name="Alternative Contact Number"
+                                                                                      type="number"
+                                                                                        value={alterContactNumber}
+                                                                                    setValue={setAlterContactNumber}
+                                                              
+                                                                                      // readOnly={readOnly}
+                                                                                      // disabled={childRecord.current > 0}
+                                                                                      className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                                    />
+                                                                         </div>
+                            
                                             
-                                                                    // setValue={setContact}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />
+
+                                                                       
+                                                                       {/* <div className='col-span-2 flex flex-row gap-3' >
+                                                                     
+                                                                    
+                                                             </div> */}
+                                                              
                                                                               {/* <TextInput
                                                                     name="Fax"
                                                                     type="number"
@@ -1094,16 +1473,16 @@ console.log(singleData,"singleData")
                                                                     disabled={childRecord.current > 0}
                                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
                                                                   />     */}
-                                                                          <TextInput
+                                                                          {/* <TextInput
                                                                     name="Website"
-                                                                    type="number"
-                                                                    // value={contact}
+                                                                    type="text"
+                                                                    value={website}
                                             
-                                                                    // setValue={setContact}
+                                                                    setValue={setWebsite}
                                                                     readOnly={readOnly}
                                                                     disabled={childRecord.current > 0}
                                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />
+                                                                  /> */}
                                                                     
                                                                                     
                       </div>
@@ -1112,79 +1491,11 @@ console.log(singleData,"singleData")
 
      
                 </div>
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
-                 <div className="space-y-2">
-                 
-
-                      <div className="grid grid-cols-2 gap-2">
-                   
-                                  <DropdownInput
-                                                      name="City/State Name"
-                                                      options={dropDownListMergedObject(
-                                                        id
-                                                          ? cityList?.data
-                                                          : cityList?.data?.filter((item) => item.active),
-                                                        "name",
-                                                        "id"
-                                                      )}
-                                                      country={country}
-                                                      masterName="CITY MASTER"
-                                                      lastTab={activeTab}
-                                                      value={city}
-                                                      setValue={setCity}
-                                                      required={true}
-                                                      readOnly={readOnly}
-                                                      disabled={childRecord.current > 0}
-                                                      className="focus:ring-2 focus:ring-blue-100"
-                                                    />
-                                                               <TextInput
-                                                            name="Land Mark"
-                                                            type="number"
-                                                            // value={pincode}
-                                                            required={true}
-                                    
-                                                            // setValue={setPincode}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                          /> 
-                                                          <div className="col-span-2">
-
-                                                          <TextArea name="Address"
-                                                          inputClass="h-10" value={address} 
-                                                          setValue={setAddress} required={true}
-                                                            readOnly={readOnly} d
-                                                            isabled={(childRecord.current > 0)} />
-                                                          </div>
-
-                                                     
-                                                      <div className="mb-11">
-
-                                                     <TextInput
-                                                            name="Pincode"
-                                                            type="number"
-                                                            value={pincode}
-                                                            required={true}
-                                    
-                                                            setValue={setPincode}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                          />         
-                                                      </div>
-                                                                                           
-                      </div>
-                    </div> 
-                  </div>
-
-
-                </div>
+               
               
 
                     <div className="lg:col-span-4 space-y-3">
-                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
                         <h3 className="font-medium text-gray-800 mb-2 text-sm">Business Details</h3>
                         <div className="space-y-2">
 
@@ -1245,7 +1556,7 @@ console.log(singleData,"singleData")
                                                                                 className="focus:ring-2 focus:ring-blue-100"
                                                                               />
                                   <TextInput
-                                                    name="CST No"
+                                                    name="MSME CERTFICATE  No"
                                                     type="text"
                                                     value={cstNo}
                                                     setValue={setCstNo}
@@ -1256,8 +1567,8 @@ console.log(singleData,"singleData")
                                                     <TextInput
                                                     name="CIN No"
                                                     type="text"
-                                                    value={cstNo}
-                                                    setValue={setCstNo}
+                                                    value={cinNo}
+                                                    setValue={setCinNo}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100"
@@ -1270,17 +1581,17 @@ console.log(singleData,"singleData")
                       
                     </div>
                     <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
                  <div className="space-y-2">
                  
 
                         <TextInput
                                   name="Bank Name"
-                                  type="number"
-                                  // value={contact}
+                                  type="text"
+                                  value={bankname}
           
-                                  // setValue={setContact}
+                                  setValue={setBankName}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
                                   className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1289,9 +1600,9 @@ console.log(singleData,"singleData")
                               <TextInput
                                             name="Branch Name"
                                             type="text"
-                                            // value={contact}
+                                            value={bankBranchName}
                     
-                                            // setValue={setContact}
+                                            setValue={setBankBranchName}
                                             readOnly={readOnly}
                                             disabled={childRecord.current > 0}
                                             className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1299,19 +1610,19 @@ console.log(singleData,"singleData")
                                        <TextInput
                                               name="Account Number"
                                               type="text"
-                                              // value={contact}
+                                              value={accountNumber}
                       
-                                              // setValue={setContact}
+                                              setValue={setAccountNumber}
                                               readOnly={readOnly}
                                               disabled={childRecord.current > 0}
                                               className="focus:ring-2 focus:ring-blue-100 w-10"
                                             />
                                                   <TextInput
                                                         name="IFSC CODE"
-                                                        type="number"
-                                                        // value={contact}
+                                                        type="text"
+                                                        value={ifscCode}
                                 
-                                                        // setValue={setContact}
+                                                        setValue={setIfscCode}
                                                         readOnly={readOnly}
                                                         disabled={childRecord.current > 0}
                                                         className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1325,30 +1636,25 @@ console.log(singleData,"singleData")
 
      
                    </div>
-                                                     
-<div className="relative h-40 w-full justify-end mt-16"> {/* Set desired height */}
-  <div className="absolute bottom-0 right-0  ">
-    <button
-      onClick={() => setBranchModelOpen(true)}
-      readOnly={readOnly}
-      className="flex items-center pl-3 h-7 w-24 rounded-md bg-blue-600 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-2 w-3"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-      Add Branch
-    </button>
-  </div>
-</div>
+                               <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Attchments</h3>
+                 <div className="space-y-2">
+                                        <div className="flex pt-4">
+            <button
+              className="relative  h-6 px-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white
+              rounded shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300 ease-in-out overflow-hidden"
+              onClick={() => setFormReport(true)}
+            >
+              <span className="absolute  bg-white opacity-10 "></span>
+              <span className="relative z-10 text-[12px]"> Attach Documents</span>
+            </button>
+          </div>
+                    </div> 
+                  </div>
+
+     
+                   </div>                          
 
               </div>
             </div>
@@ -1371,19 +1677,31 @@ console.log(singleData,"singleData")
             <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto mt-1">
 
           <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-                    <h1 className="text-2xl font-bold text-gray-800">Customer/Supplier Master </h1>
-               <div className="flex items-center gap-4">
+                    <h1 className="text-xl font-bold text-gray-800">Customer/Supplier Master </h1>
+                      <div className="flex items-center gap-4 text-md">
                           <button
                             onClick={() => {
                               setForm(true);
                               onNew();
                             }}
-                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                           >
-                            <Plus size={16} />
+                            <Plus size={12} />
+                          <span className=" ">
                             Add New Customer/Supplier
+                            </span>   
                           </button>
                   <div className="flex items-center gap-2">
+                     <button
+                                onClick={() => setView("all")}
+                                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "all"
+                                    ? "bg-indigo-100 text-indigo-600"
+                                    : "text-gray-600 hover:bg-gray-100"
+                                  }`}
+                              >
+                                <Table size={16} />
+                                All
+                              </button>
                               <button
                                 onClick={() => setView("Customer")}
                                 className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Customer"
@@ -1461,6 +1779,7 @@ console.log(singleData,"singleData")
                 setBranchModelOpen={setBranchModelOpen}
                 onClose={() => {
                   setBranchModelOpen(false)
+                  refetch()
                 }}
               >
 
@@ -1468,22 +1787,22 @@ console.log(singleData,"singleData")
 
                 <AddBranch 
                   
-                singleData={singleData} partyId={id} branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                singleData={singleData} partyId={id}  branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
                   branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
                   branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} 
                   branchContactPerson={branchContactPerson} setBranchcontactPerson={setBranchcontactPerson}  branchWebsite={branchWebsite}
                   setBranchWebsite={setBranchWebsite}  openingHours={openingHours}   setopeningHours={setopeningHours}
                   onNew={onNew}  branchType={branchType} handleFun={handleFun}
-                  setId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
+                  setPartyId={setId} childRecord={childRecord} saveData={saveData} saveExitData={saveExitData} setReadOnly={setReadOnly}
                   deleteData={deleteData} readOnly={readOnly} onCloseForm={onCloseForm}
                   handleChange={handleChange} contactDetails={contactDetails} setContactDetails={setContactDetails}
                   shippingAddress={shippingAddress} setForm={setForm}   onClose={() => {
                   setBranchModelOpen(false) 
                 }}    branchForm={branchForm}  setBranchForm={setBranchForm}
-                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  id={id}
+                   removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  
                   partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen} name={name}
                    setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
-                  branchTypeData = {branchTypeData} cityList={cityList}
+                 cityList={cityList}  branchState={branchState} refetch={refetch} 
                 />
 
 
@@ -1502,7 +1821,8 @@ console.log(singleData,"singleData")
              
               >
                   <RawMaterial    
-                  addData={addData}  updateData={updateData}
+                      addData={addData} 
+                      updateData={updateData}
                       SaveBranch={SaveBranch}
                       material={material}
                       setMaterial={setMaterial}
@@ -1518,7 +1838,7 @@ console.log(singleData,"singleData")
               </Modal>
                      <Modal
                     isOpen={isContactPerson}
-                    widthClass={`${"w-[30%] h-[80%]"}`}
+                    widthClass={`${ branchForm ?   "w-[33%] h-[71%]"  : "w-[60%] h-[68%]"  }`}
                     setIsContactPerson={setIsContactPerson}
                     onClose={() => {
                       setIsContactPerson(false)
@@ -1528,11 +1848,12 @@ console.log(singleData,"singleData")
              
               >
                   <ContactPersonDetails    
-                     partyData={singleData?.data}   contactNumber={contactNumber} setContactNumber={setContactNumber} 
+                     partyData={singleData?.data}   partyId={id} contactNumber={contactNumber} setContactNumber={setContactNumber} 
                      contactPersonName={contactPersonName}  setContactPersonName={setContactPersonName}  designation={designation}
-                     setDesignation={setDesignation} department={SetDepartment}  
-                      setIsContactPerson={setIsContactPerson}
-                       branchForm={branchForm}  
+                     setDesignation={setDesignation} setDepartment={setDepartment}   department={department}
+                      setIsContactPerson={setIsContactPerson}  setContactPersonEmail={setContactPersonEmail}  contactPersonEmail={contactPersonEmail}
+                       branchForm={branchForm}   refetch={refetch} syncFormWithDb ={syncFormWithDb} alterContactNumber={alterContactNumber}
+                      setAlterContactNumber={setAlterContactNumber}
                        setBranchForm={setBranchForm}
                         onClose={() => {
                         setIsContactPerson(false) 
@@ -1540,16 +1861,68 @@ console.log(singleData,"singleData")
 
                   />
               </Modal>
+                    <Modal isOpen={formReport}
+        onClose={() => setFormReport(false)} widthClass={"p-3 h-[70%] w-[70%]"}
+      >
+        <ArtDesignReport
+          // userRole={userRole}
+          setFormReport={setFormReport}
+          tableWidth="100%"
+          formReport={formReport}
+          setAttachments={setAttachments}
+          attachments={attachments}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
+      </Modal>
          
        <div className="h-full flex flex-col bg-[f1f1f0] ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  {id ? (!readOnly ? "Edit Customer/supplier" : "Customer/supplier Master") : "Add New Customer/supplier"}
+                <h2 className="text-md font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Customer/Supplier" : "Customer/Supplier Master") : "Add New Customer/Supplier"}
                 </h2>
              
               </div>
+
+
               <div className="flex gap-2">
+                 <div className="  ">
+    <button
+      onClick={() => {
+        if(name ){
+
+          setBranchModelOpen(true)
+          setBranchForm(false)
+        }
+        else{
+ Swal.fire({
+                             icon: 'warning',
+                             title: `Enter ${isSupplier ? "Supplier Details" : "Customer Details"} `,
+                             showConfirmButton: false,
+                             timer: 2000
+                           });
+        }
+
+      }}
+      readOnly={readOnly}
+            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Add Branch
+    </button>
+  </div>
                 <div>
                   {!readOnly && (
                     <button
@@ -1559,7 +1932,7 @@ console.log(singleData,"singleData")
                         setSearchValue("");
                         setId(false);
                       }}
-                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                      className="px-2 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Cancel
                     </button>
@@ -1570,7 +1943,7 @@ console.log(singleData,"singleData")
                     <button
                       type="button"
                       onClick={saveData}
-                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                      className="px-2 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                     >
                       <Check size={14} />
@@ -1587,10 +1960,9 @@ console.log(singleData,"singleData")
 
                
 
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Basic Details</h3>
-                    {/* <div className="space-y-2"> */}
                     <div className="grid grid-cols-2">     
                       <div className="flex flex-row items-center gap-2 mt-2 mb-2">
                            <div className="flex items-center gap-2 ">
@@ -1615,7 +1987,7 @@ console.log(singleData,"singleData")
                                   <div className="col-span-4 flex flex-row">
                          
                         {isSupplier && (
-                            <div className="w-60">
+                            <div className="w-48">
 
                                   <MultiSelectDropdown 
                                   // name={"Material List"}
@@ -1627,15 +1999,34 @@ console.log(singleData,"singleData")
                             </div>
                                                   )}
                                 
-                     {isSupplier && (
-                        <div className="mt-3 px-3">
-                      <button  className="w-7 h-6 border border-green-500 rounded-md mt-2
-                                            hover:bg-green-500 text-green-600 hover:text-white
-                                            transition-colors flex items-center justify-center" onClick={() => setRawMaterial(true)}>
-                                   <FaPlus className="text-sm w-3 h-4 " />
-                                  </button>
-                        </div>
-                         )} 
+             {isSupplier && (
+  <div className="mt-3 px-3 relative inline-block">
+    {/* Button */}
+    <button
+      className="w-7 h-6 border border-green-500 rounded-md mt-2
+                hover:bg-green-500 text-green-600 hover:text-white
+                transition-colors flex items-center justify-center"
+      onClick={() => setRawMaterial(true)}
+      onMouseEnter={() => setTooltipVisibleForMaterial(true)}
+      onMouseLeave={() => setTooltipVisibleForMaterial(false)}
+    >
+      <FaPlus className="text-sm w-3 h-4" />
+    </button>
+
+    {/* Tooltip (shown below and right-aligned to button) */}
+    {tooltipVisibleForMaterial && (
+      <div className="absolute left-full top-0 ml-2 mt-1 w-56 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg z-10">
+        <div className="flex items-start">
+          <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+          <span>Click to add a new Material</span>
+        </div>
+        {/* Tooltip arrow */}
+        <div className="absolute top-2 -left-1 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+      </div>
+    )}
+  </div>
+)}
+
 
                         </div>     
                       </div>
@@ -1673,10 +2064,10 @@ console.log(singleData,"singleData")
                                 className="focus:ring-2 focus:ring-blue-100"
                               />
                       </div>
-                       <div>
+                       <div className="col-span-1">
                           <TextInput
                                 name="Party Code"
-                                type="number"
+                                type="text"
                                 value={partyCode}
         
                                 setValue={setPartyCode}
@@ -1685,6 +2076,18 @@ console.log(singleData,"singleData")
                                 className="focus:ring-2 focus:ring-blue-100 w-10"
                               />
                       </div>
+                          {/* <div className="col-span-1">
+                          <DateInput
+                                name="Date of Registration"
+                                
+                                value={partyCode}
+        
+                                setValue={setPartyCode}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                              />
+                      </div> */}
                       <div className="mt-5 ml-3">
                               <ToggleButton
                           name="Status"
@@ -1712,68 +2115,101 @@ console.log(singleData,"singleData")
 
         
                   </div>
-                   <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                   <div className="lg:col-span-4 space-y-3 ">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[330px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
                  <div className="space-y-2">
                  
 
                       <div className="grid grid-cols-2 gap-2">
-                   
-                                  <DropdownInput
-                                                      name="City/State Name"
-                                                      options={dropDownListMergedObject(
-                                                        id
-                                                          ? cityList?.data
-                                                          : cityList?.data?.filter((item) => item.active),
-                                                        "name",
-                                                        "id"
-                                                      )}
-                                                      country={country}
-                                                      masterName="CITY MASTER"
-                                                      lastTab={activeTab}
-                                                      value={city}
-                                                      setValue={setCity}
-                                                      required={true}
-                                                      readOnly={readOnly}
-                                                      disabled={childRecord.current > 0}
-                                                      className="focus:ring-2 focus:ring-blue-100"
-                                                    />
-                                                               <TextInput
+         
+                              <div className="col-span-2">
+                                
+                                <TextArea name="Address"
+                                  inputClass="h-10" value={address} 
+                                  setValue={setAddress} required={true}
+                                    readOnly={readOnly} d
+                                    isabled={(childRecord.current > 0)} />
+                              </div>
+                                        <TextInput
                                                             name="Land Mark"
                                                             type="text"
                                                             value={landMark}
-                                                            required={true}
                                     
                                                             setValue={setlandMark}
                                                             readOnly={readOnly}
                                                             disabled={childRecord.current > 0}
                                                             className="focus:ring-2 focus:ring-blue-100 w-10"
                                                           /> 
-                                                          <div className="col-span-2">
+                                  <DropdownInput
+                                    name="City/State Name"
+                                    options={dropDownListMergedObject(
+                                      id
+                                        ? cityList?.data
+                                        : cityList?.data?.filter((item) => item.active),
+                                      "name",
+                                      "id"
+                                    )}
+                                    country={country}
+                                    masterName="CITY MASTER"
+                                    lastTab={activeTab}
+                                    value={city}
+                                    setValue={setCity}
+                                    required={true}
+                                    readOnly={readOnly}
+                                    disabled={childRecord.current > 0}
+                                    className="focus:ring-2 focus:ring-blue-100"
+                                  />
+                                                      
+                                    <div className="col-span-2 flex flex-row gap-3">                        
+                                      <div className="w-24">
 
-                                                          <TextArea name="Address"
-                                                          inputClass="h-10" value={address} 
-                                                          setValue={setAddress} required={true}
-                                                            readOnly={readOnly} d
-                                                            isabled={(childRecord.current > 0)} />
-                                                          </div>
+                                      <TextInput
+                                            name="Pincode"
+                                            type="number"
+                                            value={pincode}
+                                            required={true}
+                    
+                                            setValue={setPincode}
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />         
+                                      </div>
+                                      <div className="w-64"> 
+                                            <TextInput
+                                        name={"Email"}
+                                        type="text"
+                                        value={email}
+                
+                                        setValue={setEmail}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                      />
+                                      <div>
+                                       
+
+                                      </div>
+
+                                      </div>
+                                    </div> 
+                                     <div>
+                                                       <TextInput
+                                        name={"Contact Number"}
+                                        type="text"
+                                        value={email}
+                
+                                        setValue={setEmail}
+                                        readOnly={readOnly}
+                                        disabled={childRecord.current > 0}
+                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                      />
+                                        </div>    
 
                                                      
-                                                      <div className="mb-11">
+                                                                     
 
-                                                     <TextInput
-                                                            name="Pincode"
-                                                            type="number"
-                                                            value={pincode}
-                                                            required={true}
-                                    
-                                                            setValue={setPincode}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                          />         
-                                                      </div>
                                                                                            
                       </div>
                     </div> 
@@ -1782,27 +2218,18 @@ console.log(singleData,"singleData")
 
                 </div>
                    <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[330px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
                  <div className="space-y-2">
                  
 
-                        <TextInput
-                                  name="Party Email"
-                                  type="text"
-                                  value={email}
-          
-                                  setValue={setEmail}
-                                  readOnly={readOnly}
-                                  disabled={childRecord.current > 0}
-                                  className="focus:ring-2 focus:ring-blue-100 w-10"
-                                />
+                      
                       <div className="grid grid-cols-2 gap-2">
                         <div className="col-span-2 flex flex-row gap-4 mt-2">
-                           <div className="w-72">
+                           <div className="w-96">
                                                   
                               <TextInput
-                                            name="Contact Person"
+                                            name="Contact Person Name"
                                             type="text"
                                             value={contactPersonName}
                     
@@ -1812,7 +2239,7 @@ console.log(singleData,"singleData")
                                             className="focus:ring-2 focus:ring-blue-100 w-10"
                                           />
                                            </div>
-                    <div className="relative inline-block">
+                      <div className="relative inline-block">
                                 <button
                                   className="w-7 h-6 border border-green-500 rounded-md mt-6
                                             hover:bg-green-500 text-green-600 hover:text-white
@@ -1823,6 +2250,7 @@ console.log(singleData,"singleData")
                                     // setIsDropdownOpen(false);
                                     // setEditingItem("new");
                                     // setOpenModel(true);
+                                    setBranchForm(false)
                                     setIsContactPerson(true)
                                   }}
                                   onMouseEnter={() => setTooltipVisible(true)}
@@ -1844,7 +2272,7 @@ console.log(singleData,"singleData")
                       </div>
                        
   </div> 
-                                       <TextInput
+             <TextInput
                                               name="Designation"
                                               type="text"
                                               value={designation}  
@@ -1859,21 +2287,58 @@ console.log(singleData,"singleData")
                                               type="text"
                                               value={department}
                       
-                                              setValue={SetDepartment} 
+                                              setValue={setDepartment} 
                                               readOnly={readOnly}
                                               disabled={childRecord.current > 0}
                                               className="focus:ring-2 focus:ring-blue-100 w-10"
                                             />
-                                                  <TextInput
-                                                                    name="Contact Number"
-                                                                    type="number"
-                                                                    value={contact} 
+                                                <div className='col-span-2'>
+                                  
+                                                                        <TextInput
+                                                                            name="Email"
+                                                                            type="text"
+                                                                            value={branchEmail}
+                                                    
+                                                                            setValue={setBranchEmail}
+                                                                            readOnly={readOnly}
+                                                                            disabled={childRecord.current > 0}
+                                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                          />
+                                                                        </div>
+                                                                                    <div className='col-span-1'>
+                                
+                                                              <TextInput
+                                                                name="Contact Number"
+                                                                type="number"
+                                                                value={contactNumber} 
+                                                                setValue={setContactNumber}
+                                        
+                                                                readOnly={readOnly}
+                                                                disabled={childRecord.current > 0}
+                                                                className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                          />
+                                                                          </div>  
+                                                              <div className='col-span-1'>
+                                                                        <TextInput
+                                                                                      name="Alternative Contact Number"
+                                                                                      type="number"
+                                                                                        value={alterContactNumber}
+                                                                                    setValue={setAlterContactNumber}
+                                                              
+                                                                                      // readOnly={readOnly}
+                                                                                      // disabled={childRecord.current > 0}
+                                                                                      className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                                                    />
+                                                                         </div>
+                            
                                             
-                                                                    setValue={setContact}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />
+
+                                                                       
+                                                                       {/* <div className='col-span-2 flex flex-row gap-3' >
+                                                                     
+                                                                    
+                                                             </div> */}
+                                                              
                                                                               {/* <TextInput
                                                                     name="Fax"
                                                                     type="number"
@@ -1884,7 +2349,7 @@ console.log(singleData,"singleData")
                                                                     disabled={childRecord.current > 0}
                                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
                                                                   />     */}
-                                                                          <TextInput
+                                                                          {/* <TextInput
                                                                     name="Website"
                                                                     type="text"
                                                                     value={website}
@@ -1893,7 +2358,7 @@ console.log(singleData,"singleData")
                                                                     readOnly={readOnly}
                                                                     disabled={childRecord.current > 0}
                                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />
+                                                                  /> */}
                                                                     
                                                                                     
                       </div>
@@ -1906,7 +2371,7 @@ console.log(singleData,"singleData")
               
 
                     <div className="lg:col-span-4 space-y-3">
-                      <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
                         <h3 className="font-medium text-gray-800 mb-2 text-sm">Business Details</h3>
                         <div className="space-y-2">
 
@@ -1967,7 +2432,7 @@ console.log(singleData,"singleData")
                                                                                 className="focus:ring-2 focus:ring-blue-100"
                                                                               />
                                   <TextInput
-                                                    name="CST No"
+                                                    name="MSME CERTFICATE  No"
                                                     type="text"
                                                     value={cstNo}
                                                     setValue={setCstNo}
@@ -1992,7 +2457,7 @@ console.log(singleData,"singleData")
                       
                     </div>
                     <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[240px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
                  <div className="space-y-2">
                  
@@ -2021,9 +2486,9 @@ console.log(singleData,"singleData")
                                        <TextInput
                                               name="Account Number"
                                               type="text"
-                                              // value={contact}
+                                              value={accountNumber}
                       
-                                              // setValue={setContact}
+                                              setValue={setAccountNumber}
                                               readOnly={readOnly}
                                               disabled={childRecord.current > 0}
                                               className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -2047,30 +2512,25 @@ console.log(singleData,"singleData")
 
      
                    </div>
-                                                     
-<div className="relative h-40 w-full justify-end mt-16"> {/* Set desired height */}
-  <div className="absolute bottom-0 right-0  ">
-    <button
-      onClick={() => setBranchModelOpen(true)}
-      readOnly={readOnly}
-      className="flex items-center pl-3 h-7 w-24 rounded-md bg-blue-600 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-2 w-3"
-        viewBox="0 0 20 20"
-        fill="currentColor"
+              <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[240px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Attchments</h3>
+                 <div className="space-y-2">
+       <div className="flex pt-4">
+      <button
+        className="relative w-20 h-7 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
+        transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
+        onClick={() => setFormReport(true)}
       >
-        <path
-          fillRule="evenodd"
-          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-      Add Branch
-    </button>
-  </div>
-</div>
+        <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
+        <Paperclip className="relative z-10 w-5 h-5" />
+      </button>
+    </div>
+                    </div> 
+                  </div>
+
+     
+                   </div>                          
 
               </div>
             </div>

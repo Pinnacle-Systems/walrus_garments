@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
-    Modal,
+    
     ToggleButton,
     DateInput,
     DropdownInput,
@@ -16,35 +16,171 @@ import {
 } from "../../../Inputs";
 import MastersForm from '../MastersForm/MastersForm';
 import { findFromList } from '../../../Utils/helper';
-import { useAddPartyMutation, useUpdatePartyMutation } from '../../../redux/services/PartyMasterService';
+import { useAddPartyMutation,   useUpdatePartyMutation } from '../../../redux/services/PartyMasterService';
 import { toast } from "react-toastify";
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
-import { Check } from 'lucide-react';
+import { Check, DatabaseBackup, Eye, Paperclip } from 'lucide-react';
 import { useGetbranchTypeQuery } from '../../../redux/uniformService/BranchTypeMaster';
 import { XMarkIcon, MapPinIcon, BuildingStorefrontIcon, PhoneIcon, EnvelopeIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
-import { FaPlus } from 'react-icons/fa';
+import { FaInfoCircle, FaPlus } from 'react-icons/fa';
 import { dropDownListMergedObject } from '../../../Utils/contructObject';
 import { statusDropdown } from '../../../Utils/DropdownData';
+import BranchContactdetails from './BranchContactDetails';
+import Modal from "../../../UiComponents/Modal";
+import { faFileShield } from '@fortawesome/free-solid-svg-icons';
+import { useCallback } from 'react';
+import { useAddPartyBranchMutation, useDeletePartyBranchMutation, useGetPartyBranchByIdQuery, useUpdatePartyBranchMutation } from '../../../redux/services/PartyBranchMasterService';
+import Swal from 'sweetalert2';
+import ArtDesignReport from './ArtDesign/ArtDesignReport';
 
-const AddBranch = ({ singleData, partyId,
-    branchType,cityList,branchInfo,name,id,setBranchInfo , handleFun,
-    branchEmail, setBranchEmail, setBranchAddress, branchName, setBranchName
-    , setBranchCode, branchAddress, branchContact, setBranchContact, setBranchModelOpen, 
-    childRecord, branchContactPerson, setBranchcontactPerson, readOnly,managerName ,openingHours , branchWebsite ,setBranchWebsite, setopeningHours ,
-    branchForm,setBranchForm
+
+const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,setBranchInfo ,childRecord, readOnly,setReadOnly  ,
+      branchForm,setBranchForm ,branchState , refetch ,branchAlterContact ,setBranchAlterContact , branchContactPersonEmail , setBranchContactPersonEmail
 }) => {
-    const MODEL = " Branch Info";
-    const [addData] = useAddPartyMutation();
-    const [updateData] = useUpdatePartyMutation();
 
-  console.log(branchForm,"branchForm");
+    const {
+
+  
+  branchName,
+  setBranchName,
+  branchCode,
+  setBranchCode,
+  branchAddress,
+  setBranchAddress,
+  branchContact,
+  setBranchContact,
+  branchContactPerson,
+  setBranchcontactPerson,
+  branchEmail,
+  setBranchEmail,
+  openingHours,
+  setopeningHours,
+  branchWebsite,
+  setBranchWebsite,
+
+    branchAliasName,
+    setBranchAliasName,
+
+    branchActive,
+    setBranchActive,
+    branchCity,
+    setBranchCity,
+    branchLandMark,
+    setBranchLandMark,
+    branchPincode,
+    setBranchPincode,
+    branchContactDesignation,
+    setBranchcontactDesignation,
+    branchContactDepartment,
+    setBranchcontactDepartment,
+    branchBankname,
+    setBranchBankName,
+    branchBankBranchName,
+    setBranchBankBranchName,
+    branchAccountNumber,
+    setBranchAccountNumber,
+    branchIfscCode,
+    setBranchIfscCode, 
+    branchType,
+    setBranchType
     
-          const { data: branchTypeData } = useGetbranchTypeQuery({ });
+  } = branchState;
 
+  console.log(branchState,"branchState")
+
+  const [isBranchcontact,setIsBranchcontact]   = useState(false)
+  const [branchId,setBranchId]   = useState("")
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [contactForm,setContactForm]  =  useState(false)
+  const [formReport, setFormReport] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+
+
+  const { data: branchTypeData } = useGetbranchTypeQuery({ });
+  
+  
+  const {
+    data: singleBranchData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetPartyBranchByIdQuery(branchId, { skip: !branchId });
+  
+  console.log(branchId,"branchId")
+
+    const [addData] = useAddPartyBranchMutation();
+    const [updateData] = useUpdatePartyBranchMutation()
+ const [removeData] =   useDeletePartyBranchMutation()
+
+
+
+
+
+    const syncFormWithDb = useCallback(
+      (data) => {
+        setReadOnly(false)
+        setBranchName(data?.branchName ? data?.branchName : undefined);
+        setBranchCode(data?.branchCode ? data?.branchCode : undefined);
+        setBranchAddress(data?.branchAddress ? data?.branchAddress : undefined);
+        setBranchContact(data?.branchContact ? data?.branchContact : undefined);
+        setBranchcontactPerson(data?.branchContactPerson ? data?.branchContactPerson : undefined);
+        setBranchEmail(data?.branchEmail ? data?.branchEmail : undefined);
+        setopeningHours(data?.openingHours ? data?.openingHours : undefined);
+        setBranchWebsite(data?.branchWebsite ? data?.branchWebsite : undefined);
+        setBranchAliasName(data?.branchAliasName ? data?.branchAliasName : undefined);
+        setBranchActive(data?.branchActive ? data?.branchActive : undefined);
+        setBranchCity(data?.branchCity ? data?.branchCity : undefined);
+        setBranchLandMark(data?.branchLandMark ? data?.branchLandMark : undefined);
+        setBranchPincode(data?.branchPincode ? data?.branchPincode : undefined);
+        setBranchcontactDesignation(data?.branchContactDesignation ? data?.branchContactDesignation : undefined);
+        setBranchcontactDepartment(data?.branchContactDepartment ? data?.branchContactDepartment : undefined);
+        setBranchBankName(data?.branchBankname ? data?.branchBankname : undefined);
+        setBranchBankBranchName(data?.branchBankBranchName ? data?.branchBankBranchName : undefined);
+        setBranchAccountNumber(data?.branchAccountNumber ? data?.branchAccountNumber : undefined);
+        setBranchIfscCode(data?.branchIfscCode ? data?.branchIfscCode : undefined);
+        
+       
+ 
+      },
+  
+      [branchId]
+    );
+    
+  useEffect(() => {
+    syncFormWithDb(singleBranchData?.data);
+  }, [isSingleLoading,isSingleFetching ,singleBranchData,branchId, syncFormWithDb]);
+    
+    
+
+    
     const data = {
-        branchAddress,branchContact,branchContactPerson,branchEmail,branchName,branchType,branchWebsite,openingHours , isBranch : true ,id
+          branchStateValues : {
+        branchName,
+        branchAddress,
+        branchContact,
+        branchContactPerson,
+        branchEmail,
+        openingHours,
+        branchWebsite,
+        
+      branchAliasName,
+      branchCode,
+      branchActive,
+      branchCity,
+      branchLandMark,
+      branchPincode,
+      branchContactDesignation,
+      branchContactDepartment,
+      branchBankname,
+      branchBankBranchName,
+      branchAccountNumber,
+      branchIfscCode,
+      }, 
+      isBranch : true ,
+      partyId:partyId,
+      id : branchId
     }; 
 
+    console.log(data,"data")
 
     const onNew = () => {
         setBranchAddress();
@@ -52,28 +188,69 @@ const AddBranch = ({ singleData, partyId,
         setBranchContact("")
         setBranchEmail("");
         setBranchName("");
-        setBranchModelOpen(false)
-    };
+      };
 
     const handleSubmitCustom = async (callback, data, text, exit = false) => {
         try {
             let returnData;
             if (text === "Updated") {
-                returnData = await callback({ id: partyId, body: data }).unwrap();
+                returnData = await callback(data).unwrap();
+                setBranchId('')
+                setPartyId("")
+
             } else {
                 returnData = await callback(data).unwrap();
+                setBranchId("")
+                setPartyId("")
             }
-            toast.success(text + "Successfully");
+                  Swal.fire({
+                     icon: 'success',
+                     title: `${text || 'Saved'} Successfully`,
+                     showConfirmButton: false,
+                     timer: 2000
+                   });
+              setBranchId(returnData?.data?.id);
+              refetch()
+              setPartyId(returnData?.data?.partyId)
 
-            onNew();
 
         } catch (error) {
             console.error("Submission error:", error);
-            toast.error("Something went wrong during submission");
+                console.error("Submission error:", error);
+                        Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                  });
         }
     };
 
-        console.log(branchForm, "branchForm")
+             const handleDelete = async (orderId) => {
+             if (orderId) {
+                 if (!window.confirm("Are you sure to delete...?")) {
+                     return;
+                 }
+                 try {
+                     await removeData(orderId)
+                    //  setId("");
+                    refetch()
+                     onNew();
+                          Swal.fire({
+                             icon: 'success',
+                             title: `Deleted Successfully`,
+                             showConfirmButton: false,
+                             timer: 2000
+                           });
+                 } catch (error) {
+                             Swal.fire({
+                             icon: 'error',
+                             title: 'Submission error',
+                             text: error.data?.message || 'Something went wrong!',
+                           });
+                 }
+             }
+     
+         };
 
     const validateData = (data) => {
 
@@ -94,11 +271,18 @@ const AddBranch = ({ singleData, partyId,
             //     });
             //     return;
             // }
-        // if (partyId) {
-        //     handleSubmitCustom(updateData, data, "Updated");
-        // } else {
+            //     handleSubmitCustom(updateData, data, "Updated");
+            // } else {
+              
+        if (branchId && partyId) {
+          handleSubmitCustom(updateData, data, "Updated");
+        }
+        else {
+          handleSubmitCustom(addData, data, "Added");
 
-            handleSubmitCustom(addData, data, "Added");
+        }
+        // else{
+        //   toast.info("no Party selected")
         // }
     };
 
@@ -112,7 +296,7 @@ const AddBranch = ({ singleData, partyId,
           {
               header: 'BranchName',
               accessor: (item) => item.branchName,
-              className : 'font-medium text-gray-900 w-[40%]'
+              className : 'font-medium text-gray-900 w-[35%]'
           },
             
         {
@@ -123,7 +307,7 @@ const AddBranch = ({ singleData, partyId,
   {
               header: '',
               accessor: (item) => item.none,
-              className : 'font-medium text-gray-900 w-[20%]'
+              className : 'font-medium text-gray-900 w-[40%]'
           },
      
         ];
@@ -148,48 +332,88 @@ const AddBranch = ({ singleData, partyId,
   }
   
          const handleView = (id) => {
-     
-            //  setId(id)
-            //  setForm(true)
+     console.log(id,"id")
+             setBranchId(id)
+             setBranchForm(false)
             //  setReadOnly(true);
          };
      
          const handleEdit = (id) => {
-            //  setId(id)
+             setBranchId(id)
              setBranchForm(false)
             //  setReadOnly(false);
          };
      
-         const handleDelete = async (orderId) => {
-             if (orderId) {
-                 if (!window.confirm("Are you sure to delete...?")) {
-                     return;
-                 }
-                 try {
-                    //  await removeData(orderId)
-                    //  setId("");
-                     onNew();
-                     toast.success("Deleted Successfully");
-                 } catch (error) {
-                     toast.error("something went wrong");
-                 }
-             }
-     
-         };
+   
+  console.log(branchActive,"branchActive")
 
     return (
-        <>
+
       
+        <>
+                           <Modal
+                          isOpen={isBranchcontact}
+                          widthClass={`${ contactForm  ? "w-[34%] h-[73%]" :  "w-[60%] h-[70%]"  }`}
+                          setIsContactPerson={setIsBranchcontact}
+                          onClose={() => {
+                            setIsBranchcontact(false)
+                            // setMaterialForm(false)
+                            }}
+                            // allData ={allData}
+                   
+                    >
+                        <BranchContactdetails    
+                          partyData={singleData?.data}   partyId={partyId}   setPartyId={setPartyId} branchStat = {branchState} branchId={branchId}
+
+                           contactPersonName={branchState?.branchContactPerson}  setContactPersonName={branchState?.setBranchcontactPerson} 
+                           
+                         designation={branchState?.branchContactDesignation}  setDesignation={branchState?.setBranchcontactDesignation} 
+                           
+                            department={ branchState?.branchContactDepartment} setDepartment={branchState?.setBranchcontactDepartment}
+                           
+                            contact={branchState?.branchContact}   setContact={branchState?.setBranchContact}
+                           
+                            branchAddress={branchState?.branchAddress}  setBranchAddress={branchState?.setBranchAddress}
+
+                            alterContact = {branchState?.branchAlterContact}  setAlterContact = {branchState?.setBranchAlterContact}
+
+                            email={branchState?.branchContactPersonEmail}  setEmail = {branchState?.setBranchContactPersonEmail}
+                           
+                            branchForm={branchForm}  setBranchId={setBranchId}  contactForm={contactForm}  setContactForm={setContactForm}
+                        
+                            setIsContactPerson={branchState?.setIsContactPerson}   
+                             setBranchForm={setBranchForm}
+                              onClose={() => {
+                              setIsBranchcontact(false) 
+                            }}
+      
+                        />
+                    </Modal>
+                                        <Modal isOpen={formReport}
+                            onClose={() => setFormReport(false)} widthClass={"p-3 h-[70%] w-[70%]"}
+                          >
+                            <ArtDesignReport
+                              // userRole={userRole}
+                              setFormReport={setFormReport}
+                              tableWidth="100%"
+                              formReport={formReport}
+                              setAttachments={setAttachments}
+                              attachments={attachments}
+                              // searchValue={searchValue}
+                              // setSearchValue={setSearchValue}
+                            />
+                          </Modal>
 { branchForm  == true  ?   
   
+  
 
-(                 
-     <div className="flex flex-col bg-[#f1f1f0] p-4 h-[96%] rounded-md">
+(   
+                
+     <div className="flex flex-col bg-[#f1f1f0] p-4 h-[100%] rounded-md">
    
-     {/* Header */}
      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 p-2 bg-white rounded-md shadow-md border border-gray-200">
        <div className="flex items-center gap-2">
-         <h1 className="text-lg font-semibold text-gray-800 tracking-tight p-2" >
+         <h1 className="text-lg font-semibold text-gray-800 tracking-tight " >
            Branch List
          </h1>
        </div>
@@ -206,7 +430,6 @@ const AddBranch = ({ singleData, partyId,
        </button>
      </div>
    
-     {/* Scrollable Table Container */}
      <div className="flex-1 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm p-2">
        <ReusableTable
          columns={columns}
@@ -222,10 +445,10 @@ const AddBranch = ({ singleData, partyId,
 
       :
                     
-          (  <div className="bg-[F1F1F0]  shadow-xl w-full  overflow-hidden p-2 h-[98%]">
-        <div className="flex justify-between bg-white items-center my-2 rounded-md  ">
-           <h2 className="text-lg font-semibold text-gray-800 p-3">Add New Branch</h2>
-                      <h2 className="text-lg font-semibold text-gray-800 p-3">{name}</h2>
+          (  <div className="bg-[F1F1F0]  shadow-xl w-full  overflow-auto p-2 h-[98%] ">
+        <div className="flex justify-between bg-white items-center my-2 rounded-md  px-4 ">
+           <h2 className="text-gray-800 font-semibold text-lg p-1">Add New Branch</h2>
+                      <h2 className="text-lg font-semibold text-zinc-800 p-1">{name}</h2>
 
            <div className='flex flex-row gap-3'>
 
@@ -233,43 +456,53 @@ const AddBranch = ({ singleData, partyId,
               type="button"
                 onClick={()  => setBranchForm(true)}
 
-              className="px-3 py-1 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-600 text-xs rounded"
+              className="px-3 py-1 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-600 text-xs flex items-center gap-1 rounded"
             >
+              <Eye className="w-4 h-4" />
               View
             </button>  
-                <button
+                {/* <button
                       type="button"
                       onClick={() => 
                        onclose}
                       className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                     >
                       Cancel
-                </button> 
+                </button>  */}
                       <button
               type="submit"
         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"           onClick={saveData}
            >
                 <Check size={14} />
-              Save 
+              {branchId  ?   "update"  : "save"}
             </button>
            </div>
         </div>
  
-           <div className="flex-1 overflow-auto p-3">
+           <div className="flex-1 overflow-auto p-1">
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                       
         
                        
         
                         <div className="lg:col-span-4 space-y-3">
-                          <div className="bg-white p-3 rounded-md border border-gray-200">
+                          <div className="bg-white p-3 rounded-md border border-gray-200 h-[320px]">
                             <h3 className="font-medium text-gray-800 mb-2 text-sm">Basic Details</h3>
-                            {/* <div className="space-y-2"> */}
-                            <div className="grid grid-cols-2 mb-11">     
-                          
-                            
-        
+                            <div className="grid grid-cols-2 ">     
+                            <div className='w-52'>
+                              <DropdownWithSearch
+                              options={branchTypeData?.data}
+                              labelField ={"name"}
+                                                                required={true}
+
+                              label={"Branch Category"}
+                              value ={branchType}
+                              setValue = {setBranchType}
+                              />
+
+                            </div>
+
                               <div className="col-span-2">
                                       <TextArea
                                         name="Branch Name"
@@ -282,15 +515,19 @@ const AddBranch = ({ singleData, partyId,
                                         required
                                         disabled={childRecord.current > 0}
                                         className="focus:ring-2 focus:ring-blue-100"
+                                             onBlur={(e) => {
+                                                     if (branchAliasName) return;
+                                                     setBranchAliasName(e.target.value);
+                                                   }} 
                                       /> 
                               </div>
                                <div className="col-span-2">
                                     <TextArea
-                                        name="Alias Name"
+                                        name="Branch Alias Name"
                                         type="text"
                                         inputClass="h-8" 
-                                        // value={aliasName}
-                                        // setValue={setAliasName}
+                                        value={branchAliasName}
+                                        setValue={setBranchAliasName}
                                         required={true}
                                         readOnly={readOnly}
                                         disabled={childRecord.current > 0}
@@ -300,10 +537,10 @@ const AddBranch = ({ singleData, partyId,
                                <div>
                                   <TextInput
                                         name="Branch Code"
-                                        type="number"
-                                        // value={contact}
+                                        type="text"
+                                        value={branchCode}
                 
-                                        // setValue={setContact}
+                                        setValue={setBranchCode}
                                         readOnly={readOnly}
                                         disabled={childRecord.current > 0}
                                         className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -311,127 +548,155 @@ const AddBranch = ({ singleData, partyId,
                               </div>
                               <div className="mt-5 ml-3">
                                       <ToggleButton
-                                  name="Status"
-                                  options={statusDropdown}
-                                  // value={active}
-                                  // setActive={setActive}
-                                  required={true}
-                                  readOnly={readOnly}
-                                  className="bg-gray-100 p-1 rounded-lg"
-                                  activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
-                                  inactiveClass="text-gray-500"
-                                />
+                                      name="Status"
+                                      options={statusDropdown}
+                                      value={branchActive}
+                                      setActive={setBranchActive}
+                                      required={true}
+                                      readOnly={readOnly}
+                                      className="bg-gray-100 p-1 rounded-lg"
+                                      activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
+                                      inactiveClass="text-gray-500"
+                                    />
                               </div>
+                        </div>
+                      </div>
                                  
-             <div className="mt-5 ml-3">
-                               
-                              </div>
+           
                                                       
                                                             
                                                                
-                                                          </div>
                         
                           
-                          </div>
         
                 
                           </div>
                            <div className="lg:col-span-4 space-y-3 ">
-                          <div className="bg-white p-3 rounded-md border border-gray-200 ">
+                          <div className="bg-white p-3 rounded-md border border-gray-200 h-[320px]">
                             <h3 className="font-medium text-gray-800 mb-2 text-sm">Address  Details</h3>
                          <div className="space-y-2">
                          
         
-                              <div className="grid grid-cols-2 gap-2 mb-11">
+                              <div className="grid grid-cols-2 gap-2 ">
+                              
+                                <div className='col-span-2'>
+                                  
+                                <TextArea name="Address"
+                                inputClass="h-10" 
+                                value={branchAddress} 
+                                setValue={setBranchAddress}
+                                  required={true}
+                                  readOnly={readOnly} d
+                                  isabled={(childRecord.current > 0)} />
+                                </div>
+                                      <TextInput
+                                              name="Land Mark"
+                                              type="text"
+                                              value={branchLandMark}
+                                              setValue={setBranchLandMark}
+                      
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100 w-10"
+                                            /> 
+                                                    {/* <TextInput
+                                                            name="Website"
+                                                            type="text"
+                                                            value={branchWebsite}
+                                                            setValue={setBranchWebsite}
+                                    
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          /> */}
                                   <DropdownInput
-                                                                                 name="City/State Name"
-                                                                                 options={dropDownListMergedObject(
-                                                                                   id
-                                                                                     ? cityList?.data
-                                                                                     : cityList?.data?.filter((item) => item.active),
-                                                                                   "name",
-                                                                                   "id"
-                                                                                 )}
-                                                                                //  country={country}
-                                                                                 masterName="CITY MASTER"
-                                                                                //  lastTab={activeTab}
-                                                                                //  value={city}
-                                                                                //  setValue={setCity}
-                                                                                 required={true}
-                                                                                 readOnly={readOnly}
-                                                                                 disabled={childRecord.current > 0}
-                                                                                 className="focus:ring-2 focus:ring-blue-100"
-                                                                               />
-                                                                       <TextInput
-                                                                    name="Land Mark"
-                                                                    type="number"
-                                                                    // value={pincode}
-                                                                    required={true}
-                                            
-                                                                    // setValue={setPincode}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  /> 
-                                                                  <div className="col-span-2">
-        
-                                                                  <TextArea name="Address"
-                                                                  inputClass="h-10" 
-                                                                  // value={address} 
-                                                                  // setValue={setAddress}
-                                                                   required={true}
-                                                                    readOnly={readOnly} d
-                                                                    isabled={(childRecord.current > 0)} />
-                                                                  </div>
-        
-                                                             
-                                                              <div className="">
-        
-                                                             <TextInput
-                                                                    name="Pincode"
-                                                                    type="number"
-                                                                    // value={pincode}
-                                                                    required={true}
-                                            
-                                                                    // setValue={setPincode}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />         
-                                                              </div>
-                                                                                                   
-                              </div>
-                            </div> 
-                          </div>
-        
-        
-                        </div>
-                           <div className="lg:col-span-4 space-y-3">
-                          <div className="bg-white p-3 rounded-md border border-gray-200">
-                            <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
-                         <div className="space-y-2">
-                         
-        
-                                <TextInput
+                                      name="City/State Name"
+                                      options={dropDownListMergedObject(
+                                        partyId
+                                          ? cityList?.data
+                                          : cityList?.data?.filter((item) => item.active),
+                                        "name",
+                                        "id"
+                                      )}
+                                            //  country={country}
+                                              masterName="CITY MASTER"
+                                            //  lastTab={activeTab}
+                                              value={branchCity}
+                                              setValue={setBranchCity}
+                                              required={true}
+                                              readOnly={readOnly}
+                                              disabled={childRecord.current > 0}
+                                              className="focus:ring-2 focus:ring-blue-100"
+                                            />
+                                    
+                                    <div className="col-span-2 flex flex-row gap-3">                        
+                                            <div className="w-24">
+      
+                                                  <TextInput
+                                                  name="Pincode"
+                                                  type="number"
+                                                  value={branchPincode}
+                                                  setValue={setBranchPincode}
+                                                  required={true}
+                          
+                                                  readOnly={readOnly}
+                                                  disabled={childRecord.current > 0}
+                                                  className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                />         
+                                           </div>
+                                              <div className="w-64"> 
+                                            <TextInput
                                           name="Branch Email"
-                                          type="number"
-                                          // value={email}
+                                          type="text"
+                                          value={branchEmail}
                   
-                                          // setValue={setEmail}
+                                          setValue={setBranchEmail}
                                           readOnly={readOnly}
                                           disabled={childRecord.current > 0}
                                           className="focus:ring-2 focus:ring-blue-100 w-10"
                                         />
+                                          <div>
+                                                                                 
+                                          
+                                                                                </div>
+                                          
+                                                                                </div>
+                                                                              </div>  
+                                     <TextInput
+                                          name="Contact Number"
+                                          type="text"
+                                          value={branchEmail}
+                  
+                                          setValue={setBranchEmail}
+                                          readOnly={readOnly}
+                                          disabled={childRecord.current > 0}
+                                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                                        />                  
+                              </div>
+                            </div> 
+                          </div>
+                                                           
+                                                                                                   
+        
+        
+                        </div>
+                           <div className="lg:col-span-4 space-y-3">
+                          <div className="bg-white p-3 rounded-md border border-gray-200 h-[320px]">
+                            <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact  Details</h3>
+                         <div className="space-y-2">
+                         
+        
+                           
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="col-span-2 flex flex-row gap-4 mt-2">
-                                   <div className="w-72">
+                                   <div className="w-96">
                                                           
                                       <TextInput
                                                     name="Contact Person Name"
                                                     type="text"
-                                                    // value={contact}
+                                                    value={branchContactPerson}
+                                                    setValue={setBranchcontactPerson}
                             
-                                                    // setValue={setContact}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -444,19 +709,19 @@ const AddBranch = ({ singleData, partyId,
                                                     transition-colors flex items-center justify-center"
                                           disabled={readOnly}
                                           onClick={() => {
-                                            // openAddModal();
+                                            setIsBranchcontact(true)
                                             // setIsDropdownOpen(false);
                                             // setEditingItem("new");
                                             // setOpenModel(true);
                                             // setIsContactPerson(true)
                                           }}
-                                          // onMouseEnter={() => setTooltipVisible(true)}
-                                          // onMouseLeave={() => setTooltipVisible(false)}
+                                          onMouseEnter={() => setTooltipVisible(true)}
+                                          onMouseLeave={() => setTooltipVisible(false)}
                                           aria-label="Add supplier"
                                         >
                                           <FaPlus className="text-sm" />
                                         </button>
-{/*         
+        
                                             {tooltipVisible && (
                                               <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
                                                 <div className="flex items-start">
@@ -465,16 +730,17 @@ const AddBranch = ({ singleData, partyId,
                                                 </div>
                                                 <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
                                               </div>
-                                            )} */}
+                                            )}
                               </div>
                                
           </div> 
-                                               <TextInput
+                         
+                                             <TextInput
                                                       name="Designation"
                                                       type="text"
-                                                      // value={Designation}  
+                                                      value={branchContactDesignation}  
+                                                      setValue={setBranchcontactDesignation}
                               
-                                                      // setValue={setDesignation}
                                                       readOnly={readOnly}
                                                       disabled={childRecord.current > 0}
                                                       className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -482,43 +748,57 @@ const AddBranch = ({ singleData, partyId,
                                                      <TextInput
                                                       name="Department"
                                                       type="text"
-                                                      // value={department}
+                                                      value={branchContactDepartment}
+                                                      setValue={setBranchcontactDepartment} 
                               
-                                                      // setValue={SetDepartment} 
                                                       readOnly={readOnly}
                                                       disabled={childRecord.current > 0}
                                                       className="focus:ring-2 focus:ring-blue-100 w-10"
                                                     />
-                                                          <TextInput
-                                                                            name="Contact Number"
-                                                                            type="number"
-                                                                            // value={contact} 
-                                                    
-                                                                            // setValue={setContact}
-                                                                            readOnly={readOnly}
-                                                                            disabled={childRecord.current > 0}
-                                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                          />
-                                                                                      {/* <TextInput
-                                                                            name="Fax"
-                                                                            type="number"
-                                                                            // value={contact}
-                                                    
-                                                                            // setValue={setContact}
-                                                                            readOnly={readOnly}
-                                                                            disabled={childRecord.current > 0}
-                                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                          />     */}
-                                                                                  <TextInput
-                                                                            name="Website"
-                                                                            type="number"
-                                                                            // value={contact}
-                                                    
-                                                                            // setValue={setContact}
-                                                                            readOnly={readOnly}
-                                                                            disabled={childRecord.current > 0}
-                                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                          />
+                                      <div className='col-span-2'>
+
+                                       <TextInput
+                                          name="Email"
+                                          type="text"
+                                          value={branchContactPersonEmail}
+                  
+                                          setValue={setBranchContactPersonEmail}
+                                          readOnly={readOnly}
+                                          disabled={childRecord.current > 0}
+                                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                                        />
+                                      </div> 
+                                          <TextInput
+                                                            name="Contact Number"
+                                                            type="number"
+                                                            value={branchContact} 
+                                                            setValue={setBranchContact}
+                                    
+                                                            readOnly={readOnly}
+                                                            disabled={childRecord.current > 0}
+                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                          />
+                                      {/* </div>
+                                       <div className='w-48'> */}
+                                          <TextInput
+                                                        name="Alternative Contact Number"
+                                                        type="number"
+                                                          value={branchAlterContact}
+                                                      setValue={setBranchAlterContact}
+                                
+                                                        // readOnly={readOnly}
+                                                        // disabled={childRecord.current > 0}
+                                                        className="focus:ring-2 focus:ring-blue-100 w-10"
+                                                      />
+                                        
+                                                 
+                                     {/* <div className='col-span-2 flex flex-row gap-3' >
+                                      <div className='w-44'> */}
+
+                                            {/* </div> */}
+                                    
+                                {/* </div> */}
+                                                            
                                                                             
                                                                                             
                               </div>
@@ -530,92 +810,7 @@ const AddBranch = ({ singleData, partyId,
                        
                       
         
-                            {/* <div className="lg:col-span-4 space-y-3">
-                              <div className="bg-white p-3 rounded-md border border-gray-200">
-                                <h3 className="font-medium text-gray-800 mb-2 text-sm">Business Details</h3>
-                                <div className="space-y-2">
-        
-                                  <div className="grid grid-cols-2 gap-2">
-                                      
-        
-                                <DropdownInput
-                                      name="Currency"
-                                      options={dropDownListObject(
-                                        id
-                                          ? currencyList?.data ?? []
-                                          : currencyList?.data?.filter(
-                                            (item) => item.active
-                                          ) ?? [],
-                                        "name",
-                                        "id"
-                                      )}
-                                      lastTab={activeTab}
-                                      masterName="CURRENCY MASTER"
-                                      value={currency}
-                                      setValue={setCurrency}
-                                      readOnly={readOnly}
-                                      disabled={childRecord.current > 0}
-                                      className="focus:ring-2 focus:ring-blue-100"
-                                    />
-                                                    
-                                          <DropdownInput
-                                            name="PayTerm"
-                                            options={dropDownListObject(
-                                              id
-                                                ? payTermList?.data
-                                                : payTermList?.data?.filter((item) => item.active),
-                                              "aliasName",
-                                              "id"
-                                            )}
-                                            value={payTermDay}
-                                            setValue={setPayTermDay}
-                                            // required={true}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                            className="focus:ring-2 focus:ring-blue-100"
-                                          />
-                                                                              <TextInput
-                                                                  name="Pan No"
-                                                                  type="pan_no"
-                                                                  value={panNo}
-                                                                  setValue={setPanNo}
-                                                                  readOnly={readOnly}
-                                                                  disabled={childRecord.current > 0}
-                                                                  className="focus:ring-2 focus:ring-blue-100"
-                                                          /> 
-                                                                <TextInput
-                                                                                        name="GST No"
-                                                                                        type="text"
-                                                                                        value={gstNo}
-                                                                                        setValue={setGstNo}
-                                                                                        readOnly={readOnly}
-                                                                                        className="focus:ring-2 focus:ring-blue-100"
-                                                                                      />
-                                          <TextInput
-                                                            name="CST No"
-                                                            type="text"
-                                                            value={cstNo}
-                                                            setValue={setCstNo}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100"
-                                                          />
-                                                            <TextInput
-                                                            name="CIN No"
-                                                            type="text"
-                                                            value={cstNo}
-                                                            setValue={setCstNo}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100"
-                                                          />
-                                                          
-                                  </div>
-                                </div>
-                              </div>
-        
-                              
-                            </div> */}
+                           
                             <div className="lg:col-span-6 space-y-3">
                           <div className="bg-white p-3 rounded-md border border-gray-200">
                             <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
@@ -624,25 +819,23 @@ const AddBranch = ({ singleData, partyId,
         
                               
                               <div className="grid grid-cols-2 gap-2">
-                                {/* <div className='col-span-2'> */}
 
                                   <TextInput
                                           name="Bank Name"
-                                          type="number"
-                                          // value={contact}
+                                          type="text"
+                                          value={branchBankname}
+                                          setValue={setBranchBankName}
                   
-                                          // setValue={setContact}
                                           readOnly={readOnly}
                                           disabled={childRecord.current > 0}
                                           className="focus:ring-2 focus:ring-blue-100 w-10"
                                         />
-                                {/* </div> */}
                                       <TextInput
                                                     name="Branch Name"
                                                     type="text"
-                                                    // value={contact}
+                                                    value={branchBankBranchName}
+                                                    setValue={setBranchBankBranchName}
                             
-                                                    // setValue={setContact}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -650,19 +843,19 @@ const AddBranch = ({ singleData, partyId,
                                                <TextInput
                                                       name="Account Number"
                                                       type="text"
-                                                      // value={contact}
+                                                      value={branchAccountNumber}
+                                                      setValue={setBranchAccountNumber}
                               
-                                                      // setValue={setContact}
                                                       readOnly={readOnly}
                                                       disabled={childRecord.current > 0}
                                                       className="focus:ring-2 focus:ring-blue-100 w-10"
                                                     />
                                                           <TextInput
                                                                 name="IFSC CODE"
-                                                                type="number"
-                                                                // value={contact}
+                                                                type="text"
+                                                                value={branchIfscCode}
+                                                                setValue={setBranchIfscCode}
                                         
-                                                                // setValue={setContact}
                                                                 readOnly={readOnly}
                                                                 disabled={childRecord.current > 0}
                                                                 className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -677,30 +870,27 @@ const AddBranch = ({ singleData, partyId,
              
                            </div>
                                                              
-        <div className="relative h-40 w-full justify-end mt-16"> {/* Set desired height */}
-          <div className="absolute bottom-0 right-0  ">
-            <button
-              onClick={() => setBranchModelOpen(true)}
-              readOnly={readOnly}
-              className="flex items-center pl-3 h-7 w-24 rounded-md bg-blue-600 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-2 w-3"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add Branch
-            </button>
-          </div>
-        </div>
-        
+               <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[175px]">
+                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Attchments</h3>
+                 <div className="space-y-2">
+    <div className="flex pt-4">
+  <button
+    className="relative w-10 h-10 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
+    transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
+    onClick={() => setFormReport(true)}
+  >
+    <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
+    <Paperclip className="relative z-10 w-5 h-5" />
+  </button>
+</div>
+
+
+                    </div> 
+                  </div>
+
+     
+                   </div>  
                       </div>
                     </div>
 

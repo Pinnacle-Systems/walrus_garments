@@ -183,6 +183,7 @@ export const MultiSelectDropdown = ({
 };
 export const TextInput = ({
   name,
+  label,
   type = "text",
   value,
   setValue,
@@ -198,7 +199,7 @@ export const TextInput = ({
     <div className={`mb-2 ${width}`}>
       {name && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
-          {required ? <RequiredLabel name={name} /> : name}
+          {required ? <RequiredLabel name={ label ? label  :  name} /> : name}
         </label>
       )}
       <input
@@ -464,7 +465,7 @@ export const TextArea = ({
         required={required}
         readOnly={readOnly}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => handleOnChange(e,setValue)}
         onBlur={onBlur}
         placeholder={name}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
@@ -933,6 +934,8 @@ export const DropdownWithSearch = ({
   setValue,
   readOnly,
   disabled,
+  required = false,
+
   labelField,
   label,
 }) => {
@@ -975,10 +978,11 @@ export const DropdownWithSearch = ({
   }, [currentIndex]);
 
   return (
-    <div id={`dropdown${currentIndex}`} className={`${className}mb-2`}>
+    <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
       {label && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
-          {label}
+                 {required ? <RequiredLabel name={label} /> : `${label}`}
+
         </label>
       )}
       <select
@@ -987,6 +991,7 @@ export const DropdownWithSearch = ({
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
+        
         disabled={disabled}
         readOnly={readOnly}
         value={value || ""}
@@ -1227,23 +1232,23 @@ console.log(data,"commonTable")
             currentItems?.map((item, index) => (
               <tr
                 key={item.id}
-                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                  }`}
+                className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                  }` }
               >
                 {columns?.map((column, colIndex) => (
                   <td
                     key={colIndex}
-                    className={` ${column.className ? column.className  : "" } h-8 ` }
+                    className={` ${column.className ? column.className  : ""  } ${ column.header  !== "" ? 'border-r border-white/50' : ''} h-8 ` }
                   >
                     {column.accessor(item, index)}
                   </td>
                 ))}
                 {rowActions && (
-                  <td className=" w-[40px] border-gray-200 border-l  h-8 justify-end">
+                  <td className=" w-[30px] border-gray-200 gap-1   h-8 justify-end">
                     <div className="flex">
                       {onView && (
                         <button
-                          className="text-blue-600  flex items-center  px-2  bg-blue-50 rounded"
+                          className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
                           onClick={() => onView(item.id)}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -1254,7 +1259,7 @@ console.log(data,"commonTable")
                       )}
                       {onEdit && (
                         <button
-                          className="text-green-600  px-2  bg-green-50 rounded"
+                          className="text-green-600 gap-1 px-1   bg-green-50 rounded"
                           onClick={() => onEdit(item.id)}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -1264,7 +1269,7 @@ console.log(data,"commonTable")
                       )}
                       {onDelete && (
                         <button
-                          className=" text-red-800 flex items-center gap-1 mx-2  bg-red-50 rounded"
+                          className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
                           onClick={() => onDelete(item.id)}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
