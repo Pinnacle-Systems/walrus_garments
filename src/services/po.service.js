@@ -185,7 +185,6 @@ async function getOne(id) {
           select: {
             aliasName: true,
             contactPersonName: true,
-            contactMobile: true,
             gstNo: true,
             address: true,
             pincode: true,
@@ -201,14 +200,12 @@ async function getOne(id) {
             name: true,
             address: true,
             contactPersonName: true,
-            contactMobile: true,
           },
         },
         DeliveryBranch: {
           select: {
             branchName: true,
             contactName: true,
-            contactMobile: true,
             address: true,
           },
         },
@@ -272,7 +269,7 @@ export async function getPoItems(req) {
                     //     }
                     //     : undefined,
                     // supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    // transType: poType,
+                    transType: poType,
                     // supplier: {
                     //     aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
                     // }
@@ -770,7 +767,7 @@ async function create(body) {
         branchId: parseInt(branchId),
         active: active ?? true,
         remarks: remarks ?? "",
-        deliveryType,
+        deliveryType : deliveryType ? deliveryType : "ToSelf"  ,
         deliveryBranchId: deliveryType === "ToSelf" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         deliveryPartyId: deliveryType === "ToParty" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         createdById: parseInt(userId),

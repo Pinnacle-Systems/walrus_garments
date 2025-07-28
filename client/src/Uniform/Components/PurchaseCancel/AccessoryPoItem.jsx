@@ -3,8 +3,9 @@ import { useGetPoItemByIdQuery } from '../../../redux/uniformService/PoServices'
 import { Loader } from '../../../Basic/components'
 import { DELETE } from '../../../icons'
 import { findFromList, substract } from '../../../Utils/helper'
+import { HiPencil, HiTrash } from 'react-icons/hi'
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, qty, removeItem, purchaseInwardId }) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, qty, deleteRow, purchaseInwardId }) => {
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: poItemId, purchaseInwardId }, { skip: !poItemId })
 
 
@@ -39,21 +40,25 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
 
     return (
         <tr key={poItemId}>
-            <td className='text-left   table-data'>{index + 1}</td>
-            <td className='text-left px-1 table-data'>{item?.poNo}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-            <td className='text-right px-1  table-data'>{item?.poQty || 0}</td>
-            <td className='text-right px-1  table-data'>{(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0)}</td>
-            <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.balanceQty}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{index + 1}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+                        <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
 
-            <td className='table-data text-right w-16'>
+            {/* <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+            <td className='text-right px-1  table-data'>{(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0)}</td> */}
+            {/* <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
+            <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
+            <td className='text-right px-1  table-data'>{item?.balanceQty}</td> */}
+
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.price}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.poQty || 0}</td>
+
+            <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -81,15 +86,47 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                 />
             </td>
-            <td className='text-right  w-12 table-data'>{item?.price}</td>
 
-            {!readOnly &&
-                <td className='table-data w-12'>
-                    <div tabIndex={-1} onClick={() => removeItem(poItemId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
-                        {DELETE}
-                    </div>
-                </td>
-            }
+              <td className="py-0.5 border border-gray-300 text-[11px]">
+                                                             <div className="flex space-x-2  justify-center">
+                     
+                                                                 <button
+                                                                     // onClick={() => handleView(index)}
+                                                                     // onMouseEnter={() => setTooltipVisible(true)}
+                                                                     // onMouseLeave={() => setTooltipVisible(false)}
+                                                                     className="text-blue-800 flex items-center  bg-blue-50 rounded"
+                                                                 >
+                                                                     👁 <span className="text-xs"></span>
+                                                                 </button>
+                                                                 <span className="tooltip-text">View</span>
+                                                                 <button
+                                                                     // onClick={() => handleEdit(index)}
+                                                                     className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                                                                 >
+                                                                     <HiPencil className="w-4 h-4" />
+                     
+                                                                 </button>
+                                                                 <span className="tooltip-text">Edit</span>
+                                                                 <button
+                                                                     onClick={() => deleteRow(index)}
+                                                                     className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                                                 >
+                                                                     <HiTrash className="w-4 h-4" />
+                     
+                                                                 </button>
+                                                                 <span className="tooltip-text">Delete</span>
+                     
+                                                                 {/* {tooltipVisible && (
+                                                                     <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                                                                         <div className="flex items-start">
+                                                                             <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                                                                             <span>View</span>
+                                                                         </div>
+                                                                         <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                                                                     </div>
+                                                                 )} */}
+                                                             </div>
+                                                         </td>
         </tr>
     )
 }

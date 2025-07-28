@@ -8,7 +8,7 @@ import secureLocalStorage from 'react-secure-storage'
 import { HiTrash } from 'react-icons/hi'
 
 
-const YarnDetailsSubGrid = ({ readOnly, item,  sizeList, id, setOrderDetails, gridIndex,handleAdd,orderDetails }) => {
+const SizeDetailsSubGrid = ({ readOnly, item,  sizeList, id, setOrderDetails, gridIndex,handleAdd,orderDetails }) => {
 
     const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
     const [panelGridOpen, setPanelGridOpen] = useState(false)
@@ -45,10 +45,11 @@ const YarnDetailsSubGrid = ({ readOnly, item,  sizeList, id, setOrderDetails, gr
         setOrderDetails(prev => {
             // const updated = [...prev];
             const updated = structuredClone(prev);
-            updated[gridIndex].orderDetailsSubGrid.splice(index, 1);
+            // console.log(updated[gridIndex],"deletesuybro")
+            updated[gridIndex].orderSizeDetails.splice(index, 1);
 
 
-            if (updated[gridIndex].orderDetailsSubGrid.length === 0) {
+            if (updated[gridIndex].orderSizeDetails.length === 0) {
                 updated.splice(gridIndex, 1);
             }
 
@@ -136,7 +137,7 @@ const YarnDetailsSubGrid = ({ readOnly, item,  sizeList, id, setOrderDetails, gr
                   min="0"
                   onFocus={e => e.target.select()}
                   className="text-right rounded w-full py-1 text-xs table-data-input"
-                  value={(!yarn.qty) ? 0 : yarn.qty}
+                  value={yarn?.qty}
                   disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                   onChange={e => handleInputChange(e.target.value, index, "qty")}
                   onBlur={e => handleInputChange(e.target.value, index, "qty")}
@@ -168,4 +169,4 @@ const YarnDetailsSubGrid = ({ readOnly, item,  sizeList, id, setOrderDetails, gr
     )
 }
 
-export default YarnDetailsSubGrid
+export default SizeDetailsSubGrid

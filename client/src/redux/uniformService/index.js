@@ -34,3 +34,4 @@ export { default as SocksMaterialApi } from "./SocksMaterialMasterService"
 export { default as SocksTypeApi } from "./SocksTypeMasterService";
 export { default as MeasurementMasterApi } from "./MeasurementMasterService"
 export { default as FiberContentMasterApi } from "./FiberContentMasterServices"
+export { default as requirementPlanningFormApi } from "./RequirementPlanningFormServices"

@@ -36,7 +36,9 @@ import {
   partyBranch,
   partyBranchContact,
   partyContact,
-  branchType
+  branchType,
+  requirementPlanningForm,
+  Material
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -171,6 +173,9 @@ app.use("/partyBranch",partyBranch)
 app.use("/branchType",branchType)
 app.use("/partyBranchContact",partyBranchContact)
 app.use("/partyContact",partyContact)
+app.use("/requirementPlanningForm", requirementPlanningForm);
+app.use("/material",Material)
+
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

@@ -1,11 +1,11 @@
 import { Modal } from "@mui/material";
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
-import { DropdownInput } from "../../../Inputs";
-import { deliveryTypes, poTypes } from "../../../Utils/DropdownData";
+import { DropdownInput, DropdownWithSearch } from "../../../Inputs";
+import { deliveryTypes, directOrPo, poTypes, PurchaseType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { getCommonParams } from "../../../Utils/helper";
+import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { toast } from "react-toastify";
@@ -17,9 +17,12 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useSelector } from "react-redux";
+import { useGetOrderByIdQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 
 const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , allData})  => {
 
+
+  
 
     const today = new Date()
       const componentRef = useRef();
@@ -36,29 +39,34 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
       const [discountType, setDiscountType] = useState("Percentage");
       const [discountValue, setDiscountValue] = useState(0);
       const [partyId, setPartyId] = useState(false);
-    
+      const [orderId,setOrderId]   = useState("")
       const [remarks, setRemarks] = useState("")
+      const [purchaseType,setPurchaseType]   =  useState('')
     
-      const [formReport, setFormReport] = useState(false);
     
-      const [searchValue, setSearchValue] = useState("");
       const [deliveryType, setDeliveryType] = useState("")
       const [deliveryToId, setDeliveryToId] = useState("")
           const [showExtraCharge, setShowExtraCharge] = useState(false)
           const [showDiscount, setShowDiscount] = useState(false)
     
-      const childRecord = useRef(0);
 
             const [suppliers, setSuppliers] = useState([
         "Supplier One",
         "Supplier Two",
         "Supplier Three",
     ]);
-      const { branchId, companyId, finYearId, userId } = getCommonParams()
-        const params = {
-    branchId, companyId 
-  };
-
+   
+    const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const params = {
+        branchId, userId, finYearId
+    };
+      const { data: orderData } = useGetOrderQuery({ params });
+      
+          const {
+              data: singleOrderData,
+              isFetching: isSingleOrderFetching,
+              isLoading: isSingleOrderLoading,
+          } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
   
     const getNextDocId = useCallback(() => {
@@ -84,22 +92,22 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
           const { data: supplierList } =
               useGetPartyQuery({ params: { ...params } });
 
-    const allSuppliers = supplierList ? supplierList.data : []
+    const allSuppliers = supplierList ? supplierList?.data?.filter(S  =>  S.isSupplier) : []
 
   function filterSupplier() {
     let finalSupplier = []
-    if (transType.toLowerCase().includes("yarn")) {
-      finalSupplier = allSuppliers.filter(s => s.yarn)
-    } else if (transType.toLowerCase().includes("fabric")) {
-      finalSupplier = allSuppliers.filter(s => s.fabric)
-    } 
-    else if (transType.toLowerCase() === "accessory" ) {
-      finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
-    } 
-    else {
-      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
+    // if (transType.toLowerCase().includes("yarn")) {
+    //   finalSupplier = allSuppliers.filter(s => s.yarn)
+    // } else if (transType.toLowerCase().includes("fabric")) {
+    //   finalSupplier = allSuppliers.filter(s => s.fabric)
+    // } 
+    // else if (transType.toLowerCase() === "accessory" ) {
+    //   finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
+    // } 
+    // else {
+      finalSupplier = allSuppliers.filter(s => s.isSupplier)
 
-    }
+    // }
     return finalSupplier
   }
   let supplierListBasedOnSupply = filterSupplier()
@@ -116,7 +124,6 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
         state.openTabs.tabs.find((tab) => tab.active).name
       );
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
@@ -163,56 +170,65 @@ const partyFilter = (data) => {
 
 
 
+const syncFormWithDb = useCallback((data) => {
+  setTransType(data?.transType || "GreyYarn");
+  setDate(data?.createdAt 
+    ? moment.utc(data.createdAt).format("YYYY-MM-DD") 
+    : moment.utc(new Date()).format("YYYY-MM-DD")
+  );
+
+  setPoItems(data?.PoItems || []);
+  setDocId(data?.docId || "");
+  setPartyId(data?.partyId || "");
+  setPayTermId(data?.payTermId || "");
+  setDiscountType(data?.discountType || "Percentage");
+  setDiscountValue(data?.discountValue || "0");
+  setSupplierId(data?.supplierId || "");
+  setDueDate(data?.dueDate 
+    ? moment.utc(data.dueDate).format("YYYY-MM-DD") 
+    : ""
+  );
+  setDeliveryType(data?.deliveryType || "");
+  setDeliveryToId(
+    data?.deliveryType === "ToSelf" 
+      ? data?.deliveryBranchId 
+      : data?.deliveryPartyId || ""
+  );
+  setRemarks(data?.remarks || "");
+
+  // Optional: If you need to track branch ID
+  // if (data?.branchId) {
+  //   branchIdFromApi.current = data.branchId;
+  // }
+}, [id]);
+
+const syncOrderForm = useCallback((data) => {
+  console.log("Order data:", data?.orderDetails);
+  if (data?.orderDetails) {
+    setPartyId(data?.partyId);
+  }
+}, [orderId]);
+
+useEffect(() => {
+  if (id && singleData?.data) {
+    syncFormWithDb(singleData.data);
+  } else {
+    syncFormWithDb(undefined);
+  }
+}, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+useEffect(() => {
+  console.log(singleOrderData?.data?.partyId,"setIsd")
+      setPartyId(singleOrderData?.data?.partyId)
+}, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData, syncOrderForm]);
 
 
-    const syncFormWithDb = useCallback((data) => {
-    //   if (id) {
-    //     setReadOnly(true);
-    //   } else {
-    //     setReadOnly(false);
-    //   }
-  
-      setTransType(data?.transType ? data.transType : "GreyYarn");
-      setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
-    
-      setPoItems(data?.PoItems ? data?.PoItems : [])
-      if (data?.docId) {
-        setDocId(data?.docId)
-      }
-      if (data?.date) setDate(data?.date);
-        setPartyId(data?.partyId ? data?.partyId : '' )
-      setPayTermId(data?.payTermId ? data?.payTermId : "");
-      setDiscountType(data?.discountType ? data?.discountType : "Percentage")
-      setDiscountValue(data?.discountValue ? data?.discountValue : "0")
-      setSupplierId(data?.supplierId ? data?.supplierId : "");
-      setDueDate(data?.dueDate ? moment.utc(data?.dueDate).format("YYYY-MM-DD") : "");
-      setDeliveryType(data?.deliveryType ? data?.deliveryType : "")
-      if (data) {
-        setDeliveryToId(data?.deliveryType === "ToSelf" ? data?.deliveryBranchId : data?.deliveryPartyId)
-      } else {
-        setDeliveryToId("")
-      }
-      setRemarks(data?.remarks ? data.remarks : "")
-      // if (data?.branchId) {
-      //   branchIdFromApi.current = data?.branchId
-      // }
-    }, [id]);
-  
-  
-  
-  
-    useEffect(() => {
-      if (id) {
-        syncFormWithDb(singleData?.data);
-      } else {
-        syncFormWithDb(undefined);
-      }
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
     let data = {
     transType, supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
-    poItems: poItems.filter(po => po.yarnId || po.fabricId || po.accessoryId),
+    poItems: poItems?.filter(po => po.yarnId || po.fabricId || po.accessoryId),
     deliveryType, deliveryToId,
     discountType,
     discountValue,
@@ -290,125 +306,131 @@ const partyFilter = (data) => {
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
-                    <div className="border  border-slate-100 justify-between p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
-                        {/* <h2 className="font-medium text-slate-700 mb-2">
-                            Inward Details
-                        </h2> */}
-                        {/* <div className="grid grid-cols-3 gap-1 "> */}
-                          <div className="w-28">
-
-                            <ReusableInput label="Doc. Id" readOnly value={docId}  />
-                          </div>
-                            <div className="w-28">
-
-                            <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                            </div>
-                                    <div className="w-28">
-                           <ReusableInput
+                        
+                             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                                <h2 className="font-medium text-slate-700 mb-2">
+                                                      Basic Details
+                                                </h2>
+                                                <div className="grid grid-cols-2 gap-1">
+                          <ReusableInput label="Doc. Id" readOnly value={docId}  />
+                  
+                          <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                         <ReusableInput
                             label="Due Date"
                             value={dueDate}
                             setValue={setDueDate}
-                            required
+                            
                             type={"date"}
+                            required={true}
                             readOnly={readOnly}
                           />
-                        {/* </div> */}
-                                {/* <DropdownInput name="Inward Type"
-                            beforeChange={() => { setDirectInwardReturnItems([]) }}
-                            options={directOrPo}
-                            value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} /> */}
-                             {/* <DropdownInput name="Po Type"
-                                options={poTypes}
-                                value={transType}
-                                setValue={setTransType}
-                                required={true}
-                                readOnly={readOnly} /> */}
+                      
+                          
+                         
+                                                </div>
+                                            </div>
                   
 
-                        </div>
-                    </div>
+  <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                    <h2 className="font-medium text-slate-700 mb-2">
+                        
+                    </h2>
+                    <div className="grid grid-cols-2 gap-1 mt-8">
+                          <DropdownInput name="DirectOrPo"
+                                  options={PurchaseType}
+                                  value={purchaseType}
+                                  setValue={setPurchaseType}
+                                  required={true}
+                                  readOnly={readOnly}
+                                   />    
+                      
+             {purchaseType  ===  "Order Purchase" &&  
+                          <DropdownWithSearch
+                          label="Order No"
+                          options={orderData?.data}
+                          labelField={"docId"}
+                          value={orderId}
+                          required={true}
+                          setValue={setOrderId}
 
-                        <div className="border border-slate-200 justify-between p-2 bg-white rounded-md shadow-sm col-span-1 flex flex-row gap-8">
-                         
-                            <div className="w-48 ">
-                            <DropdownInput name="Po Type"
+                          />
+                          }
+                          
+                           <DropdownInput name="Po Type"
                                   options={poTypes}
                                   value={transType}
                                   setValue={setTransType}
                                   required={true}
-                                  readOnly={readOnly} />
-                          </div>
-                           <div className="w flex flex-row gap-8">
+                                  readOnly={readOnly} />                    
+                                 <div>
+                            {/* <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}   readOnly={readOnly}/> */}
 
-                            <ReusableSearchableInput
-                                            label="Supplier"
-                                            component="PartyMaster"
-                                            placeholder="Search Parties..."
-                                            optionList={partyFilter(supplierList)}
-                                            onAddItem={handleAddSupplier}
-                                            // onDeleteItem={onDeleteItem}
-                                            setSearchTerm={setPartyId}
-                                            searchTerm={partyId}
-                                            readOnly={readOnly}
-                                            disable ={!transType}
-                                        /> 
-                   
-                        </div>
-                                     
-                                   
+                      {/* <DropdownWithSearch
+                       labelField={"name"}
+                        label={"Customer"}
+                        options={allSuppliers}
+                        disabled={true}
+                         value={partyId} setValue={setPartyId} required={true}   readOnly={readOnly}/> */}
+                           <div id={`dropdown`} className={` mb-2`}>
+    
+        {/* <label className="block text-xs font-bold text-slate-700 mb-1">
+                 Customer
 
-                               
+        </label> */}
+      
+      {/* <select
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 `}
+        
+        // disabled
+        readOnly={readOnly}
+        value={54}
+        onChange={(e) => {
+          setPartyId(e.target.value)
+        }}
+      >{console.log(partyId,'partyId')}
 
+        <option value={54}>Select</option>
+        {(  supplierList?.data || []).map((option) => (
+          <option key={option.id} value={option.id} >
+            {option.id}
+          </option>
+        ))}
+      </select> */}
+    </div>
                     </div>
+
+                      </div>
+                  </div>
 
 
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                       
-                        <div className="grid grid-cols-2 gap-1">
-                          
-                            {/* <DropdownInput name="Location"
-                                options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
-                                value={locationId}
-                                setValue={(value) => { setLocationId(value); setStoreId("") }}
-                                required={true} 
-                                readOnly={ readOnly}
-                                 />
-                                 <DropdownInput name="Store"
-                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
-                            value={storeId} setValue={setStoreId} required={true} 
-                            readOnly={id || readOnly}
-                             /> */}
-                              {/* <div className="col-span-1 pt-0.5">
-                           <DropdownInput
-                            name="Delivery Type"
-                            options={deliveryTypes}
-                            value={deliveryType}
-                            setValue={setDeliveryType}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div> */}
-                          
-           <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}                             readOnly={readOnly}
- />
+                        {/* <div className="grid grid-cols-2 gap-1"> */}
+                         <div className="w flex flex-row gap-8 mt-8">
 
-                        {/* <div className="col-span-1 pt-0.5">
-                          <DropdownInput
-                            name="Delivery To"
-                            options={
-                              deliveryType === "ToSelf"
-                                ? dropDownListObject(branchList?.data || [], "branchName", "id")
-                                : dropDownListObject(clientDetail, "name", "id")
-                            }
-                            masterName="PARTY MASTER"
-                            lastTab={activeTab}
-                            value={deliveryToId}
-                            setValue={setDeliveryToId}
-                            required
-                            readOnly={readOnly}
-                          />
-                        </div>
-                          */}
+                            <ReusableSearchableInput
+                                            label="Supplier"
+                                            component="PartyMaster"
+                                            placeholder="Search Suppliers..."
+                                            optionList={allSuppliers}
+                                            onAddItem={handleAddSupplier}
+                                            // onDeleteItem={onDeleteItem}
+                                            setSearchTerm={setSupplierId}
+                                            searchTerm={supplierId}
+                                            readOnly={readOnly}
+                                            disable ={!transType} 
+                                        /> 
+                   
+                        {/* </div> */}
+                                  
+                          
+                    
+                          
+
+
+                
                         </div>
 
                        </div>
@@ -463,7 +485,6 @@ const partyFilter = (data) => {
                                            </div>
                    
                    
-                                           {/* Pricing Summary (Grand Total) Section */}
                                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                                                <h2 className="font-bold text-slate-800 mb-2 text-base">
                                                    Qty Summary
@@ -489,26 +510,7 @@ const partyFilter = (data) => {
                                                        />
                                                    </div>
                    
-                                                   {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
-                                                       <span className="text-slate-800 font-semibold">Grand Total</span>
-                                                       <span className="font-bold text-indigo-700">$1,200.00</span>
-                                                   </div> */}
-                            {/* <div className="flex gap-5 items-center mb-1 text-xs">
-                                                       <button
-                                                           className="text-green-600 text-[14px] hover:text-white hover:bg-green-600 border border-green-700 px-2 py-1 rounded-md  flex items-center"
-                                                           onClick={() => setShowDiscount(true)}
-                                                       >
-                                                           <HiMinus className="w-2.5 h-2.5 mr-1" />
-                                                           <span>Add Discount</span>
-                                                       </button>
-                                                       <button
-                                                           className="text-indigo-600 text-[14px] hover:text-white hover:bg-indigo-600 border border-indigo-700 px-2 py-1 rounded-md flex items-center"
-                                                           onClick={() => setShowExtraCharge(true)}
-                                                       >
-                                                           <HiPlus className=" w-2.5 h-2.5 mr-1" />
-                                                           <span> Extra Charge</span>
-                                                       </button>
-                                                   </div> */}
+                                                
                         </div>
                     </div>
 

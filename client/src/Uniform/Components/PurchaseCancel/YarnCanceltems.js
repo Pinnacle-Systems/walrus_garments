@@ -2,10 +2,11 @@ import React from 'react';
 import YarnPoItem from './YarnPoItem';
 import { toast } from 'react-toastify';
 import { HiPlus } from 'react-icons/hi';
+import { useEffect } from 'react';
 
 
-const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId }) => {
-
+const YarnCancelItems = ({id, inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId }) => {
+ console.log(inwardItems,"inwardItems")
     const handleInputChange = (value, index, field, balanceQty) => {
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
@@ -33,7 +34,47 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
             return newBlend
         });
     };
+      useEffect(() => {
+        if(id) return
+        if (inwardItems?.length >= 1) return;
+        setInwardItems((prev) => {
+          let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+            return {
+              yarnId: "",
+              qty: "0.00",
+              tax: "0",
+              colorId: "",
+              uomId: "",
+              price: "0.00",
+              discountValue: "0.00",
+              noOfBags: 0.00,
+              discountType: "",
+              weightPerBag: 0.00,
+            };
+          });
+          return [...prev, ...newArray];
+        });
+      }, [ setInwardItems, inwardItems]);
 
+      const addNewRow = () => {
+        const newRow = {
+          yarnId: "",
+          qty: "",
+          tax: "0",
+          colorId: "",
+          uomId: "",
+          price: "",
+          discountTypes: "",
+          discountValue: "0.00",
+          noOfBags : "0.00"
+        };
+        setInwardItems([...inwardItems, newRow]);
+      };
+      const deleteRow = (id) => {
+        setInwardItems((yarnBlend) =>
+          yarnBlend.filter((row, index) => index !== parseInt(id))
+        );
+      };
     return (
         <>
         
@@ -86,7 +127,7 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
             
                                     <button
                                         onClick={() => {
-                                            // addNewRow()
+                                            addNewRow()
                                         }}
                                         className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
                                     >
@@ -106,25 +147,25 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
                                                 S.No
                                             </th>
                                                 <th
-                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 doc Id
                                             </th>
                                             <th
             
-                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Items
                                             </th>
                                             <th
             
-                                                className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Colors
                                             </th>
                                             <th
             
-                                                className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 UOM
                                             </th>
@@ -177,7 +218,9 @@ const YarnCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, pu
                                     </thead>
                                          <tbody className='overflow-y-auto  h-full w-full'>
                         
-                        {inwardItems.map((item, index) => <YarnPoItem readOnly={readOnly} noOfBags={item.noOfBags} weightPerBag={item.weightPerBag} purchaseInwardId={purchaseInwardId} removeItem={removeItem} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
+                        {inwardItems.map((item, index) => <YarnPoItem
+                        deleteRow={deleteRow}
+                        readOnly={readOnly} noOfBags={item.noOfBags} weightPerBag={item.weightPerBag} purchaseInwardId={purchaseInwardId} removeItem={removeItem} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                         {Array.from({ length: 1 - inwardItems?.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row' key={i}>
                             {Array.from({ length: 8}).map(i =>

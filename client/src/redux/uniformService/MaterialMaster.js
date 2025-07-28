@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { CLASS_API } from "../../Api";
+import {  MATERIAL_MASTER_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -14,7 +14,7 @@ const MaterialMasterApi = createApi({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: CLASS_API + "/search/" + searchParams,
+                        url: MATERIAL_MASTER_API + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const MaterialMasterApi = createApi({
                     };
                 }
                 return {
-                    url: CLASS_API,
+                    url: MATERIAL_MASTER_API,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -36,7 +36,7 @@ const MaterialMasterApi = createApi({
         getMaterialMasterById: builder.query({
             query: (id) => {
                 return {
-                    url: `${CLASS_API}/${id}`,
+                    url: `${MATERIAL_MASTER_API}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -47,7 +47,7 @@ const MaterialMasterApi = createApi({
         }),
         addMaterialMaster: builder.mutation({
             query: (payload) => ({
-                url: CLASS_API,
+                url: MATERIAL_MASTER_API,
                 method: "POST",
                 body: payload,
                 headers: {
@@ -60,7 +60,7 @@ const MaterialMasterApi = createApi({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
-                    url: `${CLASS_API}/${id}`,
+                    url: `${MATERIAL_MASTER_API}/${id}`,
                     method: "PUT",
                     body,
                 };
@@ -69,7 +69,7 @@ const MaterialMasterApi = createApi({
         }),
         deleteMaterialMaster: builder.mutation({
             query: (id) => ({
-                url: `${CLASS_API}/${id}`,
+                url: `${MATERIAL_MASTER_API}/${id}`,
                 method: "DELETE",
             }),
             invalidatesTags: ["MaterialMaster"],
@@ -78,11 +78,11 @@ const MaterialMasterApi = createApi({
 });
 
 export const {
-    useGetClassMasterQuery,
-    useGetClassMasterByIdQuery,
-    useAddClassMasterMutation,
-    useUpdateClassMasterMutation,
-    useDeleteClassMasterMutation,
+    useGetMaterialMasterQuery,
+    useGetMaterialMasterByIdQuery,
+    useAddMaterialMasterMutation,
+    useUpdateMaterialMasterMutation,
+    useDeleteMaterialMasterMutation,
 } = MaterialMasterApi;
 
 export default MaterialMasterApi;

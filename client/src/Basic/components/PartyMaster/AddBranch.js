@@ -35,8 +35,8 @@ import ArtDesignReport from './ArtDesign/ArtDesignReport';
 
 
 const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,setBranchInfo ,childRecord, readOnly,setReadOnly  ,
-      branchForm,setBranchForm ,branchState , refetch ,branchAlterContact ,setBranchAlterContact , branchContactPersonEmail , setBranchContactPersonEmail
-}) => {
+      branchForm,setBranchForm ,branchState , refetch ,setBranchModelOpen , branchContactPersonEmail , setBranchContactPersonEmail,branchActive
+    }) => {
 
     const {
 
@@ -54,14 +54,11 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
   branchEmail,
   setBranchEmail,
   openingHours,
-  setopeningHours,
   branchWebsite,
-  setBranchWebsite,
 
     branchAliasName,
     setBranchAliasName,
 
-    branchActive,
     setBranchActive,
     branchCity,
     setBranchCity,
@@ -82,11 +79,16 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
     branchIfscCode,
     setBranchIfscCode, 
     branchType,
-    setBranchType
+    setBranchType,
+    branchContactPersonContact,
+setBranchContactPersonContact,
+branchContactPersonAlterContact,
+setBranchContactPersonAlterContact,
     
   } = branchState;
 
-  console.log(branchState,"branchState")
+
+
 
   const [isBranchcontact,setIsBranchcontact]   = useState(false)
   const [branchId,setBranchId]   = useState("")
@@ -124,8 +126,8 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
         setBranchContact(data?.branchContact ? data?.branchContact : undefined);
         setBranchcontactPerson(data?.branchContactPerson ? data?.branchContactPerson : undefined);
         setBranchEmail(data?.branchEmail ? data?.branchEmail : undefined);
-        setopeningHours(data?.openingHours ? data?.openingHours : undefined);
-        setBranchWebsite(data?.branchWebsite ? data?.branchWebsite : undefined);
+        // setopeningHours(data?.openingHours ? data?.openingHours : undefined);
+        // setBranchWebsite(data?.branchWebsite ? data?.branchWebsite : undefined);
         setBranchAliasName(data?.branchAliasName ? data?.branchAliasName : undefined);
         setBranchActive(data?.branchActive ? data?.branchActive : undefined);
         setBranchCity(data?.branchCity ? data?.branchCity : undefined);
@@ -174,6 +176,8 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
       branchBankBranchName,
       branchAccountNumber,
       branchIfscCode,
+      branchContactPersonContact,
+    setBranchContactPersonContact,
       }, 
       isBranch : true ,
       partyId:partyId,
@@ -274,10 +278,11 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
             //     handleSubmitCustom(updateData, data, "Updated");
             // } else {
               
-        if (branchId && partyId) {
+        if (branchId) {
           handleSubmitCustom(updateData, data, "Updated");
         }
         else {
+          
           handleSubmitCustom(addData, data, "Added");
 
         }
@@ -345,7 +350,6 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
          };
      
    
-  console.log(branchActive,"branchActive")
 
     return (
 
@@ -469,14 +473,29 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                     >
                       Cancel
                 </button>  */}
-                      <button
+                {partyId &&  (
+           <button             
               type="submit"
         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"           onClick={saveData}
-           >
+                  border border-green-600 flex items-center gap-1 text-xs"         
+                    onClick={saveData} >
                 <Check size={14} />
               {branchId  ?   "update"  : "save"}
             </button>
+                )
+                
+                }  
+                {!partyId && (
+                       <button             
+              type="submit"
+        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"         
+                    onClick={()  =>  setBranchModelOpen(false)} >
+                {/* <Check size={14} /> */}
+              Done
+            </button>
+                )}      
+      
            </div>
         </div>
  
@@ -648,9 +667,9 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                                             <TextInput
                                           name="Branch Email"
                                           type="text"
-                                          value={branchEmail}
+                                          value={branchContactPersonEmail}
                   
-                                          setValue={setBranchEmail}
+                                          setValue={setBranchContactPersonEmail}
                                           readOnly={readOnly}
                                           disabled={childRecord.current > 0}
                                           className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -658,20 +677,20 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                                           <div>
                                                                                  
                                           
-                                                                                </div>
-                                          
-                                                                                </div>
+                                              </div>
+        
+                                              </div>
                                                                               </div>  
                                      <TextInput
                                           name="Contact Number"
-                                          type="text"
-                                          value={branchEmail}
-                  
-                                          setValue={setBranchEmail}
+                                          type="number"
+                                          value={branchContact}
+                                          setValue={setBranchContact}
                                           readOnly={readOnly}
                                           disabled={childRecord.current > 0}
                                           className="focus:ring-2 focus:ring-blue-100 w-10"
                                         />                  
+                  
                               </div>
                             </div> 
                           </div>
@@ -771,8 +790,8 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                                           <TextInput
                                                             name="Contact Number"
                                                             type="number"
-                                                            value={branchContact} 
-                                                            setValue={setBranchContact}
+                                                            value={branchContactPersonContact} 
+                                                            setValue={setBranchContactPersonContact}
                                     
                                                             readOnly={readOnly}
                                                             disabled={childRecord.current > 0}
@@ -783,8 +802,8 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                                           <TextInput
                                                         name="Alternative Contact Number"
                                                         type="number"
-                                                          value={branchAlterContact}
-                                                      setValue={setBranchAlterContact}
+                                                          value={branchContactPersonAlterContact}
+                                                      setValue={setBranchContactPersonAlterContact}
                                 
                                                         // readOnly={readOnly}
                                                         // disabled={childRecord.current > 0}
@@ -811,7 +830,7 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                       
         
                            
-                            <div className="lg:col-span-6 space-y-3">
+                   <div className="lg:col-span-6 space-y-3">
                           <div className="bg-white p-3 rounded-md border border-gray-200">
                             <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank  Details</h3>
                          <div className="space-y-2">
@@ -840,32 +859,32 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100 w-10"
                                                   />
-                                               <TextInput
-                                                      name="Account Number"
-                                                      type="text"
-                                                      value={branchAccountNumber}
-                                                      setValue={setBranchAccountNumber}
-                              
-                                                      readOnly={readOnly}
-                                                      disabled={childRecord.current > 0}
-                                                      className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                    />
-                                                          <TextInput
-                                                                name="IFSC CODE"
-                                                                type="text"
-                                                                value={branchIfscCode}
-                                                                setValue={setBranchIfscCode}
-                                        
-                                                                readOnly={readOnly}
-                                                                disabled={childRecord.current > 0}
-                                                                className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                              />
+                                    <TextInput
+                                          name="Account Number"
+                                          type="text"
+                                          value={branchAccountNumber}
+                                          setValue={setBranchAccountNumber}
+                  
+                                          readOnly={readOnly}
+                                          disabled={childRecord.current > 0}
+                                          className="focus:ring-2 focus:ring-blue-100 w-10"
+                                        />
+                                      <TextInput
+                                            name="IFSC CODE"
+                                            type="text"
+                                            value={branchIfscCode}
+                                            setValue={setBranchIfscCode}
+                    
+                                            readOnly={readOnly}
+                                            disabled={childRecord.current > 0}
+                                            className="focus:ring-2 focus:ring-blue-100 w-10"
+                                          />
                                                                         
                                                                             
                                                                                             
                               </div>
-                            </div> 
-                          </div>
+                        </div> 
+                  </div>
         
              
                            </div>
@@ -874,16 +893,16 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
                   <div className="bg-white p-3 rounded-md border border-gray-200  h-[175px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Attchments</h3>
                  <div className="space-y-2">
-    <div className="flex pt-4">
-  <button
-    className="relative w-10 h-10 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
-    transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
-    onClick={() => setFormReport(true)}
-  >
-    <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
-    <Paperclip className="relative z-10 w-5 h-5" />
-  </button>
-</div>
+                    <div className="flex pt-4">
+                  <button
+                    className="relative w-10 h-10 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
+                    transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
+                    onClick={() => setFormReport(true)}
+                  >
+                    <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
+                        <Paperclip className="relative z-10 w-5 h-5" />
+                   </button>
+                </div>
 
 
                     </div> 
@@ -899,16 +918,16 @@ const AddBranch = ({ singleData, partyId,setPartyId, cityList,branchInfo,name,se
 
         
 
-      </div>
-      
+    </div>
     
-    )            
+  
+  )            
 
 
-    } 
+  } 
 
-        </>
-    )
+      </>
+  )
 }
 
 export default AddBranch

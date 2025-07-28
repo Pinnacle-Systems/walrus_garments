@@ -99,8 +99,7 @@ export default function TableGridItems({ item  , gridIndex , id, setOrderDetails
         setOrderDetails(prev => {
             // const updated = [...prev];
             const updated = structuredClone(prev);
-            updated[rowIndex].orderYarnDetails
-.splice(subRowIndex, 1);
+            updated[rowIndex].orderYarnDetails.splice(subRowIndex, 1);
 
 
             if (updated[rowIndex].orderDetailsSubGrid.length === 0) {

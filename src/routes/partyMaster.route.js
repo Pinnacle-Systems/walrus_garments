@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import multerUpload from '../utils/multerUpload.js';
+import multerUpload, { multerUploadForGrid } from '../utils/multerUpload.js';
 
 import { get, getOne, getSearch, create, update, remove, upload, kycFormController, removePartyBranch ,removePartyMaterial , getMaterialOne ,
 updateMaterial
@@ -10,7 +10,7 @@ updateMaterial
 
 router.patch('/upload/:id', multerUpload.single('image'), upload);
 
-router.post('/', create);
+router.post('/',multerUploadForGrid.array('image'), create, );
 
 router.post('/kycform', multerUpload.single('image'), kycFormController);
 
@@ -20,7 +20,7 @@ router.get('/:id', getOne);
 
 router.get('/search/:searchKey', getSearch);
 
-router.put('/:id', update);
+router.put('/:id' ,multerUploadForGrid.array('image'), update);
 
 
 router.delete('/:id', remove);

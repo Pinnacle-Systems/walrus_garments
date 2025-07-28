@@ -151,6 +151,7 @@ model Branch {
   Sample                                 Sample[]
   DirectReturnOrPoReturn                 DirectReturnOrPoReturn[]
   PurchaseCancel                         PurchaseCancel[]
+  RequirementPlanningForm                 RequirementPlanningForm[]    
 }
 
 model UserOnBranch {
@@ -263,7 +264,8 @@ model User {
   DirectReturnOrPoReturnUpdatedBy     DirectReturnOrPoReturn[]     @relation(name: "updatedBy")
   PurchaseCancelCreatedBy             PurchaseCancel[]             @relation(name: "createdBy")
   PurchaseCancelUpdatedBy             PurchaseCancel[]             @relation(name: "updatedBy")
-                
+  RequirementPlanningCreatedBy        RequirementPlanningForm[]     @relation(name: "createdBy")
+  RequirementPlanningUpdateBy         RequirementPlanningForm[]     @relation(name: "updatedBy")               
 
 }
 
@@ -455,30 +457,49 @@ model Currency {
 
 model Party {
   id                         Int                          @id @default(autoincrement())
+  isSupplier                 Boolean?                     @default(false)
+  isClient                   Boolean?                     @default(false)
+  isBuyer                    Boolean?                     @default(false)
   name                       String
-  code                       String?
   aliasName                  String?
+  code                       String?
+  active                     Boolean?                     @default(true)
   displayName                String?
   address                    String?                      @db.LongText
-  image                      Bytes?                       @db.LongBlob
+  landMark                   String?
   City                       City?                        @relation(fields: [cityId], references: [id])
   cityId                     Int?
   pincode                    Int?
+  email                      String?
+  contact                    BigInt?                      
+  contactPersonName          String?
+  designation                String?
+  department                String?
+  contactPersonEmail         String?
+  contactPersonNumber        Int?
+  alterContactNumber         Int?
+  website                    String?
+  Currency                   Currency?                    @relation(fields: [currencyId], references: [id])
+  currencyId                 Int?
+  payTermDay                 String?
   panNo                      String?
+  gstNo                      String?
+  msmeNo                     String?
+  cinNo                      String?
+  bankName                   String?
+  branchName                 String?
+  accountNumber              String?
+  ifscCode                   String?
+  createdById                Int?
+
+
+
+  image                      Bytes?                       @db.LongBlob
   tinNo                      String?
   cstNo                      String?
   cstDate                    DateTime?                    @db.Date
-  cinNo                      String?
   faxNo                      String?
-  email                      String?
-  website                    String?
-  contactPersonName          String?
-  gstNo                      String?
-  Currency                   Currency?                    @relation(fields: [currencyId], references: [id])
-  currencyId                 Int?
   costCode                   String?
-  active                     Boolean?                     @default(true)
-  contactMobile              BigInt?                      @default(0)
   PartyOnAccessoryItems      PartyOnAccessoryItems[]
   Company                    Company?                     @relation(fields: [companyId], references: [id])
   companyId                  Int?
@@ -488,18 +509,16 @@ model Party {
   createdAt                  DateTime?                    @default(now())
   updatedAt                  DateTime?                    @updatedAt
   createdBy                  User?                        @relation("createdBy", fields: [createdById], references: [id])
-  createdById                Int?
   updatedBy                  User?                        @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById                Int?
   PriceTemplate              PriceTemplate?               @relation(fields: [priceTemplateId], references: [id])
   priceTemplateId            Int?
-  isSupplier                 Boolean?                     @default(false)
-  isClient                   Boolean?                     @default(false)
   isIgst                     Boolean?                     @default(false)
-  bankName                   String?
-  branchName                 String?
-  accountnumber              String?
-  ifsccode                   String?
+  isAcc                      Boolean?                     @default(false)
+  isGy                       Boolean?                     @default(false)
+  isDy                       Boolean?                     @default(false)
+  mailId                     String?
+
 
   PoSupplier                 Po[]                         @relation(name: "supplier")
   PoDelivery                 Po[]                         @relation(name: "deliveryTo")
@@ -528,14 +547,10 @@ model Party {
   OnlineSales                OnlineSales[]
   OnlineSalesReturn          OnlineSalesReturn[]
   CreditDebitNote            CreditDebitNote[]
-  isAcc                      Boolean?                     @default(false)
-  isGy                       Boolean?                     @default(false)
-  isDy                       Boolean?                     @default(false)
+
   ShippingAddress            ShippingAddress[]
   ContactDetails             ContactDetails[]
   Order                      Order[]
-  payTermDay                 String?
-  mailId                     String?
   CertificateDetail          CertificateDetail[]
   Sample                     Sample[]
   partyBranch                PartyBranch[]
@@ -546,6 +561,8 @@ model Party {
   PartyMaterials             PartyMaterials[]
   PartyContactDetails        PartyContactDetails[]
   BranchContactDetails       BranchContactDetails[]
+  RequirementPlanningForm    RequirementPlanningForm[]
+  PartyAttachments        PartyAttachments[]
 }
 
 model PartyBranch {
@@ -553,7 +570,7 @@ model PartyBranch {
   branchName           String?
   branchAliasName      String?
   branchCode           String?
-  active               Boolean?                @default(true)
+  active               Boolean?                  @default(true)
   City                  City?                       @relation(fields: [branchCityId], references: [id])
   branchCityId          Int?           
   branchLandMark        String?      
@@ -569,27 +586,29 @@ model PartyBranch {
   branchBankname           String?
   branchIfscCode           String?
   branchBankBranchName      String?
-  Party                   Party?                 @relation(fields: [partyId], references: [id])
+  Party                   Party?                 @relation(fields: [partyId], references: [id],onDelete: Cascade)
   partyId                Int?
   isMainBranch           Boolean?                @default(false)
   BranchType             BranchType?                 @relation(fields: [branchTypeId], references: [id])
   branchTypeId           Int?                 
   partyShippingAddress PartyShippingAddress[]
   BranchContactDetails      BranchContactDetails[]
+  BranchAttchments      BranchAttchments[]
 
 }
 
 model BranchContactDetails {
   id                Int          @id @default(autoincrement())
-  PartyBranch        PartyBranch?                 @relation(fields: [branchId], references: [id])
+  PartyBranch        PartyBranch?                 @relation(fields: [branchId], references: [id],onDelete: Cascade)
   branchId            Int?
-  Party               Party?                 @relation(fields: [partyId], references: [id])
+  Party               Party?                 @relation(fields: [partyId], references: [id],onDelete: Cascade)
   partyId            Int?
   contactPersonName String?
   mobileNo          String?
   email             String?
   designation       String?
   department        String?
+  alterContactNumber  String?
 }
 
 model PartyShippingAddress {
@@ -603,7 +622,7 @@ model PartyShippingAddress {
 model PartyMaterials{
   id            Int          @id @default(autoincrement())
   name          String?
-  Party         Party?       @relation(fields: [partyId], references: [id])
+  Party         Party?       @relation(fields: [partyId], references: [id],onDelete: Cascade)
   partyId       Int?
   value         Int?    
   isMainBranch  Boolean?     @default(false)
@@ -617,8 +636,26 @@ model PartyContactDetails {
   email             String?
   Designation       String?
   department        String?
-  Party                Party?                 @relation(fields: [partyId], references: [id])
+  Party                Party?                 @relation(fields: [partyId], references: [id],onDelete: Cascade)
   partyId              Int?
+  alterContactNumber  String?
+}
+
+model PartyAttachments {
+  id          Int          @id @default(autoincrement())
+  Party         Party?       @relation(fields: [partyId], references: [id],onDelete: Cascade)
+  partyId       Int?
+  filePath      String?
+  createdAt     DateTime?    @default(now())
+  updatedAt     DateTime?    @updatedAt
+}
+model BranchAttchments {
+  id          Int          @id @default(autoincrement())
+  PartyBranch PartyBranch? @relation(fields: [partyBranchId], references: [id],onDelete: Cascade)
+  partyBranchId Int?
+  filePath    String?
+  createdAt   DateTime?    @default(now())
+  updatedAt   DateTime?    @updatedAt
 }
 
 model CertificateDetail {
@@ -3087,6 +3124,7 @@ model Sample {
   User              User?     @relation(fields: [userId], references: [id])
   userId            Int?
   sampleDetails     sampleDetails[]
+  RequirementPlanningForm       RequirementPlanningForm[]
 }
 
 model sampleDetails {
@@ -3123,6 +3161,35 @@ model sampleDetails {
   socksTypeId     Int?
   socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
   filePath        String?        @db.LongText
+}
+
+
+model RequirementPlanningForm {
+  id                Int             @id @default(autoincrement())
+  docId             String?
+  createdAt         DateTime?      @default(now())
+  updatedAt         DateTime?      @updatedAt
+  createdBy         User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  Branch            Branch?       @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  Party             Party?        @relation(fields: [partyId], references: [id])
+  partyId           Int?
+  requirementDate   DateTime?
+  remarks           String?        @db.LongText
+  specialInstructions String?
+  sample            Sample?       @relation(fields: [sampelId], references: [id])
+  sampelId          Int?
+RequirementPlanningFormItems    RequirementPlanningFormItems[]
+}
+model RequirementPlanningFormItems {
+  id                        Int                        @id @default(autoincrement())
+  RequirementPlanningForm   RequirementPlanningForm?    @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
+  requirementPlanningFormId Int?
+
+
 }
 
 

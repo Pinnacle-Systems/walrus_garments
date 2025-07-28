@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 import OrderFormUi from './orderFormUi';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
+import { ReusableTable } from '../../../Inputs';
 
 
 const Order = () => {
@@ -31,31 +32,39 @@ const Order = () => {
         {
             header: 'S.No',
             accessor: (item, index) => index + 1,
-            cellClass: () => 'font-medium text-gray-900'
+            className: 'font-medium text-gray-900 w-[3%]  text-center'
+
         },
         {
             header: 'Order No.',
             accessor: (item) => item.docId,
-            cellClass: () => 'font-medium text-gray-900'
+           className:  'font-medium text-gray-900 w-[10%]' 
         },
         {
             header: 'Order Date',
-            accessor: (item) => item.docDate
+            accessor: (item) => item.docDate,
+         className:  'font-medium text-gray-900 w-[10%]' 
+
         },
         {
-            header: 'Party',
+            header: 'Customer',
             accessor: (item) => item.Party?.name,
-            cellClass: () => 'uppercase'
+           className:  'font-medium text-gray-900 w-[60%]' 
         },
-        {
-            header: 'ContactPerson',
-            accessor: (item) => item.contactPersonName,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
-        {
-            header: 'Contact',
-            accessor: (item) => item.phone,
-            cellClass: () => 'text-gray-800 uppercase'
+        // {
+        //     header: 'ContactPerson',
+        //     accessor: (item) => item.contactPersonName,
+        //     cellClass: () => 'text-gray-800 uppercase'
+        // },
+        // {
+        //     header: 'Contact',
+        //     accessor: (item) => item.phone,
+        //     cellClass: () => 'text-gray-800 uppercase'
+        // },
+           {
+            header: '',
+            accessor: (item) => item.none,
+           className:  'font-medium text-gray-900 w-[20%]' 
         },
     ];
 
@@ -113,14 +122,14 @@ const Order = () => {
                     partyData={partyData?.data}  setShowOrderForm={setShowOrderForm}
                 /> 
             ) : (
-                <div className="p-2 bg-[#F1F1F0] min-h-screen">
+                <div className="p-1 bg-[#F1F1F0] h-[40%]">
                     <h1 className="text-2xl font-bold text-gray-800"> Order Information</h1>
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select
                                 value={selectedPeriod}
                                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
+                                className="px-3 py-1 border rounded-md text-sm"
                             >
                                 <option value="this-month">This Month</option>
                                 <option value="last-month">Last Month</option>
@@ -128,7 +137,7 @@ const Order = () => {
                             <select
                                 value={selectedFinYear}
                                 onChange={(e) => setSelectedFinYear(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
+                                className="px-3 py-1 border rounded-md text-sm"
                             >
                                 <option value="2023-2024">2023-2024</option>
                                 <option value="2022-2023">2022-2023</option>
@@ -136,15 +145,15 @@ const Order = () => {
 
                         </div>
                         <button
-                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
+                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
                             onClick={() => { setShowOrderForm(true); onNew() }}
                         >
                             <FaPlus /> Create New
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <CommonTable
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden  w-full">
+                        <ReusableTable
                             columns={columns}
                             data={orderData?.data || []}
                             onView={handleView}

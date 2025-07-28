@@ -504,6 +504,7 @@ export const DropdownInput = ({
   };
 
   const isDisabled = readOnly || disabled;
+  console.log(options, "options in dropdown",value);
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -980,7 +981,7 @@ export const DropdownWithSearch = ({
   return (
     <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
       {label && (
-        <label className="block text-xs font-bold text-gray-600 mb-1">
+        <label className="block text-xs font-bold text-slate-700 mb-1">
                  {required ? <RequiredLabel name={label} /> : `${label}`}
 
         </label>
@@ -1128,7 +1129,7 @@ console.log(data,"commonTable")
     if (totalPages <= 1) return null;
 
     return (
-      <div className="flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
+      <div className=" w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data?.length)} of {data?.length} entries
         </div>
@@ -1202,9 +1203,9 @@ console.log(data,"commonTable")
   };
 
   return (
-    <div className="bg-[#F1F1F0] rounded-xl shadow-sm overflow-hidden">
-      <table className=" border-collapse">
-        <thead className="bg-gray-200 text-gray-800">
+    <div className="bg-[#F1F1F0] shadow-sm overflow-hidden">
+      <table className=" border-collapse w-full">
+        <thead className="bg-gray-200 text-gray-800 ">
           <tr>
 
             {columns?.map((column, index) => (

@@ -268,15 +268,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
     function filterSupplier() {
         let finalSupplier = []
-        if (transType === "DyedYarn" ||  transType  === "GreyYarn") {
-            finalSupplier = supplierList?.data?.filter(s => (s.isDy || s.isGy))
-        } 
-          if (transType === "Accessory") {
-            finalSupplier = supplierList?.data?.filter(s => (s.isAcc))
-        }
+        // if (transType === "DyedYarn" ||  transType  === "GreyYarn") {
+        //     finalSupplier = supplierList?.data?.filter(s => (s.isDy || s.isGy))
+        // } 
+        //   if (transType === "Accessory") {
+        //     finalSupplier = supplierList?.data?.filter(s => (s.isAcc))
+        // }
         // else {
         //     finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
         // }
+          finalSupplier = supplierList?.data?.filter(s => s.isSupplier )
         return finalSupplier
     }
     let supplierListBasedOnSupply = filterSupplier()

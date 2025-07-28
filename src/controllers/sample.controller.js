@@ -51,10 +51,9 @@ async function getSearch(req, res, next) {
 
 
 async function create(req, res, next) {
-    res.json(await _create(req.body));
 
     try {
-        // res.json(await _create(req.body));
+        res.json(await _create(req.body));
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, error.message);

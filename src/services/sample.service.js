@@ -95,7 +95,7 @@ async function get(req) {
         select: {
           name: true,
           contactPersonName: true,
-          contactMobile: true,
+          // contactMobile: true,
         },
       },
 
@@ -388,7 +388,7 @@ async function updateSampleDetailsBySampleFollow(
           colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
           fabricId: temp.fabricId ? parseInt(temp.fabricId) : undefined,
           sizeId: temp.sizeId ? parseInt(temp.sizeId) : undefined,
-          comment: temp.comment ? temp.comment : "",
+          // comment: temp.comment ? temp.comment : "",
           filePath: temp.filePath ? temp.filePath : undefined,
         },
       });
@@ -401,7 +401,7 @@ async function updateSampleDetailsBySampleFollow(
           fabricId: temp.fabricId ? parseInt(temp.fabricId) : undefined,
           colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
           sizeId: temp.sizeId ? parseInt(temp.sizeId) : undefined,
-          comment: temp.comment ? temp.comment : "",
+          // comment: temp.comment ? temp.comment : "",
           filePath: temp.filePath ? temp.filePath : undefined,
         },
       });
@@ -413,7 +413,7 @@ async function updateSampleDetailsBySampleFollow(
 async function update(id, body) {
   let bodyData = await body;
   const {
-    colorId,
+    orderId,
     styleId,
     sizeId,
     fabricId,
@@ -477,6 +477,7 @@ async function update(id, body) {
         userId: merchandId ? parseInt(merchandId) : undefined,
         updatedById: userId ? parseInt(userId) : undefined,
         partyId: partyId ? parseInt(partyId) : undefined,
+        orderId : orderId  ? parseInt(orderId)  : undefined ,
         companyId: companyId ? parseInt(companyId) : undefined,
         active: active && JSON.parse(active) ? JSON.parse(active) : undefined,
         branchId: branchId ? parseInt(branchId) : undefined,

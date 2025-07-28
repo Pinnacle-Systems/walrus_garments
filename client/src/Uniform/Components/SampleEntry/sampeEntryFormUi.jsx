@@ -22,7 +22,6 @@ import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "
 import { toast } from "react-toastify";
 import moment from "moment";
 import { getCommonParams, renameFile } from "../../../Utils/helper";
-import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
@@ -30,8 +29,10 @@ import { DropdownInput, DropdownWithSearch,  TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { useAddSampleMutation, useGetSampleByIdQuery, useGetSampleQuery, useUpdateSampleMutation } from "../../../redux/uniformService/SampleService";
+import SampleItems from "./SampleItems";
 
-const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData , orderData , setOrderId  , orderId }) => {
+const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData ,
+     orderData , setOrderId  , orderId , singleOrderData , isSingleOrderLoading  , isSingleOrderFetching }) => {
     const [suppliers, setSuppliers] = useState([
         "Supplier One",
         "Supplier Two",
@@ -44,13 +45,8 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
     const [term, setTerm] = useState("");
     const [newSampleEntry,setNewSampleEntry] = useState(false)
 
-    const handleAdd = () => {
-        if (term.trim()) {
-            console.log("Term added:", term);
-            setTerm("");
-            setIsEditing(false);
-        }
-    };
+    console.log(sampleDetails,"sampleDetails")
+
 
 
     const [addressForm, setAddressForm] = useState(false);
@@ -75,7 +71,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
     const childRecord = useRef(0);
     const { branchId, userId, companyId, finYearId } = getCommonParams()
     const [openModelForAddress, setOpenModelForAddress] = useState(false)
-    const [packingCoverType, setPackingCoverType] = useState("")
+    const [customerCode, setCustomerCode] = useState("")
 
     const params = {
         branchId, userId, finYearId
@@ -84,7 +80,6 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
         useGetPartyQuery({ params: { ...params } });
 
     // const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
-        const { data: allData, isLoading, isFetching } = useGetSampleQuery({ params, searchParams: '' });
 
 
     const getNextDocId = useCallback(() => {
@@ -99,11 +94,11 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
 
 
 
-    const {
-        data: singleOrderData,
-        isFetching: isSingleOrderFetching,
-        isLoading: isSingleOrderLoading,
-    } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    // const {
+    //     data: singleOrderData,
+    //     isFetching: isSingleOrderFetching,
+    //     isLoading: isSingleOrderLoading,
+    // } = useGetOrderByIdQuery(orderId, { skip: !orderId });
     // const [addData] = useAddOrderMutation();
     // const [updateData] = useUpdateOrderMutation();
     const [removeData] = useDeletePartyMutation();
@@ -117,37 +112,47 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
     const [updateData] = useUpdateSampleMutation();
 
 
-    const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =  useGetPartyByIdQuery(partyId, { skip: !partyId });
 
     const syncFormWithDb = useCallback((data , sampleDetails) => {
+        console.log("data", data    )
         if (id ||  orderId) {
             setReadOnly(readOnly ? readOnly : false);
         }
-        if (data?.docId) {
+        if (id) {
             setDocId(data?.docId)
         }
         setDate(data?.createdAt ? moment(data?.createdAt).format("YYYY-MM-DD") : moment(new Date()).format("YYYY-MM-DD"));
         setPartyId(data?.partyId ? data?.partyId : "");
-        setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
-        setPhone(data?.phone ? data?.phone : "");
+        // setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
+        // setPhone(data?.phone ? data?.phone : "");
         setAddress(data?.address ? data?.address : "");
         setValidDate(data?.validDate ? moment(data?.validDate).format("YYYY-MM-DD") : "");
-        setSampleDetails(sampleDetails ? sampleDetails: []);
+        // setOrderId(data?.orderId   ? data?.orderId  : undefined )
+        // setSampleDetails(sampleDetails)
 
-
-        setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "");
+        setCustomerCode(data?.packingCoverType ? data?.packingCoverType : "");
         setNotes(data?.notes ? data?.notes : "")
         setOrderBy(data?.orderBy ? data?.orderBy : "");
         setTerm(data?.term ? data?.term : "")
 
     }, [orderId,id]);
 
+
     useEffect(() => {
         if (orderId) {
             syncFormWithDb(singleOrderData?.data, singleOrderData?.data?.orderDetails);
+                   setSampleDetails(
+                        singleOrderData?.data?.orderDetails?.map(item => ({
+                            ...item,
+                            sampleSizeDetails: item?.orderSizeDetails || [] 
+                        }))
+                        );
+
+
         } 
         else if(id){
              syncFormWithDb(singleData?.data ,  singleData?.data?.sampleDetails);
+             setSampleDetails(singleData?.data?.sampleDetails)
             }
            
         else {
@@ -157,7 +162,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
 
     let data = {
         branchId, id, userId, companyId, notes, term, orderBy, docId,
-        packingCoverType,
+        packingCoverType: customerCode,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate, sampleDetails
     }
@@ -196,6 +201,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
             } else {
                 returnData = await callback(formData).unwrap();
             }
+            setId(returnData?.data?.id)
             if (returnData.statusCode === 0) {
                 if (nextProcess == "new") {
                     syncFormWithDb(undefined);
@@ -212,11 +218,10 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                     title: text + "  " + "Successfully",
                     icon: "success",
                     draggable: true,
-                    timer: 1000, // time in milliseconds (2000ms = 2 seconds)
-                    showConfirmButton: false, // hides the OK button
-                    // timerProgressBar: true, // shows a progress bar
+                    timer: 1000, 
+                    showConfirmButton: false, 
                     didOpen: () => {
-                        Swal.showLoading(); // optional: show loading spinner
+                        Swal.showLoading(); 
                     }
                 });
                 // toast.success(text + "Successfully");
@@ -270,21 +275,23 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
         setSampleDetails([]);
 
     }
+useEffect(() => {
+    if (Array.isArray(sampleDetails) && sampleDetails.length >= 1) return;
 
-    useEffect(() => {
-        if (sampleDetails?.length >= 1) return
-        setSampleDetails(prev => {
-            let newArray = Array.from({ length: 1 - prev.length }, () => {
-                return {
-                    yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
-                    measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-                    stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
-                }
-            })
-            return [...prev, ...newArray]
-        }
-        )
-    }, [setSampleDetails, sampleDetails])
+    setSampleDetails(prev => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+        const newArray = Array.from({ length: 1 - safePrev.length }, () => ({
+            yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
+            measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+            stripecolorId: "", noOfStripes: "0", socksTypeId: "", sampleQty: 0.00, sampleWeight: 0.00,
+            sampleSizeDetails: [{ qty: 0.00, sizeId: "", weight: "" }]
+        }));
+
+        return [...safePrev, ...newArray];
+    });
+}, [setSampleDetails, sampleDetails]);
+
+
 
 
     // useEffect(() => {
@@ -358,30 +365,34 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
-                                Order Details
+                                Sample Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Order.No" readOnly value={docId}   />
-                                <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true}  />
-                                <ReusableInput label="Due Date" type="date" value={validDate} setValue={setValidDate}  />
-                                    <DropdownWithSearch
+                                <ReusableInput label="Sample.No" readOnly value={docId}   />
+                                <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true}  />
+                                <ReusableInput label="Deleivery Date" type="date" value={validDate} setValue={setValidDate}  />
+                                    {/* <DropdownWithSearch
                                         name="Orders"
                                         options={orderData?.data}
                                         value={orderId}
                                         setValue={setOrderId}
-                                        disabled={newSampleEntry ? false : true} 
+                                        disabled={newSampleEntry ? true : false} 
                                         labelField={"docId"}
                                         label={"Orders"} 
                                       
-                                    />
-                               <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                                        <span>New Sample Entry</span>
+                                    /> */}
+                               {/* <div className="flex items-center gap-2 text-xs text-slate-500 mb-1 item-center mt-4">
+                                        <span className="block text-xs font-bold text-slate-700 mb-1">Direct Sample</span>
                                         <input
                                             type="checkbox"
-                                            onClick={() => setNewSampleEntry(!newSampleEntry)}
+                                            onClick={() =>   {
+                                                setNewSampleEntry(!newSampleEntry)
+                                                syncFormWithDb(undefined);
+                                                setSampleDetails([]);
+                                            }}
                                             disabled={orderId}
                                         />
-                                        </div>
+                                        </div> */}
      
                             </div>
                         </div>
@@ -395,7 +406,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
                                         <ReusableSearchableInput
-                                            label="Party"
+                                            label="Customer"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
                                             optionList={supplierList?.data}
@@ -406,22 +417,20 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                         />
                                     </div>
 
-
-                                    <DropdownInput
-                                        name="Packing Cover"
-                                        options={packingCover}
-                                        value={packingCoverType}
-                                        setValue={setPackingCoverType}
-                                        
-
-                                    />
+                                  <TextInput
+                                    name="Customer Code"
+                                    placeholder="Customer Code"
+                                   value={customerCode}
+                                    setValue={setCustomerCode}
+                                    // disabled={true}
+                                />
 
 
 
 
 
-                                    <div className="mb-3">
-                                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                                    {/* <div className="mb-3">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
                                             Source Address
                                         </label>
                                         <div className="relative">
@@ -510,14 +519,9 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                                 </div>
                                             </div>
                                         )}
-                                        {/* {addressForm &&
-                                          
+                             
 
-                                            <AddressForm setAddressForm={setAddressForm} />
-
-                                        } */}
-
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -528,7 +532,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-1 gap-x-3">
+                            <div className="grid grid-cols-2 gap-x-3">
                                 <TextInput
                                     name="Contact Person"
                                     placeholder="Contact name"
@@ -542,15 +546,24 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                     value={phone}
                                     setValue={setPhone}
                                     // disabled={true}
+                                    // onChange={(e) => setPhone(e.target.value)}
 
-                                // onChange={(e) => setPhone(e.target.value)}
                                 />
 
                             </div>
                         </div>
                     </div>
 
-                    <OrderItems readOnly={readOnly} itemHeading={itemHeading} setSampleDetails={setSampleDetails} sampleDetails={sampleDetails} id={id} />
+
+
+
+                    <SampleItems  newSampleEntry={newSampleEntry} readOnly={readOnly} itemHeading={itemHeading} 
+
+
+                    setSampleDetails={setSampleDetails} sampleDetails={sampleDetails} id={id} orderId={orderId} />
+
+
+
                     <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
@@ -560,7 +573,7 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                 onChange={(e) => {
                                     setTerm(e.target.value)
                                 }}
-                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                 placeholder="Additional notes..."
 
                             />
@@ -573,20 +586,6 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                 </button> */}
                         </div>
 
-                        {/* <div className="mt-3 space-y-1.5">
-                                <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                    <span>Payment due within 30 days</span>
-                                    <button className="text-red-400 hover:text-red-500">
-                                        <HiTrash className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-[12px]">
-                                    <span>Late fee of 2% per month</span>
-                                    <button className="text-red-400 hover:text-red-500">
-                                        <HiTrash className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div> */}
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
@@ -597,13 +596,12 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                                 onChange={(e) => {
                                     setNotes(e.target.value)
                                 }}
-                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                                className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
                                 placeholder="Additional notes..."
                             />
                         </div>
 
 
-                        {/* Pricing Summary (Grand Total) Section */}
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-semibold text-slate-800 mb-2 text-base">
                                 Qty Summary
@@ -652,82 +650,9 @@ const SampleEntryUi = ({ sampleDetails, setSampleDetails, readOnly, setReadOnly,
                             </div>
                         </div>
 
-                        {showExtraCharge && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h3 className="text-base font-semibold">Add Extra Charge</h3>
-                                        <button onClick={() => setShowExtraCharge(false)} className="text-slate-400 hover:text-slate-600">
-                                            <HiX className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="e.g. Delivery fee"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                                            <input
-                                                type="number"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                        <button className="w-full bg-indigo-600 text-white py-1.5 px-3 rounded text-sm hover:bg-indigo-700 transition">
-                                            Apply Charge
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    
 
-                        {showDiscount && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h3 className="text-base font-semibold">Add Discount</h3>
-                                        <button onClick={() => setShowDiscount(false)} className="text-slate-400 hover:text-slate-600">
-                                            <HiX className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="e.g. Summer promotion"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
-                                                <select className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                                                    <option>Percentage</option>
-                                                    <option>Fixed Amount</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-slate-700 mb-1">Value</label>
-                                                <input
-                                                    type="number"
-                                                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                    placeholder="0.00"
-                                                />
-                                            </div>
-                                        </div>
-                                        <button className="w-full bg-green-600 text-white py-1.5 px-3 rounded text-sm hover:bg-green-700 transition">
-                                            Apply Discount
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                      
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">

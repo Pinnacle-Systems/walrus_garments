@@ -63,7 +63,7 @@ export function ReusableSearchableInput({
 
 
       <div className="relative text-sm w-full" ref={containerRef}>
-        <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+        <label className="block text-xs font-bold text-slate-700 mb-1">{label}</label>
 
         <div className="flex gap-2">
           <div className="relative flex-grow">
@@ -270,7 +270,7 @@ export function ReusableInput(
   return (
     <div className="mb-2">
       {label && (
-        <label className="block text-xs text-slate-500 mb-1">
+        <label className="block text-xs font-bold text-slate-700 mb-1">
           {label}
         </label>
       )}

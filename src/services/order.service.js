@@ -337,6 +337,10 @@ console.log(orderDetails,"orderDetails")
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
     if (!dataFound) return { statusCode: 404, message: "No record found for order" };
 
+    
+const parsedOrderDetails = JSON.parse(orderDetails || "[]");
+
+const incomingIds = parsedOrderDetails.filter(i => i.id).map(i => parseInt(i.id));
     let data;
     await prisma.$transaction(async (tx) => {
         data = await tx.order.update({
@@ -345,7 +349,7 @@ console.log(orderDetails,"orderDetails")
                   
                 },
                 include: {
-                        PoItems: true
+                        orderDetails: true
                     },
             data: {
                 docId: draftSave ? docIdNumber : dataFound?.docId,
@@ -382,20 +386,90 @@ console.log(orderDetails,"orderDetails")
                 //         )
                 //     }
                 // }
-                        orderDetails: {
-                                   deleteMany: {},
-                                        
-                                   create :  orderDetails?.length  >  0   ?  
-                                JSON.parse(orderDetails)?.map(item => ({
-                                                styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-                                                }))   :  []
-
-                        }
+            
 
 
 
-                                    },
-                                });
+orderDetails: {
+  deleteMany: {
+    ...(incomingIds.length > 0 && {
+      id: { notIn: incomingIds }
+    })
+  },
+
+  update: parsedOrderDetails
+    .filter(item => item.id)
+    .map((item) => ({
+      where: { id: parseInt(item.id) },
+      data: {
+        styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+        fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+        socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+        socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+
+        orderSizeDetails: {
+          deleteMany: {}, // always delete all existing
+          createMany: {
+            data: item?.orderSizeDetails?.map((sub) => ({
+              sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+              sizeMeasurement: sub?.sizeMeasurement || undefined,
+              qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+            })) || [],
+          },
+        },
+
+        orderYarnDetails: {
+          deleteMany: {}, // always delete all existing
+          createMany: {
+            data: item?.orderYarnDetails?.map((yarn) => ({
+              yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+              yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+              count: yarn?.count || undefined,
+              yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+            })) || [],
+          },
+        },
+      },
+    })),
+
+  create: parsedOrderDetails
+    .filter(item => !item.id)
+    .map((item) => ({
+      styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+      fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+      socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+      socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+
+      orderSizeDetails: {
+        createMany: {
+          data: item?.orderSizeDetails?.map((sub) => ({
+            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+            sizeMeasurement: sub?.sizeMeasurement || undefined,
+            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+          })) || [],
+        },
+      },
+
+      orderYarnDetails: {
+        createMany: {
+          data: item?.orderYarnDetails?.map((yarn) => ({
+            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+            count: yarn?.count || undefined,
+            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+          })) || [],
+        },
+      },
+    })),
+}
+
+
+
+
+
+
+                },
+            });
 
 
     });

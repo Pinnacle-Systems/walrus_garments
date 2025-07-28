@@ -1,5 +1,5 @@
-import { HiPlus, HiShare, HiPrinter, HiTrash, HiMinus, HiLocationMarker, HiCheck } from "react-icons/hi";
-import { FaWhatsapp } from "react-icons/fa";
+import { HiPlus, HiShare, HiPrinter, HiTrash, HiMinus, HiLocationMarker, HiCheck, HiOutlineDocumentText } from "react-icons/hi";
+import { FaRegSave, FaWhatsapp } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
 import { HiX, HiOutlineRefresh } from "react-icons/hi";
 import {
@@ -29,6 +29,7 @@ import Modal from "../../../UiComponents/Modal";
 import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
+import { MdDrafts } from "react-icons/md";
 
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData  , setShowOrderForm}) => {
     const [suppliers, setSuppliers] = useState([
@@ -129,12 +130,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(j => j.styleId && j.socksMaterialId && j.socksTypeId && j.qty)
+        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails
   
     }
 
 
-
+          console.log(orderDetails,"orderDetails")
 
 
     const validateData = (data) => {
@@ -150,6 +151,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         try {
             const formData = new FormData();
             for (let key in data) {
+                // console.log(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath })),"order")
+                // console.log(data[key],"data")
+               if(key ===  "orderDetails"){
+                    console.log(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath })))
+                }
+
                 if (key === 'orderDetails') {
                     formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
                     data[key].forEach(option => {
@@ -161,7 +168,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     formData.append(key, data[key]);
                 }
             }
-
             let returnData;
             if (text === "Updated") {
                 console.log(formData, "formData")
@@ -185,14 +191,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     title: text + "  " + "Successfully",
                     icon: "success",
                     draggable: true,
-                    timer: 1000, // time in milliseconds (2000ms = 2 seconds)
-                    showConfirmButton: false, // hides the OK button
-                    // timerProgressBar: true, // shows a progress bar
+                    timer: 1000,
+                    showConfirmButton: false, 
                     didOpen: () => {
-                        Swal.showLoading(); // optional: show loading spinner
+                        Swal.showLoading();
                     }
                 });
-                // toast.success(text + "Successfully");
 
             } else {
                 toast.error(returnData?.message);
@@ -251,9 +255,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                 return {
                     yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
                     measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-                    stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: "",
+                    stripecolorId: "", noOfStripes: "0" , socksTypeId: "",
                      orderSizeDetails : [ {
-                                 qty : "" , sizeMeasurement : ""  , sizeId : ""
+                                 qty: 0.00 , sizeMeasurement : ""  , sizeId : ""
 
                           }],
                           orderYarnDetails: [{ yarnId : "" }]
@@ -344,13 +348,23 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Order Information</h1>
-                    <button
-                        onClick={onClose}
-                        className="text-indigo-600 hover:text-indigo-700"
-                        title="Open Report"
-                    >
-                        <FaFileAlt className="w-5 h-5" />
-                    </button>
+                    <div className="gpa-4">
+                             <button
+                            onClick={onClose}
+                            className="text-indigo-600 hover:text-indigo-700"
+                            title="Open Report"
+                        >
+                    <HiOutlineDocumentText className="w-7 h-6" />
+                               </button>
+                                <button
+                            onClick={onClose}
+                            className="text-indigo-600 hover:text-indigo-700"
+                            title="Open Report"
+                        >
+                            <FaFileAlt className="w-5 h-5" />
+                        </button>
+                    </div>
+            
                 </div>
 
                 <div className="space-y-3 h-full ">
@@ -378,7 +392,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
                                         <ReusableSearchableInput
-                                            label="Party"
+                                            label="Customer"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
                                             optionList={supplierList?.data}
@@ -390,22 +404,13 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                         />
                                     </div>
 
-{/* 
-                                    <DropdownInput
-                                        name="Packing Cover"
-                                        options={packingCover}
-                                        value={packingCoverType}
-                                        setValue={setPackingCoverType}
-                                        disabled={readOnly}
-
-                                    /> */}
 
 
 
 
 
                                     <div className="mb-3">
-                                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
                                             Source Address
                                         </label>
                                         <div className="relative">
@@ -413,12 +418,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                 type="text"
                                                 className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                                 placeholder="Select address"
-                                                disabled={readOnly}
+                                                disabled
                                                 value={address}
-                                                onClick={() => setShowAddressPopup(true)}
+                                                // onClick={() => setShowAddressPopup(true)}
                                             />
 
-                                            <div
+                                            {/* <div
                                                 className="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-slate-400 hover:text-indigo-600 transition-colors"
                                                 onClick={() => {
                                                     if (!readOnly) {
@@ -428,16 +433,16 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                             >
 
                                                 <HiLocationMarker className="w-4 h-4" />
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         {showAddressPopup && (
-                                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+                                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50" disabled>
                                                 <div className="bg-[f1f1f0] rounded-lg shadow-xl w-full max-w-md">
                                                     <div className="flex justify-between items-center border-b border-slate-200 p-4">
                                                         <h3 className="text-lg font-medium text-slate-800">Select Address</h3>
                                                         <button
-                                                            onClick={() => setShowAddressPopup(false)}
+                                                            // onClick={() => setShowAddressPopup(false)}
                                                             className="text-white bg-red-600 rounded-full p-1 hover:bg-red-600"
                                                         >
                                                             <HiX className="w-5 h-5" />
@@ -505,7 +510,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-1 gap-x-3">
+                            <div className="grid grid-cols-2 gap-x-3">
                                 {/* <TextInput
                                     name="Contact Person"
                                     placeholder="Contact name"
@@ -522,24 +527,23 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                     setValue={setContactPersonName}
                                 
                                 />
-                                <TextInput
+                                {/* <TextInput
                                     name="Phone"
                                     value={phone}
                                     setValue={setPhone}
                                     readOnly={readOnly}
                                     disabled={true}
 
-                                // onChan
-                                // ge={(e) => setPhone(e.target.value)}
-                                />
-                                 {/* <DropdownWithSearch
+                                onChange={(e) => setPhone(e.target.value)}
+                                /> */}
+                                 <DropdownWithSearch
                                     options={partyId  ?  options  :  []}
                                     labelField={"mobileNo"}
                                     label={"Contact Person Name"}
-                                    value={contactPersonName}
+                                    value={partyId}
                                     setValue={setContactPersonName}
                                 
-                                /> */}
+                                />
 
                             </div>
                         </div>

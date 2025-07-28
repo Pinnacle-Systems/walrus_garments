@@ -53,7 +53,7 @@ import { useGetCountriesQuery, useGetCountryByIdQuery } from "../../../redux/ser
 import Swal from "sweetalert2";
 import Loader from "../Loader";
 import { faL } from "@fortawesome/free-solid-svg-icons";
-import { FaInfoCircle, FaPlus } from "react-icons/fa";
+import { FaInfoCircle, FaPlus, FaQuestionCircle, FaUpload } from "react-icons/fa";
 import AddContactPersonDetails from "./PartyContactDetails";
 import ContactPersonDetails from "./PartyContactDetails";
 import ArtDesignReport from "./ArtDesign/ArtDesignReport";
@@ -94,7 +94,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [accessoryGroup, setAccessoryGroup] = useState(false);
   const [accessoryGroupPrev, setAccessoryGroupPrev] = useState(false);
   const [priceTemplateId, setPriceTemplateId] = useState("");
-  const [currency, setCurrency] = useState("INR");
+  const [currency, setCurrency] = useState("");
   const [active, setActive] = useState(true);
   const [isSupplier, setSupplier] = useState(false);
   const [isClient, setClient] = useState();
@@ -104,6 +104,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [contactDetails, setContactDetails] = useState([]);
   const [contactNumber, setContactNumber] = useState("")
   const [alterContactNumber, setAlterContactNumber] = useState("")
+
+  const [msmeNo , setMsmeNo] = useState('')
 
     const [formReport, setFormReport] = useState(false);
   const [attachments, setAttachments] = useState([]);
@@ -115,7 +117,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [certificate, setCertificate] = useState([])
   const [searchValue, setSearchValue] = useState("");
   const [email, setEmail] = useState("")
-  const [addressOnlyRead, setAddressOnlyRead] = useState(true)
   const [errors, setErrors] = useState({});
   const [image, setImage] = useState({});
   const [partyCode,setPartyCode] = useState("");
@@ -142,6 +143,8 @@ const [branchLandMark, setBranchLandMark] = useState('');
 const [branchPincode, setBranchPincode] = useState('');
 const [branchContactDesignation, setBranchcontactDesignation] = useState('');
 const [branchContactDepartment, setBranchcontactDepartment] = useState('');
+const [branchContactPersonContact, setBranchContactPersonContact] = useState('');
+const [branchContactPersonAlterContact, setBranchContactPersonAlterContact] = useState('');
 const [branchBankname, setBranchBankName] = useState('');
 const [branchBankBranchName, setBranchBankBranchName] = useState('');
 const [branchAccountNumber, setBranchAccountNumber] = useState('');
@@ -161,10 +164,19 @@ const [branchIfscCode, setBranchIfscCode] = useState('');
   const [isContactPerson,setIsContactPerson]  = useState(false)
   const [designation,setDesignation]  = useState("")
    const [department,setDepartment ] = useState("")
+   const [contactId,setContactId] = useState("")
 const [contactPersonEmail,setContactPersonEmail]  = useState("")
 const[tooltipVisibleForMaterial,setTooltipVisibleForMaterial] =  useState("")
 const [branchAlterContact ,setBranchAlterContact] =  useState("")
 const [ branchContactPersonEmail , setBranchContactPersonEmail ] = useState("")
+
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  // const [readOnly, setReadOnly] = useState(false)
+  // const [id, setId] = useState("");
+  const [showImageTooltip, setShowImageTooltip] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
    const branchState = {
       branchModelOpen,
@@ -188,6 +200,10 @@ branchAlterContact,
 setBranchAlterContact,
 branchContactPersonEmail,
 setBranchContactPersonEmail,
+branchContactPersonContact,
+setBranchContactPersonContact,
+branchContactPersonAlterContact,
+setBranchContactPersonAlterContact,
 
   branchAliasName,
   setBranchAliasName,
@@ -213,9 +229,12 @@ setBranchContactPersonEmail,
   setBranchAccountNumber,
   branchIfscCode,
   setBranchIfscCode,
-  branchType,setBranchType
+  branchType,
+  setBranchType
 };
 
+
+console.log(branchState,"branchState")
 
   
   const childRecord = useRef(0);
@@ -235,11 +254,9 @@ setBranchContactPersonEmail,
     companyId,
   };
   const { data: cityList } = useGetCityQuery({ params });
-  const { data: countrytList } = useGetCountriesQuery({ params });
 
   const { data: payTermList } = useGetPaytermMasterQuery({ params });
 
-  const cerdificateDetail = useGetCertificateQuery({ params })
   const { data: currencyList } = useGetCurrencyMasterQuery({ params });
 
   const {
@@ -263,7 +280,7 @@ setBranchContactPersonEmail,
   }, [openPartyModal]);
 
 
-console.log(id,"id")
+console.log(currencyList,"currency")
   const {
     data: singleData,
     refetch,
@@ -314,7 +331,6 @@ if(view  ==  "all"){
       }
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
-      setMail(data?.mailId || "")
       setAliasName(data?.aliasName || "");
       setImage(data?.image || "");
       setDisplayName(data?.displayName || "");
@@ -339,7 +355,6 @@ if(view  ==  "all"){
       setWebsite(data?.website || "");
       setEmail(data?.email || "");
       setCity(data?.City?.id || "");
-      setCurrency(data?.Currency?.name || "");
       setActive(id ? data?.active : true);
 
 
@@ -355,7 +370,10 @@ if(view  ==  "all"){
       setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
       setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
       setContactPersonName(contactdetails?.contactPersonName  ? contactdetails?.contactPersonName : undefined )
-      setContact(contactdetails?.mobileNo  ?  contactdetails?.mobileNo  : undefined )
+      setContactPersonEmail(contactdetails?.email  ?  contactdetails?.email  : undefined )
+      setContactNumber(contactdetails?.mobileNo  ?  contactdetails?.mobileNo  : undefined )
+      setAlterContactNumber(contactdetails?.alterContactNumber  ?  contactdetails?.alterContactNumber  : undefined)
+      setContactId(contactdetails?.id  ? contactdetails?.id : undefined  )
       setDesignation(contactdetails?.Designation  ?  contactdetails?.Designation  : undefined)
       setDepartment(contactdetails?.department   ?  contactdetails?.department   : undefined  )
       setSupplier(data?.isSupplier || false);
@@ -366,6 +384,17 @@ if(view  ==  "all"){
       setBranchName(data?.branchName ? data?.branchName : "")
       setBranchCode(data?.branchCode ? data?.branchCode : "");
       setBranchInfo(data?.partyBranch ? data?.partyBranch : [])
+      setBankName(data?.bankName ? data?.bankName : "")
+      setBankBranchName(data?.branchName ? data?.branchName : "")
+      setAccountNumber(data?.accountNumber ? data?.accountNumber : "")
+      setIfscCode(data?.ifscCode ? data?.ifscCode : "")
+      setlandMark(data?.landMark ? data?.landMark : "")
+      setPartyCode(data?.code ? data?.code : "")
+      setMsmeNo(data?.msmeNo ? data?.msmeNo : "")
+      setContact(data?.contact ? data?.contact : "")
+      setAlterContactNumber(data?.alterContactNumber ? data?.alterContactNumber : "")
+      setCurrency(data?.currencyId   ? data?.currencyId : "");
+      setPayTermDay(data?.payTermDay ? data?.payTermDay : "0");
       setProcessDetails(
         data?.PartyOnProcess
           ? data.PartyOnProcess.map((item) => {
@@ -397,34 +426,30 @@ setSelected(
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    name,
-    code,
-    aliasName,
-    displayName,
-    address,
-    cityId: city,
-    pincode,
-    panNo,
+   
+    isClient, isSupplier,  name, aliasName,   partyCode, active ,  displayName,
+ 
+    address,landMark ,cityId: city, pincode,   email , contact ,
+
+
+     contactPersonName, designation, department, contactPersonEmail, contactNumber ,    alterContactNumber,  website, contactId ,
+
+    currencyId: currency, payTermDay , panNo  ,    gstNo,  
+  
+    bankname , bankBranchName , accountNumber , ifscCode , msmeNo  ,    cinNo  ,  
+    
+  
     tinNo,
     certificate,
     cstNo,
     cstDate,
-    cinNo,
     faxNo,
-    email,
-    website,
     igst,
-    currencyId: currency,
     costCode,
-    gstNo,
-    active,
-    isSupplier,
-    isClient,
     accessoryGroup,
     companyId,
     shippingAddress,
     contactDetails,
-    payTermDay,
     accessoryItemList,
     processDetails: processDetails
       ? processDetails.map((item) => item.value)
@@ -437,16 +462,18 @@ setSelected(
     isGy,
     isDy,
     partyBranch,
-    contactNumber,
-    alterContactNumber,
+  attachments,
+
+   
+   
+
+ 
   
-    
-    
-    
-    branchInfo : branchInfo?.filter(item  => item.branchName !== "") , mail,
     partyMaterials : selected,   material,  materialActive, rawMaterial,
- branchStateValues : {
-  branchModelOpen,
+    
+    branchStateValues : {
+    
+            
             branchName,
             branchAddress,
             branchContact,
@@ -454,7 +481,6 @@ setSelected(
             branchEmail,
             openingHours,
             branchWebsite,
-
             branchAliasName,
             branchCode,
             branchActive,
@@ -467,9 +493,10 @@ setSelected(
             branchBankBranchName,
             branchAccountNumber,
             branchIfscCode,
+            branchContactPersonEmail,
+            branchContactPersonContact
 },
 
-    contact,department,designation,contactPersonName,contactPersonEmail
 
   };
 
@@ -493,34 +520,50 @@ setSelected(
 
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
     try {
+                           
+
          const formData = new FormData();
       for (let key in data) {
+         console.log(key ,"hit")
         if (key === 'attachments') {
-          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? (console.log(i.filePath.name,"filepath")) : i.filePath }))));
+
+          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
           data[key].forEach(option => {
            
             if (option?.filePath instanceof File) {
-              formData.append('file', option.filePath);
+              formData.append('image', option.filePath);
             }
           });
+        }
+        else{
+          formData.append(key, data[key]);
         } 
       }
-      console.log(formData,"formData")
-       data.attachmentsFormData = formData;
       
       let returnData;
       if (text === "Updated") {
-        returnData = await callback({ id, body: data }).unwrap();
+        returnData = await callback({ id, body: formData }).unwrap();
       } else {
-        console.log("add")
-        returnData = await callback(data).unwrap();
-      }
-          Swal.fire({
+        try{
+
+          returnData = await callback(data).unwrap();
+                 Swal.fire({
         icon: 'success',
         title: `${text || 'Saved'} Successfully`,
         showConfirmButton: false,
         timer: 2000
       });
+        }
+        catch (error) {
+ console.error("Submission error:", error);
+            Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+        }
+      }
+   
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -920,11 +963,12 @@ const SaveBranch  = (   )  => {
        if(isLoading  ||  isFetching ) return <Loader/>
 console.log(singleData,"singleData")
 
-  if (partyId) {
-    return (
-      <>
-         <Modal
-          isOpen={form}
+
+if(partyId){
+  return (
+    <>
+     <Modal
+              isOpen={form}
           form={form}
            widthClass={`${"w-[85%] "} ${isAddressExpanded ? "h-[95%]" : "h-[97%]"}`}
                 onClose={() => {
@@ -942,17 +986,19 @@ console.log(singleData,"singleData")
               <Modal
                 isOpen={branchModelOpen}
                 form={form}
-                widthClass={`${"w-[90%] h-[90%]"}`}
+                widthClass={` ${branchForm  ?  "w-[60%] h-[80%]" : "w-[90%] h-[90%]" } `}
                 setBranchModelOpen={setBranchModelOpen}
                 onClose={() => {
                   setBranchModelOpen(false)
+                  refetch()
                 }}
               >
 
 
 
                 <AddBranch 
-                                singleData={singleData} partyId={id}  branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
+                  
+                singleData={singleData} partyId={id}  branchEmail={branchEmail} setBranchEmail={setBranchEmail} setBranchAddress={setBranchAddress}
                   branchName={branchName} setBranchName={setBranchName} branchCode={branchCode} setBranchCode={setBranchCode}
                   branchAddress={branchAddress} branchContact={branchContact} setBranchContact={setBranchContact} 
                   branchContactPerson={branchContactPerson} setBranchcontactPerson={setBranchcontactPerson}  branchWebsite={branchWebsite}
@@ -986,6 +1032,8 @@ console.log(singleData,"singleData")
              
               >
                   <RawMaterial    
+                      addData={addData} 
+                      updateData={updateData}
                       SaveBranch={SaveBranch}
                       material={material}
                       setMaterial={setMaterial}
@@ -999,8 +1047,47 @@ console.log(singleData,"singleData")
 
                   />
               </Modal>
-                
- <div className="h-full flex flex-col bg-[f1f1f0] ">
+                     <Modal
+                    isOpen={isContactPerson}
+                    widthClass={`${ branchForm ?   "w-[33%] h-[71%]"  : "w-[60%] h-[68%]"  }`}
+                    setIsContactPerson={setIsContactPerson}
+                    onClose={() => {
+                      setIsContactPerson(false)
+                      // setMaterialForm(false)
+                      }}
+                      allData ={allData}
+             
+              >
+                  <ContactPersonDetails    
+                     partyData={singleData?.data}   partyId={id} contactNumber={contactNumber} setContactNumber={setContactNumber} 
+                     contactPersonName={contactPersonName}  setContactPersonName={setContactPersonName}  designation={designation}
+                     setDesignation={setDesignation} setDepartment={setDepartment}   department={department}
+                      setIsContactPerson={setIsContactPerson}  setContactPersonEmail={setContactPersonEmail}  contactPersonEmail={contactPersonEmail}
+                       branchForm={branchForm}   refetch={refetch} syncFormWithDb ={syncFormWithDb} alterContactNumber={alterContactNumber}
+                      setAlterContactNumber={setAlterContactNumber}
+                       setBranchForm={setBranchForm}
+                        onClose={() => {
+                        setIsContactPerson(false) 
+                      }}
+
+                  />
+              </Modal>
+                    <Modal isOpen={formReport}
+        onClose={() => setFormReport(false)} widthClass={"p-3 h-[70%] w-[70%]"}
+      >
+        <ArtDesignReport
+          // userRole={userRole}
+          setFormReport={setFormReport}
+          tableWidth="100%"
+          formReport={formReport}
+          setAttachments={setAttachments}
+          attachments={attachments}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
+      </Modal>
+         
+       <div className="h-full flex flex-col bg-[f1f1f0] ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
                 <h2 className="text-md font-semibold text-gray-800">
@@ -1015,17 +1102,17 @@ console.log(singleData,"singleData")
     <button
       onClick={() => {
         if(name ){
+            setBranchModelOpen(true)
+            setBranchForm(false)
+          }
 
-          setBranchModelOpen(true)
-          setBranchForm(false)
-        }
-        else{
- Swal.fire({
-                             icon: 'warning',
-                             title: `Enter ${isSupplier ? "Supplier Details" : "Customer Details"} `,
-                             showConfirmButton: false,
-                             timer: 2000
-                           });
+          else{
+            Swal.fire({
+                  icon: 'warning',
+                  title: `Enter ${isSupplier ? "Supplier Details" : "Customer Details"} `,
+                  showConfirmButton: false,
+                  timer: 2000
+                });
         }
 
       }}
@@ -1095,8 +1182,9 @@ console.log(singleData,"singleData")
                                                      name="type"
                                                      checked={isClient}
                                                      onChange={() => handleChange('client')}
+                                                     readOnly={readOnly}
                                                    />
-                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
+                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Customer</label>
                                         </div>
                              <div className="flex flex-row gap-2">
 
@@ -1105,6 +1193,8 @@ console.log(singleData,"singleData")
                                     name="type"
                                     checked={isSupplier}
                                     onChange={() => handleChange('supplier')}
+                                                                                         readOnly={readOnly}
+
                                   />
                                   <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
                                 </div>
@@ -1322,9 +1412,9 @@ console.log(singleData,"singleData")
                                                        <TextInput
                                         name={"Contact Number"}
                                         type="text"
-                                        value={email}
+                                        value={contact}
                 
-                                        setValue={setEmail}
+                                        setValue={setContact}
                                         readOnly={readOnly}
                                         disabled={childRecord.current > 0}
                                         className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1421,9 +1511,9 @@ console.log(singleData,"singleData")
                                                                         <TextInput
                                                                             name="Email"
                                                                             type="text"
-                                                                            value={branchEmail}
+                                                                            value={contactPersonEmail}
                                                     
-                                                                            setValue={setBranchEmail}
+                                                                            setValue={setContactPersonEmail}
                                                                             readOnly={readOnly}
                                                                             disabled={childRecord.current > 0}
                                                                             className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -1458,32 +1548,8 @@ console.log(singleData,"singleData")
                                             
 
                                                                        
-                                                                       {/* <div className='col-span-2 flex flex-row gap-3' >
-                                                                     
-                                                                    
-                                                             </div> */}
-                                                              
-                                                                              {/* <TextInput
-                                                                    name="Fax"
-                                                                    type="number"
-                                                                    // value={contact}
-                                            
-                                                                    // setValue={setContact}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />     */}
-                                                                          {/* <TextInput
-                                                                    name="Website"
-                                                                    type="text"
-                                                                    value={website}
-                                            
-                                                                    setValue={setWebsite}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  /> */}
-                                                                    
+                                                                 
+                                                         
                                                                                     
                       </div>
                     </div> 
@@ -1558,8 +1624,8 @@ console.log(singleData,"singleData")
                                   <TextInput
                                                     name="MSME CERTFICATE  No"
                                                     type="text"
-                                                    value={cstNo}
-                                                    setValue={setCstNo}
+                                                    value={msmeNo}
+                                                    setValue={setMsmeNo}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100"
@@ -1636,20 +1702,20 @@ console.log(singleData,"singleData")
 
      
                    </div>
-                               <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+              <div className="lg:col-span-4 space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200  h-[240px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Attchments</h3>
                  <div className="space-y-2">
-                                        <div className="flex pt-4">
-            <button
-              className="relative  h-6 px-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white
-              rounded shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-300 ease-in-out overflow-hidden"
-              onClick={() => setFormReport(true)}
-            >
-              <span className="absolute  bg-white opacity-10 "></span>
-              <span className="relative z-10 text-[12px]"> Attach Documents</span>
-            </button>
-          </div>
+       <div className="flex pt-4">
+      <button
+        className="relative w-20 h-7 bg-gray-800    text-white rounded-md shadow-md hover:shadow-xl hover:scale-105 
+        transform transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center"
+        onClick={() => setFormReport(true)}
+      >
+        <span className="absolute inset-0 bg-white opacity-10 rounded-md"></span>
+        <Paperclip className="relative z-10 w-5 h-5" />
+      </button>
+    </div>
                     </div> 
                   </div>
 
@@ -1664,12 +1730,9 @@ console.log(singleData,"singleData")
       
        
         </Modal>
-      </>
-
-    );
-  }
-  else {
-
+    </>
+  )
+}
 
     return (
       <div onKeyDown={handleKeyDown}>
@@ -1741,7 +1804,7 @@ console.log(singleData,"singleData")
                     setReadOnly={setReadOnly}
                     deleteData={deleteData}
                 /> */}
-              <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 w-">
                         <ReusableTable
                             columns={columns}
                             data={filterParty || []}
@@ -1802,7 +1865,7 @@ console.log(singleData,"singleData")
                    removeItem={removeItem} setBranchInfo={setBranchInfo} branchInfo={branchInfo}  
                   partyBranch={partyBranch} setPartyBranch={setPartyBranch} setBranchModelOpen={setBranchModelOpen} name={name}
                    setBranchType ={setBranchType} handleInputbranch={handleInputbranch} deleteBranch={deleteBranch}
-                 cityList={cityList}  branchState={branchState} refetch={refetch} 
+                 cityList={cityList}  branchState={branchState} refetch={refetch}  branchActive={branchActive}
                 />
 
 
@@ -1971,8 +2034,9 @@ console.log(singleData,"singleData")
                                                      name="type"
                                                      checked={isClient}
                                                      onChange={() => handleChange('client')}
+                                                     readOnly={readOnly}
                                                    />
-                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Client</label>
+                                                   <label className="block text-xs font-bold text-gray-600 mt-1">Customer</label>
                                         </div>
                              <div className="flex flex-row gap-2">
 
@@ -1981,6 +2045,8 @@ console.log(singleData,"singleData")
                                     name="type"
                                     checked={isSupplier}
                                     onChange={() => handleChange('supplier')}
+                                                                                         readOnly={readOnly}
+
                                   />
                                   <label className="block text-xs font-bold text-gray-600 mt-1">Supplier</label>
                                 </div>
@@ -2197,10 +2263,10 @@ console.log(singleData,"singleData")
                                      <div>
                                                        <TextInput
                                         name={"Contact Number"}
-                                        type="text"
-                                        value={email}
+                                        type="number"
+                                        value={contact}
                 
-                                        setValue={setEmail}
+                                        setValue={setContact}
                                         readOnly={readOnly}
                                         disabled={childRecord.current > 0}
                                         className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -2297,9 +2363,9 @@ console.log(singleData,"singleData")
                                                                         <TextInput
                                                                             name="Email"
                                                                             type="text"
-                                                                            value={branchEmail}
+                                                                            value={contactPersonEmail}
                                                     
-                                                                            setValue={setBranchEmail}
+                                                                            setValue={setContactPersonEmail}
                                                                             readOnly={readOnly}
                                                                             disabled={childRecord.current > 0}
                                                                             className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -2334,32 +2400,8 @@ console.log(singleData,"singleData")
                                             
 
                                                                        
-                                                                       {/* <div className='col-span-2 flex flex-row gap-3' >
-                                                                     
-                                                                    
-                                                             </div> */}
-                                                              
-                                                                              {/* <TextInput
-                                                                    name="Fax"
-                                                                    type="number"
-                                                                    // value={contact}
-                                            
-                                                                    // setValue={setContact}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  />     */}
-                                                                          {/* <TextInput
-                                                                    name="Website"
-                                                                    type="text"
-                                                                    value={website}
-                                            
-                                                                    setValue={setWebsite}
-                                                                    readOnly={readOnly}
-                                                                    disabled={childRecord.current > 0}
-                                                                    className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                                  /> */}
-                                                                    
+                                                                 
+                                                         
                                                                                     
                       </div>
                     </div> 
@@ -2404,7 +2446,7 @@ console.log(singleData,"singleData")
                                       id
                                         ? payTermList?.data
                                         : payTermList?.data?.filter((item) => item.active),
-                                      "aliasName",
+                                      "name",
                                       "id"
                                     )}
                                     value={payTermDay}
@@ -2434,8 +2476,8 @@ console.log(singleData,"singleData")
                                   <TextInput
                                                     name="MSME CERTFICATE  No"
                                                     type="text"
-                                                    value={cstNo}
-                                                    setValue={setCstNo}
+                                                    value={msmeNo}
+                                                    setValue={setMsmeNo}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
                                                     className="focus:ring-2 focus:ring-blue-100"
@@ -2526,6 +2568,85 @@ console.log(singleData,"singleData")
         <Paperclip className="relative z-10 w-5 h-5" />
       </button>
     </div>
+          {/* <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-medium text-slate-700">
+                        Fabric Image Upload
+                      </h3>
+                      <div
+                        className="relative"
+                        onMouseEnter={() => setShowImageTooltip(true)}
+                        onMouseLeave={() => setShowImageTooltip(false)}
+                      >
+                        <FaQuestionCircle className="text-slate-400 text-sm cursor-help" />
+                        {showImageTooltip && (
+                          <div className="absolute z-10 left-full ml-2 w-48 bg-slate-800 text-white text-xs rounded p-2 shadow-lg">
+                            Upload high-quality fabric images (max 5MB)
+                            <div className="absolute -left-1 top-2 w-2.5 h-2.5 bg-slate-800 transform rotate-45"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-2 border-dashed border-slate-200 rounded-lg p-4 flex flex-col items-center">
+                      {imagePreview ? (
+                        <>
+                          <img
+                            src={imagePreview}
+                            alt="Fabric preview"
+                            className="h-48 object-contain mb-2 cursor-pointer"
+                            onClick={() => setShowModal(true)}
+                            disabled={readOnly}
+                          />
+                          <button
+                            // onClick={handleRemoveImage}
+                            className="text-xs text-red-600 hover:text-red-800"
+                            disabled={readOnly}
+                          >
+                            Remove Image
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <FaUpload className="text-slate-400 text-2xl mb-2" />
+                          <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded transition-colors">
+                            Choose File
+                            <input
+                              type="file"
+                              className="hidden"
+                              name="fabricImage"
+                              accept="image/*"
+                              // onChange={handleImageUpload}
+                              disabled={readOnly}
+                              // ref={fileInputRef}
+                            />
+                          </label>
+                          <p className="text-xs text-slate-500 mt-1">
+                            JPEG, PNG (max 5MB)
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    {showModal && (
+                      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+                        <div className="bg-white p-4 rounded shadow-lg max-w-full max-h-full">
+                          <img
+                            src={imagePreview}
+                            disabled={readOnly}
+                            alt="Full preview"
+                            className="max-h-[80vh] max-w-[90vw] object-contain"
+                          />
+                          <button
+                            onClick={() => setShowModal(false)}
+                            className="block mt-4 mx-auto text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div> */}
                     </div> 
                   </div>
 
@@ -2545,7 +2666,7 @@ console.log(singleData,"singleData")
     );
   }
 
-}
+
 
 
                       

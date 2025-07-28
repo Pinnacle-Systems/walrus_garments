@@ -20,7 +20,7 @@ import {
   setLastTab,
   setOpenPartyModal,
 } from "../../../redux/features/openModel";
-import { HiPencil, HiTrash } from "react-icons/hi";
+import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 const AccessoryPoItems = ({
   id,
   poItems,
@@ -118,6 +118,20 @@ const AccessoryPoItems = ({
     return acc ? acc.accessoryItem.name : null;
   }
 
+    const addNewRow = () => {
+      const newRow = {
+        yarnId: "",
+        qty: "",
+        tax: "0",
+        colorId: "",
+        uomId: "",
+        price: "",
+        discountTypes: "",
+        discountValue: "0.00",
+        noOfBags : "0.00"
+      };
+      setPoItems([...poItems, newRow]);
+    };
   function findAccessoryGroupName(id) {
     if (!accessoryList) return 0;
     let acc = accessoryList.data.find(
@@ -242,6 +256,12 @@ const AccessoryPoItems = ({
     dispatch(setLastTab(activeTab));
     dispatch(push({ name: masterName }));
   };
+
+    const deleteRow = (id) => {
+    setPoItems((yarnBlend) =>
+      yarnBlend.filter((row, index) => index !== parseInt(id))
+    );
+  };
   return (
     <>
       <Modal
@@ -257,8 +277,24 @@ const AccessoryPoItems = ({
           isSupplierOutside={isSupplierOutside}
         />
       </Modal>
-      <div className={` relative w-full overflow-y-auto p-3`}>
-            <table className="w-full border-collapse table-fixed">
+      <div className={` relative w-full overflow-y-auto p-3 max-h-[250px] overflow-auto`}>
+              <div className="flex justify-between items-center mb-2">
+                            <h2 className="font-bold text-slate-700">List Of Items</h2>
+                            <div className="flex gap-2 items-center">
+        
+                                <button
+                                    onClick={() => {
+                                        addNewRow()
+                                    }}
+                                    className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+                                >
+                                    <HiPlus className="w-3 h-3 mr-1" />
+                                    Add Item
+                                </button>
+                            </div>
+        
+                        </div>
+            <table className="w-full border-collapse table-fixed ">
                                 <thead className="bg-gray-200 text-gray-800">
               <tr>
                                         <th
@@ -321,7 +357,7 @@ const AccessoryPoItems = ({
                                         >
                                             Gross
                                         </th>
-                                         <th
+                                         {/* <th
         
                                             className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                         >
@@ -332,7 +368,7 @@ const AccessoryPoItems = ({
                                             className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                         >
                                              Price With Tax
-                                        </th>
+                                        </th> */}
                                          <th
         
                                             className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -503,7 +539,7 @@ const AccessoryPoItems = ({
                                                 min={"0"}
                                                 type="number"
                                                 onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
                                                 value={(!row.qty) ? 0 : row.qty}
                                                 disabled={readOnly}
                                                 onChange={(e) =>
@@ -527,7 +563,7 @@ const AccessoryPoItems = ({
                                                 min={"0"}
                                                 type="number"
                                                 onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
                                                 value={(!row.price) ? 0 : row.price}
                                                 disabled={readOnly}
                                                 onChange={(e) =>
@@ -549,7 +585,7 @@ const AccessoryPoItems = ({
                                                 disabled={true}
                                             />
                                         </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
+                                        {/* <td className='py-0.5 border border-gray-300 text-[11px]'>
                                             <input
                                                 type="number"
                                                 onKeyDown={e => {
@@ -578,11 +614,11 @@ const AccessoryPoItems = ({
                                                 type="number"
                                                 onFocus={(e) => e.target.select()}
                                                 className="text-right rounded py-1 px-1 w-16 table-data-input"
-                                                // value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
-                                                // value={getPriceWithTax(row.qty, row.price, row.taxPercent)}
+                                                value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
+                                                value={getPriceWithTax(row.qty, row.price, row.taxPercent)}
                                                 disabled={true}
                                             />
-                                        </td>
+                                        </td> */}
                                           <td className="w-16 px-1 py-1 text-center">
                                                 <div className="flex space-x-2  justify-center">
         
@@ -604,7 +640,7 @@ const AccessoryPoItems = ({
                                                     </button>
                                                     <span className="tooltip-text">Edit</span>
                                                     <button
-                                                        // onClick={() => deleteRow(index)}
+                                                        onClick={() => deleteRow(index)}
                                                         className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
                                                     >
                                                         <HiTrash className="w-4 h-4" />

@@ -53,13 +53,13 @@ async function create(body) {
     const data = await prisma.partyBranch.create(
         {
             data: {
-                partyId : partyId|| undefined,
+                                  partyId : partyId|| undefined,
                           
                                     branchName: branchStateValues?.branchName || undefined,
                                     branchAliasName: branchStateValues?.branchAliasName || undefined,
                                     branchCode: branchStateValues?.branchCode || undefined,
                                     active: branchStateValues?.active ? branchStateValues?.active  : false,
-                                    branchCityId: branchStateValues?.branchCityId || undefined,
+                                    branchCityId: branchStateValues?.branchCity || undefined,
                                     branchLandMark: branchStateValues?.branchLandMark || undefined,
                                     branchAddress: branchStateValues?.branchAddress || undefined,
                                     branchPincode: branchStateValues?.branchPincode || undefined,
@@ -75,7 +75,7 @@ async function create(body) {
                                     branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
                                     isMainBranch: branchStateValues?.isMainBranch || undefined,
                                     branchTypeId: branchStateValues?.branchTypeId || undefined,
-
+                                    
             }
         }
     )

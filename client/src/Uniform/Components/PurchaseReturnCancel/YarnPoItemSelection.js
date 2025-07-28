@@ -107,26 +107,26 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                     <label>Design</label>
 
                                 </th>
-                                <th className="border-2  top-0 stick-bg">
+                                {/* <th className="border-2  top-0 stick-bg">
                                     <label>Gauge</label>
 
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
+                                </th> */}
+                                {/* <th className="border-2  top-0 stick-bg">
                                     <label>LL</label>
 
-                                </th>
+                                </th> */}
                                 <th className="border-2  top-0 stick-bg">
                                     <label>GSM</label>
 
                                 </th>
-                                <th className="border-2  top-0 stick-bg">
+                                {/* <th className="border-2  top-0 stick-bg">
                                     <label>K-Dia</label>
 
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
                                     <label>F-Dia</label>
 
-                                </th>
+                                </th> */}
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Uom</label>
 
@@ -158,11 +158,11 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                         <td className='py-1'> {dataObj?.Fabric?.name}</td>
                                         <td className='py-1'> {dataObj?.Color?.name}</td>
                                         <td className='py-1'> {dataObj?.Design?.name}</td>
-                                        <td className='py-1'> {dataObj?.Gauge?.name}</td>
-                                        <td className='py-1'> {dataObj?.LoopLength?.name}</td>
+                                        {/* <td className='py-1'> {dataObj?.Gauge?.name}</td> */}
+                                        {/* <td className='py-1'> {dataObj?.LoopLength?.name}</td> */}
                                         <td className='py-1'> {dataObj?.Gsm?.name}</td>
-                                        <td className='py-1'> {dataObj?.KDia?.name}</td>
-                                        <td className='py-1'> {dataObj?.FDia?.name}</td>
+                                        {/* <td className='py-1'> {dataObj?.KDia?.name}</td>
+                                        <td className='py-1'> {dataObj?.FDia?.name}</td> */}
                                         <td className='py-1'> {dataObj?.Uom?.name}</td>
                                     </tr>
                                 ))}

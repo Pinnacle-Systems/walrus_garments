@@ -4,12 +4,15 @@ import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import SampleForm from './SampleForm';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
-import { useDeleteOrderMutation, useGetOrderQuery } from '../../../redux/uniformService/OrderService';
+import {  useGetOrderByIdQuery, useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import { getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import SampleEntryUi from './sampeEntryFormUi';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
-import {  useGetSampleQuery } from '../../../redux/uniformService/SampleService';
+import {  useDeleteSampleMutation, useGetSampleByIdQuery, useGetSampleQuery } from '../../../redux/uniformService/SampleService';
+import { ReusableTable } from '../../../Inputs';
+import moment from 'moment';
+import Swal from 'sweetalert2';
 
 
 const SampleEntry = () => {
@@ -25,42 +28,56 @@ const SampleEntry = () => {
     const params = {
         branchId, userId, finYearId
     };
+
     const { data: orderData } = useGetOrderQuery({ params });
-    const { data: sampleEntryData } = useGetSampleQuery({ params });
+    const { data: allData  , isLoading  , isFetching } = useGetSampleQuery({ params });
+    
+        const {
+            data: singleOrderData,
+            isFetching: isSingleOrderFetching,
+            isLoading: isSingleOrderLoading,
+        } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
     const { data: partyData } = useGetPartyQuery({ params })
-    const [removeData] = useDeleteOrderMutation();
+    const [removeData] = useDeleteSampleMutation();
 
     const columns = [
         {
             header: 'S.No',
             accessor: (item, index) => index + 1,
-            cellClass: () => 'font-medium text-gray-900'
+          className : 'font-medium text-gray-900 w-[5%] text-center'
         },
         {
-            header: 'Sample No.',
+            header: 'Sample No',
             accessor: (item) => item.docId,
-            cellClass: () => 'font-medium text-gray-900'
+          className :'font-medium text-gray-900 w-[10%]'
         },
         {
             header: 'Sample Date',
-            accessor: (item) => item.createdAt
+            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD") ,
+             className :'font-medium text-gray-900 w-[10%]'
         },
         {
-            header: 'Party',
+            header: 'Customer',
             accessor: (item) => item.Party?.name,
-            cellClass: () => 'uppercase'
-        },
+            className :'font-medium text-gray-900 w-[25%]'      
+          },
         {
             header: 'ContactPerson',
             accessor: (item) => item.contactPersonName,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
+             className :'font-medium text-gray-900 w-[15%]'      
+              },
         {
             header: 'Contact',
             accessor: (item) => item.phone,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
+            className :'font-medium text-gray-900  w-[10%]'      
+          },
+              {
+            header: '',
+            accessor: (item) => item.none,
+            className :'font-medium text-gray-900  w-[60%]'      
+          },
+          
     ];
 
 
@@ -87,9 +104,28 @@ const SampleEntry = () => {
                 await removeData(id)
                 setId("");
                 onNew();
-                toast.success("Deleted Successfully");
+                
+                                Swal.fire({
+                                    title:  "Deleted Successfully",
+                                    icon: "success",
+                                    draggable: true,
+                                    timer: 1000, 
+                                    showConfirmButton: false, 
+                                    didOpen: () => {
+                                        Swal.showLoading(); 
+                                    }
+                                });
             } catch (error) {
-                toast.error("something went wrong");
+                  Swal.fire({
+                                    title:  error,
+                                    icon: "error",
+                                    draggable: true,
+                                    timer: 1000, 
+                                    showConfirmButton: false, 
+                                    didOpen: () => {
+                                        Swal.showLoading(); 
+                                    }
+                                });
             }
         }
 
@@ -101,16 +137,19 @@ const SampleEntry = () => {
 
     }
 
+
     return (
         <>
             {showManufacturer ? (
                 <SampleEntryUi sampleDetails={sampleDetails} setSampleDetails={setSampleDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-                    partyData={partyData?.data} orderData={orderData} orderId={orderId} setOrderId={setOrderId}
+                    partyData={partyData?.data} orderData={orderData} orderId={orderId} setOrderId={setOrderId}  allData={allData?.data}  
+                      isLoading = {isLoading}   isFetching ={isFetching}
+                      singleOrderData={singleOrderData} isSingleOrderFetching ={isSingleOrderFetching}  isSingleOrderLoading ={isSingleOrderLoading}
                 />
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
                     <h1 className="text-2xl font-bold text-gray-800"> Sample Entry</h1>
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select
                                 value={selectedPeriod}
@@ -132,16 +171,20 @@ const SampleEntry = () => {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setShowManufacturer(true); onNew() }}
+                            onClick={() => { 
+                                setShowManufacturer(true)
+                                onNew()
+                                setSampleDetails([])
+                             }}
                         >
                             <FaPlus /> Create New
                         </button>
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <CommonTable
+                        <ReusableTable
                             columns={columns}
-                            data={sampleEntryData?.data || []}
+                            data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

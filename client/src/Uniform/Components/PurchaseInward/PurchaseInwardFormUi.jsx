@@ -295,18 +295,20 @@ console.log(data,"data")
 
   function filterSupplier() {
     let finalSupplier = []
-    if (transType.toLowerCase().includes("yarn")) {
-      finalSupplier = allSuppliers.filter(s => s.yarn)
-    } else if (transType.toLowerCase().includes("fabric")) {
-      finalSupplier = allSuppliers.filter(s => s.fabric)
-    } 
-    else if (transType.toLowerCase() === "accessory" ) {
-      finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
-    } 
-    else {
-      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
+    // if (transType.toLowerCase().includes("yarn")) {
+    //   finalSupplier = allSuppliers.filter(s => s.yarn)
+    // } else if (transType.toLowerCase().includes("fabric")) {
+    //   finalSupplier = allSuppliers.filter(s => s.fabric)
+    // } 
+    // else if (transType.toLowerCase() === "accessory" ) {
+    //   finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
+    // } 
+    // else {
+    //   finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
 
-    }
+    // }
+    finalSupplier = allSuppliers.filter(s => s.isSupplier )
+
     return finalSupplier
   }
   let supplierListBasedOnSupply = filterSupplier()
@@ -415,9 +417,9 @@ console.log(data,"data")
 
 
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                        <h2 className="font-medium text-slate-700 mb-2">
+                        {/* <h2 className="font-medium text-slate-700 mb-2">
                             Inward Details
-                        </h2>
+                        </h2> */}
                         <div className="grid grid-cols-2 gap-1">
                             <ReusableInput label="Doc. Id" readOnly value={docId} />
                             <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
@@ -441,7 +443,7 @@ console.log(data,"data")
                             <div className="grid grid-cols-2 gap-1">
                           
                                <ReusableSearchableInput
-                                            label="Party"
+                                            label="Customer"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
                                             optionList={supplierList?.data}
@@ -482,10 +484,10 @@ console.log(data,"data")
                                 < div className="">
                                     <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                         onClick={() => {
-                                            if (!supplierId) {
-                                                toast.info("Please Select Suppplier", { position: "top-center" })
-                                                return
-                                            }
+                                            // if (!supplierId) {
+                                            //     toast.info("Please Select Suppplier", { position: "top-center" })
+                                            //     return
+                                            // }
                                             setInwardItemSelection(true)
                                         }}
                                     >Select Items

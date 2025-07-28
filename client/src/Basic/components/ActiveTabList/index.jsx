@@ -5,7 +5,8 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
-import {  BranchType, OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
+import {  BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
+import RequirementPlanningform from "../../../Uniform/Components/RequireMentPlanningForm";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -56,7 +57,7 @@ const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
 const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
 const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
-
+const RequirementPlanningForm = lazy(() => import("../../../Uniform/Components/RequireMentPlanningForm"));
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
   const dispatch = useDispatch();
@@ -106,6 +107,7 @@ const ActiveTabList = () => {
     "SOCKS TYPE MASTER": <SocksType />,
     "PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
+    "GSM MASTER" : <GsmMaster/>,
     "PAY TERM MASTER": <PayTermMaster />,
     "MEASUREMENT MASTER": <MeasurementMaster />,
     "FABRIC MASTER": <FabricMaster />,
@@ -117,7 +119,8 @@ const ActiveTabList = () => {
     "PURCHASE RETURN": <PurchaseReturn />,
     "OPENING STOCK" : <OpeningStock/>,
     "PURCHASE ORDER CANCEL" : <PurchaseCancel/>,
-    "BRANCH TYPE MASTER"  : <BranchType/>
+    "BRANCH TYPE MASTER"  : <BranchType/> ,
+    "REQUIREMENT PLANNING FORM"  :  <RequirementPlanningForm/>
 
   };
 

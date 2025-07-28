@@ -293,7 +293,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
         {
             header: 'Inward No',
             accessor: (item) => item.docId,
-            className: 'font-medium text-gray-900 w-20'
+            className: 'font-medium uppercase text-gray-900 w-24'
         },
            {
             header: 'TransType',
@@ -374,7 +374,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
 
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Purchase Order</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select

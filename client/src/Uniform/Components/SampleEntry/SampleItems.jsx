@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { HiPlus, HiPencil, HiTrash } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { getImageUrlPath } from "../../../helper";
@@ -17,8 +17,11 @@ import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
 import TableGridItems from './TableGridItems';
 import Modal from "../../../UiComponents/Modal";
 import { FaInfoCircle } from 'react-icons/fa';
+import SizeDetailsSubGrid from './SizeDetailsSubGrid';
+import { useGetgsmQuery } from '../../../redux/uniformService/GsmMasterServices';
+import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 
-export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetails, id }) {
+export default function SampleItems({ newSampleEntry , readOnly,   setSampleDetails,  sampleDetails, id ,orderId }) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [tableDataView, setTableDataView] = useState(false)
     const [currentItem, setCurrentItem] = useState();
@@ -39,12 +42,11 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
         useGetSocksTypeQuery({ params: { ...params } });
     const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
     const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-    const { data: machineList } = useGetMachineQuery({ params: { ...params } });
-    const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
+    const { data: gsmList } = useGetgsmQuery({ params: { ...params } });
+    const { data: uomList } = useGetUomQuery({ params: { ...params } });
 
     const {
-        data: colorlist,
+        data: colorList,
         isLoading: isColorListLoading,
         isFetching: isColorListFetching,
     } = useGetColorMasterQuery({ params });
@@ -56,7 +58,8 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
             {
                 yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
                 measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-                stripecolorId: "", design: "", noOfStripes: "0", qty: "0", socksTypeId: ""
+                stripecolorId: "", design: "", noOfStripes: "0", qty: 0.00, socksTypeId: "",
+                sampleSizeDetails : [{qty : "0.00" , sizeId : "" , Weight : '0.000'}]
             }
         ]);
     }
@@ -65,7 +68,6 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
 
 
 
-    console.log(sampleDetails,"sampleDetails")
 
     function handleInputChange(value, index, field) {
         setSampleDetails(sampleDetails => {
@@ -101,25 +103,46 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
     }
 
 
+        function handleAdd(index) {
+            setSampleDetails(prev => {
+                                const newPrev = structuredClone(prev);
+
+
+                                if (!Array.isArray(newPrev[index].orderSizeDetails)) {
+                                    newPrev[index].orderSizeDetails = [];
+                                }
+                                newPrev[index].sampleSizeDetails.push({
+                                    qty  : 0.00 ,sizeId  : ""  , weight : ""
+                                });
+                                return newPrev;
+                            });
+                        }
+
+                                
+
+
+
     return (
 
         <>
-            <Modal
+            {/* <Modal
                 isOpen={tableDataView}
                 onClose={() => setTableDataView(false)}
-                widthClass={"px-2 h-[37%] w-[50%]"}
+                widthClass={"px-2 h-[47%] w-[50%]"}
             >
                 <TableGridItems id={id} gridEditableIndex={gridEditableIndex} orderDetails={sampleDetails} handleInputChange={handleInputChange} item={currentItem} index={currentIndex} Yarnlist={Yarnlist} machineList={machineList} socksMaterialData={socksMaterialData}
                     colorlist={colorlist} socksTypeData={socksTypeData}
                     readOnly={readOnly} styleList={styleList?.data}
 
                 />
-            </Modal>
+            </Modal> */}
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[290px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    {/* <div className="flex gap-2 items-center">
+                    {newSampleEntry  &&
+                    
+                       <div className="flex gap-2 items-center">
 
                         <button
                             onClick={() => {
@@ -130,7 +153,9 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
                         </button>
-                    </div> */}
+                    </div>
+                    }
+                 
 
                 </div>
 
@@ -140,7 +165,7 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                         <thead className="bg-gray-200 text-gray-800">
                             <tr>
                                 <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-8 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     S.No
                                 </th>
@@ -152,71 +177,38 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-48 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Image
                                 </th>
+                   
                                 <th
 
-                                    className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Fab.Content
+                                    Socks Material
                                 </th>
                                 <th
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    SocksMaterial
+                                    Socks Type
                                 </th>
+                          
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Socks.Type
-                                </th>
-                                <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Size
-                                </th>
-                                <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    S.Mea
-                                </th>
-                                <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    OrderQty
-                                </th>
-                                 <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    SampleQty
-                                </th>
-                                    <th
-
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    SampleWeight
-                                </th>
-                                <th
-
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-8  text-center font-medium text-[13px] `}
                                 >
                                     Actions
                                 </th>
-                                {/* ))} */}
                             </tr>
                         </thead>
                         <tbody>
 
-                            {(sampleDetails ? sampleDetails : []).map((item, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer " >
+                            {(sampleDetails ? sampleDetails : [])?.map((item, index) =>  {
+                            return (
+                                <React.Fragment>
+                                               <tr className="border border-blue-gray-200 cursor-pointer " >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
@@ -247,7 +239,7 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
 
                                     <td className=" py-0.5 px-3 border border-gray-300 overflow-x-auto">
                                         <div className='flex gap-2'>
-                                            {(!readOnly && !item.filePath) &&
+                                            {(!readOnly && !item?.filePath) &&
                                                 <input
                                                     title=" "
                                                     type="file"
@@ -261,10 +253,10 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                                 />
 
                                             }
-                                            {item.filePath &&
+                                            {item?.filePath &&
                                                 <>
                                                     <span className="text-xs">{item?.filePath?.name || item?.filePath}</span>
-                                                    <button className="text-xs" onClick={() => { openPreview(item.filePath) }}>
+                                                    <button className="text-xs" onClick={() => { openPreview(item?.filePath) }}>
                                                         {VIEW}
                                                     </button>
                                                     {!readOnly &&
@@ -275,65 +267,18 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                         </div>
                                     </td>
 
-                                    {/* <td className="border border-gray-300 text-[11px] ">
-                                    <select
-                                        disabled={readOnly}
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnNeedleId") } }}
-                                        className='text-left w-full rounded py-1 h-full'
-                                        value={item?.yarnNeedleId}
+                
 
-                                        onChange={(e) => handleInputChange(e.target.value, index, "yarnNeedleId")}
-                                        onBlur={(e) => {
-                                            handleInputChange((e.target.value), index, "yarnNeedleId")
-                                        }}
-                                    >
-
-                                        <option>
-                                            select
-                                        </option>
-                                        {Yarnlist?.data?.map(size =>
-                                            <option value={size.id || ""} key={size.id}   >
-                                                {size?.name}
-                                            </option>)}
-
-                                    </select>
-                                </td>
-
-                                <td className=" border border-gray-300 text-[11px] ">
-                                    <select
-                                        disabled={readOnly}
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "machineId") } }}
-                                        className='text-left w-full rounded py-1 h-full'
-                                        value={item?.machineId}
-
-                                        onChange={(e) => handleInputChange(e.target.value, index, "machineId")}
-                                        onBlur={(e) => {
-                                            handleInputChange((e.target.value), index, "machineId")
-                                        }}
-                                    >
-
-                                        <option>
-                                            select
-                                        </option>
-                                        {machineList?.data?.map(size =>
-                                            <option value={size.id || ""} key={size.id}   >
-                                                {size?.name}
-                                            </option>)}
-
-                                    </select>
-                                </td> */}
-
-
-                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+                                    {/* <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             // disabled={true}
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "fiberContentId") } }}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "comments") } }}
                                             className='text-left w-full rounded  h-full'
-                                            value={item?.fiberContentId}
+                                            value={item?.comments}
 
-                                            onChange={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "comments")}
                                             onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "fiberContentId")
+                                                handleInputChange((e.target.value), index, "comments")
                                             }}
                                         >
 
@@ -346,24 +291,16 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                                 </option>)}
 
                                         </select>
-                                    </td>
+                                    </td> */}
 
 
 
-                                    {/* <td className="table-data w-40 text-left px-1 py-1 text-xs border border-gray-300">
-                                    <textarea readOnly={readOnly} className=" w-full overflow-auto focus:outline-none  rounded text-xs"
-                                        value={item.description}
-                                        onChange={(e) => handleInputChange(e.target.value, index, "description")}
-
-                                    >
-                                    </textarea>
-
-                                </td> */}
+                           
                                     <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             //  disabled={true}
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "socksMaterialId") } }}
-                                            className='text-left w-full rounded  h-full'
+                                            className='text-left w-full rounded  h-full py-1'
                                             value={item?.socksMaterialId}
 
                                             onChange={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
@@ -405,83 +342,10 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
 
                                         </select>
                                     </td>
-                                    {/* <td className="w-40  border border-gray-300 text-[11px] ">
-                                    <select
-                                        disabled={readOnly}
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "legcolorId") } }}
-                                        className='text-left w-full rounded py-1 h-full'
-                                        value={item?.legcolorId}
-
-                                        onChange={(e) => handleInputChange(e.target.value, index, "legcolorId")}
-                                        onBlur={(e) => {
-                                            handleInputChange((e.target.value), index, "legcolorId")
-                                        }}
-                                    >
-
-                                        <option>
-                                            select
-                                        </option>
-                                        {colorlist?.data?.map(color =>
-                                            <option value={color.id || ""} key={color.id}   >
-                                                {color?.name}
-                                            </option>)}
-                                    </select>
-                                </td>
-                                <td className="w-40  border border-gray-300 text-[11px] ">
-                                    <select
-                                        disabled={readOnly}
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "footcolorId") } }}
-                                        className='text-left w-full rounded py-1 h-full'
-                                        value={item?.footcolorId}
-
-                                        onChange={(e) => handleInputChange(e.target.value, index, "footcolorId")}
-                                        onBlur={(e) => {
-                                            handleInputChange((e.target.value), index, "footcolorId")
-                                        }}
-                                    >
-
-                                        <option>
-                                            select
-                                        </option>
-                                        {colorlist?.data?.map(color =>
-                                            <option value={color.id || ""} key={color.id}   >
-                                                {color?.name}
-                                            </option>)}
-                                    </select>
-                                </td>
-                                <td className=" w-40 border border-gray-300 text-[11px] ">
-                                    <select
-                                        disabled={readOnly}
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "stripecolorId") } }}
-                                        className='text-left w-full rounded py-1 h-full'
-                                        value={item?.stripecolorId}
-
-                                        onChange={(e) => handleInputChange(e.target.value, index, "stripecolorId")}
-                                        onBlur={(e) => {
-                                            handleInputChange((e.target.value), index, "stripecolorId")
-                                        }}
-                                    >
-
-                                        <option>
-                                            select
-                                        </option>
-                                        {colorlist?.data?.map(color =>
-                                            <option value={color.id || ""} key={color.id}   >
-                                                {color?.name}
-                                            </option>)}
-                                    </select>
-                                </td>
-                                <td className="w-40  border border-gray-300 text-[11px] ">
-                                    <input className='text-right w-full h-full p-1.5 border-gray-200 '
-                                        type="number"
-                                        value={item?.noOfStripes || 0}
-                                        onChange={(e) => { handleInputChange(e.target.value, index, "noOfStripes") }} onFocus={(e) => { e.target.select() }} min={0}
-                                    />
-
-                                </td> */}
+                 
 
 
-
+{/* 
 
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5">
                                         <select
@@ -505,51 +369,51 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                                 </option>)}
 
                                         </select>
-                                    </td>
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] ">
-                                        <input className='text-right w-full h-full'
+                                    </td> */}
+                                    {/* <td className="w-40 py-0.5 border border-gray-300 text-[11px] ">
+                                        <input className='text-right w-full h-full py-1.5'
                                             type="text"
                                             // disabled={true}
-                                            value={item?.measurements || 0}
-                                            onChange={(e) => { handleInputChange(e.target.value, index, "measurements") }}
+                                            value={item?.sizeMeasurement}
+                                            onChange={(e) => { handleInputChange(e.target.value, index, "sizeMeasurement") }}
                                             onFocus={(e) => { e.target.select() }} min={0}
                                         />
 
-                                    </td>
-
+                                    </td> */}
+{/* 
 
                                     <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
-                                        <input className='text-right w-full h-full '
+                                        <input className='text-right w-full h-full py-1.5'
                                             type="number"
                                             // disabled={true}
                                             value={item?.qty}
                                             onChange={(e) => { handleInputChange(e.target.value, index, "qty") }} onFocus={(e) => { e.target.select() }} min={0}
                                         />
 
-                                    </td>
+                                    </td> */}
 
-                          <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
-                                        <input className='text-right w-full h-full '
+                          {/* <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                        <input className='text-right w-full h-full py-1.5'
                                             type="number"
                                             disabled={readOnly}
                                             value={item?.sampleQty}
                                             onChange={(e) => { handleInputChange(e.target.value, index, "sampleQty") }} onFocus={(e) => { e.target.select() }} min={0}
                                         />
 
-                                    </td>
-                                 <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
-                                        <input className='text-right w-full h-full '
+                                    </td> */}
+                                 {/* <td className="w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300">
+                                        <input className='text-right w-full h-full py-1.5'
                                             type="number"
                                             disabled={readOnly}
                                             value={item?.sampleWeight}
                                             onChange={(e) => { handleInputChange(e.target.value, index, "sampleWeight") }} onFocus={(e) => { e.target.select() }} min={0}
                                         />
 
-                                    </td>
+                                    </td> */}
 
 
-                                    <td className="w-16 px-1 py-1 text-center">
-                                        <div className="flex space-x-2  justify-center">
+                                    <td className="w-8  py-1 text-center">
+                                        <div className="flex space-x-2  justify-end">
 
                                             <button
                                                 onClick={() => handleView(index)}
@@ -560,26 +424,29 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                                 👁 <span className="text-xs"></span>
                                             </button>
                                             <span className="tooltip-text">View</span>
-                                            {/* <button
-                                                disabled={true}
+                                               {newSampleEntry  &&  
+                                               <>
+                                        
+                                            <button
                                                 onClick={() => handleEdit(index)}
                                                 className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiPencil className="w-4 h-4" />
 
-                                            </button> */}
-                                            {/* <span className="tooltip-text">Edit</span> */}
-                                            {/* <button
-                                                 disabled={true}
+                                            </button>
+                                            <span className="tooltip-text">Edit</span>
+                                            <button
                                                 onClick={() => deleteRow(index)}
                                                 className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiTrash className="w-4 h-4" />
 
                                             </button>
-                                            <span className="tooltip-text">Delete</span> */}
+                                            <span className="tooltip-text">Delete</span>
+                                                   </>
+                                               }
 
-                                            {/* {tooltipVisible && (
+                                            {tooltipVisible && (
                                                 <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
                                                     <div className="flex items-start">
                                                         <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
@@ -587,11 +454,36 @@ export default function OrderItems({ readOnly,   setSampleDetails,  sampleDetail
                                                     </div>
                                                     <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
                                                 </div>
-                                            )} */}
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
-                            )}
+                                      <SizeDetailsSubGrid
+                                      gridIndex={index}
+                                      id={id}
+                                      item={item}
+                                      orderId={orderId}
+                                      sampleDetails={sampleDetails} 
+                                      setSampleDetails={setSampleDetails}
+                                      readOnly={readOnly}
+                                      colorList={colorList}
+                                      sizeList={sizeList}
+                                      handleAdd={handleAdd}
+                                      gsmList={gsmList}
+                                      handleInputChange={handleInputChange}
+                                      index={index}
+                                      uomList={uomList}
+                                    //   uomData={uomData}
+                                    //   singleuomData={singleuomData}
+                                    />
+                                </React.Fragment>
+                     
+                       
+                            
+                       
+                                 )
+                            })}
+                           
                         </tbody>
                     </table>
 

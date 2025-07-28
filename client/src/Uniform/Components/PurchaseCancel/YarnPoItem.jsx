@@ -6,7 +6,7 @@ import { substract } from '../../../Utils/helper'
 import { toast } from "react-toastify"
 import { HiPencil, HiTrash } from 'react-icons/hi'
 
-const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, noOfBags, removeItem, purchaseInwardId, weightPerBag }) => {
+const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteRow, removeItem, purchaseInwardId, weightPerBag }) => {
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: poItemId, purchaseInwardId }, { skip: !poItemId })
     useEffect(() => {
         if (purchaseInwardId) return
@@ -17,18 +17,18 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, noOfBag
     }, [isFetching, isLoading, data, purchaseInwardId])
     if (isLoading || isFetching) return <Loader />
 
-    const poItem = data.data
+    const poItem = data?.data
 
-    let poQty = parseFloat(poItem.qty).toFixed(3)
-    let poBags = parseFloat(poItem.noOfBags).toFixed(3)
-    let alreadyCancelQty = poItem.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
-    let alreadyInwardedQty = poItem.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
+    let poQty = parseFloat(poItem?.qty).toFixed(3)
+    let poBags = parseFloat(poItem?.noOfBags).toFixed(3)
+    let alreadyCancelQty = poItem?.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
+    let alreadyInwardedQty = poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
 
-    let alreadyReturnedQty = poItem.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
-    let alreadyCancelBags = poItem.alreadyCancelData?._sum.noOfBags ? poItem.alreadyCancelData._sum.noOfBags : "0.000";
-    let alreadyInwardedBags = poItem.alreadyInwardedData?._sum?.noOfBags ? poItem.alreadyInwardedData._sum.noOfBags : "0.000";
+    let alreadyReturnedQty = poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
+    let alreadyCancelBags = poItem?.alreadyCancelData?._sum.noOfBags ? poItem.alreadyCancelData._sum.noOfBags : "0.000";
+    let alreadyInwardedBags = poItem?.alreadyInwardedData?._sum?.noOfBags ? poItem.alreadyInwardedData._sum.noOfBags : "0.000";
 
-    let alreadyReturnedBags = poItem.alreadyReturnedData?._sum?.noOfBags ? parseFloat(poItem.alreadyReturnedData._sum.noOfBags).toFixed(3) : "0.000";
+    let alreadyReturnedBags = poItem?.alreadyReturnedData?._sum?.noOfBags ? parseFloat(poItem.alreadyReturnedData._sum.noOfBags).toFixed(3) : "0.000";
     let balanceQty = substract(substract(poQty, alreadyCancelQty), alreadyInwardedQty)
     let balanceBags = substract(substract(poBags, alreadyCancelBags), alreadyInwardedBags)
 
@@ -181,7 +181,7 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, noOfBag
                                                       </button>
                                                       <span className="tooltip-text">Edit</span>
                                                       <button
-                                                        //   onClick={() => deleteRow(index)}
+                                                          onClick={() => deleteRow(index)}
                                                           className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
                                                       >
                                                           <HiTrash className="w-4 h-4" />

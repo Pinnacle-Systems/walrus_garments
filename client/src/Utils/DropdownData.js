@@ -64,13 +64,16 @@ export const Generalpurchase = [
 
 ]
 
-
 export const directOrPo = [
     { show: "Direct Inward", value: "DirectInward" },
     { show: "Purchase Inward", value: "PurchaseInward" },
 
 ]
+export const PurchaseType = [
+    { show: "General Purchase", value: "General Purchase" },
+    { show: "Order Purchase", value: "Order Purchase" },
 
+]
 export const directOrPoreturn = [
     { show: "Direct Return", value: "DirectReturn" },
     { show: "Purchase Return", value: "PurchaseReturn" },

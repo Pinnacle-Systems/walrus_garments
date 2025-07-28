@@ -39,7 +39,8 @@ import {
   DispatchedApi,
   GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi, UnitOfMeasurementApi,
   MeasurementMasterApi,
-  FiberContentMasterApi
+  FiberContentMasterApi,
+  requirementPlanningFormApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -55,6 +56,7 @@ import CountsMasterApi from "./uniformService/CountsMasterServices";
 import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 import branchTypeMasterApi from "./uniformService/BranchTypeMaster";
 import partyBranchMasterApi from "./services/PartyBranchMasterService";
+import MaterialMasterApi from "./uniformService/MaterialMaster";
 
 const commonReducers = {
   openTabs, party,
@@ -149,6 +151,8 @@ const commonReducers = {
   partyBranchMaster : partyBranchMasterApi.reducer,
   partyBranchContactMaster : partyBranchContactMasterApi.reducer,
   partyContactMaster : partyContactMasterApi.reducer,
+  RequirementPlanningForm : requirementPlanningFormApi.reducer,
+   MaterialMaster: MaterialMasterApi.reducer
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -241,7 +245,9 @@ YarnNeedleMasterApi.middleware,
 branchTypeMasterApi.middleware,
 partyBranchMasterApi.middleware,
 partyBranchContactMasterApi.middleware,
-partyContactMasterApi.middleware
+partyContactMasterApi.middleware,
+requirementPlanningFormApi.middleware,
+MaterialMasterApi.middleware,
 ];
 
 

@@ -65,6 +65,7 @@ const PurchaseCancelForm = ({ onClose })  => {
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { companyId, active: true } });
+    console.log(supplierList?.data?.filter(s   => s.isSupplier),"final")
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
@@ -89,6 +90,7 @@ const PurchaseCancelForm = ({ onClose })  => {
   const [removeData] = useDeletePurchaseCancelMutation();
 
   const syncFormWithDb = useCallback((data) => {
+    console.log("hit",id)
     if (id) {
       setReadOnly(true);
     } else {
@@ -97,7 +99,7 @@ const PurchaseCancelForm = ({ onClose })  => {
     if (data?.docId) {
       setDocId(data?.docId)
     }
-    setPoType(data?.poType ? data.poType : "DyedFabric");
+    setPoType(data?.poType ? data.poType : "DyedYarn");
 
     setInwardItems(data?.cancelItems ? structuredClone(data.cancelItems) : [])
     if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
@@ -171,10 +173,10 @@ const PurchaseCancelForm = ({ onClose })  => {
 
   const saveData = () => {
 
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", { position: "top-center" })
-      return
-    }
+    // if (!validateData(data)) {
+    //   toast.info("Please fill all required fields...!", { position: "top-center" })
+    //   return
+    // }
     if (id) {
       console.log(id, "id", data, "dataaa")
       handleSubmitCustom(updateData, data, "Updated");
@@ -222,17 +224,18 @@ const PurchaseCancelForm = ({ onClose })  => {
     });
   }
 
-  const allSuppliers = supplierList ? supplierList.data : []
+  const allSuppliers = supplierList?.data?.filter(s   => s.isSupplier)   
 
   function filterSupplier() {
     let finalSupplier = []
-    if (poType.toLowerCase().includes("yarn")) {
-      finalSupplier = allSuppliers.filter(s => s.yarn)
-    } else if (poType.toLowerCase().includes("fabric")) {
-      finalSupplier = allSuppliers.filter(s => s.fabric)
-    } else {
-      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems.length > 0)
-    }
+    // if (poType.toLowerCase().includes("yarn")) {
+    //   finalSupplier = allSuppliers.filter(s => s.yarn)
+    // } else if (poType.toLowerCase().includes("fabric")) {
+    //   finalSupplier = allSuppliers.filter(s => s.fabric)
+    // } else {
+    //   finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems.length > 0)
+    // }
+    finalSupplier = allSuppliers?.data?.filter(s  =>  s.isSupplier)
     return finalSupplier
   }
   let supplierListBasedOnSupply = filterSupplier()
@@ -241,6 +244,8 @@ const PurchaseCancelForm = ({ onClose })  => {
       return total + parseFloat(current?.qty)
     }, 0)
   }
+
+
   return (
     <>
   
@@ -265,7 +270,8 @@ const PurchaseCancelForm = ({ onClose })  => {
           searchValue={searchValue}
           setSearchValue={setSearchValue}
         />
-      </Modal>
+      </Modal>{    console.log(inwardItems,"inwardItems")
+}
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={poType}
           supplierId={supplierId}
@@ -302,7 +308,15 @@ const PurchaseCancelForm = ({ onClose })  => {
 
                                                   </div>
                                                       <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
-                                    <DropdownInput
+                               
+                                      </div>
+                                  </div>
+
+                                      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                          <h2 className="font-medium text-slate-700 mb-2">
+                                          </h2>
+                                          <div className="grid grid-cols-2 gap-1">
+                                                 <DropdownInput
                                         className={"w-[110px]"}
                                         name="Po Type"
                                         beforeChange={() => { setSupplierId(""); setInwardItems([]); }}
@@ -312,16 +326,9 @@ const PurchaseCancelForm = ({ onClose })  => {
                                         required={true}
                                         readOnly={readOnly}
                                       />
-                                      </div>
-                                  </div>
-
-                                      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                                          <h2 className="font-medium text-slate-700 mb-2">
-                                          </h2>
-                                          <div className="grid grid-cols-2 gap-1">
                                               <div className="col-span-1">
 
-                                                            <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id || readOnly} />
+                                                            <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id || readOnly} />
                                                       </div>
                                                           <div className="item-center mt-5  gap-5">
                                         <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
@@ -369,13 +376,13 @@ const PurchaseCancelForm = ({ onClose })  => {
                           ?
                           <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
                             transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
-                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()}  id={id} />
                           :
-                          poType.toLowerCase().includes("fabric")
-                            ?
-                            <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
-                              inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                            :
+                          // poType.toLowerCase().includes("fabric")
+                          //   ?
+                          //   <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
+                          //     inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                          //   :
                             <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                       }
                     

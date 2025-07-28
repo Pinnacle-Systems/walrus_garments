@@ -16,11 +16,11 @@ import { useGetMachineQuery } from "../../../redux/services/MachineMasterService
 import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
 import TableGridItems from './TableGridItems';
 import Modal from "../../../UiComponents/Modal";
-import { FaInfoCircle } from 'react-icons/fa';
-import YarnDetailsSubGrid from './SizeDetailsSubGrid';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetCountsMasterQuery } from '../../../redux/uniformService/CountsMasterServices';
 import { useGetYarnTypeMasterQuery } from '../../../redux/uniformService/YarnTypeMasterServices';
+import Swal from 'sweetalert2';
+import SizeDetailsSubGrid from './SizeDetailsSubGrid';
 
 export default function OrderItems({ readOnly, itemHeading, setOrderDetails, orderDetails, id  , setYarnItems  , yarnItems }) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -64,7 +64,20 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
     } = useGetColorMasterQuery({ params });
 
     function addNewRow() {
-        if (readOnly) return toast.info("Turn on Edit Mode...!!!")
+        if (readOnly) {
+
+          Swal.fire({
+              title: "Turn On Edit Mode",
+              icon: "warning",
+              draggable: true,
+              timer: 1000,
+              showConfirmButton: false, 
+              didOpen: () => {
+                  Swal.showLoading();
+              }
+          });
+          return
+        } 
         setOrderDetails(prev => [
             ...prev,
             {
@@ -96,6 +109,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
     }
 
     function deleteRow(index) {
+      console.log(index,"index")
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
         setOrderDetails(prev => prev.filter((_, i) => i !== index))
     }
@@ -108,7 +122,6 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
             setOrderDetails(prev => {
                                 const newPrev = structuredClone(prev);
 
-                                const itemData = newPrev[index]?.orderSizeDetails?.[0] || {};
 
                                 if (!Array.isArray(newPrev[index].orderSizeDetails)) {
                                     newPrev[index].orderSizeDetails = [];
@@ -187,7 +200,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                 {/* ))} */}
           </Modal>
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[300px] overflow-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[400px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
@@ -282,12 +295,12 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
         <td className="w-12 border border-gray-300 text-[11px] text-center p-0.5">{index + 1}</td>
 
         {/* Style ID */}
-        <td className="py-0.5 border border-gray-300 text-[11px]">
+        <td className=" border border-gray-300 text-[11px]">
           <select
             onKeyDown={(e) => {
               if (e.key === "Delete") handleInputChange("", index, "styleId");
             }}
-            className="text-left rounded h-full w-full"
+            className="text-left rounded h-full w-full py-1.5 px-2"
             value={item?.styleId}
             disabled={id ? gridEditableIndex !== index : false}
             onChange={(e) => handleInputChange(e.target.value, index, "styleId")}
@@ -343,7 +356,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
             onKeyDown={(e) => {
               if (e.key === "Delete") handleInputChange("", index, "fiberContentId");
             }}
-            className="text-left w-full rounded h-full"
+            className="text-left w-full rounded h-full py-1.5 px-2"
             value={item?.fiberContentId}
             onChange={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
             onBlur={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
@@ -364,7 +377,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
             onKeyDown={(e) => {
               if (e.key === "Delete") handleInputChange("", index, "socksMaterialId");
             }}
-            className="text-left w-full rounded h-full"
+            className="text-left w-full rounded h-full py-1.5 px-2"
             value={item?.socksMaterialId}
             onChange={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
             onBlur={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
@@ -385,7 +398,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
             onKeyDown={(e) => {
               if (e.key === "Delete") handleInputChange("", index, "socksTypeId");
             }}
-            className="text-left w-full rounded h-full"
+            className="text-left w-full rounded h-full py-1.5 px-2"
             value={item?.socksTypeId}
             onChange={(e) => handleInputChange(e.target.value, index, "socksTypeId")}
             onBlur={(e) => handleInputChange(e.target.value, index, "socksTypeId")}
@@ -438,7 +451,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
 
       {/* SubGrid */}
       {/* {item?.orderDetailsSubGrid?.map((value, valueIndex) => ( */}
-        <YarnDetailsSubGrid
+        <SizeDetailsSubGrid
           gridIndex={index}
           id={id}
           item={item}
