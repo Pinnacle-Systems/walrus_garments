@@ -6,11 +6,23 @@ import { useEffect } from 'react';
 
 
 const YarnCancelItems = ({id, inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId }) => {
- console.log(inwardItems,"inwardItems")
-    const handleInputChange = (value, index, field, balanceQty) => {
+    const handleInputChange = (value, index, field, balanceQty, poItem ) => {
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
             newBlend[index][field] = value;
+            if(poItem){
+
+                newBlend[index]["yarnId"] = poItem?.yarnId
+                newBlend[index]["uomId"] = poItem?.uomId
+                newBlend[index]["colorId"] = poItem?.colorId
+                newBlend[index]["poId"] = poItem?.poId
+               newBlend[index]["poItemsId"] = poItem?.id
+
+                newBlend[index]["poQty"] = poItem?.poQty
+                newBlend[index]["poNo"] = poItem?.Po?.docId
+                newBlend[index]["price"] = poItem?.price
+        
+            }
             // if (field !== "qty" && newBlend[index]["noOfBags"] && newBlend[index]["weightPerBag"]) {
             //     let tempInwardQty = (parseFloat(newBlend[index]["noOfBags"]) * parseFloat(newBlend[index]["weightPerBag"])).toFixed(3)
             //     if (parseFloat(balanceQty) < parseFloat(tempInwardQty)) {
@@ -24,6 +36,7 @@ const YarnCancelItems = ({id, inwardItems, setInwardItems, readOnly, removeItem,
             //         toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
             //         return inwardItems
             //     }
+            // }
             //     let qty = parseInt(newBlend[index]["noOfBags"]) * parseFloat(newBlend[index]["weightPerBag"])
             //     let excessQty = parseInt(newBlend[index]["noOfBags"]) * 2
             //     if ((qty + excessQty) < parseFloat(value)) {
@@ -180,13 +193,13 @@ const YarnCancelItems = ({id, inwardItems, setInwardItems, readOnly, removeItem,
             
                                                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                                Quantity
+                                               Po Quantity
                                             </th>
                                             <th
             
                                                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                               Already Return Qty
+                                               Already Cancel Qty
                                             </th>
                                             <th
             

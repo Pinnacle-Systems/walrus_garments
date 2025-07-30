@@ -543,6 +543,8 @@ async function getOne(id) {
 
         },
     })
+
+    console.log(data , 'data')
     // data["DirectItems"] = await getDirectInwardReturnItemsLotBreakUp(data.id, data.poType)
     data["directReturnItems"] = await getPurchaseReturnItemsAlreadyData(data.id, data.poInwardOrDirectInward, data?.poType, data?.directReturnItems, data?.storeId, data?.createdAt)
     if (!data) return NoRecordFound("directReturnOrPoReturn");
@@ -661,7 +663,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 
 async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, directReturnItems, poType, poInwardOrDirectInward, storeId, branchId) {
-    console.log(directReturnItems,"directReturnItems")
+    console.log(((poType == "DyedYarn" || poType == "GreyYarn" ) && (poInwardOrDirectInward == "PurchaseReturn")),"condition")
     let promises
 
     if ((poType == "DyedYarn" || poType == "GreyYarn" ) && (poInwardOrDirectInward == "PurchaseReturn")) {
@@ -683,10 +685,16 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
 
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
-                    // noOfRolls: item["noOfRolls"] ? parseInt(item["noOfRolls"]) : 0,
+                    directItemsId: item["directItemsId"] ? parseInt(item["directItemsId"]) : undefined,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
+                    alreadyInwardedQty : item["alreadyInwardedQty"]  ?   parseInt(item["alreadyInwardedQty"])   :  undefined  ,
+                    alreadyReturnedQty : item["alreadyReturnedQty"]  ?   parseInt(item["alreadyReturnedQty"])   :  undefined  ,
+                    balanceQty : item["balanceQty"]  ?   parseInt(item["balanceQty"])   :  undefined  ,
+                    cancelQty : item["cancelQty"]  ?   parseInt(item["cancelQty"])   :  undefined  ,
                    
                 }
             })
@@ -699,7 +707,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
 
     }
 
-        if ((poType == "DyedYarn" || poType == "GreyYarn" ) && (poInwardOrDirectInward == "DirectReturn")) {
+    else if ((poType == "DyedYarn" || poType == "GreyYarn" ) && (poInwardOrDirectInward == "DirectReturn")) {
         promises = directReturnItems.map(async (item, index) => {
             let data = await tx.directReturnItems.create({
                 data: {
@@ -731,7 +739,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
         )
     }
 
-    else {
+   
         if ((poType == "Accessory") && (poInwardOrDirectInward == "PurchaseReturn")) {
             promises = directReturnItems.map(async (item, index) => {
                 console.log(item["returnQty"] ? true : false);
@@ -814,7 +822,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
             )
         }
 
-    }
+    
 
     return Promise.all(promises)
 }
@@ -841,7 +849,7 @@ async function create(body) {
         data = await tx.directReturnOrPoReturn.create({
             data: {
                 poType, poInwardOrDirectInward,
-                supplierId: parseInt(supplierId),
+                supplierId: supplierId ?   parseInt(supplierId) :   null, 
                 branchId: parseInt(branchId),
                 storeId: parseInt(storeId),
                 dcNo,

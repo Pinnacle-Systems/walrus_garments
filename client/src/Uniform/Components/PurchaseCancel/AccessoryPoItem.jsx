@@ -47,18 +47,16 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-                        <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+          <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>{console.log(item.uomId,"uom",uomList)}
 
-            {/* <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-            <td className='text-right px-1  table-data'>{(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0)}</td> */}
-            {/* <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='text-right px-1  table-data'>{item?.balanceQty}</td> */}
-
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.price}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.poQty || 0}</td>
 
-            <td className='py-0.5 border border-gray-300 text-[11px]'>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0)}</td> 
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty}</td> 
+
+              <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -86,6 +84,11 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                 />
             </td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.price}</td>
+
+
+          
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price)  * parseFloat(item?.qty).toFixed(3) ||  "0.000"}</td>
 
               <td className="py-0.5 border border-gray-300 text-[11px]">
                                                              <div className="flex space-x-2  justify-center">

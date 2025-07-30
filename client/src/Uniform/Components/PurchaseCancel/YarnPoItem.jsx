@@ -8,16 +8,11 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 
 const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteRow, removeItem, purchaseInwardId, weightPerBag }) => {
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: poItemId, purchaseInwardId }, { skip: !poItemId })
-    useEffect(() => {
-        if (purchaseInwardId) return
-        if (isLoading || isFetching) return
-        if (data?.data) {
-            handleInputChange(parseFloat(data.data.weightPerBag).toFixed(3), index, "weightPerBag", 0)
-        }
-    }, [isFetching, isLoading, data, purchaseInwardId])
-    if (isLoading || isFetching) return <Loader />
+  
+       const poItem = data?.data
 
-    const poItem = data?.data
+
+ 
 
     let poQty = parseFloat(poItem?.qty).toFixed(3)
     let poBags = parseFloat(poItem?.noOfBags).toFixed(3)
@@ -32,6 +27,16 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
     let balanceQty = substract(substract(poQty, alreadyCancelQty), alreadyInwardedQty)
     let balanceBags = substract(substract(poBags, alreadyCancelBags), alreadyInwardedBags)
 
+
+        useEffect(() => {
+        if (purchaseInwardId) return
+        if (isLoading || isFetching) return
+        if (data?.data) {
+            handleInputChange(parseFloat(data.data.weightPerBag).toFixed(3), index, "weightPerBag" ,0 , poItem)
+        }
+    }, [isFetching, isLoading, data, purchaseInwardId])
+    if (isLoading || isFetching) return <Loader />
+
     return (
         <tr key={poItemId} className="border border-blue-gray-200 cursor-pointer "  > 
             <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
@@ -39,15 +44,15 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
             <td  className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Yarn?.aliasName}</td>
             <td  className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Color?.name}</td>
             <td  className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Uom?.name}</td>
-            <td  className="py-0.5 border border-gray-300 text-[11px]">{poQty}</td>
+            <td  className="py-0.5 border border-gray-300 text-[11px] text-right">{poQty}</td>
             {/* <td className='text-right  table-data'>{poBags}</td> */}
             {/* <td className='text-right  table-data'>{alreadyCancelQty}</td>
             <td className='text-right  table-data'>{alreadyCancelBags}</td>
             <td className='text-right  table-data'>{alreadyInwardedQty}</td>
             <td className='text-right  table-data'>{alreadyInwardedBags}</td> */}
-            <td  className="py-0.5 border border-gray-300 text-[11px]">{alreadyReturnedQty}</td>
+            <td  className="py-0.5 border border-gray-300 text-[11px] text-right">{alreadyCancelQty}</td>
             {/* <td className='text-right  table-data'>{alreadyReturnedBags}</td> */}
-            <td  className="py-0.5 border border-gray-300 text-[11px]">{balanceQty}</td>
+            <td  className="py-0.5 border border-gray-300 text-[11px] text-right">{balanceQty}</td>
             {/* <td  className="py-0.5 border border-gray-300 text-[11px]">{balanceBags}</td> */}
             {/* <td className='text-left w-16  table-data'>
                 <input

@@ -205,7 +205,7 @@ async function getOne(id) {
         },
     })
 
-
+console.log(data,"data")
     data["cancelItems"] = await getCancelItemsAlreadyData(data.id, "PurchaseCancel", data?.poType, data?.cancelItems)
     if (!data) return NoRecordFound("purchaseCancel");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -275,28 +275,26 @@ async function getSearch(req) {
 
 async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poInwardOrDirectInward, storeId, branchId) {
     let promises
+
+    console.log(poType == "DyedYarn"  ||  poType == "GreyYarn"  )
     if (poType == "DyedYarn"  ||  poType == "GreyYarn"   ) {
 
         promises = cancelItems.map(async (item, index) => {
             const data = await tx.cancelItems.create({
                 data: {
-                    // purchaseCancelId: parseInt(purchaseCancelId),
-                    fabricId: item["fabricId"] ? parseInt(item["fabricId"]) : undefined,
-                    designId: item["designId"] ? parseInt(item["designId"]) : undefined,
-                    gaugeId: item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
-                    loopLengthId: item["loopLengthId"] ? parseInt(item["loopLengthId"]) : undefined,
-                    gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-                    kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-                    fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-                    // uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+                    purchaseCancelId: parseInt(purchaseCancelId),
+                    yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+                    uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                    qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
-
+                    qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
-                    // poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    // gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+                
+
+
 
                 }
             })
@@ -312,19 +310,30 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
         promises = cancelItems.map(async (item, index) => {
             const data = await tx.cancelItems.create({
                 data: {
-                    // purchaseCancelId: parseInt(purchaseCancelId),
-                    accessoryId: parseInt(item["accessoryId"]),
-                    accessoryGroupId: parseInt(item["accessoryGroupId"]),
-                    accessoryItemId: parseInt(item["accessoryItemId"]),
-                    sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                    // uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                    colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+
+                    purchaseCancelId :  purchaseCancelId  ?  parseInt(purchaseCancelId)  :  ""   ,
+                    accessoryId  :  item["accessoryId"]   ?   parseInt(item["accessoryId"])  :  ""  ,
+                    accessoryGroupId  :    item["accessoryGroupId"]   ?     parseInt(item["accessoryGroupId"])   :  ""  ,
+                    accessoryItemId   :  item["accessoryItemId"] ?  parseInt(item["accessoryItemId"])   :  ""  ,
+                    sizeId   :   item["sizeId"] ? parseInt(item["sizeId"]) : ""  ,
+                    colorId: item["colorId"] ? parseInt(item["colorId"]) : "" ,
+                    uomId: item["uomId"] ? parseInt(item["uomId"]) : "",
+
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
-
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                    poNo: item["poNo"] ? item["poNo"] : undefined,
-                    // poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+                    poNo: item["poNo"] ? item["poNo"] : "",
+                    poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : "",
+
+                    // purchaseCancelId: parseInt(purchaseCancelId),
+                    // accessoryId: parseInt(item["accessoryId"]),
+                    // accessoryGroupId: parseInt(item["accessoryGroupId"]),
+                    // accessoryItemId: parseInt(item["accessoryItemId"]),
+                    // sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : "",
+                    // colorId: item["colorId"] ? parseInt(item["colorId"]) : "",
+                   
+            
+
 
                 }
             })

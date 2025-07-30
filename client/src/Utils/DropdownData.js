@@ -69,7 +69,7 @@ export const directOrPo = [
     { show: "Purchase Inward", value: "PurchaseInward" },
 
 ]
-export const PurchaseType = [
+export const purchaseType = [
     { show: "General Purchase", value: "General Purchase" },
     { show: "Order Purchase", value: "Order Purchase" },
 

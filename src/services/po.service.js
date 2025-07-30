@@ -268,7 +268,7 @@ export async function getPoItems(req) {
                     //         contains: searchDocId
                     //     }
                     //     : undefined,
-                    // supplierId: supplierId ? parseInt(supplierId) : undefined,
+                    supplierId: supplierId ? parseInt(supplierId) : undefined,
                     transType: poType,
                     // supplier: {
                     //     aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
@@ -287,9 +287,9 @@ export async function getPoItems(req) {
         data = await getAllDataPoItems(data, poType)
         
         // if (isPurchaseInwardFilter) {
+        //     console.log(data,"data")
             
         //     data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
-        //     console.log(data,"data")
         //     data = data?.filter(j => parseFloat(j.balanceQty) > 0)
 
         // }
@@ -450,7 +450,6 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             noOfRolls: true
         }
     });
-    console.log(alreadyInwardedData,"alreadyInwardedData")
 
 
     const alreadyReturnedData = await prisma?.directReturnItems?.aggregate({
@@ -470,7 +469,6 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
         }
     });
 
-    console.log(alreadyReturnedData,"alreadyReturnedData")
 
 
     const alreadyCancelData = await prisma.cancelItems.aggregate({
@@ -488,7 +486,6 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
         }
     });
-    console.log(alreadyCancelData,"alreadyCancelData")
 
 
     async function getLotWiseDatas(inwardData) {
@@ -510,6 +507,10 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     }
 
 
+    console.log(
+        alreadyInwardedData, "alreadyInwardedData"  ,
+        alreadyReturnedData,"alreadyReturnedData"
+        ,alreadyCancelData,"alreadyCancelData")
 
 
 
@@ -523,8 +524,11 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
-    console.log(alreadyInwardedQty,alreadyReturnedQty,"alreadyReturnedQty")
 
+    console.log(balanceQty , "balanceQty"  ,
+        allowedReturnQty, "allowedReturnQty"
+    );
+    
 
 
     let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,data?.yarnId))?.stockQty || 0)
@@ -746,7 +750,7 @@ async function create(body) {
       transType, dueDate, taxTemplateId,
       supplierId, poItems, payTermId, remarks,
       branchId, active, userId, deliveryType,
-      deliveryToId, finYearId
+      deliveryToId, finYearId , orderId , PurchaseType
     } = await body;
   
     const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -771,6 +775,8 @@ async function create(body) {
         deliveryBranchId: deliveryType === "ToSelf" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         deliveryPartyId: deliveryType === "ToParty" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         createdById: parseInt(userId),
+        orderId  : parseInt(orderId),
+        PurchaseType : PurchaseType,
         PoItems: {
           createMany: {
             data: filteredPoItems,

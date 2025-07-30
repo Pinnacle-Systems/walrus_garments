@@ -93,7 +93,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty} </td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
                         className="text-right rounded py-1  px-1 w-full table-data-input"
@@ -121,7 +121,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                             handleInputChange(parseFloat(e.target.value).toFixed(3), index, "noOfBags", item?.balanceQty)
                         }}
                     />
-                </td>             
+                </td>              */}
 
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
                     <input
@@ -154,7 +154,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                
           
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(sumArray(item?.inwardLotDetails ? item?.inwardLotDetails : [], "qty"))).toFixed(2)}</td> 
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2)}</td> 
 
              
                         

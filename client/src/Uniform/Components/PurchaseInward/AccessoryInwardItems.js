@@ -165,13 +165,13 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                                 S.No
                                             </th>
                                               <th
-                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Po.No
                                             </th>
                                             <th
             
-                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Accessory Name
                                             </th>
@@ -243,12 +243,12 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                             >
                                                 Balance Qty
                                             </th> 
-                                                  <th
+                                                  {/* <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                             >
                                                No Of Rolls
-                                            </th> 
+                                            </th>  */}
                                                   <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -280,7 +280,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                                                 {Array.from({ length: 1 - inwardItems?.length }).map(i =>
                                                     <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                                        {Array.from({ length: 16 }).map(i =>
+                                                        {Array.from({ length: 15 }).map(i =>
                                                             <td className="table-data   "></td>
                                                         )}
                                                         {!readOnly &&

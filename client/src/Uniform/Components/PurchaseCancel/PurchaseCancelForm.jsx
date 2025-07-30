@@ -31,16 +31,15 @@ import { HiOutlineRefresh } from "react-icons/hi";
 
 const MODEL = "Purchase Cancel";
 
-const PurchaseCancelForm = ({ onClose })  => {
+const PurchaseCancelForm = ({ onClose  , id  , setId })  => {
 
 
   const dispatch = useDispatch()
   const today = new Date()
   const [inwardItemSelection, setInwardItemSelection] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
-  const [id, setId] = useState("");
   const [date, setDate] = useState(getDateFromDateTime(today));
-  const [poType, setPoType] = useState("DyedYarn");
+  const [poType, setPoType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
 
   const [docId, setDocId] = useState("");
@@ -270,7 +269,7 @@ const PurchaseCancelForm = ({ onClose })  => {
           searchValue={searchValue}
           setSearchValue={setSearchValue}
         />
-      </Modal>{    console.log(inwardItems,"inwardItems")
+      </Modal>{console.log(inwardItems,"inwardItems")
 }
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={poType}
@@ -281,7 +280,7 @@ const PurchaseCancelForm = ({ onClose })  => {
      
        <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
                       <div className="flex justify-between items-center mb-1">
-                          <h1 className="text-2xl font-bold text-gray-800">Purchse Cancel </h1>
+                          <h1 className="text-2xl font-bold text-gray-800">Purchase Cancel </h1>
                           <button
                               onClick={onClose}
                               className="text-indigo-600 hover:text-indigo-700"

@@ -308,7 +308,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
         {
             header: 'Supplier',
             accessor: (item) => findFromList(item.supplierId, supplierList?.data ,"name"),
-             className:  'text-gray-800 uppercase w-72'
+             className:  'text-gray-800 uppercase w-96'
         },
            {
             header: '',

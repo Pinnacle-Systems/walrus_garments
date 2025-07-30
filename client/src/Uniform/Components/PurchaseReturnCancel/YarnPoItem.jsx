@@ -78,14 +78,10 @@ const YarnPoItem = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
             
 
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>                                  
-                      {getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty).toFixed(3) || 0}
-                      {  console.log(getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty),"allowQty")
-}
-                </td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.allowedReturnQty || 0.00}</td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.stockQty} </td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty).toFixed(3) || 0}</td>
 
-                  <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                  {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                                     <input
                                         type="number"
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0", index, "noOfBags") } }}
@@ -139,7 +135,7 @@ const YarnPoItem = ({ yarnList, uomList,
                                             handleInputChange(parseFloat(e.target.value).toFixed(3), index, "weightPerBag")
                                         }
                                     />
-                                </td>
+                                </td> */}
              
 
 

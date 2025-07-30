@@ -876,6 +876,8 @@ enum P_InwardOrReturn {
   ProcessDeliveryReturn
   RawMaterialSales
   RawMaterialOpeningStock
+  GeneralPo
+  OrderAgainstPo
 }
 
 model Color {
@@ -972,6 +974,9 @@ model Po {
   DeliveryBranch   Branch?        @relation("deliveryBranch", fields: [deliveryBranchId], references: [id])
   deliveryBranchId Int?
   remarks          String?        @db.LongText
+  order            Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId          Int?
+  PurchaseType     String?
   PoItems          PoItems[]
 }
 
@@ -2939,6 +2944,7 @@ model Order {
   orderDetails      OrderDetails[]
   Sample            Sample[]
   sampleDetails     sampleDetails[]
+  Po                Po[]
 }
 
 model OrderDetails {
@@ -3325,7 +3331,7 @@ model CancelItems {
   Color            Color?          @relation(fields: [colorId], references: [id])
   colorId          Int?
   Uom              UnitOfMeasurement?             @relation(fields: [uomId], references: [id])
-  uomId            Int
+  uomId            Int?
   Design           Design?         @relation(fields: [designId], references: [id])
   Gauge            Gauge?          @relation(fields: [gaugeId], references: [id])
   LoopLength       LoopLength?     @relation(fields: [loopLengthId], references: [id])

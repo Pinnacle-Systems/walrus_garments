@@ -122,7 +122,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setTransType(data?.poType ? data.poType : "DyedYarn");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
         // setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-        // setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
+        setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
         if (data?.docId) {
             setDocId(data?.docId)
         }

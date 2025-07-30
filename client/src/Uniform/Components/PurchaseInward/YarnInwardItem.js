@@ -285,12 +285,12 @@ const YarnInwardPoItems = ({
                                 >
                                     Balance Qty
                                 </th> 
-                                      <th
+                                      {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                    No Of Bags
-                                </th> 
+                                </th>  */}
                                       <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -328,7 +328,7 @@ const YarnInwardPoItems = ({
                                                          purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
                                                      {Array.from({ length: 1 - inwardItems?.length }).map(i =>
                                                          <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                                             {Array.from({ length: 7 }).map(i =>
+                                                             {Array.from({ length: 6 }).map(i =>
                                                                  <td className="table-data   "></td>
                                                              )}
                                                              {!readOnly &&

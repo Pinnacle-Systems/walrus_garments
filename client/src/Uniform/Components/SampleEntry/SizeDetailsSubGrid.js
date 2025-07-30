@@ -87,6 +87,8 @@ function deleteSubRow(gridIndex, index) {
             <th className="w-28 px-4 py-2 text-center font-medium text-[13px]">Gsm</th>
 
             <th className="w-24 px-4 py-2 text-center font-medium text-[13px]">Weight</th>
+                        <th className="w-24 px-4 py-2 text-center font-medium text-[13px]">Yarn Needle</th>
+
           <th className="w-44 px-4 py-2 text-center font-medium text-[13px]">Remarks</th>
 
              <th className="w-11 px-4 py-2 text-right font-medium text-[13px]">
@@ -222,6 +224,23 @@ function deleteSubRow(gridIndex, index) {
                   // disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                   onChange={e => handleInputChange(e.target.value, index, "weight")}
                   onBlur={e => handleInputChange(e.target.value, index, "weight")}
+                />
+              </td>
+              
+                 <td className="py-0.5 border border-gray-300 text-[11px]">
+                <input
+                  type="text"
+                  // onKeyDown={e => {
+                  //   if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
+                  //   if (e.key === "Delete") handleInputChange("0.000", index, "discountAmount");
+                  // }}
+                  min="0"
+                  onFocus={e => e.target.select()}
+                  className="text-right rounded w-full py-1 text-xs table-data-input"
+                  value={(yarn.weight)}
+                  // disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
+                  onChange={e => handleInputChange(e.target.value, index, "yarnNeedle")}
+                  onBlur={e => handleInputChange(e.target.value, index, "yarnNeedle")}
                 />
               </td>
                                <td className="py-0.5 border border-gray-300 text-[11px]">

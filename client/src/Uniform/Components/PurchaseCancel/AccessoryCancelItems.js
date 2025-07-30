@@ -32,6 +32,8 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                 newBlend[index]["discountAmount"] = poItem?.discountAmount
                 newBlend[index]["discountType"] = poItem?.discountType
                 newBlend[index]["poId"] = poItem?.poId
+                newBlend[index]["poItemsId"] = poItem?.id
+
                 newBlend[index]["price"] = poItem?.price
                 newBlend[index]["taxPercent"] = poItem?.taxPercent
                 newBlend[index]["uomId"] = poItem?.uomId
@@ -134,27 +136,27 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                                 S.No
                                             </th>
                                                 <th
-                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Po.No
                                             </th>
                                             <th
             
-                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                               Acc. Name
+                                               Accessory Name
                                             </th>
                                             <th
             
                                                 className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                               Acc. Items
+                                               Accessory Items
                                             </th>
                                             <th
             
                                                 className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                               Acc. Group
+                                               Accessory Group
                                             </th>
                                             {/* <th
             
@@ -181,24 +183,53 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                             >
                                                 UOM
                                             </th>
-            
-                                            <th
-            
-                                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                                Price
-                                            </th>
-                                                     <th
+                                                   <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Po qty
                                             </th>
+                                               <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                               Already Cancel Qty
+                                            </th>   <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                  Already Inward  Qty
+
+                                            </th>   <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Already Return  Qty
+                                            </th>   <th
+            
+                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                BalanceQty
+                                            </th>
+                                       
+                                     
                                              <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                             >
                                                 Cancel Qty
+                                            </th>
+                                                          <th
+            
+                                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Price
+                                            </th>
+                                                               <th
+            
+                                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Gross
                                             </th>
                                              <th
             
@@ -215,7 +246,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                             colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                         {Array.from({ length: 1 - inwardItems.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 15 }).map(i =>
+                                {Array.from({ length: 16 }).map(i =>
                                     <td className="table-data   "></td>
                                 )}
                                 {!readOnly &&
@@ -229,47 +260,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                         </div>
                                                                         </div>
 
-            {/* <div className={`relative w-full overflow-auto py-1`}>
-                <table className="border border-gray-500 text-xs table-auto w-full  ">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
-                        <tr className='h-8 '>
-                            <th className="table-data   text-center">S.no</th>
-                            <th className="table-data    text-center">Po.no</th>
-                            <th className="table-data  ">Acc. Name</th>
-                            <th className="table-data  ">Acc. Items</th>
-                            <th className="table-data  ">Acc. Group</th>
-                            <th className="table-data  ">Colors</th>
-                            <th className="table-data  ">Size</th>
-                            <th className="table-data   ">UOM</th>
-                            <th className="table-data   ">Po Qty</th>
-                            <th className="table-data   ">A.Can Qty</th>
-                            <th className="table-data   ">A.In. Qty</th>
-                            <th className="table-data   ">A.Rtn. Qty</th>
-                            <th className="table-data   ">Bal.Qty</th>
-                            <th className="table-data   ">Can. Qty<span className="text-red-500">*</span></th>
-                            <th className="table-data   ">Price</th>
-                            {!readOnly &&
-                                <th className='table-data border  w-12'>Del</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems, "inwardItems")}
-                        {inwardItems.map((item, index) => <AccessoryPoItem sizeList={sizeList} accessoryList={accessoryList}
-                            uomList={uomList}
-                            colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 1 - inwardItems.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 15 }).map(i =>
-                                    <td className="table-data   "></td>
-                                )}
-                                {!readOnly &&
-                                    <td className="table-data w-10"></td>
-                                }
-                            </tr>)
-                        }
-                    </tbody>
-                </table>
-            </div> */}
+            
         </>
     )
 }

@@ -2,7 +2,7 @@ import { Modal } from "@mui/material";
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
 import { DropdownInput, DropdownWithSearch } from "../../../Inputs";
-import { deliveryTypes, directOrPo, poTypes, PurchaseType } from "../../../Utils/DropdownData";
+import { deliveryTypes, directOrPo, poTypes, purchaseType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
@@ -18,6 +18,7 @@ import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useSelector } from "react-redux";
 import { useGetOrderByIdQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import Swal from "sweetalert2";
 
 const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , allData})  => {
 
@@ -41,7 +42,7 @@ const PurchaseOrderForm = ( {  onClose , id  , setId , readOnly , setReadOnly , 
       const [partyId, setPartyId] = useState(false);
       const [orderId,setOrderId]   = useState("")
       const [remarks, setRemarks] = useState("")
-      const [purchaseType,setPurchaseType]   =  useState('')
+      const [PurchaseType,setPurchaseType]   =  useState('')
     
     
       const [deliveryType, setDeliveryType] = useState("")
@@ -171,7 +172,12 @@ const partyFilter = (data) => {
 
 
 const syncFormWithDb = useCallback((data) => {
-  setTransType(data?.transType || "GreyYarn");
+
+  
+
+
+
+  setTransType(data?.transType);
   setDate(data?.createdAt 
     ? moment.utc(data.createdAt).format("YYYY-MM-DD") 
     : moment.utc(new Date()).format("YYYY-MM-DD")
@@ -195,12 +201,16 @@ const syncFormWithDb = useCallback((data) => {
       : data?.deliveryPartyId || ""
   );
   setRemarks(data?.remarks || "");
+  setPurchaseType(data?.PurchaseType  ?  data?.PurchaseType :  "")
 
   // Optional: If you need to track branch ID
   // if (data?.branchId) {
   //   branchIdFromApi.current = data.branchId;
   // }
 }, [id]);
+
+
+console.log(transType,"transType")
 
 const syncOrderForm = useCallback((data) => {
   console.log("Order data:", data?.orderDetails);
@@ -212,9 +222,10 @@ const syncOrderForm = useCallback((data) => {
 useEffect(() => {
   if (id && singleData?.data) {
     syncFormWithDb(singleData.data);
-  } else {
-    syncFormWithDb(undefined);
   }
+  //  else {
+  //   syncFormWithDb(undefined);
+  // }
 }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
 useEffect(() => {
@@ -232,7 +243,7 @@ useEffect(() => {
     deliveryType, deliveryToId,
     discountType,
     discountValue,
-    finYearId
+    finYearId,orderId ,PurchaseType
   }
  const handleSubmitCustom = async (callback, data, text) => {
   console.log(callback,"callback")
@@ -246,19 +257,33 @@ useEffect(() => {
       if (returnData.statusCode === 1) {
         toast.error(returnData.message);
       } else {
-        toast.success(text + "Successfully");
+                     Swal.fire({
+                icon: 'success',
+                title: `${text || 'Saved'} Successfully`,
+                showConfirmButton: false,
+                timer: 2000
+              });
         setId("")
-        // syncFormWithDb(undefined)
+        syncFormWithDb(undefined)
       }
     } catch (error) {
       console.log("handle");
     }
   };
+
+  const   validateData = (data) => {
+    if (data.dueDate) {
+      return true;
+    }
+ 
+
+    return false;
+  };
     const saveData = (nextProcess) => {
-        // if (!validateData(data)) {
-        //     toast.info("Please fill all required fields...!", { position: "top-center" })
-        //     return
-        // }
+        if (!validateData(data)) {
+            toast.info("Please fill all required fields...!", { position: "top-center" })
+            return
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
@@ -337,14 +362,14 @@ useEffect(() => {
                     </h2>
                     <div className="grid grid-cols-2 gap-1 mt-8">
                           <DropdownInput name="DirectOrPo"
-                                  options={PurchaseType}
-                                  value={purchaseType}
+                                  options={purchaseType}
+                                  value={PurchaseType}
                                   setValue={setPurchaseType}
                                   required={true}
                                   readOnly={readOnly}
                                    />    
                       
-             {purchaseType  ===  "Order Purchase" &&  
+             {PurchaseType  ===  "Order Purchase" &&  
                           <DropdownWithSearch
                           label="Order No"
                           options={orderData?.data}
@@ -436,12 +461,12 @@ useEffect(() => {
                        </div>
                    </div>
                              <fieldset className=''>                      
-                       {transType.toLowerCase().includes("GreyYarn".toLowerCase())
+                       {transType?.toLowerCase().includes("GreyYarn".toLowerCase())
                         ?
                         <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         :
                         (
-                          transType.toLowerCase().includes("DyedYarn".toLowerCase())
+                          transType?.toLowerCase().includes("DyedYarn".toLowerCase())
                             ?
                             <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                             :

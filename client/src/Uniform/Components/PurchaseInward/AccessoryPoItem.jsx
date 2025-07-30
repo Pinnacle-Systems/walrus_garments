@@ -57,12 +57,12 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.colorId, colorList?.data, "name")} </td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.sizeId, sizeList?.data, "name")} </td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item?.uomId, uomList?.data, "name")} </td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.poQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.cancelQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyInwardedQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-left'>{item?.balanceQty || 0}</td>
- <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.poQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.cancelQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty || 0}</td>
+ {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
                         className="text-right rounded py-1  px-1 w-full table-data-input"
@@ -90,7 +90,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                             handleInputChange(parseFloat(e.target.value).toFixed(3), index, "noOfBags", item?.balanceQty)
                         }}
                     />
-                </td>   
+                </td>    */}
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {

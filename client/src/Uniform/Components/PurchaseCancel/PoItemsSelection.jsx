@@ -8,7 +8,6 @@ import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
-    console.log(inwardItems,"inwardItems")
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId));
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
