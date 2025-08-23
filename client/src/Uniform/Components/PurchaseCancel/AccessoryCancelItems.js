@@ -209,7 +209,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, removeIte
             
                                                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                                BalanceQty
+                                                Balance Qty
                                             </th>
                                        
                                      

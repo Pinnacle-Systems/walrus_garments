@@ -5,9 +5,9 @@ import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 
 
 
-export default function TableGridItems({ item, gridIndex, id, setOrderDetails, yarnTypeList, readOnly, yarnList, selectedIndex, colorlist ,
+export default function TableGridItems({ item, gridIndex, id, setOrderDetails, yarnTypeList, readOnly, yarnList, selectedIndex,
 
-    yarnNeedleList, countsList, sampleDetails
+    yarnNeedleList, countsList, colorlist
 }) {
 
 
@@ -19,10 +19,10 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
     function handleInputChange(value, index, field) {
         console.log(value, "value", index)
 
-        let sampleyarnDetails = "sampleyarnDetails"
+        let orderYarnDetails = "orderYarnDetails"
         setOrderDetails(orderDetails => {
             const newBlend = structuredClone(orderDetails);
-            newBlend[gridIndex][sampleyarnDetails][index][field] = value;
+            newBlend[gridIndex][orderYarnDetails][index][field] = value;
             return newBlend
         }
         );
@@ -35,15 +35,15 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
     function addNewRow() {
         setOrderDetails(prev => {
             const newPrev = structuredClone(prev);
-            const sampleyarnDetails = "sampleyarnDetails";
+            const orderYarnDetailsKey = "orderYarnDetails";
 
-            if (!newPrev[selectedIndex][sampleyarnDetails]) {
-                newPrev[selectedIndex][sampleyarnDetails] = [];
+            if (!newPrev[selectedIndex][orderYarnDetailsKey]) {
+                newPrev[selectedIndex][orderYarnDetailsKey] = [];
             }
 
-            console.log(newPrev[selectedIndex][sampleyarnDetails], "gridIndex");
+            console.log(newPrev[selectedIndex][orderYarnDetailsKey], "gridIndex");
 
-            newPrev[selectedIndex][sampleyarnDetails].push({
+            newPrev[selectedIndex][orderYarnDetailsKey].push({
                 yarnId: '',
             });
 
@@ -138,7 +138,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
                                 >
                                     S.No
                                 </th>
-                                    <th
+                                <th
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -166,7 +166,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
 
                                     className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Yarn Kneedles
+                                    Needle Type
                                 </th>
 
 
@@ -181,9 +181,10 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
 
                         <tbody>
 
-                            {(sampleDetails[selectedIndex] ? sampleDetails[selectedIndex]?.orderYarnDetails : [])?.map((row, index) =>
+                            {(item?.orderYarnDetails ? item?.orderYarnDetails : [])?.map((row, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer " >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
+
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -197,7 +198,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
                                         >
                                             <option >
                                             </option>
-                                            {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
+                                         {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
@@ -216,10 +217,11 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, y
                                         >
                                             <option >
                                             </option>
-                                            {(id ? yarnTypeList?.data : yarnTypeList?.data?.filter(item => item.active))?.map((blend) =>
+                                                {(id ? yarnTypeList?.data : yarnTypeList?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
+                                           
                                         </select>
                                     </td>
 

@@ -21,18 +21,18 @@ import {
 import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import moment from "moment";
-import { getCommonParams, renameFile } from "../../../Utils/helper";
+import { findFromList, getCommonParams, renameFile } from "../../../Utils/helper";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
-import { DropdownInput, DropdownWithSearch,  TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { useAddSampleMutation, useGetSampleByIdQuery, useGetSampleQuery, useUpdateSampleMutation } from "../../../redux/uniformService/SampleService";
 import SampleItems from "./SampleItems";
 
-const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData ,
-     orderData , setOrderId  , orderId , singleOrderData , isSingleOrderLoading  , isSingleOrderFetching }) => {
+const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampleDetails, readOnly, setReadOnly, setId, id, onClose, partyData,
+    orderData, setOrderId, orderId, singleOrderData, isSingleOrderLoading, isSingleOrderFetching }) => {
     const [suppliers, setSuppliers] = useState([
         "Supplier One",
         "Supplier Two",
@@ -43,16 +43,15 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
     const [isEditing, setIsEditing] = useState(false);
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
-    const [newSampleEntry,setNewSampleEntry] = useState(false)
-
-    console.log(sampleDetails,"sampleDetails")
+    const [newSampleEntry, setNewSampleEntry] = useState(false)
 
 
 
-    const [addressForm, setAddressForm] = useState(false);
+
     const [notes, setNotes] = useState("");
     const [orderBy, setOrderBy] = useState("")
     const [showAddressPopup, setShowAddressPopup] = useState(false)
+
     const handleAddSupplier = (newName) => {
         if (!suppliers.includes(newName)) {
             setSuppliers([...suppliers, newName]);
@@ -113,9 +112,9 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
 
 
 
-    const syncFormWithDb = useCallback((data , sampleDetails) => {
-        console.log("data", data    )
-        if (id ||  orderId) {
+    const syncFormWithDb = useCallback((data, sampleDetails) => {
+        console.log("data", data)
+        if (id || orderId) {
             setReadOnly(readOnly ? readOnly : false);
         }
         if (id) {
@@ -135,37 +134,48 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
         setOrderBy(data?.orderBy ? data?.orderBy : "");
         setTerm(data?.term ? data?.term : "")
 
-    }, [orderId,id]);
+    }, [orderId, id]);
 
 
     useEffect(() => {
         if (orderId) {
             syncFormWithDb(singleOrderData?.data, singleOrderData?.data?.orderDetails);
-                   setSampleDetails(
-                        singleOrderData?.data?.orderDetails?.map(item => ({
-                            ...item,
-                            sampleSizeDetails: item?.orderSizeDetails || [] 
-                        }))
-                        );
+            setSampleDetails(
+                singleOrderData?.data?.orderDetails?.map(item => ({
+                    ...item,
+                    sampleSizeDetails: item?.orderSizeDetails || []
+                }))
+            );
 
 
-        } 
-        else if(id){
-             syncFormWithDb(singleData?.data ,  singleData?.data?.sampleDetails);
-             setSampleDetails(singleData?.data?.sampleDetails)
-            }
-           
+        }
+        else if (id) {
+            syncFormWithDb(singleData?.data, singleData?.data?.sampleDetails);
+            setSampleDetails(singleData?.data?.sampleDetails)
+        }
+
         else {
             syncFormWithDb(undefined);
         }
-    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData , singleData ,isSingleFetching , isSingleLoading  , id]);
+    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData, singleData, isSingleFetching, isSingleLoading, id]);
 
     let data = {
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType: customerCode,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, sampleDetails
+        partyId, finYearId, phone, contactPersonName, address, validDate,
+        sampleDetails
+            : sampleDetails
+                ?.filter(item => item.styleId)
+                .map(item => ({
+                    ...item,
+                    sampleSizeDetails: item.sampleSizeDetails?.filter(size => size.qty) || [],
+                    sampleYarnDetails : item.sampleYarnDetails?.filter(yarn => yarn.colorId) || []
+                }))
+                .filter(item => item.sampleSizeDetails.length > 0)
     }
+
+
 
 
 
@@ -182,9 +192,11 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
         try {
             const formData = new FormData();
             for (let key in data) {
+
                 if (key === 'sampleDetails') {
                     formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
                     data[key].forEach(option => {
+                        console.log(option?.filePath instanceof File, "filePath")
                         if (option?.filePath instanceof File) {
                             formData.append('images', option.filePath);
                         }
@@ -218,10 +230,10 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
                     title: text + "  " + "Successfully",
                     icon: "success",
                     draggable: true,
-                    timer: 1000, 
-                    showConfirmButton: false, 
+                    timer: 1000,
+                    showConfirmButton: false,
                     didOpen: () => {
-                        Swal.showLoading(); 
+                        Swal.showLoading();
                     }
                 });
                 // toast.success(text + "Successfully");
@@ -275,21 +287,21 @@ const SampleEntryUi = ({ allData, isLoading  , isFetching , sampleDetails, setSa
         setSampleDetails([]);
 
     }
-useEffect(() => {
-    if (Array.isArray(sampleDetails) && sampleDetails.length >= 1) return;
+    useEffect(() => {
+        if (Array.isArray(sampleDetails) && sampleDetails.length >= 1) return;
 
-    setSampleDetails(prev => {
-        const safePrev = Array.isArray(prev) ? prev : [];
-        const newArray = Array.from({ length: 1 - safePrev.length }, () => ({
-            yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
-            measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-            stripecolorId: "", noOfStripes: "0", socksTypeId: "", sampleQty: 0.00, sampleWeight: 0.00,
-            sampleSizeDetails: [{ qty: 0.00, sizeId: "", weight: "" }]
-        }));
+        setSampleDetails(prev => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+            const newArray = Array.from({ length: 1 - safePrev.length }, () => ({
+                yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",uomId : "",  
+                measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+                stripecolorId: "", noOfStripes: "0", socksTypeId: "", sampleQty: 0.00, sampleWeight: 0.00,
+                sampleSizeDetails: [{ qty: 0.00, sizeId: "", weight: "" }]
+            }));
 
-        return [...safePrev, ...newArray];
-    });
-}, [setSampleDetails, sampleDetails]);
+            return [...safePrev, ...newArray];
+        });
+    }, [setSampleDetails, sampleDetails]);
 
 
 
@@ -330,9 +342,15 @@ useEffect(() => {
     }
 
     function getTotalQty() {
-        let qty = sampleDetails?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-        return parseInt(qty)
+        return sampleDetails?.reduce((acc, curr) => {
+            const sizeQty = curr?.sampleSizeDetails?.reduce(
+                (sAcc, sCurr) => sAcc + (parseInt(sCurr?.qty) || 0),
+                0
+            );
+            return acc + sizeQty;
+        }, 0) || 0;
     }
+
 
     return (
         <>
@@ -351,7 +369,12 @@ useEffect(() => {
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Sample Entry</h1>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            setOrderId("")
+                            setId("")
+                            setSampleDetails([]);
+                            onClose();
+                        }}
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
                     >
@@ -368,32 +391,33 @@ useEffect(() => {
                                 Sample Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Sample.No" readOnly value={docId}   />
-                                <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true}  />
-                                <ReusableInput label="Deleivery Date" type="date" value={validDate} setValue={setValidDate}  />
-                                    {/* <DropdownWithSearch
-                                        name="Orders"
-                                        options={orderData?.data}
-                                        value={orderId}
-                                        setValue={setOrderId}
-                                        disabled={newSampleEntry ? true : false} 
-                                        labelField={"docId"}
-                                        label={"Orders"} 
-                                      
-                                    /> */}
-                               {/* <div className="flex items-center gap-2 text-xs text-slate-500 mb-1 item-center mt-4">
-                                        <span className="block text-xs font-bold text-slate-700 mb-1">Direct Sample</span>
-                                        <input
-                                            type="checkbox"
-                                            onClick={() =>   {
-                                                setNewSampleEntry(!newSampleEntry)
-                                                syncFormWithDb(undefined);
-                                                setSampleDetails([]);
-                                            }}
-                                            disabled={orderId}
-                                        />
-                                        </div> */}
-     
+                                <ReusableInput label="Sample.No" readOnly value={docId} />
+                                <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} />
+                                {/* <ReusableInput label="Deleivery Date" type="date" value={validDate} setValue={setValidDate}  /> */}
+
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1 item-center mt-4 mr-5 ">
+                                    <span className="text-xs font-bold text-slate-700 mb-1 ">Direct Sample</span>
+                                    <input
+                                        type="checkbox"
+                                        onClick={() => {
+                                            setNewSampleEntry(!newSampleEntry)
+                                            syncFormWithDb(undefined);
+                                            setSampleDetails([]);
+                                            setOrderId("")
+                                        }}
+                                        disabled={orderId}
+                                    />
+                                </div>
+                                <DropdownWithSearch
+                                    name="Orders"
+                                    options={orderData?.data}
+                                    value={orderId}
+                                    setValue={setOrderId}
+                                    disabled={newSampleEntry ? true : false}
+                                    labelField={"docId"}
+                                    label={"Orders"}
+
+                                />
                             </div>
                         </div>
 
@@ -406,9 +430,9 @@ useEffect(() => {
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
                                         <ReusableSearchableInput
-                                            label="Customer"
+                                            label="Customer Id"
                                             component="PartyMaster"
-                                            placeholder="Search Parties..."
+                                            placeholder="Search Customer Id..."
                                             optionList={supplierList?.data}
                                             onAddItem={handleAddSupplier}
                                             onDeleteItem={onDeleteItem}
@@ -417,111 +441,32 @@ useEffect(() => {
                                         />
                                     </div>
 
-                                  <TextInput
-                                    name="Customer Code"
-                                    placeholder="Customer Code"
-                                   value={customerCode}
-                                    setValue={setCustomerCode}
-                                    // disabled={true}
-                                />
 
-
-
-
-
-                                    {/* <div className="mb-3">
+                                    <div className="mb-3">
                                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Source Address
+                                            Address
                                         </label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
                                                 placeholder="Select address"
-                                                disabled={true}
-                                                value={address}
-                                                onClick={() => setShowAddressPopup(true)}
-                                                />
+                                                disabled
+                                                value={findFromList(partyId, supplierList?.data, "address")}
+                                            // onClick={() => setShowAddressPopup(true)}
+                                            />
 
-                                            <div
-                                                className="absolute inset-y-0 right-0 flex items-center pr-2.5 cursor-pointer text-slate-400 hover:text-indigo-600 transition-colors"
-                                                onClick={() => {
-                                                    if(!readOnly){
-                                                        setShowAddressPopup(true)
-                                                     } 
-                                                    }}
-                                                >
 
-                                                <HiLocationMarker className="w-4 h-4" />
-                                            </div>
                                         </div>
 
-                                        {showAddressPopup && (
-                                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
-                                                <div className="bg-[f1f1f0] rounded-lg shadow-xl w-full max-w-md">
-                                                    <div className="flex justify-between items-center border-b border-slate-200 p-4">
-                                                        <h3 className="text-lg font-medium text-slate-800">Select Address</h3>
-                                                        <button
-                                                            onClick={() => setShowAddressPopup(false)}
-                                                            className="text-white bg-red-600 rounded-full p-1 hover:bg-red-600"
-                                                        >
-                                                            <HiX className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
 
-                                                    <div className="p-4  bg-white max-h-[60vh] overflow-y-auto">
-                                                        <div className="space-y-3">
 
-                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.partyBranch?.map((item, index) => (
 
-                                                                <div key={index}
-                                                                    aria-disabled
-                                                                    className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
-                                                                    onClick={() => {
-                                                                        setAddress(item?.branchAddress);
-                                                                        setShowAddressPopup(false)
+                                    </div>
 
-                                                                    }}
-                                                                >
-                                                                    <h4 className="font-medium text-slate-800">{item?.branchName}</h4>
-                                                                    <p className="text-sm text-slate-600 mt-1">{item?.branchAddress}</p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
 
-                                                        <button onClick={() => {
 
-                                                            if (!partyId) {
-                                                                toast.error("Choose PartyId");
-                                                                return
-                                                            }
-                                                            setEditingItem(partyId);
-                                                            setOpenModelForAddress(true)
-                                                            setShowAddressPopup(false)
-                                                        }}
-                                                            disabled
 
-                                                         className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
-                                                            <HiPlus className="w-4 h-4 mr-2" />
-                                                            <span>Add New Address</span>
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="border-t border-slate-200 p-4 flex justify-end">
-                                                        <button
-                                                            onClick={() => setShowAddressPopup(false)}
-                                                            className="px-4 py-1 bg-white hover:bg-red-600 text-red-600  hover:text-white border border-red-600 
-             text-red-700 rounded-md hover:bg-red-700 transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                             
-
-                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -536,17 +481,17 @@ useEffect(() => {
                                 <TextInput
                                     name="Contact Person"
                                     placeholder="Contact name"
-                                    value={contactPersonName}
+                                    value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
                                     setValue={setContactPersonName}
-                                    // disabled={true}
+                                    disabled={true}
                                 />
                                 <TextInput
                                     name="Phone"
                                     placeholder="Contact name"
-                                    value={phone}
+                                    value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
                                     setValue={setPhone}
-                                    // disabled={true}
-                                    // onChange={(e) => setPhone(e.target.value)}
+                                    disabled={true}
+                                // onChange={(e) => setPhone(e.target.value)}
 
                                 />
 
@@ -557,10 +502,13 @@ useEffect(() => {
 
 
 
-                    <SampleItems  newSampleEntry={newSampleEntry} readOnly={readOnly} itemHeading={itemHeading} 
+                    <div>
+                        <SampleItems newSampleEntry={newSampleEntry} readOnly={readOnly} itemHeading={itemHeading}
 
+                            setSampleDetails={setSampleDetails} sampleDetails={sampleDetails} id={id} orderId={orderId}
+                        />
+                    </div>
 
-                    setSampleDetails={setSampleDetails} sampleDetails={sampleDetails} id={id} orderId={orderId} />
 
 
 
@@ -577,13 +525,7 @@ useEffect(() => {
                                 placeholder="Additional notes..."
 
                             />
-                            {/* <button
-                                    onClick={handleAdd}
-                                    className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
-                                    title="Confirm"
-                                >
-                                    <HiCheck className="w-5 h-5" />
-                                </button> */}
+           
                         </div>
 
 
@@ -615,44 +557,13 @@ useEffect(() => {
 
 
 
-                                <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Order By</span>
-                                    <input
-                                        type="text"
-                                        className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                                        placeholder="Order By"
-                                        value={orderBy}
-                                        onChange={(e) => setOrderBy(e.target.value)}
-                                        />
-                                </div>
-                                        
 
-                                {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
-                                    <span className="text-slate-800 font-semibold">Grand Total</span>
-                                    <span className="font-bold text-indigo-700">$1,200.00</span>
-                                </div> */}
-                                {/* <div className="flex gap-5 items-center mb-1 text-xs">
-                                    <button
-                                        className="text-green-600 text-[14px] hover:text-white hover:bg-green-600 border border-green-700 px-2 py-1 rounded-md  flex items-center"
-                                        onClick={() => setShowDiscount(true)}
-                                    >
-                                        <HiMinus className="w-2.5 h-2.5 mr-1" />
-                                        <span>Add Discount</span>
-                                    </button>
-                                    <button
-                                        className="text-indigo-600 text-[14px] hover:text-white hover:bg-indigo-600 border border-indigo-700 px-2 py-1 rounded-md flex items-center"
-                                        onClick={() => setShowExtraCharge(true)}
-                                    >
-                                        <HiPlus className=" w-2.5 h-2.5 mr-1" />
-                                        <span> Extra Charge</span>
-                                    </button>
-                                </div> */}
                             </div>
                         </div>
 
-                    
 
-                      
+
+
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
@@ -679,15 +590,15 @@ useEffect(() => {
                                 Email
                             </button> */}
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                onClick={() =>  setReadOnly(false)}
+                                onClick={() => setReadOnly(false)}
                             >
-                                <FiEdit2   className="w-4 h-4 mr-2" />
+                                <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>
-                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
                                 <FaWhatsapp className="w-4 h-4 mr-2" />
                                 WhatsApp
-                            </button>
+                            </button> */}
                             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
                                 <FiPrinter className="w-4 h-4 mr-2" />
                                 Print

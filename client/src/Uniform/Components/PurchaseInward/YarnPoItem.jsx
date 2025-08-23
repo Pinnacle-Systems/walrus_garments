@@ -72,7 +72,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
             <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>{console.log(item, "item")}
                 
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.poItemsId, poList?.data, "docId")}</td>
+                <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.poId, poList?.data, "docId")}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "aliasName")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
@@ -154,7 +154,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                
           
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2)}</td> 
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2)  ||  0}</td> 
 
              
                         

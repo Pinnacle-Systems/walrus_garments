@@ -580,45 +580,12 @@ const AccessoryPoItems = ({
                                             <input
                                                 type="number"
                                                 onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                className="text-right rounded py-1 px-1 w-full"
                                                 value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
                                                 disabled={true}
                                             />
                                         </td>
-                                        {/* <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <input
-                                                type="number"
-                                                onKeyDown={e => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0", index, "taxPercent") }
-                                                }}
-                                                min={"0"}
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                value={(!row.taxPercent) ? 0 : row.taxPercent}
-                                                disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.tax)}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "taxPercent")
-                                                }
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(parseFloat(e.target.value), index, "taxPercent");
-        
-        
-                                                }
-                                                }
-                                            />
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <input
-                                                type="number"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
-                                                value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
-                                                value={getPriceWithTax(row.qty, row.price, row.taxPercent)}
-                                                disabled={true}
-                                            />
-                                        </td> */}
+                                    
                                           <td className="w-16 px-1 py-1 text-center">
                                                 <div className="flex space-x-2  justify-center">
         

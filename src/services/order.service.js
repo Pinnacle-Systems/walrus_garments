@@ -57,7 +57,6 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
 
-        console.log(lastObject, "lastObjectlasttttt")
         const branchObj = await getTableRecordWithId(branchId, "branch")
         let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
         if (lastObject) {
@@ -87,6 +86,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
                 id: 'desc'
             }
         });
+        console.log(lastObject, "lastObjectlasttttt")
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
         let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
@@ -147,14 +147,15 @@ async function get(req) {
                 }
             },
             orderDetails: {
-                select  :{
-                    fiberContentId : true ,
-                    id : true , 
-                    orderId : true  ,
-                    socksMaterialId  : true ,
-                    styleId : true ,
-                    orderSizeDetails  : true  ,
-                    orderYarnDetails  : true ,
+                select: {
+                    fiberContentId: true,
+                    id: true,
+                    orderId: true,
+                    socksMaterialId: true,
+                    filePath: true,
+                    styleId: true,
+                    orderSizeDetails: true,
+                    orderYarnDetails: true,
                 }
             }
 
@@ -191,17 +192,18 @@ async function getOne(id) {
                     name: true
                 }
             },
-                   orderDetails: {
-                select  :{
-                    fiberContentId : true ,
-                    id : true , 
-                    orderId : true  ,
-                    socksMaterialId  : true ,
-                    styleId : true ,
-                    socksTypeId : true,
-                    sizeId : true,
-                    orderSizeDetails  : true  ,
-                    orderYarnDetails  : true ,
+            orderDetails: {
+                select: {
+                    fiberContentId: true,
+                    id: true,
+                    orderId: true,
+                    socksMaterialId: true,
+                    styleId: true,
+                    socksTypeId: true,
+                    filePath: true,
+                    sizeId: true,
+                    orderSizeDetails: true,
+                    orderYarnDetails: true,
                 }
             }
         }
@@ -245,73 +247,75 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 
 
 async function create(req) {
-    const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave,
+    const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
-let orderDetailsParsed = [];
+    let orderDetailsParsed = [];
 
 
-console.log(orderDetails,"orderDetails");
+    console.log(orderDetails, "orderDetails");
 
     let data;
     await prisma.$transaction(async (tx) => {
 
-data = await tx.order.create({
-  data: {
-    docId,
-    packingCoverType,
-    partyId: partyId ? parseInt(partyId) : undefined,
-    branchId: branchId ? parseInt(branchId) : undefined,
-    createdById: parseInt(userId),
-    contactPersonName,
-    address,
-    phone,
-    notes,
-    term,
-    orderBy,
-    validDate: validDate ? new Date(validDate) : undefined,
-    draftSave: Boolean(draftSave),
+        data = await tx.order.create({
+            data: {
+                docId,
+                packingCoverType,
+                partyId: partyId ? parseInt(partyId) : undefined,
+                branchId: branchId ? parseInt(branchId) : undefined,
+                createdById: parseInt(userId),
+                contactPersonName,
+                address,
+                phone,
+                notes,
+                term,
+                orderBy,
+                validDate: validDate ? new Date(validDate) : undefined,
+                draftSave: Boolean(draftSave),
 
-    orderDetails: orderDetails?.length > 0
-      ? {
-          create: JSON.parse(orderDetails).map((item) => ({
-            styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-            fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
-            socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
-            socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                orderDetails: orderDetails?.length > 0
+                    ? {
+                        create: JSON.parse(orderDetails).map((item) => ({
+                            styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+                            fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+                            socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+                            socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                            filePath: item?.filePath ? item?.filePath : undefined,
 
-            orderSizeDetails: item?.orderSizeDetails?.length > 0
-              ? {
-                  createMany: {
-                    data: item.orderSizeDetails.map((sub) => ({
-                      size: sub?.sizeId || undefined,
-                      sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                      sizeMeasurement: sub?.sizeMeasurement || undefined,
-                      qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                    })),
-                  },
-                }
-              : undefined,
+                            orderSizeDetails: item?.orderSizeDetails?.length > 0
+                                ? {
+                                    createMany: {
+                                        data: item.orderSizeDetails.map((sub) => ({
+                                            size: sub?.sizeId || undefined,
+                                            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                            sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                        })),
+                                    },
+                                }
+                                : undefined,
 
-            orderYarnDetails: item?.orderYarnDetails?.length > 0
-              ? {
-                  createMany: {
-                    data: item.orderYarnDetails.map((yarn) => ({
-                      yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                      yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                      count: yarn?.count ?  yarn?.count  :  undefined,
-                      yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                    })),
-                  },
-                }
-              : undefined,
-          })),
-        }
-      : undefined,
-  },
-});
+                            orderYarnDetails: item?.orderYarnDetails?.length > 0
+                                ? {
+                                    createMany: {
+                                        data: item.orderYarnDetails.map((yarn) => ({
+                                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                                            count: yarn?.count ? yarn?.count : undefined,
+                                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                        })),
+                                    },
+                                }
+                                : undefined,
+                        })),
+                    }
+                    : undefined,
+            },
+        });
 
 
 
@@ -333,24 +337,24 @@ const update = async (id, body) => {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
-console.log(orderDetails,"orderDetails")
+    console.log(orderDetails, "orderDetails")
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
     if (!dataFound) return { statusCode: 404, message: "No record found for order" };
 
-    
-const parsedOrderDetails = JSON.parse(orderDetails || "[]");
 
-const incomingIds = parsedOrderDetails.filter(i => i.id).map(i => parseInt(i.id));
+    const parsedOrderDetails = JSON.parse(orderDetails || "[]");
+
+    const incomingIds = parsedOrderDetails?.filter(i => i.id).map(i => parseInt(i.id));
     let data;
     await prisma.$transaction(async (tx) => {
         data = await tx.order.update({
             where: {
-                 id: parseInt(id) ,
-                  
-                },
-                include: {
-                        orderDetails: true
-                    },
+                id: parseInt(id),
+
+            },
+            include: {
+                orderDetails: true
+            },
             data: {
                 docId: draftSave ? docIdNumber : dataFound?.docId,
                 partyId: partyId ? parseInt(partyId) : undefined,
@@ -361,115 +365,94 @@ const incomingIds = parsedOrderDetails.filter(i => i.id).map(i => parseInt(i.id)
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
                 updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                // orderDetails: {
-                //     deleteMany: {},
-                //     createMany: {
-                //         data: JSON.parse(orderDetails || []).map(temp => {
-                //             let newItem = {}
-                //             newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : "";
-                //             newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : "";
-                //             newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : "";
-                //             newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : "";
-                //             newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : "";
-                //             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : "";
-                //             newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : "";
-                //             newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : "";
-                //             newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : "";
-                //             newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : "";
-                //             newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : "";
-                //             newItem["description"] = temp["description"] ? temp["description"] : "";
-                //             newItem["measurements"] = temp["measurements"] ? temp["measurements"] : "";
-                //             newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : "";
-                //             newItem["filePath"] = temp["filePath"] ? temp["filePath"] : "";
-                //             return newItem
-                //         }
-                //         )
-                //     }
-                // }
-            
 
 
 
-orderDetails: {
-  deleteMany: {
-    ...(incomingIds.length > 0 && {
-      id: { notIn: incomingIds }
-    })
-  },
 
-  update: parsedOrderDetails
-    .filter(item => item.id)
-    .map((item) => ({
-      where: { id: parseInt(item.id) },
-      data: {
-        styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-        fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
-        socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
-        socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
 
-        orderSizeDetails: {
-          deleteMany: {}, // always delete all existing
-          createMany: {
-            data: item?.orderSizeDetails?.map((sub) => ({
-              sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-              sizeMeasurement: sub?.sizeMeasurement || undefined,
-              qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-            })) || [],
-          },
-        },
+                orderDetails: {
+                    deleteMany: {
+                        ...(incomingIds.length > 0 && {
+                            id: { notIn: incomingIds }
+                        })
+                    },
 
-        orderYarnDetails: {
-          deleteMany: {}, // always delete all existing
-          createMany: {
-            data: item?.orderYarnDetails?.map((yarn) => ({
-              yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-              yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-              count: yarn?.count || undefined,
-              yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-            })) || [],
-          },
-        },
-      },
-    })),
+                    update: parsedOrderDetails
+                        .filter(item => item.id)
+                        .map((item) => ({
+                            where: { id: parseInt(item.id) },
+                            data: {
+                                styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+                                fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+                                socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+                                socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                                filePath: item?.filePath ? item?.filePath : undefined,
 
-  create: parsedOrderDetails
-    .filter(item => !item.id)
-    .map((item) => ({
-      styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-      fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
-      socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
-      socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                                orderSizeDetails: {
+                                    deleteMany: {}, // always delete all existing
+                                    createMany: {
+                                        data: item?.orderSizeDetails?.map((sub) => ({
+                                            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                            sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                        })) || [],
+                                    },
+                                },
 
-      orderSizeDetails: {
-        createMany: {
-          data: item?.orderSizeDetails?.map((sub) => ({
-            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-            sizeMeasurement: sub?.sizeMeasurement || undefined,
-            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-          })) || [],
-        },
-      },
+                                orderYarnDetails: {
+                                    deleteMany: {}, // always delete all existing
+                                    createMany: {
+                                        data: item?.orderYarnDetails?.map((yarn) => ({
+                                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
 
-      orderYarnDetails: {
-        createMany: {
-          data: item?.orderYarnDetails?.map((yarn) => ({
-            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-            count: yarn?.count || undefined,
-            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-          })) || [],
-        },
-      },
-    })),
-}
+                                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                                            count: yarn?.count || undefined,
+                                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                        })) || [],
+                                    },
+                                },
+                            },
+                        })),
+
+                    create: parsedOrderDetails
+                        .filter(item => !item.id)
+                        .map((item) => ({
+                            styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+                            fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+                            socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+                            socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+
+                            orderSizeDetails: {
+                                createMany: {
+                                    data: item?.orderSizeDetails?.map((sub) => ({
+                                        sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                        sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                    })) || [],
+                                },
+                            },
+
+                            orderYarnDetails: {
+                                createMany: {
+                                    data: item?.orderYarnDetails?.map((yarn) => ({
+                                        yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                                        yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                                        count: yarn?.count || undefined,
+                                        yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                    })) || [],
+                                },
+                            },
+                        })),
+                }
 
 
 
 
 
 
-                },
-            });
+            },
+        });
 
 
     });

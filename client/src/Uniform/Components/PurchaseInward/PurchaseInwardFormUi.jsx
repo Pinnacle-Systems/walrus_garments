@@ -442,7 +442,7 @@ console.log(data,"data")
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
                           
-                               <ReusableSearchableInput
+                               {/* <ReusableSearchableInput
                                             label="Customer"
                                             component="PartyMaster"
                                             placeholder="Search Parties..."
@@ -452,7 +452,7 @@ console.log(data,"data")
                                             setSearchTerm={setPartyId}
                                             searchTerm={partyId}
                                             readOnly={readOnly}
-                                        /> 
+                                        />  */}
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
                             <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
@@ -481,7 +481,7 @@ console.log(data,"data")
                             // readOnly={id || readOnly}
                              />
                             {(!readOnly && poInwardOrDirectInward == "PurchaseInward") &&
-                                < div className="">
+                                < div className="mt-5">
                                     <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                         onClick={() => {
                                             // if (!supplierId) {

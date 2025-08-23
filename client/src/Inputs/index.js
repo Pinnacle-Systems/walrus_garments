@@ -522,9 +522,7 @@ export const DropdownInput = ({
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
-          ${readOnly || disabled
-            ? "bg-gray-100 text-gray-100 cursor-not-allowed"
-            : "bg-white text-gray-900 hover:border-gray-400"}
+      
           ${className}`}
         value={value}
         onChange={(e) => {

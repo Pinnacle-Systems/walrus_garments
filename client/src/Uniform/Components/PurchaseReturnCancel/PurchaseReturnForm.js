@@ -375,7 +375,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
-                                Inward Details
+                                Return Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc. Id." value={docId} required={true} readOnly
@@ -384,7 +384,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
 
 
 
-                                <DropdownInput name="Inward Type"
+                                <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
@@ -405,7 +405,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                 Supplier Details
                             </h2>
                             <div className="grid grid-cols-2 gap-2">
-
+{/* 
                                 <div className="col-span-2">
                                     <ReusableSearchableInput
                                         label="Party"
@@ -418,7 +418,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                         searchTerm={supplierId}
                                         readOnly={readOnly}
                                     />
-                                </div>
+                                </div> */}
 
                                 <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
 

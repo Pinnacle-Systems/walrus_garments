@@ -90,12 +90,12 @@ async function get(req) {
       id: "desc",
     },
     include: {
-     
+
       Party: {
         select: {
           name: true,
-          contactPersonName: true,
-          // contactMobile: true,
+          contactPersonEmail: true,
+          contactPersonNumber: true,
         },
       },
 
@@ -130,11 +130,26 @@ async function getOne(id) {
     },
     include: {
       Party: {
-                  select: {
-                      name: true
-                  }
-              },
-             sampleDetails : true,   
+        select: {
+          name: true,
+          contactPersonEmail: true,
+          contactPersonNumber: true,
+        }
+      },
+      sampleDetails: {
+        select: {
+          sampleSizeDetails: true,
+          id: true,
+          sampleId: true,
+          socksMaterialId: true,
+          styleId: true,
+          socksTypeId: true,
+          filePath: true,
+          SampleYarnDetails : true,
+        },
+       
+
+      },
     },
   });
   if (!data) return NoRecordFound("party");
@@ -191,24 +206,22 @@ export async function removeStyleImage(id) {
 
 async function create(body) {
   const {
-    colorId,
-    styleId,
-    sizeId,
-    fabricId,
+
     active,
     userId,
     sampleDetails,
-    merchandId,
+    draftSave,
     branchId,
     partyId,
     phone,
     contactPersonName,
     address,
     validDate,
-    companyId,
-    sampleSizeGrid,
+    filePath,
+    notes,
+    term,
   } = await body;
-  console.log(sampleDetails,"sampleDetails")
+  console.log(sampleDetails, "sampleDetails")
   let data;
   let newDocId = await getNextDocId(branchId);
   data = await prisma.sample.create({
@@ -216,51 +229,63 @@ async function create(body) {
       address,
       docId: newDocId,
       contactPersonName,
-      userId: merchandId ? parseInt(merchandId) : undefined,
-      colorId: colorId ? parseInt(colorId) : undefined,
       createdById: userId ? parseInt(userId) : undefined,
       partyId: partyId ? parseInt(partyId) : undefined,
-      // styleId: styleId ? parseInt(styleId) : undefined,
-      sizeId: sizeId ? parseInt(sizeId) : undefined,
-      companyId: companyId ? parseInt(companyId) : undefined,
+      filePath: filePath ? filePath : undefined,
       active: active && JSON.parse(active) ? JSON.parse(active) : undefined,
       branchId: branchId ? parseInt(branchId) : undefined,
       phone,
       validDate: validDate ? new Date(validDate) : undefined,
-      sampleDetails: {
-          createMany: {
-                  data: JSON.parse(sampleDetails || []).map(temp => {
-                      let newItem = {}
-                      newItem["yarnNeedleId"] = temp["yarnNeedleId"] ? parseInt(temp["yarnNeedleId"]) : null;
-                      newItem["machineId"] = temp["machineId"] ? parseInt(temp["machineId"]) : null;
-                      newItem["fiberContentId"] = temp["fiberContentId"] ? parseInt(temp["fiberContentId"]) : null;
-                      newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : null;
-                      newItem["sampleQty"] = temp["sampleQty"] ? parseFloat(temp["sampleQty"]) : null;
-                      newItem["sampleWeight"] = temp["sampleWeight"] ? parseFloat(temp["sampleWeight"]) : null;
-                      newItem["socksMaterialId"] = temp["socksMaterialId"] ? parseInt(temp["socksMaterialId"]) : null;
-                      newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) :null;
-                      newItem["styleId"] = temp["styleId"] ? parseInt(temp["styleId"]) : null;
-                      newItem["socksTypeId"] = temp["socksTypeId"] ? parseInt(temp["socksTypeId"]) : null;
-                      newItem["legcolorId"] = temp["legcolorId"] ? parseInt(temp["legcolorId"]) : null;
-                      newItem["footcolorId"] = temp["footcolorId"] ? parseInt(temp["footcolorId"]) : null;
-                      newItem["stripecolorId"] = temp["stripecolorId"] ? parseInt(temp["stripecolorId"]) : null;
-                      newItem["description"] = temp["description"] ? temp["description"] : null;
-                      newItem["measurements"] = temp["measurements"] ? temp["measurements"] : null;
-                      newItem["noOfStripes"] = temp["noOfStripes"] ? temp["noOfStripes"] : null;
-                      newItem["filePath"] = temp["filePath"] ? temp["filePath"] : null;
+      notes: notes ? notes : undefined,
+      term: term ? term : undefined,
+      draftSave: draftSave ? JSON.parse(draftSave) : false,
 
 
-                      return newItem
-                  }
-     
-          
-                            )
-                        }
-          
-                      },
-          
-                    },
-                  });
+      sampleDetails: JSON.parse(sampleDetails)?.length > 0
+        ? {
+          create: JSON.parse(sampleDetails).map((item) => ({
+            styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+            socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+            socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+            filePath: item?.filePath ? item?.filePath : undefined,
+
+            sampleSizeDetails: item?.sampleSizeDetails?.length > 0
+              ? {
+                createMany: {
+                  data: item?.sampleSizeDetails.map((sub) => ({
+                    sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                    uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                    qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                    gsmId: sub?.gsmId ? parseInt(sub.gsmId) : undefined,
+                    weight: sub?.weight ? sub?.weight : undefined,
+                    yarnNeedleId: sub?.yarnNeedleId ? parseInt(sub.yarnNeedleId) : undefined,
+                    remarks: sub?.remarks ? sub?.remarks : undefined,
+                  })),
+                },
+              }
+              : undefined,
+
+            SampleYarnDetails: item?.sampleYarnDetails?.length > 0
+              ? {
+                createMany: {
+                  data: item.sampleYarnDetails.map((yarn) => ({
+                    colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                    yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                    yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                    count: yarn?.count ? yarn?.count : undefined,
+                    yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                  })),
+                },
+              }
+
+              : undefined,
+
+          })),
+        }
+        : undefined,
+
+    },
+  });
 
   return { statusCode: 0, data };
 }
@@ -359,7 +384,7 @@ async function updateSampleDetailsBySampleFollow(
   sampleDetails,
   sampleData
 ) {
-  let removedItems = sampleData.sampleDetails.filter((oldItem) => {
+  let removedItems = sampleData?.sampleDetails?.filter((oldItem) => {
     let result = JSON.parse(sampleDetails || [])?.find(
       (newItem) => newItem.id == oldItem.id
     );
@@ -383,9 +408,9 @@ async function updateSampleDetailsBySampleFollow(
         },
         data: {
           sampleId: sampleData.id ? parseInt(sampleData.id) : undefined,
+          colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
           itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
           itemTypeId: temp.itemTypeId ? parseInt(temp.itemTypeId) : undefined,
-          colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
           fabricId: temp.fabricId ? parseInt(temp.fabricId) : undefined,
           sizeId: temp.sizeId ? parseInt(temp.sizeId) : undefined,
           // comment: temp.comment ? temp.comment : "",
@@ -414,16 +439,10 @@ async function update(id, body) {
   let bodyData = await body;
   const {
     orderId,
-    styleId,
-    sizeId,
-    fabricId,
+
     active,
     userId,
-    currentStage,
-    remarks,
-    sampleUpdateMerchandiser = false,
-    sampleSubmitWay,
-    sampleSubmitBy,
+
     branchId,
     partyId,
     phone,
@@ -431,17 +450,20 @@ async function update(id, body) {
     address,
     validDate,
     companyId,
-    sampleSizeGrid,
-    packing,
-    printing,
-    cutting,
+
     merchandId,
-    ironing,
-    stitching,
-    pattern,
+
     sampleDetails,
+    notes,
+    term,
   } = bodyData;
   let data;
+
+
+  const parsedsampleDetails = JSON.parse(sampleDetails || "[]");
+  console.log(parsedsampleDetails, "parsedsampleDetails")
+
+  const incomingIds = parsedsampleDetails?.filter(i => i.id).map(i => parseInt(i.id));
 
   const dataFound = await prisma.sample.findUnique({
     where: {
@@ -449,27 +471,15 @@ async function update(id, body) {
     },
   });
   if (!dataFound) return NoRecordFound("sample");
+
   await prisma.$transaction(async (tx) => {
-    // if (sampleUpdateMerchandiser) {
-    //   data = await tx.sample.update({
-    //     where: {
-    //       id: parseInt(id),
-    //     },
-    //     data: {
-    //       remarks,
-    //       sampleSubmitBy: sampleSubmitBy ? sampleSubmitBy : undefined,
-    //       sampleSubmitWay: sampleSubmitWay ? sampleSubmitWay : undefined,
-    //       updatedById: userId ? parseInt(userId) : undefined,
-    //     },
-    //     include: {
-    //       sampleDetails: true,
-    //     },
-    //   });
-    //   await updateSampleDetails(tx, sampleDetails, data, parseInt(userId));
-    // } else {
     data = await tx.sample.update({
       where: {
         id: parseInt(id),
+
+      },
+      include: {
+        sampleDetails: true,
       },
       data: {
         address,
@@ -477,21 +487,169 @@ async function update(id, body) {
         userId: merchandId ? parseInt(merchandId) : undefined,
         updatedById: userId ? parseInt(userId) : undefined,
         partyId: partyId ? parseInt(partyId) : undefined,
-        orderId : orderId  ? parseInt(orderId)  : undefined ,
+        orderId: orderId ? parseInt(orderId) : undefined,
         companyId: companyId ? parseInt(companyId) : undefined,
         active: active && JSON.parse(active) ? JSON.parse(active) : undefined,
         branchId: branchId ? parseInt(branchId) : undefined,
         phone,
         validDate: validDate ? new Date(validDate) : undefined,
-      },
-      include: {
-        sampleDetails: true,
+        notes: notes ? notes : undefined,
+        term: term ? term : undefined,
+
+
+
+
+        // sampleDetails: {
+        //   deleteMany: {
+        //     ...(incomingIds.length > 0 && {
+        //       id: { notIn: incomingIds }
+        //     })
+        //   },
+
+        //   update: parsedsampleDetails?.filter(item => item.id)?.map((item) => ({
+        //     where: { id: parseInt(item.id) },
+        //     data: {
+        //       styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+        //       socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+        //       socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+        //       filePath: item?.filePath ? item?.filePath : undefined,
+
+
+        //       sampleSizeDetails: {
+        //         deleteMany: {},
+        //         createMany: {
+        //           data: item?.sampleSizeDetails?.map((sub) => ({
+        //             sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+        //             uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+        //             qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+        //             gsmId: sub?.gsmId ? parseInt(sub.gsmId) : undefined,
+        //             weight: sub?.weight ? sub?.weight : undefined,
+        //             yarnNeedleId: sub?.yarnNeedleId ? parseInt(sub.yarnNeedleId) : undefined,
+        //             remarks: sub?.remarks ? sub?.remarks : undefined,
+        //           })) || [],
+        //         },
+        //       },
+
+
+        //     },
+        //   })),
+
+        //   create: parsedsampleDetails.filter?.(item => !item.id)?.map((item) => ({
+        //     styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+        //     socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+        //     socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+
+        //     sampleSizeDetails: {
+        //       createMany: {
+        //         data: item?.sampleSizeDetails?.map((sub) => ({
+        //           colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+        //           sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+        //           uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+        //           qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+        //           gsmId: sub?.gsmId ? parseInt(sub.gsmId) : undefined,
+        //           weight: sub?.weight ? sub?.weight : undefined,
+        //           yarnNeedleId: sub?.yarnNeedleId ? parseInt(sub.yarnNeedleId) : undefined,
+        //           remarks: sub?.remarks ? sub?.remarks : undefined,
+        //         })) || [],
+        //       },
+        //     },
+
+
+        //   })),
+        // }
+
+
+        sampleDetails: {
+          deleteMany: {
+            ...(incomingIds.length > 0 && {
+              id: { notIn: incomingIds }
+            })
+          },
+
+          update: parsedsampleDetails.filter(item => item.id)
+            .map((item) => ({
+              where: { id: parseInt(item.id) },
+
+
+              data: {
+
+                styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+                fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+                socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+                socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                filePath: item?.filePath ? item?.filePath : undefined,
+
+
+
+                sampleSizeDetails: {
+                  deleteMany: {}, 
+                      createMany: {
+                        data: item?.sampleSizeDetails?.map((sub) => ({
+                          sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                          // uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                          qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                          weight: sub?.weight ? sub?.weight : undefined,
+                          remarks: sub?.remarks ? sub?.remarks : undefined,
+                        })) || [],
+                      },
+                },
+
+                sampleYarnDetails: {
+                  deleteMany: {}, 
+                  createMany: {
+                    data: item?.sampleYarnDetails?.map((yarn) => ({
+                      colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                      yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                      yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                      count: yarn?.count || undefined,
+                      yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                    })) || [],
+                  },
+                },
+              },
+            })),
+
+
+          create: parsedsampleDetails.filter(item => !item.id)
+            .map((item) => ({
+              styleId: item?.styleId ? parseInt(item.styleId) : undefined,
+              fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
+              socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
+              socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+              filePath: item?.filePath ? item?.filePath : undefined,
+
+              sampleSizeDetails: {
+                createMany: {
+                  data: item?.orderSizeDetails?.map((sub) => ({
+                    sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                    sizeMeasurement: sub?.sizeMeasurement || undefined,
+                    qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                  })) || [],
+                },
+              },
+
+              sampleYarnDetails: {
+                createMany: {
+                  data: item?.sampleYarnDetails?.map((yarn) => ({
+                    colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                    yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                    yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                    count: yarn?.count || undefined,
+                    yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                  })) || [],
+                },
+              },
+            })),
+        }
+
+
+
+
       },
     });
-    await updateSampleDetailsBySampleFollow(tx, sampleDetails, data, userId);
-    // }
-  });
 
+
+  });
 
   return { statusCode: 0, data };
 }
@@ -554,29 +712,3 @@ export async function updateAttachment(req) {
 
 export { get, getOne, getSearch, create, update, remove };
 
-// sampleSizeGrid: sampleSizeGrid ? {
-//     deleteMany: {},
-//     createMany: {
-//         data: sampleSizeGrid.map(temp => {
-//             let newItem = {}
-//             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : undefined;
-//             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : undefined;
-//             return newItem
-//         }
-//         )
-//     }
-// } : undefined,
-
-// sampleDetails: {
-//     deleteMany: {},
-//     createMany: sampleDetails ? {
-//         data: JSON.parse(sampleDetails || []).map(temp => ({
-//             itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
-//             itemTypeId: temp.itemTypeId ? parseInt(temp.itemTypeId) : undefined,
-//             colorId: temp.colorId ? parseInt(temp.colorId) : undefined,
-//             sizeId: temp.sizeId ? parseInt(temp.sizeId) : undefined,
-//             comment: temp.comment ? temp.comment : "",
-//             filePath: temp.filePath ? temp.filePath : undefined,
-//         }))
-//     } : undefined
-// },

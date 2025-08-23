@@ -173,7 +173,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                             >
                                                weightPerBag
                                             </th>  */}
-                                                  <th
+                                                  {/* <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                             >
@@ -184,7 +184,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                             >
                                                weight Per Bag
-                                            </th>
+                                            </th> */}
                                                   <th
             
                                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -219,7 +219,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                                                 {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                                     <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                                        {Array.from({ length: 15 }).map(i =>
+                                                        {Array.from({ length: 13 }).map(i =>
                                                             <td className="table-data w-14  "></td>
                                                         )}
                                                         {!readOnly &&

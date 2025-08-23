@@ -17,7 +17,7 @@ export default function PurchaseOrder( { styles,singleData,findAmount,getTotals,
 
                     <View style={tw("flex flex-row justify-start w-full  ")} >
                     <View style={tw("flex flex-row gap-x-2 w-1/2 -ml-1")}>
-                        <Text style={[tw("text-xs font-bold"), { fontWeight: 900, fontFamily: "Times-Bold" }]}> Po No : </Text>
+                        <Text style={[tw("text-xs font-bold"), { fontWeight: 900, fontFamily: "Times-Bold" }]}> Po No     : </Text>
                         <Text style={tw("text-xs")}>  {singleData?.docId || ""} </Text>
                     </View>
                     <View style={tw("flex flex-row gap-x-2 w-1/2 ml-1")}>
@@ -29,7 +29,7 @@ export default function PurchaseOrder( { styles,singleData,findAmount,getTotals,
 
                     <View style={tw("flex flex-row  justify-start w-full ")} >
 
-                    <View style={tw("flex flex-row gap-x-2 w-1/2")}>
+                    <View style={tw("flex flex-row gap-x-2 w-1/3")}>
                         <Text style={[tw("text-xs font-bold"), { fontWeight: 900, fontFamily: "Times-Bold" }]}>Supplier :  </Text>
                         <Text style={tw("text-xs")}>{singleData?.supplier?.aliasName || 'N/A'}</Text>
                     </View>
@@ -39,16 +39,16 @@ export default function PurchaseOrder( { styles,singleData,findAmount,getTotals,
                     </View>
                     </View>
                     <View style={tw("flex flex-row  justify-start w-full  ")} >
-                    <View style={tw("flex flex-row gap-x-2 w-1/2")}>
+                    {/* <View style={tw("flex flex-row gap-x-2 w-1/2")}>
                         <Text style={[tw("text-xs font-bold"), { fontWeight: 900, fontFamily: "Times-Bold" }]}>Delivery Type :</Text>
                         <Text style={tw("text-xs")}>{singleData?.deliveryType} </Text>
-                    </View>
+                    </View> */}
 
 
-                    <View style={tw("flex flex-row gap-x-2 w-1/2")}>
+                    {/* <View style={tw("flex flex-row gap-x-2 w-1/2")}>
                         <Text style={[tw("text-xs font-bold "), { fontWeight: 900, fontFamily: "Times-Bold" }]}>Delivery To :</Text>
                         <Text style={tw("text-xs")}>{singleData?.DeliveryParty?.name || 'N/A'} </Text>
-                    </View>
+                    </View> */}
 
                     </View>
 </View>

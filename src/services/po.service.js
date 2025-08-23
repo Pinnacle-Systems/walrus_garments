@@ -775,8 +775,8 @@ async function create(body) {
         deliveryBranchId: deliveryType === "ToSelf" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         deliveryPartyId: deliveryType === "ToParty" ? (deliveryToId ? parseInt(deliveryToId) : null) : null,
         createdById: parseInt(userId),
-        orderId  : parseInt(orderId),
-        PurchaseType : PurchaseType,
+        orderId  : orderId  ?  parseInt(orderId) : undefined,
+        PurchaseType : PurchaseType, 
         PoItems: {
           createMany: {
             data: filteredPoItems,

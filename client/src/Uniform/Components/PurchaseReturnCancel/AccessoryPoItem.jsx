@@ -107,7 +107,7 @@ console.log(index,"index")
                      <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
                      <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.poQty || 0}</td>
                      <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.allowedReturnQty || 0}</td>
-         <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+         {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
                         className="text-right rounded py-1  px-1 w-full table-data-input"
@@ -163,7 +163,7 @@ console.log(index,"index")
                                     handleInputChange(parseFloat(e.target.value).toFixed(3), index, "weightPerBag")
                                 }
                             />
-                        </td>              
+                        </td>               */}
                        <td className='py-0.5 border border-gray-300 text-[11px]'>
                                      <input
                                          type="number"

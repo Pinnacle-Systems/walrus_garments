@@ -308,12 +308,12 @@ const YarnPoItems = ({
                                 >
                                     Lot Det.
                                 </th> */}
-                                <th
+                                {/* <th
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     No. of Bags
-                                </th>
+                                </th> */}
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -326,12 +326,12 @@ const YarnPoItems = ({
                                 >
                                     Price
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Price(with Tax)
-                                </th>
+                                </th> */}
 
                                 <th
 
@@ -431,7 +431,7 @@ const YarnPoItems = ({
                                                 </button>
                                             </td> */}
           
-                                  <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+                                  {/* <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                       <input
                                               onKeyDown={e => {
                                                   if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -455,7 +455,7 @@ const YarnPoItems = ({
                                                   }
 
                                                 />
-                                     </td>
+                                     </td> */}
                                       <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                             <input
                                                 onKeyDown={e => {
@@ -464,7 +464,7 @@ const YarnPoItems = ({
                                                 }}
                                                 min={"0"}
                                                 type="number"
-                                                className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                className="text-right rounded py-1 px-1 w-full table-data-input"
                                                 onFocus={(e) => e.target.select()}
                                                 // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                 value={row?.qty}
@@ -487,7 +487,7 @@ const YarnPoItems = ({
                                                           }}
                                                           min={"0"}
                                                           type="number"
-                                                          className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                                          className="text-right rounded py-1 w-full px-1 table-data-input"
                                                           onFocus={(e) => e.target.select()}
                                                           value={(!row.price) ? 0 : row.price}
                                                           disabled={readOnly}
@@ -503,21 +503,14 @@ const YarnPoItems = ({
 
                                              </td>
           
-                                            <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
+                                            {/* <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
 
                                                 {priceWithTax(row.price, row.taxPercent).toFixed(2)}
 
-                                            </td>
+                                            </td> */}
 
-                                            <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
-                                                <input
-                                                    type="number"
-                                                    onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 w-16 px-1 table-data-input"
-                                                    value={(!row.price || !row.price) ? 0 : (parseFloat(sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")) * parseFloat(row.price)).toFixed(2)}
-                                                    disabled={true}
-                                                />
-                                            </td>
+                                                         <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(row?.price) * parseFloat(row?.qty)).toFixed(2)  ||  0}</td> 
+
                                                         
                                               {/* <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
                                                   <button

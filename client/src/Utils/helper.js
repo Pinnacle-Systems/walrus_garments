@@ -187,7 +187,7 @@ export const getDateFromDateTimeToDisplay = (dateTime) => moment.utc(dateTime).f
 
 export function findFromList(id, list, property) {
   if (!list) return ""
-  let data = list?.filter(j => j.active).find(i => parseInt(i.id) === parseInt(id))
+  let data = list?.find(i => parseInt(i.id) === parseInt(id))
   if (!data) return ""
   return data[property]
 }

@@ -38,18 +38,18 @@ const Order = () => {
         {
             header: 'Order No.',
             accessor: (item) => item.docId,
-           className:  'font-medium text-gray-900 w-[10%]' 
+            className: 'font-medium text-gray-900 w-[10%]'
         },
         {
             header: 'Order Date',
             accessor: (item) => item.docDate,
-         className:  'font-medium text-gray-900 w-[10%]' 
+            className: 'font-medium text-gray-900 w-[10%]'
 
         },
         {
             header: 'Customer',
             accessor: (item) => item.Party?.name,
-           className:  'font-medium text-gray-900 w-[60%]' 
+            className: 'font-medium text-gray-900 w-[40%]'
         },
         // {
         //     header: 'ContactPerson',
@@ -61,10 +61,10 @@ const Order = () => {
         //     accessor: (item) => item.phone,
         //     cellClass: () => 'text-gray-800 uppercase'
         // },
-           {
+        {
             header: '',
             accessor: (item) => item.none,
-           className:  'font-medium text-gray-900 w-[20%]' 
+            className: 'font-medium text-gray-900 w-[40%]'
         },
     ];
 
@@ -84,27 +84,28 @@ const Order = () => {
     };
 
     const handleDelete = async (orderId) => {
+        let returnData;
         if (orderId) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                await removeData(orderId)
+                 await removeData(orderId)
                 setId("");
                 onNew();
-                      Swal.fire({
-                                    title: "Deleted Successfully",
-                                    icon: "success",
-                                    timer: 1000, 
-                                 
-                                });
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    timer: 1000,
+
+                });
             } catch (error) {
-                     Swal.fire({
+                Swal.fire({
                     icon: 'error',
                     title: 'Submission error',
                     text: error.data?.message || 'Something went wrong!',
                 });
-}
+            }
         }
 
     };
@@ -119,8 +120,8 @@ const Order = () => {
         <>
             {showOrderForm ? (
                 <OrderFormUi orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowOrderForm(false); setReadOnly(prev => !prev) }}
-                    partyData={partyData?.data}  setShowOrderForm={setShowOrderForm}
-                /> 
+                    partyData={partyData?.data} setShowOrderForm={setShowOrderForm}
+                />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[40%]">
                     <h1 className="text-2xl font-bold text-gray-800"> Order Information</h1>

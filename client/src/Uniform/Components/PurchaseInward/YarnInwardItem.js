@@ -188,6 +188,7 @@ const YarnInwardPoItems = ({
                return newBlend
            })
        }
+       console.log(inwardItems,"inwardItems")
   return (
     <>
     

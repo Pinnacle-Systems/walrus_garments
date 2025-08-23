@@ -20,7 +20,7 @@ const SampleEntry = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
     const [selectedStatus, setSelectedStatus] = useState('all');
-    const [showManufacturer, setShowManufacturer] = useState(false);
+    const [showSampleForm, setShowSampleForm] = useState(false);
     const [id, setId] = useState("");
     const [orderId,setOrderId] = useState("")
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -60,18 +60,15 @@ const SampleEntry = () => {
         {
             header: 'Customer',
             accessor: (item) => item.Party?.name,
-            className :'font-medium text-gray-900 w-[25%]'      
+            className :'font-medium text-gray-900 w-[20%]'      
           },
         {
-            header: 'ContactPerson',
-            accessor: (item) => item.contactPersonName,
-             className :'font-medium text-gray-900 w-[15%]'      
+            header: 'Contact Person',
+            accessor: (item) => item.Party?.contactPersonEmail,
+             className :'font-medium text-gray-900 uppercase  w-[15%]'      
               },
-        {
-            header: 'Contact',
-            accessor: (item) => item.phone,
-            className :'font-medium text-gray-900  w-[10%]'      
-          },
+ 
+
               {
             header: '',
             accessor: (item) => item.none,
@@ -83,15 +80,15 @@ const SampleEntry = () => {
 
 
     const handleView = (id) => {
-
+        console.log(id,"idddddd")
         setId(id)
-        setShowManufacturer(true)
+        setShowSampleForm(true)
         setReadOnly(true);
     };
 
     const handleEdit = (id) => {
         setId(id)
-        setShowManufacturer(true)
+        setShowSampleForm(true)
         setReadOnly(false);
     };
 
@@ -133,17 +130,17 @@ const SampleEntry = () => {
     const onNew = () => {
         setId("");
         setReadOnly(false);
-        setSampleDetails([]);
 
+        console.log(sampleDetails,"sampleDetailsssss" )
     }
 
 
     return (
         <>
-            {showManufacturer ? (
-                <SampleEntryUi sampleDetails={sampleDetails} setSampleDetails={setSampleDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+            {showSampleForm ? (
+                <SampleEntryUi sampleDetails={sampleDetails} setSampleDetails={setSampleDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowSampleForm(false); setReadOnly(prev => !prev) }}
                     partyData={partyData?.data} orderData={orderData} orderId={orderId} setOrderId={setOrderId}  allData={allData?.data}  
-                      isLoading = {isLoading}   isFetching ={isFetching}
+                      isLoading = {isLoading}   isFetching ={isFetching} setShowSampleForm={setShowSampleForm}
                       singleOrderData={singleOrderData} isSingleOrderFetching ={isSingleOrderFetching}  isSingleOrderLoading ={isSingleOrderLoading}
                 />
             ) : (
@@ -172,11 +169,11 @@ const SampleEntry = () => {
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
                             onClick={() => { 
-                                setShowManufacturer(true)
+                                setShowSampleForm(true)
                                 onNew()
-                                setSampleDetails([])
-                             }}
-                        >
+                            }}
+                       >
+                                
                             <FaPlus /> Create New
                         </button>
                     </div>
