@@ -123,7 +123,7 @@ const Order = () => {
                     partyData={partyData?.data} setShowOrderForm={setShowOrderForm}
                 />
             ) : (
-                <div className="p-1 bg-[#F1F1F0] h-[40%]">
+                <div className="p-1 bg-[#F1F1F0] h-[85%]">
                     <h1 className="text-2xl font-bold text-gray-800"> Order Information</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ const Order = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden  w-full">
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden w-full">
                         <ReusableTable
                             columns={columns}
                             data={orderData?.data || []}

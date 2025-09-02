@@ -204,6 +204,11 @@ async function getOne(id) {
                     sizeId: true,
                     orderSizeDetails: true,
                     orderYarnDetails: true,
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    }
                 }
             }
         }
@@ -246,7 +251,71 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 }
 
 
+export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, packingType) {
+
+
+    const childRecord = 0;
+    let data = await prisma.orderDetails.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            orderSizeDetails: {
+                select: {
+                    id: true,
+                    sizeMeasurement: true,
+                    qty: true,
+                    orderdetailsId: true,
+                    sizeId: true,
+                    weight: true,
+                    size: {
+                        select: {
+                            name: true
+                        }
+                    }
+
+                }
+            },
+            orderYarnDetails: {
+                select: {
+                    id: true,
+                    yarncategoryId: true,
+                    yarnId: true,
+                    count: true,
+                    yarnKneedleId: true,
+                    colorId: true,
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    YarnType : {
+                        select : {
+                            name : true
+                        }
+                    },
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+
+    })
+    if (!data) return NoRecordFound("order");
+
+
+
+
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
+
+
 async function create(req) {
+            console.log(req.body,"req")
+    
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -289,10 +358,10 @@ async function create(req) {
                                 ? {
                                     createMany: {
                                         data: item.orderSizeDetails.map((sub) => ({
-                                            size: sub?.sizeId || undefined,
                                             sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                                             sizeMeasurement: sub?.sizeMeasurement || undefined,
                                             qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                            weight: sub?.weight ? parseFloat(sub.weight) : undefined,
                                         })),
                                     },
                                 }
@@ -305,7 +374,7 @@ async function create(req) {
                                             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
                                             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                            count: yarn?.count ? yarn?.count : undefined,
+                                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
                                             yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                         })),
                                     },
@@ -395,6 +464,8 @@ const update = async (id, body) => {
                                             sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                                             sizeMeasurement: sub?.sizeMeasurement || undefined,
                                             qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                            weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+
                                         })) || [],
                                     },
                                 },
@@ -404,14 +475,14 @@ const update = async (id, body) => {
                                     createMany: {
                                         data: item?.orderYarnDetails?.map((yarn) => ({
                                             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-
                                             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                            count: yarn?.count || undefined,
+                                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
                                             yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                         })) || [],
                                     },
                                 },
+
                             },
                         })),
 
@@ -429,6 +500,8 @@ const update = async (id, body) => {
                                         sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                                         sizeMeasurement: sub?.sizeMeasurement || undefined,
                                         qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                        weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+
                                     })) || [],
                                 },
                             },
@@ -438,7 +511,7 @@ const update = async (id, body) => {
                                     data: item?.orderYarnDetails?.map((yarn) => ({
                                         yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                         yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                        count: yarn?.count || undefined,
+                                        count: yarn?.count ? parseInt(yarn?.count) : undefined,
                                         yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                     })) || [],
                                 },

@@ -8,7 +8,12 @@ import "./index.css";
 import { FormControl, MenuItem, TextField } from "@mui/material";
 import { push } from "../redux/features/opentabs";
 import { useDispatch } from "react-redux";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaEdit, FaInfoCircle, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
+import secureLocalStorage from "react-secure-storage";
+import { useGetPartyQuery } from "../redux/services/PartyMasterService";
+import { useModal } from "../Basic/pages/home/context/ModalContext";
+import useOutsideClick from "../CustomHooks/handleOutsideClick";
+import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -85,97 +90,99 @@ export const handleOnChangeforpassword = (event, setValue) => {
 export const MultiSelectDropdown = ({
   name,
   selected,
-  labelName,
+  label,
   setSelected,
   options,
   readOnly = false,
   tabIndex = null,
   className = "",
-  inputClass,
+  required,
 }) => {
   console.log(options, "options");
-    console.log(selected, "selected");
+  console.log(selected, "selected");
 
- const customSelectStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    minHeight: '22px',
-    height: '22px',
-    fontSize: '12px',
-    borderRadius: '0.5rem', // rounded-lg
-    outline: 'none',
-    transition: 'all 150ms', // transition-all duration-150
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
-    padding: '0.25rem', // p-1
-    borderColor: state.isFocused ? '' : '#cbd5e1', // focus:border-blue-500
-    boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : undefined, // focus:ring-1 focus:ring-blue-500
-    '&:hover': {
-      borderColor: '#94a3b8'
-    }
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: '22px',
-    padding: '0 8px'
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: '0px',
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: '22px',
-  }),
-  option: (provided) => ({
-    ...provided,
-    fontSize: '14px',
-    padding: '8px 12px'
-  }),
-};
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '22px',
+      height: '22px',
+      fontSize: '12px',
+      borderRadius: '0.5rem', // rounded-lg
+      outline: 'none',
+      transition: 'all 150ms', // transition-all duration-150
+      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+      padding: '0.25rem', // p-1
+      borderColor: state.isFocused ? '' : '#cbd5e1', // focus:border-blue-500
+      boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : undefined, // focus:ring-1 focus:ring-blue-500
+      '&:hover': {
+        borderColor: '#94a3b8'
+      }
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '22px',
+      padding: '0 8px'
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: '0px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '22px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      fontSize: '14px',
+      padding: '8px 12px'
+    }),
+  };
 
   return (
     <div
-      className={`m-1  md:grid-cols-2 items-center z-0 data  ${className}`}
+      className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
     >
-      <label className={`md:text-start   block text-xs font-bold text-slate-700 mb-1${labelName}`}>{name}</label>
-     <MultiSelect
-  options={options}
-  value={selected}
-  onChange={readOnly ? () => {} : setSelected}
-  labelledBy="Select"
-  hasSelectAll={false}
-  styles={{
-    container: (base) => ({
-      ...base,
-      fontSize: "12px",
-      minHeight: "28px",
-    }),
-    control: (base) => ({
-      ...base,
-      padding: "2px",
-      borderRadius: "10px",
-      boxShadow: "none",
-      border: "1px solid #ccc",
-      minHeight: "28px",
-    }),
-    option: (base, state) => ({
-      ...base,
-      fontSize: "12px",
-      backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
-      padding: "4px 8px",
-    }),
-    chips: (base) => ({
-      ...base,
-      fontSize: "12px",
-      padding: "2px 4px",
-    }),
-    searchBox: (base) => ({
-      ...base,
-      fontSize: "12px",
-      padding: "2px",
-    }),
-  }}
-/>
+      <span className="mb-2">
+        {required ? <RequiredLabel name={label ? label : name} /> : name}
+      </span>
+      <MultiSelect
+        options={options}
+        value={selected}
+        onChange={readOnly ? () => { } : setSelected}
+        labelledBy="Select"
+        hasSelectAll={false}
+        styles={{
+          container: (base) => ({
+            ...base,
+            fontSize: "12px",
+            minHeight: "28px",
+          }),
+          control: (base) => ({
+            ...base,
+            padding: "2px",
+            borderRadius: "10px",
+            boxShadow: "none",
+            border: "1px solid #ccc",
+            minHeight: "28px",
+          }),
+          option: (base, state) => ({
+            ...base,
+            fontSize: "12px",
+            backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
+            padding: "4px 8px",
+          }),
+          chips: (base) => ({
+            ...base,
+            fontSize: "12px",
+            padding: "2px 4px",
+          }),
+          searchBox: (base) => ({
+            ...base,
+            fontSize: "12px",
+            padding: "2px",
+          }),
+        }}
+      />
 
 
     </div>
@@ -199,7 +206,7 @@ export const TextInput = ({
     <div className={`mb-2 ${width}`}>
       {name && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
-          {required ? <RequiredLabel name={ label ? label  :  name} /> : name}
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
         </label>
       )}
       <input
@@ -218,11 +225,13 @@ export const TextInput = ({
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
-          ${readOnly || disabled
-            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-            : "bg-white hover:border-gray-400"}
-          ${className}`}
+         
+          ${className}`
+        }
       />
+      {/* ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"} */}
     </div>
   );
 };
@@ -465,7 +474,7 @@ export const TextArea = ({
         required={required}
         readOnly={readOnly}
         value={value}
-        onChange={(e) => handleOnChange(e,setValue)}
+        onChange={(e) => handleOnChange(e, setValue)}
         onBlur={onBlur}
         placeholder={name}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
@@ -504,7 +513,7 @@ export const DropdownInput = ({
   };
 
   const isDisabled = readOnly || disabled;
-  console.log(options, "options in dropdown",value);
+  console.log(options, "options in dropdown", value);
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -808,26 +817,28 @@ export const DateInputNew = ({
   tabIndex = null,
   inputClass,
   inputHead,
+  className
 }) => {
   console.log(type, "type");
 
   const today = new Date().toISOString().split("T")[0];
   return (
-    <div className="   grid-cols-1 md:grid-cols-3 items-center  md:px-1 w-24">
-      <label
-        htmlFor="id"
-        className={`md:text-start flex  pb-[3px] text-xs ${inputHead} font-semibold group-hover:text-blue-600`}
-      >
-        {required ? <RequiredLabel name={name} /> : `${name}`}
-      </label>
+    <div className="   grid-cols-1 md:grid-cols-3 items-center  md:px-1 ">
+      {name && (
+        <label className="block  font-bold text-slate-700 mb-1 text-ms">
+          {name}
+        </label>
+      )}
       <input
         tabIndex={tabIndex ? tabIndex : undefined}
         type={type}
         disabled={disabled}
         required={required}
         min={type === "date" ? today : undefined}
-        className={`focus:outline-none md:col-span-2 border border-gray-400 text-xs p-0.5  rounded-md w-24 ${inputClass}`}
-        id="id"
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+          } ${className}`} id="id"
         value={value}
         onChange={(e) => {
           setValue(e.target.value);
@@ -980,7 +991,7 @@ export const DropdownWithSearch = ({
     <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
       {label && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
-                 {required ? <RequiredLabel name={label} /> : `${label}`}
+          {required ? <RequiredLabel name={label} /> : `${label}`}
 
         </label>
       )}
@@ -990,7 +1001,7 @@ export const DropdownWithSearch = ({
           focus:border-indigo-300 focus:outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
-        
+
         disabled={disabled}
         readOnly={readOnly}
         value={value || ""}
@@ -1108,14 +1119,14 @@ export const ReusableTable = ({
   emptyStateMessage = 'No data available',
   rowActions = true,
   width
-})  => {
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(data?.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
-console.log(data,"commonTable")
+  console.log(data, "commonTable")
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -1124,7 +1135,7 @@ console.log(data,"commonTable")
   };
 
   const Pagination = () => {
-    if (totalPages <= 1) return null;
+    // if (totalPages <= 1) return null;
 
     return (
       <div className=" w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
@@ -1201,93 +1212,381 @@ console.log(data,"commonTable")
   };
 
   return (
-    <div className="bg-[#F1F1F0] shadow-sm overflow-hidden">
-      <table className=" border-collapse w-full">
-        <thead className="bg-gray-200 text-gray-800 ">
-          <tr>
-
-            {columns?.map((column, index) => (
-              <th
-                key={index}
-                className={` ${column.className ? column.className  : "" } py-2  font-medium   ${ column.header  !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
-             
-              >
-                {column.header}
-              </th>
-            ))}
-            {rowActions && (
-              <th className="px-4 py-2 text-center font-medium text-[13px] justify-end">Actions</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems?.length === 0 ? (
+    <>
+      <div className="bg-[#F1F1F0] shadow-sm h-[80%]">
+        <table className=" border-collapse w-full ">
+          <thead className="bg-gray-200 text-gray-800 ">
             <tr>
-              <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
-                {emptyStateMessage}
-              </td>
+
+              {columns?.map((column, index) => (
+                <th
+                  key={index}
+                  className={` ${column.className ? column.className : ""} py-2  font-medium   ${column.header !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
+
+                >
+                  {column.header}
+                </th>
+              ))}
+              {rowActions && (
+                <th className="px-4 py-2 text-center font-medium text-[13px] justify-end">Actions</th>
+              )}
             </tr>
-          ) : (
-            currentItems?.map((item, index) => (
-              <tr
-                key={item.id}
-                className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                  }` }
-              >
-                {columns?.map((column, colIndex) => (
-                  <td
-                    key={colIndex}
-                    className={` ${column.className ? column.className  : ""  } ${ column.header  !== "" ? 'border-r border-white/50' : ''} h-8 ` }
-                  >
-                    {column.accessor(item, index)}
-                  </td>
-                ))}
-                {rowActions && (
-                  <td className=" w-[30px] border-gray-200 gap-1   h-8 justify-end">
-                    <div className="flex">
-                      {onView && (
-                        <button
-                          className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                          onClick={() => onView(item.id)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      )}
-                      {onEdit && (
-                        <button
-                          className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                          onClick={() => onEdit(item.id)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                          </svg>
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                          {/* <span className="text-xs">delete</span> */}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
+          </thead>
+          <tbody>
+            {currentItems?.length === 0 ? (
+              <tr>
+                <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+                  {emptyStateMessage}
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-      <Pagination />
-    </div>
+            ) : (
+              currentItems?.map((item, index) => (
+                <tr
+                  key={item.id}
+                  className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                    }`}
+                >
+                  {columns?.map((column, colIndex) => (
+                    <td
+                      key={colIndex}
+                      className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-8 `}
+                    >
+                      {column.accessor(item, index)}
+                    </td>
+                  ))}
+                  {rowActions && (
+                    <td className=" w-[30px] border-gray-200 gap-1   h-8 justify-end">
+                      <div className="flex">
+                        {onView && (
+                          <button
+                            className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                            onClick={() => onView(item.id)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
+                        {onEdit && (
+                          <button
+                            className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                            onClick={() => onEdit(item.id)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
+                            onClick={() => onDelete(item.id)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {/* <span className="text-xs">delete</span> */}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="">
+
+        <Pagination />
+      </div>
+    </>
+
+
+
 
 
   );
 };
+
+
+export function ReusableSearchableInput({
+  label,
+  placeholder,
+  onDeleteItem,
+  optionList,
+  component,
+  setSearchTerm,
+  searchTerm,
+  readOnly,
+  ref,
+  nextRef
+
+}) {
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
+  const branchId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentBranchId"
+  );
+  const userId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userId"
+  ); const {
+    data: partyList,
+    isLoading: isPartyLoading,
+    isFetching: isPartyFetching,
+  } = useGetPartyQuery({ params: { companyId, userId } });
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [editingItem, setEditingItem] = useState("");
+  const containerRef = useRef(null);
+  const modal = useModal();
+  const [openModel, setOpenModel] = useState(false)
+  const { openAddModal } = modal || {};
+  const [search, setSearch] = useState("");
+  const [filteredPages, setFilteredPages] = useState([]);
+
+  const [isListShow, setIsListShow] = useState(false);
+  const inputRef = useOutsideClick(() => {
+    setIsListShow(false);
+  });
+
+  console.log(optionList, "optionList")
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
+
+  const handleEdit = (id, e) => {
+    e.stopPropagation();
+    setEditingItem(id);
+    setIsDropdownOpen(false);
+    setOpenModel(true)
+  };
+
+  const handleDelete = (itemId, e) => {
+    onDeleteItem(itemId);
+  };
+
+
+  useEffect(() => {
+    if (!partyList) return;
+    if (!search) {
+      setFilteredPages(partyList?.data);
+    }
+    setFilteredPages(
+      partyList?.data?.filter((page) =>
+        page?.code?.toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }, [search, partyList, isPartyFetching, isPartyLoading]);
+
+
+  useEffect(() => {
+    let pageSearchComponent = document.getElementById("pageSearch");
+    if (!pageSearchComponent) return;
+    pageSearchComponent.addEventListener("keydown", function (ev) {
+      var focusableElementsString = '[tabindex="0"]';
+      let ol = document.querySelectorAll(focusableElementsString);
+      if (ev.key === "ArrowDown") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      } else if (ev.key === "ArrowUp") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = ol[i - 1];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      }
+    });
+    return () => {
+      pageSearchComponent.removeEventListener("keydown", () => { });
+    };
+  }, []);
+
+  return (
+    <>
+      <Modal
+        isOpen={openModel}
+        onClose={() => setOpenModel(false)}
+        widthClass={"w-[10%] h-[10%]"}
+      >
+        <DynamicRenderer componentName={component} editingItem={editingItem} onCloseForm={() => setOpenModel(false)} />
+      </Modal>
+
+
+      <div className="relative text-sm w-full" id="pageSearch" ref={containerRef}>
+        <label className="block text-xs font-bold text-slate-700 mb-1">{label}</label>
+
+        <div className="flex gap-2">
+          <div className="relative flex-grow">
+            <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+            {isListShow ? (
+              <input
+                className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+              focus:border-indigo-300 focus:outline-none transition-all duration-200
+              hover:border-slate-400 text-gray-800"
+                placeholder={placeholder}
+                value={search}
+                onChange={(e) => {
+                  // setSearchTerm(e.target.value);
+                  setIsDropdownOpen(true);
+                  setSearch(e.target.value)
+                }}
+                onFocus={() => {
+                  setIsDropdownOpen(true)
+                  setIsListShow(true);
+                }}
+                disabled={readOnly}
+                tabIndex={0}
+                ref={ref}
+
+              />
+            ) :
+              (
+
+                <input
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+                  focus:border-indigo-300 focus:outline-none transition-all duration-200
+                  hover:border-slate-400 text-gray-800"
+                  ref={ref}
+                  placeholder={placeholder}
+                  value={findFromList(searchTerm, optionList, "code")}
+                  onChange={(e) => {
+                    //  setSearchTerm(e.target.value);
+                    setIsDropdownOpen(true);
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      nextRef.current.focus();
+                      if (nextRef?.current) {
+                        console.log("Focusing next input ref:", nextRef.current);
+                        nextRef.current.focus();
+                      }
+                    }
+                  }}
+                  onFocus={() => {
+                    setIsDropdownOpen(true)
+                    setIsListShow(true);
+                  }}
+                  disabled={readOnly}
+                  tabIndex={0}
+
+                />
+              )
+
+            }
+
+
+          </div>
+
+          <div className="relative">
+            <button
+              className="h-full px-3 py-1.5 border border-green-500 rounded-md
+              hover:bg-green-500 text-green-600 hover:text-white transition-colors flex items-center justify-center"
+              disabled={readOnly}
+              onClick={() => {
+                // openAddModal();
+                // setIsDropdownOpen(false);
+                setEditingItem("new");
+                setOpenModel(true)
+              }}
+              onMouseEnter={() => setTooltipVisible(true)}
+              onMouseLeave={() => setTooltipVisible(false)}
+              aria-label="Add supplier"
+
+            >
+              <FaPlus className="text-sm" />
+            </button>
+            {tooltipVisible && (
+              <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                <div className="flex items-start">
+                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                  <span>Click to add a new supplier</span>
+                </div>
+                <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {isDropdownOpen && (
+          <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
+            {optionList?.length > 0 ? (
+              filteredPages?.map((item) => (
+                <div
+                  key={item.id}
+                  tabIndex={0}
+                  className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
+                  onClick={() => { setSearchTerm(item.id); setIsDropdownOpen(false); setSearch(""); setIsListShow(false) }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setSearchTerm(item.id);
+                      setSearch("");
+                      setIsListShow(false);
+                      setIsDropdownOpen(false);
+
+                    }
+                  }}
+                >
+                  <div>
+                    <div className="font-medium">{item.code}</div>
+
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className="text-indigo-600 hover:text-indigo-800 p-1"
+                      onClick={(e) => handleEdit(item?.id, e)}
+                      title="Edit supplier"
+                    >
+                      <FaEdit className="text-sm" />
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-800 p-1"
+                      onClick={(e) => handleDelete(item?.id)}
+                      title="Delete supplier"
+                    >
+                      <FaTrash className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-left text-indigo-600 hover:bg-slate-50 flex items-center gap-2"
+                onClick={() => {
+                  setEditingItem(null);
+                  setIsDropdownOpen(false);
+                  openAddModal();
+                }}
+              >
+                {/* <FaPlus className="text-xs" />
+                Create "{searchTerm}" */}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+
+
+  );
+}

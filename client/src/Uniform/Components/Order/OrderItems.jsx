@@ -52,10 +52,9 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
   const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
 
 
-  const { data: machineList } = useGetMachineQuery({ params: { ...params } });
-  const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
-  const { data: yarnType } = useGetYarnTypeMasterQuery({ params: { ...params } });
 
+  const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
+  const { data: yarnTypeList } = useGetYarnTypeMasterQuery({ params: { ...params } });
 
   const {
     data: colorlist,
@@ -182,7 +181,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
           gridIndex={selectedIndex}
           selectedIndex={selectedIndex}
           id={id}
-          yarnTypeList={yarnType}
+          yarnTypeList={yarnTypeList}
           gridEditableIndex={gridEditableIndex}
           handleInputChange={handleInputChange}
           currentItem={currentItem}
@@ -196,11 +195,12 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
           styleList={styleList?.data}
           setOrderDetails={setOrderDetails}
           orderDetails={orderDetails}
+          onClose={() => setTableDataView(false)}
         />
         {/* ))} */}
       </Modal>
 
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[280px] overflow-auto">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[380px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
           <div className="flex gap-2 items-center">
@@ -276,6 +276,12 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                                 >
                                     Qty
                                 </th> */}
+                <th
+
+                  className={`w-5 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Yarn Details
+                </th>
 
                 <th
 
@@ -411,25 +417,26 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                           ))}
                         </select>
                       </td>
+                      <td className='flex items-center justify-center border border-gray-300 text-[11px] '>
+                        <button
+                          onClick={() => {
+                            handleView(index)
+                            setIndex(index)
+                            GridIndex = index
+                          }
 
-                      {/* Actions */}
+                          }
+                          // onMouseEnter={() => setTooltipVisible(true)}
+                          // onMouseLeave={() => setTooltipVisible(false)}
+                          className="text-blue-800 rounded h-full  text-lg" // 👈 increased size
+                        >
+                          <span className=''>👁</span>
+                        </button>
+                      </td>
                       <td className="w-16 px-1 py-1 text-end">
                         <div className="flex space-x-2 justify-end">
 
-                          <button
-                            onClick={() => {
-                              handleView(index)
-                              setIndex(index)
-                              GridIndex = index
-                            }
 
-                            }
-                            // onMouseEnter={() => setTooltipVisible(true)}
-                            // onMouseLeave={() => setTooltipVisible(false)}
-                            className="text-blue-800 flex items-center bg-blue-50 rounded"
-                          >
-                            👁
-                          </button>
                           <span className="tooltip-text">View</span>
                           <button
                             onClick={() => handleEdit(index)}

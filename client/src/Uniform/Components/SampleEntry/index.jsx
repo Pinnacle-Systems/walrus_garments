@@ -65,7 +65,7 @@ const SampleEntry = () => {
         {
             header: 'Contact Person',
             accessor: (item) => item.Party?.contactPersonEmail,
-             className :'font-medium text-gray-900 uppercase  w-[15%]'      
+             className :'font-medium text-gray-900   w-[15%]'      
               },
  
 

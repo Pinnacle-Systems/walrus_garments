@@ -1,6 +1,6 @@
 import { FaFileAlt } from "react-icons/fa";
-import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
-import { DropdownInput, DropdownWithSearch, Modal } from "../../../Inputs";
+import { ReusableInput } from "../Order/CommonInput";
+import { DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
 import { deliveryTypes, directOrPo, poTypes, purchaseType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
@@ -16,11 +16,13 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useSelector } from "react-redux";
-import { useGetOrderByIdQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-PO";
 import tw from "../../../Utils/tailwind-react-pdf";
+import OrderPurchase from "./OrderPurchase";
+import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData }) => {
 
@@ -44,7 +46,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [partyId, setPartyId] = useState(false);
   const [orderId, setOrderId] = useState("")
   const [remarks, setRemarks] = useState("")
-  const [PurchaseType, setPurchaseType] = useState('')
+  const [PurchaseType, setPurchaseType] = useState('General Purchase')
 
 
   const [deliveryType, setDeliveryType] = useState("")
@@ -52,8 +54,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
   const [showDiscount, setShowDiscount] = useState(false)
   const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [orderSizeDetails, setOrderSizeDetails] = useState([])
+  const [orderYarnDetails, setOrderYarnDetails] = useState([])
 
-
+  const [requirementId, setRequirementId] = useState("");
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
     "Supplier Two",
@@ -92,9 +96,23 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [updateData] = useUpdatePoMutation();
   const [removeData] = useDeletePoMutation();
 
+  // const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdNewQuery({ id: styleId }, { skip: !styleId });
+
+  const { data: requirementData } = useGetRequirementPlanningFormQuery({ params: { branchId } });
+  const { data: singleRequireMentData } = useGetRequirementPlanningFormByIdQuery(requirementId, { skip: !requirementId });
+
+  useEffect(() => {
+    if (requirementId && singleRequireMentData?.data) {
+      setOrderSizeDetails(singleRequireMentData?.data?.requirementSizeDetails ? singleRequireMentData?.data?.requirementSizeDetails : [])
+      setOrderYarnDetails(singleRequireMentData?.data?.RequirementYarnDetails ? singleRequireMentData?.data?.RequirementYarnDetails : [])
+    }
+
+  }, [requirementId, singleRequireMentData]);
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { ...params } });
+
+
 
   const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
 
@@ -149,8 +167,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     if (!data || !transType) return [];
 
     const cleanTransType = transType.toLowerCase().trim();
-    console.log("Looking for material:", cleanTransType);
-    console.log(data?.data, "Original Data");
+
 
     return data?.data
       ?.map((party) => {
@@ -177,7 +194,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const syncFormWithDb = useCallback((data) => {
 
 
-
+    setReadOnly(true)
 
 
     setTransType(data?.transType);
@@ -205,6 +222,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     );
     setRemarks(data?.remarks || "");
     setPurchaseType(data?.PurchaseType ? data?.PurchaseType : "")
+    setOrderId(data?.orderId ? data?.orderId : "")
+    setRequirementId(data?.requirementId ? data?.requirementId : "")
 
     // Optional: If you need to track branch ID
     // if (data?.branchId) {
@@ -213,7 +232,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   }, [id]);
 
 
-  console.log(transType, "transType")
+  console.log(orderId,requirementId , "transType" , readOnly)
 
   const syncOrderForm = useCallback((data) => {
     console.log("Order data:", data?.orderDetails);
@@ -231,10 +250,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     // }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  useEffect(() => {
-    console.log(singleOrderData?.data?.partyId, "setIsd")
-    setPartyId(singleOrderData?.data?.partyId)
-  }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData, syncOrderForm]);
+  // useEffect(() => {
+  //   console.log(singleOrderData?.data?.partyId, "setIsd")
+  //   setPartyId(singleOrderData?.data?.partyId)
+  // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData, syncOrderForm]);
 
 
 
@@ -242,11 +261,11 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     transType, supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
-    poItems: poItems?.filter(po => po.yarnId || po.fabricId || po.accessoryId),
+    poItems: poItems?.filter(po => po.yarnId || po.fabricId || po.accessoryId || po.yarncategoryId),
     deliveryType, deliveryToId,
     discountType,
     discountValue,
-    finYearId, orderId, PurchaseType
+    finYearId, orderId, PurchaseType, requirementId
   }
   const handleSubmitCustom = async (callback, data, text) => {
     console.log(callback, "callback")
@@ -311,12 +330,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   return (
     <>
 
-      {/* <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
-        <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-          supplierId={supplierId}
-          inwardItems={directInwardReturnItems}
-          setInwardItems={setDirectInwardReturnItems} />
-      </Modal> */}
+
       <Modal
         isOpen={printModalOpen}
         onClose={() => setPrintModalOpen(false)}
@@ -335,7 +349,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Order </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -357,23 +371,19 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <ReusableInput label="Doc. Id" readOnly value={docId} />
-
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
               <ReusableInput
                 label="Due Date"
                 value={dueDate}
                 setValue={setDueDate}
-
                 type={"date"}
                 required={true}
                 readOnly={readOnly}
               />
 
-
-
             </div>
-          </div>
 
+          </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
@@ -387,84 +397,66 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                 required={true}
                 readOnly={readOnly}
               />
-
-              {PurchaseType === "Order Purchase" &&
-                <DropdownWithSearch
-                  label="Order No"
-                  options={orderData?.data}
-                  labelField={"docId"}
-                  value={ readOnly ? findFromList(orderId,orderData?.data,"docId")  : orderId}
-                  required={true}
-                  setValue={setOrderId}
-
-                />
-              }
-
               <DropdownInput name="Po Type"
                 options={poTypes}
                 value={transType}
                 setValue={setTransType}
                 required={true}
                 readOnly={readOnly} />
+              {PurchaseType === "Order Purchase" &&
+                <DropdownWithSearch
+                  label="Order No"
+                  options={orderData?.data}
+                  labelField={"docId"}
+                  value={ orderId}
+                  required={true}
+                  setValue={setOrderId}
+                />
+              }
+{console.log(findFromList(orderId, orderData?.data, "docId") ,"ggggggg")}
+
+
+              {PurchaseType === "Order Purchase" &&
+                <DropdownWithSearch
+                  // options={singleOrderData?.data?.orderDetails?.map(o => ({
+                  //   ...o,
+                  //   displayLabel: o?.style?.name
+                  // }))}
+                  options={requirementData?.data?.filter(i => i.orderId == orderId)}
+                  value={ requirementId}
+
+                  setValue={setRequirementId}
+                  labelField={"docId"}
+                  label={"Requirement No"}
+                />}
               <div>
-                {/* <DropdownInput name="Customer" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true}   readOnly={readOnly}/> */}
-
-                {/* <DropdownWithSearch
-                       labelField={"name"}
-                        label={"Customer"}
-                        options={allSuppliers}
-                        disabled={true}
-                         value={partyId} setValue={setPartyId} required={true}   readOnly={readOnly}/> */}
-                <div id={`dropdown`} className={` mb-2`}>
-
-                  {/* <label className="block text-xs font-bold text-slate-700 mb-1">
-                 Customer
-
-        </label> */}
-
-                  {/* <select
-        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
-          focus:border-indigo-300 focus:outline-none transition-all duration-200
-          hover:border-slate-400 `}
-        
-        // disabled
-        readOnly={readOnly}
-        value={54}
-        onChange={(e) => {
-          setPartyId(e.target.value)
-        }}
-      >{console.log(partyId,'partyId')}
-
-        <option value={54}>Select</option>
-        {(  supplierList?.data || []).map((option) => (
-          <option key={option.id} value={option.id} >
-            {option.id}
-          </option>
-        ))}
-      </select> */}
-                </div>
               </div>
-
             </div>
           </div>
 
 
+
+
+
+
+
+
+
+
+
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
 
-            {/* <div className="grid grid-cols-2 gap-1"> */}
             <div className="w flex flex-row gap-8 mt-8">
 
               <ReusableSearchableInput
-                label="Supplier"
+                label="Customer Id"
                 component="PartyMaster"
-                placeholder="Search Suppliers..."
-                optionList={allSuppliers}
+                placeholder="Search Customer Id..."
+                optionList={supplierList?.data}
                 onAddItem={handleAddSupplier}
                 // onDeleteItem={onDeleteItem}
                 setSearchTerm={setSupplierId}
                 searchTerm={supplierId}
-                readOnly={readOnly}
-                disable={!transType}
               />
 
               {/* </div> */}
@@ -480,20 +472,25 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
           </div>
         </div>
         <fieldset className=''>
-          {transType?.toLowerCase().includes("GreyYarn".toLowerCase())
-            ?
-            <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+          {PurchaseType === "Order Purchase" ?
+
+            <OrderPurchase orderYarnDetails={orderYarnDetails} orderSizeDetails={orderSizeDetails} poItems={poItems} setPoItems={setPoItems}
+              id={id}
+            />
             :
-            (
-              transType?.toLowerCase().includes("DyedYarn".toLowerCase())
-                ?
-                <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                :
-                <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            )
+            transType?.toLowerCase().includes("GreyYarn".toLowerCase())
+              ?
+              <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+              :
+              (
+                transType?.toLowerCase().includes("DyedYarn".toLowerCase())
+                  ?
+                  <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                  :
+                  <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+              )
           }
-          {/* <Consolidation readOnly={readOnly} remarks={remarks} setRemarks={setRemarks}
-                      /> */}
+
         </fieldset>
 
         <div className="grid grid-cols-3 gap-3">

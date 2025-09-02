@@ -14,6 +14,15 @@ async function get(req) {
     return { statusCode: 0, data };
 }
 
+async function getYarncounts(req) {
+    const { companyId, active } = req.query
+    const data = await prisma.yarnCounts.findMany({
+        where: {
+            active: active ? Boolean(active) : undefined,
+        }
+    });
+    return { statusCode: 0, data };
+}
 
 async function getOne(id) {
     const childRecord = 0;
@@ -22,7 +31,8 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            YarnOnYarnBlend: true
+            YarnOnYarnBlend: true ,
+             yarnCounts: true,
         }
     })
     if (!data) return NoRecordFound("yarn");
@@ -49,23 +59,25 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { contentId, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active } = await body
+    const { name, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active ,countsList } = await body
     const data = await prisma.yarn.create(
         {
             data: {
-                contentId: contentId ? parseInt(contentId) : null,
-                yarnTypeId: yarnTypeId ?  parseInt(yarnTypeId) : null,
-                countsId: countsId ? parseInt(countsId) : null,
-                taxPercent: taxPercent ?  parseInt(taxPercent) : null,
-                aliasName, hsn,
-                YarnOnYarnBlend: yarnBlendDetails ? {
-                    createMany: {
-                        data: yarnBlendDetails.map(blend => {
-                            return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
+                aliasName, hsn, companyId: parseInt(companyId), active ,name
+                ,
+                yarnCounts: {
+                    createMany: countsList?.length > 0 ? {
+                        data: countsList?.map((temp) => {
+                            let newItem = {}
+                            newItem["name"] = temp["label"] ? temp["label"] : null;
+                            newItem["value"] = temp["value"] ? String(temp["value"]) : null;
+                            newItem["active"] = temp["active"] ? (temp["active"]) : false;
+
+
+                            return newItem
                         })
-                    }
-                } : undefined,
-                companyId: parseInt(companyId), active
+                    } : undefined
+                }
             }
         }
     )
@@ -73,7 +85,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { contentId, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active } = await body
+    const { name, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active ,countsList } = await body
     const dataFound = await prisma.yarn.findUnique({
         where: {
             id: parseInt(id)
@@ -85,20 +97,21 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            contentId: parseInt(contentId),
-            yarnTypeId: parseInt(yarnTypeId),
-            countsId: parseInt(countsId),
-            taxPercent: parseInt(taxPercent),
-            aliasName, hsn,
-            YarnOnYarnBlend: yarnBlendDetails ? {
+            aliasName, hsn,name,
+            companyId: parseInt(companyId), active,
+               yarnCounts: {
                 deleteMany: {},
-                createMany: {
-                    data: yarnBlendDetails.map(blend => {
-                        return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
-                    })
-                }
-            } : undefined,
-            companyId: parseInt(companyId), active
+                createMany: countsList.length > 0
+                    ? {
+                        data: countsList.map((temp) => ({
+                            name: temp.label  ?  temp.label  :  undefined,
+                            value: temp.value ? String(temp.value) : undefined,
+                            active : temp.active ?   temp.active  : false
+                        })),
+                    }
+                    : undefined,
+            },
+  
         }
     })
     return { statusCode: 0, data };
@@ -115,6 +128,7 @@ async function remove(id) {
 
 export {
     get,
+    getYarncounts,
     getOne,
     getSearch,
     create,

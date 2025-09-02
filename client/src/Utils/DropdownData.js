@@ -246,3 +246,9 @@ export const packingCover = [
     { show: "PRINT", value: "PRINT" },
     { show: "PLAIN", value: "PLAIN" },
 ]
+
+export const Colors = [
+    { show: "BLACK", value: "PRINT" },
+    { show: "NAVY", value: "PLAIN" },
+]
+

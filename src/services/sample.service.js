@@ -145,9 +145,9 @@ async function getOne(id) {
           styleId: true,
           socksTypeId: true,
           filePath: true,
-          SampleYarnDetails : true,
+          sampleYarnDetails: true,
         },
-       
+
 
       },
     },
@@ -221,7 +221,6 @@ async function create(body) {
     notes,
     term,
   } = await body;
-  console.log(sampleDetails, "sampleDetails")
   let data;
   let newDocId = await getNextDocId(branchId);
   data = await prisma.sample.create({
@@ -265,14 +264,14 @@ async function create(body) {
               }
               : undefined,
 
-            SampleYarnDetails: item?.sampleYarnDetails?.length > 0
+            sampleYarnDetails: item?.sampleYarnDetails?.length > 0
               ? {
                 createMany: {
                   data: item.sampleYarnDetails.map((yarn) => ({
                     colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
                     yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                     yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                    count: yarn?.count ? yarn?.count : undefined,
+                    count: yarn?.count ? String(yarn?.count) : undefined,
                     yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                   })),
                 },
@@ -582,26 +581,26 @@ async function update(id, body) {
 
 
                 sampleSizeDetails: {
-                  deleteMany: {}, 
-                      createMany: {
-                        data: item?.sampleSizeDetails?.map((sub) => ({
-                          sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                          // uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
-                          qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                          weight: sub?.weight ? sub?.weight : undefined,
-                          remarks: sub?.remarks ? sub?.remarks : undefined,
-                        })) || [],
-                      },
+                  deleteMany: {},
+                  createMany: {
+                    data: item?.sampleSizeDetails?.map((sub) => ({
+                      sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                      // uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                      qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                      weight: sub?.weight ? sub?.weight : undefined,
+                      remarks: sub?.remarks ? sub?.remarks : undefined,
+                    })) || [],
+                  },
                 },
 
                 sampleYarnDetails: {
-                  deleteMany: {}, 
+                  deleteMany: {},
                   createMany: {
                     data: item?.sampleYarnDetails?.map((yarn) => ({
                       colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
                       yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                       yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                      count: yarn?.count || undefined,
+                      count: yarn?.count ? String(yarn?.count) : undefined,
                       yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                     })) || [],
                   },
@@ -634,7 +633,7 @@ async function update(id, body) {
                     colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
                     yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                     yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                    count: yarn?.count || undefined,
+                    count: yarn?.count ? String(yarn?.count) : undefined,
                     yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                   })) || [],
                 },

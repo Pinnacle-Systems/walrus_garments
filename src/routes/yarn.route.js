@@ -1,11 +1,14 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch,  create, update, remove} from '../controllers/yarn.controller.js';
+import { get, getOne, getSearch,  create, update, remove ,getYarnCounts} from '../controllers/yarn.controller.js';
 
 
 router.post('/', create);
 
 router.get('/', get);
+
+router.get('/getYarnCounts', getYarnCounts);
+
 
 router.get('/:id', getOne);
 

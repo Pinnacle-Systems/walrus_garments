@@ -1,6 +1,8 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById } from '../services/order.service.js';
+import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById , 
+    getOrderItemsByIdNew as _getOrderItemsByIdNew
+ } from '../services/order.service.js';
 
 async function get(req, res, next) {
     try {
@@ -33,6 +35,14 @@ export async function getOrderItemsById(req, res, next) {
     }
 }
 
+export async function getOrderItemsByIdNew(req, res, next) {
+    try {
+        res.json(await _getOrderItemsByIdNew(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
 
 async function create(req, res, next) {
     try {

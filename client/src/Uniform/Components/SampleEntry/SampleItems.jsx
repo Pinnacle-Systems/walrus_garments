@@ -108,8 +108,8 @@ export default function SampleItems({ newSampleEntry, readOnly, setSampleDetails
             const newPrev = structuredClone(prev);
 
 
-            if (!Array.isArray(newPrev[index].orderSizeDetails)) {
-                newPrev[index].orderSizeDetails = [];
+            if (!Array.isArray(newPrev[index].sampleSizeDetails)) {
+                newPrev[index].sampleSizeDetails = [];
             }
             newPrev[index].sampleSizeDetails.push({
                 qty: 0.00, sizeId: "", weight: ""
@@ -136,7 +136,6 @@ export default function SampleItems({ newSampleEntry, readOnly, setSampleDetails
     } = useGetColorMasterQuery({ params });
 
     function setIndex(index) {
-        console.log(index, "setInde");
         setSelectedIndex(index)
 
     }
@@ -148,7 +147,7 @@ export default function SampleItems({ newSampleEntry, readOnly, setSampleDetails
                 onClose={() => setTableDataView(false)}
                 widthClass="px-2 h-[70%] w-[70%]"
             >{
-    console.log(sampleDetails, "sampleDetails")}
+                    console.log(sampleDetails, "sampleDetails")}
                 <TableGridItems
                     // item={sampleDetails[selectedIndex ? selectedIndex  : null]}
                     gridIndex={selectedIndex}
@@ -168,6 +167,8 @@ export default function SampleItems({ newSampleEntry, readOnly, setSampleDetails
                     styleList={styleList?.data}
                     setSampleDetails={setSampleDetails}
                     sampleDetails={sampleDetails}
+                    onClose={() => setTableDataView(false)}
+
                 />
                 {/* ))} */}
             </Modal>
@@ -374,26 +375,26 @@ export default function SampleItems({ newSampleEntry, readOnly, setSampleDetails
                                                         👁 <span className="text-xs"></span>
                                                     </button>
                                                     <span className="tooltip-text">View</span>
-                                                        <>
+                                                    <>
 
-                                                            <button
-                                                                onClick={() => handleEdit(index)}
-                                                                className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                                                            >
-                                                                <HiPencil className="w-4 h-4" />
+                                                        <button
+                                                            onClick={() => handleEdit(index)}
+                                                            className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                                                        >
+                                                            <HiPencil className="w-4 h-4" />
 
-                                                            </button>
-                                                            <span className="tooltip-text">Edit</span>
-                                                            <button
-                                                                onClick={() => deleteRow(index)}
-                                                                className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                                                            >
-                                                                <HiTrash className="w-4 h-4" />
+                                                        </button>
+                                                        <span className="tooltip-text">Edit</span>
+                                                        <button
+                                                            onClick={() => deleteRow(index)}
+                                                            className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                                        >
+                                                            <HiTrash className="w-4 h-4" />
 
-                                                            </button>
-                                                            <span className="tooltip-text">Delete</span>
-                                                        </>
-                                                    
+                                                        </button>
+                                                        <span className="tooltip-text">Delete</span>
+                                                    </>
+
 
                                                     {tooltipVisible && (
                                                         <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">

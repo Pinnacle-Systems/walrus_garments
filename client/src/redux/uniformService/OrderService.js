@@ -58,6 +58,18 @@ const OrderApi = createApi({
             },
             providesTags: ["Order"],
         }),
+        getOrderItemsByIdNew: builder.query({
+            query: ({ id, prevProcessId, packingCategory, packingType }) => {
+                return {
+                    url: `${ORDER_API}/getOrderItemsNew/${id}/${prevProcessId ? prevProcessId : null}/${packingCategory ? packingCategory : null}/${packingType ? packingType : null}`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                };
+            },
+            providesTags: ["Order"],
+        }),
         addOrder: builder.mutation({
             query: (payload) => ({
                 url: ORDER_API,
@@ -92,9 +104,11 @@ export const {
     useGetOrderQuery,
     useGetOrderByIdQuery,
     useGetOrderItemsByIdQuery,
+    useGetOrderItemsByIdNewQuery,
     useAddOrderMutation,
     useUpdateOrderMutation,
     useDeleteOrderMutation,
 } = OrderApi;
 
 export default OrderApi;
+

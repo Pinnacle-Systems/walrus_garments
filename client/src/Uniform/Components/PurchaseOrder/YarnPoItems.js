@@ -175,21 +175,7 @@ const YarnPoItems = ({
 
   return (
     <>
-    {console.log("YarnPoiTemns")}
-      {/* <Modal
-        isOpen={Number.isInteger(currentSelectedIndex)}
-        onClose={() => setCurrentSelectedIndex("")}
-      >
-        <TaxDetailsFullTemplate
-          readOnly={readOnly}
-          setCurrentSelectedIndex={setCurrentSelectedIndex}
-          taxTypeId={taxTypeId}
-          currentIndex={currentSelectedIndex}
-          poItems={poItems}
-          handleInputChange={handleInputChange}
-          isSupplierOutside={isSupplierOutside}
-        />
-      </Modal> */}
+   
       
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">

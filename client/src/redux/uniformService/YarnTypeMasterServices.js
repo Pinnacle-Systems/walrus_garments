@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { YARN_TYPE_API} from "../../Api";
+import { YARN_TYPE_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -11,10 +11,10 @@ const YarnTypeMasterApi = createApi({
   tagTypes: ["YarnTypeMaster"],
   endpoints: (builder) => ({
     getYarnTypeMaster: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: YARN_TYPE_API +"/search/"+searchParams,
+            url: YARN_TYPE_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
@@ -24,6 +24,19 @@ const YarnTypeMasterApi = createApi({
         }
         return {
           url: YARN_TYPE_API,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["YarnTypeMaster"],
+    }),
+    getYarnCounts: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${YARN_TYPE_API}/getYarnCounts`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",

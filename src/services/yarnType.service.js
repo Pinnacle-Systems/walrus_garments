@@ -15,12 +15,26 @@ async function get(req) {
 }
 
 
+async function getYarncounts(req) {
+    const { companyId, active } = req.query
+    const data = await prisma.yarnCounts.findMany({
+        where: {
+            active: active ? Boolean(active) : undefined,
+        }
+    });
+    return { statusCode: 0, data };
+}
+
 async function getOne(id) {
     const childRecord = 0;
     const data = await prisma.yarnType.findUnique({
         where: {
             id: parseInt(id)
-        }
+        },
+        include: {
+            yarnCounts: true
+        },
+
     })
     if (!data) return NoRecordFound("yarnType");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -46,11 +60,24 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, companyId, active } = await body
+    const { name, code, companyId, active, countsList } = await body
     const data = await prisma.yarnType.create(
         {
             data: {
-                name, code, companyId: parseInt(companyId), active
+                name, code, companyId: parseInt(companyId), active,
+                yarnCounts: {
+                    createMany: countsList?.length > 0 ? {
+                        data: countsList?.map((temp) => {
+                            let newItem = {}
+                            newItem["name"] = temp["label"] ? temp["label"] : null;
+                            newItem["value"] = temp["value"] ? String( temp["value"]) : null;
+                            newItem["active"] = temp["active"] ? ( temp["active"]) : false;
+
+
+                            return newItem
+                        })
+                    } : undefined
+                }
             }
         }
     )
@@ -58,7 +85,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, active } = await body
+    const { name, code, active, countsList } = await body
     const dataFound = await prisma.yarnType.findUnique({
         where: {
             id: parseInt(id)
@@ -71,7 +98,20 @@ async function update(id, body) {
         },
         data:
         {
-            name, code, active
+            name, code, active,
+            yarnCounts: {
+                deleteMany: {},
+                createMany: countsList.length > 0
+                    ? {
+                        data: countsList.map((temp) => ({
+                            name: temp.label  ?  temp.label  :  undefined,
+                            value: temp.value ? String(temp.value) : undefined,
+                            active : temp.active ?   temp.active  : false
+                        })),
+                    }
+                    : undefined,
+            },
+
         },
     })
     return { statusCode: 0, data };
@@ -92,5 +132,6 @@ export {
     getSearch,
     create,
     update,
-    remove
+    remove,
+    getYarncounts
 }

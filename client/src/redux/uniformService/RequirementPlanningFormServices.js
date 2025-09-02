@@ -93,7 +93,7 @@ const RequirementPlanningFormApi = createApi({
         url: `${REQUIREMENT_FORM_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["po"],
+      invalidatesTags: ["RequirementPlanningForm"],
     }),
   }),
 });

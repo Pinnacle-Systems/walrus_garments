@@ -1,49 +1,43 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, getPoItems as _getPoItems, create as _create, update as _update, remove as _remove, getPoItemById as _getPoItemById } from '../services/requirementPlanningForm.service.js';
+import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById , 
+    getOrderItemsByIdNew as _getOrderItemsByIdNew
+ } from '../services/requirementPlanningForm.service.js';
 
 async function get(req, res, next) {
-    res.json(await _get(req));
     try {
+        res.json(await _get(req));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error `, err.message);
     }
 }
 
+
 async function getOne(req, res, next) {
     try {
-        res.json(await _getOne(req.params.id));
+        res.json(await _getOne(req.params.id, req.params.prevProcessId));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
     }
 }
 
-export async function getPoItemById(req, res, next) {
-        console.log(req.params,"getPoItemById")
 
+
+
+export async function getOrderItemsById(req, res, next) {
     try {
-        res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType));
+        res.json(await _getOrderItemsById(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
     }
 }
 
-export async function getPoItems(req, res, next) {
-    console.log("getPoItems ")
+export async function getOrderItemsByIdNew(req, res, next) {
     try {
-        res.json(await _getPoItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error`, err.message);
-    }
-}
-
-async function getSearch(req, res, next) {
-    try {
-        res.json(await _getSearch(req));
+        res.json(await _getOrderItemsByIdNew(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
@@ -52,7 +46,7 @@ async function getSearch(req, res, next) {
 
 async function create(req, res, next) {
     try {
-        res.json(await _create(req.body));
+        res.json(await _create(req));
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
@@ -70,6 +64,7 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
     try {
+        console.log(req.body, req.params)
         res.json(await _update(req.params.id, req.body));
         console.log(res.statusCode);
     } catch (error) {
@@ -100,14 +95,13 @@ async function remove(req, res, next) {
             res.statusCode = 200;
             res.json({ statusCode: 1, message: "Child record Exists" })
         }
-        console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
+        console.log(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
     }
 }
 
 export {
     get,
     getOne,
-    getSearch,
     create,
     update,
     remove

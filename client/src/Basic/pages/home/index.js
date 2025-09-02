@@ -47,7 +47,7 @@ const Home = () => {
               setLogout={setLogout}
             />
             <div className="">
-              <ActiveTabList />
+              <ActiveTabList isSuperAdmin={isSuperAdmin} />
 
             </div>
 
@@ -58,8 +58,8 @@ const Home = () => {
 
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
             <div className="mt-[30px]  p-5 bg-gray-100  :tab">
-              <ActiveTabList />
-              {openTabs.tabs.length === 0 ? <Dashboard /> : ''}
+              <ActiveTabList  isSuperAdmin={isSuperAdmin} />
+              {openTabs.tabs.length === 0 ? <Dashboard   /> : ''}
             </div>
 
 

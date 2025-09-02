@@ -5,8 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
-import {  BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward } from "../../../Uniform/Components";
-import RequirementPlanningform from "../../../Uniform/Components/RequireMentPlanningForm";
+import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm } from "../../../Uniform/Components";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -57,8 +56,7 @@ const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
 const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
 const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
-const RequirementPlanningForm = lazy(() => import("../../../Uniform/Components/RequireMentPlanningForm"));
-const ActiveTabList = () => {
+const ActiveTabList = ( {isSuperAdmin} ) => {
   const openTabs = useSelector((state) => state.openTabs);
   const dispatch = useDispatch();
   const [showHidden, setShowHidden] = useState(false);
@@ -107,7 +105,7 @@ const ActiveTabList = () => {
     "SOCKS TYPE MASTER": <SocksType />,
     "PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
-    "GSM MASTER" : <GsmMaster/>,
+    "GSM MASTER": <GsmMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
     "MEASUREMENT MASTER": <MeasurementMaster />,
     "FABRIC MASTER": <FabricMaster />,
@@ -117,12 +115,13 @@ const ActiveTabList = () => {
     "SAMPLE FOLLOW": <SampleFollow />,
     "PURCHASE INWARD": <PurchaseInward />,
     "PURCHASE RETURN": <PurchaseReturn />,
-    "OPENING STOCK" : <OpeningStock/>,
-    "PURCHASE ORDER CANCEL" : <PurchaseCancel/>,
-    "BRANCH TYPE MASTER"  : <BranchType/> ,
-    "REQUIREMENT PLANNING FORM"  :  <RequirementPlanningForm/>
+    "OPENING STOCK": <OpeningStock />,
+    "PURCHASE ORDER CANCEL": <PurchaseCancel />,
+    "BRANCH TYPE MASTER": <BranchType />,
+    "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />
 
   };
+
 
   const innerWidth = window.innerWidth;
   const itemsToShow = innerWidth / 130;
@@ -132,11 +131,25 @@ const ActiveTabList = () => {
     sessionStorage.getItem("sessionId") + "userId"
   );
 
+     function initialTab() {
+    if (currentShowingTabs?.length == 0  &&  !isSuperAdmin) {
+      dispatch(push(
+        {
+          active: true,
+          name: "DASHBOARD",
+        }
+
+      ));
+    }
+    else {
+      return
+    }
+  }
   return (
     <div className="relative">
       <div className="flex justify-between">
         <div className="flex gap-2">
-          {currentShowingTabs?.map((tab, index) => (
+          {currentShowingTabs?.length == 0 ? initialTab() : currentShowingTabs?.map((tab, index) => (
             <div
               key={index}
               className={`px-2 rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active

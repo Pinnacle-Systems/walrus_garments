@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { YARN_API} from "../../Api";
+import { YARN_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -8,13 +8,13 @@ const YarnMasterApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["Party"],
+  tagTypes: ["Yarn"],
   endpoints: (builder) => ({
     getYarnMaster: builder.query({
-      query: ({params, searchParams}) => {
-        if(searchParams){
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
           return {
-            url: YARN_API +"/search/"+searchParams,
+            url: YARN_API + "/search/" + searchParams,
             method: "GET",
             headers: {
               "Content-type": "application/json; charset=UTF-8",
@@ -31,7 +31,20 @@ const YarnMasterApi = createApi({
           params
         };
       },
-      providesTags: ["Party"],
+      providesTags: ["Yarn"],
+    }),
+    getYarnCounts: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${YARN_API}/getYarnCounts`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Yarn"],
     }),
     getYarnMasterById: builder.query({
       query: (id) => {
@@ -43,7 +56,7 @@ const YarnMasterApi = createApi({
           },
         };
       },
-      providesTags: ["Party"],
+      providesTags: ["Yarn"],
     }),
     addYarnMaster: builder.mutation({
       query: (payload) => ({
@@ -51,30 +64,31 @@ const YarnMasterApi = createApi({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["Yarn"],
     }),
     updateYarnMaster: builder.mutation({
-      query: ({id, body}) => {
+      query: ({ id, body }) => {
         return {
           url: `${YARN_API}/${id}`,
           method: "PUT",
           body,
         };
       },
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["Yarn"],
     }),
     deleteYarnMaster: builder.mutation({
       query: (id) => ({
         url: `${YARN_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Party"],
+      invalidatesTags: ["Yarn"],
     }),
   }),
 });
 
 export const {
   useGetYarnMasterQuery,
+  useGetYarnCountsQuery,
   useGetYarnMasterByIdQuery,
   useAddYarnMasterMutation,
   useUpdateYarnMasterMutation,

@@ -3,9 +3,9 @@ import { FaWhatsapp } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
 import { HiX, HiOutlineRefresh } from "react-icons/hi";
 import {
-    ReusableSearchableInput,
     ReusableDropdown,
     ReusableInput,
+    ReusableSearchableInput,
 } from "./CommonInput";
 
 import { FiSave, FiPlusCircle, FiMail, FiPrinter, FiX, FiCopy, FiShare2, FiEdit2 } from "react-icons/fi";
@@ -68,10 +68,10 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
     const [partyId, setPartyId] = useState("");
     const [date, setDate] = useState("");
     const childRecord = useRef(0);
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
     const [openModelForAddress, setOpenModelForAddress] = useState(false)
     const [customerCode, setCustomerCode] = useState("")
 
+    const { branchId, userId, companyId, finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
@@ -143,7 +143,9 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
             setSampleDetails(
                 singleOrderData?.data?.orderDetails?.map(item => ({
                     ...item,
-                    sampleSizeDetails: item?.orderSizeDetails || []
+                    sampleSizeDetails: item?.orderSizeDetails || [],
+                    sampleYarnDetails: item?.orderYarnDetails
+
                 }))
             );
 
@@ -159,22 +161,24 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
         }
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData, singleData, isSingleFetching, isSingleLoading, id]);
 
+
     let data = {
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType: customerCode,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate,
         sampleDetails
-            : sampleDetails
-                ?.filter(item => item.styleId)
-                .map(item => ({
-                    ...item,
-                    sampleSizeDetails: item.sampleSizeDetails?.filter(size => size.qty) || [],
-                    sampleYarnDetails : item.sampleYarnDetails?.filter(yarn => yarn.colorId) || []
-                }))
-                .filter(item => item.sampleSizeDetails.length > 0)
+        // : sampleDetails
+        //     ?.filter(item => item.styleId)
+        //     .map(item => ({
+        //         ...item,
+        //         sampleSizeDetails: item?.sampleSizeDetails?.filter(size => size.qty) || [],
+        //         sampleYarnDetails : item?.orderYarnDetails
+        //     }))
+        //     .filter(item => item.sampleSizeDetails.length > 0)
     }
 
+    console.log(data, "dataaa")
 
 
 
@@ -293,7 +297,7 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
         setSampleDetails(prev => {
             const safePrev = Array.isArray(prev) ? prev : [];
             const newArray = Array.from({ length: 1 - safePrev.length }, () => ({
-                yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",uomId : "",  
+                yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "", uomId: "",
                 measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
                 stripecolorId: "", noOfStripes: "0", socksTypeId: "", sampleQty: 0.00, sampleWeight: 0.00,
                 sampleSizeDetails: [{ qty: 0.00, sizeId: "", weight: "" }]
@@ -429,7 +433,7 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
-                                        <ReusableSearchableInput
+                                        {/* <ReusableSearchableInput
                                             label="Customer Id"
                                             component="PartyMaster"
                                             placeholder="Search Customer Id..."
@@ -438,7 +442,23 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
                                             onDeleteItem={onDeleteItem}
                                             setSearchTerm={setPartyId}
                                             searchTerm={partyId}
-                                        />
+                                            disabled={true}
+                                        /> */}
+                                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                                            Customer
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 "
+                                                placeholder=""
+                                                disabled
+                                                value={findFromList(partyId, supplierList?.data, "code")}
+                                            // onClick={() => setShowAddressPopup(true)}
+                                            />
+
+
+                                        </div>
                                     </div>
 
 
@@ -449,7 +469,7 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
                                         <div className="relative">
                                             <input
                                                 type="text"
-                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 "
                                                 placeholder="Select address"
                                                 disabled
                                                 value={findFromList(partyId, supplierList?.data, "address")}
@@ -525,7 +545,7 @@ const SampleEntryUi = ({ allData, isLoading, isFetching, sampleDetails, setSampl
                                 placeholder="Additional notes..."
 
                             />
-           
+
                         </div>
 
 

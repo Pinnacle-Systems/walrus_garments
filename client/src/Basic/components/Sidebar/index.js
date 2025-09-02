@@ -11,6 +11,8 @@ import { useGetPageGroupQuery } from '../../../redux/services/PageGroupMasterSer
 import SidebarComponent from './SidebarComponent';
 // import logo from "../../assets/pinnacle.png";
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -338,7 +340,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   const masters = allowedPages.filter((page) => page.type === "Masters")
   const mastersGroup = [...new Set(masters.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
   const transactions = allowedPages.filter((page) => page.type === "Transactions")
-  console.log(transactions,"transactions")
+  console.log(transactions, "transactions")
   const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
   const reports = allowedPages.filter((page) => page.type === "Reports")
   const reportGroups = [...new Set(reports.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
@@ -362,6 +364,9 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     },
 
   ]
+
+    const dispatch = useDispatch();
+
   return (
     <>
       {/* Toggle Button */}
@@ -391,8 +396,16 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
           {/* Dashboard Link */}
           <div
             className="text-white hover:text-gray-300 cursor-pointer mb-4 flex flex-col items-center"
-            onClick={() => navigate("/dashboard")}
-          >
+
+            onClick={(() => {
+              dispatch(push(
+                {
+                  active: true,
+                  name: "DASHBOARD",
+                }
+
+              ));
+            })}>
             <LayoutDashboard size={20} />
             <span className="text-[11px] text-center mt-1">Dashboard</span>
           </div>

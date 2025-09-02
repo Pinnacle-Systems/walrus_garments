@@ -132,26 +132,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
                           ))}
                         </select>
                       </td>
-                      {/* <td className="py-0.5 border border-gray-300 text-[11px]">
-                        <select
-                          onKeyDown={e => {
-                            if (e.key === "Delete") {
-                              handleInputChange("", index, "sizeId");
-                            }
-                          }}
-                          className="text-left w-full rounded h-full py-1"
-                          value={  yarn?.uomId}
-                          onChange={(e) => handleInputChange(e.target.value, index, "uomId", gridIndex)}
-                          onBlur={(e) => handleInputChange(e.target.value, index, "uomId", gridIndex)}
-                        >
-                          <option>select</option>
-                          {uomList?.data?.map(size => (
-                            <option value={size.id || ""} key={size.id}>
-                              {size?.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td> */}
+                 
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <input
                           type="number"
@@ -168,26 +149,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
                           onBlur={e => handleInputChange(e.target.value, index, "qty")}
                         />
                       </td>
-                      {/* <td className="py-0.5 border border-gray-300 text-[11px]">
-                        <select
-                          onKeyDown={e => {
-                            if (e.key === "Delete") {
-                              handleInputChange("", index, "gsmId");
-                            }
-                          }}
-                          className="text-left rounded w-full py-1 text-xs table-data-input"
-                          value={yarn?.gsmId}
-                          onChange={(e) => handleInputChange(e.target.value, index, "gsmId", gridIndex)}
-                          onBlur={(e) => handleInputChange(e.target.value, index, "gsmId", gridIndex)}
-                        >
-                          <option>select</option>
-                          {gsmList?.data?.map(gsm => (
-                            <option value={gsm.id || ""} key={gsm.id}>
-                              {gsm?.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td> */}
+                     
 
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <input
@@ -205,26 +167,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
                           onBlur={e => handleInputChange(e.target.value, index, "weight")}
                         />
                       </td>
-{/* 
-                      <td className="py-0.5 border border-gray-300 text-[11px]">
-                        <select
-                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                          disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={yarn.yarnNeedleId}
-                          onChange={(e) => handleInputChange(e.target.value, index, "yarnNeedleId")}
-                          onBlur={(e) => {
-                            handleInputChange((e.target.value), index, "yarnNeedleId")
-                          }
-                          }
-                        >
-                          <option hidden>
-                          </option>
-                          {(id ? yarnNeedleList?.data : yarnNeedleList?.data.filter(item => item.active))?.map((blend) =>
-                            <option value={blend.id} key={blend.id}>
-                              {blend?.name}
-                            </option>
-                          )}
-                        </select>
-                      </td> */}
+
 
                       <td className="py-0.5 border border-gray-300 text-[11px]">
                         <textarea

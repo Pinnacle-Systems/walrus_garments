@@ -3,7 +3,6 @@ import { FaRegSave, FaWhatsapp } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
 import { HiX, HiOutlineRefresh } from "react-icons/hi";
 import {
-    ReusableSearchableInput,
     ReusableDropdown,
     ReusableInput,
 } from "./CommonInput";
@@ -26,7 +25,7 @@ import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
-import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
@@ -130,12 +129,11 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails
+        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails :orderDetails?.filter(item  => item.styleId) 
 
     }
 
 
-    console.log(orderDetails, "orderDetails")
 
 
     const validateData = (data) => {
@@ -151,7 +149,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         try {
             const formData = new FormData();
             for (let key in data) {
-                
+
 
                 if (key === 'orderDetails') {
                     formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
@@ -245,9 +243,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     }
 
     useEffect(() => {
-        if (orderDetails?.length >= 1) return
+        if (orderDetails?.length >= 2) return
         setOrderDetails(prev => {
-            let newArray = Array?.from({ length: 1 - prev?.length }, () => {
+            let newArray = Array?.from({ length: 2 - prev?.length }, () => {
                 return {
                     yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
                     measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
@@ -375,7 +373,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <ReusableInput label="Order.No" readOnly value={docId} />
 
                                 <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <ReusableInput label="Due Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
+                                <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
                             </div>
                         </div>
 
@@ -388,15 +386,14 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                                     <div className="col-span-2">
                                         <ReusableSearchableInput
-                                            label="Customer"
+                                            label="Customer Id"
                                             component="PartyMaster"
-                                            placeholder="Search Parties..."
+                                            placeholder="Search Customer Id..."
                                             optionList={supplierList?.data}
                                             onAddItem={handleAddSupplier}
                                             onDeleteItem={onDeleteItem}
                                             setSearchTerm={setPartyId}
                                             searchTerm={partyId}
-                                            readOnly={readOnly}
                                         />
                                     </div>
 
@@ -407,7 +404,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                                     <div className="mb-3">
                                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                                             Address
+                                            Address
                                         </label>
                                         <div className="relative">
                                             <input
@@ -524,7 +521,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                         />
                     </fieldset>
 
-                <div className="grid grid-cols-3 gap-3">
+                    {/* <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
                             <textarea
@@ -537,7 +534,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 placeholder="Additional notes..."
 
                             />
-           
+
                         </div>
 
 
@@ -576,7 +573,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-                    </div>
+                    </div> */}
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}

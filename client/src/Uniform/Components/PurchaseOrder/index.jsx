@@ -15,7 +15,7 @@ import { DisabledInput, DropdownInput, DateInput, ReusableTable } from "../../..
 import { dropDownListObject, } from '../../../Utils/contructObject';
 import { poTypes } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
-import FabricPoItems from "./FabricPoItems";
+import FabricPoItems from "./OrderPurchase";
 import AccessoryPoItems from "./AccessoryPoItems"
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
@@ -402,7 +402,6 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
                             <FaPlus /> Create New
                         </button>
                     </div>
-
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                         <ReusableTable
                             columns={columns}
@@ -413,6 +412,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
                             itemsPerPage={10}
                         />
                     </div>
+
                 </div>
             )}
         </>

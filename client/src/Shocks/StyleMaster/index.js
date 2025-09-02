@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
-import toast from 'react-hot-toast';
 // import { dropDownListObject, multiSelectOption } from '../../../Utils/contructObject';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
-import {  TextInput, ToggleButton } from '../../Inputs';
+import { TextInput, ToggleButton } from '../../Inputs';
 import BrowseSingleImage from '../../Basic/components/BrowseSingleImage';
 import { useAddStyleMasterMutation, useDeleteStyleMasterMutation, useGetStyleMasterByIdQuery, useGetStyleMasterQuery, useUpdateStyleMasterMutation } from '../../redux/uniformService/StyleMasterService';
 import { useGetFabricMasterQuery } from '../../redux/uniformService/FabricMasterService';
@@ -24,24 +23,12 @@ const StyleMaster = () => {
 
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
-    const [image, setImage] = useState("")
     const [name, setName] = useState("");
     const [sku, setSku] = useState("");
-    const [productType, setProductType] = useState("");
-    const [seoTitle, setSeoTitle] = useState("");
-    const [sleeve, setSleeve] = useState("");
-    const [pattern, setPattern] = useState("");
-    const [occassion, setOccassion] = useState("");
-    const [material, setMaterial] = useState("");
-    const [washCare, setWashCare] = useState("");
-    const [active, setActive] = useState(true);
-    const [fabricId, setFabricId] = useState("");
-    const [sizeTemplateId, setSizeTemplateId] = useState("")
-    const [selectedColorsList, setSelectedColorsList] = useState([])
-    const [portionDetails, setPortionDetails] = useState([]);
-    const [hsn, setHsn] = useState("")
 
-    const [errors, setErrors] = useState({});
+    const [active, setActive] = useState(true);
+
+
 
     const [searchValue, setSearchValue] = useState("");
 
@@ -78,51 +65,7 @@ const StyleMaster = () => {
         [id]
     );
 
-    // const syncFormWithDb = useCallback(
-    //     (data) => {
-    //         if (!id) {
-    //             setReadOnly(false);
-    //             setImage("");
-    //             setSku("");
-    //             setHsn("");
-    //             setProductType("");
-    //             setName("");
-    //             setSeoTitle("");
-    //             setSleeve("");
-    //             setFabricId("");
-    //             setPattern("");
-    //             setOccassion("");
-    //             setMaterial("");
-    //             setWashCare("");
-    //                   setActive(id ? (data?.active ) : true);
 
-    //             setSizeTemplateId("")
-    //             setSelectedColorsList([])
-    //             setPortionDetails([])
-    //         } else {
-    //             setReadOnly(true);
-    //             setImage(data?.image ? viewBase64String(data.image) : "");
-    //             setSku(data?.sku || "");
-    //             setHsn(data?.hsn || "");
-    //             setProductType(data?.productType || "");
-    //             setName(data?.name || "");
-    //             setSeoTitle(data?.seoTitle || "");
-    //             setSleeve(data?.sleeve || "");
-    //             setFabricId(data?.fabricId || "");
-    //             setPattern(data?.pattern || "");
-    //             setOccassion(data?.occassion || "");
-    //             setMaterial(data?.material || "");
-    //             setWashCare(data?.washCare || "");
-    //             setActive(id ? (data?.active ?? false) : true);
-    //             setSizeTemplateId(data?.sizeTemplateId || "")
-    //             setSelectedColorsList(data?.StyleOnColor ? data.StyleOnColor.map(item => {
-    //                 return { value: item.colorId, label: item.Color.name }
-    //             }) : [])
-    //             setPortionDetails(data?.portionDetails ? data.portionDetails : [])
-    //         }
-    //     },
-    //     [id]
-    // );
     const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params, searchParams: searchValue });
     const { data: colorList } =
         useGetColorMasterQuery({ params });
@@ -140,7 +83,7 @@ const StyleMaster = () => {
     }
 
     const validateData = (data) => {
-        if (data.name && data.sku) {
+        if (data.name &&  data.sku) {
             return true;
         }
         return false;
@@ -157,51 +100,30 @@ const StyleMaster = () => {
             }
             setId(returnData.data.id);
             // toast.success(text + "Successfully");
-               Swal.fire({
-                    title: text + "  " + "Successfully",
-                    icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false, 
-                    didOpen: () => {
-                        Swal.showLoading(); 
-                    }
-                });
+            Swal.fire({
+                title: text + "  " + "Successfully",
+                icon: "success",
+                draggable: true,
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            setForm(false)
         } catch (error) {
             console.log("handle");
         }
     };
 
-    // const handleSubmitCustom = async (callback, data, text) => {
-    //     try {
-    //         const formData = new FormData()
-    //         for (let key in data) {
-    //             formData.append(key, data[key]);
-    //         }
-    //         formData.append("selectedColorsList", JSON.stringify(selectedColorsList.map(item => item.value)))
-    //         formData.append("portionDetails", JSON.stringify(portionDetails))
-    //         if (image instanceof File) {
-    //             formData.append("image", image);
-    //         } else if (!image) {
-    //             formData.append("isDeleteImage", true);
-    //         }
-    //         let returnData;
-    //         if (text === "Updated") {
-    //             returnData = await callback({ id, body: formData }).unwrap();
-    //         } else {
-    //             returnData = await callback(formData).unwrap();
-    //         }
-    //         setId(returnData.data.id)
-    //         toast.success(text + "Successfully");
-    //     } catch (error) {
-    //         console.log("handle");
-    //     }
-    // };
 
     const saveData = () => {
         if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
+                timer: 1000,
+
             });
             return;
         }
@@ -215,33 +137,37 @@ const StyleMaster = () => {
         }
     };
 
-    const deleteData = async ( id ) => {
+    const deleteData = async (id) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
                 let deldata = await removeData(id).unwrap();
-                if (deldata?.statusCode == 1) {
-                    toast.error(deldata?.message)
-                    return
-                }
+                // if (deldata?.statusCode == 1) {
+                //     toast.error(deldata?.message)
+                //     return
+                // }
                 setId("");
                 // toast.success("Deleted Successfully");
-                         Swal.fire({
+                Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
                     draggable: true,
                     timer: 1000,
-                    showConfirmButton: false, 
+                    showConfirmButton: false,
                     didOpen: () => {
-                        Swal.showLoading(); 
+                        Swal.showLoading();
                     }
                 });
 
                 setForm(false)
             } catch (error) {
-                toast.error("something went wrong");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
             }
         }
     };
@@ -257,7 +183,6 @@ const StyleMaster = () => {
     const onNew = () => {
         setId("");
         setForm(true);
-        setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
     };
@@ -275,19 +200,19 @@ const StyleMaster = () => {
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1'>Style Master</h5>
-        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => {
-                              setForm(true);
-                              onNew();
-                            }}
-                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                          >
-                            <Plus size={16} />
-                            Add New Style 
-                          </button>
-                  
-                        </div>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => {
+                            setForm(true);
+                            onNew();
+                        }}
+                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                    >
+                        <Plus size={16} />
+                        Add New Style
+                    </button>
+
+                </div>
             </div>
             <div className='w-full flex items-start'>
                 <Mastertable
@@ -305,82 +230,42 @@ const StyleMaster = () => {
                         isLoading || isFetching
                     } />
             </div>
-            {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
-                <MastersForm
-                    onNew={onNew}
+
+            {form && (
+                <Modal
+                    isOpen={form}
+                    form={form}
+                    widthClass={"w-[30%] max-w-6xl h-[50vh]"}
                     onClose={() => {
                         setForm(false);
-                        setSearchValue("");
-                        setId(false);
                     }}
-                    model={MODEL}
-                    // childRecord={childRecord.current}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                    readOnly={readOnly}
-                    emptyErrors={() => setErrors({})}
                 >
-                    <fieldset className=' rounded mt-2'>
-                        <div className=''>
-                            <div className='flex justify-between'>
+                    <div className="h-full flex flex-col bg-[f1f1f0]">
+                        <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                    {id ? (!readOnly ? "Edit Style  " : "Style Master ") : "Add New Style "}
+                                </h2>
+
+                            </div>
+                            <div className="flex gap-2">
                                 <div>
-                                    <div className="mb-3">
-                                        <TextInput name="SKU / Style code" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
-                                    </div>
-                                   
-                                    <div className="mb-3">
-                                        <TextInput name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
-
-                                    </div>
-                                </div>
-                              
-                            </div>
-                            <div className="mb-5">
-                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
-                            </div>
-
-                        </div>
-                    </fieldset>
-                </MastersForm>
-            </Modal>} */}
-   {form && (
-                            <Modal
-                                isOpen={form}
-                                form={form}
-                                widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-                                onClose={() => {
-                                setForm(false);
-                                setErrors({});
-                                }}
-                            >
-                                <div className="h-full flex flex-col bg-[f1f1f0]">
-                                <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-                                    <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                        {id ? (!readOnly ? "Edit Style  " : "Style Master ") : "Add New Style "}
-                                    </h2>
-                                    
-                                    </div>
-                                    <div className="flex gap-2">
-                                    <div>
-                                        {readOnly && (
+                                    {readOnly && (
                                         <button
                                             type="button"
                                             onClick={() => {
-                                            setForm(false);
-                                            setSearchValue("");
-                                            setId(false);
+                                                setForm(false);
+                                                setSearchValue("");
+                                                setId(false);
                                             }}
                                             className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                                         >
                                             Cancel
                                         </button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {!readOnly && (
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    {!readOnly && (
                                         <button
                                             type="button"
                                             onClick={saveData}
@@ -390,53 +275,53 @@ const StyleMaster = () => {
                                             <Check size={14} />
                                             {id ? "Update" : "Save"}
                                         </button>
-                                        )}
-                                    </div>
-                                    </div>
+                                    )}
                                 </div>
-
-                                <div className="flex-1 overflow-auto p-3">
-                                    <div className="grid grid-cols-1  gap-3  h-full">
-                                    <div className="lg:col-span- space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                        
-                                        <fieldset className=' rounded mt-2'>
-                                             <div className=''>
-                            <div className='flex justify-between'>
-                                <div>
-                                    <div className="mb-3">
-                                        <TextInput name="SKU / Style code" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
-                                    </div>
-                                   
-                                    <div className="mb-3">
-                                        <TextInput name="Item Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
-
-                                    </div>
-                                </div>
-                              
                             </div>
-                            <div className="mb-5">
-                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
-                            </div>
-
                         </div>
+
+                        <div className="flex-1 overflow-auto p-3">
+                            <div className="grid grid-cols-1  gap-3  h-full">
+                                <div className="lg:col-span- space-y-3">
+                                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+
+                                        <fieldset className=' rounded mt-2'>
+                                            <div className=''>
+                                                <div className='flex justify-between'>
+                                                    <div>
+
+                                                        <div className="mb-3">
+                                                            <TextInput name="SKU / Style code" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+
+                                                        </div>
+                                                        <div className="mb-3">
+                                                            <TextInput name="Alias Name" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                                <div className="mb-5">
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+
+                                                </div>
+
+                                            </div>
                                         </fieldset>
 
-                                        </div>
-
-                                    
                                     </div>
-                                    </div>
-                                </div>
 
 
                                 </div>
+                            </div>
+                        </div>
+
+
+                    </div>
 
 
 
-                            </Modal>
-                            )}
+                </Modal>
+            )}
         </div>
     )
 }
@@ -444,11 +329,11 @@ const StyleMaster = () => {
 export default StyleMaster
 
 
-                                            
 
 
-                                            
 
-                                            
+
+
+
 
 
