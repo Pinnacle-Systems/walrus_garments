@@ -141,6 +141,7 @@ const YarnPoItems = ({
       return total;
     }
   };
+  
   const getFinalAmountAfterDiscount = () => {
     return poItems.reduce((acc, row) => {
       const price = parseFloat(row.price) || 0;
@@ -289,7 +290,7 @@ const YarnPoItems = ({
                                             </option>
                                             {(id ? yarnList?.data : yarnList?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
-                                                    {blend?.aliasName}
+                                                    {blend?.name}
                                                 </option>)}
                                      </select>
                                               </td>

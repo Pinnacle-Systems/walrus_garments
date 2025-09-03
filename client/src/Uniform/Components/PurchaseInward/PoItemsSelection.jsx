@@ -10,22 +10,21 @@ import YarnPoItemSelection from './YarnPoItemSelection';
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
     // const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i.poItemsId));
-        const [localInwardItems, setLocalInwardItems] = useState([]);
 
+    const [localInwardItems, setLocalInwardItems] = useState([]);
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
-    console.log(inwardItems,"inwardItems");
-console.log(localInwardItems,"localInwardItems")
+   
 
-    
+
     const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
         useGetPartyQuery({ params: { companyId, active: true } });
 
     if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id, obj) {
-        console.log(obj,"obj")
+        console.log(obj, "obj")
         // setInwardItems([])
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
@@ -42,11 +41,11 @@ console.log(localInwardItems,"localInwardItems")
     }
 
     function isItemAdded(id) {
-        console.log(localInwardItems,"isChecked",localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
+        console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
         return localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
     }
     function handleChange(id, obj) {
-        console.log("Hit",id,obj)
+        console.log("Hit", id, obj)
         if (isItemAdded(id, obj)) {
             removeItem(id)
         } else {
@@ -74,7 +73,7 @@ console.log(localInwardItems,"localInwardItems")
             let newInwardItems = localInwardItems.filter(item => {
                 return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
             })
-console.log([...oldInwardItems, ...newInwardItems],"...oldInwardItems, ...newInwardItems")
+            console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {
                 return {
 
@@ -95,7 +94,7 @@ console.log([...oldInwardItems, ...newInwardItems],"...oldInwardItems, ...newInw
                     taxPercent: poItem?.tax,
                     uomId: poItem?.uomId,
                     poQty: poItem?.poQty,
-                     yarnId:poItem?.yarnId, 
+                    yarnId: poItem?.yarnId,
                     cancelQty: poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000",
                     alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000",
                     alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000",
@@ -105,12 +104,12 @@ console.log([...oldInwardItems, ...newInwardItems],"...oldInwardItems, ...newInw
         });
         setInwardItemSelection(false);
     }
-    console.log(inwardItems,"inwardItems")
 
     function handleCancel() {
         setLocalInwardItems([]);
         setInwardItemSelection(false);
     }
+
     return (
         <>
             <div className='h-full w-full flex flex-col'>
@@ -128,13 +127,13 @@ console.log([...oldInwardItems, ...newInwardItems],"...oldInwardItems, ...newInw
                     {
                         <>
 
-                            
-                             {transtype.includes("Yarn")  ? 
+
+                            {transtype.includes("Yarn") ?
 
                                 <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                                 :
-                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                             }
+                                :
+                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                            }
                         </>
                     }
 

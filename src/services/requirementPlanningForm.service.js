@@ -187,7 +187,8 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = 0;
+    const childRecord = await prisma.po.count({ where: { requirementId: parseInt(id) } });
+
     let data = await prisma.requirementPlanningForm.findUnique({
         where: {
             id: parseInt(id)
@@ -210,9 +211,9 @@ async function getOne(id) {
                             name: true
                         }
                     },
-                    YarnType : {
-                        select : {
-                            name : true
+                    YarnType: {
+                        select: {
+                            name: true
                         }
                     }
                 }
@@ -291,7 +292,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
                     count: true,
                     yarnKneedleId: true,
                     colorId: true,
-                    
+
                     Yarn: {
                         select: {
                             name: true
@@ -319,7 +320,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails } = req.body
+        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails ,styleId } = req.body
 
 
 
@@ -347,6 +348,7 @@ async function create(req) {
                 orderBy,
                 validDate: validDate ? new Date(validDate) : undefined,
                 orderId: parseInt(orderId),
+                styleId : parseInt(styleId),
                 // draftSave: Boolean(draftSave),
 
                 // orderDetails: orderDetails?.length > 0
@@ -386,7 +388,7 @@ async function create(req) {
                         },
                     }
                     : undefined,
-                
+
             },
         });
 
@@ -473,18 +475,18 @@ const update = async (id, body) => {
                     },
 
                     update: orderYarnDetails?.filter(item => item.id)?.map((sub) => ({
-                            where: { id: parseInt(sub.id) },
-                            data: {
-                                colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                                percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                                yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                                yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                                styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                            },
-                        })),
-                    }
+                        where: { id: parseInt(sub.id) },
+                        data: {
+                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                        },
+                    })),
+                }
 
 
 

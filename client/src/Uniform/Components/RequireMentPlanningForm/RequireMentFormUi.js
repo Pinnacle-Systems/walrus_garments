@@ -4,7 +4,6 @@ import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
-import moment from "moment";
 import FormItems from "./FormItems";
 import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
@@ -15,21 +14,17 @@ import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 
-const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId }) => {
+const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+
+    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId,dueDate, setDuedate ,
+
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm
+}) => {
 
 
 
 
-    const [docId, setDocId] = useState("New")
-    const [showOrderForm, setShowOrderForm] = useState(true);
-    const [active, setActive] = useState(true);
-    const [styleId, setstyleId] = useState("");
-    const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
-    const [sampledetails, setSampleDetails] = useState([]);
-    const [orderSizeDetails, setOrderSizeDetails] = useState([])
-    const [orderYarnDetails, setOrderYarnDetails] = useState([])
-    const [requirementForm, setRequirementForm] = useState([])
-    const [partyId, setPartyId] = useState("");
+
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
@@ -60,6 +55,11 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
         if (id) {
             setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
             setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
+            setChildrecord(data?.childRecord ? data?.childRecord : 0)
+            setOrderId(data?.orderId ? data?.orderId : "")
+            setstyleId(data?.styleId ? data?.styleId : "")
+            setPartyId(data?.partyId ? data?.partyId : "")
+
         }
 
 
@@ -205,7 +205,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc.Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <ReusableInput label="Delivery Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                                <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  />
                                 <TextInput
                                     name="Job Number"
                                     placeholder="Contact name"
@@ -240,9 +240,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            {/* <h2 className="font-medium text-slate-700 mb-2">
-                                Order Details
-                            </h2> */}
+
                             <div className="grid grid-cols-2 gap-x-3">
 
 
@@ -252,7 +250,6 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                 <DropdownInput name="Stripes Color" options={Colors} required={true} />
                                 <DropdownWithSearch label={"socksType"} labelField={"name"} options={socksMaterialData?.data} type={"date"} required={true} />
                                 <DropdownInput name="Packing Cover" options={packingCover} required={true} />
-                                {/* <DropdownInput name="Packing Type"   required={true} /> */}
 
                             </div>
 
@@ -296,7 +293,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
                     <fieldset className=''>
 
-                        <FormItems sampleDetails={sampledetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
+                        <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
                             setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id}
                         />
 

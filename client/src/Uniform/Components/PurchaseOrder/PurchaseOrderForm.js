@@ -449,7 +449,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             <div className="w flex flex-row gap-8 mt-8">
 
               <ReusableSearchableInput
-                label="Customer Id"
+                label="Supplier Id"
                 component="PartyMaster"
                 placeholder="Search Customer Id..."
                 optionList={supplierList?.data}

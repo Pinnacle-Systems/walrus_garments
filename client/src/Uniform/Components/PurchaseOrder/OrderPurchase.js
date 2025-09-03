@@ -43,24 +43,31 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
         const combined = [];
 
-        orderSizeDetails?.forEach(size => {
-            orderYarnDetails?.forEach(yarn => {
-                combined?.push({
-                    sizeId: size.sizeId,
-                    yarnId: yarn.yarnId,
-                    Yarn: {
-                        name: yarn?.Yarn?.name,
-                    },
-                    percentage: yarn?.percentage,
-                    colorId: yarn.colorId,
-                    requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100).toFixed(2)),
-                    weight: size.weight,
-                    uomId: size.uomId
+        if(id){
+            return
+        }
+        else{
+            orderSizeDetails?.forEach(size => {
+                orderYarnDetails?.forEach(yarn => {
+                    combined?.push({
+                        sizeId: size.sizeId,
+                        yarnId: yarn.yarnId,
+                        Yarn: {
+                            name: yarn?.Yarn?.name,
+                        },
+                        percentage: yarn?.percentage,
+                        colorId: yarn.colorId,
+                        requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100).toFixed(2)),
+                        weight: size.weight,
+                        uomId: size.uomId,
+    
+                    });
                 });
             });
-        });
+            setPoItems(combined);
+        }
 
-        setPoItems(combined);
+
         //     orderYarnDetails?.forEach((yarn) => {
         //     // newFunction(yarn?.percentage, yarn?.yarncategoryId);
         // });
@@ -73,7 +80,25 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
         setPoItems(newBlend);
     };
-
+    const addNewRow = () => {
+        const newRow = {
+            yarnId: "",
+            qty: "",
+            tax: "0",
+            colorId: "",
+            uomId: "",
+            price: "",
+            discountValue: "0.00",
+            noOfBags: 0,
+            weightPerBag: 0,
+        };
+        setPoItems([...poItems, newRow]);
+    };
+    const deleteRow = (id) => {
+        setPoItems((yarnBlend) =>
+            yarnBlend?.filter((row, index) => index !== parseInt(id))
+        );
+    };
     return (
         <>
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
@@ -83,7 +108,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
                         <button
                             onClick={() => {
-                                // addNewRow()
+                                addNewRow()
                             }}
                             className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
                         >
@@ -166,7 +191,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
 
                                     <td className="border border-gray-300 px-2 py-1 text-right text-xs">
-                                        { id ? row?.requiredQty : getRequireWeight(row?.yarnId).toFixed(3)}
+                                        {id ? row?.requiredQty : getRequireWeight(row?.yarnId).toFixed(3)}
                                     </td>
                                     <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
@@ -260,7 +285,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
                                             </button>
                                             <span className="tooltip-text">Edit</span>
                                             <button
-                                                //   onClick={() => deleteRow(index)}
+                                                onClick={() => deleteRow(index)}
                                                 className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiTrash className="w-4 h-4" />

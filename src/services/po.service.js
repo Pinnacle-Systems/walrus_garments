@@ -845,7 +845,7 @@ async function update(id, body) {
                 requirementId:  parseInt(requirementId) ,
                 PoItems: {
                     createMany: {
-                        data: newPoItems.map(item => getPoItemObject(transType, item))
+                        data: newPoItems?.map(item => getPoItemObject(transType, item))
                     }
                 }
             }

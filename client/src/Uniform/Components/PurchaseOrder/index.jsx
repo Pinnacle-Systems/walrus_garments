@@ -65,12 +65,11 @@ export default function Form() {
   const [deliveryToId, setDeliveryToId] = useState("")
 
   const childRecord = useRef(0);
-  const [purchaseOrderForm,setPurchaseOrderForm]  = useState("")
-const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
+  const [purchaseOrderForm, setPurchaseOrderForm] = useState("")
+  const [selectedPeriod, setSelectedPeriod] = useState('this-month');
+  const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
   const { branchId, companyId, finYearId, userId } = getCommonParams()
 
-  const branchIdFromApi = useRef(branchId);
   const params = {
     branchId, companyId, finYearId
   };
@@ -79,27 +78,16 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     useGetPartyQuery({ params: { ...params } });
 
 
-  const { data: taxTypeList } =
-    useGetTaxTemplateQuery({ params: { ...params } });
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-  const { data: payTermList } =
-    useGetPaytermMasterQuery({ params: { ...params } });
-    
-  const handlePrint = () => {
-    setPrintModalOpen(true);
-  };
-  const activeTab = useSelector((state) =>
-    state.openTabs.tabs.find((tab) => tab.active).name
-  );
-  console.log(activeTab, "activeTab")
+
+
 
 
   const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   const getNextDocId = useCallback(() => {
     if (id || isLoading || isFetching) return
@@ -129,7 +117,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
 
     setTransType(data?.transType ? data.transType : "GreyYarn");
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
-  
+
     setPoItems(data?.PoItems ? data?.PoItems : [])
     if (data?.docId) {
       setDocId(data?.docId)
@@ -148,9 +136,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
       setDeliveryToId("")
     }
     setRemarks(data?.remarks ? data.remarks : "")
-    // if (data?.branchId) {
-    //   branchIdFromApi.current = data?.branchId
-    // }
+
   }, [id]);
 
 
@@ -177,20 +163,14 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
 
 
 
-  function isSupplierOutside() {
-    if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
-    }
-    return false
-  }
-   console.log(transType,"transtype")
+
   const validateData = (data) => {
     let mandatoryFields = ["uomId", "colorId", "qty", "price"];
     if (transType === "GreyYarn" || transType === "DyedYarn") {
       mandatoryFields = [...mandatoryFields, ...["yarnId", "noOfBags"]]
     } else if (transType === "GreyFabric" || transType === "DyedFabric") {
       mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-    } 
+    }
     return data.supplierId && data.dueDate && data.payTermId
       && isGridDatasValid(data.poItems, false, mandatoryFields) && data.poItems.length !== 0
   }
@@ -219,29 +199,14 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
 
   const saveData = () => {
     console.log(data, "data for valitation")
-   
+
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
       handleSubmitCustom(addData, data, "Added");
     }
   }
-  console.log(poItems, "poItems")
-  const deleteData = async () => {
-    if (id) {
-      if (!window.confirm("Are you sure to delete...?")) {
-        return;
-      }
-      try {
-        await removeData(id)
-        setId("");
-        onNew();
-        toast.success("Deleted Successfully");
-      } catch (error) {
-        toast.error("something went wrong");
-      }
-    }
-  };
+
 
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -252,8 +217,7 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
   };
 
 
-  const tableHeadings = ["PoNo", "PoDate", "transType", "DueDate", "Supplier"]
-  const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
+
   useEffect(() => {
     if (id) return
     setPoItems([]);
@@ -275,146 +239,154 @@ const [selectedPeriod, setSelectedPeriod] = useState('this-month');
   }
   const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
   console.log(clientDetail, "clientDetail")
- 
-    let supplierListBasedOnSupply = filterSupplier()
+
+  let supplierListBasedOnSupply = filterSupplier()
   transType.toLowerCase().includes("greyyarn".toLowerCase())
-   console.log(supplierListBasedOnSupply,"supplierListBasedOnSupply")
-    console.log(supplierId,"supplierId")
-    const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+  console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
+  console.log(supplierId, "supplierId")
+  const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
 
-   console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
+  console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
   const columns = [
-        {
-            header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium text-gray-900 w-12  text-center'
-        },
-        
-        {
-            header: 'Inward No',
-            accessor: (item) => item.docId,
-            className: 'font-medium uppercase text-gray-900 w-24'
-        },
-           {
-            header: 'TransType',
-            accessor: (item) => item.transType,
-           className:  'text-gray-800 uppercase w-24'
-        },
-        {
-            header: 'Inward Date',
-            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-             className:  'text-gray-800 uppercase w-24'
-        },
-        {
-            header: 'Supplier',
-            accessor: (item) => findFromList(item.supplierId, supplierList?.data ,"name"),
-             className:  'text-gray-800 uppercase w-96'
-        },
-           {
-            header: '',
-            accessor: (item) => item.none,
-             className:  'w-[55%]'
-        },
-   
-      ];
+    {
+      header: 'S.No',
+      accessor: (item, index) => index + 1,
+      className: 'font-medium text-gray-900 w-12  text-center'
+    },
 
-   
-   
-   
+    {
+      header: 'Inward No',
+      accessor: (item) => item.docId,
+      className: 'font-medium uppercase text-gray-900 w-24'
+    },
+    {
+      header: 'TransType',
+      accessor: (item) => item.transType,
+      className: 'text-gray-800 uppercase w-24'
+    },
+    {
+      header: 'Inward Date',
+      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
+      className: 'text-gray-800 uppercase w-24'
+    },
+    {
+      header: 'Supplier',
+      accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
+      className: 'text-gray-800 uppercase w-96'
+    },
+    {
+      header: '',
+      accessor: (item) => item.none,
+      className: 'w-[55%]'
+    },
 
-       const handleView = (id) => {
-   
-           setId(id)
-           setPurchaseOrderForm(true)
-           setReadOnly(true);
-       };
-   
-       const handleEdit = (orderId) => {
-           setId(orderId)
-           setPurchaseOrderForm(true)
-           setReadOnly(false);
-       };
-   
-       const handleDelete = async (orderId) => {
-           if (orderId) {
-               if (!window.confirm("Are you sure to delete...?")) {
-                   return;
-               }
-               try {
-                   // await removeData(orderId)
-                   setId("");
-                   onNew();
-                   toast.success("Deleted Successfully");
-               } catch (error) {
-                   toast.error("something went wrong");
-               }
-           }
-   
-       };
-       const onNew = () => {
-           setId("");
-           setReadOnly(false);
-          //  setOrderDetails([]);
-   
-       }
-   
-       if(isLoading  ||  isFetching ) return <Loader/>
+  ];
+
+
+
+
+
+  const handleView = (id) => {
+
+    setId(id)
+    setPurchaseOrderForm(true)
+    setReadOnly(true);
+  };
+
+  const handleEdit = (orderId) => {
+    setId(orderId)
+    setPurchaseOrderForm(true)
+    setReadOnly(false);
+  };
+
+  console.log(childRecord?.current,"childrecord");
+  
+
+  const handleDelete = async (id) => {
+    if (id) {
+      if (childRecord.current > 0) {
+        toast.info("Child Record Exist", { position: "top-center" })
+        return
+
+      }
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        // await removeData(orderId)
+        setId("");
+        onNew();
+        toast.success("Deleted Successfully");
+      } catch (error) {
+        toast.error("something went wrong");
+      }
+    }
+
+  };
+  const onNew = () => {
+    setId("");
+    setReadOnly(false);
+    //  setOrderDetails([]);
+
+  }
+
+  if (isLoading || isFetching) return <Loader />
 
   return (
 
 
 
-  <>
-            {purchaseOrderForm ? (
-                <PurchaseOrderForm
-                    onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
-                //  orderDetails={orderDetails} setOrderDetails={setOrderDetails}  id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-                //     partyData={partyData?.data}
-                />
+    <>
+      {purchaseOrderForm ? (
+        <PurchaseOrderForm
+          onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
+        //  orderDetails={orderDetails} setOrderDetails={setOrderDetails}  id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+        //     partyData={partyData?.data}
+        />
 
-            ) : (
-                <div className="p-2 bg-[#F1F1F0] min-h-screen">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Purchase Order</h1>
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
-                            >
-                                <option value="this-month">This Month</option>
-                                <option value="last-month">Last Month</option>
-                            </select>
-                            <select
-                                value={selectedFinYear}
-                                onChange={(e) => setSelectedFinYear(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
-                            >
-                                <option value="2023-2024">2023-2024</option>
-                                <option value="2022-2023">2022-2023</option>
-                            </select>
+      ) : (
+        <div className="p-2 bg-[#F1F1F0] min-h-screen">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Purchase Order</h1>
+          <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm"
+              >
+                <option value="this-month">This Month</option>
+                <option value="last-month">Last Month</option>
+              </select>
+              <select
+                value={selectedFinYear}
+                onChange={(e) => setSelectedFinYear(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm"
+              >
+                <option value="2023-2024">2023-2024</option>
+                <option value="2022-2023">2022-2023</option>
+              </select>
 
-                        </div>
-                        <button
-                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setPurchaseOrderForm(true); onNew() }}
-                        >
-                            <FaPlus /> Create New
-                        </button>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <ReusableTable
-                            columns={columns}
-                            data={allData?.data || []}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            itemsPerPage={10}
-                        />
-                    </div>
+            </div>
+            <button
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
+              onClick={() => { setPurchaseOrderForm(true); onNew() }}
+            >
+              <FaPlus /> Create New
+            </button>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <ReusableTable
+              columns={columns}
+              data={allData?.data || []}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              itemsPerPage={10}
+            />
+          </div>
 
-                </div>
-            )}
-        </>
+        </div>
+      )}
+    </>
   );
 }

@@ -47,9 +47,9 @@ function manualFilterSearchData(searchDelDate, searchDueDate, data) {
 
 async function get(req) {
     const { branchId, active, pagination, pageNumber, dataPerPage,
-        searchDocId, searchDelDate, searchDueDate, finYearId,stock,rawMaterialType,endDate,storeId
+        searchDocId, searchDelDate, searchDueDate, finYearId, stock, rawMaterialType, endDate, storeId
     } = req.query
-  
+
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -88,29 +88,30 @@ async function get(req) {
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     }
     let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime)
-  
+
 
     let StockReport;
-    console.log(req.query,"req")
+    console.log(req.query, "req")
 
     if (stock) {
-      
-    StockReport = await prisma.$queryRaw`
+
+        StockReport = await prisma.$queryRaw`
     SELECT * FROM stock WHERE createdAt < STR_TO_DATE(${endDate}, '%Y-%m-%d') AND itemType = ${rawMaterialType} AND storeId = ${storeId} ;
     `;
-    
-   
+
+
     }
-   
- 
 
 
-    return { statusCode: 0, data, nextDocId: newDocId, totalCount,StockReport };
+
+
+    return { statusCode: 0, data, nextDocId: newDocId, totalCount, StockReport };
 }
 
 
 async function getOne(id) {
-    const childRecord = 0;
+    const childRecord = await prisma.po.count({ where: { requirementId: parseInt(id) } });
+
     const data = await prisma.rawMaterialOpeningStock.findUnique({
         where: {
             id: parseInt(id)
@@ -394,13 +395,13 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    console.log(id,"id")
+    console.log(id, "id")
     const data = await prisma.rawMaterialOpeningStock.delete({
         where: {
             id: parseInt(id)
         },
     })
-    console.log(data,"data")
+    console.log(data, "data")
 
     return { statusCode: 0, data };
 }
