@@ -2,18 +2,19 @@ import { useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import { ReusableTable } from "../../../Inputs";
 import { FaPlus } from "react-icons/fa";
-import RequirmentForm from "./RequireMentFormUi";
-import { useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
-import { useGetSampleQuery } from "../../../redux/uniformService/SampleService";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import moment from "moment";
+import { useDeleteRaiseIndentMutation, useGetRaiseIndentQuery } from "../../../redux/uniformService/RaiseIndenetServices";
+import { useCallback } from "react";
+import { useEffect } from "react";
+import IndentRaiseForm from "./IndentRaiseForm";
 
 
 
 
 
-const RequirementPlanningForm = () => {
+const RaiseIndentForm = () => {
 
 
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
@@ -26,26 +27,35 @@ const RequirementPlanningForm = () => {
     const [docId, setDocId] = useState("New")
     const [showOrderForm, setShowOrderForm] = useState(true);
     const [active, setActive] = useState(true);
-    const [styleId, setstyleId] = useState("");
+    const [orderDetailsId, setOrderDetailsId] = useState("");
     const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
     const [dueDate, setDueDate] = useState("");
-
     const [sampleDetails, setSampleDetails] = useState([]);
     const [orderSizeDetails, setOrderSizeDetails] = useState([])
     const [orderYarnDetails, setOrderYarnDetails] = useState([])
-    const [requirementForm, setRequirementForm] = useState([])
+    const [raiseIndentItems, setRaiseIndentItems] = useState([])
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
+    const [requirementId,setrequirementId] = useState("")
+    const [isRaiseRendent,setRaiseIndenet]   =  useState(false)
 
     const params = {
         branchId, userId, finYearId
     };
 
-    const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
+    const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId } });
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
-    const [removeData] = useDeleteRequirementPlanningFormMutation();
+    const [removeData] = useDeleteRaiseIndentMutation();
 
+        const getNextDocId = useCallback(() => {
+            //   if (id || isLoading || isFetching) return
+            if (allData?.nextDocId) {
+                setDocId(allData.nextDocId)
+            }
+        }, [allData, id])
+    
+        useEffect(getNextDocId, [getNextDocId])
 
     const columns = [
         {
@@ -92,13 +102,12 @@ const RequirementPlanningForm = () => {
         setReadOnly(true);
     };
 
-    const handleEdit = (orderId) => {
-        setId(orderId)
+    const handleEdit = (id) => {
+        setId(id)
         setForm(true)
         setReadOnly(false);
     };
 
-    console.log(childRecord.current, "childrecord");
 
     const handleDelete = async (id) => {
         if (id) {
@@ -144,19 +153,20 @@ const RequirementPlanningForm = () => {
     return (
         <>
             {form ? (
-                <RequirmentForm
+                <IndentRaiseForm
+                setDocId={setDocId}
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
 
-                    orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} styleId={styleId} setstyleId={setstyleId}
+                    orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} orderDetailsId={orderDetailsId} setOrderDetailsId={setOrderDetailsId}
 
-                    partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
+                    partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} raiseIndentItems={raiseIndentItems} setRaiseIndentItems={setRaiseIndentItems}
 
-                    dueDate={dueDate}  setDueDate={setDueDate}
+                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setrequirementId={setrequirementId}  isRaiseRendent={isRaiseRendent}  setRaiseIndenet={setRaiseIndenet}
                 />
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Requirement Planning Form</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Raise Indent Form</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select
@@ -201,4 +211,4 @@ const RequirementPlanningForm = () => {
     );
 };
 
-export default RequirementPlanningForm;
+export default RaiseIndentForm;

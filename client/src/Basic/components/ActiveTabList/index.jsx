@@ -6,6 +6,8 @@ import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
 import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm } from "../../../Uniform/Components";
+import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
+import RaiseIndentForm from "../../../Uniform/Components/RaiseIndenet";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -56,7 +58,7 @@ const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
 const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
 const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
-const ActiveTabList = ( {isSuperAdmin} ) => {
+const ActiveTabList = ({ isSuperAdmin }) => {
   const openTabs = useSelector((state) => state.openTabs);
   const dispatch = useDispatch();
   const [showHidden, setShowHidden] = useState(false);
@@ -118,7 +120,10 @@ const ActiveTabList = ( {isSuperAdmin} ) => {
     "OPENING STOCK": <OpeningStock />,
     "PURCHASE ORDER CANCEL": <PurchaseCancel />,
     "BRANCH TYPE MASTER": <BranchType />,
-    "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />
+    "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
+    "RAISE INDENT": <RaiseIndentForm />,
+    "MATERIAL ISSUE": <MaterialIssue />,
+
 
   };
 
@@ -131,8 +136,8 @@ const ActiveTabList = ( {isSuperAdmin} ) => {
     sessionStorage.getItem("sessionId") + "userId"
   );
 
-     function initialTab() {
-    if (currentShowingTabs?.length == 0  &&  !isSuperAdmin) {
+  function initialTab() {
+    if (currentShowingTabs?.length == 0 && !isSuperAdmin) {
       dispatch(push(
         {
           active: true,

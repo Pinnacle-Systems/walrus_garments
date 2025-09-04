@@ -186,8 +186,8 @@ export async function getDirectInwardReturnItemsAlreadyData(directInwardOrReturn
 
 async function getAlreadyReturnData(poInwardOrDirectInward, directReturnItemsId, poItemsId, directItem) {
 
-    console.log(poInwardOrDirectInward ,  directReturnItemsId , poItemsId);
-    
+    console.log(poInwardOrDirectInward, directReturnItemsId, poItemsId);
+
     let sql;
 
     if (poInwardOrDirectInward == "DirectReturn") {
@@ -227,16 +227,16 @@ async function getStockData(directItem, poInwardOrDirectInward, returnLotDetails
     }
     else {
 
-
         let lotWiseStockDetails = [];
+
         for (let i = 0; i < returnLotDetails?.length; i++) {
             let returnLotData = returnLotDetails[i]
             const total = `
-    SELECT sum(qty) as total FROM stock WHERE id < select id from stock where  AND fabricid=${fabricId} and colorid=${colorId} 
-    and uomid=${uomId} and storeId=${storeId}
-  and designid=${designId} and gaugeid=${gaugeId} and looplengthid=${loopLengthId} and gsmid=${gsmId} and kdiaid=${kDiaId} and
-   fdiaid=${fDiaId} 
-      `
+                        SELECT sum(qty) as total FROM stock WHERE id < select id from stock where  AND fabricid=${fabricId} and colorid=${colorId} 
+                        and uomid=${uomId} and storeId=${storeId}
+                    and designid=${designId} and gaugeid=${gaugeId} and looplengthid=${loopLengthId} and gsmid=${gsmId} and kdiaid=${kDiaId} and
+                    fdiaid=${fDiaId} 
+                        `
 
 
             const inward = `
@@ -324,7 +324,7 @@ async function getStockDataBySingleLot(directItem, poInwardOrDirectInward, retur
         return parseFloat(beforeLotIdTotalStock[0]?.total)
     }
 
-}  
+}
 
 export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId, poInwardOrDirectInward, poType, directReturnItems, storeId, createdAt) {
     let directItemsData = [];
@@ -340,7 +340,7 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls);
         let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty);
         // let returnLotDetails = (await getStockData(directItem, poInwardOrDirectInward, directItem?.returnLotDetails, directItem?.fabricId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType,))
-        console.log(directItem,"directItem")
+        console.log(directItem, "directItem")
         let stockQty = parseFloat(await getStockDataBySingleLot(directItem, poInwardOrDirectInward, directItem?.returnLotDetails[0], directItem?.yarnId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType, directItem?.accessoryId, directItem?.accessoryGroupId, directItem?.accessoryItemId, createdAt, directItem?.sizeId))
 
         let obj = {
@@ -415,9 +415,9 @@ async function getAlreadyReturnDataByCancel(poInwardOrDirectInward, cancelItemsI
 export async function getCancelItemsAlreadyData(purchaseCancelId, poInwardOrDirectInward, poType, cancelItems, storeId) {
 
 
-    console.log(poInwardOrDirectInward,"poInwardOrDirectInward")
-    console.log(cancelItems,"cancelItems");
-    
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
+    console.log(cancelItems, "cancelItems");
+
 
     let cancelItemsData = [];
 

@@ -221,6 +221,23 @@ async function getOne(id) {
 }
 
 
+export async function getOrderItems(req) {
+
+
+    const childRecord = 0;
+    const data = await prisma.orderItems.findMany({
+        where: {
+            companyId: companyId ? parseInt(companyId) : undefined,
+            active: active ? Boolean(active) : undefined,
+        }
+    });
+    if (!data) return NoRecordFound("order");
+
+
+
+
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
 
 export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
 
@@ -289,9 +306,9 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
                             name: true
                         }
                     },
-                    YarnType : {
-                        select : {
-                            name : true
+                    YarnType: {
+                        select: {
+                            name: true
                         }
                     },
                     Color: {
@@ -314,8 +331,8 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 
 
 async function create(req) {
-            console.log(req.body,"req")
-    
+    console.log(req.body, "req")
+
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);

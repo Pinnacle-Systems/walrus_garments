@@ -34,6 +34,29 @@ const OrderApi = createApi({
             },
             providesTags: ["Order"],
         }),
+        getOrderItems: builder.query({
+            query: ({ params, searchParams }) => {
+                if (searchParams) {
+                    return {
+                        url:`${ORDER_API}/orderItems` ,
+                        method: "GET",
+                        headers: {
+                            "Content-type": "application/json; charset=UTF-8",
+                        },
+                        params
+                    };
+                }
+                return {
+                    url: `${ORDER_API}/orderItems`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["Order"],
+        }),
         getOrderById: builder.query({
             query: (id) => {
                 return {
@@ -103,6 +126,7 @@ export const {
     useLazyGetOrderQuery,
     useGetOrderQuery,
     useGetOrderByIdQuery,
+    useGetOrderItemsQuery,
     useGetOrderItemsByIdQuery,
     useGetOrderItemsByIdNewQuery,
     useAddOrderMutation,

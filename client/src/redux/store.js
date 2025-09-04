@@ -18,7 +18,7 @@ import {
   TaxTemplateApi,
   TermsAndConditionsMasterApi,
   CurrencyMasterApi,
-  emailkycUpdateApi ,
+  emailkycUpdateApi,
   machineMasterApi,
   partyBranchContactMasterApi,
   partyContactMasterApi,
@@ -57,6 +57,8 @@ import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 import branchTypeMasterApi from "./uniformService/BranchTypeMaster";
 import partyBranchMasterApi from "./services/PartyBranchMasterService";
 import MaterialMasterApi from "./uniformService/MaterialMaster";
+import RaiseIndentApi from "./uniformService/RaiseIndenetServices";
+import MaterialIssueApi from "./uniformService/MaterialIssueServices";
 
 const commonReducers = {
   openTabs, party,
@@ -67,7 +69,7 @@ const commonReducers = {
   departmentMaster: departmentMasterApi.reducer,
   employeeCategoryMaster: employeeCategoryMasterApi.reducer,
   finYearMaster: finYearMasterApi.reducer,
-  certificateMaster:certificateApi.reducer,
+  certificateMaster: certificateApi.reducer,
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
@@ -106,7 +108,7 @@ const commonReducers = {
   itemTypeMaster: ItemTypeMasterApi.reducer,
   styleTypeMaster: StyleTypeMasterApi.reducer,
   [OrderApi.reducerPath]: OrderApi.reducer,
-  [emailkycUpdateApi.reducerPath] : emailkycUpdateApi.reducer,
+  [emailkycUpdateApi.reducerPath]: emailkycUpdateApi.reducer,
   [CuttingOrderApi.reducerPath]: CuttingOrderApi.reducer,
   design: DesignApi.reducer,
   loopLength: LoopLengthApi.reducer,
@@ -147,13 +149,14 @@ const commonReducers = {
   measurementMaster: MeasurementMasterApi.reducer,
   fiberContentMaster: FiberContentMasterApi.reducer,
   YarnNeedleMaster: YarnNeedleMasterApi.reducer,
-  branchTypeMaster : branchTypeMasterApi.reducer,
-  partyBranchMaster : partyBranchMasterApi.reducer,
-  partyBranchContactMaster : partyBranchContactMasterApi.reducer,
-  partyContactMaster : partyContactMasterApi.reducer,
-  RequirementPlanningForm : requirementPlanningFormApi.reducer,
-   MaterialMaster: MaterialMasterApi.reducer
-
+  branchTypeMaster: branchTypeMasterApi.reducer,
+  partyBranchMaster: partyBranchMasterApi.reducer,
+  partyBranchContactMaster: partyBranchContactMasterApi.reducer,
+  partyContactMaster: partyContactMasterApi.reducer,
+  RequirementPlanningForm: requirementPlanningFormApi.reducer,
+  MaterialMaster: MaterialMasterApi.reducer,
+  RaiseIndent: RaiseIndentApi.reducer,
+  MaterialIssue: MaterialIssueApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -248,6 +251,8 @@ partyBranchContactMasterApi.middleware,
 partyContactMasterApi.middleware,
 requirementPlanningFormApi.middleware,
 MaterialMasterApi.middleware,
+RaiseIndentApi.middleware,
+MaterialIssueApi.middleware
 ];
 
 

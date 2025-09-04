@@ -38,7 +38,9 @@ import {
   partyContact,
   branchType,
   requirementPlanningForm,
-  Material
+  Material,
+  raiseIndent,
+  materialIssue
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -175,6 +177,8 @@ app.use("/partyBranchContact",partyBranchContact)
 app.use("/partyContact",partyContact)
 app.use("/requirementPlanningForm", requirementPlanningForm);
 app.use("/material",Material)
+app.use("/raiseIndenet",raiseIndent)
+app.use("/materialIssue",materialIssue)
 
 
 

@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById , 
-    getOrderItemsByIdNew as _getOrderItemsByIdNew , getOrderItems as _getOrderItems
- } from '../services/order.service.js';
+import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, 
+    getOrderItemsByIdNew as _getOrderItemsByIdNew , getStockvalidationById as _getStockvalidationById
+ } from '../services/materialIssue.services.js';
 
 async function get(req, res, next) {
     try {
@@ -24,18 +24,11 @@ async function getOne(req, res, next) {
 }
 
 
-export async function getOrderItems(req, res, next) {
-    try {
-        res.json(await _getOrderItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
 
-export async function getOrderItemsById(req, res, next) {
+
+export async function getStockvalidationById(req, res, next) {
     try {
-        res.json(await _getOrderItemsById(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
+        res.json(await _getStockvalidationById(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

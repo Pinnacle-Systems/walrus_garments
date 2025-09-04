@@ -1022,6 +1022,91 @@ export const DropdownWithSearch = ({
   );
 };
 
+export const DropdownWithSearchNew = ({
+  className,
+  options,
+  value,
+  setValue,
+  readOnly,
+  disabled,
+  required = false,
+  optionValue,
+  labelField,
+  label,
+}) => {
+  console.log(options, "options");
+
+  const dispatch = useDispatch();
+
+
+  const [currentIndex, setCurrentIndex] = useState("");
+  useEffect(() => setCurrentIndex(new Date()), []);
+  useEffect(() => {
+    const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
+    dropDownElement.addEventListener("keydown", function (ev) {
+      var focusableElementsString = '[tabindex="0"]';
+      let ol = dropDownElement.querySelectorAll(focusableElementsString);
+      if (ev.key === "ArrowDown") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      } else if (ev.key === "ArrowUp") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = ol[i - 1];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      }
+    });
+
+    return () => {
+      dropDownElement.removeEventListener("keydown", () => { });
+    };
+  }, [currentIndex]);
+
+  return (
+    <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
+      {label && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? <RequiredLabel name={label} /> : `${label}`}
+
+        </label>
+      )}
+      <select
+        // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+          } ${className}`}
+
+        disabled={disabled}
+        readOnly={readOnly}
+        value={value || ""}
+        onChange={(e) => {
+          setValue(e.target.value)
+        }}
+      >
+        {/* {!value && <option value="">Select {optionName}</option>} */}
+
+        <option value={""}>Select</option>
+        {(options || []).map((option) => (
+          <option key={option[optionValue]} value={option[optionValue]} classname>
+            {option[labelField]}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
   if (!isOpen) return null;
 

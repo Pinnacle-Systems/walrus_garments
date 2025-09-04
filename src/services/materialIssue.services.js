@@ -29,7 +29,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         return "Draft Save"
     }
     else if (isUpdate == "drift") {
-        let lastObject = await prisma.requirementPlanningForm.findFirst({
+        let lastObject = await prisma.MaterialIssue.findFirst({
             where: {
                 branchId: parseInt(branchId),
                 // docId: {
@@ -58,14 +58,14 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/RPL/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/RPL/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
     else {
-        let lastObject = await prisma.requirementPlanningForm.findFirst({
+        let lastObject = await prisma.MaterialIssue.findFirst({
             where: {
                 branchId: parseInt(branchId),
                 AND: [
@@ -88,10 +88,11 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         });
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/RPL/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/RPL/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
+        console.log(newDocId, "newDocId")
         return newDocId
     }
 
@@ -124,7 +125,7 @@ async function get(req) {
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
-    let data = await xprisma.RequirementPlanningForm.findMany({
+    let data = await xprisma.MaterialIssue.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
             docId: Boolean(searchDocId) ?
@@ -134,34 +135,7 @@ async function get(req) {
                 : undefined,
             partyId: partyId ? parseInt(partyId) : undefined,
         },
-        include: {
-            requirementSizeDetails: true,
-            RequirementYarnDetails: true,
-            Party: {
-                select:
-                {
-                    name: true
-                },
-            },
-            order: {
-                select: {
-                    id: true,
-                    docId: true,
 
-                }
-            },
-
-            // OrderDetails : {
-            //         select : {
-            //             style :{
-            //                 select  : {
-            //                     name : true
-            //                 }
-            //             }
-            //         }
-            // }
-
-        },
         orderBy: {
             id: "desc",
         },
@@ -189,37 +163,31 @@ async function get(req) {
 async function getOne(id) {
     const childRecord = await prisma.po.count({ where: { requirementId: parseInt(id) } });
 
-    let data = await prisma.requirementPlanningForm.findUnique({
+    let data = await prisma.MaterialIssue.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            requirementSizeDetails: true,
-            RequirementYarnDetails: {
+            RaiseIndentItems: {
                 select: {
-                    id: true,
-                    RequirementPlanningId: true,
-                    colorId: true,
-                    percentage: true,
-                    yarncategoryId: true,
-                    yarnId: true,
-                    count: true,
-                    yarnKneedleId: true,
-                    percentage: true,
                     Yarn: {
                         select: {
                             name: true
                         }
                     },
-                    YarnType: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
-        }
+                    yarnId: true,
+                    colorId: true,
+                    id: true,
+                    percentage: true,
+                    qty: true,
+                    raiseIndentId: true,
+                    sizeId: true,
+                    weight: true,
+                },
 
+
+            }
+        }
 
     })
     if (!data) return NoRecordFound("order");
@@ -228,34 +196,90 @@ async function getOne(id) {
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
+async function getStockValidationData(data) {
+
+    let results = [];
 
 
-export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
+    for (let i = 0; i < data?.RaiseIndentItems?.length; i++) {
+        let rendenetData = data?.RaiseIndentItems[i];
+
+
+
+        const query = `
+            SELECT SUM(qty) AS total
+            FROM stock
+            WHERE colorId = ${rendenetData?.colorId}
+            AND yarnId = ${rendenetData?.yarnId}
+            AND inOrOut = 'PurchaseInward'
+`;
+
+
+        const total = await prisma.$queryRawUnsafe(query);
+
+        results.push({
+            ...rendenetData,
+            stockQty: total?.[0]?.total ?? 0
+        });
+    }
+
+    console.log(results, "results");
+
+    return results;
+}
+
+
+
+export async function getStockvalidationById(id) {
 
 
     const childRecord = 0;
-    let data = await prisma.order.findUnique({
+    let data = await prisma.MaterialIssue.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            Party: {
+            RaiseIndentItems: {
                 select: {
-                    name: true
-                }
-            },
-            orderDetails: true
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    yarnId: true,
+                    colorId: true,
+                    id: true,
+                    percentage: true,
+                    qty: true,
+                    raiseIndentId: true,
+                    sizeId: true,
+                    weight: true,
+                },
 
 
-
+            }
         }
+
+
+
+
     })
-    if (!data) return NoRecordFound("order");
+
+    const enrichedItems = await getStockValidationData(data);
+
+    if (!data) return NoRecordFound("raiseIndent");
 
 
 
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return {
+        statusCode: 0,
+        data: {
+            ...data,
+            RaiseIndentItems: enrichedItems,
+            childRecord
+        }
+    };
 }
 
 
@@ -263,7 +287,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 
 
     const childRecord = 0;
-    let data = await prisma.orderDetails.findUnique({
+    let data = await prisma.MaterialIssue.findUnique({
         where: {
             id: parseInt(id)
         },
@@ -316,12 +340,81 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
+async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+
+    await tx.stock.create({
+        data: {
+            itemType: poType,
+            // inOrOut: poInwardOrDirectInward,
+            yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+            noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : undefined,
+            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+            kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
+            fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
+            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+            qty: item["issueQty"] ? 0 - parseFloat(item["issueQty"]) : 0,
+            price: item["price"] ? parseFloat(item["price"]) : 0,
+
+
+
+        }
+    })
+
+}
+
+async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId , indentRaiseId) {
+
+    let promises
+
+
+    promises = issueItems.map(async (item, index) => {
+        let data = await tx.MaterialIssueItems.create({
+            data: {
+                materialIssueId: parseInt(MaterialIssueId),
+                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : 0,
+                weight: item["weight"] ? parseInt(item["weight"]) : undefined,
+                qty: item["returnQty"] ? parseFloat(item["returnQty"]) : 0,
+                issueQty: item["issueQty"] ? parseInt(item["issueQty"]) : undefined,
+
+            }
+        })
+
+
+
+
+        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+        await tx.RaiseIndent.update({
+            where: {
+                id: parseInt(indentRaiseId),
+            },
+            data: {
+                isMaterialIssue: true,
+               
+            },
+        });
+
+    }
+    )
+
+
+
+
+
+
+
+    return Promise.all(promises)
+}
 
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails ,styleId } = req.body
+        phone, contactPersonName, address, storeId, orderId, indentRaiseId, orderDetailsId, isMaterialIssue, issueItems, poType } = req.body
 
+
+    let poInwardOrDirectInward = "MaterialIssue"
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -333,70 +426,30 @@ async function create(req) {
     let data;
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.RequirementPlanningForm.create({
+        data = await tx.MaterialIssue.create({
             data: {
                 docId,
-                packingCoverType,
+                isMaterialIssue: Boolean(isMaterialIssue),
+                contactPersonName: contactPersonName ?? "John",
                 partyId: partyId ? parseInt(partyId) : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
-                createdById: parseInt(userId),
-                contactPersonName,
-                address,
-                phone,
-                notes,
-                term,
-                orderBy,
-                validDate: validDate ? new Date(validDate) : undefined,
                 orderId: parseInt(orderId),
-                orderDetailsId : parseInt(styleId),
-                // draftSave: Boolean(draftSave),
+                orderDetailsId: parseInt(orderDetailsId),
+                // requirementId:  parseInt(requirementId) ,
 
-                // orderDetails: orderDetails?.length > 0
-                //     ? {
-                //         create: JSON.parse(orderDetails).map((item) => ({
-                //             styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-                //             fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
-                //             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
-                //             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
-                //             filePath: item?.filePath ? item?.filePath : undefined,
 
-                requirementSizeDetails: orderSizeDetails?.length > 0
-                    ? {
-                        createMany: {
-                            data: orderSizeDetails?.map((sub) => ({
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                            })),
-                        },
-                    }
-                    : undefined,
 
-                RequirementYarnDetails: orderYarnDetails?.length > 0
-                    ? {
-                        createMany: {
-                            data: orderYarnDetails.map((yarn) => ({
-                                colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                                percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                                yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                                yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                                styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined
-                            })),
-                        },
-                    }
-                    : undefined,
 
             },
         });
-
-
-
-
+        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId ,indentRaiseId )
 
     })
+
+
+
+
+
 
     return { statusCode: 0, data };
 
@@ -406,7 +459,7 @@ async function create(req) {
 
 const update = async (id, body) => {
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails,styleId,
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId,
     } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -426,7 +479,7 @@ const update = async (id, body) => {
     let data;
 
     await prisma.$transaction(async (tx) => {
-        data = await tx.requirementPlanningForm.update({
+        data = await tx.MaterialIssue.update({
             where: {
                 id: parseInt(id),
 
@@ -444,7 +497,7 @@ const update = async (id, body) => {
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
                 updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                orderDetailsId : parseInt(styleId) ,
+                orderDetailsId: parseInt(styleId),
                 RequirementYarnDetails: {
                     deleteMany: {
                         ...(incomingSizeIds?.length > 0 && {
@@ -498,7 +551,7 @@ const update = async (id, body) => {
 
 
 async function remove(id) {
-    const data = await prisma.requirementPlanningForm.delete({
+    const data = await prisma.MaterialIssue.delete({
         where: {
             id: parseInt(id)
         },

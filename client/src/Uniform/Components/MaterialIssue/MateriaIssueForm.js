@@ -8,112 +8,111 @@ import FormItems from "./FormItems";
 import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
+import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
+import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentStockValidationByIdQuery } from "../../../redux/uniformService/RaiseIndenetServices";
+import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
 
-const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
 
-    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId,dueDate, setDuedate ,
+    orderSizeDetails, orderYarnDetails, setOrderYarnDetails, orderDetailsId, setOrderDetailsId, dueDate, setDuedate,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, issueItems, setIssueItems,
+
+    isMaterialIssue, setIsMaterialIssue, indentRaiseId, setIndentRaiseId
+
+
+
 }) => {
 
 
+    const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const params = {
+        branchId, userId, finYearId
+    };
 
 
 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
-    const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdNewQuery({ id: styleId }, { skip: !styleId  });
 
-    const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
+    const { data: indentRaiseData } = useGetRaiseIndentQuery({ params });
 
-    const [addData] = useAddRequirementPlanningFormMutation();
-    const [updateData] = useUpdateRequirementPlanningFormMutation();
+    const { data: singleRaiseRendentData, isLoading: isSingleRaiseRendentLoading, isFetching: isSingleRaiseRendentFetching } = useGetRaiseIndentStockValidationByIdQuery(indentRaiseId, { skip: !indentRaiseId });
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
-    
-    const params = {
-        branchId, userId, finYearId
-    };
-    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+    const [addData] = useAddMaterialIssueMutation();
+    const [updateData] = useUpdateMaterialIssueMutation();
+
+
+    const { data: supplierList } =
+        useGetPartyQuery({ params: { ...params } });
 
 
     const syncFormWithDb = useCallback((data) => {
-            if (orderId) {
-                setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
-                setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
-            }
-            if (id) {
-                setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
-                setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
-                setChildrecord(data?.childRecord ? data?.childRecord : 0)
-                setOrderId(data?.orderId ? data?.orderId : "")
-                setstyleId(data?.orderDetailsId ? data?.orderDetailsId : "")
-                setPartyId(data?.partyId ? data?.partyId : "")
-
-            }
-
-        }, [styleId]);
 
 
+        if (id) {
+            setIssueItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
+            setOrderId(data?.orderId ? data?.orderId : "")
+            setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
+            setIndentRaiseId(data?.id ? data?.id : "")
+            setPartyId(data?.partyId ? data?.partyId : "")
 
+        }
+        else {
+            setIssueItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
+            setOrderId(data?.orderId ? data?.orderId : "")
+            setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
+            setIndentRaiseId(data?.id ? data?.id : "")
+            setPartyId(data?.partyId ? data?.partyId : "")
 
-
-    console.log(styleId,"styleId");
-    
-
-
-    useEffect(() => {
-        if (styleId && orderItemsData?.data) {
-            syncFormWithDb(orderItemsData.data, styleId);
         }
 
-    }, [orderItemsDataFetching, orderItemsDataLoading, styleId, syncFormWithDb, orderItemsData]);
+    }, [orderDetailsId]);
+
+
+
+    // useEffect(() => {
+    //     if (orderDetailsId && orderItemsData?.data) {
+    //         syncFormWithDb(orderItemsData.data, orderDetailsId);
+    //     }
+
+    // }, [orderItemsDataFetching, orderItemsDataLoading, orderDetailsId, syncFormWithDb, orderItemsData]);
 
 
     const { data: socksMaterialData } =
         useGetSocksMaterialQuery({ params: { ...params } });
 
     useEffect(() => {
-        if (orderId && singleOrderData?.data) {
-            setPartyId(singleOrderData?.data?.partyId || "")
+
+        if (singleRaiseRendentData?.data) {
+            syncFormWithDb(singleRaiseRendentData?.data)
         }
 
-    }, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
+    }, [isSingleRaiseRendentLoading, isSingleRaiseRendentFetching, indentRaiseId, singleRaiseRendentData]);
 
 
 
-    useEffect(() => {
-        if (id && singleData?.data) {
-            syncFormWithDb(singleData.data, id);
-        }
+    // useEffect(() => {
+    //     if (requirementId && singleRequirementData?.data) {
+    //         syncFormWithDb(singleRequirementData.data);
+    //     }
 
-    }, [isSingleOrderFetching, isSingleLoading, id, singleData]);
+    // }, [isSingleRequirementFetching, isSingleRequirementLoading, requirementId, singleRequirementData]);
 
 
-    console.log(partyId, 'partyId');
 
     let data = {
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId,
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, issueItems, indentRaiseId
     }
 
-
-    // const validateData = (data) => {
-
-    //     if (orderDetails?.length > 0 && data.partyId) {
-    //         return true
-    //     }
-
-    //     return false
-    // }
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
@@ -182,11 +181,13 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     }
 
 
+    console.log(indentRaiseData, "raiseIndentData")
+
     return (
         <>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Requirement Planning Form</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Material Issue Form</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -207,31 +208,12 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc.Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  />
-                                <TextInput
+                                {/* <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  /> */}
+                                {/* <TextInput
                                     name="Job Number"
                                     placeholder="Contact name"
-                                />
-                                <DropdownWithSearch
-                                    name="Sample orders"
-                                    options={orderData?.data}
-                                    value={orderId}
-                                    setValue={setOrderId}
-                                    // disabled={newSampleEntry ? false : true} 
-                                    labelField={"docId"}
-                                    label={"Order No"}
-                                />
-                                <DropdownWithSearch
-                                    name="Sample orders"
-                                    options={singleOrderData?.data?.orderDetails?.map(o => ({
-                                        ...o,
-                                        displayLabel: o?.style?.name
-                                    }))}
-                                    value={styleId}
-                                    setValue={setstyleId}
-                                    labelField={"displayLabel"}
-                                    label={"Stytle Name"}
-                                />
+                                /> */}
+
                             </div>
                         </div>
 
@@ -245,13 +227,30 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
                             <div className="grid grid-cols-2 gap-x-3">
 
+                                <TextInput
+                                    name="Order No"
+                                    placeholder="Order No"
+                                    value={findFromList(orderId, orderData?.data, "docId")}
+                                    disabled={true}
 
+                                />
+                                <TextInput
+                                    name="Style No"
+                                    placeholder="Style No"
+                                    // value={orderDetailsId}
+                                    // value={findFromList(orderDetailsId, indentRaiseData.data, "docId")}
 
-                                <DropdownInput name="Leg Color" options={Colors} required={true} />
-                                <DropdownInput name="Foot Color" options={Colors} required={true} />
-                                <DropdownInput name="Stripes Color" options={Colors} required={true} />
-                                <DropdownWithSearch label={"socksType"} labelField={"name"} options={socksMaterialData?.data} type={"date"} required={true} />
-                                <DropdownInput name="Packing Cover" options={packingCover} required={true} />
+                                    disabled={true}
+
+                                />  <TextInput
+                                    name="Raise Indent No"
+                                    placeholder="Raise Indent No"
+                                    // value={inendentRaiseId}
+                                    value={findFromList(setIndentRaiseId, indentRaiseData?.data, "docId")}
+
+                                    disabled={true}
+
+                                />
 
                             </div>
 
@@ -282,7 +281,6 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                     value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
                                     // setValue={setPhone}
                                     disabled={true}
-                                // onChange={(e) => setPhone(e.target.value)}
 
                                 />
 
@@ -296,7 +294,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                     <fieldset className=''>
 
                         <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
-                            setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id}
+                            setIssueItems={setIssueItems} issueItems={issueItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue}
                         />
 
                     </fieldset>
@@ -341,7 +339,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     )
 }
 
-export default RequirmentForm;
+export default MaterialIssueForm;
 
 
 
