@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id }) => {
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly }) => {
 
     console.log(orderSizeDetails, "orderSizeDetails", id);
     console.log(orderYarnDetails, "orderYarnDetails");
@@ -9,10 +9,10 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     console.log(requirementForm, "requirementForm");
 
 
-    
+
 
     function newFunction(value, yarnId) {
-        console.log(value, yarnId,"yarnIddddd");
+        console.log(value, yarnId, "yarnIddddd");
         setRequirementForm((prev) => {
             const newItems = structuredClone(prev);
             const percent = value === "" ? 0 : parseFloat(value);
@@ -26,7 +26,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     }
 
     function handleInputChange(value, index, yarnId) {
-        console.log(value,  "value" , yarnId, "yarncategoryId");
+        console.log(value, "value", yarnId, "yarncategoryId");
 
         setOrderYarnDetails((prev) => {
             let newItems = structuredClone(prev);
@@ -48,11 +48,11 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     }
 
 
-useEffect(() => {
-    orderYarnDetails?.forEach((yarn) => {
-        newFunction(yarn?.percentage, yarn?.yarnId);
-    });
-}, [orderYarnDetails]); 
+    useEffect(() => {
+        orderYarnDetails?.forEach((yarn) => {
+            newFunction(yarn?.percentage, yarn?.yarnId);
+        });
+    }, [orderYarnDetails]);
 
     useEffect(() => {
         if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
@@ -67,15 +67,15 @@ useEffect(() => {
                     colorId: yarn.colorId,
                     requireWeight: 0,
                     weight: size.weight,
-                    uomId : size.uomId,
+                    uomId: size.uomId,
                 });
             });
         });
 
         setRequirementForm(combined);
         orderYarnDetails?.forEach((yarn) => {
-        newFunction(yarn?.percentage, yarn?.yarnId);
-    });
+            newFunction(yarn?.percentage, yarn?.yarnId);
+        });
     }, [orderSizeDetails]);
 
     const getQtyYarnSize = (sizeId, yarnId, colorId) => {
@@ -98,11 +98,9 @@ useEffect(() => {
         return requirementForm?.reduce((total, item) => {
             if (item.yarnId !== yarnId) return total;
 
-            // find qty for this size
             const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
 
-            console.log(item, "item");
-            return (total + (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) /  1000 );
+            return (total + (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100);
 
         }, 0);
     };
@@ -110,7 +108,7 @@ useEffect(() => {
 
     return (
         <>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[350px] overflow-y-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[380px] overflow-y-auto">
                 <div className="flex justify-between items-center mb-2 overflow-y-auto">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
 
@@ -136,9 +134,10 @@ useEffect(() => {
 
                             <tr>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Size</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn </td>
 
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Percentage</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Size</td>
 
                                 {orderSizeDetails?.map((item, index) => {
                                     return (
@@ -155,18 +154,22 @@ useEffect(() => {
                             </tr>
 
                             <tr>
-                                <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">
-                                    Weight
+                                <td colSpan={3} className="bg-white border-l border-gray-300">
+                                </td>
+                                <td  className="border border-gray-300 px-2 py-1 text-end text-xs">
+                                   Size Weight
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
                                     <td key={index} className="border border-gray-300 px-2 py-1 text-center text-xs">
-                                        {item?.weight}
+                                        {item?.weight }g
                                     </td>
                                 ))}
 
                             </tr>
                             <tr>
-                                <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">
+                                  <td colSpan={3} className="bg-white border-l border-gray-300" >
+                                </td>
+                                <td  className="border border-gray-300 px-2 py-1 text-end text-xs">
                                     Order Qty
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
@@ -176,30 +179,32 @@ useEffect(() => {
                                 ))}
 
                             </tr>
+
                         </thead>
                         <tbody>
 
                             {orderYarnDetails?.map((yarn, index) => (
                                 <tr>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">{index + 1}</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">{index + 1}</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs ">{yarn?.Yarn?.name}</td>
 
 
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">{ }
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">
                                         <input
                                             type="number"
                                             min={"0"}
                                             onFocus={(e) => e.target.select()}
                                             className="text-right rounded py-1 px-1 w-full table-data-input"
                                             value={yarn?.percentage ?? ""}
-                                            
+                                            disabled={readOnly}
                                             onChange={(e) => {
                                                 handleInputChange(e.target.value, index, yarn?.yarnId)
-                                             
+
                                             }}
 
                                         />
                                     </td>
+                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-xs ">{}</td>
 
 
                                     {(orderSizeDetails || []).map((size) => (
@@ -212,9 +217,7 @@ useEffect(() => {
                                                     onFocus={(e) => e.target.select()}
                                                     className="text-right rounded py-1 px-1 w-full table-data-input"
                                                     value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId,) || "")}
-                                                // disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
-                                                // onChange={(e) => handleInputChange(e.target.value, index, yarn?.sizeId, yarn?.yarnId, yarn?.colorId)}
-                                                // onBlur={(e) => handleInputChange(e.target.value, index, yarn?.sizeId, yarn?.yarnId, yarn?.colorId)}
+                                                    disabled={true}
 
                                                 />
                                             </td>
@@ -222,7 +225,7 @@ useEffect(() => {
                                         </>
 
                                     ))}
-                                 
+
 
 
 
@@ -238,7 +241,7 @@ useEffect(() => {
 
                 <div>
                     <div className="flex justify-between items-center mb-2  mt-4">
-                        <h2 className="font-medium text-slate-700">Require Qty</h2>
+                        <h2 className="font-medium text-slate-700">Required Qty</h2>
 
                     </div>
                     <div className="w-[30%] flex justify-end items-center mt-4">
@@ -250,7 +253,7 @@ useEffect(() => {
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn</td>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty</td>
-                                  
+
                                 </tr>
 
                             </thead>
@@ -262,7 +265,7 @@ useEffect(() => {
                                         <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
 
                                         <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                            {getRequireWeight(yarn?.yarnId).toFixed(3)}
+                                            {getRequireWeight(yarn?.yarnId).toFixed(3)} Kg
                                         </td>
 
                                     </tr>
@@ -279,7 +282,7 @@ useEffect(() => {
 
 
 
-             
+
 
 
 

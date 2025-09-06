@@ -11,7 +11,6 @@ function findIsNumber(docId) {
     const parts = docId?.split('/');
     const last = parts[parts?.length - 1];
 
-    console.log(last, "lastttt")
 
     if (last == "Drift") {
         return false
@@ -86,7 +85,6 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
                 id: 'desc'
             }
         });
-        console.log(lastObject, "lastObjectlasttttt")
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
         let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
@@ -203,14 +201,31 @@ async function getOne(id) {
                     filePath: true,
                     sizeId: true,
                     orderSizeDetails: true,
-                    orderYarnDetails: true,
+                    orderYarnDetails: {
+                        select: {
+                            id: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            orderdetailsId: true,
+                            colorId: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+                 
                     style: {
                         select: {
                             name: true
                         }
                     }
                 }
-            }
+            },
+
         }
 
     })
@@ -240,35 +255,6 @@ export async function getOrderItems(req) {
 }
 
 export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
-
-
-    const childRecord = 0;
-    let data = await prisma.order.findUnique({
-        where: {
-            id: parseInt(id)
-        },
-        include: {
-            Party: {
-                select: {
-                    name: true
-                }
-            },
-            orderDetails: true
-
-
-
-        }
-    })
-    if (!data) return NoRecordFound("order");
-
-
-
-
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
-}
-
-
-export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, packingType) {
 
 
     const childRecord = 0;
@@ -319,6 +305,104 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
                 }
             }
         }
+
+    })
+    if (!data) return NoRecordFound("order");
+
+
+
+
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
+
+
+
+// export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
+
+
+//     const childRecord = 0;
+//     let data = await prisma.order.findUnique({
+//         where: {
+//             id: parseInt(id)
+//         },
+//         include: {
+//             Party: {
+//                 select: {
+//                     name: true
+//                 }
+//             },
+//             orderDetails: true
+
+
+
+//         }
+//     })
+//     if (!data) return NoRecordFound("order");
+
+
+
+
+//     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+// }
+
+
+export async function getOrderItemsByIdNew(id) {
+
+    const childRecord = 0;
+    let data = await prisma.order.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            RequirementPlanningForm: {
+                select: {
+                    OrderDetails : {
+                        select : {
+                            style : {
+                                select : {
+                                    name : true
+                                }
+                            }
+                        }
+                    },
+
+                    requirementSizeDetails: true,
+                    RequirementYarnDetails: {
+                        select: {
+                            id: true,
+                            RequirementPlanningId: true,
+                            colorId: true,
+                            percentage: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            percentage: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            YarnType: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color : {
+                                select : {
+                                    name : true
+                                }
+                            }
+
+                        }
+                    }, id: true,
+                    docId: true,
+                    orderDetailsId: true,
+                }
+            },
+
+        }
+
 
     })
     if (!data) return NoRecordFound("order");
@@ -400,7 +484,7 @@ async function create(req) {
                         })),
                     }
                     : undefined,
-            },
+                },
         });
 
 

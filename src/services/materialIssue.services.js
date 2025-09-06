@@ -58,9 +58,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -88,11 +88,10 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         });
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIISUE/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
-        console.log(newDocId, "newDocId")
         return newDocId
     }
 
@@ -135,7 +134,32 @@ async function get(req) {
                 : undefined,
             partyId: partyId ? parseInt(partyId) : undefined,
         },
-
+        include : {
+               Order: {
+                select: {
+                    docId: true
+                }
+            },
+            Party: {
+                select: {
+                    name: true
+                }
+            },
+            OrderDetails: {
+                select: {
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
+            RequirementPlanningForm: {
+                select: {
+                    docId: true
+                }
+            },
+        },
         orderBy: {
             id: "desc",
         },

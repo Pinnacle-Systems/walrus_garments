@@ -150,17 +150,14 @@ async function get(req) {
 
                 }
             },
-
-            // OrderDetails : {
-            //         select : {
-            //             style :{
-            //                 select  : {
-            //                     name : true
-            //                 }
-            //             }
-            //         }
-            // }
-
+       OrderDetails : {
+                select : {
+                    style : {
+                        select : {
+                            name : true
+                        }
+                }
+            }},
         },
         orderBy: {
             id: "desc",
@@ -194,7 +191,21 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            requirementSizeDetails: true,
+     
+            requirementSizeDetails: {
+                select : {
+                    id : true ,
+                    qty : true ,
+                    requirementPlanningFormId : true,
+                    size : {
+                        select : {
+                            name :  true
+                        }
+                    },
+                    weight : true ,
+                    sizeId : true
+                }
+            },
             RequirementYarnDetails: {
                 select: {
                     id: true,
@@ -215,7 +226,8 @@ async function getOne(id) {
                         select: {
                             name: true
                         }
-                    }
+                    },
+                    
                 }
             },
         }

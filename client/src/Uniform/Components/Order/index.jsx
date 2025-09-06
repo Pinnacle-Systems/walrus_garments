@@ -16,7 +16,6 @@ import { ReusableTable } from '../../../Inputs';
 const Order = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-    const [selectedStatus, setSelectedStatus] = useState('all');
     const [showOrderForm, setShowOrderForm] = useState(false);
     const [id, setId] = useState("");
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -31,41 +30,27 @@ const Order = () => {
     const columns = [
         {
             header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium text-gray-900 w-[3%]  text-center'
+            accessor: (item, index) => parseInt(index) + parseInt(1),
+            className: 'font-medium text-gray-900 text-center w-[20px] py-1'
 
         },
         {
-            header: 'Order No.',
+            header: 'Order No',
             accessor: (item) => item.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[40px]  py-1  px-2'
         },
         {
             header: 'Order Date',
             accessor: (item) => item.docDate,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[80px]  py-1  px-2'
 
         },
         {
             header: 'Customer',
             accessor: (item) => item.Party?.name,
-            className: 'font-medium text-gray-900 w-[40%]'
+            className: 'font-medium text-gray-900 w-[500px]  py-1  px-2'
         },
-        // {
-        //     header: 'ContactPerson',
-        //     accessor: (item) => item.contactPersonName,
-        //     cellClass: () => 'text-gray-800 uppercase'
-        // },
-        // {
-        //     header: 'Contact',
-        //     accessor: (item) => item.phone,
-        //     cellClass: () => 'text-gray-800 uppercase'
-        // },
-        {
-            header: '',
-            accessor: (item) => item.none,
-            className: 'font-medium text-gray-900 w-[40%]'
-        },
+
     ];
 
 
@@ -83,31 +68,37 @@ const Order = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (orderId) => {
-        let returnData;
-        if (orderId) {
+    const handleDelete = async (id) => {
+        if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                 await removeData(orderId)
+                let deldata = await removeData(id).unwrap();
+                if (deldata?.statusCode == 1) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Child record Exists",
+                        text: deldata.data?.message || "Data cannot be deleted!",
+                    });
+                    return;
+                }
                 setId("");
-                onNew();
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
                     timer: 1000,
-
                 });
+                setShowOrderForm(false);
             } catch (error) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Submission error',
-                    text: error.data?.message || 'Something went wrong!',
+                    icon: "error",
+                    title: "Submission error",
+                    text: error.data?.message || "Something went wrong!",
                 });
+                setShowOrderForm(false);
             }
         }
-
     };
     const onNew = () => {
         setId("");
@@ -153,7 +144,7 @@ const Order = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden w-full">
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden ">
                         <ReusableTable
                             columns={columns}
                             data={orderData?.data || []}

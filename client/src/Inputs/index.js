@@ -1002,7 +1002,7 @@ export const DropdownWithSearch = ({
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${className}`}
 
-        disabled={disabled}
+        disabled={readOnly}
         readOnly={readOnly}
         value={value || ""}
         onChange={(e) => {
@@ -1299,21 +1299,21 @@ export const ReusableTable = ({
   return (
     <>
       <div className="bg-[#F1F1F0] shadow-sm h-[80%]">
-        <table className=" border-collapse w-full ">
+        <table className="">
           <thead className="bg-gray-200 text-gray-800 ">
             <tr>
 
               {columns?.map((column, index) => (
                 <th
                   key={index}
-                  className={` ${column.className ? column.className : ""} py-2  font-medium   ${column.header !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
+                  className={` ${column.className ? column.className : ""} py-2  px-1.5 font-medium   ${column.header !== "" ? 'border-r border-white/50' : ''} text-[13px]`}
 
                 >
                   {column.header}
                 </th>
               ))}
               {rowActions && (
-                <th className="px-4 py-2 text-center font-medium text-[13px] justify-end">Actions</th>
+                <th className="px-4  py-2 text-center font-medium text-[13px] ">Actions</th>
               )}
             </tr>
           </thead>
@@ -1340,7 +1340,7 @@ export const ReusableTable = ({
                     </td>
                   ))}
                   {rowActions && (
-                    <td className=" w-[30px] border-gray-200 gap-1   h-8 justify-end">
+                    <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                       <div className="flex">
                         {onView && (
                           <button

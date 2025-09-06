@@ -1,6 +1,6 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
 import { deliveryTypes, directOrPo, poTypes, purchaseType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
@@ -372,8 +372,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             <div className="grid grid-cols-2 gap-1">
               <ReusableInput label="Doc. Id" readOnly value={docId} />
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-              <ReusableInput
-                label="Due Date"
+              <DateInputNew
+                name="Delivery Date"
                 value={dueDate}
                 setValue={setDueDate}
                 type={"date"}
@@ -451,7 +451,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
               <ReusableSearchableInput
                 label="Supplier Id"
                 component="PartyMaster"
-                placeholder="Search Customer Id..."
+                placeholder="Search Supplier Id..."
                 optionList={supplierList?.data}
                 onAddItem={handleAddSupplier}
                 // onDeleteItem={onDeleteItem}

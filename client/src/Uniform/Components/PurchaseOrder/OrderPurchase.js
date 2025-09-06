@@ -27,7 +27,6 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
             return poItems?.reduce((total, item) => {
                 if (item.yarnId !== yarnId) return total;
 
-                // find qty for this size
                 const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
 
                 console.log(item, "item");
@@ -38,40 +37,104 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
     };
 
-    useEffect(() => {
-        if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+    // useEffect(() => {
+    //     if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
 
-        const combined = [];
+    //     const combined = [];
 
-        if(id){
-            return
-        }
-        else{
-            orderSizeDetails?.forEach(size => {
-                orderYarnDetails?.forEach(yarn => {
-                    combined?.push({
-                        sizeId: size.sizeId,
-                        yarnId: yarn.yarnId,
-                        Yarn: {
-                            name: yarn?.Yarn?.name,
-                        },
-                        percentage: yarn?.percentage,
-                        colorId: yarn.colorId,
-                        requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100).toFixed(2)),
-                        weight: size.weight,
-                        uomId: size.uomId,
+    //     if(id){
+    //         return
+    //     }
+    //     else{
+    //         orderSizeDetails?.forEach(size => {
+    //             orderYarnDetails?.forEach(yarn => {
+    //                 combined?.push({
+    //                     sizeId: size.sizeId,
+    //                     yarnId: yarn.yarnId,
+    //                     Yarn: {
+    //                         name: yarn?.Yarn?.name,
+    //                     },
+    //                     percentage: yarn?.percentage,
+    //                     colorId: yarn.colorId,
+    //                     requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100)),
+    //                     weight: size.weight,
+    //                     uomId: size.uomId,
     
-                    });
+    //                 });
+    //             });
+    //         });
+    //         setPoItems(combined);
+    //     }
+
+
+   
+    // }, [orderSizeDetails, orderYarnDetails]);
+
+//     useEffect(() => {
+//   if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+//   if (id) return; 
+
+//   const groupedMap = {};
+
+//   orderSizeDetails.forEach(size => {
+//     orderYarnDetails.forEach(yarn => {
+//       const key = `${yarn.yarnId}-${yarn.colorId}`;
+
+//       const qty = Number(((parseFloat(size.weight || 0) * (yarn.percentage || 0)) / 100).toFixed(3));
+
+//       if (!groupedMap[key]) {
+//         groupedMap[key] = {
+//           yarnId: yarn.yarnId,
+//           Yarn: { name: yarn?.Yarn?.name },
+//           percentage: yarn.percentage,
+//           colorId: yarn.colorId,
+//           qty: 0,
+//           uomId: size.uomId,
+//         };
+//       }
+
+//       // accumulate qty across sizes
+//       groupedMap[key].qty += qty;
+//     });
+//   });
+
+//   setPoItems(Object.values(groupedMap));
+// }, [orderSizeDetails, orderYarnDetails, id]);
+useEffect(() => {
+    if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+
+    if (id) return;
+
+    const combined = [];
+
+    orderSizeDetails.forEach(size => {
+        orderYarnDetails.forEach(yarn => {
+            const key = `${size.sizeId}-${yarn.yarnId}-${yarn.colorId}`;
+            
+            // Check if this combination already exists
+            if (!combined.some(item =>
+                item.sizeId === size.sizeId &&
+                item.yarnId === yarn.yarnId &&
+                item.colorId === yarn.colorId
+            )) {
+                combined.push({
+                    sizeId: size.sizeId,
+                    yarnId: yarn.yarnId,
+                    Yarn: { name: yarn?.Yarn?.name },
+                    percentage: yarn?.percentage,
+                    colorId: yarn.colorId,
+                    requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100)),
+                    weight: size.weight,
+                    uomId: size.uomId,
                 });
-            });
-            setPoItems(combined);
-        }
+            }
+        });
+    });
 
+    setPoItems(combined);
 
-        //     orderYarnDetails?.forEach((yarn) => {
-        //     // newFunction(yarn?.percentage, yarn?.yarncategoryId);
-        // });
-    }, [orderSizeDetails, orderYarnDetails]);
+}, [orderSizeDetails, orderYarnDetails, id]);
+
 
     console.log(poItems, "poItems");
     const handleInputChange = (value, index, field) => {
@@ -157,7 +220,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Actual  Quantity
+                                      Qty
                                 </th>
                                 <th
 
@@ -223,13 +286,13 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
                                             className="text-right rounded py-1 px-1 w-full table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                            value={row?.qty}
+                                            value={row?.qty || 0.00}
                                             // disabled={true}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "qty")
                                             }
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
+                                                handleInputChange(parseFloat(e.target.value), index, "qty");
                                             }
                                             }
                                         />
@@ -246,7 +309,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
                                             className="text-right rounded py-1 px-1 w-full table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                            value={row?.price}
+                                            value={row?.price || 0}
                                             // disabled={true}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")

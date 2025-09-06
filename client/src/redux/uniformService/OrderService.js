@@ -82,9 +82,9 @@ const OrderApi = createApi({
             providesTags: ["Order"],
         }),
         getOrderItemsByIdNew: builder.query({
-            query: ({ id, prevProcessId, packingCategory, packingType }) => {
+            query: (id) => {
                 return {
-                    url: `${ORDER_API}/getOrderItemsNew/${id}/${prevProcessId ? prevProcessId : null}/${packingCategory ? packingCategory : null}/${packingType ? packingType : null}`,
+                    url: `${ORDER_API}/getOrderItemsNew/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",

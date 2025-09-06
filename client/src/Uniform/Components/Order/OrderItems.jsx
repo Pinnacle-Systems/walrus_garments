@@ -200,7 +200,7 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
         {/* ))} */}
       </Modal>
 
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[380px] overflow-auto">
+      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
           <div className="flex gap-2 items-center">
@@ -297,10 +297,8 @@ export default function OrderItems({ readOnly, itemHeading, setOrderDetails, ord
                 return (
                   <React.Fragment key={index}>
                     <tr className="border border-blue-gray-200 cursor-pointer">
-                      {/* S.No */}
                       <td className="w-12 border border-gray-300 text-[11px] text-center p-0.5">{index + 1}</td>
 
-                      {/* Style ID */}
                       <td className=" border border-gray-300 text-[11px]">
                         <select
                           onKeyDown={(e) => {

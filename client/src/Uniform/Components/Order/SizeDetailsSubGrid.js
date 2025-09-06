@@ -18,9 +18,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
     sessionStorage.getItem("sessionId") + "userCompanyId"
   )
 
-  const params = {
-    companyId
-  };
+console.log(readOnly,"readOnly")
 
 
 
@@ -100,6 +98,8 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                             handleInputChange("", index, "sizeId");
                           }
                         }}
+                        disabled={readOnly}
+
                         className="text-left w-full rounded h-full py-1"
                         value={yarn?.sizeId}
                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId", gridIndex)}
@@ -113,7 +113,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         ))}
                       </select>
                     </td>
-                  
+
 
 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
@@ -127,7 +127,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         onFocus={e => e.target.select()}
                         className="text-right rounded w-full py-1 text-xs table-data-input"
                         value={(yarn.weight)}
-                        // disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
+                        disabled={readOnly}
                         onChange={e => handleInputChange(e.target.value, index, "weight")}
                         onBlur={e => handleInputChange(e.target.value, index, "weight")}
                       />

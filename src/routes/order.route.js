@@ -19,7 +19,7 @@ router.get('/orderItems', getOrderItems);
 
 router.get('/getOrderItems/:id/:prevProcessId/:packingCategory/:packingType', getOrderItemsById);
 
-router.get('/getOrderItemsNew/:id/:prevProcessId/:packingCategory/:packingType', getOrderItemsByIdNew);
+router.get('/getOrderItemsNew/:id', getOrderItemsByIdNew);
 
 
 // router.put('/:id', update);

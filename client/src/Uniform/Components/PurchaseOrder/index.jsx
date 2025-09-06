@@ -250,37 +250,34 @@ export default function Form() {
   const columns = [
     {
       header: 'S.No',
-      accessor: (item, index) => index + 1,
-      className: 'font-medium text-gray-900 w-12  text-center'
+      accessor: (item, index) => parseInt(index) + 1,
+      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
     },
 
     {
       header: 'Inward No',
       accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-24'
+      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
     },
     {
       header: 'TransType',
       accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-24'
+      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
     },
     {
       header: 'Inward Date',
       accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-24'
+      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
     },
     {
       header: 'Supplier',
       accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
-      className: 'text-gray-800 uppercase w-96'
+      className: 'text-gray-800 uppercase w-[500px]'
     },
-    {
-      header: '',
-      accessor: (item) => item.none,
-      className: 'w-[55%]'
-    },
+  
 
   ];
+
 
 
 
@@ -313,7 +310,7 @@ export default function Form() {
         return;
       }
       try {
-        // await removeData(orderId)
+        await removeData(id)
         setId("");
         onNew();
         toast.success("Deleted Successfully");

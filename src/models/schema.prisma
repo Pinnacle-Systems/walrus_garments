@@ -760,6 +760,7 @@ model Yarn {
   yarnCounts                    yarnCounts[]
   RaiseIndentItems              RaiseIndentItems[]
   MaterialIssueItems            MaterialIssueItems[]
+  RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
 }
 
 model yarnCounts {
@@ -949,6 +950,7 @@ model Color {
   requirementYarnDetails                    RequirementYarnDetails[]
   RaiseIndentItems                          RaiseIndentItems[]
   MaterialIssueItems                        MaterialIssueItems[]
+  RaiseIndenetYarnItems                     RaiseIndenetYarnItems[]
 }
 
 model UnitOfMeasurement {
@@ -1410,7 +1412,6 @@ model SocksMaterial {
   companyId          Int?
   OrderDetails       OrderDetails[]
   sampleDetails      sampleDetails[]
-  RaiseIndentItems   RaiseIndentItems[]
   MaterialIssueItems MaterialIssueItems[]
 }
 
@@ -3037,6 +3038,8 @@ model OrderDetails {
   RequirementPlanningForm RequirementPlanningForm[]
   RaiseIndent             RaiseIndent[]
   MaterialIssue           MaterialIssue[]
+  RaiseIndenetYarnItems   RaiseIndenetYarnItems[]
+  RaiseIndentItems        RaiseIndentItems[]
 }
 
 model orderSizeDetails {
@@ -3066,16 +3069,15 @@ model orderYarnDetails {
 }
 
 model Machine {
-  id               Int                @id @default(autoincrement())
-  name             String?
-  code             String?
-  time             Float?
-  production       Float?
-  active           Boolean?           @default(true)
-  YarnNeedle       YarnNeedle[]
-  OrderDetails     OrderDetails[]
-  sampleDetails    sampleDetails[]
-  RaiseIndentItems RaiseIndentItems[]
+  id            Int             @id @default(autoincrement())
+  name          String?
+  code          String?
+  time          Float?
+  production    Float?
+  active        Boolean?        @default(true)
+  YarnNeedle    YarnNeedle[]
+  OrderDetails  OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model ShippingAddress {
@@ -3103,7 +3105,6 @@ model SocksType {
   companyId          Int?
   OrderDetails       OrderDetails[]
   sampleDetails      sampleDetails[]
-  RaiseIndentItems   RaiseIndentItems[]
   MaterialIssueItems MaterialIssueItems[]
 }
 
@@ -3116,16 +3117,15 @@ model Measurement {
 }
 
 model FiberContent {
-  id               Int                @id @default(autoincrement())
-  aliasName        String?
-  fabricName       String?
-  Company          Company?           @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  active           Boolean?           @default(true)
-  fiberBlend       FiberBlend[]
-  OrderDetails     OrderDetails[]
-  sampleDetails    sampleDetails[]
-  RaiseIndentItems RaiseIndentItems[]
+  id            Int             @id @default(autoincrement())
+  aliasName     String?
+  fabricName    String?
+  Company       Company?        @relation(fields: [companyId], references: [id])
+  companyId     Int?
+  active        Boolean?        @default(true)
+  fiberBlend    FiberBlend[]
+  OrderDetails  OrderDetails[]
+  sampleDetails sampleDetails[]
 }
 
 model FiberBlend {
@@ -3149,7 +3149,7 @@ model YarnNeedle {
   sampleSizeDetails      sampleSizeDetails[]
   orderYarnDetails       orderYarnDetails[]
   RequirementYarnDetails RequirementYarnDetails[]
-  RaiseIndentItems       RaiseIndentItems[]
+  RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
 }
 
 model PartyKYC {
@@ -3299,6 +3299,8 @@ model RequirementPlanningForm {
   Po                     Po[]
   RaiseIndent            RaiseIndent[]
   MaterialIssue          MaterialIssue[]
+  RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
+  RaiseIndentItems       RaiseIndentItems[]
 }
 
 model RequirementSizeDetails {
@@ -3375,35 +3377,43 @@ model RaiseIndent {
 }
 
 model RaiseIndentItems {
-  id              Int            @id @default(autoincrement())
-  RaiseIndent     RaiseIndent?   @relation(fields: [raiseIndentId], references: [id], onDelete: Cascade)
-  raiseIndentId   Int?
-  yarnNeedleId    Int?
-  yarnNeedle      YarnNeedle?    @relation(fields: [yarnNeedleId], references: [id])
-  machineId       Int?
-  machine         Machine?       @relation(fields: [machineId], references: [id])
-  fiberContentId  Int?
-  fiberContent    FiberContent?  @relation(fields: [fiberContentId], references: [id])
-  description     String?        @db.LongText
-  qty             Float?
-  socksMaterialId Int?
-  socksMaterial   SocksMaterial? @relation(fields: [socksMaterialId], references: [id])
-  measurements    String?
-  sizeId          Int?
-  size            Size?          @relation(fields: [sizeId], references: [id])
-  styleId         Int?
-  style           Style?         @relation(fields: [styleId], references: [id])
-  noOfStripes     String?
-  socksTypeId     Int?
-  socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
-  percentage      Float?
-  Color           Color?         @relation(fields: [colorId], references: [id])
-  colorId         Int?
-  weight          Float?
-  Yarn            Yarn?          @relation(fields: [yarnId], references: [id])
-  yarnId          Int?
-  MaterialIssue   MaterialIssue? @relation(fields: [materialIssueId], references: [id])
-  materialIssueId Int?
+  id                        Int                      @id @default(autoincrement())
+  RaiseIndent               RaiseIndent?             @relation(fields: [raiseIndentId], references: [id], onDelete: Cascade)
+  raiseIndentId             Int?
+  Yarn                      Yarn?                    @relation(fields: [yarnId], references: [id])
+  yarnId                    Int?
+  Color                     Color?                   @relation(fields: [colorId], references: [id])
+  colorId                   Int?
+  Size                      Size?                    @relation(fields: [sizeId], references: [id])
+  sizeId                    Int?
+  Style                     Style?                   @relation(fields: [styleId], references: [id])
+  styleId                   Int?
+  requirementPlanningForm   RequirementPlanningForm? @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
+  requirementPlanningFormId Int?
+  OrderDetails              OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
+  orderdetailsId            Int?
+  RaiseIndenetYarnItems     RaiseIndenetYarnItems[]
+}
+
+model RaiseIndenetYarnItems {
+  id                      Int                      @id @default(autoincrement())
+  RaiseIndentItems        RaiseIndentItems?        @relation(fields: [raiseIndentItemsId], references: [id], onDelete: Cascade)
+  raiseIndentItemsId      Int?
+  Yarn                    Yarn?                    @relation(fields: [yarnId], references: [id])
+  yarnId                  Int?
+  yarnNeedleId            Int?
+  yarnNeedle              YarnNeedle?              @relation(fields: [yarnNeedleId], references: [id])
+  Color                   Color?                   @relation(fields: [colorId], references: [id])
+  colorId                 Int?
+  count                   Int?
+  qty                     Float?
+  issueQty                Float?
+  percentage              Float?
+  weight                  Float?
+  RequirementPlanningForm RequirementPlanningForm? @relation(fields: [requirementPlanningId], references: [id])
+  requirementPlanningId   Int?
+  OrderDetails            OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
+  orderdetailsId          Int?
 }
 
 model MaterialIssue {
@@ -3442,7 +3452,6 @@ model MaterialIssue {
   requirementId           Int?
   draftSave               Boolean?                 @default(false)
   isMaterialIssue         Boolean?                 @default(false)
-  RaiseIndentItems        RaiseIndentItems[]
   MaterialIssueItems      MaterialIssueItems[]
 }
 

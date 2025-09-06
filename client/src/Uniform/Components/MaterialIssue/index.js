@@ -48,81 +48,93 @@ const MaterialIssue = () => {
 
     const { data: allData, isLoading, isFetching } = useGetMaterialIssueQuery({ params: { branchId } });
     const [removeData] = useDeleteMaterialIssueMutation();
-    
+
     const { data: indenetRaiseData } = useGetRaiseIndentQuery({ params: { branchId } });
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
-    
 
 
-            const getNextDocId = useCallback(() => {
-                    if (allData?.nextDocId) {
-                    setDocId(allData.nextDocId)
-                }
-            }, [allData, id])
-        
-            useEffect(getNextDocId, [getNextDocId])
+
+    const getNextDocId = useCallback(() => {
+        if (allData?.nextDocId) {
+            setDocId(allData.nextDocId)
+        }
+    }, [allData, id])
+
+    useEffect(getNextDocId, [getNextDocId])
 
 
     const columnsIssued = [
-        {
+            {
             header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium item-center text-gray-900 w-[5%]'
+            accessor: (item, index) => index + 1, 
+            className: 'font-medium text-center text-gray-900 w-[5%]'
         },
 
         {
             header: 'Doc No',
             accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
         },
 
         {
             header: 'Order No',
-            accessor: (item) => item?.order?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            accessor: (item) => item?.Order?.docId,
+            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
         },
 
-        {
-            header: 'Customer',
+        // {
+        //     header: 'Style No',
+        //     accessor: (item) => item?.OrderDetails?.style?.name,
+        //     className: 'font-medium text-gray-900 w-[70px] py-1 px-2'
+        // },
+        //   {
+        //     header: 'Requirement No',
+        //     accessor: (item) => item?.RequirementPlanningForm?.docId,
+        //     className: 'font-medium text-gray-900 w-[40px]  py-1 px-2'
+        // },
+                 {
+            header: 'Customer Name',
             accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[50%]'
+            className: 'font-medium text-gray-900 w-[500px]  py-1 px-2'
         },
-        {
-            header: '',
-            accessor: (item) => item?.none,
-            className: 'font-medium text-gray-900 w-[40%]'
-        },
+     
     ];
 
     const columnsInendentRaise = [
         {
-            header: 'S.No000',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium item-center text-gray-900 w-[5%]'
+            header: 'S.No',
+            accessor: (item, index) => index + 1, 
+            className: 'font-medium text-center text-gray-900 w-[5%]'
         },
 
         {
             header: 'Doc No',
             accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
         },
 
         {
             header: 'Order No',
-            accessor: (item) => item?.order?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            accessor: (item) => item?.Order?.docId,
+            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
         },
 
-        {
-            header: 'Customer',
+        // {
+        //     header: 'Style No',
+        //     accessor: (item) => item?.OrderDetails?.style?.name,
+        //     className: 'font-medium text-gray-900 w-[70px] py-1 px-2'
+        // },
+        //   {
+        //     header: 'Requirement No',
+        //     accessor: (item) => item?.RequirementPlanningForm?.docId,
+        //     className: 'font-medium text-gray-900 w-[40px]  py-1 px-2'
+        // },
+                 {
+            header: 'Customer Name',
             accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[50%]'
+            className: 'font-medium text-gray-900 w-[500px]  py-1 px-2'
         },
-        {
-            header: '',
-            accessor: (item) => item?.none,
-            className: 'font-medium text-gray-900 w-[40%]'
-        },
+     
     ];
 
     const handleIssuedView = (id) => {
@@ -206,13 +218,13 @@ const MaterialIssue = () => {
 
                 <MaterialIssueForm
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
-
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} orderDetailsId={orderDetailsId} setOrderDetailsId={setOrderDetailsId}
-
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} issueItems={issueItems} setIssueItems={setIssueItems}
-
-                    dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setIndentRaiseId={setIndentRaiseId}  indentRaiseId={indentRaiseId}
+                    dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setIndentRaiseId={setIndentRaiseId} indentRaiseId={indentRaiseId}
                 />
+
+
+
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -238,28 +250,31 @@ const MaterialIssue = () => {
 
                         </div>
                         <div className="flex flex-row gap-5">
+                            {/* Material Request */}
                             <button
                                 className={`px-4 py-1 rounded-md flex items-center gap-2 text-sm border 
-      ${isReport === "IndentRaised"
-                                        ? "bg-green-700 text-white border-green-700"
-                                        : "bg-white text-green-800 border-green-700 hover:bg-green-700 hover:text-white"
+                    ${isReport === "IndentRaised"
+                                        ? "bg-green-600 text-white border-green-600"
+                                        : "bg-white text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
                                     }`}
                                 onClick={() => { onNew(); setIsReport("IndentRaised") }}
                             >
-                                Indent Raised
+                                Material Request
                             </button>
 
+                            {/* Material Issue */}
                             <button
                                 className={`px-4 py-1 rounded-md flex items-center gap-2 text-sm border 
-      ${isReport === "Issued"
-                                        ? "bg-green-700 text-white border-green-700"
-                                        : "bg-white text-green-800 border-green-700 hover:bg-green-700 hover:text-white"
+                   ${isReport === "Issued"
+                                        ? "bg-amber-500 text-white border-amber-500"
+                                        : "bg-white text-amber-600 border-amber-500 hover:bg-amber-500 hover:text-white"
                                     }`}
                                 onClick={() => { onNew(); setIsReport("Issued") }}
                             >
-                                Issued
+                                Material Issued
                             </button>
                         </div>
+
 
                     </div>{console.log(isReport === "isReport", "isReport")}
                     {isReport == "IndentRaised" ?

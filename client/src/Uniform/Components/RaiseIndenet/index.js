@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
-import { ReusableTable } from "../../../Inputs";
+import { DropdownInput, ReusableTable } from "../../../Inputs";
 import { FaPlus } from "react-icons/fa";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
@@ -9,6 +9,9 @@ import { useDeleteRaiseIndentMutation, useGetRaiseIndentQuery } from "../../../r
 import { useCallback } from "react";
 import { useEffect } from "react";
 import IndentRaiseForm from "./IndentRaiseForm";
+import { Production } from "../../../Utils/DropdownData";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssueServices";
 
 
 
@@ -36,61 +39,59 @@ const RaiseIndentForm = () => {
     const [raiseIndentItems, setRaiseIndentItems] = useState([])
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
-    const [requirementId,setrequirementId] = useState("")
-    const [isRaiseRendent,setRaiseIndenet]   =  useState(false)
+    const [requirementId, setrequirementId] = useState("")
+    const [isRaiseRendent, setRaiseIndenet] = useState(false)
+    const [isReport, setIsReport] = useState("Material Request")
+
 
     const params = {
         branchId, userId, finYearId
     };
 
-    const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId } });
+    const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId, indentRaise: true } });
+    const { data: materialIssueData } = useGetMaterialIssueQuery({ params: { branchId } });
+
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
+    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
     const [removeData] = useDeleteRaiseIndentMutation();
 
-        const getNextDocId = useCallback(() => {
-            //   if (id || isLoading || isFetching) return
-            if (allData?.nextDocId) {
-                setDocId(allData.nextDocId)
-            }
-        }, [allData, id])
-    
-        useEffect(getNextDocId, [getNextDocId])
+    const getNextDocId = useCallback(() => {
+        //   if (id || isLoading || isFetching) return
+        if (allData?.nextDocId) {
+            setDocId(allData.nextDocId)
+        }
+    }, [allData, id])
+
+    useEffect(getNextDocId, [getNextDocId])
 
     const columns = [
         {
             header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium item-center text-gray-900 w-[5%]'
+            accessor: (item, index) => parseInt(index) + parseInt(1),
+            className: 'font-medium text-center text-gray-900 w-[20px]'
         },
 
         {
             header: 'Doc No',
             accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-center text-gray-900 w-[40px] py-1 px-2'
         },
 
         {
             header: 'Order No',
-            accessor: (item) => item?.order?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            accessor: (item) => item?.Order?.docId,
+            className: 'font-medium text-center text-gray-900 w-[60px] py-1 px-2'
         },
 
-        //    {
-        //         header: 'Style No',
-        //         accessor: (item) => item.none,
-        //         className : 'font-medium text-gray-900 w-[80%]'
-        //     },
+
         {
             header: 'Customer',
             accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[50%]'
+            className: 'font-medium text-start text-gray-900 w-[500px] py-1 px-2'
         },
-        {
-            header: '',
-            accessor: (item) => item?.none,
-            className: 'font-medium text-gray-900 w-[40%]'
-        },
+       
+     
     ];
 
 
@@ -147,26 +148,36 @@ const RaiseIndentForm = () => {
     const onNew = () => {
         setId("");
         setReadOnly(false);
+        setOrderId("")
+        setOrderDetailsId("")
+        setrequirementId("")
+        setRaiseIndentItems([])
+        setOrderSizeDetails([])
+        setOrderYarnDetails([])
+        setRaiseIndenet(false)
+        setPartyId("")
 
     }
+
+    console.log(partyId,"partyId")
 
     return (
         <>
             {form ? (
                 <IndentRaiseForm
-                setDocId={setDocId}
+                    setDocId={setDocId} supplierList={supplierList}
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
 
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} orderDetailsId={orderDetailsId} setOrderDetailsId={setOrderDetailsId}
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} raiseIndentItems={raiseIndentItems} setRaiseIndentItems={setRaiseIndentItems}
 
-                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setrequirementId={setrequirementId}  isRaiseRendent={isRaiseRendent}  setRaiseIndenet={setRaiseIndenet}
+                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setrequirementId={setrequirementId} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet}
                 />
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Raise Indent Form</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Material Request Form</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2">
                             <select
@@ -187,24 +198,90 @@ const RaiseIndentForm = () => {
                             </select>
 
                         </div>
-                        <button
-                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true); onNew() }}
-                        >
-                            <FaPlus /> Create New
-                        </button>
+                        <div className="flex flex-row  gap-4  ">
+
+                            <div >
+                                {/* <select
+                                    value={isReport}
+                                    onChange={(e) => setIsReport(e.target.value)}
+                                    className="px-3 py-1 border rounded-md text-sm"
+                                >
+                                    <option value="Material Request">Material Request</option>
+                                    <option value="Material Issue">Material Issue</option>
+                                </select> */}
+                                <div className="flex flex-row gap-5">
+                                    {/* Material Request */}
+                                    <button
+                                        className={`px-4 py-1 rounded-md flex items-center gap-2 text-sm border transition-colors duration-200
+      ${isReport === "Material Request"
+                                                ? "bg-green-600 text-white border-green-600 ring-2 ring-green-300"   // ✅ Active state
+                                                : "bg-white text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                                            }`}
+                                        onClick={() => { onNew(); setIsReport("Material Request") }}
+                                    >
+                                        Material Request
+                                    </button>
+
+                                    {/* Material Issue */}
+                                    <button
+                                        className={`px-4 py-1 rounded-md flex items-center gap-2 text-sm border transition-colors duration-200
+                             ${isReport === "Material Issue"
+                                                ? "bg-amber-500 text-white border-amber-500 ring-2 ring-amber-300"  // ✅ Active state
+                                                : "bg-white text-amber-600 border-amber-500 hover:bg-amber-500 hover:text-white"
+                                            }`}
+                                        onClick={() => { onNew(); setIsReport("Material Issue") }}
+                                    >
+                                        Material Issue
+                                    </button>
+                                </div>
+
+
+                            </div>
+                            <button
+                                className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4  rounded-md flex items-center gap-2 text-sm"
+                                onClick={() => { setForm(true); onNew() }}
+                            >
+                                <FaPlus /> Create New
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <ReusableTable
-                            columns={columns}
-                            data={allData?.data || []}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            itemsPerPage={10}
-                        />
-                    </div>
+                    {isReport === "Material Request" ? (
+
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <ReusableTable
+                                columns={columns}
+                                data={allData?.data || []}
+                                onView={handleView}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                itemsPerPage={10}
+                            />
+                        </div>
+
+                    )
+                        :
+                        (
+
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <ReusableTable
+                                    columns={columns}
+                                    data={materialIssueData?.data || []}
+                                    onView={handleView}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                    itemsPerPage={10}
+                                />
+                            </div>
+                        )
+
+                    }
+
+
+
+
+
+
                 </div>
             )}
         </>

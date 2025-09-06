@@ -121,8 +121,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "PURCHASE ORDER CANCEL": <PurchaseCancel />,
     "BRANCH TYPE MASTER": <BranchType />,
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
-    "RAISE INDENT": <RaiseIndentForm />,
-    "MATERIAL ISSUE": <MaterialIssue />,
+    "MATERIAL REQUEST FORM": <RaiseIndentForm />,
+    "MATERIAL ISSUE FORM": <MaterialIssue />,
 
 
   };

@@ -28,7 +28,7 @@ const RequirementPlanningForm = () => {
     const [active, setActive] = useState(true);
     const [styleId, setstyleId] = useState("");
     const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
-    const [dueDate, setDueDate] = useState("");
+    const [dueDate, setDueDate] = useState();
 
     const [sampleDetails, setSampleDetails] = useState([]);
     const [orderSizeDetails, setOrderSizeDetails] = useState([])
@@ -36,6 +36,7 @@ const RequirementPlanningForm = () => {
     const [requirementForm, setRequirementForm] = useState([])
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
+    const [jobNumber, setJobNumber] = useState("");
 
     const params = {
         branchId, userId, finYearId
@@ -50,37 +51,32 @@ const RequirementPlanningForm = () => {
     const columns = [
         {
             header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium item-center text-gray-900 w-[5%]'
+            accessor: (item, index) => parseInt(index) + 1,
+            className: 'font-medium text-center text-gray-900 w-[20px] '
         },
 
         {
             header: 'Doc No',
             accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[50px] py-1 px-2'
         },
 
         {
             header: 'Order No',
             accessor: (item) => item?.order?.docId,
-            className: 'font-medium text-gray-900 w-[10%]'
+            className: 'font-medium text-gray-900 w-[50px] py-1 px-2'
         },
-
-        //    {
-        //         header: 'Style No',
-        //         accessor: (item) => item.none,
-        //         className : 'font-medium text-gray-900 w-[80%]'
-        //     },
+        {
+            header: 'Style No',
+            accessor: (item) => item?.OrderDetails?.style?.name,
+            className: 'font-medium text-gray-900 w-[80px] py-1 px-2'
+        },
         {
             header: 'Customer',
             accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[50%]'
+            className: 'font-medium text-gray-900 w-[500px] py-1 px-2'
         },
-        {
-            header: '',
-            accessor: (item) => item?.none,
-            className: 'font-medium text-gray-900 w-[40%]'
-        },
+
     ];
 
 
@@ -102,42 +98,45 @@ const RequirementPlanningForm = () => {
 
     const handleDelete = async (id) => {
         if (id) {
-            if (childRecord.current > 0) {
-                Swal.fire({
-                    title: "Child Record Exist",
-                    icon: "success",
-                    timer: 1000,
-
-                });
-                return
-
-            }
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                await removeData(id)
+                let deldata = await removeData(id).unwrap();
+                if (deldata?.statusCode == 1) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Child record Exists",
+                        text: deldata.data?.message || "Data cannot be deleted!",
+                    });
+                    return;
+                }
                 setId("");
-                onNew();
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
                     timer: 1000,
-
                 });
+                setShowOrderForm(false);
             } catch (error) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Submission error',
-                    text: error.data?.message || 'Something went wrong!',
+                    icon: "error",
+                    title: "Submission error",
+                    text: error.data?.message || "Something went wrong!",
                 });
+                setShowOrderForm(false);
             }
         }
-
     };
     const onNew = () => {
         setId("");
         setReadOnly(false);
+        setOrderId("")
+        setstyleId("")
+        setRequirementForm([])
+        setOrderSizeDetails([])
+        setOrderYarnDetails([])
+        setJobNumber("")
 
     }
 
@@ -151,7 +150,7 @@ const RequirementPlanningForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
 
-                    dueDate={dueDate}  setDueDate={setDueDate}
+                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber}
                 />
 
             ) : (

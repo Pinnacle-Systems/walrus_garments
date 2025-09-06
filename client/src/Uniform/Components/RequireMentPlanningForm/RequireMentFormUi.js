@@ -5,7 +5,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -16,9 +16,9 @@ import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMat
 
 const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
 
-    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId,dueDate, setDuedate ,
+    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, dueDate, setDuedate,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber
 }) => {
 
 
@@ -28,7 +28,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
-    const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdNewQuery({ id: styleId }, { skip: !styleId  });
+    const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId  });
 
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
 
@@ -36,7 +36,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     const [updateData] = useUpdateRequirementPlanningFormMutation();
 
     const { branchId, userId, companyId, finYearId } = getCommonParams()
-    
+
     const params = {
         branchId, userId, finYearId
     };
@@ -44,28 +44,28 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
     const syncFormWithDb = useCallback((data) => {
-            if (orderId) {
-                setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
-                setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
-            }
-            if (id) {
-                setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
-                setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
-                setChildrecord(data?.childRecord ? data?.childRecord : 0)
-                setOrderId(data?.orderId ? data?.orderId : "")
-                setstyleId(data?.orderDetailsId ? data?.orderDetailsId : "")
-                setPartyId(data?.partyId ? data?.partyId : "")
+        if (orderId) {
+            setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
+            setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
+        }
+        if (id) {
+            setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
+            setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
+            setChildrecord(data?.childRecord ? data?.childRecord : 0)
+            setOrderId(data?.orderId ? data?.orderId : "")
+            // setstyleId(data?.orderDetailsId ? data?.orderDetailsId : "")
+            setPartyId(data?.partyId ? data?.partyId : "")
 
-            }
+        }
 
-        }, [styleId]);
-
-
+    }, [styleId]);
 
 
 
-    console.log(styleId,"styleId");
-    
+
+
+    console.log(styleId, "styleId");
+
 
 
     useEffect(() => {
@@ -188,7 +188,11 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-xl font-bold text-gray-800">Requirement Planning Form</h1>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            onClose()
+                            setId("")
+                        }}
+
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
                     >
@@ -207,31 +211,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc.Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  />
-                                <TextInput
-                                    name="Job Number"
-                                    placeholder="Contact name"
-                                />
-                                <DropdownWithSearch
-                                    name="Sample orders"
-                                    options={orderData?.data}
-                                    value={orderId}
-                                    setValue={setOrderId}
-                                    // disabled={newSampleEntry ? false : true} 
-                                    labelField={"docId"}
-                                    label={"Order No"}
-                                />
-                                <DropdownWithSearch
-                                    name="Sample orders"
-                                    options={singleOrderData?.data?.orderDetails?.map(o => ({
-                                        ...o,
-                                        displayLabel: o?.style?.name
-                                    }))}
-                                    value={styleId}
-                                    setValue={setstyleId}
-                                    labelField={"displayLabel"}
-                                    label={"Stytle Name"}
-                                />
+
                             </div>
                         </div>
 
@@ -243,24 +223,56 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
 
+                            <h2 className="font-medium text-slate-700 mb-2">
+                                Order Details
+                            </h2>
                             <div className="grid grid-cols-2 gap-x-3">
 
 
 
-                                <DropdownInput name="Leg Color" options={Colors} required={true} />
+                                <DropdownWithSearch
+                                    options={orderData?.data}
+                                    value={orderId}
+                                    setValue={setOrderId}
+                                    readOnly={id ? true : false}
+                                    labelField={"docId"}
+                                    label={"Order No"}
+                                />
+                           
+
+                                <DropdownWithSearch
+                                    options={singleOrderData?.data?.orderDetails?.map(o => ({
+                                        ...o,
+                                        displayLabel: o?.style?.name
+                                    }))}
+                                    value={styleId}
+                                    setValue={setstyleId}
+                                    labelField={"displayLabel"}
+                                    label={"Stytle Name"}
+                                    readOnly={id ? true : false}
+
+                                />
+                                <TextInput
+                                    name="Job Number"
+                                    placeholder="Contact name"
+                                    value={jobNumber}
+                                    setValue={setJobNumber}
+
+                                />
+                                {/* <DropdownInput name="Leg Color" options={Colors} required={true} />
                                 <DropdownInput name="Foot Color" options={Colors} required={true} />
                                 <DropdownInput name="Stripes Color" options={Colors} required={true} />
                                 <DropdownWithSearch label={"socksType"} labelField={"name"} options={socksMaterialData?.data} type={"date"} required={true} />
-                                <DropdownInput name="Packing Cover" options={packingCover} required={true} />
+                                <DropdownInput name="Packing Cover" options={packingCover} required={true} /> */}
 
                             </div>
 
                         </div>
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
-                            {/* <h2 className="font-medium text-slate-700 mb-2">
+                            <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
-                            </h2> */}
+                            </h2>
                             <div className="grid grid-cols-2 gap-x-3">
                                 <TextInput
                                     name="Customer"
@@ -321,7 +333,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                         <div className="flex gap-2 flex-wrap">
 
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            >
+                            onClick={()  =>  setReadOnly(false)}
+                           >
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>

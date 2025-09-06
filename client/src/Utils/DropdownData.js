@@ -251,4 +251,3 @@ export const Colors = [
     { show: "BLACK", value: "PRINT" },
     { show: "NAVY", value: "PLAIN" },
 ]
-

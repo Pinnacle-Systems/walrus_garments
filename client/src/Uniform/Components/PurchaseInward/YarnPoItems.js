@@ -375,7 +375,7 @@ const YarnPoItems = ({
                                             </option>
                                             {(id ? yarnList?.data : yarnList?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
-                                                    {blend?.aliasName}
+                                                    {blend?.name}
                                                 </option>)}
                                      </select>
                                               </td>

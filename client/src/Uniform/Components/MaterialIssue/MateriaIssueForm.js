@@ -189,7 +189,10 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-xl font-bold text-gray-800">Material Issue Form</h1>
                     <button
-                        onClick={onClose}
+                        onClick={ ()  =>  {
+                            onClose();
+                            setIndentRaiseId("")
+                        } }
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
                     >
@@ -224,7 +227,9 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-
+                            <h2 className="font-medium text-slate-700 mb-2">
+                                Order Details
+                            </h2>
                             <div className="grid grid-cols-2 gap-x-3">
 
                                 <TextInput
@@ -234,7 +239,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                                     disabled={true}
 
                                 />
-                                <TextInput
+                                {/* <TextInput
                                     name="Style No"
                                     placeholder="Style No"
                                     // value={orderDetailsId}
@@ -250,16 +255,16 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                                     disabled={true}
 
-                                />
+                                /> */}
 
                             </div>
 
                         </div>
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
-                            {/* <h2 className="font-medium text-slate-700 mb-2">
+                            <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
-                            </h2> */}
+                            </h2>
                             <div className="grid grid-cols-2 gap-x-3">
                                 <TextInput
                                     name="Customer"
