@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 import {
     get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove,
     getOrderItemsByIdNew as _getOrderItemsByIdNew, getStockvalidationById as _getStockvalidationById
-} from '../services/raiseindent.services.js';
+} from '../services/materialIssue.services.js';
 
 async function get(req, res, next) {
     try {

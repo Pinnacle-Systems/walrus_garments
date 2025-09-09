@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 
 import OrderForm from './orderForm';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useDeleteOrderMutation, useGetOrderQuery } from '../../../redux/uniformService/OrderService';
-import { getCommonParams } from '../../../Utils/helper';
+import { getCommonParams, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import OrderFormUi from './orderFormUi';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
 import { ReusableTable } from '../../../Inputs';
+import { Loader } from '../../../Basic/components';
 
 
 const Order = () => {
@@ -24,31 +25,81 @@ const Order = () => {
         branchId, userId, finYearId
     };
     const [orderDetails, setOrderDetails] = useState([])
-    const { data: orderData } = useGetOrderQuery({ params });
+
     const { data: partyData } = useGetPartyQuery({ params })
     const [removeData] = useDeleteOrderMutation();
+
+    const [serachDocNo, setSearchDocNo] = useState("")
+    const [serachDate, setSearchDate] = useState("")
+    const [searchCustomer, setSearchCustomer] = useState("")
+  const [dataPerPage, setDataPerPage] = useState("10");
+
+    const searchFields = {
+        serachDocNo,
+        serachDate,
+        searchCustomer,
+    };
+    useEffect(() => {
+        setCurrentPageNumber(1);
+    }, [
+        serachDocNo,
+        serachDate,
+        searchCustomer,
+    ]);
+
+    useEffect(() => {
+        if (orderDetails?.length >= 1) return
+        setOrderDetails(prev => {
+            let newArray = Array?.from({ length: 1 - prev?.length }, () => {
+                return {
+                    yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
+                    measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+                    stripecolorId: "", noOfStripes: "0", socksTypeId: "",
+                    orderSizeDetails: [{
+                        qty: 0.00, sizeMeasurement: "", sizeId: ""
+
+                    }],
+                    orderYarnDetails: [{ yarnId: "" }]
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setOrderDetails, orderDetails])
+
     const columns = [
         {
             header: 'S.No',
             accessor: (item, index) => parseInt(index) + parseInt(1),
-            className: 'font-medium text-gray-900 text-center w-[20px] py-1'
-
+            className: 'font-medium text-gray-900 text-center w-[10px] py-1',
+            search: ""
         },
         {
             header: 'Order No',
             accessor: (item) => item.docId,
-            className: 'font-medium text-gray-900 w-[40px]  py-1  px-2'
+            className: 'font-medium text-gray-900  text-center  w-[120px]  py-1  px-2',
+            search: "Order No",
+            value: serachDocNo,
+            setValue: setSearchDocNo,
+
         },
         {
             header: 'Order Date',
             accessor: (item) => item.docDate,
-            className: 'font-medium text-gray-900 w-[80px]  py-1  px-2'
+            className: 'font-medium text-gray-900 text-center w-[130px]  py-1  px-2',
+            search: "Order Date",
+            value: serachDate,
+            setValue: setSearchDate,
 
         },
         {
             header: 'Customer',
             accessor: (item) => item.Party?.name,
-            className: 'font-medium text-gray-900 w-[500px]  py-1  px-2'
+            className: 'font-medium text-gray-900 w-[500px]  py-1  px-2',
+            search: "Customer",
+            value: searchCustomer,
+            setValue: setSearchCustomer,
         },
 
     ];
@@ -107,6 +158,21 @@ const Order = () => {
 
     }
 
+    const [currentPageNumber, setCurrentPageNumber] = useState(1);
+
+    const handleOnclick = (e) => {
+        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
+    };
+    const { data: orderData, isFetching, isLoading } = useGetOrderQuery({
+        params: {
+            branchId,
+            ...searchFields,
+            pagination: true,
+            dataPerPage,
+            pageNumber: currentPageNumber,
+        }
+    });
+    if (isLoading || isFetching) return <Loader />
     return (
         <>
             {showOrderForm ? (
@@ -115,25 +181,9 @@ const Order = () => {
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800"> Order Information</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="px-3 py-1 border rounded-md text-sm"
-                            >
-                                <option value="this-month">This Month</option>
-                                <option value="last-month">Last Month</option>
-                            </select>
-                            <select
-                                value={selectedFinYear}
-                                onChange={(e) => setSelectedFinYear(e.target.value)}
-                                className="px-3 py-1 border rounded-md text-sm"
-                            >
-                                <option value="2023-2024">2023-2024</option>
-                                <option value="2022-2023">2022-2023</option>
-                            </select>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-800"> Order Report</h1>
 
                         </div>
                         <button
@@ -144,7 +194,7 @@ const Order = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden ">
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
                         <ReusableTable
                             columns={columns}
                             data={orderData?.data || []}

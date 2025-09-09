@@ -116,7 +116,7 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, searchDocId, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, searchCustomer, searchDocDate, partyId,
 
     } = req.query
 
@@ -126,13 +126,17 @@ async function get(req) {
     let data = await xprisma.order.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(searchDocId) ?
+            docId: Boolean(serachDocNo) ?
                 {
-                    contains: searchDocId
+                    contains: serachDocNo
                 }
                 : undefined,
+    
             partyId: partyId ? parseInt(partyId) : undefined,
-            // Party: { name: searchSupplierName ? { contains: searchSupplierName } : undefined }
+            Party:
+             { 
+                name: searchCustomer ? { contains: searchCustomer } : undefined
+             }
         },
         orderBy: {
             id: "desc",
@@ -141,7 +145,8 @@ async function get(req) {
             Party: {
                 select: {
                     id: true,
-                    name: true
+                    name: true,
+
                 }
             },
             orderDetails: {
@@ -154,6 +159,11 @@ async function get(req) {
                     styleId: true,
                     orderSizeDetails: true,
                     orderYarnDetails: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    }
                 }
             }
 
@@ -162,12 +172,12 @@ async function get(req) {
 
     });
     let totalCount = data.length;
-    if (searchDocDate) {
-        data = data.filter(i => i.docDate.includes(searchDocDate))
-    }
-    if (searchDelDate) {
-        data = data.filter(i => i.delDate.includes(searchDelDate))
-    }
+    // if (serachDocNo) {
+    //     data = data.filter(i => i.docDate.includes(serachDocNo))
+    // }
+    // if (serachDate) {
+    //     data = data.filter(i => moment(new Date(i?.createdAt).getTime()).format("YYYY-MM-DD").includes(serachDate))
+    // }
 
     if (pagination) {
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
@@ -200,6 +210,12 @@ async function getOne(id) {
                     socksTypeId: true,
                     filePath: true,
                     sizeId: true,
+                    baseColorId: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
                     orderSizeDetails: true,
                     orderYarnDetails: {
                         select: {
@@ -214,10 +230,15 @@ async function getOne(id) {
                                 select: {
                                     name: true
                                 }
+                            },
+                            Color : {
+                                select : {
+                                    name : true
+                                }
                             }
                         }
                     },
-                 
+
                     style: {
                         select: {
                             name: true
@@ -317,33 +338,6 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 
 
 
-// export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
-
-
-//     const childRecord = 0;
-//     let data = await prisma.order.findUnique({
-//         where: {
-//             id: parseInt(id)
-//         },
-//         include: {
-//             Party: {
-//                 select: {
-//                     name: true
-//                 }
-//             },
-//             orderDetails: true
-
-
-
-//         }
-//     })
-//     if (!data) return NoRecordFound("order");
-
-
-
-
-//     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
-// }
 
 
 export async function getOrderItemsByIdNew(id) {
@@ -355,16 +349,18 @@ export async function getOrderItemsByIdNew(id) {
         },
         include: {
             RequirementPlanningForm: {
+                
                 select: {
-                    OrderDetails : {
-                        select : {
-                            style : {
-                                select : {
-                                    name : true
+                    id : true ,
+                    OrderDetails: {
+                        select: {
+                            style: {
+                                select: {
+                                    name: true
                                 }
                             }
                         }
-                    },
+                    },  
 
                     requirementSizeDetails: true,
                     RequirementYarnDetails: {
@@ -388,9 +384,9 @@ export async function getOrderItemsByIdNew(id) {
                                     name: true
                                 }
                             },
-                            Color : {
-                                select : {
-                                    name : true
+                            Color: {
+                                select: {
+                                    name: true
                                 }
                             }
 
@@ -454,6 +450,7 @@ async function create(req) {
                             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                             filePath: item?.filePath ? item?.filePath : undefined,
+                            baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
 
                             orderSizeDetails: item?.orderSizeDetails?.length > 0
                                 ? {
@@ -484,7 +481,7 @@ async function create(req) {
                         })),
                     }
                     : undefined,
-                },
+            },
         });
 
 
@@ -557,7 +554,7 @@ const update = async (id, body) => {
                                 socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                                 socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                                 filePath: item?.filePath ? item?.filePath : undefined,
-
+                                baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
                                 orderSizeDetails: {
                                     deleteMany: {}, // always delete all existing
                                     createMany: {

@@ -19,9 +19,9 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, orderDetailsId, setOrderDetailsId, dueDate, setDuedate,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setrequirementId,
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setRequirementId,
 
-    isRaiseRendent, setRaiseIndenet, supplierList
+    isRaiseRendent, setRaiseIndenet, supplierList, setSubGridForm, subGridForm
 
 
 
@@ -47,6 +47,8 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     const { data: requirementData } = useGetRequirementPlanningFormQuery({ params });
 
+
+    console.log(requirementId, "requirementId")
     const { data: singleRequirementData, isLoading: isSingleRequirementLoading, isFetching: isSingleRequirementFetching } = useGetRequirementPlanningFormByIdQuery(requirementId, { skip: !requirementId });
 
 
@@ -66,19 +68,51 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             setRaiseIndentItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
             setDocId(data?.docId ? data?.docId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
-            setrequirementId(data?.requirementId ? data?.requirementId : "")
+            setRequirementId(data?.requirementId ? data?.requirementId : "")
             setRaiseIndenet(data?.isRaiseRendent ? data?.isRaiseRendent : false)
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
         else {
-          
-            setPartyId(data?.partyId ? data?.partyId : "")
-           
 
+            setPartyId(data?.partyId ? data?.partyId : "")
+
+
+
+            // setRaiseIndentItems(
+            //     data?.RequirementPlanningForm?.map( item => {
+            //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+            //             const qty = item?.requirementSizeDetails?.reduce(
+            //                 (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
+            //                 0
+            //             );
+
+            //             return {
+            //                 ...yarn,
+            //                 qty: Number(qty.toFixed(3))
+            //             };
+            //         });
+
+            //         return {
+            //             id : item?.id ,
+            //             OrderDetails : {
+            //                 style : {
+            //                     name : item?.OrderDetails?.style?.name, 
+            //                 }
+            //             } ,
+            //             requirementPlanningFormId : item.id,
+            //             orderdetailsId : item.orderDetailsId,
+            //             RaiseIndenetYarnItems
+            //         };
+            //     })
+            // );
 
             setRaiseIndentItems(
                 data?.RequirementPlanningForm?.map(item => {
+                    const allColors = item?.RequirementYarnDetails
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
                     const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
                         const qty = item?.requirementSizeDetails?.reduce(
                             (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
@@ -90,20 +124,24 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                             qty: Number(qty.toFixed(3))
                         };
                     });
-
+                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                        (sum, yarn) => sum + yarn.qty,
+                        0
+                    );
                     return {
-                        OrderDetails : {
-                            style : {
-                                name : item?.OrderDetails?.style?.name, 
+                        id: item?.id,
+                        OrderDetails: {
+                            style: {
+                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
                             }
-                        } ,
-                        requirementPlanningFormId : item.id,
-                        orderdetailsId : item.orderDetailsId,
-                        RaiseIndenetYarnItems
+                        },
+                        requirementPlanningFormId: item.id,
+                        orderdetailsId: item.orderDetailsId,
+                        RaiseIndenetYarnItems ,
+                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
                     };
                 })
             );
-
 
 
 
@@ -241,7 +279,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
         <>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Material Requisition Form</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Material Request Form</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -284,14 +322,14 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                             <div className="grid grid-cols-2 gap-x-3">
 
 
-                                    {id  ?  
-                                    <TextInput  
-                                    
-                                        name = {"Order No"}
-                                        value={findFromList(singleData?.data?.orderId,orderData?.data,"docId")}
-                                    /> 
-                                     :
-                                    
+                                {id ?
+                                    <TextInput
+
+                                        name={"Order No"}
+                                        value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
+                                    />
+                                    :
+
                                     <DropdownWithSearch
                                         options={orderData?.data}
                                         value={orderId}
@@ -300,10 +338,10 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                                         labelField={"docId"}
                                         label={"Order No"}
                                     />
-                                    
+
                                 }
 
-                        
+
 
                             </div>
 
@@ -349,6 +387,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                         <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
                             setRaiseIndentItems={setRaiseIndentItems} raiseIndentItems={raiseIndentItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet}
+                            setRequirementId={setRequirementId} requirementId={requirementId} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
                         />
 
                     </fieldset>
@@ -373,8 +412,8 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                         <div className="flex gap-2 flex-wrap">
 
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            onClick={() => setReadOnly(false)}
-                           >
+                                onClick={() => setReadOnly(false)}
+                            >
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>

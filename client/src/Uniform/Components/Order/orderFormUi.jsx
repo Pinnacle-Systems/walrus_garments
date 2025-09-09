@@ -29,36 +29,19 @@ import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInpu
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
+import { Loader } from "lucide-react";
 
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData, setShowOrderForm }) => {
-    const [suppliers, setSuppliers] = useState([
-        "Supplier One",
-        "Supplier Two",
-        "Supplier Three",
-    ]);
-    const [showExtraCharge, setShowExtraCharge] = useState(false)
-    const [showDiscount, setShowDiscount] = useState(false)
-    const [isEditing, setIsEditing] = useState(false);
+
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
     const [options, setOptions] = useState("")
 
-    const handleAdd = () => {
-        if (term.trim()) {
-            console.log("Term added:", term);
-            setTerm("");
-            setIsEditing(false);
-        }
-    };
-    const [addressForm, setAddressForm] = useState(false);
+
     const [notes, setNotes] = useState("");
     const [orderBy, setOrderBy] = useState("")
     const [showAddressPopup, setShowAddressPopup] = useState(false)
-    const handleAddSupplier = (newName) => {
-        if (!suppliers.includes(newName)) {
-            setSuppliers([...suppliers, newName]);
-        }
-    };
+
 
     const [docId, setDocId] = useState("New")
     const [active, setActive] = useState(true);
@@ -69,7 +52,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const [partyId, setPartyId] = useState("");
     const [date, setDate] = useState("");
-    const childRecord = useRef(0);
     const { branchId, userId, companyId, finYearId } = getCommonParams()
     const [openModelForAddress, setOpenModelForAddress] = useState(false)
     const [packingCoverType, setPackingCoverType] = useState("")
@@ -81,7 +63,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const { data: supplierList } =
         useGetPartyQuery({ params: { ...params } });
 
-    const { data: allData, isLoading, isFetching } = useGetOrderQuery({ params, searchParams: '' });
 
     const {
         data: singleData,
@@ -95,6 +76,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =
         useGetPartyByIdQuery(partyId, { skip: !partyId });
+
+
     const syncFormWithDb = useCallback((data) => {
         if (id) {
             setReadOnly(readOnly ? readOnly : false);
@@ -129,7 +112,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails :orderDetails?.filter(item  => item.styleId) 
+        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(item => item.styleId)
 
     }
 
@@ -235,33 +218,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         }
     };
 
-    const onNew = () => {
-        setId("");
-        setReadOnly(false);
-        setOrderDetails([]);
 
-    }
 
-    useEffect(() => {
-        if (orderDetails?.length >= 2) return
-        setOrderDetails(prev => {
-            let newArray = Array?.from({ length: 2 - prev?.length }, () => {
-                return {
-                    yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
-                    measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-                    stripecolorId: "", noOfStripes: "0", socksTypeId: "",
-                    orderSizeDetails: [{
-                        qty: 0.00, sizeMeasurement: "", sizeId: ""
-
-                    }],
-                    orderYarnDetails: [{ yarnId: "" }]
-
-                }
-            })
-            return [...prev, ...newArray]
-        }
-        )
-    }, [setOrderDetails, orderDetails])
 
 
     useEffect(() => {
@@ -279,25 +237,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-    let itemHeading = [
-        "S.No.",
-        "Style",
-        "Image",
-        "Needle",
-        "Machine",
-        "Fab.Content",
-        "Desc",
-        "Material",
-        "Socks.Type",
-        "Leg.col",
-        "Foot.col",
-        "Stripe.col",
-        "N.Stripe",
-        "Size",
-        "S.Mea",
-        "Qty",
-        "Edit/Del"
-    ]
 
 
     async function onDeleteItem(itemId) {
@@ -321,10 +260,29 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     }
 
-    function getTotalQty() {
-        let qty = orderDetails?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-        return parseInt(qty)
-    }
+ 
+    const dateRef = useRef(null);
+    const inputPartyRef = useRef(null);
+    const styleRef = useRef(null);
+    // useEffect(() => {
+    //     if (dateRef.current) {
+    //         dateRef?.current?.focus();
+    //         if (dateRef?.current?.showPicker) {
+    //             dateRef?.current?.showPicker();
+    //         }
+    //     }
+    // }, []);
+    useEffect(() => {
+        if (dateRef.current) {
+            dateRef.current.focus(); 
+        }
+    }, []);
+
+    console.log(dateRef,"dateRef")
+
+
+      if (isSingleFetching || isSingleLoading || isSingleSupplierLoading  || isSingleSupplierFetching ) return <Loader />
+
 
     return (
         <>
@@ -373,7 +331,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <ReusableInput label="Order.No" readOnly value={docId} />
 
                                 <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} />
+                                <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}
+                                    nextRef={inputPartyRef}
+                                />
                             </div>
                         </div>
 
@@ -390,10 +350,11 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                             component="PartyMaster"
                                             placeholder="Search Customer Id..."
                                             optionList={supplierList?.data}
-                                            onAddItem={handleAddSupplier}
                                             onDeleteItem={onDeleteItem}
                                             setSearchTerm={setPartyId}
                                             searchTerm={partyId}
+                                            ref={inputPartyRef}
+                                            nextRef={styleRef}
                                         />
                                     </div>
 
@@ -413,7 +374,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                                 placeholder="Select address"
                                                 disabled
                                                 value={address}
-                                            // onClick={() => setShowAddressPopup(true)}
                                             />
 
                                         </div>
@@ -516,64 +476,11 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     </div>
                     <fieldset className=''>
 
-                        <OrderItems readOnly={readOnly} itemHeading={itemHeading} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
-                            yarnItems={yarnItems} setYarnItems={setYarnItems}
+                        <OrderItems readOnly={readOnly} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
+                            yarnItems={yarnItems} setYarnItems={setYarnItems} styleRef={styleRef}
                         />
                     </fieldset>
 
-                    {/* <div className="grid grid-cols-3 gap-3">
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
-                            <textarea
-                                // disabled={true}
-                                value={term}
-                                onChange={(e) => {
-                                    setTerm(e.target.value)
-                                }}
-                                className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
-
-                            />
-
-                        </div>
-
-
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
-                            <textarea
-                                // disabled={true}
-                                value={notes}
-                                onChange={(e) => {
-                                    setNotes(e.target.value)
-                                }}
-                                className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
-                            />
-                        </div>
-
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-semibold text-slate-800 mb-2 text-base">
-                                Qty Summary
-                            </h2>
-
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Total Qty</span>
-                                    <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
-                                </div>
-
-
-
-
-                            </div>
-                        </div>
-
-
-
-
-                    </div> */}
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}

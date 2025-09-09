@@ -936,21 +936,20 @@ model Color {
   StockTransferFinishedGoodsDeliveryDetails StockTransferFinishedGoodsDeliveryDetails[]
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
-  OrderDetails                              OrderDetails[]
-  footOrderDetails                          OrderDetails[]                              @relation(name: "footOrderDetails")
-  stripesOrderDetails                       OrderDetails[]                              @relation(name: "stripesOrderDetails")
-  footSampleDetails                         sampleDetails[]                             @relation(name: "footSampleDetails")
-  stripesSampleDetails                      sampleDetails[]                             @relation(name: "stripesSampleDetails")
-  DirectReturnItems                         DirectReturnItems[]
-  CancelItems                               CancelItems[]
-  sampleSizeDetails                         sampleSizeDetails[]
-  orderYarnDetails                          orderYarnDetails[]
-  sampleYarnDetails                         sampleYarnDetails[]
-  requirementSizeDetails                    RequirementSizeDetails[]
-  requirementYarnDetails                    RequirementYarnDetails[]
-  RaiseIndentItems                          RaiseIndentItems[]
-  MaterialIssueItems                        MaterialIssueItems[]
-  RaiseIndenetYarnItems                     RaiseIndenetYarnItems[]
+
+  footSampleDetails      sampleDetails[]          @relation(name: "footSampleDetails")
+  stripesSampleDetails   sampleDetails[]          @relation(name: "stripesSampleDetails")
+  DirectReturnItems      DirectReturnItems[]
+  CancelItems            CancelItems[]
+  sampleSizeDetails      sampleSizeDetails[]
+  orderYarnDetails       orderYarnDetails[]
+  sampleYarnDetails      sampleYarnDetails[]
+  requirementSizeDetails RequirementSizeDetails[]
+  requirementYarnDetails RequirementYarnDetails[]
+  RaiseIndentItems       RaiseIndentItems[]
+  MaterialIssueItems     MaterialIssueItems[]
+  RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
+  OrderDetails           OrderDetails[]
 }
 
 model UnitOfMeasurement {
@@ -1502,7 +1501,10 @@ model Stock {
   createdAt                                 DateTime?                                @default(now())
   InwardLotDetails                          InwardLotDetails?                        @relation(fields: [inwardLotDetailsId], references: [id], onDelete: Cascade)
   inwardLotDetailsId                        Int?
+  Order                                     Order?                                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId Int?
 }
+
 
 model Location {
   id                         Int                          @id @default(autoincrement())
@@ -2967,34 +2969,35 @@ model CreditDebitNote {
 }
 
 model Order {
-  id                      Int                       @id @default(autoincrement())
-  docId                   String?
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
-  createdBy               User?                     @relation("createdBy", fields: [createdById], references: [id])
-  createdById             Int?
-  updatedBy               User?                     @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById             Int?
-  phone                   String?
-  contactPersonName       String
-  address                 String?                   @db.LongText
-  orderDate               DateTime?
-  validDate               DateTime?
-  gmail                   String?
-  Branch                  Branch?                   @relation(fields: [branchId], references: [id])
-  branchId                Int?
-  Company                 Company?                  @relation(fields: [companyId], references: [id])
-  companyId               Int?
-  Party                   Party?                    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  partyId                 Int?
-  packingCoverType        String?
-  active                  Boolean                   @default(true)
-  FinYear                 FinYear?                  @relation(fields: [finYearId], references: [id])
-  finYearId               Int?
-  notes                   String?                   @db.LongText
-  term                    String?                   @db.LongText
-  orderBy                 String?
-  draftSave               Boolean?                  @default(false)
+  id                Int       @id @default(autoincrement())
+  docId             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  createdBy         User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  phone             String?
+  contactPersonName String
+  address           String?   @db.LongText
+  orderDate         DateTime?
+  validDate         DateTime?
+  gmail             String?
+  Branch            Branch?   @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  Company           Company?  @relation(fields: [companyId], references: [id])
+  companyId         Int?
+  Party             Party?    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId           Int?
+  packingCoverType  String?
+  active            Boolean   @default(true)
+  FinYear           FinYear?  @relation(fields: [finYearId], references: [id])
+  finYearId         Int?
+  notes             String?   @db.LongText
+  term              String?   @db.LongText
+  orderBy           String?
+  draftSave         Boolean?  @default(false)
+
   orderDetails            OrderDetails[]
   Sample                  Sample[]
   sampleDetails           sampleDetails[]
@@ -3002,6 +3005,7 @@ model Order {
   RequirementPlanningForm RequirementPlanningForm[]
   RaiseIndent             RaiseIndent[]
   MaterialIssue           MaterialIssue[]
+  Stock                   Stock[]
 }
 
 model OrderDetails {
@@ -3023,12 +3027,8 @@ model OrderDetails {
   size                    Size?                     @relation(fields: [sizeId], references: [id])
   styleId                 Int?
   style                   Style?                    @relation(fields: [styleId], references: [id])
-  legcolorId              Int?
-  legcolor                Color?                    @relation(fields: [legcolorId], references: [id])
-  footcolorId             Int?
-  footcolor               Color?                    @relation("footOrderDetails", fields: [footcolorId], references: [id])
-  stripecolorId           Int?
-  stripecolor             Color?                    @relation("stripesOrderDetails", fields: [stripecolorId], references: [id])
+  Color                   Color?                    @relation(fields: [baseColorId], references: [id])
+  baseColorId             Int?
   noOfStripes             String?
   socksTypeId             Int?
   socksType               SocksType?                @relation(fields: [socksTypeId], references: [id])
@@ -3294,6 +3294,7 @@ model RequirementPlanningForm {
   orderDetailsId         Int?
   Style                  Style?                   @relation(fields: [styleId], references: [id])
   styleId                Int?
+  jobNumber              String?
   requirementSizeDetails RequirementSizeDetails[]
   RequirementYarnDetails RequirementYarnDetails[]
   Po                     Po[]

@@ -59,7 +59,7 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
     //                     requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100)),
     //                     weight: size.weight,
     //                     uomId: size.uomId,
-    
+
     //                 });
     //             });
     //         });
@@ -67,73 +67,66 @@ const OrderPurchase = ({ orderYarnDetails, orderSizeDetails, poItems, setPoItems
     //     }
 
 
-   
+
     // }, [orderSizeDetails, orderYarnDetails]);
 
-//     useEffect(() => {
-//   if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
-//   if (id) return; 
+    //     useEffect(() => {
+    //   if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+    //   if (id) return; 
 
-//   const groupedMap = {};
+    //   const groupedMap = {};
 
-//   orderSizeDetails.forEach(size => {
-//     orderYarnDetails.forEach(yarn => {
-//       const key = `${yarn.yarnId}-${yarn.colorId}`;
+    //   orderSizeDetails.forEach(size => {
+    //     orderYarnDetails.forEach(yarn => {
+    //       const key = `${yarn.yarnId}-${yarn.colorId}`;
 
-//       const qty = Number(((parseFloat(size.weight || 0) * (yarn.percentage || 0)) / 100).toFixed(3));
+    //       const qty = Number(((parseFloat(size.weight || 0) * (yarn.percentage || 0)) / 100).toFixed(3));
 
-//       if (!groupedMap[key]) {
-//         groupedMap[key] = {
-//           yarnId: yarn.yarnId,
-//           Yarn: { name: yarn?.Yarn?.name },
-//           percentage: yarn.percentage,
-//           colorId: yarn.colorId,
-//           qty: 0,
-//           uomId: size.uomId,
-//         };
-//       }
+    //       if (!groupedMap[key]) {
+    //         groupedMap[key] = {
+    //           yarnId: yarn.yarnId,
+    //           Yarn: { name: yarn?.Yarn?.name },
+    //           percentage: yarn.percentage,
+    //           colorId: yarn.colorId,
+    //           qty: 0,
+    //           uomId: size.uomId,
+    //         };
+    //       }
 
-//       // accumulate qty across sizes
-//       groupedMap[key].qty += qty;
-//     });
-//   });
+    //       // accumulate qty across sizes
+    //       groupedMap[key].qty += qty;
+    //     });
+    //   });
 
-//   setPoItems(Object.values(groupedMap));
-// }, [orderSizeDetails, orderYarnDetails, id]);
-useEffect(() => {
-    if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+    //   setPoItems(Object.values(groupedMap));
+    // }, [orderSizeDetails, orderYarnDetails, id]);
+    useEffect(() => {
+        if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+        if (id) return;
 
-    if (id) return;
+        const map = new Map();
 
-    const combined = [];
+        orderSizeDetails.forEach(size => {
+            orderYarnDetails.forEach(yarn => {
+                const key = `${size.sizeId}-${yarn.yarnId}-${yarn.colorId}`;
 
-    orderSizeDetails.forEach(size => {
-        orderYarnDetails.forEach(yarn => {
-            const key = `${size.sizeId}-${yarn.yarnId}-${yarn.colorId}`;
-            
-            // Check if this combination already exists
-            if (!combined.some(item =>
-                item.sizeId === size.sizeId &&
-                item.yarnId === yarn.yarnId &&
-                item.colorId === yarn.colorId
-            )) {
-                combined.push({
-                    sizeId: size.sizeId,
-                    yarnId: yarn.yarnId,
-                    Yarn: { name: yarn?.Yarn?.name },
-                    percentage: yarn?.percentage,
-                    colorId: yarn.colorId,
-                    requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100)),
-                    weight: size.weight,
-                    uomId: size.uomId,
-                });
-            }
+                if (!map.has(key)) {
+                    map.set(key, {
+                        sizeId: size.sizeId,
+                        yarnId: yarn.yarnId,
+                        Yarn: { name: yarn?.Yarn?.name },
+                        percentage: yarn?.percentage,
+                        colorId: yarn.colorId,
+                        requiredQty: Number(((parseFloat(size.weight) * yarn?.percentage) / 100)),
+                        weight: size.weight,
+                        uomId: size.uomId,
+                    });
+                }
+            });
         });
-    });
 
-    setPoItems(combined);
-
-}, [orderSizeDetails, orderYarnDetails, id]);
+        setPoItems([...map.values()]);
+    }, [orderSizeDetails, orderYarnDetails, id]);
 
 
     console.log(poItems, "poItems");
@@ -220,7 +213,7 @@ useEffect(() => {
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                      Qty
+                                    Qty
                                 </th>
                                 <th
 

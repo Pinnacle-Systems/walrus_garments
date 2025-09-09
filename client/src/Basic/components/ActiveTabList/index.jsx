@@ -7,7 +7,7 @@ import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
 import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
-import RaiseIndentForm from "../../../Uniform/Components/RaiseIndenet";
+import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -121,7 +121,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "PURCHASE ORDER CANCEL": <PurchaseCancel />,
     "BRANCH TYPE MASTER": <BranchType />,
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
-    "MATERIAL REQUEST FORM": <RaiseIndentForm />,
+    "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
 
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const YarnDetails = ({ indent, GridIndex, setIssueItems }) => {
 
@@ -14,21 +15,34 @@ const YarnDetails = ({ indent, GridIndex, setIssueItems }) => {
 
 
     function handleInputChange(value, index, field, stockQty = 0) {
-        console.log(value, "value");
+        console.log(parseFloat(stockQty) < parseFloat(value), "value");
 
         if (field === "issueQty") {
             if (parseFloat(stockQty) < parseFloat(value)) {
-                toast.info("Issue Qty cannot be more than Stock Qty", { position: 'top-center' });
-                return; // ⬅ stop execution here, no state update
+                // toast.info("Issue Qty cannot be more than Stock Qty", { position: 'top-center' });
+                Swal.fire({
+                    title: "Issue Qty cannot be more than Stock Qty",
+                    // icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
             }
+            else {
+
+                setIssueItems((prev) => {
+                    let RaiseIndenetYarnItems = 'RaiseIndenetYarnItems';
+                    const newItems = structuredClone(prev);
+                    newItems[GridIndex][RaiseIndenetYarnItems][index][field] = value;
+                    return newItems;
+                });
+            }
+
         }
 
-        setIssueItems((prev) => {
-            let RaiseIndenetYarnItems = 'RaiseIndenetYarnItems';
-            const newItems = structuredClone(prev);
-            newItems[GridIndex][RaiseIndenetYarnItems][index][field] = value;
-            return newItems;
-        });
     }
 
 
@@ -51,7 +65,7 @@ const YarnDetails = ({ indent, GridIndex, setIssueItems }) => {
                                     <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Yarn</th>
                                     <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Color</th>
                                     <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Required Qty</th>
-                                    <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Stock Qty</th>
+                                    {/* <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Stock Qty</th> */}
                                     <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Issue Qty</th>
 
 
@@ -74,9 +88,9 @@ const YarnDetails = ({ indent, GridIndex, setIssueItems }) => {
                                         <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                             {yarn.qty} Kg
                                         </td>
-                                        <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                        {/* <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                             {yarn.stockQty} Kg
-                                        </td>
+                                        </td> */}
                                         <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                             <input
                                                 type="number"
@@ -89,8 +103,8 @@ const YarnDetails = ({ indent, GridIndex, setIssueItems }) => {
                                                 className="text-right rounded w-full py-1 text-xs table-data-input"
                                                 value={yarn?.issueQty}
                                                 // disabled={readOnly }
-                                                onChange={e => handleInputChange(e.target.value, index, "issueQty",yarn.stockQty)}
-                                                onBlur={e => handleInputChange(e.target.value, index, "issueQty",yarn.stockQty)}
+                                                onChange={e => handleInputChange(e.target.value, index, "issueQty", yarn.stockQty)}
+                                                onBlur={e => handleInputChange(e.target.value, index, "issueQty", yarn.stockQty)}
                                             />
                                         </td>
 

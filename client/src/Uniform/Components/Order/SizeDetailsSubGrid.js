@@ -63,7 +63,7 @@ console.log(readOnly,"readOnly")
 
 
       <tr>
-        <td colSpan={8} className="p-0">
+        <td colSpan={9} className="p-0">
           <div className="flex justify-end w-full">
             <table className="w-auto border border-gray-300">
               <thead className="bg-gray-200 text-gray-800">

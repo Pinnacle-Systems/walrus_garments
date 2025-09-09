@@ -3,41 +3,15 @@ import secureLocalStorage from 'react-secure-storage'
 import { HiTrash } from 'react-icons/hi'
 
 
-const YarnDetails = ({ readOnly, item, sizeList, indentItems, setOrderDetails, gridIndex, handleAdd, id }) => {
-
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
-  const [panelGridOpen, setPanelGridOpen] = useState(false)
-  const [arrayName, setArrayName] = useState("");
-
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
-  )
+const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
 
 
 
 
-  function handleInputChange(value, index, field) {
-    let orderSizeDetails = "orderSizeDetails"
-    console.log([gridIndex], [index], [field], "gridIndex")
-    setOrderDetails(orderDetails => {
-      const newBlend = structuredClone(orderDetails);
-      console.log(newBlend, "newBlend")
-      newBlend[gridIndex][orderSizeDetails][index][field] = value;
-      return newBlend
-    }
-    );
-  };
 
 
-  function getQty(percentage) {
-    if (!indentItems?.requirementSizeDetails?.length) return 0;
 
-    const totalQty = indentItems?.requirementSizeDetails?.reduce((sum, size) => {
-      return sum + (size.weight * percentage) / 100;
-    }, 0);
 
-    return Number(totalQty.toFixed(3)); // round to 3 decimals
-  }
 
 
 
@@ -69,20 +43,23 @@ const YarnDetails = ({ readOnly, item, sizeList, indentItems, setOrderDetails, g
 
 
 
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="font-bold text-gray-800">{indentItems?.OrderDetails?.style?.name}</h2>
+      </div>
       <tr>
-        <td colSpan={3} className="p-0">
-          <div className="flex justify-end w-full">
+        <td className="p-0">
+          <div className="justify-center w-full">
             <table className="w-auto border border-gray-300">
               <thead className="bg-gray-200 text-gray-800">
                 <tr>
-                  <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">S.No</th>
-                  <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Yarn</th>
-                  <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Color</th>
-                  <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">Required Qty</th>
+                  <th className="w-8 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">S.No</th>
+                  <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
+                  <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
+                  <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
 
 
                 </tr>
-           
+
 
               </thead>
               <tbody>
@@ -98,12 +75,18 @@ const YarnDetails = ({ readOnly, item, sizeList, indentItems, setOrderDetails, g
                       {yarn?.Color?.name}
                     </td>
                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                     {yarn.qty} Kg
+                      {(yarn.qty.toFixed(3))}
                     </td>
 
 
                   </tr>
                 ))}
+                <tr>
+                  <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Qty</td>
+                  <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"> {
+                    (indentItems?.RaiseIndenetYarnItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)).toFixed(3)
+                  }</td>
+                </tr>
               </tbody>
             </table>
           </div>

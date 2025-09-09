@@ -12,12 +12,13 @@ import IndentRaiseForm from "./IndentRaiseForm";
 import { Production } from "../../../Utils/DropdownData";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssueServices";
+import { Loader } from "../../../Basic/components";
 
 
 
 
 
-const RaiseIndentForm = () => {
+const MaterialRequestForm = () => {
 
 
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
@@ -39,10 +40,10 @@ const RaiseIndentForm = () => {
     const [raiseIndentItems, setRaiseIndentItems] = useState([])
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
-    const [requirementId, setrequirementId] = useState("")
+    const [requirementId, setRequirementId] = useState("")
     const [isRaiseRendent, setRaiseIndenet] = useState(false)
     const [isReport, setIsReport] = useState("Material Request")
-
+    const [subGridForm ,setSubGridForm]  =   useState(false)
 
     const params = {
         branchId, userId, finYearId
@@ -90,8 +91,8 @@ const RaiseIndentForm = () => {
             accessor: (item) => item?.Party?.name,
             className: 'font-medium text-start text-gray-900 w-[500px] py-1 px-2'
         },
-       
-     
+
+
     ];
 
 
@@ -150,7 +151,7 @@ const RaiseIndentForm = () => {
         setReadOnly(false);
         setOrderId("")
         setOrderDetailsId("")
-        setrequirementId("")
+        setRequirementId("")
         setRaiseIndentItems([])
         setOrderSizeDetails([])
         setOrderYarnDetails([])
@@ -159,7 +160,7 @@ const RaiseIndentForm = () => {
 
     }
 
-    console.log(partyId,"partyId")
+        if (isLoading || isFetching) return <Loader />
 
     return (
         <>
@@ -172,7 +173,7 @@ const RaiseIndentForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} raiseIndentItems={raiseIndentItems} setRaiseIndentItems={setRaiseIndentItems}
 
-                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setrequirementId={setrequirementId} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet}
+                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setRequirementId={setRequirementId} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet}   setSubGridForm={setSubGridForm}   subGridForm={subGridForm}
                 />
 
             ) : (
@@ -213,7 +214,7 @@ const RaiseIndentForm = () => {
                                     {/* Material Request */}
                                     <button
                                         className={`px-4 py-1 rounded-md flex items-center gap-2 text-sm border transition-colors duration-200
-      ${isReport === "Material Request"
+                                          ${isReport === "Material Request"
                                                 ? "bg-green-600 text-white border-green-600 ring-2 ring-green-300"   // ✅ Active state
                                                 : "bg-white text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
                                             }`}
@@ -288,4 +289,4 @@ const RaiseIndentForm = () => {
     );
 };
 
-export default RaiseIndentForm;
+export default MaterialRequestForm;

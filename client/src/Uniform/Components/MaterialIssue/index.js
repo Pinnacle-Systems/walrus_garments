@@ -82,16 +82,7 @@ const MaterialIssue = () => {
             className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
         },
 
-        // {
-        //     header: 'Style No',
-        //     accessor: (item) => item?.OrderDetails?.style?.name,
-        //     className: 'font-medium text-gray-900 w-[70px] py-1 px-2'
-        // },
-        //   {
-        //     header: 'Requirement No',
-        //     accessor: (item) => item?.RequirementPlanningForm?.docId,
-        //     className: 'font-medium text-gray-900 w-[40px]  py-1 px-2'
-        // },
+    
                  {
             header: 'Customer Name',
             accessor: (item) => item?.Party?.name,

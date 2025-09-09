@@ -332,7 +332,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails ,styleId } = req.body
+        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails ,styleId , jobNumber } = req.body
 
 
 
@@ -361,7 +361,7 @@ async function create(req) {
                 validDate: validDate ? new Date(validDate) : undefined,
                 orderId: parseInt(orderId),
                 orderDetailsId : parseInt(styleId),
-                // draftSave: Boolean(draftSave),
+                jobNumber:jobNumber,
 
                 // orderDetails: orderDetails?.length > 0
                 //     ? {
@@ -418,7 +418,7 @@ async function create(req) {
 
 const update = async (id, body) => {
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails,styleId,
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails,styleId,jobNumber ,
     } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -457,6 +457,7 @@ const update = async (id, body) => {
                 validDate: validDate ? new Date(validDate) : undefined,
                 updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
                 orderDetailsId : parseInt(styleId) ,
+                jobNumber :  jobNumber ,
                 RequirementYarnDetails: {
                     deleteMany: {
                         ...(incomingSizeIds?.length > 0 && {

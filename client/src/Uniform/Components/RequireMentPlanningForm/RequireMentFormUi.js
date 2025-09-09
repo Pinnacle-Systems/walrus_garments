@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 
 const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
 
@@ -22,25 +23,26 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 }) => {
 
 
+        const [combo,setCombo]  =  useState([])
+        const [allColors,setAllColors]   =  useState([])
+    const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
+    const [addData] = useAddRequirementPlanningFormMutation();
+    const [updateData] = useUpdateRequirementPlanningFormMutation();
 
 
 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
 
-    const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId  });
-
-    const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
-
-    const [addData] = useAddRequirementPlanningFormMutation();
-    const [updateData] = useUpdateRequirementPlanningFormMutation();
 
     const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const params = { branchId, userId, finYearId };
 
-    const params = {
-        branchId, userId, finYearId
-    };
+
     const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+    const { data: styleData } = useGetStyleMasterQuery({ params: { ...params } });
+
 
 
     const syncFormWithDb = useCallback((data) => {
@@ -53,7 +55,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
             setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
             setChildrecord(data?.childRecord ? data?.childRecord : 0)
             setOrderId(data?.orderId ? data?.orderId : "")
-            // setstyleId(data?.orderDetailsId ? data?.orderDetailsId : "")
+            setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
@@ -79,14 +81,30 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     const { data: socksMaterialData } =
         useGetSocksMaterialQuery({ params: { ...params } });
 
-    useEffect(() => {
         if (orderId && singleOrderData?.data) {
             setPartyId(singleOrderData?.data?.partyId || "")
         }
 
-    }, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
+useEffect(() => {
+    if (singleOrderData?.data?.orderDetails) {
+        // Flatten all orderYarnDetails arrays
+        const combined = singleOrderData?.data?.orderDetails?.flatMap(
+            item => item?.orderYarnDetails || []
+        );
 
+        setCombo(combined); // save flattened array
 
+        // Extract all color names and combine into one string
+        const colors = combined
+            .map(yarn => yarn?.Color?.name)   // get color names
+            .filter(Boolean)               // remove undefined/null
+            .join("/");                   // combine into a string
+
+        setAllColors(colors);
+
+        console.log(colors, "All Colors Combined");
+    }
+}, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -238,20 +256,36 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                     labelField={"docId"}
                                     label={"Order No"}
                                 />
-                           
 
-                                <DropdownWithSearch
-                                    options={singleOrderData?.data?.orderDetails?.map(o => ({
-                                        ...o,
-                                        displayLabel: o?.style?.name
-                                    }))}
-                                    value={styleId}
-                                    setValue={setstyleId}
-                                    labelField={"displayLabel"}
-                                    label={"Stytle Name"}
-                                    readOnly={id ? true : false}
 
-                                />
+                                {id ?
+
+
+                                    <>
+
+                                        <TextInput
+                                            name="Stytle Name"
+                                            placeholder="Stytle Name"
+                                            value={findFromList(singleData?.data?.orderDetailsId, styleData?.data, "name")}
+                                            setValue={setJobNumber}
+
+                                        />{console.log(singleData?.data?.orderDetailsId, styleData?.data, "ddd")}
+                                    </>
+
+                                    :
+
+                                    <DropdownWithSearch
+                                        options={singleOrderData?.data?.orderDetails?.map(o => ({
+                                            ...o,
+                                            displayLabel: `${o?.style?.name} - ${allColors}`
+                                        }))}
+                                        value={styleId}
+                                        setValue={setstyleId}
+                                        labelField={"displayLabel"}
+                                        label={"Stytle Name"}
+                                        readOnly={id ? true : false}
+
+                                    />}
                                 <TextInput
                                     name="Job Number"
                                     placeholder="Contact name"
@@ -333,8 +367,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                         <div className="flex gap-2 flex-wrap">
 
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            onClick={()  =>  setReadOnly(false)}
-                           >
+                                onClick={() => setReadOnly(false)}
+                            >
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>

@@ -369,3 +369,24 @@ export async function classListData(data){
       return suffixA.localeCompare(suffixB);
     });
 }
+
+
+export function autoFocusSelect(el, refObj, condition = true) {
+  if (el && condition) {
+    el.focus();
+
+    const ev = new KeyboardEvent("keydown", {
+      bubbles: true,
+      cancelable: true,
+      key: "ArrowDown",
+      code: "ArrowDown",
+    });
+    el.dispatchEvent(ev);
+  }
+
+  if (refObj && typeof refObj === "object") {
+    if (el) {
+      refObj.current = el;
+    }
+  }
+}

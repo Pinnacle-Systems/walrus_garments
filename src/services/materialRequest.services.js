@@ -501,8 +501,17 @@ async function create(req) {
 
 
             },
-        });
 
+        });
+        await tx.requirementPlanningForm.update({
+            where: {
+                id: parseInt(requirementId),
+            },
+            data: {
+                isMaterialIssue: true,
+
+            },
+        });
     })
 
     return { statusCode: 0, data };

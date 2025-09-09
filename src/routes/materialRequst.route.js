@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { multerUploadForGrid } from '../utils/multerUpload.js';
 const router = Router();
-import { get, getOne, create, update, remove, getOrderItemsByIdNew, getStockvalidationById } from '../controllers/RaiseIndent.controller.js';
+import { get, getOne, create, update, remove, getOrderItemsByIdNew, getStockvalidationById } from '../controllers/MaterialRequst.controller.js';
 
 import multer from 'multer';
 
