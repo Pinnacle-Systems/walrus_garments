@@ -40,7 +40,8 @@ import {
   requirementPlanningForm,
   Material,
   raiseIndent,
-  materialIssue
+  materialIssue,
+  stockTransfer
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -179,6 +180,7 @@ app.use("/requirementPlanningForm", requirementPlanningForm);
 app.use("/material",Material)
 app.use("/raiseIndenet",raiseIndent)
 app.use("/materialIssue",materialIssue)
+app.use("/stockTransfer",stockTransfer)
 
 
 

@@ -251,3 +251,10 @@ export const Colors = [
     { show: "BLACK", value: "PRINT" },
     { show: "NAVY", value: "PLAIN" },
 ]
+
+
+export const stockTransferType = [
+    { show: "General", value: "General" },
+    { show: "Order", value: "Order" },
+
+]

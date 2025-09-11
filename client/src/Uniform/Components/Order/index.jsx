@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 
-import OrderForm from './orderForm';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useDeleteOrderMutation, useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import { getCommonParams, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
@@ -12,6 +11,7 @@ import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
 import { ReusableTable } from '../../../Inputs';
 import { Loader } from '../../../Basic/components';
+import OrderFormReport from './OrderReport';
 
 
 const Order = () => {
@@ -32,7 +32,7 @@ const Order = () => {
     const [serachDocNo, setSearchDocNo] = useState("")
     const [serachDate, setSearchDate] = useState("")
     const [searchCustomer, setSearchCustomer] = useState("")
-  const [dataPerPage, setDataPerPage] = useState("10");
+    const [dataPerPage, setDataPerPage] = useState("10");
 
     const searchFields = {
         serachDocNo,
@@ -47,6 +47,20 @@ const Order = () => {
         searchCustomer,
     ]);
 
+    const [currentPageNumber, setCurrentPageNumber] = useState(1);
+
+    const handleOnclick = (e) => {
+        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
+    };
+    const { data: orderData, isFetching, isLoading } = useGetOrderQuery({
+        params: {
+            branchId,
+            ...searchFields,
+            pagination: true,
+            dataPerPage,
+            pageNumber: currentPageNumber,
+        }
+    });
     useEffect(() => {
         if (orderDetails?.length >= 1) return
         setOrderDetails(prev => {
@@ -158,20 +172,8 @@ const Order = () => {
 
     }
 
-    const [currentPageNumber, setCurrentPageNumber] = useState(1);
 
-    const handleOnclick = (e) => {
-        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-    };
-    const { data: orderData, isFetching, isLoading } = useGetOrderQuery({
-        params: {
-            branchId,
-            ...searchFields,
-            pagination: true,
-            dataPerPage,
-            pageNumber: currentPageNumber,
-        }
-    });
+
     if (isLoading || isFetching) return <Loader />
     return (
         <>
@@ -195,9 +197,16 @@ const Order = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-                        <ReusableTable
+                        {/* <ReusableTable
                             columns={columns}
                             data={orderData?.data || []}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            itemsPerPage={10}
+                        
+                        /> */}
+                        <OrderFormReport
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

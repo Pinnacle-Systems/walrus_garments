@@ -103,20 +103,20 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
         setRaiseIndentItems(prev => prev.filter((_, i) => i !== index))
     }
 
-  const tableRef = useRef(null);
+    const tableRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (tableRef?.current && !tableRef?.current?.contains(event.target)) {
-        setRequirementId(null);
-      }
-    };
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (tableRef?.current && !tableRef?.current?.contains(event.target)) {
+                setRequirementId(null);
+            }
+        };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
     return (
         <>
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[300px] overflow-y-auto">
@@ -137,7 +137,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                     <tr>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</td>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Style Name </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-7">Required Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">Required Qty (Kgs)</td>
 
 
                                     </tr>
@@ -146,22 +146,30 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
                                     {(raiseIndentItems ? raiseIndentItems : []).map((indent, index) => {
                                         return (
-                                            <React.Fragment key={index}>{console.log(indent?.id == requirementId,"conditio")}
+                                            <React.Fragment key={index}>
 
                                                 <tr
-                                                       className={`${  indent?.id === requirementId ? "border-2 border-gray-500" : "" } `}
+                                                    className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
                                                     onClick={() => {
-                                                        setRequirementId(indent?.id)
+                                                        setRequirementId(indent?.requirementPlanningFormId)
                                                         setSubGridForm(true)
                                                     }}
                                                 >
                                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs" onContextMenu={(e) => {
-                                                        if (!readOnly) {
-                                                            handleRightClick(e, index, "notes");
-                                                        }
-                                                    }}>{indent?.OrderDetails?.style?.name}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-right text-xs">  {(indent?.totalYarnQty).toFixed(3)}</td>
+
+                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
+                                                    >{indent?.OrderDetails?.style?.name}
+                                                    </td>
+
+                                                    <td className="border border-gray-300 px-2 py-1 text-right text-xs"
+                                                        onContextMenu={(e) => {
+                                                            if (!readOnly) {
+                                                                handleRightClick(e, index, "notes");
+                                                            }
+                                                        }}
+                                                    >
+                                                        {Number(indent?.totalYarnQty || 0).toFixed(3)}
+                                                    </td>
 
 
                                                 </tr>
@@ -175,9 +183,15 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                     })}
                                     <tr>
                                         <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(raiseIndentItems?.reduce((sum, item) => {
-                                            return sum + item?.RaiseIndenetYarnItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0);
-                                        }, 0)).toFixed(3)}</td>
+                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(
+                                            raiseIndentItems?.reduce((sum, item) => {
+                                                return sum + (item?.RaiseIndenetYarnItems?.reduce(
+                                                    (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.qty) || 0),
+                                                    0
+                                                ) || 0);
+                                            }, 0)
+                                        )?.toFixed(3) || "0.000"}
+                                        </td>
                                     </tr>
                                     {contextMenu && (
                                         <div
@@ -223,17 +237,17 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                             </table>
                         </div>
 
-                        <div>
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    className="form-checkbox"
-                                    onClick={() => setRaiseIndenet(!isRaiseRendent)}
-                                    checked={isRaiseRendent}
-                                />
-                                <span>Raise Indent to Store</span>
-                            </label>
-                        </div>
+                        <label className="flex items-center justify-start mt-5 space-x-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                onChange={() => setRaiseIndenet(!isRaiseRendent)}
+                                checked={isRaiseRendent}
+                            />
+                            <span className="text-sm text-gray-700">Raise Indent to Store</span>
+                        </label>
+
+
                     </div>
 
 
@@ -243,7 +257,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
                             <tbody>
 
-                                {(raiseIndentItems ? raiseIndentItems : [])?.filter(item => item.id === requirementId)?.map((indent, index) => {
+                                {(raiseIndentItems ? raiseIndentItems : [])?.filter(item => item.requirementPlanningFormId === requirementId)?.map((indent, index) => {
                                     return (
                                         <React.Fragment key={index}>
 

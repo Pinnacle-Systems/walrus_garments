@@ -59,6 +59,7 @@ import partyBranchMasterApi from "./services/PartyBranchMasterService";
 import MaterialMasterApi from "./uniformService/MaterialMaster";
 import RaiseIndentApi from "./uniformService/RaiseIndenetServices";
 import MaterialIssueApi from "./uniformService/MaterialIssueServices";
+import StockTransferApi from "./uniformService/StockTransferService";
 
 const commonReducers = {
   openTabs, party,
@@ -157,6 +158,7 @@ const commonReducers = {
   MaterialMaster: MaterialMasterApi.reducer,
   RaiseIndent: RaiseIndentApi.reducer,
   MaterialIssue: MaterialIssueApi.reducer,
+  StockTransfer : StockTransferApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -252,7 +254,8 @@ partyContactMasterApi.middleware,
 requirementPlanningFormApi.middleware,
 MaterialMasterApi.middleware,
 RaiseIndentApi.middleware,
-MaterialIssueApi.middleware
+MaterialIssueApi.middleware ,
+StockTransferApi.middleware,
 ];
 
 

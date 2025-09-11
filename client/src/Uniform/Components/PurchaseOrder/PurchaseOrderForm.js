@@ -1,22 +1,19 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
-import { deliveryTypes, directOrPo, poTypes, purchaseType } from "../../../Utils/DropdownData";
+import {  poTypes,  stockTransferType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { findFromList, getCommonParams } from "../../../Utils/helper";
+import {  getCommonParams } from "../../../Utils/helper";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { dropDownListObject } from "../../../Utils/contructObject";
 import { toast } from "react-toastify";
 import YarnPoItems from "./YarnPoItems";
 import AccessoryPoItems from "./AccessoryPoItems";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa6";
-import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import { useSelector } from "react-redux";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery,  useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
+import { useGetOrderByIdQuery,  useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-PO";
@@ -112,29 +109,12 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const { data: supplierList } =
     useGetPartyQuery({ params: { ...params } });
 
+    const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
 
 
-  const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
+console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
 
-  function filterSupplier() {
-    let finalSupplier = []
-    // if (transType.toLowerCase().includes("yarn")) {
-    //   finalSupplier = allSuppliers.filter(s => s.yarn)
-    // } else if (transType.toLowerCase().includes("fabric")) {
-    //   finalSupplier = allSuppliers.filter(s => s.fabric)
-    // } 
-    // else if (transType.toLowerCase() === "accessory" ) {
-    //   finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
-    // } 
-    // else {
-    finalSupplier = allSuppliers.filter(s => s.isSupplier)
 
-    // }
-    return finalSupplier
-  }
-  let supplierListBasedOnSupply = filterSupplier()
-
-  const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
 
 
   const handleAddSupplier = (newName) => {
@@ -142,9 +122,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
       setSuppliers([...suppliers, newName]);
     }
   };
-  const activeTab = useSelector((state) =>
-    state.openTabs.tabs.find((tab) => tab.active).name
-  );
+
 
 
   const { data: supplierDetails } =
@@ -391,7 +369,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </h2>
             <div className="grid grid-cols-2 gap-1 mt-8">
               <DropdownInput name="DirectOrPo"
-                options={purchaseType}
+                options={stockTransferType}
                 value={PurchaseType}
                 setValue={setPurchaseType}
                 required={true}
@@ -413,9 +391,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                   setValue={setOrderId}
                 />
               }
-{console.log(findFromList(orderId, orderData?.data, "docId") ,"ggggggg")}
 
-
+{/* 
               {PurchaseType === "Order Purchase" &&
                 <DropdownWithSearch
                   // options={singleOrderData?.data?.orderDetails?.map(o => ({
@@ -428,7 +405,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                   setValue={setRequirementId}
                   labelField={"docId"}
                   label={"Requirement No"}
-                />}
+                />} */}
               <div>
               </div>
             </div>
@@ -452,7 +429,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                 label="Supplier Id"
                 component="PartyMaster"
                 placeholder="Search Supplier Id..."
-                optionList={supplierList?.data}
+                optionList={allSuppliers}
                 onAddItem={handleAddSupplier}
                 // onDeleteItem={onDeleteItem}
                 setSearchTerm={setSupplierId}

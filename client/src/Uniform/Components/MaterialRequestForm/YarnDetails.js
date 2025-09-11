@@ -56,11 +56,7 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
                   <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
                   <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
                   <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
-
-
                 </tr>
-
-
               </thead>
               <tbody>
                 {indentItems?.RaiseIndenetYarnItems?.map((yarn, index) => (
@@ -94,10 +90,14 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
       </tr>
 
 
-
-
     </>
   )
 }
 
 export default YarnDetails
+
+
+
+
+
+

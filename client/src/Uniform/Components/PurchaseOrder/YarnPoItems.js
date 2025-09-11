@@ -382,47 +382,6 @@ const YarnPoItems = ({
 
                                     </td>
 
-                                    {/* <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
-
-                                                {priceWithTax(row.price * ).toFixed(2)}
-
-                                            </td> */}
-
-                                    {/* <td className='w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
-                                                <input
-                                                    type="number"
-                                                    onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 w-16 px-1 table-data-input"
-                                                    value={(!row.price || !row.price) ? 0 : (parseFloat(sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")) * parseFloat(row.price)).toFixed(2)}
-                                                    disabled={true}
-                                                />
-                                            </td> */}
-                                    {/* <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "discountType") } }}
-
-
-                                                    disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
-                                                      className="text-right rounded py-1 w-full px-1 table-data-input"
-                                                    value={row.discountType}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
-                                                    onBlur={(e) => {
-
-                                                        handleInputChange(e.target.value, index, "discountType")
-
-                                                    }
-                                                    }
-                                                >
-                                                    <option hidden>
-                                                    </option>
-                                                    {(discountTypes || []).map((blend) =>
-                                                        <option value={blend.value} key={blend.value}>
-                                                            {blend.show}
-                                                        </option>
-                                                    )}
-                                                </select>
-                                            </td> 
-                                                    */}
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                         <input
                                             type="number"

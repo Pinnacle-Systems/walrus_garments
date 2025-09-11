@@ -1502,9 +1502,8 @@ model Stock {
   InwardLotDetails                          InwardLotDetails?                        @relation(fields: [inwardLotDetailsId], references: [id], onDelete: Cascade)
   inwardLotDetailsId                        Int?
   Order                                     Order?                                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId Int?
+  orderId                                   Int?
 }
-
 
 model Location {
   id                         Int                          @id @default(autoincrement())
@@ -3273,28 +3272,30 @@ model sampleYarnDetails {
 }
 
 model RequirementPlanningForm {
-  id                     Int                      @id @default(autoincrement())
-  docId                  String?
-  createdAt              DateTime?                @default(now())
-  updatedAt              DateTime?                @updatedAt
-  createdBy              User?                    @relation("createdBy", fields: [createdById], references: [id])
-  createdById            Int?
-  updatedBy              User?                    @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById            Int?
-  Branch                 Branch?                  @relation(fields: [branchId], references: [id])
-  branchId               Int?
-  Party                  Party?                   @relation(fields: [partyId], references: [id])
-  partyId                Int?
-  requirementDate        DateTime?
-  remarks                String?                  @db.LongText
-  specialInstructions    String?
-  order                  Order?                   @relation(fields: [orderId], references: [id])
-  orderId                Int?
-  OrderDetails           OrderDetails?            @relation(fields: [orderDetailsId], references: [id])
-  orderDetailsId         Int?
-  Style                  Style?                   @relation(fields: [styleId], references: [id])
-  styleId                Int?
-  jobNumber              String?
+  id                  Int           @id @default(autoincrement())
+  docId               String?
+  createdAt           DateTime?     @default(now())
+  updatedAt           DateTime?     @updatedAt
+  createdBy           User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  Branch              Branch?       @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  Party               Party?        @relation(fields: [partyId], references: [id])
+  partyId             Int?
+  requirementDate     DateTime?
+  remarks             String?       @db.LongText
+  specialInstructions String?
+  order               Order?        @relation(fields: [orderId], references: [id])
+  orderId             Int?
+  OrderDetails        OrderDetails? @relation(fields: [orderDetailsId], references: [id])
+  orderDetailsId      Int?
+  Style               Style?        @relation(fields: [styleId], references: [id])
+  styleId             Int?
+  jobNumber           String?
+  isMaterialRequst    Boolean?      @default(false)
+  isMaterialIssue     Boolean?      @default(false)
   requirementSizeDetails RequirementSizeDetails[]
   RequirementYarnDetails RequirementYarnDetails[]
   Po                     Po[]
@@ -3303,6 +3304,7 @@ model RequirementPlanningForm {
   RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
   RaiseIndentItems       RaiseIndentItems[]
 }
+
 
 model RequirementSizeDetails {
   id                        Int                      @id @default(autoincrement())

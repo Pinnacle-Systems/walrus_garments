@@ -25,22 +25,53 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         });
     }
 
+    // function handleInputChange(value, index, yarnId) {
+
+    //     setOrderYarnDetails((prev) => {
+    //         let newItems = structuredClone(prev);
+    //         newItems[index]['percentage'] = value;
+    //         return newItems;
+    //     });
+
+
+    //     setRequirementForm((prev) => {
+    //         const newItems = structuredClone(prev);
+    //         const percent = value === "" ? 0 : parseFloat(value);
+    //         newItems.forEach((item) => {
+    //             if (item.yarnId === yarnId) {
+    //                 item.requireWeight = Number(((parseFloat(item.weight) * percent) / 100).toFixed(5));
+    //             }
+    //         });
+    //         return newItems;
+    //     });
+    // }
     function handleInputChange(value, index, yarnId) {
-        console.log(value, "value", yarnId, "yarncategoryId");
+        const num = value === "" ? 0 : parseFloat(value);
 
         setOrderYarnDetails((prev) => {
             let newItems = structuredClone(prev);
-            newItems[index]['percentage'] = value;
+
+            const totalWithoutCurrent = newItems.reduce((sum, item, i) => {
+                if (i === index) return sum; // skip current
+                return sum + (parseFloat(item.percentage) || 0);
+            }, 0);
+
+            if (totalWithoutCurrent + num > 100) {
+                alert("Total percentage cannot exceed 100!");
+                return prev;
+            }
+
+            newItems[index]["percentage"] = num;
             return newItems;
         });
 
-
         setRequirementForm((prev) => {
             const newItems = structuredClone(prev);
-            const percent = value === "" ? 0 : parseFloat(value);
             newItems.forEach((item) => {
                 if (item.yarnId === yarnId) {
-                    item.requireWeight = Number(((parseFloat(item.weight) * percent) / 100).toFixed(5));
+                    item.requireWeight = Number(
+                        ((parseFloat(item.weight) * num) / 100).toFixed(5)
+                    );
                 }
             });
             return newItems;
@@ -112,7 +143,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 <div className="flex justify-between items-center mb-2 overflow-y-auto">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
 
-                    <div className="flex gap-2 items-center">
+                    {/* <div className="flex gap-2 items-center">
 
                         <button
                             onClick={() => {
@@ -123,18 +154,18 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
                         </button>
-                    </div>
+                    </div> */}
 
 
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full border-collapse table-fixed">
+                    <table className="w-[50%] border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800">
 
                             <tr>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn </td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Yarn </td>
 
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Percentage</td>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Size</td>
@@ -143,7 +174,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     return (
                                         <td
                                             key={index}
-                                            className="border border-gray-300 px-2 py-1 text-center text-xs w-24"
+                                            className="border border-gray-300 px-2 py-1 text-center text-xs w-16"
                                         >
                                             {item?.size?.name}
                                         </td>
@@ -156,20 +187,20 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                             <tr>
                                 <td colSpan={3} className="bg-white border-l border-gray-300">
                                 </td>
-                                <td  className="border border-gray-300 px-2 py-1 text-end text-xs">
-                                   Size Weight
+                                <td className="border border-gray-300 px-2 py-1 text-end text-xs">
+                                    Size Weight
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
                                     <td key={index} className="border border-gray-300 px-2 py-1 text-center text-xs">
-                                        {item?.weight }g
+                                        {item?.weight}g
                                     </td>
                                 ))}
 
                             </tr>
                             <tr>
-                                  <td colSpan={3} className="bg-white border-l border-gray-300" >
+                                <td colSpan={3} className="bg-white border-l border-gray-300" >
                                 </td>
-                                <td  className="border border-gray-300 px-2 py-1 text-end text-xs">
+                                <td className="border border-gray-300 px-2 py-1 text-end text-xs">
                                     Order Qty
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
@@ -204,7 +235,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                                         />
                                     </td>
-                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-xs ">{}</td>
+                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-xs ">{ }</td>
 
 
                                     {(orderSizeDetails || []).map((size) => (
@@ -244,7 +275,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                         <h2 className="font-medium text-slate-700">Required Qty</h2>
 
                     </div>
-                    <div className="w-[30%] flex justify-end items-center mt-4">
+                    <div className="w-[20%] flex justify-end items-center mt-4">
 
                         <table className="w-full border-collapse table-fixed">
                             <thead className="bg-gray-200 text-gray-800">
@@ -279,20 +310,6 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             </div>
             <div>
 
@@ -302,3 +319,16 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 }
 
 export default FormItems;
+
+
+
+
+
+
+
+
+
+
+
+
+

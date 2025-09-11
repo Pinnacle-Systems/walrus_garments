@@ -1459,9 +1459,9 @@ export const ReusableTable = ({
         </table>
       </div>
       <div className="">
-
         <Pagination />
       </div>
+
     </>
 
 
@@ -1764,12 +1764,13 @@ export const ReusableSearchableInput = forwardRef(
       setSearchTerm,
       searchTerm,
       readOnly,
-      nextRef
+      nextRef,
+      show 
     },
     ref
   ) => {
 
-    console.log(nextRef, "nextRef")
+    // console.log(optionList?.filter(item  => item[show]), "optionList")
 
     const companyId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -1830,9 +1831,12 @@ export const ReusableSearchableInput = forwardRef(
         setFilteredPages(partyList?.data);
       }
       setFilteredPages(
-        partyList?.data?.filter((page) =>
-          page?.code?.toLowerCase().includes(search.toLowerCase())
-        )
+        partyList?.data?.filter((page) => {
+          return (
+            page?.code?.toLowerCase().includes(search.toLowerCase()) &&
+            page[show] // this makes sure only customer/supplier (based on props) are shown
+          );
+        })
       );
     }, [search, partyList, isPartyFetching, isPartyLoading]);
 
@@ -1868,6 +1872,10 @@ export const ReusableSearchableInput = forwardRef(
         pageSearchComponent.removeEventListener("keydown", keyHandler);
       };
     }, []);
+
+
+    console.log(filteredPages, "filteredPages")
+
 
     return (
       <>

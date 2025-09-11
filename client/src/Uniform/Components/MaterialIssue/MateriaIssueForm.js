@@ -16,11 +16,11 @@ import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMat
 import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentStockValidationByIdQuery } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
 
-const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId,
 
-    orderSizeDetails, orderYarnDetails, setOrderYarnDetails, orderDetailsId, setOrderDetailsId, dueDate, setDuedate,
+    orderSizeDetails, orderYarnDetails, orderDetailsId, setOrderDetailsId,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, issueItems, setIssueItems,
+    partyId, setPartyId, docId, active, setShowOrderForm, date, requirementId, setRequirementId, issueItems, setIssueItems,
 
     isMaterialIssue, setIsMaterialIssue, indentRaiseId, setIndentRaiseId
 
@@ -64,8 +64,37 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
         }
         else {
-            setIssueItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
-            setOrderId(data?.orderId ? data?.orderId : "")
+            setIssueItems(
+                data?.RaiseIndentItems?.map(item => {
+                    const allColors = item?.RaiseIndenetYarnItems
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
+                    const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+
+
+                        return {
+                            ...yarn,
+
+                        };
+                    });
+                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                        (sum, yarn) => sum + yarn.qty,
+                        0
+                    );
+                    return {
+                        OrderDetails: {
+                            style: {
+                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+                            }
+                        },
+                        requirementPlanningFormId: item.id,
+                        orderdetailsId: item.orderDetailsId,
+                        RaiseIndenetYarnItems,
+                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+                    };
+                })
+            ); setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setIndentRaiseId(data?.id ? data?.id : "")
             setPartyId(data?.partyId ? data?.partyId : "")
@@ -97,12 +126,6 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
 
-    // useEffect(() => {
-    //     if (requirementId && singleRequirementData?.data) {
-    //         syncFormWithDb(singleRequirementData.data);
-    //     }
-
-    // }, [isSingleRequirementFetching, isSingleRequirementLoading, requirementId, singleRequirementData]);
 
 
 
@@ -189,10 +212,10 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-xl font-bold text-gray-800">Material Issue Form</h1>
                     <button
-                        onClick={ ()  =>  {
+                        onClick={() => {
                             onClose();
                             setIndentRaiseId("")
-                        } }
+                        }}
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
                     >
@@ -298,8 +321,9 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                     <fieldset className=''>
 
-                        <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
+                        <FormItems
                             setIssueItems={setIssueItems} issueItems={issueItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue}
+                            requirementId={requirementId} setRequirementId={setRequirementId}
                         />
 
                     </fieldset>

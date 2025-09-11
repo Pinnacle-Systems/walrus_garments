@@ -120,6 +120,7 @@ async function get(req) {
             partyId: partyId ? parseInt(partyId) : undefined,
         },
         include: {
+            RaiseIndentItems : true,
             Order: {
                 select: {
                     docId: true
@@ -160,9 +161,9 @@ async function get(req) {
         data = data.filter(i => i.delDate.includes(searchDelDate))
     }
 
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
+    // if (pagination) {
+    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    // }
     if (indentRaise) {
         data = data?.filter(item => item.isRaiseRendent && !item.isMaterialIssue)
 
@@ -443,7 +444,7 @@ async function create(req) {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
-
+    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : null).filter(Boolean);
 
     let data;
     await prisma.$transaction(async (tx) => {
@@ -459,21 +460,7 @@ async function create(req) {
                 Order: { connect: { id: parseInt(orderId) } },
                 // OrderDetails: { connect: { id: parseInt(orderDetailsId) } },
                 // RequirementPlanningForm: { connect: { id: parseInt(requirementId) } },
-                // RaiseIndentItems: raiseIndentItems?.length > 0
-                //     ? {
-                //         createMany: {
-                //             data: raiseIndentItems?.map((sub) => ({
-                //                 colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                //                 percentage: sub?.percentage ? parseFloat(sub.percentage) : undefined,
-                //                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                //                 sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                //                 weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                //                 yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
 
-                //             })),
-                //         },
-                //     }
-                //     : undefined,
 
                 RaiseIndentItems: raiseIndentItems?.length > 0
                     ? {
@@ -503,15 +490,18 @@ async function create(req) {
             },
 
         });
-        await tx.requirementPlanningForm.update({
-            where: {
-                id: parseInt(requirementId),
-            },
-            data: {
-                isMaterialIssue: true,
 
-            },
-        });
+
+        for (const id of formIds) {
+            await tx.requirementPlanningForm.update({
+                where: {
+                    id: parseInt(id),
+                },
+                data: {
+                    isMaterialRequst: true,
+                },
+            });
+        }
     })
 
     return { statusCode: 0, data };

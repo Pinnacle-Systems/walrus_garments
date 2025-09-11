@@ -11,6 +11,7 @@ import moment from "moment";
 import MaterialIssueForm from "./MateriaIssueForm";
 import { useDeleteMaterialIssueMutation, useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssueServices";
 import { useGetRaiseIndentQuery } from "../../../redux/uniformService/RaiseIndenetServices";
+import { Loader } from "../../../Basic/components";
 
 
 
@@ -41,6 +42,7 @@ const MaterialIssue = () => {
     const [isMaterialIssue, setIsMaterialIssue] = useState(false)
     const [isReport, setIsReport] = useState("IndentRaised")
     const [indentRaiseId, setIndentRaiseId] = useState("")
+    const [requirementId,setRequirementId]  = useState("")
 
     const params = {
         branchId, userId, finYearId
@@ -203,6 +205,8 @@ const MaterialIssue = () => {
         setIssueItems([])
     }
 
+    if  (isLoading  ||   isFetching)  return <Loader/>
+
     return (
         <>
             {form ? (
@@ -212,7 +216,8 @@ const MaterialIssue = () => {
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} orderDetailsId={orderDetailsId} setOrderDetailsId={setOrderDetailsId}
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} issueItems={issueItems} setIssueItems={setIssueItems}
                     dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setIndentRaiseId={setIndentRaiseId} indentRaiseId={indentRaiseId}
-                />
+               requirementId={requirementId}  setRequirementId={setRequirementId}
+                    />
 
 
 

@@ -9,7 +9,7 @@ import { generateSessionId } from '../../../Utils/helper';
 import Modal from '../../../UiComponents/Modal';
 import BranchAndFinYearForm from '../../components/BranchAndFinyear';
 import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
-import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -116,9 +116,9 @@ const Login = () => {
                     result.data.userInfo.role.companyId
                   );
                   secureLocalStorage.setItem(
-                  sessionStorage.getItem("sessionId") + "defaultAdmin",
-                  JSON.stringify(result.data.userInfo.role.defaultRole)
-                    );
+                    sessionStorage.getItem("sessionId") + "defaultAdmin",
+                    JSON.stringify(result.data.userInfo.role.defaultRole)
+                  );
 
 
 
@@ -148,7 +148,11 @@ const Login = () => {
               }
             } else {
               console.log(result)
-              toast.error(result.data.message);
+              Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: result.data.message || 'Something went wrong!',
+              });
               setLoading(false);
             }
           }
@@ -156,7 +160,11 @@ const Login = () => {
         },
         (error) => {
           console.log(error);
-          toast.error("Server Down", { autoClose: 5000 });
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission error',
+            text: "Server Down"
+          });
           setLoading(false);
         }
       );
@@ -226,15 +234,12 @@ const Login = () => {
           transition={{ type: 'spring', stiffness: 120 }}
           className="relative z-10 w-full max-w-md px-8 py-10 bg-white/95 backdrop-blur-lg rounded-2xl border border-stone-200 shadow-xl overflow-hidden"
         >
-          {/* Decorative Elements */}
           <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-teal-400/10 blur-md" />
           <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-rose-500/10 blur-md" />
 
-          {/* Gradient Borders */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
 
-          {/* Content */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div
               initial={{ opacity: 0, x: -10 }}

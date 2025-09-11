@@ -23,8 +23,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 }) => {
 
 
-        const [combo,setCombo]  =  useState([])
-        const [allColors,setAllColors]   =  useState([])
+    const [combo, setCombo] = useState([])
+
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
     const [addData] = useAddRequirementPlanningFormMutation();
     const [updateData] = useUpdateRequirementPlanningFormMutation();
@@ -66,7 +66,6 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
 
-    console.log(styleId, "styleId");
 
 
 
@@ -81,37 +80,31 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     const { data: socksMaterialData } =
         useGetSocksMaterialQuery({ params: { ...params } });
 
-        if (orderId && singleOrderData?.data) {
-            setPartyId(singleOrderData?.data?.partyId || "")
-        }
-
-useEffect(() => {
-    if (singleOrderData?.data?.orderDetails) {
-        // Flatten all orderYarnDetails arrays
-        const combined = singleOrderData?.data?.orderDetails?.flatMap(
-            item => item?.orderYarnDetails || []
-        );
-
-        setCombo(combined); // save flattened array
-
-        // Extract all color names and combine into one string
-        const colors = combined
-            .map(yarn => yarn?.Color?.name)   // get color names
-            .filter(Boolean)               // remove undefined/null
-            .join("/");                   // combine into a string
-
-        setAllColors(colors);
-
-        console.log(colors, "All Colors Combined");
+    if (orderId && singleOrderData?.data) {
+        setPartyId(singleOrderData?.data?.partyId || "")
     }
-}, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
     useEffect(() => {
-        if (id && singleData?.data) {
-            syncFormWithDb(singleData.data, id);
-        }
+        if (singleOrderData?.data?.orderDetails) {
+            const updated = singleOrderData?.data?.orderDetails.map(item => {
+                const yarns = item?.orderYarnDetails || [];
 
-    }, [isSingleOrderFetching, isSingleLoading, id, singleData]);
+                const combinedColors = yarns
+                    .map(yarn => yarn?.Color?.name)
+                    .filter(Boolean)
+                    .join("/");
+
+                return {
+                    ...item,
+                    allColors: combinedColors, 
+                };
+            });
+
+            setCombo(updated);
+
+            console.log(updated, "Order details with combined colors");
+        }
+    }, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
     console.log(partyId, 'partyId');
@@ -275,9 +268,13 @@ useEffect(() => {
                                     :
 
                                     <DropdownWithSearch
-                                        options={singleOrderData?.data?.orderDetails?.map(o => ({
+                                        // options={singleOrderData?.data?.orderDetails?.map(o => ({
+                                        //     ...o,
+                                        //     displayLabel: `${o?.style?.name} - ${allColors}`
+                                        // }))}
+                                        options={combo?.map(o => ({
                                             ...o,
-                                            displayLabel: `${o?.style?.name} - ${allColors}`
+                                            displayLabel: `${o?.style?.name} - ${o?.allColors}`
                                         }))}
                                         value={styleId}
                                         setValue={setstyleId}

@@ -8,6 +8,8 @@ import { useGetSampleQuery } from "../../../redux/uniformService/SampleService";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import moment from "moment";
+import { Loader } from "../../../Basic/components";
+import RequirementPlanningFormReport from "./RequirementPlanningReport";
 
 
 
@@ -42,7 +44,7 @@ const RequirementPlanningForm = () => {
         branchId, userId, finYearId
     };
 
-    const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
+    // const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
     const [removeData] = useDeleteRequirementPlanningFormMutation();
@@ -139,6 +141,7 @@ const RequirementPlanningForm = () => {
         setJobNumber("")
 
     }
+    // if (isLoading || isFetching) return <Loader />
 
     return (
         <>
@@ -150,7 +153,7 @@ const RequirementPlanningForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
 
-                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber} 
+                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber}
                 />
 
             ) : (
@@ -185,9 +188,15 @@ const RequirementPlanningForm = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <ReusableTable
+                        {/* <ReusableTable
                             columns={columns}
                             data={allData?.data || []}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            itemsPerPage={10}
+                        /> */}
+                        <RequirementPlanningFormReport
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

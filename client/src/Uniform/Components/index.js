@@ -43,4 +43,5 @@ export { default as OpeningStock } from "./OpeningStock"
 export { default as SampleEntry } from "./SampleEntry";
 export { default as BranchType } from "./BranchTypeMaster";
 export { default as RequirementPlanningForm } from "./RequireMentPlanningForm";
+export { default as StockTransfer } from "./StockTransfer";
 

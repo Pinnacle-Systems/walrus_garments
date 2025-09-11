@@ -116,7 +116,7 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, searchCustomer, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, searchClientName, searchDate, partyId,
 
     } = req.query
 
@@ -131,12 +131,12 @@ async function get(req) {
                     contains: serachDocNo
                 }
                 : undefined,
-    
+
             partyId: partyId ? parseInt(partyId) : undefined,
             Party:
-             { 
-                name: searchCustomer ? { contains: searchCustomer } : undefined
-             }
+            {
+                name: searchClientName ? { contains: searchClientName } : undefined
+            }
         },
         orderBy: {
             id: "desc",
@@ -175,13 +175,13 @@ async function get(req) {
     // if (serachDocNo) {
     //     data = data.filter(i => i.docDate.includes(serachDocNo))
     // }
-    // if (serachDate) {
-    //     data = data.filter(i => moment(new Date(i?.createdAt).getTime()).format("YYYY-MM-DD").includes(serachDate))
-    // }
-
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    if (searchDate) {
+        data = data?.filter(item => String(getDateFromDateTime(item.createdAt)).includes(searchDate) )
     }
+
+    // if (pagination) {
+    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    // }
 
 
     return { statusCode: 0, data, totalCount, nextDocId: newDocId };
@@ -231,9 +231,9 @@ async function getOne(id) {
                                     name: true
                                 }
                             },
-                            Color : {
-                                select : {
-                                    name : true
+                            Color: {
+                                select: {
+                                    name: true
                                 }
                             }
                         }
@@ -349,9 +349,12 @@ export async function getOrderItemsByIdNew(id) {
         },
         include: {
             RequirementPlanningForm: {
-                
+
                 select: {
-                    id : true ,
+                    id: true,
+                    isMaterialIssue: true,
+                    isMaterialRequst: true,
+
                     OrderDetails: {
                         select: {
                             style: {
@@ -360,7 +363,7 @@ export async function getOrderItemsByIdNew(id) {
                                 }
                             }
                         }
-                    },  
+                    },
 
                     requirementSizeDetails: true,
                     RequirementYarnDetails: {
@@ -404,9 +407,17 @@ export async function getOrderItemsByIdNew(id) {
     if (!data) return NoRecordFound("order");
 
 
+    data = {
+        ...data,
+        RequirementPlanningForm: data?.RequirementPlanningForm?.filter(
+            (item) => !item.isMaterialRequst
+        ) || [],
+    };
 
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return {
+        statusCode: 0, data: { ...data, ...{ childRecord } }
+    };
 }
 
 
@@ -556,7 +567,7 @@ const update = async (id, body) => {
                                 filePath: item?.filePath ? item?.filePath : undefined,
                                 baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
                                 orderSizeDetails: {
-                                    deleteMany: {}, // always delete all existing
+                                    deleteMany: {}, 
                                     createMany: {
                                         data: item?.orderSizeDetails?.map((sub) => ({
                                             sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
@@ -569,7 +580,7 @@ const update = async (id, body) => {
                                 },
 
                                 orderYarnDetails: {
-                                    deleteMany: {}, // always delete all existing
+                                    deleteMany: {}, 
                                     createMany: {
                                         data: item?.orderYarnDetails?.map((yarn) => ({
                                             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,

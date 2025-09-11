@@ -29,7 +29,7 @@ import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInpu
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
-import { Loader } from "lucide-react";
+import { Loader } from "../../../Basic/components";
 
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData, setShowOrderForm }) => {
 
@@ -222,15 +222,15 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-    useEffect(() => {
-        if (id) return
-        if (!singleSupplier?.data || isSingleSupplierLoading || isSingleSupplierFetching) return
-        if (!partyId) return
-        setPhone(singleSupplier?.data?.contactPersonNumber ? singleSupplier?.data.contactPersonNumber : "")
-        setContactPersonName(singleSupplier?.data?.contactPersonEmail ? singleSupplier?.data.contactPersonEmail : "");
-        setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
-        setOptions(singleSupplier?.data?.PartyContactDetails)
-    }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
+    // useEffect(() => {
+    //     if (id) return
+    //     if (!singleSupplier?.data || isSingleSupplierLoading || isSingleSupplierFetching) return
+    //     if (!partyId) return
+    //     setPhone(singleSupplier?.data?.contactPersonNumber ? singleSupplier?.data.contactPersonNumber : "")
+    //     setContactPersonName(singleSupplier?.data?.contactPersonEmail ? singleSupplier?.data.contactPersonEmail : "");
+    //     setAddress(singleSupplier?.data?.address ? singleSupplier?.data.address : "");
+    //     setOptions(singleSupplier?.data?.PartyContactDetails)
+    // }, [setPhone, setContactPersonName, partyId, singleSupplier, isSingleSupplierLoading, isSingleSupplierFetching])
 
 
 
@@ -355,6 +355,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                             searchTerm={partyId}
                                             ref={inputPartyRef}
                                             nextRef={styleRef}
+                                            show = {"isClient"}
                                         />
                                     </div>
 

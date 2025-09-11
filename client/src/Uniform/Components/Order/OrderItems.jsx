@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { HiPlus, HiPencil, HiTrash } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { getImageUrlPath } from "../../../helper";
@@ -14,13 +14,13 @@ import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/Fib
 import { autoFocusSelect, getCommonParams, renameFile } from '../../../Utils/helper';
 import { useGetMachineQuery } from "../../../redux/services/MachineMasterService";
 import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
-import TableGridItems from './Yarndetails';
+import TableGridItems from './YarnDetails';
 import Modal from "../../../UiComponents/Modal";
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetCountsMasterQuery } from '../../../redux/uniformService/CountsMasterServices';
 import { useGetYarnTypeMasterQuery } from '../../../redux/uniformService/YarnTypeMasterServices';
 import Swal from 'sweetalert2';
-import SizeDetailsSubGrid from './SizeDetailsSubGrid';
+import SizeDetailsSubGrid from './SizeDetails';
 
 const OrderItems = forwardRef(function OrderItems(
   { readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems },
@@ -184,14 +184,14 @@ const OrderItems = forwardRef(function OrderItems(
   }
 
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (styleRef.current[index + 1]) {
-        styleRef.current[index + 1].current.focus();
-      }
-    }
-  };
+  // const handleKeyDown = (e, index) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     if (styleRef.current[index + 1]) {
+  //       styleRef.current[index + 1].current.focus();
+  //     }
+  //   }
+  // };
 
   // if (!styleRef) styleRef = { current: [] };
 
@@ -264,6 +264,14 @@ const OrderItems = forwardRef(function OrderItems(
       refObj.current = el;
     }
   }
+
+
+  const handleKeyDown = (e) => {
+    if (e.key === " ") { // Space
+      e.preventDefault();
+      e.target.click(); // this reliably opens the dropdown
+    }
+  };
 
   return (
 
@@ -356,12 +364,7 @@ const OrderItems = forwardRef(function OrderItems(
                 >
                   Socks Type
                 </th>
-                <th
 
-                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                >
-                  Base Color
-                </th>
                 <th
 
                   className={`w-5 px-4 py-2 text-center font-medium text-[13px] `}
@@ -371,9 +374,9 @@ const OrderItems = forwardRef(function OrderItems(
 
                 <th
 
-                  className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                  className={`w-2 px-3 py-2 text-center font-medium text-[13px] `}
                 >
-                  Actions
+
                 </th>
 
               </tr>
@@ -393,7 +396,7 @@ const OrderItems = forwardRef(function OrderItems(
                           className="text-left rounded h-full w-full py-1.5 px-2 focus:outline-none"
                           value={item?.styleId}
 
-                          disabled={id ? gridEditableIndex !== index : false}
+                          disabled={readOnly}
                           onChange={(e) => handleInputChange(e.target.value, index, "styleId")}
                           onBlur={(e) => handleInputChange(e.target.value, index, "styleId")}
 
@@ -409,46 +412,29 @@ const OrderItems = forwardRef(function OrderItems(
 
                       <td className="py-0.5 px-3 border border-gray-300 overflow-x-auto">
                         <div className="flex gap-2">
-                          {!readOnly && !item.filePath && (
-                            <input
-                              type="file"
-                              disabled={id ? gridEditableIndex !== index : false}
-                              className="text-left w-full rounded h-full text-xs focus:outline-none"
-                              onFocus={(e) => {
-                                e.target.click();
-                              }}
-                              onChange={(e) =>
-                                e.target.files[0]
-                                  ? handleInputChange(renameFile(e.target.files[0]), index, "filePath")
-                                  : () => { }
-                              }
-                            />
-                          )}
 
-                          {item.filePath && (
-                            <>
-                              <span className="text-xs">{item?.filePath?.name || item?.filePath}</span>
-                              <button className="text-xs" onClick={() => openPreview(item.filePath)}>
-                                {VIEW}
-                              </button>
-                              {!readOnly && (
-                                <button
-                                  className="text-xs"
-                                  onClick={() => handleInputChange("", index, "filePath")}
-                                >
-                                  {CLOSE_ICON}
-                                </button>
-                              )}
-                            </>
+
+
+                          <span className="text-xs">{item?.filePath?.name || item?.filePath || "No Data"}</span>
+                          <button className="text-xs" disabled={readOnly} onClick={() => openPreview(item.filePath)}>
+                            {VIEW}
+                          </button>
+                          {!readOnly && (
+                            <button
+                              className="text-xs"
+                              onClick={() => handleInputChange("", index, "filePath")}
+                              disabled={readOnly}
+                            >
+                              {CLOSE_ICON}
+                            </button>
                           )}
                         </div>
                       </td>
 
 
-                      {/* Fiber Content */}
                       <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                         <select
-                          disabled={id ? gridEditableIndex !== index : false}
+                          disabled={readOnly}
                           onKeyDown={(e) => {
                             if (e.key === "Delete") handleInputChange("", index, "fiberContentId");
                           }}
@@ -456,7 +442,7 @@ const OrderItems = forwardRef(function OrderItems(
                           value={item?.fiberContentId}
                           onChange={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
                           onBlur={(e) => handleInputChange(e.target.value, index, "fiberContentId")}
-                  
+
                         >
                           <option value="">select</option>
                           {fiberContent?.data?.map((size) => (
@@ -478,9 +464,9 @@ const OrderItems = forwardRef(function OrderItems(
                           value={item?.socksMaterialId}
                           onChange={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
                           onBlur={(e) => handleInputChange(e.target.value, index, "socksMaterialId")}
-                          // ref={(el) =>
-                          //   autoFocusSelect(el, styleRef, !id || gridEditableIndex === index)
-                          // }
+                        // ref={(el) =>
+                        //   autoFocusSelect(el, styleRef, !id || gridEditableIndex === index)
+                        // }
                         >
                           <option value="">select</option>
                           {socksMaterialData?.data?.map((size) => (
@@ -511,7 +497,7 @@ const OrderItems = forwardRef(function OrderItems(
                           ))}
                         </select>
                       </td>
-                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      {/* <td className="py-0.5 border border-gray-300 text-[11px] ">
                         <select
                           onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "baseColorId") } }}
                           tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
@@ -529,7 +515,7 @@ const OrderItems = forwardRef(function OrderItems(
                               {blend?.name}
                             </option>)}
                         </select>
-                      </td>
+                      </td> */}
                       <td className='flex items-center justify-center border border-gray-300 text-[11px] '>
                         <button
                           onClick={() => {
@@ -541,14 +527,14 @@ const OrderItems = forwardRef(function OrderItems(
                           }
                           // onMouseEnter={() => setTooltipVisible(true)}
                           // onMouseLeave={() => setTooltipVisible(false)}
-                          className="text-blue-800 rounded h-full  text-lg focus:outline-none"
+                          className="text-blue-800 rounded h-full py-1  text-lg focus:outline-none"
                         >
                           <span className=''>👁</span>
                         </button>
                       </td>
 
                       <td
-                        className=""
+                        className="w-2 border border-gray-300"
 
                       >
                         <input
@@ -558,7 +544,7 @@ const OrderItems = forwardRef(function OrderItems(
                               handleRightClick(e, index, "notes");
                             }
                           }}
-                          className='focus:outline-none '
+                          className='w-full '
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
@@ -636,7 +622,6 @@ const OrderItems = forwardRef(function OrderItems(
         </div>
       </div>
     </>
-
 
 
   );

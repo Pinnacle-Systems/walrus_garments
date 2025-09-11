@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client'
-import {
-    get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove,
-    getOrderItemsByIdNew as _getOrderItemsByIdNew, getStockvalidationById as _getStockvalidationById
-} from '../services/materialRequest.services.js';
+
+import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, 
+    getOrderItemsByIdNew as _getOrderItemsByIdNew , getStockvalidationById as _getStockvalidationById
+ } from '../services/StockTransfer.services.js';
 
 async function get(req, res, next) {
     try {
@@ -64,7 +64,8 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
     try {
-        res.json(await _update(req.params.id, req?.body?.body));
+        console.log(req.body, req.params)
+        res.json(await _update(req.params.id, req.body));
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);

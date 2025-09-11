@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { FiberContent, YarnNeedle } from "../../../Shocks";
-import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm } from "../../../Uniform/Components";
+import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 
@@ -123,6 +123,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
     "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
+    "STOCK TRANSFER"  :  <StockTransfer/>
 
 
   };

@@ -14,8 +14,9 @@ import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useAddRaiseIndentMutation, useDeleteRaiseIndentMutation, useGetRaiseIndentByIdQuery, useUpdateRaiseIndentMutation } from "../../../redux/uniformService/RaiseIndenetServices";
+import { useDispatch } from "react-redux";
 
-const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, orderAllDataRefetch,
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, orderDetailsId, setOrderDetailsId, dueDate, setDuedate,
 
@@ -29,9 +30,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
 
     const { branchId, userId, companyId, finYearId } = getCommonParams()
-    const params = {
-        branchId, userId, finYearId
-    };
 
 
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRaiseIndentByIdQuery(id, { skip: !id });
@@ -39,17 +37,16 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
     const [updateData] = useUpdateRaiseIndentMutation();
 
 
+    const { data: requirementData, refetch } = useGetRequirementPlanningFormQuery({ params: { branchId, userId } });
 
     // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery(orderId, { skip: !orderId });
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching  } = useGetOrderItemsByIdNewQuery(orderId, { skip: !orderId });
 
 
-    const { data: requirementData } = useGetRequirementPlanningFormQuery({ params });
 
 
-    console.log(requirementId, "requirementId")
-    const { data: singleRequirementData, isLoading: isSingleRequirementLoading, isFetching: isSingleRequirementFetching } = useGetRequirementPlanningFormByIdQuery(requirementId, { skip: !requirementId });
+    const dispatch = useDispatch()
 
 
 
@@ -62,10 +59,40 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
     const syncFormWithDb = useCallback((data) => {
 
 
+
         if (id) {
 
-            console.log(data, "data")
-            setRaiseIndentItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
+            setRaiseIndentItems(
+                data?.RaiseIndentItems?.map(item => {
+                    const allColors = item?.RaiseIndenetYarnItems
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
+                    const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+
+
+                        return {
+                            ...yarn,
+
+                        };
+                    });
+                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                        (sum, yarn) => sum + yarn.qty,
+                        0
+                    );
+                    return {
+                        OrderDetails: {
+                            style: {
+                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+                            }
+                        },
+                        requirementPlanningFormId: item.id,
+                        orderdetailsId: item.orderDetailsId,
+                        RaiseIndenetYarnItems,
+                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+                    };
+                })
+            );
             setDocId(data?.docId ? data?.docId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setRequirementId(data?.requirementId ? data?.requirementId : "")
@@ -129,7 +156,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                         0
                     );
                     return {
-                        id: item?.id,
                         OrderDetails: {
                             style: {
                                 name: `${item?.OrderDetails?.style?.name} / ${allColors}`
@@ -137,7 +163,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                         },
                         requirementPlanningFormId: item.id,
                         orderdetailsId: item.orderDetailsId,
-                        RaiseIndenetYarnItems ,
+                        RaiseIndenetYarnItems,
                         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
                     };
                 })
@@ -168,6 +194,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
 
     useEffect(() => {
+
         if (id) return
         if (singleOrderData?.data) {
             syncFormWithDb(singleOrderData?.data)
@@ -175,7 +202,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
 
-    console.log(partyId, "partyId")
 
 
 
@@ -225,7 +251,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                 setId(returnData?.data?.id);
                 setShowOrderForm(false)
-
+                refetch()
 
                 Swal.fire({
                     title: text + "  " + "Successfully",
@@ -273,7 +299,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
     }
 
 
-    console.log(requirementData, "requirementData")
 
     return (
         <>
@@ -281,7 +306,10 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-xl font-bold text-gray-800">Material Request Form</h1>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            onClose()
+                            setOrderId("")
+                        }}
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
                     >

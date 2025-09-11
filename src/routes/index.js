@@ -99,3 +99,4 @@ export { default as requirementPlanningForm } from "./requirementplanningForm.ro
 export { default as Material } from "./Material.route.js"
 export { default as raiseIndent } from "./materialRequst.route.js"
 export { default as materialIssue } from "./materialIssue.route.js"
+export { default as stockTransfer } from "./StockTransfer.route.js"
