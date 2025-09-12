@@ -136,13 +136,18 @@ async function get(req) {
                 docId: searchOrderNo ? { contains: searchOrderNo } : undefined,
 
             },
-            OrderDetails: {
-                is: {
-                    style: {
-                        name: searchStyleNo ? { contains: searchStyleNo } : undefined
+            ...(searchStyleNo
+                ? {
+                    OrderDetails: {
+                        is: {
+                            style: {
+                                name: { contains: searchStyleNo }
+                            }
+                        }
                     }
                 }
-            }
+                : {})
+
         },
         include: {
             requirementSizeDetails: true,
@@ -370,7 +375,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber } = req.body
+        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber ,requirementForm } = req.body
 
 
 

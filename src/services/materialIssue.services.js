@@ -134,8 +134,8 @@ async function get(req) {
                 : undefined,
             partyId: partyId ? parseInt(partyId) : undefined,
         },
-        include : {
-               Order: {
+        include: {
+            Order: {
                 select: {
                     docId: true
                 }
@@ -387,7 +387,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 }
 
-async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId , indentRaiseId) {
+async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId) {
 
     let promises
 
@@ -396,13 +396,21 @@ async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwar
         let data = await tx.MaterialIssueItems.create({
             data: {
                 materialIssueId: parseInt(MaterialIssueId),
-                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : 0,
-                weight: item["weight"] ? parseInt(item["weight"]) : undefined,
-                qty: item["returnQty"] ? parseFloat(item["returnQty"]) : 0,
-                issueQty: item["issueQty"] ? parseInt(item["issueQty"]) : undefined,
-
+                requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
+                orderdetailsId: item?.orderdetailsId ? parseInt(item?.orderdetailsId) : undefined,
+                MaterialIssueYarnItems: item?.RaiseIndenetYarnItems ?.length > 0
+                    ? {
+                        createMany: {
+                            data: item.RaiseIndenetYarnItems.map((sub) => ({
+                                yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
+                                colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                                count: sub?.count ? parseInt(sub.count) : undefined,
+                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                percentage: sub?.percentage ? sub?.percentage : undefined,
+                            })),
+                        },
+                    }
+                    : undefined,
             }
         })
 
@@ -416,7 +424,7 @@ async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwar
             },
             data: {
                 isMaterialIssue: true,
-               
+
             },
         });
 
@@ -458,7 +466,7 @@ async function create(req) {
                 partyId: partyId ? parseInt(partyId) : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
                 orderId: parseInt(orderId),
-                orderDetailsId: parseInt(orderDetailsId),
+                // orderDetailsId: parseInt(orderDetailsId),
                 // requirementId:  parseInt(requirementId) ,
 
 
@@ -466,7 +474,7 @@ async function create(req) {
 
             },
         });
-        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId ,indentRaiseId )
+        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId)
 
     })
 

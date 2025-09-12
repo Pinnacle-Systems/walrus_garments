@@ -6,26 +6,37 @@ import { DateInputNew, ReusableSearchableInput, TextInput } from "../../../Input
 import StockTransferForm from "./StockTransferFormUI";
 import OrderFormReport from "./OrderReport";
 import Swal from "sweetalert2";
+import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 
 
 
 const StockTransfer = () => {
 
-    const [form, setForm] = useState("")
     const [id, setId] = useState("")
-   
-    const [showAddressPopup, setShowAddressPopup] = useState(false)
-
-
+    const [form, setForm] = useState("")
     const [docId, setDocId] = useState("New")
     const [readOnly, setReadOnly] = useState(true);
-
-    const [partyId, setPartyId] = useState("");
     const [date, setDate] = useState("");
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
-    const [fromOrderNo, setFromOrderNo] = useState("")
-    const [toOrderNo,setToOrderNo]  =  useState("")
+   
+    
     const [transferType,setTransfetType]  = useState("")
+    
+    const [orderId, setOrderId] = useState("");
+    const [orderItems,setOrderItems]  =  useState([])
+    const [partyId, setPartyId] = useState("");
+
+    const [requirementId,setRequirementId]   = useState("")
+    
+    const [fromOrderNo, setFromOrderNo] = useState("")
+    const [showAddressPopup, setShowAddressPopup] = useState(false)
+    
+    const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const params = {
+        branchId, userId, finYearId
+    };
+
+        const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
+    
 
     const handleView = (orderId) => {
 
@@ -78,7 +89,8 @@ const StockTransfer = () => {
         <>
             {form ? (
                 <StockTransferForm
-
+                    orderData={orderData}  orderId={orderId} setOrderId = {setOrderId}  orderItems={orderItems} setOrderItems={setOrderItems} params={params}
+                    partyId={partyId} setPartyId={setPartyId}  setRequirementId={setRequirementId} requirementId={requirementId}
                     showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup}
                     docId={docId} setDocId={setDocId}
                     readOnly={readOnly} setReadOnly={setReadOnly}

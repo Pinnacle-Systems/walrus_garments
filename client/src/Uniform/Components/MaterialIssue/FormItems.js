@@ -3,13 +3,13 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 
-const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isRaiseRendent, setRaiseIndenet, setSubGridForm, subGridForm,
+const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialIssue,  setIsMaterialIssue, setSubGridForm, subGridForm,
     requirementId, setRequirementId
 }) => {
 
 
 
-    console.log(issueItems, "raiseIndentItems");
+    console.log(issueItems, "issueItems");
 
 
 
@@ -186,10 +186,10 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isRaiseRende
                             <input
                                 type="checkbox"
                                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                onChange={() => setRaiseIndenet(!isRaiseRendent)}
-                                checked={isRaiseRendent}
+                                onChange={() => setIsMaterialIssue(!isMaterialIssue)}
+                                checked={isMaterialIssue}
                             />
-                            <span className="text-sm text-gray-700">Raise Indent to Store</span>
+                            <span className="text-sm text-gray-700">Material Issue to Production</span>
                         </label>
 
 

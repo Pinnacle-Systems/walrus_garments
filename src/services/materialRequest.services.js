@@ -102,9 +102,11 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, searchDocId, searchDelDate, searchDocDate, partyId, materialIssue, indentRaise
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, searchDate, searchOrderNo, searchClientName, partyId, materialIssue, isReport
 
     } = req.query
+
+
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -112,15 +114,34 @@ async function get(req) {
     let data = await xprisma.raiseIndent.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(searchDocId) ?
+            docId: Boolean(serachDocNo) ?
                 {
-                    contains: searchDocId
+                    contains: serachDocNo
                 }
                 : undefined,
-            partyId: partyId ? parseInt(partyId) : undefined,
+            Order: {
+                docId: searchOrderNo ? { contains: searchOrderNo } : undefined
+            },
+            // ...(searchStyleNo
+            //     ? {
+            //         OrderDetails: {
+            //             is: {
+            //                 style: {
+            //                     name: { contains: searchStyleNo }
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     : {})
+
+            Party : {
+                name :  searchClientName  ?  { contains  :  searchClientName  }  :  undefined ,
+            }
+
+
         },
         include: {
-            RaiseIndentItems : true,
+            RaiseIndentItems: true,
             Order: {
                 select: {
                     docId: true
@@ -131,15 +152,7 @@ async function get(req) {
                     name: true
                 }
             },
-            OrderDetails: {
-                select: {
-                    style: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
+          
             RequirementPlanningForm: {
                 select: {
                     docId: true
@@ -154,20 +167,23 @@ async function get(req) {
 
     });
     let totalCount = data.length;
-    if (searchDocDate) {
-        data = data.filter(i => i.docDate.includes(searchDocDate))
+
+    if (searchDate) {
+        data = data.filter(i => i?.createdAt?.includes(searchDate))
     }
-    if (searchDelDate) {
-        data = data.filter(i => i.delDate.includes(searchDelDate))
-    }
+
 
     // if (pagination) {
     //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     // }
-    if (indentRaise) {
-        data = data?.filter(item => item.isRaiseRendent && !item.isMaterialIssue)
-
+    console.log(data, "data")
+    if (isReport == "Material Request") {
+        data = data?.filter(item => item.isMaterialRequset && !item.isMaterialIssue)
     }
+    if (isReport == "All") {
+        data = data
+    }
+
 
 
     return { statusCode: 0, data, totalCount, nextDocId: newDocId };
@@ -436,9 +452,9 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, requirementId, orderDetailsId, isRaiseRendent, raiseIndentItems } = req.body
+        phone, contactPersonName, address, validDate, orderId, requirementId, orderDetailsId, isMaterialRequset, raiseIndentItems } = req.body
 
-
+console.log(raiseIndentItems,"raiseIndentItems")
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -452,7 +468,7 @@ async function create(req) {
         data = await tx.RaiseIndent.create({
             data: {
                 docId,
-                isRaiseRendent: Boolean(isRaiseRendent),
+                isMaterialRequset: Boolean(isMaterialRequset),
                 contactPersonName: contactPersonName ?? "John",
                 Party: partyId ? { connect: { id: parseInt(partyId) } } : undefined,
                 Branch: branchId ? { connect: { id: parseInt(branchId) } } : undefined,

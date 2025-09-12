@@ -1,10 +1,10 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
-import {  poTypes,  stockTransferType } from "../../../Utils/DropdownData";
+import { poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
-import {  getCommonParams } from "../../../Utils/helper";
+import { getCommonParams } from "../../../Utils/helper";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import YarnPoItems from "./YarnPoItems";
@@ -12,8 +12,8 @@ import AccessoryPoItems from "./AccessoryPoItems";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa6";
-import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery,  useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
-import { useGetOrderByIdQuery,  useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-PO";
@@ -71,7 +71,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     data: singleOrderData,
     isFetching: isSingleOrderFetching,
     isLoading: isSingleOrderLoading,
-  } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+  } = useGetOrderItemsByIdNewQuery({id : orderId}, { skip: !orderId });
 
 
   const getNextDocId = useCallback(() => {
@@ -93,26 +93,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [updateData] = useUpdatePoMutation();
   const [removeData] = useDeletePoMutation();
 
-  // const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdNewQuery({ id: styleId }, { skip: !styleId });
 
-  const { data: requirementData } = useGetRequirementPlanningFormQuery({ params: { branchId } });
-  const { data: singleRequireMentData } = useGetRequirementPlanningFormByIdQuery(requirementId, { skip: !requirementId });
-
-  useEffect(() => {
-    if (requirementId && singleRequireMentData?.data) {
-      setOrderSizeDetails(singleRequireMentData?.data?.requirementSizeDetails ? singleRequireMentData?.data?.requirementSizeDetails : [])
-      setOrderYarnDetails(singleRequireMentData?.data?.RequirementYarnDetails ? singleRequireMentData?.data?.RequirementYarnDetails : [])
-    }
-
-  }, [requirementId, singleRequireMentData]);
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { ...params } });
 
-    const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
+  const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
 
 
-console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
 
 
 
@@ -125,15 +113,7 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
 
 
 
-  const { data: supplierDetails } =
-    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-  function isSupplierOutside() {
-    if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
-    }
-    return false
-  }
 
 
   function getTotalQty() {
@@ -141,31 +121,7 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
     return parseInt(qty)
   }
 
-  const partyFilter = (data) => {
-    if (!data || !transType) return [];
-
-    const cleanTransType = transType.toLowerCase().trim();
-
-
-    return data?.data
-      ?.map((party) => {
-        const matchedMaterials = party?.PartyMaterials?.filter((material) => {
-          const match = material?.name?.toLowerCase().includes(cleanTransType);
-          console.log(`Material: ${material?.name}, Match: ${match}`);
-          return match;
-        });
-
-        if (matchedMaterials.length > 0) {
-          return {
-            ...party,
-            PartyMaterials: matchedMaterials, // only matching ones
-          };
-        }
-
-        return null;
-      })
-      .filter(Boolean); // Remove nulls
-  };
+ 
 
 
 
@@ -210,14 +166,7 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
   }, [id]);
 
 
-  console.log(orderId,requirementId , "transType" , readOnly)
 
-  const syncOrderForm = useCallback((data) => {
-    console.log("Order data:", data?.orderDetails);
-    if (data?.orderDetails) {
-      setPartyId(data?.partyId);
-    }
-  }, [orderId]);
 
   useEffect(() => {
     if (id && singleData?.data) {
@@ -228,11 +177,48 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
     // }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  // useEffect(() => {
-  //   console.log(singleOrderData?.data?.partyId, "setIsd")
-  //   setPartyId(singleOrderData?.data?.partyId)
-  // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData, syncOrderForm]);
+  useEffect(() => {
 
+     
+            setPoItems(
+                singleOrderData?.data?.RequirementPlanningForm?.map(item => {
+                    const allColors = item?.RequirementYarnDetails
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
+                    const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+                        const qty = item?.requirementSizeDetails?.reduce(
+                            (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
+                            0
+                        );
+
+                        return {
+                            ...yarn,
+                            qty: Number(qty.toFixed(3)),
+                            orderDetailsId: item.orderDetailsId,
+
+                        };
+                    });
+                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                        (sum, yarn) => sum + yarn.qty,
+                        0
+                    );
+                    return {
+                        OrderDetails: {
+                            style: {
+                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+                            }
+                        },
+                        requirementPlanningFormId: item.id,
+                        RaiseIndenetYarnItems,
+                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+                    };
+                })
+            );
+  }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+
+
+    console.log(poItems,"PoItemns")
 
 
   let data = {
@@ -368,8 +354,8 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
 
             </h2>
             <div className="grid grid-cols-2 gap-1 mt-8">
-              <DropdownInput name="DirectOrPo"
-                options={stockTransferType}
+              <DropdownInput name="DirectPoOrderPo"
+                options={purchaseType}
                 value={PurchaseType}
                 setValue={setPurchaseType}
                 required={true}
@@ -386,26 +372,13 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
                   label="Order No"
                   options={orderData?.data}
                   labelField={"docId"}
-                  value={ orderId}
+                  value={orderId}
                   required={true}
                   setValue={setOrderId}
                 />
               }
 
-{/* 
-              {PurchaseType === "Order Purchase" &&
-                <DropdownWithSearch
-                  // options={singleOrderData?.data?.orderDetails?.map(o => ({
-                  //   ...o,
-                  //   displayLabel: o?.style?.name
-                  // }))}
-                  options={requirementData?.data?.filter(i => i.orderId == orderId)}
-                  value={ requirementId}
 
-                  setValue={setRequirementId}
-                  labelField={"docId"}
-                  label={"Requirement No"}
-                />} */}
               <div>
               </div>
             </div>
@@ -451,21 +424,22 @@ console.log(supplierList?.data?.filter(S => S.isSupplier),"suplier")
         <fieldset className=''>
           {PurchaseType === "Order Purchase" ?
 
-            <OrderPurchase orderYarnDetails={orderYarnDetails} orderSizeDetails={orderSizeDetails} poItems={poItems} setPoItems={setPoItems}
-              id={id}
+            <OrderPurchase  poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId}  requirementId={requirementId}
+              id={id} 
             />
             :
-            transType?.toLowerCase().includes("GreyYarn".toLowerCase())
-              ?
-              <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-              :
-              (
-                transType?.toLowerCase().includes("DyedYarn".toLowerCase())
-                  ?
-                  <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                  :
-                  <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-              )
+            <></>
+            // transType?.toLowerCase().includes("GreyYarn".toLowerCase())
+            //   ?
+            //   <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+            //   :
+            //   (
+            //     transType?.toLowerCase().includes("DyedYarn".toLowerCase())
+            //       ?
+            //       <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+            //       :
+            //       <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+            //   )
           }
 
         </fieldset>

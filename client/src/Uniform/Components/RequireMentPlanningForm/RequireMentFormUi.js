@@ -5,7 +5,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery,  useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -102,7 +102,6 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
             setCombo(updated);
 
-            console.log(updated, "Order details with combined colors");
         }
     }, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
@@ -113,7 +112,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId,
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId,requirementForm
     }
 
 

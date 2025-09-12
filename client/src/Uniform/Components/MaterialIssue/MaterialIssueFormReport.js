@@ -5,12 +5,13 @@ import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetRaiseIndentQuery } from "../../../redux/uniformService/RaiseIndenetServices";
 import moment from "moment";
+import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssueServices";
 
 
 
 
 
-const MaterialRequestFormReport = ({
+const MaterialIssueFormReport = ({
     onClick,
     onView,
     itemsPerPage = 10,
@@ -64,7 +65,7 @@ const MaterialRequestFormReport = ({
 
 
 
-    const { data: allData, isFetching, isLoading } = useGetRaiseIndentQuery({
+    const { data: allData, isFetching, isLoading } = useGetMaterialIssueQuery({
         params: {
             branchId, companyId,
             ...searchFields,
@@ -404,4 +405,4 @@ const MaterialRequestFormReport = ({
     );
 };
 
-export default MaterialRequestFormReport;
+export default MaterialIssueFormReport;

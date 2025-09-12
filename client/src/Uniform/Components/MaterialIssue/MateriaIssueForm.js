@@ -5,7 +5,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -15,6 +15,7 @@ import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentStockValidationByIdQuery } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
+import { Loader } from "../../../Basic/components";
 
 const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId,
 
@@ -22,7 +23,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, requirementId, setRequirementId, issueItems, setIssueItems,
 
-    isMaterialIssue, setIsMaterialIssue, indentRaiseId, setIndentRaiseId
+    isMaterialIssue, setIsMaterialIssue,  materialRequstId,   setMaterialRequstId
 
 
 
@@ -42,7 +43,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     const { data: indentRaiseData } = useGetRaiseIndentQuery({ params });
 
-    const { data: singleRaiseRendentData, isLoading: isSingleRaiseRendentLoading, isFetching: isSingleRaiseRendentFetching } = useGetRaiseIndentStockValidationByIdQuery(indentRaiseId, { skip: !indentRaiseId });
+    const { data: materialRequstData, isLoading: isSingleMaterialRequstLoading, isFetching: isSingleMaterialRequstFetching } = useGetRaiseIndentStockValidationByIdQuery(materialRequstId, { skip: !materialRequstId });
 
     const [addData] = useAddMaterialIssueMutation();
     const [updateData] = useUpdateMaterialIssueMutation();
@@ -59,7 +60,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
             setIssueItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
             setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
-            setIndentRaiseId(data?.id ? data?.id : "")
+            setMaterialRequstId(data?.id ? data?.id : "")
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
@@ -88,15 +89,16 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                                 name: `${item?.OrderDetails?.style?.name} / ${allColors}`
                             }
                         },
-                        requirementPlanningFormId: item.id,
-                        orderdetailsId: item.orderDetailsId,
+                        requirementPlanningFormId: item.requirementPlanningFormId,
+                        orderdetailsId: item.orderdetailsId,
                         RaiseIndenetYarnItems,
                         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
                     };
                 })
-            ); setOrderId(data?.orderId ? data?.orderId : "")
+            ); 
+            setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
-            setIndentRaiseId(data?.id ? data?.id : "")
+            setMaterialRequstId(data?.id ? data?.id : "")
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
@@ -118,11 +120,11 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     useEffect(() => {
 
-        if (singleRaiseRendentData?.data) {
-            syncFormWithDb(singleRaiseRendentData?.data)
+        if (materialRequstData?.data) {
+            syncFormWithDb(materialRequstData?.data)
         }
 
-    }, [isSingleRaiseRendentLoading, isSingleRaiseRendentFetching, indentRaiseId, singleRaiseRendentData]);
+    }, [isSingleMaterialRequstLoading, isSingleMaterialRequstFetching, materialRequstId, materialRequstData]);
 
 
 
@@ -133,7 +135,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, issueItems, indentRaiseId
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, issueItems, indentRaiseId: materialRequstId
     }
 
 
@@ -204,7 +206,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
     }
 
 
-    console.log(indentRaiseData, "raiseIndentData")
+    if (isSingleMaterialRequstLoading || isSingleMaterialRequstFetching) return <Loader />
 
     return (
         <>
@@ -214,7 +216,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                     <button
                         onClick={() => {
                             onClose();
-                            setIndentRaiseId("")
+                            setMaterialRequstId("")
                         }}
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"

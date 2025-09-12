@@ -3,82 +3,34 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, raiseIndentItems, readOnly, id,  isMaterialRequset,  setIsMaterialRequset, setSubGridForm, subGridForm,
-    requirementId, setRequirementId
+const FormItems = ({   setOrderItems,  orderItems, readOnly, id,  isMaterialRequset,  setIsMaterialRequset, setSubGridForm, subGridForm,
+    requirementId, setRequirementId,
+    
 }) => {
 
-    console.log(orderSizeDetails, "orderSizeDetails", id);
-    console.log(orderYarnDetails, "orderYarnDetails");
+ 
 
-    console.log(raiseIndentItems, "raiseIndentItems");
-
-
-
-
-    function newFunction(value, yarnId) {
-        setRaiseIndentItems((prev) => {
-            const newItems = structuredClone(prev);
-            const percent = value === "" ? 0 : parseFloat(value);
-            newItems.forEach((item) => {
-                if (item.yarnId === yarnId) {
-                    item.requireWeight = Number(((parseFloat(item.weight) * percent) / 100).toFixed(5));
-                }
-            });
-            return newItems;
-        });
-    }
-
-
-
-
-    useEffect(() => {
-        orderYarnDetails?.forEach((yarn) => {
-            newFunction(yarn?.percentage, yarn?.yarnId);
-        });
-    }, [orderYarnDetails]);
+    console.log(orderItems, "orderItems");
 
 
 
 
 
 
-    useEffect(() => {
-        if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
 
-        if (id) return;
 
-        const groupedMap = {};
 
-        orderSizeDetails.forEach(size => {
-            orderYarnDetails.forEach(yarn => {
-                const key = `${yarn.yarnId}-${yarn.colorId}`;
 
-                const qty = Number(((parseFloat(size.weight) * yarn.percentage) / 100).toFixed(3));
 
-                if (!groupedMap[key]) {
-                    groupedMap[key] = {
-                        yarnId: yarn.yarnId,
-                        Yarn: { name: yarn?.Yarn?.name },
-                        percentage: yarn.percentage,
-                        colorId: yarn.colorId,
-                        qty: 0,
-                        uomId: size.uomId,
-                    };
-                }
 
-                // accumulate qty across sizes
-                groupedMap[key].qty += qty;
-            });
-        });
 
-        setRaiseIndentItems(Object.values(groupedMap));
-    }, [orderSizeDetails, orderYarnDetails, id]);
+
 
 
     function deleteRow(index) {
         console.log(index, "index")
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setRaiseIndentItems(prev => prev.filter((_, i) => i !== index))
+        setOrderItems(prev => prev.filter((_, i) => i !== index))
     }
 
 
@@ -100,7 +52,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
     function deleteRow(index) {
         console.log(index, "index")
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setRaiseIndentItems(prev => prev.filter((_, i) => i !== index))
+        setOrderItems(prev => prev.filter((_, i) => i !== index))
     }
 
     const tableRef = useRef(null);
@@ -144,21 +96,21 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                 </thead>
                                 <tbody>
 
-                                    {(raiseIndentItems ? raiseIndentItems : []).map((indent, index) => {
+                                    {(orderItems ? orderItems : []).map((item, index) => {
                                         return (
                                             <React.Fragment key={index}>
 
                                                 <tr
-                                                    className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
+                                                    className={`${item?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
                                                     onClick={() => {
-                                                        setRequirementId(indent?.requirementPlanningFormId)
+                                                        setRequirementId(item?.requirementPlanningFormId)
                                                         setSubGridForm(true)
                                                     }}
                                                 >
                                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
 
                                                     <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.OrderDetails?.style?.name}
+                                                    >{item?.OrderDetails?.style?.name}
                                                     </td>
 
                                                     <td className="border border-gray-300 px-2 py-1 text-right text-xs"
@@ -168,7 +120,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                                             }
                                                         }}
                                                     >
-                                                        {Number(indent?.totalYarnQty || 0).toFixed(3)}
+                                                        {Number(item?.totalYarnQty || 0).toFixed(3)}
                                                     </td>
 
 
@@ -184,7 +136,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                     <tr>
                                         <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
                                         <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(
-                                            raiseIndentItems?.reduce((sum, item) => {
+                                            orderItems?.reduce((sum, item) => {
                                                 return sum + (item?.RaiseIndenetYarnItems?.reduce(
                                                     (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.qty) || 0),
                                                     0
@@ -219,15 +171,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                                 >
                                                     Delete{" "}
                                                 </button>
-                                                {/* <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        handleDeleteAllRows();
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete All
-                                                </button> */}
+                                               
                                             </div>
                                         </div>
                                     )}
@@ -257,7 +201,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
                             <tbody>
 
-                                {(raiseIndentItems ? raiseIndentItems : [])?.filter(item => item.requirementPlanningFormId === requirementId)?.map((indent, index) => {
+                                {(orderItems ? orderItems : [])?.filter(item => item.requirementPlanningFormId === requirementId)?.map((indent, index) => {
                                     return (
                                         <React.Fragment key={index}>
 
@@ -278,37 +222,6 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                         </table>
                     </div>
 
-                    {/* <div className="w-[30%] flex justify-end items-center mt-4">
-
-                        <table className="w-full border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-800">
-
-                                <tr>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty</td>
-
-                                </tr>
-
-                            </thead>
-                            <tbody>
-
-                                {orderYarnDetails?.map((yarn, index) => (
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs w-9">{index + 1}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
-
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                            {getRequireWeight(yarn?.yarnId).toFixed(3)} Kg
-                                        </td>
-
-                                    </tr>
-                                ))}
-
-                            </tbody>
-
-                        </table>
-                    </div> */}
 
                 </div>
             </div>

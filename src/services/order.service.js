@@ -337,10 +337,60 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 }
 
 
+export async function getStockvalidationById(id) {
+
+
+    const childRecord = 0;
+    let data = await prisma.MaterialIssue.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            RaiseIndentItems: {
+                select: {
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    yarnId: true,
+                    colorId: true,
+                    id: true,
+                    percentage: true,
+                    qty: true,
+                    raiseIndentId: true,
+                    sizeId: true,
+                    weight: true,
+                },
+
+
+            }
+        }
 
 
 
-export async function getOrderItemsByIdNew(id) {
+
+    })
+
+    const enrichedItems = await getStockValidationData(data);
+
+    if (!data) return NoRecordFound("raiseIndent");
+
+
+
+
+    return {
+        statusCode: 0,
+        data: {
+            ...data,
+            RaiseIndentItems: enrichedItems,
+            childRecord
+        }
+    };
+}
+
+
+export async function getOrderItemsByIdNew(id,stockValidation) {
 
     const childRecord = 0;
     let data = await prisma.order.findUnique({
@@ -413,6 +463,10 @@ export async function getOrderItemsByIdNew(id) {
             (item) => !item.isMaterialRequst
         ) || [],
     };
+
+    if(stockValidation){
+        
+    }
 
 
     return {

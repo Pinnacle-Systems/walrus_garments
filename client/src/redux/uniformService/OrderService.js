@@ -38,7 +38,7 @@ const OrderApi = createApi({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url:`${ORDER_API}/orderItems` ,
+                        url: `${ORDER_API}/orderItems`,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -82,9 +82,9 @@ const OrderApi = createApi({
             providesTags: ["Order"],
         }),
         getOrderItemsByIdNew: builder.query({
-            query: (id) => {
+            query: ({ id, stockValidation }) => {
                 return {
-                    url: `${ORDER_API}/getOrderItemsNew/${id}`,
+                    url: `${ORDER_API}/getOrderItemsNew/${id}/${stockValidation ? stockValidation : null}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",

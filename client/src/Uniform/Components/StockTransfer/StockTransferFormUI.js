@@ -1,24 +1,148 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { useState } from "react";
-import { getCommonParams } from "../../../Utils/helper";
-import { DateInputNew, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { useCallback, useEffect, useState } from "react";
+import { findFromList, getCommonParams } from "../../../Utils/helper";
+import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import FormItems from "./FormItems";
 
 const StockTransferForm = ({
-
-
-    showAddressPopup, setShowAddressPopup,
     docId,
-    address,
+    fromOrderNo, onClose, setTransfetType, transferType, partyId, setPartyId, params, requirementId, setRequirementId,
+    orderData, orderId, setOrderId, orderItems, setOrderItems,
     date,
-    setOpenModelForAddress,
     setFromOrderNo,
-    fromOrderNo, onClose, setTransfetType, transferType
+
 
 }) => {
 
+    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+
+    let stockValidation = true
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation }, { skip: !orderId });
+
+
+    // useEffect(() => {
+    //     if (!singleOrderData?.data?.orderDetails?.length) return;
+
+    //     const orderQty = singleOrderData.data.orderDetails.reduce((acc, item) => {
+    //         const totalQty = (item?.orderSizeDetails || []).reduce(
+    //             (sum, s) => sum + (s.qty || 0),
+    //             0
+    //         );
+    //         return acc + totalQty;
+    //     }, 0);
+
+    //     const updatedOrder = {
+    //         ...singleOrderData.data,
+    //         orderQty,
+    //     };
+
+    //     setOrderItems(updatedOrder);
+    //     setPartyId(singleOrderData?.data?.partyId ? singleOrderData?.data?.partyId : "")
+
+    // }, [orderId, singleOrderData?.data, isSingleOrderLoading, isSingleOrderFetching]);
+
+
+    useEffect(() => {
+        if (!singleOrderData?.data?.orderDetails?.length) return;
+
+        const orderQty = singleOrderData?.data?.orderDetails.reduce((acc, item) => {
+            const totalQty = (item?.orderSizeDetails || []).reduce(
+                (sum, s) => sum + (s.qty || 0),
+                0
+            );
+            return acc + totalQty;
+        }, 0);
+
+
+        const allYarns = singleOrderData?.data?.orderDetails?.flatMap(d => d.orderYarnDetails || []);
+
+
+        const yarnTotals = allYarns?.reduce((acc, yarn) => {
+            if (!acc[yarn?.yarnId]) {
+                acc[yarn?.yarnId] = { ...yarn, totalQty: 0 };
+            }
+            acc[yarn.yarnId].totalQty += yarn.qty || 0;
+            return acc;
+        }, {});
+
+
+        const combinedYarns = Object.values(yarnTotals);
+
+        const updatedOrder = {
+            ...singleOrderData.data,
+            orderQty,
+            yarnSummary: combinedYarns,
+        };
+
+        setOrderItems(updatedOrder);
+    }, [orderId, singleOrderData?.data]);
+
+
+    const syncFormWithDb = useCallback((data) => {
+
+
+
+
+        setPartyId(data?.partyId ? data?.partyId : "")
+
+
+
+        setOrderItems(
+            data?.RequirementPlanningForm?.map(item => {
+                const allColors = item?.RequirementYarnDetails
+                    ?.map(yarn => yarn?.Color?.name)
+                    .filter(Boolean)
+                    .join(" - ");
+                const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+                    const qty = item?.requirementSizeDetails?.reduce(
+                        (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
+                        0
+                    );
+
+                    return {
+                        ...yarn,
+                        qty: Number(qty.toFixed(3)),
+                        orderDetailsId: item.orderDetailsId,
+
+                    };
+                });
+                const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                    (sum, yarn) => sum + yarn.qty,
+                    0
+                );
+                return {
+                    OrderDetails: {
+                        style: {
+                            name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+                        }
+                    },
+                    requirementPlanningFormId: item.id,
+                    RaiseIndenetYarnItems,
+                    totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+                };
+            })
+        );
+
+
+
+
+
+    }, [orderId]);
+
+
+    useEffect(() => {
+
+        if (singleOrderData?.data) {
+            syncFormWithDb(singleOrderData?.data)
+        }
+
+    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
+    console.log(orderItems, "orderItems");
 
 
     return (
@@ -74,14 +198,24 @@ const StockTransferForm = ({
 
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-                                    {transferType == "Order" && (
-                                        <>
 
-                                            <TextInput name="From Order No" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
-                                            <TextInput name="From Customer" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
-                                        </>
-                                    )}
-                                    <TextInput name="To Order No" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
+
+
+                                    <DropdownWithSearch
+                                        options={orderData?.data}
+                                        value={orderId}
+                                        setValue={setOrderId}
+                                        // readOnly={id ? true : false}
+                                        labelField={"docId"}
+                                        label={"Order No"}
+                                    />
+                                    <TextInput
+                                        name="Customer"
+                                        placeholder="Contact name"
+                                        value={findFromList(partyId, supplierList?.data, "name")}
+                                        // setValue={setContactPersonName}
+                                        disabled={true}
+                                    />                                    <TextInput name="To Order No" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
                                     <TextInput name="To Customer" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
 
 
@@ -102,8 +236,13 @@ const StockTransferForm = ({
 
                         </div>
                     </div>
+                    <div>
+                        <FormItems orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} />
 
+                    </div>
                 </div>
+
+
             </div>
         </>
     )

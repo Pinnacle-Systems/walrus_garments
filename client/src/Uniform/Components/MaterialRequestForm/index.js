@@ -8,7 +8,7 @@ import moment from "moment";
 import { useDeleteRaiseIndentMutation, useGetRaiseIndentQuery } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useCallback } from "react";
 import { useEffect } from "react";
-import IndentRaiseForm from "./IndentRaiseForm";
+import IndentRaiseForm from "./MaterialRequsetForm";
 import { Production } from "../../../Utils/DropdownData";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssueServices";
@@ -42,15 +42,15 @@ const MaterialRequestForm = () => {
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
     const [requirementId, setRequirementId] = useState("")
-    const [isRaiseRendent, setRaiseIndenet] = useState(false)
-    const [isReport, setIsReport] = useState("Material Request")
+    const [isMaterialRequset, setIsMaterialRequset] = useState(false)
+    const [isReport, setIsReport] = useState("All")
     const [subGridForm, setSubGridForm] = useState(false)
 
     const params = {
         branchId, userId, finYearId
     };
 
-    const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId, indentRaise: true } });
+    const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId } });
     const { data: materialIssueData } = useGetMaterialIssueQuery({ params: { branchId } });
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching, refetch: orderAllDataRefetch } = useGetOrderQuery({ params });
@@ -156,7 +156,7 @@ const MaterialRequestForm = () => {
         setRaiseIndentItems([])
         setOrderSizeDetails([])
         setOrderYarnDetails([])
-        setRaiseIndenet(false)
+        setIsMaterialRequset(false)
         setPartyId("")
 
     }
@@ -174,7 +174,7 @@ const MaterialRequestForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} raiseIndentItems={raiseIndentItems} setRaiseIndentItems={setRaiseIndentItems}
 
-                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setRequirementId={setRequirementId} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
+                    dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setRequirementId={setRequirementId} isMaterialRequset={isMaterialRequset} setIsMaterialRequset={setIsMaterialRequset} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
 
                     orderAllDataRefetch={orderAllDataRefetch}
                 />
@@ -205,7 +205,7 @@ const MaterialRequestForm = () => {
 
 
                             <button
-                                className= "py-2  hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4  rounded-md flex items-center gap-2 text-sm"
+                                className="py-2  hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4  rounded-md flex items-center gap-2 text-sm"
                                 onClick={() => { setForm(true); onNew() }}
                             >
                                 <FaPlus /> Create New
@@ -213,7 +213,7 @@ const MaterialRequestForm = () => {
                         </div>
                     </div>
 
-                    {isReport === "Material Request" ? (
+                    {isReport === "Material Request" || isReport === "All" ? (
 
                         // <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                         //     <ReusableTable
@@ -226,6 +226,7 @@ const MaterialRequestForm = () => {
                         //     />
                         // </div>
                         <MaterialRequestFormReport
+                            isReport={isReport}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
+import Swal from "sweetalert2";
 
 const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly }) => {
 
@@ -57,11 +58,22 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             }, 0);
 
             if (totalWithoutCurrent + num > 100) {
-                alert("Total percentage cannot exceed 100!");
-                return prev;
+                Swal.fire({
+                    title: "Total percentage cannot exceed 100!",
+                    icon: "error",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+            else {
+
+                newItems[index]["percentage"] = num;
             }
 
-            newItems[index]["percentage"] = num;
             return newItems;
         });
 
@@ -72,6 +84,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     item.requireWeight = Number(
                         ((parseFloat(item.weight) * num) / 100).toFixed(5)
                     );
+                    item.percentage = value
                 }
             });
             return newItems;

@@ -450,7 +450,7 @@ async function create(req) {
     let data;
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.MaterialIssue.create({
+        data = await tx.Stock.create({
             data: {
                 docId,
                 isMaterialIssue: Boolean(isMaterialIssue),

@@ -44,7 +44,7 @@ export async function getOrderItemsById(req, res, next) {
 
 export async function getOrderItemsByIdNew(req, res, next) {
     try {
-        res.json(await _getOrderItemsByIdNew(req.params.id));
+        res.json(await _getOrderItemsByIdNew(req.params.id,req?.params?.stockValidation));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

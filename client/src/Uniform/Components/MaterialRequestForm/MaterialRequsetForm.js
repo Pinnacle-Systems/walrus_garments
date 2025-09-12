@@ -15,6 +15,7 @@ import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useAddRaiseIndentMutation, useDeleteRaiseIndentMutation, useGetRaiseIndentByIdQuery, useUpdateRaiseIndentMutation } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useDispatch } from "react-redux";
+import { Loader } from "../../../Basic/components";
 
 const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, orderAllDataRefetch,
 
@@ -22,7 +23,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setRequirementId,
 
-    isRaiseRendent, setRaiseIndenet, supplierList, setSubGridForm, subGridForm
+    isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm
 
 
 
@@ -41,12 +42,11 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching  } = useGetOrderItemsByIdNewQuery(orderId, { skip: !orderId });
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({id : orderId , stockValidation : false },{ skip: !orderId });
 
 
 
 
-    const dispatch = useDispatch()
 
 
 
@@ -96,7 +96,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             setDocId(data?.docId ? data?.docId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setRequirementId(data?.requirementId ? data?.requirementId : "")
-            setRaiseIndenet(data?.isRaiseRendent ? data?.isRaiseRendent : false)
+            setIsMaterialRequset(data?.isMaterialRequset ? data?.isMaterialRequset : false)
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
@@ -105,34 +105,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             setPartyId(data?.partyId ? data?.partyId : "")
 
 
-
-            // setRaiseIndentItems(
-            //     data?.RequirementPlanningForm?.map( item => {
-            //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-            //             const qty = item?.requirementSizeDetails?.reduce(
-            //                 (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-            //                 0
-            //             );
-
-            //             return {
-            //                 ...yarn,
-            //                 qty: Number(qty.toFixed(3))
-            //             };
-            //         });
-
-            //         return {
-            //             id : item?.id ,
-            //             OrderDetails : {
-            //                 style : {
-            //                     name : item?.OrderDetails?.style?.name, 
-            //                 }
-            //             } ,
-            //             requirementPlanningFormId : item.id,
-            //             orderdetailsId : item.orderDetailsId,
-            //             RaiseIndenetYarnItems
-            //         };
-            //     })
-            // );
 
             setRaiseIndentItems(
                 data?.RequirementPlanningForm?.map(item => {
@@ -148,7 +120,9 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                         return {
                             ...yarn,
-                            qty: Number(qty.toFixed(3))
+                            qty: Number(qty.toFixed(3)),
+                            orderDetailsId: item.orderDetailsId,
+
                         };
                     });
                     const totalYarnQty = RaiseIndenetYarnItems?.reduce(
@@ -162,7 +136,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                             }
                         },
                         requirementPlanningFormId: item.id,
-                        orderdetailsId: item.orderDetailsId,
                         RaiseIndenetYarnItems,
                         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
                     };
@@ -219,7 +192,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, raiseIndentItems, isRaiseRendent, requirementId
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, raiseIndentItems, isMaterialRequset, requirementId
     }
 
 
@@ -298,6 +271,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
         }
     }
 
+    if (isSingleLoading || isSingleFetching || isSingleOrderLoading || isSingleOrderFetching) return <Loader />
 
 
     return (
@@ -414,7 +388,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                     <fieldset className=''>
 
                         <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
-                            setRaiseIndentItems={setRaiseIndentItems} raiseIndentItems={raiseIndentItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isRaiseRendent={isRaiseRendent} setRaiseIndenet={setRaiseIndenet}
+                            setRaiseIndentItems={setRaiseIndentItems} raiseIndentItems={raiseIndentItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialRequset={isMaterialRequset} setIsMaterialRequset={setIsMaterialRequset}
                             setRequirementId={setRequirementId} requirementId={requirementId} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
                         />
 
