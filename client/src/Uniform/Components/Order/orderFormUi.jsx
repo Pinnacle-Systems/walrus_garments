@@ -264,21 +264,13 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const dateRef = useRef(null);
     const inputPartyRef = useRef(null);
     const styleRef = useRef(null);
-    // useEffect(() => {
-    //     if (dateRef.current) {
-    //         dateRef?.current?.focus();
-    //         if (dateRef?.current?.showPicker) {
-    //             dateRef?.current?.showPicker();
-    //         }
-    //     }
-    // }, []);
+
     useEffect(() => {
         if (dateRef.current) {
             dateRef.current.focus(); 
         }
     }, []);
 
-    console.log(dateRef,"dateRef")
 
 
       if (isSingleFetching || isSingleLoading || isSingleSupplierLoading  || isSingleSupplierFetching ) return <Loader />

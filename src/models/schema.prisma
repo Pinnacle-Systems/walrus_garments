@@ -274,6 +274,8 @@ model User {
   RaiseIndentUpdateBy                 RaiseIndent[]                @relation(name: "updatedBy")
   MaterialIssueCreatedBy              MaterialIssue[]              @relation(name: "createdBy")
   MaterialIssueUpdateBy               MaterialIssue[]              @relation(name: "updatedBy")
+  StockTransferCreatedBy              StockTransfer[]              @relation(name: "createdBy")
+  StockTransferUpdateBy               StockTransfer[]              @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -761,6 +763,7 @@ model Yarn {
   RaiseIndentItems              RaiseIndentItems[]
   RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
   MaterialIssueYarnItems        MaterialIssueYarnItems[]
+  StockTransferItems            StockTransferItems[]
 }
 
 model yarnCounts {
@@ -827,17 +830,18 @@ model FabricOnYarnBlend {
 }
 
 model AccessoryGroup {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  Company           Company?            @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  active            Boolean             @default(true)
-  AccessoryItem     AccessoryItem[]
-  PoItems           PoItems[]
-  DirectItems       DirectItems[]
-  Stock             Stock[]
-  DirectReturnItems DirectReturnItems[]
-  CancelItems       CancelItems[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  Company            Company?             @relation(fields: [companyId], references: [id])
+  companyId          Int?
+  active             Boolean              @default(true)
+  AccessoryItem      AccessoryItem[]
+  PoItems            PoItems[]
+  DirectItems        DirectItems[]
+  Stock              Stock[]
+  DirectReturnItems  DirectReturnItems[]
+  CancelItems        CancelItems[]
+  StockTransferItems StockTransferItems[]
 }
 
 model AccessoryItem {
@@ -855,6 +859,7 @@ model AccessoryItem {
   Stock                 Stock[]
   DirectReturnItems     DirectReturnItems[]
   CancelItems           CancelItems[]
+  StockTransferItems    StockTransferItems[]
 }
 
 model Accessory {
@@ -876,6 +881,7 @@ model Accessory {
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
   CancelItems                   CancelItems[]
+  StockTransferItems            StockTransferItems[]
 }
 
 enum AccessoryCategory {
@@ -950,6 +956,7 @@ model Color {
   RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
   OrderDetails           OrderDetails[]
   MaterialIssueYarnItems MaterialIssueYarnItems[]
+  StockTransferItems     StockTransferItems[]
 }
 
 model UnitOfMeasurement {
@@ -3006,6 +3013,8 @@ model Order {
   MaterialIssue           MaterialIssue[]
   Stock                   Stock[]
   DirectInwardOrReturn    DirectInwardOrReturn[]
+  FromOrder               StockTransfer[]           @relation(name: "fromOrder")
+  ToOrder                 StockTransfer[]           @relation(name: "toOrder")
 }
 
 model OrderDetails {
@@ -3494,6 +3503,39 @@ model MaterialIssueYarnItems {
   requirementPlanningId   Int?
   OrderDetails            OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
   orderdetailsId          Int?
+}
+
+model StockTransfer {
+  id                 Int                  @id @default(autoincrement())
+  docId              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  createdBy          User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById        Int?
+  updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  fromOrder          Order?               @relation("fromOrder", fields: [fromOrderId], references: [id])
+  fromOrderId        Int?
+  toOrsder            Order?               @relation("toOrder", fields: [toOrderId], references: [id])
+  toOrderId          Int?
+  StockTransferItems StockTransferItems[]
+}
+
+model StockTransferItems {
+  id               Int             @id @default(autoincrement())
+  StockTransfer    StockTransfer?  @relation(fields: [stockTransferId], references: [id])
+  stockTransferId  Int?
+  Yarn             Yarn?           @relation(fields: [yarnId], references: [id])
+  yarnId           Int?
+  Accessory        Accessory?      @relation(fields: [accessoryId], references: [id])
+  accessoryId      Int?
+  accessoryGroup   AccessoryGroup? @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  accessoryItem    AccessoryItem?  @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  Color            Color?          @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  transferQty      Float?
 }
 
 model DirectReturnOrPoReturn {

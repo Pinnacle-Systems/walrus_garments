@@ -2,29 +2,26 @@ import React, { useEffect, useRef, useState } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
+import Modal from "../../../UiComponents/Modal";
+import StockTransferDetails from "./StockTransferDetails";
+import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
+import { useGetStockQuery } from "../../../redux/services/StockService";
+import { findFromList } from "../../../Utils/helper";
+import YarnTransferDetails from "./StockTransferDetails";
+import StockDetails from "./StockDetails";
 
-const FormItems = ({   setOrderItems,  orderItems, readOnly, id,  isMaterialRequset,  setIsMaterialRequset, setSubGridForm, subGridForm,
-    requirementId, setRequirementId,
-    
+const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
+    yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
+
 }) => {
 
- 
 
-    console.log(orderItems, "orderItems");
-
+    console.log(tempOrderItems, "tempOrderItems")
 
 
 
-
-
-
-
-
-
-
-
-
-
+    const [tableDataView, setTableDataView] = useState(false)
+    const [tableStockDataView, setTableStockDataView] = useState(false)
 
 
     function deleteRow(index) {
@@ -35,6 +32,8 @@ const FormItems = ({   setOrderItems,  orderItems, readOnly, id,  isMaterialRequ
 
 
     const [contextMenu, setContextMenu] = useState(null);
+
+
     const handleRightClick = (event, rowIndex, type) => {
         event.preventDefault();
         setContextMenu({
@@ -55,184 +54,310 @@ const FormItems = ({   setOrderItems,  orderItems, readOnly, id,  isMaterialRequ
         setOrderItems(prev => prev.filter((_, i) => i !== index))
     }
 
-    const tableRef = useRef(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (tableRef?.current && !tableRef?.current?.contains(event.target)) {
-                setRequirementId(null);
-            }
-        };
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
+
+    function handleInputChange(value, index, field) {
+
+
+        console.log(value, "value", index)
+
+
+        setStockItems(stock => {
+            const newBlend = structuredClone(stock);
+            newBlend[index][field] = parseInt(value);
+            return newBlend
+        }
+        );
+    };
+
+
+    function handleInputChangeOrder(value, index, field) {
+
+
+        console.log(value, "value", index)
+
+
+        setOrderItems(stock => {
+            const newBlend = structuredClone(stock);
+            newBlend[index][field] = parseInt(value);
+            return newBlend
+        }
+        );
+    };
+
+
+
     return (
         <>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[300px] overflow-y-auto">
+            <Modal
+                isOpen={tableDataView}
+                onClose={() => setTableDataView(false)}
+                widthClass="px-2 h-[70%] w-[70%]"
+            >
+                <YarnTransferDetails
+                    tempOrderItems={tempOrderItems}
+                    setOrderItems={setOrderItems} orderItems={orderItems}
+                    setTempOrderItems={setTempOrderItems}
+                    tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} stockItems={stockItems} setStockItems={setStockItems}
+                    onClose={() => setTableDataView(false)}
+
+                />
+            </Modal>
+           <Modal
+                isOpen={tableStockDataView}
+                onClose={() => setTableStockDataView(false)}
+                widthClass="px-2 h-[70%] w-[70%]"
+            >
+                <StockDetails
+                    tempOrderItems={tempOrderItems}
+                    setOrderItems={setOrderItems} orderItems={orderItems}
+                    setTempOrderItems={setTempOrderItems}
+                    tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} stockItems={stockItems} setStockItems={setStockItems}
+                    onClose={() => setTableStockDataView(false)}
+                    colorList={colorList} yarnList={yarnList}
+
+                />
+            </Modal>
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[200px] mb-4">
 
 
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="font-medium text-slate-700">Required Qty</h2>
+                <div className="flex flex-row gap-5">
+                    <div className="flex justify-between items-center ">
+                        <h2 className="font-medium text-slate-700">Yarn Transfer Details</h2>
                     </div>
+                    <button
+                        onClick={() => {
+                            setTableDataView(true)
+                        }
 
+                        }
+                        // onMouseEnter={() => setTooltipVisible(true)}
+                        // onMouseLeave={() => setTooltipVisible(false)}
+                        className="text-blue-800 rounded h-full py-1  text-lg focus:outline-none"
+                    >
+                        <span className=''>👁</span>
+                    </button>
                 </div>
-                <div className="flex flex-row gap-40">
-                    <div className="w-[40%] flex flex-col ">
+                <div className="flex flex-row gap-40 ">
+                    <div className="w-[80%] flex flex-col">
                         <div className="justify-end items-center mt-4 mb-5">
-                            <table ref={tableRef} className="w-full border-collapse table-fixed">
-                                <thead className="bg-gray-200 text-gray-800">
+                            <div className="max-h-[140px] overflow-y-auto ">
+                                <table className="w-full border-collapse table-fixed">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+                                        <tr>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty</th>
 
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Style Name </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">Required Qty (Kgs)</td>
+                                            <th className="w-32 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Kgs)</th>
 
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-                                    {(orderItems ? orderItems : []).map((item, index) => {
-                                        return (
-                                            <React.Fragment key={index}>
-
-                                                <tr
-                                                    className={`${item?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
-                                                    onClick={() => {
-                                                        setRequirementId(item?.requirementPlanningFormId)
-                                                        setSubGridForm(true)
-                                                    }}
-                                                >
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{item?.OrderDetails?.style?.name}
-                                                    </td>
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-right text-xs"
-                                                        onContextMenu={(e) => {
-                                                            if (!readOnly) {
-                                                                handleRightClick(e, index, "notes");
-                                                            }
-                                                        }}
-                                                    >
-                                                        {Number(item?.totalYarnQty || 0).toFixed(3)}
-                                                    </td>
+                                        </tr>
+                                    </thead>
 
 
-                                                </tr>
+                                    <tbody>
+                                        {(orderItems ?? []).map((yarnItem, index) => (
+                                            <tr
+                                                key={index}
+                                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                    }`}
+                                                onClick={() => setRequirementId(yarnItem?.requirementPlanningFormId)}
+                                            >
+                                                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                                                    {index + 1}
+                                                </td>
+                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                    {yarnItem?.style}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {yarnItem?.Yarn?.name}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {yarnItem?.Color?.name}
+                                                </td>
+                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    {yarnItem?.qty?.toFixed(3)}
+                                                </td>
+                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    {yarnItem?.balaneQty?.toFixed(3)}
+                                                </td>
+                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    <input
+                                                        min="0"
+                                                        type="number"
+                                                        className="text-right rounded py-1 px-1 w-full "
+                                                        onFocus={(e) => e.target.select()}
+                                                        value={(yarnItem?.transferQty || "0.000")
+                                                        }
+                                                        onChange={(e) => handleInputChangeOrder(e.target.value, index, "transferQty")}
+                                                        onBlur={(e) => {
+                                                            handleInputChangeOrder((e.target.value), index, "transferQty")
+                                                        }
+                                                        }
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
 
+                                    </tbody>
+                                </table>
+                            </div>
 
-
-                                            </React.Fragment>
-                                        );
-
-
-                                    })}
-                                    <tr>
-                                        <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(
-                                            orderItems?.reduce((sum, item) => {
-                                                return sum + (item?.RaiseIndenetYarnItems?.reduce(
-                                                    (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.qty) || 0),
-                                                    0
-                                                ) || 0);
-                                            }, 0)
-                                        )?.toFixed(3) || "0.000"}
-                                        </td>
-                                    </tr>
-                                    {contextMenu && (
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                top: `${contextMenu.mouseY - 50}px`,
-                                                left: `${contextMenu.mouseX + 20}px`,
-
-                                                // background: "gray",
-                                                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                                padding: "8px",
-                                                borderRadius: "4px",
-                                                zIndex: 1000,
+                            {contextMenu && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: `${contextMenu.mouseY - 50}px`,
+                                        left: `${contextMenu.mouseX + 20}px`,
+                                        boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        zIndex: 1000,
+                                    }}
+                                    className="bg-gray-100"
+                                    onMouseLeave={handleCloseContextMenu}
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <button
+                                            className="text-black text-[12px] text-left rounded px-1"
+                                            onClick={() => {
+                                                deleteRow(contextMenu.rowId);
+                                                handleCloseContextMenu();
                                             }}
-                                            className="bg-gray-100"
-                                            onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
                                         >
-                                            <div className="flex flex-col gap-1">
-                                                <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        deleteRow(contextMenu.rowId);
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete{" "}
-                                                </button>
-                                               
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </tbody>
-
-                            </table>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-
-                        <label className="flex items-center justify-start mt-5 space-x-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                onChange={() => setIsMaterialRequset(!isMaterialRequset)}
-                                checked={isMaterialRequset}
-                            />
-                            <span className="text-sm text-gray-700">Raise Indent to Store</span>
-                        </label>
-
-
                     </div>
-
-
-
-                    <div className=" w-[50%]">
-                        <table className="w-full border-collapse table-fixed">
-
-                            <tbody>
-
-                                {(orderItems ? orderItems : [])?.filter(item => item.requirementPlanningFormId === requirementId)?.map((indent, index) => {
-                                    return (
-                                        <React.Fragment key={index}>
-
-
-
-                                            <YarnDetails indentItems={indent} index={index} />
-
-
-                                        </React.Fragment>
-                                    );
-
-
-                                })}
-
-
-                            </tbody>
-
-                        </table>
-                    </div>
-
-
                 </div>
-            </div>
-            <div>
 
+            </div>
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[200px] ">
+
+
+                <div className="flex flex-row gap-7">
+                    <div className="flex justify-between items-center ">
+                        <h2 className="font-medium text-slate-700">Transfer Stock Details</h2>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setTableStockDataView(true)
+                        }
+
+                        }
+                        // onMouseEnter={() => setTooltipVisible(true)}
+                        // onMouseLeave={() => setTooltipVisible(false)}
+                        className="text-blue-800 rounded h-full py-1  text-lg focus:outline-none"
+                    >
+                        <span className=''>👁</span>
+                    </button>
+                </div>
+
+
+                <div className="flex flex-row gap-40 ">
+                    <div className="w-[80%] flex flex-col">
+                        <div className="justify-end items-center mt-4 mb-5">
+                            <div className="h-[140px] overflow-y-auto ">
+                                <table className="w-full border-collapse ">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+                                        <tr>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
+                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Kgs)</th>
+
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {stockItems?.map((stock, index) => (
+                                            <tr
+                                                key={index}
+                                                className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                    }`}
+                                            >
+                                                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                                                    {index + 1}
+                                                </td>
+                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                    {findFromList(stock?.yarnId, yarnList, "name")}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {findFromList(stock?.colorId, colorList, "name")}
+
+                                                </td>
+                                                <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                    {parseInt(stock?._sum?.qty).toFixed(3)}
+
+                                                </td>
+                                                <td className="w-12 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    <input
+                                                        min="0"
+                                                        type="number"
+                                                        className="text-right rounded py-1 px-1 w-full "
+                                                        onFocus={(e) => e.target.select()}
+                                                        value={(stock?.transferQty || "0.000")
+                                                        }
+                                                        onChange={(e) => handleInputChange(e.target.value, index, "transferQty")}
+                                                        onBlur={(e) => {
+                                                            handleInputChange((e.target.value), index, "transferQty")
+                                                        }
+                                                        }
+                                                    />
+                                                </td>
+
+                                            </tr>
+                                        ))}
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {contextMenu && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        top: `${contextMenu.mouseY - 50}px`,
+                                        left: `${contextMenu.mouseX + 20}px`,
+                                        boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                        padding: "8px",
+                                        borderRadius: "4px",
+                                        zIndex: 1000,
+                                    }}
+                                    className="bg-gray-100"
+                                    onMouseLeave={handleCloseContextMenu}
+                                >
+                                    <div className="flex flex-col gap-1">
+                                        <button
+                                            className="text-black text-[12px] text-left rounded px-1"
+                                            onClick={() => {
+                                                deleteRow(contextMenu.rowId);
+                                                handleCloseContextMenu();
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </>
     )
 }
 
 export default FormItems;
+
 
 
 

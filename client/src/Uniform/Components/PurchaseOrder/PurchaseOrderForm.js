@@ -71,7 +71,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     data: singleOrderData,
     isFetching: isSingleOrderFetching,
     isLoading: isSingleOrderLoading,
-  } = useGetOrderItemsByIdNewQuery({id : orderId}, { skip: !orderId });
+  } = useGetOrderItemsByIdNewQuery({ id: orderId }, { skip: !orderId });
 
 
   const getNextDocId = useCallback(() => {
@@ -98,7 +98,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const { data: supplierList } =
     useGetPartyQuery({ params: { ...params } });
 
-  const allSuppliers = supplierList ? supplierList?.data?.filter(S => S.isSupplier) : []
 
 
 
@@ -121,7 +120,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     return parseInt(qty)
   }
 
- 
+
 
 
 
@@ -177,48 +176,48 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     // }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  useEffect(() => {
-
-     
-            setPoItems(
-                singleOrderData?.data?.RequirementPlanningForm?.map(item => {
-                    const allColors = item?.RequirementYarnDetails
-                        ?.map(yarn => yarn?.Color?.name)
-                        .filter(Boolean)
-                        .join(" - ");
-                    const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-                        const qty = item?.requirementSizeDetails?.reduce(
-                            (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-                            0
-                        );
-
-                        return {
-                            ...yarn,
-                            qty: Number(qty.toFixed(3)),
-                            orderDetailsId: item.orderDetailsId,
-
-                        };
-                    });
-                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-                        (sum, yarn) => sum + yarn.qty,
-                        0
-                    );
-                    return {
-                        OrderDetails: {
-                            style: {
-                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                            }
-                        },
-                        requirementPlanningFormId: item.id,
-                        RaiseIndenetYarnItems,
-                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                    };
-                })
-            );
-  }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+  // useEffect(() => {
 
 
-    console.log(poItems,"PoItemns")
+  //           setPoItems(
+  //               singleOrderData?.data?.RequirementPlanningForm?.map(item => {
+  //                   const allColors = item?.RequirementYarnDetails
+  //                       ?.map(yarn => yarn?.Color?.name)
+  //                       .filter(Boolean)
+  //                       .join(" - ");
+  //                   const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+  //                       const qty = item?.requirementSizeDetails?.reduce(
+  //                           (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
+  //                           0
+  //                       );
+
+  //                       return {
+  //                           ...yarn,
+  //                           qty: Number(qty.toFixed(3)),
+  //                           orderDetailsId: item.orderDetailsId,
+
+  //                       };
+  //                   });
+  //                   const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+  //                       (sum, yarn) => sum + yarn.qty,
+  //                       0
+  //                   );
+  //                   return {
+  //                       OrderDetails: {
+  //                           style: {
+  //                               name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+  //                           }
+  //                       },
+  //                       requirementPlanningFormId: item.id,
+  //                       RaiseIndenetYarnItems,
+  //                       totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+  //                   };
+  //               })
+  //           );
+  // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+
+
+  console.log(poItems, "PoItemns")
 
 
   let data = {
@@ -402,11 +401,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                 label="Supplier Id"
                 component="PartyMaster"
                 placeholder="Search Supplier Id..."
-                optionList={allSuppliers}
+                optionList={supplierList?.data}
                 onAddItem={handleAddSupplier}
                 // onDeleteItem={onDeleteItem}
                 setSearchTerm={setSupplierId}
                 searchTerm={supplierId}
+                show={"isClient"}
+
               />
 
               {/* </div> */}
@@ -422,24 +423,23 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
           </div>
         </div>
         <fieldset className=''>
-          {PurchaseType === "Order Purchase" ?
+          {/*   {PurchaseType === "Order Purchase" ?
 
-            <OrderPurchase  poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId}  requirementId={requirementId}
-              id={id} 
+            <OrderPurchase  poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId}  requirementId={requirementId} id={id} 
             />
-            :
-            <></>
-            // transType?.toLowerCase().includes("GreyYarn".toLowerCase())
-            //   ?
-            //   <YarnPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            //   :
-            //   (
-            //     transType?.toLowerCase().includes("DyedYarn".toLowerCase())
-            //       ?
-            //       <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            //       :
-            //       <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            //   )
+            : */}
+          {
+            transType?.toLowerCase().includes("GreyYarn".toLowerCase())
+              ?
+              <YarnPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+              :
+              (
+                transType?.toLowerCase().includes("DyedYarn".toLowerCase())
+                  ?
+                  <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+                  :
+                  <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+              )
           }
 
         </fieldset>

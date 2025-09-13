@@ -17,7 +17,7 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 
 const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
 
-    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, dueDate, setDuedate,
+    orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, yarnTotals, setYarnTotals,
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber
 }) => {
@@ -34,6 +34,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
     const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
+
+
 
 
     const { branchId, userId, companyId, finYearId } = getCommonParams()
@@ -60,11 +62,16 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
         }
 
-    }, [styleId]);
+    }, [orderId,id]);
 
 
 
+    useEffect(() => {
+        if (id && singleData?.data) {
+            syncFormWithDb(singleData?.data);
+        }
 
+    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
 
 
@@ -103,7 +110,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
             setCombo(updated);
 
         }
-    }, [isSingleFetching, isSingleOrderLoading, orderId, singleOrderData]);
+        
+    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
     console.log(partyId, 'partyId');
@@ -338,7 +346,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                     <fieldset className=''>
 
                         <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
-                            setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id}
+                            setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id}  yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                         />
 
                     </fieldset>

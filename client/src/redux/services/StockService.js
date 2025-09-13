@@ -46,15 +46,31 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
+    // getStockById: builder.query({
+    //   query: ({ params }) => {
+    //     return {
+    //       url: `${STOCK_API}/${params.productId || params.salePrice || params.fromOrderId}`,
+    //       method: "GET",
+    //       headers: {
+    //         "Content-type": "application/json; charset=UTF-8",
+    //       },
+    //       params
+    //     };
+    //   },
+    //   providesTags: ["Stock"],
+    // }),
     getStockById: builder.query({
       query: ({ params }) => {
+        const { productId, fromOrderId, salePrice, ...rest } = params;
+
+        const id = productId || salePrice || fromOrderId; 
         return {
-          url: `${STOCK_API}/${params.productId || params.salePrice}`,
+          url: `${STOCK_API}/${id}`, // path param
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
-          params
+          params: rest,
         };
       },
       providesTags: ["Stock"],

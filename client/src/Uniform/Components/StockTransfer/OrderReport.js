@@ -22,6 +22,8 @@ import { reactPaginateIndexToPageNumber } from "../../../Utils/helper";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { Loader } from "../../../Basic/components";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
+import moment from "moment";
 
 // import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
 // import { useGetQuotesQuery } from "../../../redux/services/QuotesService";
@@ -86,7 +88,7 @@ const OrderFormReport = ({
 
 
 
-    const { data: allData, isFetching, isLoading } = useGetOrderQuery({
+    const { data: allData, isFetching, isLoading } = useGetStockTransferQuery({
         params: {
             branchId,
             ...searchFields,
@@ -219,7 +221,7 @@ const OrderFormReport = ({
                                     </th>
 
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                                        <div>Order No</div>
+                                        <div>Doc No</div>
                                         {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -231,7 +233,7 @@ const OrderFormReport = ({
                                         /> */}
                                     </th>
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                                        <div>Order Date</div>
+                                        <div>Doc Date</div>
                                         {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -242,8 +244,20 @@ const OrderFormReport = ({
                                             }}
                                         /> */}
                                     </th>
-                                    <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                                        <div>Customer</div>
+                                    <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                        <div>From Order</div>
+                                        {/* <input
+                                            type="text"
+                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchClientName}
+                                            onChange={(e) => {
+                                                setSearchClientName(e.target.value);
+                                            }}
+                                        /> */}
+                                    </th>
+                                    <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                        <div>To Order</div>
                                         {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -287,7 +301,18 @@ const OrderFormReport = ({
                                             }}
                                         />
                                     </th>
-                                    <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-24  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={searchClientName}
+                                            onChange={(e) => {
+                                                setSearchClientName(e.target.value);
+                                            }}
+                                        />
+                                    </th>
+                                    <th className="w-24   px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -331,13 +356,14 @@ const OrderFormReport = ({
                                                 {index + 1}
                                             </td>
 
-                                            <td className="py-1.5 text-center">{dataObj.docId} </td>
-
-
                                             <td className="py-1.5 text-center">
-                                                {dataObj?.docDate || ""}
+                                                {dataObj?.docId || ""}
                                             </td>
-                                            <td className="py-1.5 text-center"> {dataObj?.Party?.name}</td>
+                                            <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
+
+                                            <td className="py-1.5 text-center"> {dataObj?.fromOrder?.docId  ||  "General"}</td>
+
+                                            <td className="py-1.5 text-center"> {dataObj?.toOrsder?.docId}</td>
                                             {rowActions && (
                                                 <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                     <div className="flex">

@@ -176,7 +176,7 @@ async function get(req) {
     //     data = data.filter(i => i.docDate.includes(serachDocNo))
     // }
     if (searchDate) {
-        data = data?.filter(item => String(getDateFromDateTime(item.createdAt)).includes(searchDate) )
+        data = data?.filter(item => String(getDateFromDateTime(item.createdAt)).includes(searchDate))
     }
 
     // if (pagination) {
@@ -246,7 +246,60 @@ async function getOne(id) {
                     }
                 }
             },
+            RequirementPlanningForm: {
 
+                select: {
+                    id: true,
+                    isMaterialIssue: true,
+                    isMaterialRequst: true,
+
+                    OrderDetails: {
+                        select: {
+                            style: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+
+                    requirementSizeDetails: true,
+                    RequirementYarnDetails: {
+                        select: {
+                            id: true,
+                            RequirementPlanningId: true,
+
+                            colorId: true,
+                            percentage: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            percentage: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            YarnType: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            }
+
+                        }
+                    }, id: true,
+                    docId: true,
+                    orderDetailsId: true,
+                    orderId: true
+                }
+            },
+            Stock : true
         }
 
     })
@@ -324,7 +377,9 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
                         }
                     }
                 }
-            }
+            },
+
+
         }
 
     })
@@ -341,38 +396,120 @@ export async function getStockvalidationById(id) {
 
 
     const childRecord = 0;
-    let data = await prisma.MaterialIssue.findUnique({
+    let data = await prisma.order.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            RaiseIndentItems: {
+            Party: {
                 select: {
-                    Yarn: {
+                    name: true
+                }
+            },
+            orderDetails: {
+                select: {
+                    fiberContentId: true,
+                    id: true,
+                    orderId: true,
+                    socksMaterialId: true,
+                    styleId: true,
+                    socksTypeId: true,
+                    filePath: true,
+                    sizeId: true,
+                    baseColorId: true,
+                    Color: {
                         select: {
                             name: true
                         }
                     },
-                    yarnId: true,
-                    colorId: true,
+                    orderSizeDetails: true,
+                    orderYarnDetails: {
+                        select: {
+                            id: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            orderdetailsId: true,
+                            colorId: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
+            RequirementPlanningForm: {
+
+                select: {
                     id: true,
-                    percentage: true,
-                    qty: true,
-                    raiseIndentId: true,
-                    sizeId: true,
-                    weight: true,
-                },
+                    isMaterialIssue: true,
+                    isMaterialRequst: true,
 
+                    OrderDetails: {
+                        select: {
+                            style: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
 
-            }
+                    requirementSizeDetails: true,
+                    RequirementYarnDetails: {
+                        select: {
+                            id: true,
+                            RequirementPlanningId: true,
+
+                            colorId: true,
+                            percentage: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            percentage: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            YarnType: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            }
+
+                        }
+                    }, id: true,
+                    docId: true,
+                    orderDetailsId: true,
+                    orderId: true
+                }
+            },
+            Stock : true
         }
-
-
-
 
     })
 
-    const enrichedItems = await getStockValidationData(data);
 
     if (!data) return NoRecordFound("raiseIndent");
 
@@ -390,7 +527,7 @@ export async function getStockvalidationById(id) {
 }
 
 
-export async function getOrderItemsByIdNew(id,stockValidation) {
+export async function getOrderItemsByIdNew(id, stockValidation) {
 
     const childRecord = 0;
     let data = await prisma.order.findUnique({
@@ -464,9 +601,19 @@ export async function getOrderItemsByIdNew(id,stockValidation) {
         ) || [],
     };
 
-    if(stockValidation){
-        
+    if (stockValidation) {
+        let stockData = await prisma.stock.findMany({
+            where: {
+                orderId: parseInt(id)
+            },
+        })
+
+        // let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
+
+        console.log(stockData, "stockData")
     }
+
+
 
 
     return {
@@ -621,7 +768,7 @@ const update = async (id, body) => {
                                 filePath: item?.filePath ? item?.filePath : undefined,
                                 baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
                                 orderSizeDetails: {
-                                    deleteMany: {}, 
+                                    deleteMany: {},
                                     createMany: {
                                         data: item?.orderSizeDetails?.map((sub) => ({
                                             sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
@@ -634,7 +781,7 @@ const update = async (id, body) => {
                                 },
 
                                 orderYarnDetails: {
-                                    deleteMany: {}, 
+                                    deleteMany: {},
                                     createMany: {
                                         data: item?.orderYarnDetails?.map((yarn) => ({
                                             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,

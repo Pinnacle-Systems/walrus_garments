@@ -21,24 +21,45 @@ const YarnPoItems = ({
 }) => {
 
 
+    useEffect(() => {
+        if (poItems?.length >= 2) return
+        setPoItems(prev => {
+            let newArray = Array?.from({ length: 2 - prev?.length }, () => {
+                return {
+                    yarnId: "",
+                    qty: "0",
+                    tax: "0",
+                    colorId: "",
+                    uomId: "",
+                    price: "0",
+                    discountValue: "0.00",
+                    noOfBags: 0,
+                    weightPerBag: 0,
+
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setPoItems, poItems])
     console.log(poItems, "poItems");
 
 
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(poItems);
         newBlend[index][field] = value;
-        if (field === "yarnId") {
-            newBlend[index]["taxPercent"] = findYarnTax(value);
-        }
-        // if (field !== "qty") {
-        //   newBlend[index]["qty"] = (
-        //     parseFloat(newBlend[index]["noOfBags"]) *
-        //     parseFloat(newBlend[index]["weightPerBag"])
-        //   ).toFixed(3);
+        // if (field === "yarnId") {
+        //     newBlend[index]["taxPercent"] = findYarnTax(value);
         // }
+        // // if (field !== "qty") {
+        // //   newBlend[index]["qty"] = (
+        // //     parseFloat(newBlend[index]["noOfBags"]) *
+        // //     parseFloat(newBlend[index]["weightPerBag"])
+        // //   ).toFixed(3);
+        // // }
         setPoItems(newBlend);
     };
-    console.log(poItems, "poItems");
 
 
 
@@ -57,23 +78,6 @@ const YarnPoItems = ({
         setPoItems([...poItems, newRow]);
     };
 
-    useEffect(() => {
-        if (id) return
-        if (poItems?.length >= 1) return;
-        setPoItems((prev) => {
-            let newArray = Array?.from({ length: 1 - prev.length }, (i) => {
-                return {
-                    yarnId: "",
-                    qty: "0.00",
-                    noOfBags: 0,
-                    weightPerBag: 0,
-
-
-                };
-            });
-            return [...prev, ...newArray];
-        });
-    }, [transType, setPoItems, poItems]);
 
     const deleteRow = (id) => {
         setPoItems((yarnBlend) =>
@@ -93,77 +97,14 @@ const YarnPoItems = ({
     } = useGetColorMasterQuery({
         params: { ...params, isGrey: greyFilter ? true : undefined },
     });
-    function findYarnTax(id) {
-        if (!yarnList) return 0;
-        let yarnItem = yarnList.data.find(
-            (item) => parseInt(item.id) === parseInt(id)
-        );
-        return yarnItem ? yarnItem.taxPercent : 0;
-    }
+   
 
-    function getTotals(field) {
-        const total = poItems.reduce((accumulator, current) => {
-            return accumulator + parseFloat(current[field] ? current[field] : 0);
-        }, 0);
-        return parseFloat(total);
-    }
+  
 
-    const TotalAmount = (price, tax, qty) => {
-        const p = parseFloat(price) || 0;
-        const t = parseFloat(tax) || 0;
-        const q = parseFloat(qty) || 0;
+  
 
-        const priceWithTax = p + (p * t) / 100;
-        return priceWithTax * q;
-    };
-
-    const getDiscountAmount = (row) => {
-        if (!row) return 0;
-        const price = parseFloat(row.price) || 0;
-        const tax = parseFloat(row.tax) || 0;
-        const qty = parseFloat(row.qty) || 0;
-        const discountValue = parseFloat(row.discountValue) || 0;
-        const discountType = (row.discountType || "").toLowerCase();
-        const total = TotalAmount(price, tax, qty);
-
-        if (discountType === "flat") {
-            return total - discountValue;
-        } else if (discountType === "percentage") {
-            const discount = (total * discountValue) / 100;
-            return total - discount;
-        } else {
-            return total;
-        }
-    };
-
-    const getFinalAmountAfterDiscount = () => {
-        return poItems.reduce((acc, row) => {
-            const price = parseFloat(row.price) || 0;
-            const tax = parseFloat(row.tax) || 0;
-            const qty = parseFloat(row.qty) || 0;
-            const discountValue = parseFloat(row.discountValue) || 0;
-            const discountType = (row.discountType || "").toLowerCase();
-
-            const total = TotalAmount(price, tax, qty);
-
-            let finalAmount = total;
-
-            if (discountType === "flat") {
-                finalAmount = total - discountValue;
-            } else if (discountType === "percentage") {
-                const discount = (total * discountValue) / 100;
-                finalAmount = total - discount;
-            }
-
-            return acc + finalAmount;
-        }, 0);
-    };
-    const dispatch = useDispatch();
-    const handleCreateNew = (masterName = "") => {
-        dispatch(setOpenPartyModal(true));
-        dispatch(setLastTab(activeTab));
-        dispatch(push({ name: masterName }));
-    }
+  
+    
 
 
 

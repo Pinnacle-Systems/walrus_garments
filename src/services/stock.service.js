@@ -204,28 +204,107 @@ function manualFilterSearchData(searchYarnAliasName, searchColor, data) {
 }
 
 async function get(req) {
-    const { branchId, storeId, itemType, filterColors, isGetStockReport = false,
+    const { branchId, storeId, itemType, filterColors, isGetStockReport = false, status, orderId,
         pagination = false, dataPerPage = 5, pageNumber = 1,
         searchColor, searchUom, searchLotNo, searchPrevProcess, searchYarnAliasName, processInwardId, stockId, rawMaterialSalesId,
         yarnId, fabricId, designId, gaugeId, loopLengthId, gsmId, kDiaId, fDiaId, accessoryId, sizeId, colorId, uomId, lotNo, processId, stockReport, fromDate, toDate, finishedGoodsStockReport
     } = req.query
     let data;
-    if (stockReport) {
-        return { statusCode: 0, data: await getStockReport(itemType, storeId, toDate, branchId) };
-    }
-    if (finishedGoodsStockReport) {
-        return { statusCode: 0, data: await getFinishedGoodsStockReport(storeId, toDate, branchId) };
-    };
+    // if (stockReport) {
+    //     return { statusCode: 0, data: await getStockReport(itemType, storeId, toDate, branchId) };
+    // }
+    // if (finishedGoodsStockReport) {
+    //     return { statusCode: 0, data: await getFinishedGoodsStockReport(storeId, toDate, branchId) };
+    // };
 
 
-    if (isGetStockReport) {
-        data = await getStockReportForCuttingDelivery(storeId, itemType, branchId, pageNumber, dataPerPage)
-    }
-    else {
+    // if (isGetStockReport) {
+    //     data = await getStockReportForCuttingDelivery(storeId, itemType, branchId, pageNumber, dataPerPage)
+    // }
+    if (status == "Order") {
         data = await xprisma.stock.groupBy({
             where: {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 storeId: storeId ? parseInt(storeId) : undefined,
+                itemType,
+                yarnId: yarnId ? parseInt(yarnId) : undefined,
+                accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
+                sizeId: sizeId ? parseInt(sizeId) : undefined,
+                colorId: colorId ? parseInt(colorId) : undefined,
+                uomId: uomId ? parseInt(uomId) : undefined,
+                Color: searchColor ? {
+                    name: {
+                        contains: searchColor
+                    }
+                } : undefined,
+                Uom: searchUom ? {
+                    name: {
+                        contains: searchUom
+                    }
+                } : undefined,
+                lotNo: searchLotNo ? {
+                    contains: searchLotNo
+                } : undefined,
+                Process: searchPrevProcess ? {
+                    name: {
+                        contains: searchPrevProcess
+                    }
+                } : undefined,
+                Yarn: searchYarnAliasName ? {
+                    aliasName: {
+                        contains: searchYarnAliasName
+                    }
+                } : undefined,
+                colorId: (filterColors && filterColors.length > 0) ? {
+                    in: filterColors.split(",").map(id => parseInt(id))
+                } : undefined,
+                id: stockId ? { lt: parseInt(stockId) } : undefined,
+                orderId: orderId ? parseInt(orderId) : undefined,
+
+                OR: processInwardId ? [
+                    {
+                        ProgramInwardLotDetails: {
+                            processInwardProgramDetailsId: {
+                                processInwardId: { lt: parseInt(processInwardId) }
+                            }
+                        }
+                    },
+                    { programInwardLotDetailsId: null }
+                ] : undefined,
+                OR: rawMaterialSalesId ? [
+                    {
+                        RawMaterialsSalesDetails: {
+                            rawMaterialsSalesId: {
+                                lt: parseInt(rawMaterialSalesId)
+                            }
+                        },
+                    },
+                    { rawMaterialsSalesDetailsId: null }
+                ] : undefined
+            },
+            by: ["storeId", "itemType", "processId",
+                "yarnId",
+                "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
+                "accessoryId", "sizeId",
+                "colorId",
+                "uomId",
+                "lotNo", "branchId", 'inOrOut'
+            ],
+            _sum: {
+                qty: true,
+                gross: true,
+                noOfRolls: true,
+                noOfBags: true,
+            },
+        })
+        data = data.filter(item => (item._sum.qty > 0));
+    }
+    else {
+    console.log(storeId,"storeIddddddddd")
+
+        data = await xprisma.stock.groupBy({
+            where: {
+                branchId: branchId ? parseInt(branchId) : undefined,
                 itemType,
                 yarnId: yarnId ? parseInt(yarnId) : undefined,
                 fabricId: fabricId ? parseInt(fabricId) : undefined,
@@ -268,6 +347,8 @@ async function get(req) {
                     in: filterColors.split(",").map(id => parseInt(id))
                 } : undefined,
                 id: stockId ? { lt: parseInt(stockId) } : undefined,
+                orderId: null,
+
                 OR: processInwardId ? [
                     {
                         ProgramInwardLotDetails: {
@@ -289,23 +370,32 @@ async function get(req) {
                     { rawMaterialsSalesDetailsId: null }
                 ] : undefined
             },
-            by: ["storeId", "itemType", "processId",
-                "yarnId",
-                "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-                "accessoryId", "sizeId",
-                "colorId",
-                "uomId",
-                "lotNo", "branchId", 'inOrOut'
-            ],
-            _sum: {
-                qty: true,
-                gross: true,
-                noOfRolls: true,
-                noOfBags: true,
-            },
-        })
+            // by: ["storeId", "itemType", "processId",
+            //     "yarnId",
+            //     "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
+            //     "accessoryId", "sizeId",
+            //     "colorId",
+            //     "uomId",
+            //     "lotNo", "branchId", 'inOrOut'
+            // ],
+            
+                 by: [
+                    "yarnId",
+                   
+                    "accessoryId", "sizeId",
+                    "colorId",
+                    
+                ],
+                _sum: {
+                    qty: true,
+                    gross: true,
+                    noOfRolls: true,
+                    noOfBags: true,
+                },
+            })
         data = data.filter(item => (item._sum.qty > 0));
     }
+        console.log(data,"dataaaaa")
 
     // data = data.filter(item => !(item._sum.qty === 0));
     let newItemArray = []
@@ -319,13 +409,14 @@ async function get(req) {
         return Promise.all(newItemArray)
     })()
 
+        console.log(newItemArray,"newItemArray  ")
 
 
     data = newItemArray
 
     data = manualFilterSearchData(searchYarnAliasName, searchColor, data)
 
-    let totalCount = data.length
+    let totalCount = data?.length
     if (pagination) {
 
 
@@ -335,7 +426,8 @@ async function get(req) {
 }
 
 
-async function getOne() {
+async function getOne(id, req) {
+
     const {
         branchId,
         storeId,
@@ -352,8 +444,14 @@ async function getOne() {
         colorId,
         uomId,
         lotNo,
-        itemType
+        itemType,
+        orderId
     } = req.query
+
+
+    console.log(storeId,"storeId")
+
+
     let data = await xprisma.stock.groupBy({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
@@ -372,7 +470,7 @@ async function getOne() {
             colorId: colorId ? parseInt(colorId) : undefined,
             uomId: uomId ? parseInt(uomId) : undefined,
             lotNo,
-            processId: processId ? parseInt(processId) : undefined
+            orderId: id ? parseInt(id) : undefined
         },
         by: ["storeId", "itemType", "processId",
             "yarnId",

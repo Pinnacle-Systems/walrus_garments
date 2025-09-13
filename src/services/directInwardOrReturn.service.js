@@ -912,13 +912,14 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
             uomId: item?.uomId ? parseInt(item.uomId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
             qty: item?.qty ? parseFloat(item?.qty) : undefined,
-            price: item.price ? parseFloat(item.price) : undefined,
+            price: item.price ? parseInt(item.price) : undefined,
         }
     })
 
 }
 
 async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+    console.log(item,"item")
     await tx.stock.create({
         data: {
             itemType: poType,
@@ -931,7 +932,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             storeId: storeId ? parseInt(storeId) : undefined,
             qty: (item.qty) ? parseFloat(item.qty) : undefined,
             price: item.price ? parseFloat(item.price) : undefined,
-
+            orderId : item.orderId ?  item.orderId  : undefined,
         }
     })
     console.log("Eror")
@@ -942,7 +943,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
     let promises
     if (poType == "GreyYarn" || poType == "DyedYarn") {
 
-        promises = directItems.map(async (item, index) => {
+        promises = directItems?.map(async (item, index) => {
             const data = await tx.directItems.create({
                 data: {
                     directInwardOrReturnId: parseInt(directInwardOrReturnId),
@@ -1052,7 +1053,6 @@ async function create(body) {
                 createdById: parseInt(userId),
                 vehicleNo, specialInstructions, remarks,
                 docId,
-                orderId: parseInt(orderId),
 
             },
         })

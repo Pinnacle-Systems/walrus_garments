@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { multerUploadForGrid } from '../utils/multerUpload.js';
 const router = Router();
-import { get, getOne, create, update, remove, getOrderItemsById, getOrderItemsByIdNew  , getOrderItems} from '../controllers/order.controller.js';
+import { get, getOne, create, update, remove, getOrderItemsById, getOrderItemsByIdNew  , getOrderItems  } from '../controllers/order.controller.js';
 
 import multer from 'multer';
 
@@ -21,6 +21,7 @@ router.get('/getOrderItems/:id/:prevProcessId/:packingCategory/:packingType', ge
 
 router.get('/getOrderItemsNew/:id/:stockValidation', getOrderItemsByIdNew);
 
+// router.get('/stockValidation/:id', getStockvalidationById);
 
 // router.put('/:id', update);
 router.put('/:id', multerUploadForGrid.array('images'), update);

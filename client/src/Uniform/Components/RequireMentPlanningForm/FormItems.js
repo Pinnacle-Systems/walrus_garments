@@ -2,12 +2,12 @@ import React, { useEffect } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import Swal from "sweetalert2";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly }) => {
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, yarnTotals, setYarnTotals }) => {
 
     console.log(orderSizeDetails, "orderSizeDetails", id);
-    console.log(orderYarnDetails, "orderYarnDetails");
+    console.log(yarnTotals, "yarnTotals");
 
-    console.log(requirementForm, "requirementForm");
+    console.log(orderYarnDetails, "orderYarnDetails");
 
 
 
@@ -52,8 +52,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         setOrderYarnDetails((prev) => {
             let newItems = structuredClone(prev);
 
-            const totalWithoutCurrent = newItems.reduce((sum, item, i) => {
-                if (i === index) return sum; // skip current
+            const totalWithoutCurrent = newItems?.reduce((sum, item, i) => {
+                if (i === index) return sum;
                 return sum + (parseFloat(item.percentage) || 0);
             }, 0);
 
@@ -89,6 +89,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             });
             return newItems;
         });
+
     }
 
 
@@ -148,6 +149,60 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
         }, 0);
     };
+
+    
+    // useEffect(() => {
+    //     if (!orderYarnDetails || !requirementForm || !orderSizeDetails) return;
+
+
+    //     console.log(orderYarnDetails,"orderYarnDetails")
+
+    //     // const totals = orderYarnDetails?.map((yarn) => {
+    //     //     const total =
+    //     //         requirementForm?.reduce((sum, item) => {
+    //     //             if (item.yarnId !== yarn.yarnId) return sum;
+
+    //     //             const sizeQty =
+    //     //                 orderSizeDetails?.find((s) => s.sizeId === item.sizeId)?.qty || 0;
+
+    //     //             return (
+    //     //                 sum +
+    //     //                 (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100
+    //     //             );
+    //     //         }, 0) || 0;
+
+    //     //     return {
+    //     //         yarnName: yarn?.Yarn?.name,
+    //     //         qty: parseFloat(total.toFixed(3)),
+    //     //     };
+    //     // });
+
+    //     // setYarnTotals(totals);
+    //     setOrderYarnDetails((prev) => {
+    //         if (!prev || !requirementForm || !orderSizeDetails) return prev;
+
+    //         return prev.map((yarn) => {
+    //             const total =
+    //                 requirementForm?.reduce((sum, item) => {
+    //                     if (item.yarnId !== yarn.yarnId) return sum;
+
+    //                     const sizeQty =
+    //                         orderSizeDetails?.find((s) => s.sizeId === item.sizeId)?.qty || 0;
+
+    //                     return (
+    //                         sum +
+    //                         (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100
+    //                     );
+    //                 }, 0) || 0;
+
+    //             return {
+    //                 ...yarn,
+    //                 requiredQty: parseFloat(total.toFixed(3)), // ✅ push directly inside orderYarnDetails
+    //             };
+    //         });
+    //     });
+    // }, []);
+
 
 
     return (
@@ -315,8 +370,23 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     </tr>
                                 ))}
 
-                            </tbody>
 
+                            </tbody>
+                            {/* <tbody>
+                                {yarnTotals?.map((y, index) => (
+                                    <tr key={index}>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs w-9">
+                                            {index + 1}
+                                        </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">
+                                            {y.yarnName}
+                                        </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">
+                                            {y.qty.toFixed(3)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody> */}
                         </table>
                     </div>
                 </div>

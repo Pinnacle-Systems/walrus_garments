@@ -1,86 +1,75 @@
-import { FaFileAlt } from "react-icons/fa";
+import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { HiPlus, HiX } from "react-icons/hi";
+import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
 import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery } from "../../../redux/uniformService/OrderService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import FormItems from "./FormItems";
+import { useAddStockMutation, useDeleteStockMutation, useGetStockByIdQuery, useGetStockQuery, useUpdateStockMutation } from "../../../redux/services/StockService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
+import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
+import Swal from "sweetalert2";
+import { useAddStockTransferMutation, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
+import { Loader } from "../../../Basic/components";
 
 const StockTransferForm = ({
     docId,
-    fromOrderNo, onClose, setTransfetType, transferType, partyId, setPartyId, params, requirementId, setRequirementId,
-    orderData, orderId, setOrderId, orderItems, setOrderItems,
-    date,
-    setFromOrderNo,
-
+    fromOrderNo, onClose,  setTransferType, transferType, partyId, setPartyId, params, requirementId, setRequirementId,
+    orderData, orderId, setOrderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems,setTempOrderItems,tempOrderItems,tempStockItems,setTempStockItems,
+    date, OnNew, id,
+    setFromOrderNo, yarnTotals, setYarnTotals, toOrderId, setToOrderId
 
 }) => {
 
     const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
-
-    let stockValidation = true
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation }, { skip: !orderId });
-
-
-    // useEffect(() => {
-    //     if (!singleOrderData?.data?.orderDetails?.length) return;
-
-    //     const orderQty = singleOrderData.data.orderDetails.reduce((acc, item) => {
-    //         const totalQty = (item?.orderSizeDetails || []).reduce(
-    //             (sum, s) => sum + (s.qty || 0),
-    //             0
-    //         );
-    //         return acc + totalQty;
-    //     }, 0);
-
-    //     const updatedOrder = {
-    //         ...singleOrderData.data,
-    //         orderQty,
-    //     };
-
-    //     setOrderItems(updatedOrder);
-    //     setPartyId(singleOrderData?.data?.partyId ? singleOrderData?.data?.partyId : "")
-
-    // }, [orderId, singleOrderData?.data, isSingleOrderLoading, isSingleOrderFetching]);
+    const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
+    const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
 
 
-    useEffect(() => {
-        if (!singleOrderData?.data?.orderDetails?.length) return;
 
-        const orderQty = singleOrderData?.data?.orderDetails.reduce((acc, item) => {
-            const totalQty = (item?.orderSizeDetails || []).reduce(
-                (sum, s) => sum + (s.qty || 0),
-                0
-            );
-            return acc + totalQty;
-        }, 0);
+    // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation }, { skip: !orderId });
 
 
-        const allYarns = singleOrderData?.data?.orderDetails?.flatMap(d => d.orderYarnDetails || []);
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(toOrderId, { skip: !toOrderId });
 
 
-        const yarnTotals = allYarns?.reduce((acc, yarn) => {
-            if (!acc[yarn?.yarnId]) {
-                acc[yarn?.yarnId] = { ...yarn, totalQty: 0 };
-            }
-            acc[yarn.yarnId].totalQty += yarn.qty || 0;
-            return acc;
-        }, {});
 
 
-        const combinedYarns = Object.values(yarnTotals);
 
-        const updatedOrder = {
-            ...singleOrderData.data,
-            orderQty,
-            yarnSummary: combinedYarns,
-        };
+    const {
+        data: stockData,
+        isFetching: stockFetching,
+        isLoading: stockLoading,
+    } = useGetStockByIdQuery(
+        {
+            params: {
+                transferType,
+                fromOrderId,
+                storeId : 1
+            },
+        },
+        {
+            skip: !transferType && !fromOrderId, // skip only when nothing is selected
+        }
+    );
+    const [addData] = useAddStockTransferMutation();
+    const [updateData] = useUpdateStockTransferMutation();
+    //   const [removeData] = useDeleteStockMutation();
 
-        setOrderItems(updatedOrder);
-    }, [orderId, singleOrderData?.data]);
+
+    const data = {
+        orderItems : orderItems?.filter(item =>  parseInt(item.transferQty)  >  0),
+         stockItems, fromOrderId, toOrderId, docId
+
+    }
+
+
+
+
 
 
     const syncFormWithDb = useCallback((data) => {
@@ -92,42 +81,68 @@ const StockTransferForm = ({
 
 
 
-        setOrderItems(
-            data?.RequirementPlanningForm?.map(item => {
+
+        // setOrderItems(
+        //         data?.RequirementPlanningForm(item => {
+
+        //         const allColors = item?.RequirementYarnDetails?.map(yarn => yarn?.Color?.name)?.filter(Boolean)?.join(" - ");
+
+        //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+
+        //             const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
+        //                 console.log(
+        //                     `Calculation => sum(${sum}) + size.weight(${size?.weight}) * yarn.percentage(${yarn?.percentage}) / 100`
+        //                 );
+
+        //                 return sum + (size?.weight * (yarn?.percentage / 100));
+        //             }, 0);
+
+        //             console.log(`✅ Yarn ${yarn?.Yarn.name || yarn?.id} final qty:`, qty);
+
+        //             return {
+        //                 ...yarn,
+        //                 qty: Number(qty.toFixed(3)),
+        //                 style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+        //                 orderDetailsId: item.orderDetailsId,
+        //             };
+        //         });
+
+        //         console.log(RaiseIndenetYarnItems, "RaiseIndenetYarnItems")
+
+        //         return {
+
+        //             RaiseIndenetYarnItems,
+        //         };
+        //     })
+        // );
+
+        setTempOrderItems(data?.RequirementPlanningForm?.flatMap(item => {
                 const allColors = item?.RequirementYarnDetails
                     ?.map(yarn => yarn?.Color?.name)
-                    .filter(Boolean)
-                    .join(" - ");
-                const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-                    const qty = item?.requirementSizeDetails?.reduce(
-                        (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-                        0
-                    );
+                    ?.filter(Boolean)
+                    ?.join(" - ");
+
+                return item?.RequirementYarnDetails?.map(yarn => {
+                    const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
+                        console.log(
+                            `Calculation => sum(${sum}) + size.weight(${size?.weight}) * yarn.percentage(${yarn?.percentage}) / 100`
+                        );
+
+                        return sum + (size?.weight * (yarn?.percentage / 100));
+                    }, 0);
+
+                    console.log(`✅ Yarn ${yarn?.Yarn?.name || yarn?.id} final qty:`, qty);
 
                     return {
                         ...yarn,
                         qty: Number(qty.toFixed(3)),
+                        style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
                         orderDetailsId: item.orderDetailsId,
-
+                        orderId : item.orderId
                     };
                 });
-                const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-                    (sum, yarn) => sum + yarn.qty,
-                    0
-                );
-                return {
-                    OrderDetails: {
-                        style: {
-                            name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                        }
-                    },
-                    requirementPlanningFormId: item.id,
-                    RaiseIndenetYarnItems,
-                    totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                };
-            })
+            }) ?? []
         );
-
 
 
 
@@ -142,7 +157,94 @@ const StockTransferForm = ({
         }
 
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
-    console.log(orderItems, "orderItems");
+
+
+
+
+    useEffect(() => {
+
+        if (stockData?.data) {
+            // syncFormWithDb(stockData?.data)
+            setTempStockItems(stockData?.data)
+        }
+
+    }, [stockFetching, stockLoading, fromOrderId, transferType, syncFormWithDb, stockData]);
+
+    const handleSubmitCustom = async (callback, data, text) => {
+        console.log(callback, "callback")
+        try {
+            let returnData;
+            if (text === "Updated") {
+                returnData = await callback(data).unwrap();
+            } else {
+                returnData = await callback(data).unwrap();
+            }
+            if (returnData.statusCode === 1) {
+                // toast.error(returnData.message);
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: `${text || 'Saved'} Successfully`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                // setId("")
+                syncFormWithDb(undefined)
+            }
+        } catch (error) {
+            console.log("handle");
+        }
+    };
+
+    const validateData = (data) => {
+        if (data.dueDate) {
+            return true;
+        }
+
+
+        return false;
+    };
+
+
+    const saveData = (nextProcess) => {
+        // if (!validateData(data)) {
+        //   toast.info("Please fill all required fields...!", { position: "top-center" })
+        //   return
+        // }
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return
+        }
+        if (nextProcess == "draft" && !id) {
+            console.log(nextProcess, "nextProcess")
+
+            handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
+        }
+
+
+        else if (id && nextProcess == "draft") {
+
+            handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+        }
+        else if (id) {
+
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+        } else {
+            handleSubmitCustom(addData, data, "Added", nextProcess);
+        }
+    }
+
+        const transferTytpe = useRef(null);
+        const inputPartyRef = useRef(null);
+        const styleRef = useRef(null);
+    
+        useEffect(() => {
+            if (transferTytpe.current) {
+                transferTytpe.current.focus(); 
+            }
+        }, []);
+
+
+    if (isSingleOrderLoading || isSingleOrderFetching  ||  stockFetching  || stockLoading  ) return <Loader />
 
 
     return (
@@ -159,7 +261,10 @@ const StockTransferForm = ({
                                         <HiOutlineDocumentText className="w-7 h-6" />
                                     </button> */}
                         <button
-                            onClick={onClose}
+                            onClick={() => {
+                                OnNew()
+                                onClose()
+                            }}
                             className="text-indigo-600 hover:text-indigo-700"
                             title="Open Report"
                         >
@@ -180,44 +285,58 @@ const StockTransferForm = ({
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc Id" readOnly value={docId} />
                                 <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <DropdownInput name="Stock Transfer Type"
-                                    options={stockTransferType}
-                                    value={transferType}
-                                    setValue={setTransfetType}
-                                    required={true}
-                                // readOnly={readOnly}
-                                />
 
                             </div>
                         </div>
-
-
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
+                        <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                            <h2 className="font-medium text-slate-700 mb-2">Order Details</h2>
 
                             <div className="grid grid-cols-1">
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                                <div className="grid grid-cols-4 gap-x-3 gap-y-3">{console.log(fromOrderId, "fromOrderId")}
+                                    <DropdownInput name="Stock Transfer Type"
+                                        options={stockTransferType}
+                                        value={transferType}
+                                        setValue={(value) => { setTransferType(value); OnNew() }}
+                                        required={true}
+                                        ref={transferTytpe}
 
+                                    />
+                                    {transferType === "Order" && (
+                                        <>
+                                            <DropdownWithSearch
+                                                options={orderData?.data}
+
+                                                value={fromOrderId}
+                                                setValue={setFromOrderId}
+                                                // readOnly={id ? true : false}
+                                                labelField={"docId"}
+                                                label={"From Order No"}
+                                            />
+
+                                            <TextInput name="From Customer" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
+
+
+                                        </>
+                                    )}
 
 
                                     <DropdownWithSearch
-                                        options={orderData?.data}
-                                        value={orderId}
-                                        setValue={setOrderId}
+                                        options={orderData?.data?.filter(item => item.id !== parseInt(fromOrderId))}
+
+                                        value={toOrderId}
+                                        setValue={setToOrderId}
                                         // readOnly={id ? true : false}
                                         labelField={"docId"}
-                                        label={"Order No"}
+                                        label={transferType === "Order" ? "To Order No" : "Order No"}
                                     />
+
                                     <TextInput
-                                        name="Customer"
+                                        name={transferType === "Order" ? "To Customer" : "Customer"}
                                         placeholder="Contact name"
                                         value={findFromList(partyId, supplierList?.data, "name")}
                                         // setValue={setContactPersonName}
                                         disabled={true}
-                                    />                                    <TextInput name="To Order No" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
-                                    <TextInput name="To Customer" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
-
+                                    />
 
 
 
@@ -227,18 +346,65 @@ const StockTransferForm = ({
                             </div>
                         </div>
 
-
-
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                            </h2>
-
-                        </div>
                     </div>
                     <div>
-                        <FormItems orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} />
 
+
+                        <FormItems orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
+                            colorList={colorList?.data} yarnList={yarnList?.data} tempOrderItems={tempOrderItems}  setTempOrderItems={setTempOrderItems}
+                            stockItems={stockItems} setStockItems={setStockItems}   tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
+
+                        />
+
+
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+                        {/* Left Buttons */}
+                        <div className="flex gap-2 flex-wrap">
+                            <button
+                                onClick={() => saveData("new")}
+                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                <FiSave className="w-4 h-4 mr-2" />
+                                Save & New
+                            </button>
+                            <button
+                                // onClick={() => saveData("close")}
+                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                Save & Close
+                            </button>
+                            <button
+                                // onClick={() => saveData("draft")} 
+                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                Draft Save
+                            </button>
+                        </div>
+
+                        {/* Right Buttons */}
+                        <div className="flex gap-2 flex-wrap">
+                            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                                                                       <FiShare2 className="w-4 h-4 mr-2" />
+                                                                       Email
+                                                                   </button> */}
+                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                            // onClick={() => setReadOnly(false)}
+                            >
+                                <FiEdit2 className="w-4 h-4 mr-2" />
+                                Edit
+                            </button>
+                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                                <FaWhatsapp className="w-4 h-4 mr-2" />
+                                WhatsApp
+                            </button>
+                            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                            // onClick={() => setPrintModalOpen(true)}
+                            >
+                                <FiPrinter className="w-4 h-4 mr-2" />
+                                Print
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -249,3 +415,10 @@ const StockTransferForm = ({
 }
 
 export default StockTransferForm;
+
+
+
+
+
+
+

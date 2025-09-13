@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 
 import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById , 
-    getOrderItemsByIdNew as _getOrderItemsByIdNew , getOrderItems as _getOrderItems
+    getOrderItemsByIdNew as _getOrderItemsByIdNew , getOrderItems as _getOrderItems ,
  } from '../services/order.service.js';
 
 async function get(req, res, next) {
@@ -51,6 +51,17 @@ export async function getOrderItemsByIdNew(req, res, next) {
     }
 }
 
+
+//  export async function getStockvalidationById(req, res, next) {
+//     try {
+//         res.json(await _getStockvalidationById(req.params.id,req?.params?.stockValidation));
+//         console.log(res.statusCode);
+//     } catch (err) {
+//         console.error(`Error`, err.message);
+//     }
+// }
+
+
 async function create(req, res, next) {
     try {
         res.json(await _create(req));
@@ -69,9 +80,8 @@ async function create(req, res, next) {
     }
 }
 
-async function update(req, res, next) {
+async function update(req, res) {
     try {
-        console.log(req.body, req.params)
         res.json(await _update(req.params.id, req.body));
         console.log(res.statusCode);
     } catch (error) {
@@ -112,4 +122,7 @@ export {
     create,
     update,
     remove
+
+    
+    
 };

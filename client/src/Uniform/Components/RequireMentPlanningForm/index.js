@@ -39,6 +39,7 @@ const RequirementPlanningForm = () => {
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
     const [jobNumber, setJobNumber] = useState("");
+    const [yarnTotals, setYarnTotals] = useState([]);
 
     const params = {
         branchId, userId, finYearId
@@ -153,7 +154,7 @@ const RequirementPlanningForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
 
-                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber}
+                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber}  yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                 />
 
             ) : (

@@ -433,7 +433,6 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
 
 
-
     const alreadyInwardedData = await prisma?.directItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
@@ -507,11 +506,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     }
 
 
-    console.log(
-        alreadyInwardedData, "alreadyInwardedData",
-        alreadyReturnedData, "alreadyReturnedData"
-        , alreadyCancelData, "alreadyCancelData")
-
+ 
 
 
 
@@ -525,9 +520,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
 
-    console.log(balanceQty, "balanceQty",
-        allowedReturnQty, "allowedReturnQty"
-    );
+
 
 
 
@@ -601,6 +594,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     return {
         statusCode: 0, data: {
             ...data,
+            
             alreadyInwardedData,
             balanceQty,
             cancelQty,

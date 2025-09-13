@@ -93,6 +93,18 @@ const OrderApi = createApi({
             },
             providesTags: ["Order"],
         }),
+        getStockValidationById: builder.query({
+            query: (id) => {
+                return {
+                    url: `${ORDER_API}/stockValidation/${id}`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                };
+            },
+            providesTags: ["Order"],
+        }),
         addOrder: builder.mutation({
             query: (payload) => ({
                 url: ORDER_API,
@@ -129,6 +141,7 @@ export const {
     useGetOrderItemsQuery,
     useGetOrderItemsByIdQuery,
     useGetOrderItemsByIdNewQuery,
+    useGetStockValidationByIdQuery,
     useAddOrderMutation,
     useUpdateOrderMutation,
     useDeleteOrderMutation,

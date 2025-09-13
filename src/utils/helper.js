@@ -52,7 +52,7 @@ export async function getStockProperty(itemType, item, property, storeId, branch
       noOfRolls: item?.noOfRolls ? parseInt(item.noOfRolls) : undefined,
       qty: item?.qty ? parseFloat(item.qty) : undefined,
       price: item?.price ? parseFloat(item.price) : undefined,
-      storeId: parseInt(storeId),
+      storeId: storeId ?   parseInt(storeId)  :  undefined,
       lotNo: item?.lotNo ? item.lotNo : undefined,
       processId: item?.processId ? parseInt(item.processId) : undefined,
     }

@@ -63,21 +63,22 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     }
 
     function getSelectAll(poItems) {
-        return poItems.every(item => isItemAdded(item.id))
+        return poItems?.every(item => isItemAdded(item.id))
     }
 
     function handleDone() {
         setInwardItemSelection([])
         setInwardItems(prevInwardItems => {
-            let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.poItemsId))
-            let newInwardItems = localInwardItems.filter(item => {
-                return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
+            let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item.poItemsId))
+            let newInwardItems = localInwardItems?.filter(item => {
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
             })
             console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {
                 return {
 
                     poItemsId: poItem?.id,
+                    orderId : poItem?.Po.orderId,
                     poNo: poItem?.Po?.docId,
                     fabricId: poItem?.fabricId,
                     colorId: poItem?.colorId,
@@ -120,7 +121,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                     </div>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>Supplier</label>
-                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList.data, "name")} disabled={true} />
+                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList?.data, "name")} disabled={true} />
                     </div>
                 </div>
                 <div className='h-[500px] overflow-auto'>

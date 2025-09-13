@@ -1,12 +1,13 @@
 import { FaFileAlt, FaPlus } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import { DateInputNew, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import StockTransferForm from "./StockTransferFormUI";
 import OrderFormReport from "./OrderReport";
 import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 
 
 
@@ -17,33 +18,55 @@ const StockTransfer = () => {
     const [docId, setDocId] = useState("New")
     const [readOnly, setReadOnly] = useState(true);
     const [date, setDate] = useState("");
-   
-    
-    const [transferType,setTransfetType]  = useState("")
-    
-    const [orderId, setOrderId] = useState("");
-    const [orderItems,setOrderItems]  =  useState([])
-    const [partyId, setPartyId] = useState("");
 
-    const [requirementId,setRequirementId]   = useState("")
-    
-    const [fromOrderNo, setFromOrderNo] = useState("")
+
+    const [transferType, setTransferType] = useState("")
+
+    const [orderId, setOrderId] = useState("");
+    const [orderItems, setOrderItems] = useState([])
+    const [tempOrderItems, setTempOrderItems] = useState([])
+
+    const [partyId, setPartyId] = useState("");
+    const [toOrderId, setToOrderId] = useState("")
+
+    const [requirementId, setRequirementId] = useState("")
+
+    const [fromOrderId, setFromOrderId] = useState("")
     const [showAddressPopup, setShowAddressPopup] = useState(false)
-    
+
+    const [stockItems, setStockItems] = useState([])
+    const [tempStockItems, setTempStockItems] = useState([])
+
+
     const { branchId, userId, companyId, finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
 
-        const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
-    
+    const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
+
+    const { data: allData, isFetching, isLoading } = useGetStockTransferQuery({
+        params: {
+            branchId,
+
+        }
+    });
+
+    const getNextDocId = useCallback(() => {
+        //   if (id || isLoading || isFetching) return
+        if (allData?.nextDocId) {
+            setDocId(allData.nextDocId)
+        }
+    }, [allData, id])
+
+    useEffect(getNextDocId, [getNextDocId])
 
     const handleView = (orderId) => {
-
         setId(orderId)
         setForm(true)
         setReadOnly(true);
     };
+
 
     const handleEdit = (orderId) => {
         setId(orderId)
@@ -83,22 +106,31 @@ const StockTransfer = () => {
             }
         }
     };
+    const OnNew = () => {
+        setId("")
+        setReadOnly(false);
+        setOrderId("")
+        setRequirementId("")
+        setToOrderId("")
+        setPartyId("")
+        setFromOrderId("")
+        setOrderItems([])
+        setStockItems([])
+    };
 
 
     return (
         <>
             {form ? (
                 <StockTransferForm
-                    orderData={orderData}  orderId={orderId} setOrderId = {setOrderId}  orderItems={orderItems} setOrderItems={setOrderItems} params={params}
-                    partyId={partyId} setPartyId={setPartyId}  setRequirementId={setRequirementId} requirementId={requirementId}
-                    showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup}
-                    docId={docId} setDocId={setDocId}
-                    readOnly={readOnly} setReadOnly={setReadOnly}
-                    date={date} setDate={setDate}
-                    setFromOrderNo={setFromOrderNo} fromOrderNo={fromOrderNo}  setTransfetType={setTransfetType} transferType={transferType}
-                    onClose = {()  =>  {
-                        setForm(false)
-                    }}
+                    orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
+                    partyId={partyId} setPartyId={setPartyId} setRequirementId={setRequirementId} requirementId={requirementId}
+                    showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems}  setTempOrderItems={setTempOrderItems}
+                    docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
+                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
+                    date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
+                    setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
+                    onClose={() => { setForm(false) }}
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -109,7 +141,7 @@ const StockTransfer = () => {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true) }}
+                            onClick={() => { setForm(true); setTransferType("") }}
                         >
                             <FaPlus /> Create New
                         </button>

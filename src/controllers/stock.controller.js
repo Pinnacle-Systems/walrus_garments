@@ -25,7 +25,7 @@ export async function getPcsStock(req, res, next) {
 async function getOne(req, res, next) {
 
     try {
-        res.json(await _getOne(req.params.id, req.query));
+        res.json(await _getOne(req.params.id, req));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

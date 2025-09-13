@@ -7,36 +7,6 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
 
 
 
-
-
-
-
-
-
-
-
-
-  function deleteRow(gridIndex, index) {
-    setOrderDetails(prev => prev.filter((_, i) => i !== index))
-  }
-  function deleteSubRow(gridIndex, index) {
-
-    setOrderDetails(prev => {
-      // const updated = [...prev];
-      const updated = structuredClone(prev);
-      // console.log(updated[gridIndex],"deletesuybro")
-      updated[gridIndex].orderSizeDetails.splice(index, 1);
-
-
-      if (updated[gridIndex].orderSizeDetails.length === 0) {
-        updated.splice(gridIndex, 1);
-      }
-
-      return updated;
-    });
-  }
-
-
   return (
     <>
 
@@ -55,7 +25,10 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
                   <th className="w-8 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">S.No</th>
                   <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
                   <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
-                  <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
+                  <th className="w-24 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
+                  <th className="w-24 px-4 py-1.5 border border-gray-300  font-medium text-xs">Stock Qty (Kgs) </th>
+                  <th className="w-24 px-4 py-1.5 border border-gray-300  font-medium text-xs">Transfer Qty (Kgs)</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -73,8 +46,32 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                       {(yarn.qty.toFixed(3))}
                     </td>
-
-
+                    <td className="border border-gray-300 px-2 py-1 text-right text-xs">
+                      <input
+                        min="0"
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={yarn?.issueQty}
+                      // onChange={(e) => {
+                      //   handleInputChange(e.target.value, index, "issueQty");
+                      // }}
+                      // onBlur={(e) => {
+                      //   const val = e.target.value;
+                      //   handleInputChange(val === "" ? 0 : parseFloat(val).toFixed(2), index, "qty");
+                      // }}
+                      />
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 text-right text-xs">
+                      <input
+                        min="0"
+                        type="number"
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        onFocus={(e) => e.target.select()}
+                        value={yarn?.issueQty}
+                   
+                      />
+                    </td>
                   </tr>
                 ))}
                 <tr>
@@ -94,7 +91,17 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
   )
 }
 
+
+
 export default YarnDetails
+
+
+
+
+
+
+
+
 
 
 
