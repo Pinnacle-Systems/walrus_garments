@@ -13,15 +13,15 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
-import { useAddStockTransferMutation, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
+import { useAddStockTransferMutation, useGetStockTransferByIdQuery, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
 import { Loader } from "../../../Basic/components";
 
 const StockTransferForm = ({
-    docId,
-    fromOrderNo, onClose,  setTransferType, transferType, partyId, setPartyId, params, requirementId, setRequirementId,
-    orderData, orderId, setOrderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems,setTempOrderItems,tempOrderItems,tempStockItems,setTempStockItems,
-    date, OnNew, id,
-    setFromOrderNo, yarnTotals, setYarnTotals, toOrderId, setToOrderId
+    docId, id,
+    fromCustomerId, setFromCustomerId, onClose, setTransferType, transferType, partyId, setPartyId, params, requirementId, setRequirementId,
+    orderData, orderId, setOrderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
+    date, OnNew,
+    yarnTotals, setYarnTotals, toOrderId, setToOrderId
 
 }) => {
 
@@ -36,7 +36,11 @@ const StockTransferForm = ({
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(toOrderId, { skip: !toOrderId });
 
+    const { data: fromOrderData, isLoading: isfromOrderLoading, isFetching: isfromOrderFetching } = useGetOrderByIdQuery(fromOrderId, { skip: !fromOrderId });
 
+
+
+    const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching } = useGetStockTransferByIdQuery(id, { skip: !id });
 
 
 
@@ -49,7 +53,7 @@ const StockTransferForm = ({
             params: {
                 transferType,
                 fromOrderId,
-                storeId : 1
+                storeId: 1
             },
         },
         {
@@ -62,8 +66,8 @@ const StockTransferForm = ({
 
 
     const data = {
-        orderItems : orderItems?.filter(item =>  parseInt(item.transferQty)  >  0),
-         stockItems, fromOrderId, toOrderId, docId
+        orderItems: orderItems?.filter(item => parseInt(item.transferQty) > 0),
+        stockItems, fromOrderId, toOrderId, docId,
 
     }
 
@@ -77,46 +81,48 @@ const StockTransferForm = ({
 
 
 
-        setPartyId(data?.partyId ? data?.partyId : "")
+        if (id) {
 
+            setOrderItems(data?.YarnTransferDetails ? data?.YarnTransferDetails : [])
+            setStockItems(data?.StockTransferItems ? data?.StockTransferItems : [])
 
+        } else {
+            // setOrderItems(
+            //         data?.RequirementPlanningForm(item => {
 
+            //         const allColors = item?.RequirementYarnDetails?.map(yarn => yarn?.Color?.name)?.filter(Boolean)?.join(" - ");
 
-        // setOrderItems(
-        //         data?.RequirementPlanningForm(item => {
+            //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
 
-        //         const allColors = item?.RequirementYarnDetails?.map(yarn => yarn?.Color?.name)?.filter(Boolean)?.join(" - ");
+            //             const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
+            //                 console.log(
+            //                     `Calculation => sum(${sum}) + size.weight(${size?.weight}) * yarn.percentage(${yarn?.percentage}) / 100`
+            //                 );
 
-        //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+            //                 return sum + (size?.weight * (yarn?.percentage / 100));
+            //             }, 0);
 
-        //             const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
-        //                 console.log(
-        //                     `Calculation => sum(${sum}) + size.weight(${size?.weight}) * yarn.percentage(${yarn?.percentage}) / 100`
-        //                 );
+            //             console.log(`✅ Yarn ${yarn?.Yarn.name || yarn?.id} final qty:`, qty);
 
-        //                 return sum + (size?.weight * (yarn?.percentage / 100));
-        //             }, 0);
+            //             return {
+            //                 ...yarn,
+            //                 qty: Number(qty.toFixed(3)),
+            //                 style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+            //                 orderDetailsId: item.orderDetailsId,
+            //             };
+            //         });
 
-        //             console.log(`✅ Yarn ${yarn?.Yarn.name || yarn?.id} final qty:`, qty);
+            //         console.log(RaiseIndenetYarnItems, "RaiseIndenetYarnItems")
 
-        //             return {
-        //                 ...yarn,
-        //                 qty: Number(qty.toFixed(3)),
-        //                 style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-        //                 orderDetailsId: item.orderDetailsId,
-        //             };
-        //         });
+            //         return {
 
-        //         console.log(RaiseIndenetYarnItems, "RaiseIndenetYarnItems")
+            //             RaiseIndenetYarnItems,
+            //         };
+            //     })
+            // );
+            setPartyId(data?.partyId ? data?.partyId : "")
 
-        //         return {
-
-        //             RaiseIndenetYarnItems,
-        //         };
-        //     })
-        // );
-
-        setTempOrderItems(data?.RequirementPlanningForm?.flatMap(item => {
+            setTempOrderItems(data?.RequirementPlanningForm?.flatMap(item => {
                 const allColors = item?.RequirementYarnDetails
                     ?.map(yarn => yarn?.Color?.name)
                     ?.filter(Boolean)
@@ -138,16 +144,32 @@ const StockTransferForm = ({
                         qty: Number(qty.toFixed(3)),
                         style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
                         orderDetailsId: item.orderDetailsId,
-                        orderId : item.orderId
+                        orderId: item.orderId
                     };
                 });
             }) ?? []
-        );
+            );
+        }
 
 
 
 
-    }, [orderId]);
+
+
+
+
+
+
+    }, [orderId, id]);
+
+
+    useEffect(() => {
+
+        if (singleData?.data) {
+            syncFormWithDb(singleData?.data)
+        }
+
+    }, [isSingleDataFetching, isSingleDataLoading, id, syncFormWithDb, singleData]);
 
 
     useEffect(() => {
@@ -158,7 +180,15 @@ const StockTransferForm = ({
 
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
 
+    useEffect(() => {
 
+        if (fromOrderData?.data) {
+
+            setFromCustomerId(fromOrderData?.data?.partyId ? fromOrderData?.data?.partyId : undefined)
+
+        }
+
+    }, [isfromOrderFetching, isfromOrderLoading, fromOrderId, syncFormWithDb, fromOrderData]);
 
 
     useEffect(() => {
@@ -233,18 +263,18 @@ const StockTransferForm = ({
         }
     }
 
-        const transferTytpe = useRef(null);
-        const inputPartyRef = useRef(null);
-        const styleRef = useRef(null);
-    
-        useEffect(() => {
-            if (transferTytpe.current) {
-                transferTytpe.current.focus(); 
-            }
-        }, []);
+    const inputRef1 = useRef(null);
+    const inputPartyRef = useRef(null);
+    const styleRef = useRef(null);
+
+    useEffect(() => {
+        if (inputRef1.current) {
+            inputRef1.current.focus();
+        }
+    }, []);
 
 
-    if (isSingleOrderLoading || isSingleOrderFetching  ||  stockFetching  || stockLoading  ) return <Loader />
+    if (isSingleOrderLoading || isSingleOrderFetching || stockFetching || stockLoading) return <Loader />
 
 
     return (
@@ -285,22 +315,23 @@ const StockTransferForm = ({
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc Id" readOnly value={docId} />
                                 <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                                <DropdownInput name="Stock Transfer Type"
+                                    options={stockTransferType}
+                                    value={transferType}
+                                    setValue={(value) => { setTransferType(value); OnNew() }}
+                                    required={true}
+                                    ref={inputRef1}
+                                    openOnFocus={true}
 
+                                />
                             </div>
                         </div>
                         <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2">Order Details</h2>
 
                             <div className="grid grid-cols-1">
-                                <div className="grid grid-cols-4 gap-x-3 gap-y-3">{console.log(fromOrderId, "fromOrderId")}
-                                    <DropdownInput name="Stock Transfer Type"
-                                        options={stockTransferType}
-                                        value={transferType}
-                                        setValue={(value) => { setTransferType(value); OnNew() }}
-                                        required={true}
-                                        ref={transferTytpe}
+                                <div className="grid grid-cols-3 gap-x-3 gap-y-3">
 
-                                    />
                                     {transferType === "Order" && (
                                         <>
                                             <DropdownWithSearch
@@ -311,9 +342,17 @@ const StockTransferForm = ({
                                                 // readOnly={id ? true : false}
                                                 labelField={"docId"}
                                                 label={"From Order No"}
+                                                className={"bg-gradient-to-r from-green-500 via-emerald-500 "}
                                             />
+                                            <div className="col-span-2" >
 
-                                            <TextInput name="From Customer" value={fromOrderNo} setValue={setFromOrderNo} required={true} readOnly={true} />
+                                                <TextInput name="From Customer"
+                                                    value={findFromList(fromCustomerId, supplierList?.data, "name")}
+                                                    setValue={setFromCustomerId}
+                                                    required={true}
+                                                    readOnly={true}
+                                                />
+                                            </div>
 
 
                                         </>
@@ -327,17 +366,19 @@ const StockTransferForm = ({
                                         setValue={setToOrderId}
                                         // readOnly={id ? true : false}
                                         labelField={"docId"}
-                                        label={transferType === "Order" ? "To Order No" : "Order No"}
+                                        label={"To Order No"}
+                                        className={"bg-gradient-to-r from-blue-500 via-purple-500"}
                                     />
+                                    <div className="col-span-2" >
 
-                                    <TextInput
-                                        name={transferType === "Order" ? "To Customer" : "Customer"}
-                                        placeholder="Contact name"
-                                        value={findFromList(partyId, supplierList?.data, "name")}
-                                        // setValue={setContactPersonName}
-                                        disabled={true}
-                                    />
-
+                                        <TextInput
+                                            name={transferType === "Order" ? "To Customer" : "Customer"}
+                                            placeholder="Contact name"
+                                            value={findFromList(partyId, supplierList?.data, "name")}
+                                            // setValue={setContactPersonName}
+                                            disabled={true}
+                                        />
+                                    </div>
 
 
 
@@ -351,8 +392,9 @@ const StockTransferForm = ({
 
 
                         <FormItems orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
-                            colorList={colorList?.data} yarnList={yarnList?.data} tempOrderItems={tempOrderItems}  setTempOrderItems={setTempOrderItems}
-                            stockItems={stockItems} setStockItems={setStockItems}   tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
+                            colorList={colorList?.data} yarnList={yarnList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
+                            stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
+                            toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data}
 
                         />
 

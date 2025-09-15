@@ -8,6 +8,7 @@ import OrderFormReport from "./OrderReport";
 import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
+import moment from "moment";
 
 
 
@@ -17,7 +18,7 @@ const StockTransfer = () => {
     const [form, setForm] = useState("")
     const [docId, setDocId] = useState("New")
     const [readOnly, setReadOnly] = useState(true);
-    const [date, setDate] = useState("");
+    const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
 
 
     const [transferType, setTransferType] = useState("")
@@ -33,6 +34,8 @@ const StockTransfer = () => {
 
     const [fromOrderId, setFromOrderId] = useState("")
     const [showAddressPopup, setShowAddressPopup] = useState(false)
+    const [fromCustomerId, setFromCustomerId] = useState("")
+
 
     const [stockItems, setStockItems] = useState([])
     const [tempStockItems, setTempStockItems] = useState([])
@@ -61,15 +64,15 @@ const StockTransfer = () => {
 
     useEffect(getNextDocId, [getNextDocId])
 
-    const handleView = (orderId) => {
-        setId(orderId)
+    const handleView = (id) => {
+        setId(id)
         setForm(true)
         setReadOnly(true);
     };
 
 
-    const handleEdit = (orderId) => {
-        setId(orderId)
+    const handleEdit = (id) => {
+        setId(id)
         setForm(true)
         setReadOnly(false);
     };
@@ -116,6 +119,8 @@ const StockTransfer = () => {
         setFromOrderId("")
         setOrderItems([])
         setStockItems([])
+        setTempOrderItems([])
+        setTempOrderItems([])
     };
 
 
@@ -123,14 +128,15 @@ const StockTransfer = () => {
         <>
             {form ? (
                 <StockTransferForm
+                    id={id} setId={setId}
                     orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
                     partyId={partyId} setPartyId={setPartyId} setRequirementId={setRequirementId} requirementId={requirementId}
-                    showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems}  setTempOrderItems={setTempOrderItems}
+                    showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                     docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
+                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
                     date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
                     setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
-                    onClose={() => { setForm(false) }}
+                    onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId}
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">

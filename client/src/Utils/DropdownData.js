@@ -254,7 +254,7 @@ export const Colors = [
 
 
 export const stockTransferType = [
-    { show: "From General", value: "General" },
-    { show: "From Order", value: "Order" },
+    { show: "General To Order", value: "General" },
+    { show: "Order To Order", value: "Order" },
 
 ]

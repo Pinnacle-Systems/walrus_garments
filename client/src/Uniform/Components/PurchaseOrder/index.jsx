@@ -198,7 +198,6 @@ export default function Form() {
 
 
   const saveData = () => {
-    console.log(data, "data for valitation")
 
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");

@@ -207,7 +207,7 @@ export default function YarnTransferDetails({ tempOrderItems, setOrderItems, ord
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Purchase Qty</th>
+                                            {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Purchase Qty</th> */}
 
 
                                         </tr>
@@ -242,9 +242,9 @@ export default function YarnTransferDetails({ tempOrderItems, setOrderItems, ord
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {yarnItem?.qty?.toFixed(3)}
                                                 </td>
-                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {yarnItem?.qty?.toFixed(3)}
-                                                </td>
+                                                </td> */}
 
                                             </tr>
                                         ))}

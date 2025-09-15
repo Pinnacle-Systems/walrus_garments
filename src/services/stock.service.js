@@ -300,7 +300,7 @@ async function get(req) {
         data = data.filter(item => (item._sum.qty > 0));
     }
     else {
-    console.log(storeId,"storeIddddddddd")
+        console.log(storeId, "storeIddddddddd")
 
         data = await xprisma.stock.groupBy({
             where: {
@@ -378,24 +378,24 @@ async function get(req) {
             //     "uomId",
             //     "lotNo", "branchId", 'inOrOut'
             // ],
-            
-                 by: [
-                    "yarnId",
-                   
-                    "accessoryId", "sizeId",
-                    "colorId",
-                    
-                ],
-                _sum: {
-                    qty: true,
-                    gross: true,
-                    noOfRolls: true,
-                    noOfBags: true,
-                },
-            })
+
+            by: [
+                "yarnId",
+
+                "accessoryId", "sizeId",
+                "colorId",
+
+            ],
+            _sum: {
+                qty: true,
+                gross: true,
+                noOfRolls: true,
+                noOfBags: true,
+                orderId: true
+            },
+        })
         data = data.filter(item => (item._sum.qty > 0));
     }
-        console.log(data,"dataaaaa")
 
     // data = data.filter(item => !(item._sum.qty === 0));
     let newItemArray = []
@@ -409,7 +409,7 @@ async function get(req) {
         return Promise.all(newItemArray)
     })()
 
-        console.log(newItemArray,"newItemArray  ")
+    console.log(newItemArray, "newItemArray  ")
 
 
     data = newItemArray
@@ -449,44 +449,51 @@ async function getOne(id, req) {
     } = req.query
 
 
-    console.log(storeId,"storeId")
+    console.log(storeId, "storeId")
 
 
     let data = await xprisma.stock.groupBy({
         where: {
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            itemType,
-            yarnId: yarnId ? parseInt(yarnId) : undefined,
-            fabricId: fabricId ? parseInt(fabricId) : undefined,
-            designId: designId ? parseInt(designId) : undefined,
-            gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
-            loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
-            gsmId: gsmId ? parseInt(gsmId) : undefined,
-            kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
-            fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
-            accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
-            sizeId: sizeId ? parseInt(sizeId) : undefined,
+            orderId: id ? parseInt(id) : undefined,
             colorId: colorId ? parseInt(colorId) : undefined,
-            uomId: uomId ? parseInt(uomId) : undefined,
-            lotNo,
-            orderId: id ? parseInt(id) : undefined
+            yarnId: yarnId ? parseInt(yarnId) : undefined,
+            // branchId: branchId ? parseInt(branchId) : undefined,
+            // storeId: storeId ? parseInt(storeId) : undefined,
+            // itemType,
+            // fabricId: fabricId ? parseInt(fabricId) : undefined,
+            // designId: designId ? parseInt(designId) : undefined,
+            // gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
+            // loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
+            // gsmId: gsmId ? parseInt(gsmId) : undefined,
+            // kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
+            // fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
+            // accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
+            // sizeId: sizeId ? parseInt(sizeId) : undefined,
+            // uomId: uomId ? parseInt(uomId) : undefined,
+            // lotNo,
         },
-        by: ["storeId", "itemType", "processId",
+        by: [
+            // "storeId", 
             "yarnId",
-            "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-            "accessoryId", "sizeId",
             "colorId",
-            "uomId",
-            "lotNo"
+            "orderId"
+            // "itemType", "processId",
+            // "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
+            // "accessoryId", "sizeId",
+            // "uomId",
+            // "lotNo"
         ],
         _sum: {
             qty: true,
-            gross: true,
-            noOfRolls: true,
-            noOfBags: true,
+
+            // gross: true,
+            // noOfRolls: true,
+            // noOfBags: true,
         },
+        
     })
+    console.log(data, "dataaaaagetOne")
+
     data = await (async function getPrice() {
         let promises = data.map(async (item) => {
             let newItem = structuredClone(item);

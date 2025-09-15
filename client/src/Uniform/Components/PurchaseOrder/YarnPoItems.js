@@ -20,29 +20,29 @@ const YarnPoItems = ({
     greyFilter,
 }) => {
 
+console.log(poItems,"PoItems") 
+    // useEffect(() => {
+    //     if (poItems?.length >= 2) return
+    //     setPoItems(prev => {
+    //         let newArray = Array?.from({ length: 2 - prev?.length }, () => {
+    //             return {
+    //                 yarnId: "",
+    //                 qty: "0",
+    //                 tax: "0",
+    //                 colorId: "",
+    //                 uomId: "",
+    //                 price: "0",
+    //                 discountValue: "0.00",
+    //                 noOfBags: 0,
+    //                 weightPerBag: 0,
 
-    useEffect(() => {
-        if (poItems?.length >= 2) return
-        setPoItems(prev => {
-            let newArray = Array?.from({ length: 2 - prev?.length }, () => {
-                return {
-                    yarnId: "",
-                    qty: "0",
-                    tax: "0",
-                    colorId: "",
-                    uomId: "",
-                    price: "0",
-                    discountValue: "0.00",
-                    noOfBags: 0,
-                    weightPerBag: 0,
 
-
-                }
-            })
-            return [...prev, ...newArray]
-        }
-        )
-    }, [setPoItems, poItems])
+    //             }
+    //         })
+    //         return [...prev, ...newArray]
+    //     }
+    //     )
+    // }, [setPoItems, poItems])
     console.log(poItems, "poItems");
 
 
@@ -63,20 +63,20 @@ const YarnPoItems = ({
 
 
 
-    const addNewRow = () => {
-        const newRow = {
-            yarnId: "",
-            qty: "0",
-            tax: "0",
-            colorId: "",
-            uomId: "",
-            price: "0",
-            discountValue: "0.00",
-            noOfBags: 0,
-            weightPerBag: 0,
-        };
-        setPoItems([...poItems, newRow]);
-    };
+    // const addNewRow = () => {
+    //     const newRow = {
+    //         yarnId: "",
+    //         qty: "0",
+    //         tax: "0",
+    //         colorId: "",
+    //         uomId: "",
+    //         price: "0",
+    //         discountValue: "0.00",
+    //         noOfBags: 0,
+    //         weightPerBag: 0,
+    //     };
+    //     setPoItems([...poItems, newRow]);
+    // };
 
 
     const deleteRow = (id) => {
@@ -120,7 +120,7 @@ const YarnPoItems = ({
 
                         <button
                             onClick={() => {
-                                addNewRow()
+                                // addNewRow()
                             }}
                             className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
                         >

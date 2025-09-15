@@ -320,7 +320,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 Order Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Order.No" readOnly value={docId} />
+                                <ReusableInput label="Order No" readOnly value={docId} />
 
                                 <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
                                 <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}

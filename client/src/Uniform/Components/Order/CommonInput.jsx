@@ -261,7 +261,7 @@ export const handleOnChange = (event, setValue) => {
 
 
 export function ReusableInput(
-  { setValue, label, type, value, className = "", textClassName = "", tabIndex = null, onChange, placeholder, readOnly, disabled }
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled }
 ) {
   return (
     <div className="mb-2">

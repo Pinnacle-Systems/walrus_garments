@@ -764,6 +764,7 @@ model Yarn {
   RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
   MaterialIssueYarnItems        MaterialIssueYarnItems[]
   StockTransferItems            StockTransferItems[]
+  YarnTransferDetails           YarnTransferDetails[]
 }
 
 model yarnCounts {
@@ -957,6 +958,7 @@ model Color {
   OrderDetails           OrderDetails[]
   MaterialIssueYarnItems MaterialIssueYarnItems[]
   StockTransferItems     StockTransferItems[]
+  YarnTransferDetails    YarnTransferDetails[]
 }
 
 model UnitOfMeasurement {
@@ -3317,6 +3319,7 @@ model RequirementPlanningForm {
   RaiseIndentItems       RaiseIndentItems[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialIssueYarnItems MaterialIssueYarnItems[]
+  YarnTransferDetails    YarnTransferDetails[]
 }
 
 model RequirementSizeDetails {
@@ -3516,14 +3519,15 @@ model StockTransfer {
   updatedById        Int?
   fromOrder          Order?               @relation("fromOrder", fields: [fromOrderId], references: [id])
   fromOrderId        Int?
-  toOrsder            Order?               @relation("toOrder", fields: [toOrderId], references: [id])
+  toOrsder           Order?               @relation("toOrder", fields: [toOrderId], references: [id])
   toOrderId          Int?
   StockTransferItems StockTransferItems[]
+  YarnTransferDetails YarnTransferDetails[]
 }
 
 model StockTransferItems {
   id               Int             @id @default(autoincrement())
-  StockTransfer    StockTransfer?  @relation(fields: [stockTransferId], references: [id])
+  StockTransfer    StockTransfer?  @relation(fields: [stockTransferId], references: [id],onDelete: Cascade)
   stockTransferId  Int?
   Yarn             Yarn?           @relation(fields: [yarnId], references: [id])
   yarnId           Int?
@@ -3536,6 +3540,23 @@ model StockTransferItems {
   Color            Color?          @relation(fields: [colorId], references: [id])
   colorId          Int?
   transferQty      Float?
+}
+
+model YarnTransferDetails {
+  id                      Int                      @id @default(autoincrement())
+  StockTransfer           StockTransfer?           @relation(fields: [stockTransferId], references: [id],onDelete: Cascade)
+  stockTransferId         Int?
+  RequirementPlanningForm RequirementPlanningForm? @relation(fields: [RequirementPlanningId], references: [id])
+  RequirementPlanningId   Int?
+  Color                   Color?                   @relation(fields: [colorId], references: [id])
+  colorId                 Int?
+  orderId                 Int?
+  Yarn                    Yarn?                   @relation(fields: [yarnId], references: [id])
+  yarnId                  Int?
+  style                   String?
+  qty                     Float?
+  transferQty             Float?
+
 }
 
 model DirectReturnOrPoReturn {

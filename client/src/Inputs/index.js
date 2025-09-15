@@ -490,7 +490,75 @@ export const TextArea = ({
 };
 
 
-export const DropdownInput = ({
+// export const DropdownInput = ({
+//   name,
+//   beforeChange = () => { },
+//   onBlur = null,
+//   options,
+//   value,
+//   setValue,
+//   defaultValue,
+//   className = "",
+//   readOnly = false,
+//   required = false,
+//   disabled = false,
+//   clear = false,
+//   tabIndex = null,
+//   autoFocus = false,
+//   width = "full",
+//   country
+// }) => {
+//   const handleOnChange = (e) => {
+//     setValue(e.target.value);
+//   };
+
+//   const isDisabled = readOnly || disabled;
+//   console.log(options, "options in dropdown", value);
+
+//   return (
+//     <div className={`mb-2 ${width}`}>
+//       {name && (
+//         <label className="block text-xs font-bold text-slate-700 mb-1">
+//           {required ? <RequiredLabel name={name} /> : name}
+//         </label>
+//       )}
+//       <select
+//         onBlur={onBlur}
+//         autoFocus={autoFocus}
+//         tabIndex={tabIndex ?? undefined}
+//         defaultValue={defaultValue}
+//         required={required}
+//         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+//           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+//           transition-all duration-150 shadow-sm
+      
+//           ${className}`}
+//         value={value}
+//         onChange={(e) => {
+//           beforeChange();
+//           handleOnChange(e);
+//         }}
+//         disabled={isDisabled}
+//       >
+//         <option value="" hidden={!clear} className="text-gray-800">
+//           Select {name || "option"}
+//         </option>
+//         {options?.map((option, index) => (
+//           <option
+//             key={index}
+//             value={option.value}
+//             className="text-xs py-1 text-gray-800"
+//           >
+//             {option.show}
+//           </option>
+//         ))}
+//       </select>
+//     </div>
+//   );
+// };
+
+
+export const DropdownInput = forwardRef(({
   name,
   beforeChange = () => { },
   onBlur = null,
@@ -506,14 +574,16 @@ export const DropdownInput = ({
   tabIndex = null,
   autoFocus = false,
   width = "full",
-  country
-}) => {
+  country,
+  openOnFocus = false,   // new prop
+}, ref) => {
   const handleOnChange = (e) => {
     setValue(e.target.value);
   };
 
   const isDisabled = readOnly || disabled;
-  console.log(options, "options in dropdown", value);
+  
+  console.log(openOnFocus,"openOnFocus")
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -523,6 +593,7 @@ export const DropdownInput = ({
         </label>
       )}
       <select
+        ref={ref}
         onBlur={onBlur}
         autoFocus={autoFocus}
         tabIndex={tabIndex ?? undefined}
@@ -531,12 +602,16 @@ export const DropdownInput = ({
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
-      
           ${className}`}
         value={value}
         onChange={(e) => {
           beforeChange();
           handleOnChange(e);
+        }}
+        onFocus={(e) => {
+          if (openOnFocus) {
+            e.target.click();
+          }
         }}
         disabled={isDisabled}
       >
@@ -555,7 +630,8 @@ export const DropdownInput = ({
       </select>
     </div>
   );
-};
+});
+
 
 export const DropdownInputForm = ({
   name,
@@ -957,7 +1033,93 @@ export const validatePincode = (data) => {
   return data.toString().length === 6;
 };
 
-export const DropdownWithSearch = ({
+// export const DropdownWithSearch = ({
+//   className,
+//   options,
+//   value,
+//   setValue,
+//   readOnly,
+//   disabled,
+//   required = false,
+
+//   labelField,
+//   label,
+// }) => {
+//   console.log(options, "options");
+
+//   const dispatch = useDispatch();
+
+
+//   const [currentIndex, setCurrentIndex] = useState("");
+//   useEffect(() => setCurrentIndex(new Date()), []);
+//   useEffect(() => {
+//     const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
+//     dropDownElement.addEventListener("keydown", function (ev) {
+//       var focusableElementsString = '[tabindex="0"]';
+//       let ol = dropDownElement.querySelectorAll(focusableElementsString);
+//       if (ev.key === "ArrowDown") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       } else if (ev.key === "ArrowUp") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = ol[i - 1];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       }
+//     });
+
+//     return () => {
+//       dropDownElement.removeEventListener("keydown", () => { });
+//     };
+//   }, [currentIndex]);
+
+//   return (
+//     <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
+//       {label && (
+//         <label className="block text-xs font-bold text-slate-700 mb-1">
+//           {required ? <RequiredLabel name={label} /> : `${label}`}
+
+//         </label>
+//       )}
+//       <select
+//         // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+//         className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+//           focus:border-indigo-300 focus:outline-none transition-all duration-200
+//           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+//           } ${className}`}
+
+//         disabled={readOnly}
+//         readOnly={readOnly}
+//         value={value || ""}
+//         onChange={(e) => {
+//           setValue(e.target.value)
+//         }}
+//       >
+//         {/* {!value && <option value="">Select {optionName}</option>} */}
+
+//         <option value={""}>Select</option>
+//         {(options || []).map((option) => (
+//           <option key={option.id} value={option.id} classname>
+//             {option[labelField]}
+//           </option>
+//         ))}
+//       </select>
+//     </div>
+//   );
+// };
+
+
+export const DropdownWithSearch = forwardRef(({
   className,
   options,
   value,
@@ -965,82 +1127,70 @@ export const DropdownWithSearch = ({
   readOnly,
   disabled,
   required = false,
-
   labelField,
   label,
-}) => {
-  console.log(options, "options");
+  nextRef = null, 
+  classNameForOptions  // 👈 next input ref
+}, ref) => {
 
-  const dispatch = useDispatch();
-
+    // 👈 next input ref
+  console.log(classNameForOptions,"classNameForOptions")
 
   const [currentIndex, setCurrentIndex] = useState("");
-  useEffect(() => setCurrentIndex(new Date()), []);
+  useEffect(() => setCurrentIndex(Date.now()), []);
+
   useEffect(() => {
     const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
-    dropDownElement.addEventListener("keydown", function (ev) {
-      var focusableElementsString = '[tabindex="0"]';
-      let ol = dropDownElement.querySelectorAll(focusableElementsString);
-      if (ev.key === "ArrowDown") {
-        for (let i = 0; i < ol.length; i++) {
-          if (ol[i] === ev.target) {
-            let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
-            o.focus();
-            break;
-          }
+    if (!dropDownElement) return;
+
+    const handleKeyDown = (ev) => {
+      if (ev.key === "Enter" || ev.key === "Tab") {
+        if (nextRef?.current) {
+          nextRef.current.focus();
+          ev.preventDefault();
         }
-        ev.preventDefault();
-      } else if (ev.key === "ArrowUp") {
-        for (let i = 0; i < ol.length; i++) {
-          if (ol[i] === ev.target) {
-            let o = ol[i - 1];
-            o.focus();
-            break;
-          }
-        }
-        ev.preventDefault();
       }
-    });
+    };
+
+    dropDownElement.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      dropDownElement.removeEventListener("keydown", () => { });
+      dropDownElement.removeEventListener("keydown", handleKeyDown);
     };
-  }, [currentIndex]);
+  }, [currentIndex, nextRef]);
 
   return (
-    <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
+    <div id={`dropdown${currentIndex}`} className={` mb-2`}>
       {label && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={label} /> : `${label}`}
-
         </label>
       )}
-      <select
-        // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
-          focus:border-indigo-300 focus:outline-none transition-all duration-200
-          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
-          } ${className}`}
-
-        disabled={readOnly}
-        readOnly={readOnly}
-        value={value || ""}
-        onChange={(e) => {
-          setValue(e.target.value)
-        }}
-      >
-        {/* {!value && <option value="">Select {optionName}</option>} */}
-
-        <option value={""}>Select</option>
-        {(options || []).map((option) => (
-          <option key={option.id} value={option.id} classname>
-            {option[labelField]}
-          </option>
-        ))}
-      </select>
+    <select
+  ref={ref}
+  className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+    focus:border-indigo-300 focus:outline-none transition-all duration-200
+    hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} 
+    ${className}`}
+  disabled={readOnly}
+  readOnly={readOnly}
+  value={value || ""}
+  onChange={(e) => setValue(e.target.value)}
+>
+  <option value="">Select</option>
+  {(options || []).map((option) => (
+    <option
+      key={option.id}
+      value={option.id}
+    >
+        <span></span>   {option[labelField]}
+    </option>
+  ))}
+</select>
     </div>
   );
-};
+});
+
 
 export const DropdownWithSearchNew = ({
   className,
@@ -2045,3 +2195,5 @@ export const ReusableSearchableInput = forwardRef(
     );
   }
 );
+
+

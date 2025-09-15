@@ -6,7 +6,7 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 
-export default function StockDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems,yarnList,colorList
+export default function StockDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
 
 }) {
 
@@ -185,21 +185,18 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
 
         <>
 
-            <div className="h-full flex flex-col bg-[f1f1f0] px-2 w-full">
-
-
-                <div className="flex flex-row gap-40 ">
-                    <div className="flex flex-col">
-                        <div className="justify-end items-center mt-4 mb-5">
-                            <div className="max-h-[600px] overflow-y-auto ">
-                                <table className=" border-collapse ">
-                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+            <div className="h-full flex flex-col bg-[#f1f1f0] p-3 w-full">
+                <div className="flex flex-row w-full">
+                    <div className="flex flex-col w-full">
+                        <div className="mt-4 mb-5 w-full">
+                            <div className="max-h-[600px] w-full overflow-y-auto">
+                                <table className="border-collapse w-full">
+                                    <thead className="bg-gray-200 text-gray-800">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
-                                            <th className=" px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            <th className=" px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
-
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Yarn</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Stock Qty (Kgs)</th>
                                         </tr>
                                     </thead>
 
@@ -218,36 +215,20 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
                                                 </td>
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
                                                     {findFromList(stock?.colorId, colorList, "name")}
-
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                    {parseInt(stock?._sum?.qty).toFixed(3)}
-
+                                                    {parseFloat(stock?._sum?.qty).toFixed(3)}
                                                 </td>
-                                               
-
                                             </tr>
                                         ))}
-
                                     </tbody>
                                 </table>
                             </div>
-
                         </div>
-                        {/* <div className='flex justify-end gap-4 mt-3'>
-                            <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
-                                Done
-                            </button>
-                            <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
-                                Cancel
-                            </button>
-                        </div> */}
                     </div>
-
                 </div>
-
-
             </div>
+
 
         </>
     )

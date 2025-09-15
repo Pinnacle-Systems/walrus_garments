@@ -176,45 +176,45 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     // }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  // useEffect(() => {
+  useEffect(() => {
 
 
-  //           setPoItems(
-  //               singleOrderData?.data?.RequirementPlanningForm?.map(item => {
-  //                   const allColors = item?.RequirementYarnDetails
-  //                       ?.map(yarn => yarn?.Color?.name)
-  //                       .filter(Boolean)
-  //                       .join(" - ");
-  //                   const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-  //                       const qty = item?.requirementSizeDetails?.reduce(
-  //                           (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-  //                           0
-  //                       );
+            setPoItems(
+                singleOrderData?.data?.RequirementPlanningForm?.map(item => {
+                    const allColors = item?.RequirementYarnDetails
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
+                    const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+                        const qty = item?.requirementSizeDetails?.reduce(
+                            (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
+                            0
+                        );
 
-  //                       return {
-  //                           ...yarn,
-  //                           qty: Number(qty.toFixed(3)),
-  //                           orderDetailsId: item.orderDetailsId,
+                        return {
+                            ...yarn,
+                            qty: Number(qty.toFixed(3)),
+                            orderDetailsId: item.orderDetailsId,
 
-  //                       };
-  //                   });
-  //                   const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-  //                       (sum, yarn) => sum + yarn.qty,
-  //                       0
-  //                   );
-  //                   return {
-  //                       OrderDetails: {
-  //                           style: {
-  //                               name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-  //                           }
-  //                       },
-  //                       requirementPlanningFormId: item.id,
-  //                       RaiseIndenetYarnItems,
-  //                       totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-  //                   };
-  //               })
-  //           );
-  // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+                        };
+                    });
+                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+                        (sum, yarn) => sum + yarn.qty,
+                        0
+                    );
+                    return {
+                        OrderDetails: {
+                            style: {
+                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+                            }
+                        },
+                        requirementPlanningFormId: item.id,
+                        RaiseIndenetYarnItems,
+                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+                    };
+                })
+            );
+  }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
   console.log(poItems, "PoItemns")
@@ -423,12 +423,12 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
           </div>
         </div>
         <fieldset className=''>
-          {/*   {PurchaseType === "Order Purchase" ?
+            {PurchaseType === "Order Purchase" ?
 
             <OrderPurchase  poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId}  requirementId={requirementId} id={id} 
             />
-            : */}
-          {
+            :
+          // {
             transType?.toLowerCase().includes("GreyYarn".toLowerCase())
               ?
               <YarnPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />

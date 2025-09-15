@@ -164,9 +164,9 @@ async function get(req) {
         data = data.filter(i => i.delDate.includes(searchDelDate))
     }
 
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
+    // if (pagination) {
+    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    // }
 
 
     return { statusCode: 0, data, totalCount, nextDocId: newDocId };
@@ -181,25 +181,8 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            RaiseIndentItems: {
-                select: {
-                    Yarn: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    yarnId: true,
-                    colorId: true,
-                    id: true,
-                    percentage: true,
-                    qty: true,
-                    raiseIndentId: true,
-                    sizeId: true,
-                    weight: true,
-                },
-
-
-            }
+            StockTransferItems: true,
+            YarnTransferDetails : true
         }
 
     })
@@ -364,7 +347,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
-
+            orderId : item["orderId"] ?  parseInt(item["orderId"])  :  undefined,
 
 
         }
@@ -445,9 +428,7 @@ async function createStocktransferItems(
                         stockTransferId: parseInt(stockTransferId),
                         yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                        transferQty: item?.transferQty
-                            ? 0 - parseInt(item.transferQty)
-                            : undefined,
+                        transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
                     },
                 });
 
@@ -463,9 +444,38 @@ async function createStocktransferItems(
         );
     }
 
+    // if (orderItems?.length) {
+    //     await Promise.all(
+    //         orderItems.map(async (item) => {
+    //             await createYarnStockAgainstOrder(
+    //                 tx,
+    //                 poType,
+    //                 poInwardOrDirectInward,
+    //                 branchId,
+    //                 storeId,
+    //                 item
+    //             );
+    //         })
+    //     );
+    // }
     if (orderItems?.length) {
         await Promise.all(
-            orderItems.map(async (item) => {
+            orderItems?.map(async (item) => {
+                await tx.YarnTransferDetails.create({
+                    data: {
+                        stockTransferId: parseInt(stockTransferId),
+                        RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
+                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                        orderId: item?.orderId ? parseInt(item.orderId) : undefined,
+                        yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                        style: item?.style ? item?.style : undefined,
+                        transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+                        qty: item?.qty ? parseFloat(item?.qty) : undefined,
+
+
+                    },
+                });
+
                 await createYarnStockAgainstOrder(
                     tx,
                     poType,

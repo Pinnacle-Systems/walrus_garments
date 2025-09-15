@@ -299,7 +299,25 @@ async function getOne(id) {
                     orderId: true
                 }
             },
-            Stock : true
+            Po: {
+                select : {
+
+                    id: true,
+                    supplier: true,
+                    transType: true,
+                    dueDate: true,
+                    supplierId: true,
+                    docId: true,
+                    orderId: true,
+                    PurchaseType: true,
+                    PoItems: true,
+                    order: true,
+                    
+                }
+                
+            },
+
+            Stock: true
         }
 
     })
@@ -505,7 +523,7 @@ export async function getStockvalidationById(id) {
                     orderId: true
                 }
             },
-            Stock : true
+            Stock: true
         }
 
     })

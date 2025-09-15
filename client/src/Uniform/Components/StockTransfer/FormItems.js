@@ -12,11 +12,13 @@ import StockDetails from "./StockDetails";
 
 const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
+    toOrderId, fromOrderId, orderData
+
 
 }) => {
 
 
-    console.log(tempOrderItems, "tempOrderItems")
+    console.log(fromOrderId, toOrderId, "toOrderId", orderData)
 
 
 
@@ -57,18 +59,21 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
 
 
-    function handleInputChange(value, index, field) {
+    function handleInputChange(value, index, field, stock) {
 
 
-        console.log(value, "value", index)
+        console.log(stock, "stock",)
 
 
         setStockItems(stock => {
             const newBlend = structuredClone(stock);
-            newBlend[index][field] = parseInt(value);
+            if (stock)
+                newBlend[index][field] = parseFloat(value);
             return newBlend
-        }
-        );
+        });
+
+
+
     };
 
 
@@ -80,7 +85,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
         setOrderItems(stock => {
             const newBlend = structuredClone(stock);
-            newBlend[index][field] = parseInt(value);
+            newBlend[index][field] = parseFloat(value);
             return newBlend
         }
         );
@@ -93,7 +98,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
             <Modal
                 isOpen={tableDataView}
                 onClose={() => setTableDataView(false)}
-                widthClass="px-2 h-[70%] w-[70%]"
+                widthClass=" h-[70%] w-[70%]"
             >
                 <YarnTransferDetails
                     tempOrderItems={tempOrderItems}
@@ -104,10 +109,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
                 />
             </Modal>
-           <Modal
+            <Modal
                 isOpen={tableStockDataView}
                 onClose={() => setTableStockDataView(false)}
-                widthClass="px-2 h-[70%] w-[70%]"
+                widthClass="  h-[70%] w-[50%]"
             >
                 <StockDetails
                     tempOrderItems={tempOrderItems}
@@ -119,12 +124,16 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
                 />
             </Modal>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[200px] mb-4">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[180px] mb-4">
 
 
                 <div className="flex flex-row gap-5">
                     <div className="flex justify-between items-center ">
-                        <h2 className="font-medium text-slate-700">Yarn Transfer Details</h2>
+                        <h2 className="font-medium text-slate-700">From Order Details
+                            <span className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 bg-clip-text text-transparent font-semibold ml-4">
+                                {findFromList(fromOrderId, orderData, "docId")}
+                            </span>
+                        </h2>
                     </div>
                     <button
                         onClick={() => {
@@ -140,18 +149,18 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
                     </button>
                 </div>
                 <div className="flex flex-row gap-40 ">
-                    <div className="w-[80%] flex flex-col">
-                        <div className="justify-end items-center mt-4 mb-5">
+                    <div className="w-[81%] flex flex-col">
+                        <div className="justify-end items-center ">
                             <div className="max-h-[140px] overflow-y-auto ">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            <th className="w-72 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
+                                            <th className="w-72 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Balance Qty</th>
 
                                             <th className="w-32 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Kgs)</th>
 
@@ -182,10 +191,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {yarnItem?.qty?.toFixed(3)}
                                                 </td>
-                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {yarnItem?.balaneQty?.toFixed(3)}
                                                 </td>
-                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     <input
                                                         min="0"
                                                         type="number"
@@ -198,6 +207,41 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
                                                             handleInputChangeOrder((e.target.value), index, "transferQty")
                                                         }
                                                         }
+                                                    />
+                                                </td> */}
+                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    <input
+                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={yarnItem?.transferQty || ""}
+                                                        // value={item?.quantity ? item.quantity.toFixed(3) : ""}
+
+
+
+
+                                                        disabled={readOnly}
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+
+                                                            handleInputChangeOrder(
+                                                                val === "" ? "" : val,
+                                                                index,
+                                                                "transferQty",
+
+                                                            );
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            const formatted =
+                                                                e.target.value === "" ? "" : Number(e.target.value).toFixed(3);
+                                                            e.target.value = formatted;
+                                                            handleInputChangeOrder(formatted, index, "transferQty");
+                                                        }}
+                                                        placeHolder="0.00"
                                                     />
                                                 </td>
                                             </tr>
@@ -239,12 +283,16 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
                 </div>
 
             </div>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[200px] ">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[180px] ">
 
 
                 <div className="flex flex-row gap-7">
                     <div className="flex justify-between items-center ">
-                        <h2 className="font-medium text-slate-700">Transfer Stock Details</h2>
+                        <h2 className="font-medium text-slate-700">To Order Details  <span
+                            className="ml-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold"
+                        >
+                            {findFromList(toOrderId, orderData, "docId")}
+                        </span>    </h2>
                     </div>
                     <button
                         onClick={() => {
@@ -262,8 +310,8 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
 
                 <div className="flex flex-row gap-40 ">
-                    <div className="w-[80%] flex flex-col">
-                        <div className="justify-end items-center mt-4 mb-5">
+                    <div className="w-[81%] flex flex-col">
+                        <div className="justify-end items-center ">
                             <div className="h-[140px] overflow-y-auto ">
                                 <table className="w-full border-collapse ">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -295,25 +343,53 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList,
 
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                    {parseInt(stock?._sum?.qty).toFixed(3)}
+                                                    {parseFloat(stock?._sum?.qty).toFixed(2)}
 
                                                 </td>
+
                                                 <td className="w-12 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     <input
-                                                        min="0"
+                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                                         type="number"
-                                                        className="text-right rounded py-1 px-1 w-full "
-                                                        onFocus={(e) => e.target.select()}
-                                                        value={(stock?.transferQty || "0.000")
-                                                        }
-                                                        onChange={(e) => handleInputChange(e.target.value, index, "transferQty")}
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={stock?.transferQty || ""}
+                                                        // value={item?.quantity ? item.quantity.toFixed(3) : ""}
+
+
+
+
+                                                        disabled={readOnly}
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+
+                                                            // handleInputChange(
+                                                            //     val === "" ? "" : val,
+                                                            //     index,
+                                                            //     "transferQty",
+
+                                                            // );
+                                                            if (val <= parseFloat(stock?._sum?.qty ?? 0)) {
+                                                                // ✅ If user typed two decimals, fix it immediately
+                                                                if (/^\d+(\.\d{2})$/.test(val)) {
+                                                                }
+                                                                handleInputChange(val, index, "transferQty", stock);
+                                                            } else {
+                                                                toast.info("Transfer Qty cannot be more than Stock Qty");
+                                                            }
+                                                        }}
                                                         onBlur={(e) => {
-                                                            handleInputChange((e.target.value), index, "transferQty")
-                                                        }
-                                                        }
+                                                            const formatted =
+                                                                e.target.value === "" ? "" : Number(e.target.value).toFixed(3);
+                                                            e.target.value = formatted;
+                                                            handleInputChange(formatted, index, "transferQty");
+                                                        }}
+                                                        placeHolder="0.00"
                                                     />
                                                 </td>
-
                                             </tr>
                                         ))}
 
