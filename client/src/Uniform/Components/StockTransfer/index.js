@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import { DateInputNew, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import StockTransferForm from "./StockTransferFormUI";
-import OrderFormReport from "./OrderReport";
+import StockTransferReport from "./stockTransferReport";
 import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
-import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
+import { useDeleteStockTransferMutation, useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
 
 
@@ -21,13 +21,13 @@ const StockTransfer = () => {
     const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
 
 
-    const [transferType, setTransferType] = useState("")
+    const [transferType, setTransferType] = useState("General")
 
     const [orderId, setOrderId] = useState("");
     const [orderItems, setOrderItems] = useState([])
     const [tempOrderItems, setTempOrderItems] = useState([])
 
-    const [partyId, setPartyId] = useState("");
+    const [toCustomerId, setToCustomerId] = useState("");
     const [toOrderId, setToOrderId] = useState("")
 
     const [requirementId, setRequirementId] = useState("")
@@ -54,6 +54,8 @@ const StockTransfer = () => {
 
         }
     });
+
+    const [removeData] = useDeleteStockTransferMutation()
 
     const getNextDocId = useCallback(() => {
         //   if (id || isLoading || isFetching) return
@@ -83,15 +85,15 @@ const StockTransfer = () => {
                 return;
             }
             try {
-                // let deldata = await removeData(id).unwrap();
-                // if (deldata?.statusCode == 1) {
-                //     Swal.fire({
-                //         icon: "error",
-                //         title: "Child record Exists",
-                //         text: deldata.data?.message || "Data cannot be deleted!",
-                //     });
-                //     return;
-                // }
+                let deldata = await removeData(id).unwrap();
+                if (deldata?.statusCode == 1) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Record Not Found",
+                        text: deldata.data?.message || "Data cannot be deleted!",
+                    });
+                    return;
+                }
                 setId("");
                 Swal.fire({
                     title: "Deleted Successfully",
@@ -115,12 +117,12 @@ const StockTransfer = () => {
         setOrderId("")
         setRequirementId("")
         setToOrderId("")
-        setPartyId("")
+        setToCustomerId("")
         setFromOrderId("")
         setOrderItems([])
         setStockItems([])
         setTempOrderItems([])
-        setTempOrderItems([])
+        setTempStockItems([])
     };
 
 
@@ -128,12 +130,12 @@ const StockTransfer = () => {
         <>
             {form ? (
                 <StockTransferForm
-                    id={id} setId={setId}
+                    id={id} setId={setId}  setForm={setForm}
                     orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
-                    partyId={partyId} setPartyId={setPartyId} setRequirementId={setRequirementId} requirementId={requirementId}
+                    toCustomerId={toCustomerId} setToCustomerId={setToCustomerId} setRequirementId={setRequirementId} requirementId={requirementId}
                     showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                     docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
+                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
                     date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
                     setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
                     onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId}
@@ -147,7 +149,7 @@ const StockTransfer = () => {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true); setTransferType("") }}
+                            onClick={() => { setForm(true); setTransferType("") ;OnNew() }}
                         >
                             <FaPlus /> Create New
                         </button>
@@ -163,7 +165,7 @@ const StockTransfer = () => {
                             itemsPerPage={10}
                         
                         /> */}
-                        <OrderFormReport
+                        <StockTransferReport
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}

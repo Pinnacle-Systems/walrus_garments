@@ -25,17 +25,9 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
 
-// import { useGetPurchaseBillQuery } from "../../../redux/services/PurchaseBillService";
-// import { useGetQuotesQuery } from "../../../redux/services/QuotesService";
-// import { useGetLeadQuery } from "../../../redux/services/LeadFormService";
-// import { DateInput, DropdownInput } from "../../../Inputs";
-// import { useGetUserQuery } from "../../../redux/services/UsersMasterService";
-// import { ExcelButton } from "../../../Buttons";
-// import { exportFileToCsv } from "../../../Utils/excelHelper";
-// import ReactHTMLTableToExcel from "react-html-table-to-excel";
-// import { substract } from "../../../helper";
 
-const OrderFormReport = ({
+
+const StockTransferReport = ({
     onClick,
     onView,
     itemsPerPage = 10,
@@ -52,7 +44,8 @@ const OrderFormReport = ({
     const [serachDocNo, setSerachDocNo] = useState("");
     const [searchClientName, setSearchClientName] = useState("");
     const [searchDate, setSearchDate] = useState("");
-
+    const [fromOrderNo, setFromOrderNo] = useState("")
+    const [toOrderNo, setToOrderNo] = useState("")
 
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
@@ -67,6 +60,8 @@ const OrderFormReport = ({
         serachDocNo,
         searchClientName,
         searchDate,
+        fromOrderNo,
+        toOrderNo
 
     };
 
@@ -76,6 +71,8 @@ const OrderFormReport = ({
         serachDocNo,
         searchClientName,
         searchDate,
+        fromOrderNo,
+        toOrderNo
     ]);
 
     const companyId = secureLocalStorage.getItem(
@@ -306,9 +303,9 @@ const OrderFormReport = ({
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={searchClientName}
+                                            value={fromOrderNo}
                                             onChange={(e) => {
-                                                setSearchClientName(e.target.value);
+                                                setFromOrderNo(e.target.value);
                                             }}
                                         />
                                     </th>
@@ -317,9 +314,9 @@ const OrderFormReport = ({
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={searchClientName}
+                                            value={toOrderNo}
                                             onChange={(e) => {
-                                                setSearchClientName(e.target.value);
+                                                setToOrderNo(e.target.value);
                                             }}
                                         />
                                     </th>
@@ -337,77 +334,79 @@ const OrderFormReport = ({
                                         </td>
                                     </tr>
                                 </tbody>
-                            ) : (
-                                <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
-                                        <tr
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    onClick(dataObj.id);
-                                                }
-                                            }}
-                                            tabIndex={0}
-                                            key={dataObj.id}
-                                            className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                                                }`}
-                                            onClick={() => onClick(dataObj.id)}
-                                        >
-                                            <td className="text-center " >
-                                                {index + 1}
-                                            </td>
+                            ) :
 
-                                            <td className="py-1.5 text-center">
-                                                {dataObj?.docId || ""}
-                                            </td>
-                                            <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
-
-                                            <td className="py-1.5 text-center"> {dataObj?.fromOrder?.docId  ||  "General"}</td>
-
-                                            <td className="py-1.5 text-center"> {dataObj?.toOrsder?.docId}</td>
-                                            {rowActions && (
-                                                <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                                                    <div className="flex">
-                                                        {onView && (
-                                                            <button
-                                                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                                                onClick={() => onView(dataObj.id)}
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                            </button>
-                                                        )}
-                                                        {onEdit && (
-                                                            <button
-                                                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                                                onClick={() => onEdit(dataObj.id)}
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                                                </svg>
-                                                            </button>
-                                                        )}
-                                                        {onDelete && (
-                                                            <button
-                                                                className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                                                onClick={() => onDelete(dataObj.id)}
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                                </svg>
-                                                                {/* <span className="text-xs">delete</span> */}
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                (
+                                    <tbody className="border-2">
+                                        {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                            <tr
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        onClick(dataObj.id);
+                                                    }
+                                                }}
+                                                tabIndex={0}
+                                                key={dataObj.id}
+                                                className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                    }`}
+                                                onClick={() => onClick(dataObj.id)}
+                                            >
+                                                <td className="text-center " >
+                                                    {index + 1}
                                                 </td>
-                                            )}
 
-                                        </tr>
-                                    ))}
+                                                <td className="py-1.5 text-center">
+                                                    {dataObj?.docId || ""}
+                                                </td>
+                                                <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
-                                </tbody>
-                            )}
+                                                <td className="py-1.5 text-center"> {dataObj?.fromOrder?.docId || "General"}</td>
+
+                                                <td className="py-1.5 text-center"> {dataObj?.toOrsder?.docId}</td>
+                                                {rowActions && (
+                                                    <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                                                        <div className="flex">
+                                                            {onView && (
+                                                                <button
+                                                                    className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                                                    onClick={() => onView(dataObj.id)}
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                            {onEdit && (
+                                                                <button
+                                                                    className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                                                    onClick={() => onEdit(dataObj.id)}
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                            {onDelete && (
+                                                                <button
+                                                                    className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
+                                                                    onClick={() => onDelete(dataObj.id)}
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    {/* <span className="text-xs">delete</span> */}
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
+
+                                            </tr>
+                                        ))}
+
+                                    </tbody>
+                                )}
                         </table>
 
                     </div>
@@ -422,4 +421,4 @@ const OrderFormReport = ({
     );
 };
 
-export default OrderFormReport;
+export default StockTransferReport;

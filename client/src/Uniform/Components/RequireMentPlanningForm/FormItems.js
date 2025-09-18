@@ -1,14 +1,31 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import Swal from "sweetalert2";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, yarnTotals, setYarnTotals }) => {
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, yarnTotals, setYarnTotals, setRequirementItems, requirementItems , orderItemsData }) => {
 
-    console.log(orderSizeDetails, "orderSizeDetails", id);
-    console.log(yarnTotals, "yarnTotals");
+    console.log(orderSizeDetails, "orderSizeDetails");
+    console.log(orderYarnDetails, "orderYarnDetails")
+    console.log(requirementItems, "requirementItems");
+    console.log(orderItemsData, "orderData")
 
-    console.log(orderYarnDetails, "orderYarnDetails");
 
+
+    function calculateYarnTotals(yarnArr, sizeArr) {
+        return yarnArr.map(yarn => {
+            const total = sizeArr?.reduce((sum, size) => {
+                return sum + (yarn.percentage * size.weight / 100) * size.qty;
+            }, 0);
+
+            return {
+                yarnId: yarn.id,
+                yarnName: yarn.name,
+                totalRequired: total.toFixed(3)  // round to 3 decimals
+            };
+        });
+    }
+
+    console.log(calculateYarnTotals(orderYarnDetails, orderSizeDetails), "Totallll")
 
 
 
@@ -26,27 +43,10 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         });
     }
 
-    // function handleInputChange(value, index, yarnId) {
 
-    //     setOrderYarnDetails((prev) => {
-    //         let newItems = structuredClone(prev);
-    //         newItems[index]['percentage'] = value;
-    //         return newItems;
-    //     });
-
-
-    //     setRequirementForm((prev) => {
-    //         const newItems = structuredClone(prev);
-    //         const percent = value === "" ? 0 : parseFloat(value);
-    //         newItems.forEach((item) => {
-    //             if (item.yarnId === yarnId) {
-    //                 item.requireWeight = Number(((parseFloat(item.weight) * percent) / 100).toFixed(5));
-    //             }
-    //         });
-    //         return newItems;
-    //     });
-    // }
     function handleInputChange(value, index, yarnId) {
+
+
         const num = value === "" ? 0 : parseFloat(value);
 
         setOrderYarnDetails((prev) => {
@@ -72,6 +72,26 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             else {
 
                 newItems[index]["percentage"] = num;
+                const requirementArr = newItems?.map((yarn) => ({
+                    yarn: yarn.Yarn.name,
+                    percentage: yarn.percentage,
+                    yarnKneedleId : yarn?.yarnKneedleId,
+                    yarnId: yarn.yarnId,
+                    count : yarn.yarnId,
+                    colorId : yarn?.colorId ,
+                    uomId: yarn?.uomId ? yarn?.uomId : 1,
+                    orderId : orderItemsData?.orderId,
+                    orderDetailsId : orderItemsData?.id,
+                    partyId : orderItemsData?.order?.partyId,
+                    requiredQty: orderSizeDetails?.reduce(
+                        (sum, size) =>
+                            sum + (yarn.percentage * size.weight / 100) * size.qty,
+                        0
+                    ).toFixed(3),
+                }));
+
+                setRequirementItems(requirementArr);
+
             }
 
             return newItems;
@@ -90,14 +110,33 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             return newItems;
         });
 
+        // const requirementArr = orderYarnDetails?.map(yarn => ({
+        //     yarnId: yarn.id,
+        //     yarnName: yarn.name,
+        //     percentage: yarn.percentage,
+        //     requiredQty: orderSizeDetails?.reduce(
+        //         (sum, size) => sum + (yarn.percentage * size.weight / 100) * size.qty,
+        //         0
+        //     ).toFixed(3)
+        // }));
+
+        // setRequirementItems(requirementArr);
+
     }
 
+    console.log(requirementItems, "requirementItems");
 
     useEffect(() => {
         orderYarnDetails?.forEach((yarn) => {
             newFunction(yarn?.percentage, yarn?.yarnId);
         });
     }, [orderYarnDetails]);
+
+
+
+
+
+
 
     useEffect(() => {
         if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
@@ -124,7 +163,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     }, [orderSizeDetails]);
 
     const getQtyYarnSize = (sizeId, yarnId, colorId) => {
-        console.log(sizeId, yarnId, colorId, "sizeId, yarnId, colorId");
+        // console.log(sizeId, yarnId, colorId, "sizeId, yarnId, colorId");
 
         const item = requirementForm?.find(
             i => i.sizeId === sizeId && i.yarnId === yarnId && i.colorId === colorId
@@ -145,63 +184,12 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
             const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
 
-            return (total + (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100);
+            return (total + (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)));
 
         }, 0);
     };
 
-    
-    // useEffect(() => {
-    //     if (!orderYarnDetails || !requirementForm || !orderSizeDetails) return;
 
-
-    //     console.log(orderYarnDetails,"orderYarnDetails")
-
-    //     // const totals = orderYarnDetails?.map((yarn) => {
-    //     //     const total =
-    //     //         requirementForm?.reduce((sum, item) => {
-    //     //             if (item.yarnId !== yarn.yarnId) return sum;
-
-    //     //             const sizeQty =
-    //     //                 orderSizeDetails?.find((s) => s.sizeId === item.sizeId)?.qty || 0;
-
-    //     //             return (
-    //     //                 sum +
-    //     //                 (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100
-    //     //             );
-    //     //         }, 0) || 0;
-
-    //     //     return {
-    //     //         yarnName: yarn?.Yarn?.name,
-    //     //         qty: parseFloat(total.toFixed(3)),
-    //     //     };
-    //     // });
-
-    //     // setYarnTotals(totals);
-    //     setOrderYarnDetails((prev) => {
-    //         if (!prev || !requirementForm || !orderSizeDetails) return prev;
-
-    //         return prev.map((yarn) => {
-    //             const total =
-    //                 requirementForm?.reduce((sum, item) => {
-    //                     if (item.yarnId !== yarn.yarnId) return sum;
-
-    //                     const sizeQty =
-    //                         orderSizeDetails?.find((s) => s.sizeId === item.sizeId)?.qty || 0;
-
-    //                     return (
-    //                         sum +
-    //                         (parseFloat(item.requireWeight || 0) * parseFloat(sizeQty || 0)) / 100
-    //                     );
-    //                 }, 0) || 0;
-
-    //             return {
-    //                 ...yarn,
-    //                 requiredQty: parseFloat(total.toFixed(3)), // ✅ push directly inside orderYarnDetails
-    //             };
-    //         });
-    //     });
-    // }, []);
 
 
 
@@ -351,7 +339,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                 <tr>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Color</td>
+
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty (kgs)</td>
 
                                 </tr>
 
@@ -362,9 +352,10 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     <tr>
                                         <td className="border border-gray-300 px-2 py-1 text-left text-xs w-9">{index + 1}</td>
                                         <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Color?.name}</td>
 
                                         <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                            {getRequireWeight(yarn?.yarnId).toFixed(3)} Kg
+                                            {getRequireWeight(yarn?.yarnId).toFixed(3)}
                                         </td>
 
                                     </tr>

@@ -5,7 +5,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery,  useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -19,7 +19,9 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, yarnTotals, setYarnTotals,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber,
+
+    setRequirementItems, requirementItems
 }) => {
 
 
@@ -48,23 +50,50 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
     const syncFormWithDb = useCallback((data) => {
+        console.log(data, "data")
         if (orderId) {
             setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
             setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
+            // setRequirementItems(data  ?  data  :  {})
+            const updated = data?.orderDetails?.map(item => {
+                const yarns = item?.orderYarnDetails || [];
+
+                const combinedColors = yarns
+                    .map(yarn => yarn?.Color?.name)
+                    .filter(Boolean)
+                    .join("/");
+
+                return {
+                    ...item,
+                    allColors: combinedColors,
+                };
+            });
+
+            setCombo(updated);
         }
         if (id) {
             setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
             setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
             setChildrecord(data?.childRecord ? data?.childRecord : 0)
-            setOrderId(data?.orderId ? data?.orderId : "")
+            // setOrderId(data?.orderId ? data?.orderId : "")
             setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setPartyId(data?.partyId ? data?.partyId : "")
 
+            const combined = data?.RequirementYarnDetails
+                ?.map(item => `${data?.OrderDetails?.style?.name || ""} - ${item?.Color?.name || ""}`)
+                .filter(Boolean)  
+                .join(" / ");   
+
+            setCombo([{ allColorsWithStyle: combined }]);
+
+
+
         }
 
-    }, [orderId,id]);
+    }, [orderId, id]);
 
 
+    console.log(combo, "combo")
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -78,7 +107,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
     useEffect(() => {
         if (styleId && orderItemsData?.data) {
-            syncFormWithDb(orderItemsData.data, styleId);
+            syncFormWithDb(orderItemsData?.data, styleId);
         }
 
     }, [orderItemsDataFetching, orderItemsDataLoading, styleId, syncFormWithDb, orderItemsData]);
@@ -91,26 +120,33 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
         setPartyId(singleOrderData?.data?.partyId || "")
     }
 
+    // useEffect(() => {
+    //     if (singleOrderData?.data?.orderDetails) {
+    //         const updated = singleOrderData?.data?.orderDetails.map(item => {
+    //             const yarns = item?.orderYarnDetails || [];
+
+    //             const combinedColors = yarns
+    //                 .map(yarn => yarn?.Color?.name)
+    //                 .filter(Boolean)
+    //                 .join("/");
+
+    //             return {
+    //                 ...item,
+    //                 allColors: combinedColors,
+    //             };
+    //         });
+
+    //         setCombo(updated);
+
+    //     }
+
+    // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+
     useEffect(() => {
-        if (singleOrderData?.data?.orderDetails) {
-            const updated = singleOrderData?.data?.orderDetails.map(item => {
-                const yarns = item?.orderYarnDetails || [];
-
-                const combinedColors = yarns
-                    .map(yarn => yarn?.Color?.name)
-                    .filter(Boolean)
-                    .join("/");
-
-                return {
-                    ...item,
-                    allColors: combinedColors, 
-                };
-            });
-
-            setCombo(updated);
-
+        if (orderId && singleOrderData?.data) {
+            syncFormWithDb(singleOrderData?.data);
         }
-        
+
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
@@ -120,18 +156,19 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId,requirementForm
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementForm, requirementItems
     }
 
+    const validateData = (data) => {
+        if (data.orderId && data?.styleId) {
+            return true;
+        }
 
-    // const validateData = (data) => {
 
-    //     if (orderDetails?.length > 0 && data.partyId) {
-    //         return true
-    //     }
+        return false;
+    };
 
-    //     return false
-    // }
+
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
@@ -174,11 +211,46 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
         }
     };
 
+
+
     const saveData = (nextProcess) => {
-        // if (!validateData(data)) {
-        //     toast.info("Please fill all required fields...!", { position: "top-center" })
-        //     return
-        // }
+        if (!validateData(data)) {
+            // toast.info("Please fill all required fields...!", { position: "top-center" })
+            Swal.fire({
+                // title: "Total percentage exceeds 100%",
+                title: "Please fill all required fields...!",
+                icon: "error",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return
+        }
+        const totalPercentage = orderYarnDetails?.reduce(
+            (sum, yarn) => sum + (parseFloat(yarn.percentage) || 0),
+            0
+        );
+
+        if (totalPercentage < 100) {
+            Swal.fire({
+                title: "Total percentage is less than 100%",
+                text: "Please adjust yarn percentages to make it 100%",
+                icon: "warning",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return false;
+        }
+
+        if (totalPercentage > 100) {
+            Swal.fire({
+                title: "Total percentage exceeds 100%",
+                text: "Please adjust yarn percentages to make it exactly 100%",
+                icon: "error",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
@@ -244,32 +316,54 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Order Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
+                            <div className="grid grid-cols-6 gap-x-3">
+
+
+                        <div className="col-span-2">
+
+                                {id ?
 
 
 
-                                <DropdownWithSearch
-                                    options={orderData?.data}
-                                    value={orderId}
-                                    setValue={setOrderId}
-                                    readOnly={id ? true : false}
-                                    labelField={"docId"}
-                                    label={"Order No"}
-                                />
+                                        <TextInput
+                                            name="Order No"
+                                            value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
+                                            setValue={setJobNumber}
+                                            required={true}
 
+                                        />
+
+                                    :
+                                    <DropdownWithSearch
+                                        options={orderData?.data}
+                                        value={orderId}
+                                        setValue={setOrderId}
+                                        readOnly={id ? true : false}
+                                        labelField={"docId"}
+                                        label={"Order No"}
+                                        required={true}
+                                    />
+                                }
+                        </div>
+
+
+                                <div className="col-span-4">
 
                                 {id ?
 
 
                                     <>
+                                        {combo?.map((row, i) => (
+                                            <TextInput
+                                                name="Stytle Name"
+                                                placeholder="Stytle Name"
+                                                value={row?.allColorsWithStyle || ""}
+                                                setValue={setJobNumber}
+                                                required={true}
 
-                                        <TextInput
-                                            name="Stytle Name"
-                                            placeholder="Stytle Name"
-                                            value={findFromList(singleData?.data?.orderDetailsId, styleData?.data, "name")}
-                                            setValue={setJobNumber}
+                                            />
+                                        ))}
 
-                                        />{console.log(singleData?.data?.orderDetailsId, styleData?.data, "ddd")}
                                     </>
 
                                     :
@@ -288,8 +382,13 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                         labelField={"displayLabel"}
                                         label={"Stytle Name"}
                                         readOnly={id ? true : false}
+                                        required={true}
 
                                     />}
+                                    
+                                </div>
+                                <div className='col-span-2'>
+
                                 <TextInput
                                     name="Job Number"
                                     placeholder="Contact name"
@@ -297,6 +396,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                     setValue={setJobNumber}
 
                                 />
+                                </div>
                                 {/* <DropdownInput name="Leg Color" options={Colors} required={true} />
                                 <DropdownInput name="Foot Color" options={Colors} required={true} />
                                 <DropdownInput name="Stripes Color" options={Colors} required={true} />
@@ -312,6 +412,8 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                 Contact Details
                             </h2>
                             <div className="grid grid-cols-2 gap-x-3">
+                                <div className="col-span-2">
+
                                 <TextInput
                                     name="Customer"
                                     placeholder="Contact name"
@@ -319,6 +421,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
                                     // setValue={setContactPersonName}
                                     disabled={true}
                                 />
+                                </div>
                                 <TextInput
                                     name="Contact Person"
                                     placeholder="Contact Person"
@@ -345,8 +448,10 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
                     <fieldset className=''>
 
-                        <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
-                            setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id}  yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
+                        <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems}
+                            setRequirementItems={setRequirementItems} orderItemsData={orderItemsData?.data}
+
+
                         />
 
                     </fieldset>

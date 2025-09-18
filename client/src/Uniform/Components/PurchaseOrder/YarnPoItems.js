@@ -21,28 +21,28 @@ const YarnPoItems = ({
 }) => {
 
 console.log(poItems,"PoItems") 
-    // useEffect(() => {
-    //     if (poItems?.length >= 2) return
-    //     setPoItems(prev => {
-    //         let newArray = Array?.from({ length: 2 - prev?.length }, () => {
-    //             return {
-    //                 yarnId: "",
-    //                 qty: "0",
-    //                 tax: "0",
-    //                 colorId: "",
-    //                 uomId: "",
-    //                 price: "0",
-    //                 discountValue: "0.00",
-    //                 noOfBags: 0,
-    //                 weightPerBag: 0,
+    useEffect(() => {
+        if (poItems?.length >= 3) return
+        setPoItems(prev => {
+            let newArray = Array?.from({ length: 3 - prev?.length }, () => {
+                return {
+                    yarnId: "",
+                    qty: "0",
+                    tax: "0",
+                    colorId: "",
+                    uomId: "",
+                    price: "0",
+                    discountValue: "0.00",
+                    noOfBags: 0,
+                    weightPerBag: 0,
 
 
-    //             }
-    //         })
-    //         return [...prev, ...newArray]
-    //     }
-    //     )
-    // }, [setPoItems, poItems])
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setPoItems, poItems])
     console.log(poItems, "poItems");
 
 
@@ -63,20 +63,20 @@ console.log(poItems,"PoItems")
 
 
 
-    // const addNewRow = () => {
-    //     const newRow = {
-    //         yarnId: "",
-    //         qty: "0",
-    //         tax: "0",
-    //         colorId: "",
-    //         uomId: "",
-    //         price: "0",
-    //         discountValue: "0.00",
-    //         noOfBags: 0,
-    //         weightPerBag: 0,
-    //     };
-    //     setPoItems([...poItems, newRow]);
-    // };
+    const addNewRow = () => {
+        const newRow = {
+            yarnId: "",
+            qty: "0",
+            tax: "0",
+            colorId: "",
+            uomId: "",
+            price: "0",
+            discountValue: "0.00",
+            noOfBags: 0,
+            weightPerBag: 0,
+        };
+        setPoItems([...poItems, newRow]);
+    };
 
 
     const deleteRow = (id) => {
@@ -116,7 +116,7 @@ console.log(poItems,"PoItems")
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
-                    <div className="flex gap-2 items-center">
+                    {/* <div className="flex gap-2 items-center">
 
                         <button
                             onClick={() => {
@@ -127,7 +127,7 @@ console.log(poItems,"PoItems")
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
                         </button>
-                    </div>
+                    </div> */}
 
                 </div>
                 <div className={` relative w-full overflow-y-auto py-1`}>

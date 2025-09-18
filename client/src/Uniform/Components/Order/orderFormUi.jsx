@@ -371,68 +371,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                                         </div>
 
-                                        {showAddressPopup && (
-                                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50" disabled>
-                                                <div className="bg-[f1f1f0] rounded-lg shadow-xl w-full max-w-md">
-                                                    <div className="flex justify-between items-center border-b border-slate-200 p-4">
-                                                        <h3 className="text-lg font-medium text-slate-800">Select Address</h3>
-                                                        <button
-                                                            // onClick={() => setShowAddressPopup(false)}
-                                                            className="text-white bg-red-600 rounded-full p-1 hover:bg-red-600"
-                                                        >
-                                                            <HiX className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="p-4  bg-white max-h-[60vh] overflow-y-auto">
-                                                        <div className="space-y-3">
-
-                                                            {partyData?.find(j => parseInt(j.id) == parseInt(partyId))?.partyBranch?.map((item, index) => (
-
-                                                                <div key={index}
-                                                                    className="p-3 border border-slate-200 rounded-md hover:border-indigo-300 cursor-pointer transition-colors"
-                                                                    onClick={() => {
-                                                                        setAddress(item?.branchAddress);
-                                                                        setShowAddressPopup(false)
-
-                                                                    }}
-                                                                >
-                                                                    <h4 className="font-medium text-slate-800">{item?.branchName}</h4>
-                                                                    <p className="text-sm text-slate-600 mt-1">{item?.branchAddress}</p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-
-                                                        <button onClick={() => {
-
-                                                            if (!partyId) {
-                                                                toast.error("Choose PartyId");
-                                                                return
-                                                            }
-                                                            setEditingItem(partyId);
-                                                            setOpenModelForAddress(true)
-                                                            setShowAddressPopup(false)
-
-
-                                                        }} className="mt-4 w-full flex items-center justify-center py-2 px-3 border border-dashed border-slate-300 rounded-md text-indigo-600 hover:bg-indigo-50 transition-colors">
-                                                            <HiPlus className="w-4 h-4 mr-2" />
-                                                            <span>Add New Address</span>
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="border-t border-slate-200 p-4 flex justify-end">
-                                                        <button
-                                                            onClick={() => setShowAddressPopup(false)}
-                                                            className="px-4 py-1 bg-white hover:bg-red-600 text-red-600  hover:text-white border border-red-600 
-              rounded-md  transition-colors"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
+                                      
 
                                     </div>
                                 </div>

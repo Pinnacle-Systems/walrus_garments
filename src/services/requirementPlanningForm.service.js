@@ -150,6 +150,7 @@ async function get(req) {
 
         },
         include: {
+            RequirementPlanningItems: true,
             requirementSizeDetails: true,
             RequirementYarnDetails: {
                 select: {
@@ -234,7 +235,15 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-
+            OrderDetails: {
+                select: {
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
             requirementSizeDetails: {
                 select: {
                     id: true,
@@ -249,6 +258,7 @@ async function getOne(id) {
                     sizeId: true
                 }
             },
+            RequirementPlanningItems: true,
             RequirementYarnDetails: {
                 select: {
                     id: true,
@@ -261,6 +271,11 @@ async function getOne(id) {
                     yarnKneedleId: true,
                     percentage: true,
                     Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Color: {
                         select: {
                             name: true
                         }
@@ -375,7 +390,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber ,requirementForm } = req.body
+        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber, requirementItems } = req.body
 
 
 
@@ -414,6 +429,26 @@ async function create(req) {
                 //             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                 //             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                 //             filePath: item?.filePath ? item?.filePath : undefined,
+
+                RequirementPlanningItems: requirementItems?.length > 0
+                    ? {
+                        createMany: {
+                            data: requirementItems?.map((sub) => ({
+                                orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
+                                orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
+                                percentage: sub?.percentage ? parseFloat(sub.percentage) : undefined,
+                                colorId: sub?.colorId ? parseFloat(sub.colorId) : undefined,
+                                yarnId: sub?.yarnId ? parseFloat(sub.yarnId) : undefined,
+                                colorId: sub?.colorId ? parseFloat(sub.colorId) : undefined,
+                                // uomId: sub?.uomId ? parseFloat(sub.uomId) : undefined,
+                                count: sub?.count ? parseFloat(sub.count) : undefined,
+                                partyId: sub?.partyId ? parseInt(sub.partyId) : undefined,
+                                requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
+                            })),
+                        },
+                    }
+
+                    : undefined,
 
                 requirementSizeDetails: orderSizeDetails?.length > 0
                     ? {

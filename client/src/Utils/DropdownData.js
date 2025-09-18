@@ -54,7 +54,19 @@ export const poTypes = [
     { show: "Accessory", value: "Accessory" },
 
 ]
+export const MaterialType = [
+    // { show: "GreyYarn", value: "GreyYarn" },
+    { show: "DyedYarn", value: "DyedYarn" },
+    { show: "Accessory", value: "Accessory" },
 
+]
+
+export const PoTypes = [
+    { show: "ORDER", value: "ORDER" },
+    { show: "SAMPLE", value: "SAMPLE" },
+    { show: "GENERAL", value: "GENERAL" },
+
+]
 export const Generalpurchase = [
     { show: "Grey Yarn", value: "GreyYarn" },
     { show: "Dyed Yarn", value: "DyedYarn" },

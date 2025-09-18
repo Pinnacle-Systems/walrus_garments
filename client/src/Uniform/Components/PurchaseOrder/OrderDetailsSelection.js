@@ -6,19 +6,19 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 
-export default function StockDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
+export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
 
 }) {
 
 
-    console.log(tempStockItems, "tempStockItems")
-
+    console.log(tempPoItems, "tempPoItems")
+    console.log(poItems, "poItems")
 
 
     function handleDone() {
         setStockItems(
             tempStockItems?.filter(stockItem =>
-                orderItems?.some(orderItem =>
+                poItems?.some(orderItem =>
                     stockItem?.yarnId === orderItem?.yarnId &&
                     stockItem?.colorId === orderItem?.colorId // use colorId for safety
                 )
@@ -42,7 +42,7 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
     }
 
     function handleCancel() {
-        setOrderItems([]);
+        setPoItems([]);
         onClose()
     }
 
@@ -143,14 +143,58 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
     function addItem(id, obj) {
         console.log(obj, "obj")
 
-        setOrderItems(localInwardItems => {
+        setPoItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(obj);
             return newItems
         });
     }
     function removeItem(id) {
-        setOrderItems(localInwardItems => {
+        setPoItems(localInwardItems => {
+            let newItems = structuredClone(localInwardItems);
+            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
+            return newItems
+        });
+    }
+
+    function handleChange(id, obj) {
+
+        if (isItemAdded(id, obj)) {
+            removeItem(id)
+        } else {
+            addItem(id, obj)
+        }
+    }
+
+    function isItemAdded(id) {
+          const index = poItems?.findIndex(v => v.yarnId === "" || v == null);
+
+        return poItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
+    }
+
+    function handleSelectAllChange(value, poItems) {
+        if (value) {
+            poItems?.forEach(item => addItem(item.id, item))
+        } else {
+            poItems?.forEach(item => removeItem(item.id))
+        }
+    }
+
+    function getSelectAll(poItems) {
+        return poItems?.every(item => isItemAdded(item.id))
+    }
+
+    function addItem(id, obj) {
+        console.log(obj, "obj")
+
+        setPoItems(localInwardItems => {
+            let newItems = structuredClone(localInwardItems);
+            newItems.push(obj);
+            return newItems
+        });
+    }
+    function removeItem(id) {
+        setPoItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
             return newItems
@@ -166,7 +210,7 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
     }
 
     function isItemAdded(id) {
-        return orderItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
+        return poItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
     }
 
     function handleSelectAllChange(value, poItems) {
@@ -193,31 +237,79 @@ export default function StockDetails({ tempOrderItems, setOrderItems, orderItems
                                 <table className="border-collapse w-full">
                                     <thead className="bg-gray-200 text-gray-800">
                                         <tr>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                                <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, tempPoItems ? tempPoItems : [])}
+                                                    checked={getSelectAll(tempPoItems ? tempPoItems : [])}
+                                                />
+                                            </th>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Yarn</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Stock Qty (Kgs)</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Po Type</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Order No</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Customer Name</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style No</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Yarn</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Color</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty</th>
+                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price  Qty</th>
+
+
+
+
                                         </tr>
                                     </thead>
 
                                     <tbody>
-                                        {tempStockItems?.map((stock, index) => (
+                                        {tempPoItems?.map((item, index) => (
                                             <tr
                                                 key={index}
                                                 className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                                     }`}
+                                                onClick={() => {
+                                                    if (item?.balanceQty !== 0) {
+                                                        handleChange(item.id, item)
+                                                    }
+                                                }}
                                             >
+                                                <td className='py-1 text-center'>
+                                                    <input type="checkbox" name="" id=""
+                                                        checked={isItemAdded(item.id, item)}
+                                                        disabled={item?.balanceQty === 0} />
+                                                </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {findFromList(stock?.yarnId, yarnList, "name")}
+                                                <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                    { }
                                                 </td>
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {findFromList(stock?.colorId, colorList, "name")}
+                                                    {item?.order?.docId}
                                                 </td>
-                                                <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                    {parseFloat(stock?._sum?.qty).toFixed(3)}
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.Party?.name}
+                                                </td>
+                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                    {item?.OrderDetails?.style?.name}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.Yarn?.name}
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.Color?.name}
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.Counts?.name}
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.Uom?.name}
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    {item?.requiredQty}
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    { }
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    { }
+                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    { }
                                                 </td>
                                             </tr>
                                         ))}

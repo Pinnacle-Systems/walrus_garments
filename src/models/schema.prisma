@@ -573,6 +573,7 @@ model Party {
   PartyAttachments        PartyAttachments[]
   RaiseIndent             RaiseIndent[]
   MaterialIssue           MaterialIssue[]
+  RequirementPlanningItems  RequirementPlanningItems[]
 }
 
 model PartyBranch {
@@ -693,12 +694,13 @@ model Content {
 }
 
 model Counts {
-  id        Int      @id @default(autoincrement())
-  name      String
-  Company   Company? @relation(fields: [companyId], references: [id])
-  companyId Int?
-  active    Boolean  @default(true)
-  Yarn      Yarn[]
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  Company                  Company?                   @relation(fields: [companyId], references: [id])
+  companyId                Int?
+  active                   Boolean                    @default(true)
+  Yarn                     Yarn[]
+  RequirementPlanningItems RequirementPlanningItems[]
 }
 
 model YarnType {
@@ -763,8 +765,9 @@ model Yarn {
   RaiseIndentItems              RaiseIndentItems[]
   RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
   MaterialIssueYarnItems        MaterialIssueYarnItems[]
-  StockTransferItems            StockTransferItems[]
-  YarnTransferDetails           YarnTransferDetails[]
+  FromOrderTransferItems        FromOrderTransferItems[]
+  ToOrderTransferTtems          ToOrderTransferTtems[]
+  RequirementPlanningItems      RequirementPlanningItems[]
 }
 
 model yarnCounts {
@@ -831,36 +834,36 @@ model FabricOnYarnBlend {
 }
 
 model AccessoryGroup {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  Company            Company?             @relation(fields: [companyId], references: [id])
-  companyId          Int?
-  active             Boolean              @default(true)
-  AccessoryItem      AccessoryItem[]
-  PoItems            PoItems[]
-  DirectItems        DirectItems[]
-  Stock              Stock[]
-  DirectReturnItems  DirectReturnItems[]
-  CancelItems        CancelItems[]
-  StockTransferItems StockTransferItems[]
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  Company                Company?                 @relation(fields: [companyId], references: [id])
+  companyId              Int?
+  active                 Boolean                  @default(true)
+  AccessoryItem          AccessoryItem[]
+  PoItems                PoItems[]
+  DirectItems            DirectItems[]
+  Stock                  Stock[]
+  DirectReturnItems      DirectReturnItems[]
+  CancelItems            CancelItems[]
+  FromOrderTransferItems FromOrderTransferItems[]
 }
 
 model AccessoryItem {
-  id                    Int                     @id @default(autoincrement())
-  name                  String
-  AccessoryGroup        AccessoryGroup          @relation(fields: [accessoryGroupId], references: [id])
-  active                Boolean                 @default(true)
-  accessoryGroupId      Int
-  Company               Company?                @relation(fields: [companyId], references: [id])
-  companyId             Int?
-  Accessory             Accessory[]
-  PartyOnAccessoryItems PartyOnAccessoryItems[]
-  PoItems               PoItems[]
-  DirectItems           DirectItems[]
-  Stock                 Stock[]
-  DirectReturnItems     DirectReturnItems[]
-  CancelItems           CancelItems[]
-  StockTransferItems    StockTransferItems[]
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  AccessoryGroup         AccessoryGroup           @relation(fields: [accessoryGroupId], references: [id])
+  active                 Boolean                  @default(true)
+  accessoryGroupId       Int
+  Company                Company?                 @relation(fields: [companyId], references: [id])
+  companyId              Int?
+  Accessory              Accessory[]
+  PartyOnAccessoryItems  PartyOnAccessoryItems[]
+  PoItems                PoItems[]
+  DirectItems            DirectItems[]
+  Stock                  Stock[]
+  DirectReturnItems      DirectReturnItems[]
+  CancelItems            CancelItems[]
+  FromOrderTransferItems FromOrderTransferItems[]
 }
 
 model Accessory {
@@ -882,7 +885,7 @@ model Accessory {
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
   CancelItems                   CancelItems[]
-  StockTransferItems            StockTransferItems[]
+  FromOrderTransferItems        FromOrderTransferItems[]
 }
 
 enum AccessoryCategory {
@@ -915,6 +918,7 @@ enum P_InwardOrReturn {
   GeneralPo
   OrderAgainstPo
   MaterialIssue
+  StockTransfer
 }
 
 model Color {
@@ -944,21 +948,22 @@ model Color {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   OnlineSalesDetails                        OnlineSalesDetails[]
 
-  footSampleDetails      sampleDetails[]          @relation(name: "footSampleDetails")
-  stripesSampleDetails   sampleDetails[]          @relation(name: "stripesSampleDetails")
-  DirectReturnItems      DirectReturnItems[]
-  CancelItems            CancelItems[]
-  sampleSizeDetails      sampleSizeDetails[]
-  orderYarnDetails       orderYarnDetails[]
-  sampleYarnDetails      sampleYarnDetails[]
-  requirementSizeDetails RequirementSizeDetails[]
-  requirementYarnDetails RequirementYarnDetails[]
-  RaiseIndentItems       RaiseIndentItems[]
-  RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
-  OrderDetails           OrderDetails[]
-  MaterialIssueYarnItems MaterialIssueYarnItems[]
-  StockTransferItems     StockTransferItems[]
-  YarnTransferDetails    YarnTransferDetails[]
+  footSampleDetails        sampleDetails[]            @relation(name: "footSampleDetails")
+  stripesSampleDetails     sampleDetails[]            @relation(name: "stripesSampleDetails")
+  DirectReturnItems        DirectReturnItems[]
+  CancelItems              CancelItems[]
+  sampleSizeDetails        sampleSizeDetails[]
+  orderYarnDetails         orderYarnDetails[]
+  sampleYarnDetails        sampleYarnDetails[]
+  requirementSizeDetails   RequirementSizeDetails[]
+  requirementYarnDetails   RequirementYarnDetails[]
+  RaiseIndentItems         RaiseIndentItems[]
+  RaiseIndenetYarnItems    RaiseIndenetYarnItems[]
+  OrderDetails             OrderDetails[]
+  MaterialIssueYarnItems   MaterialIssueYarnItems[]
+  FromOrderTransferItems   FromOrderTransferItems[]
+  ToOrderTransferTtems     ToOrderTransferTtems[]
+  RequirementPlanningItems RequirementPlanningItems[]
 }
 
 model UnitOfMeasurement {
@@ -990,6 +995,7 @@ model UnitOfMeasurement {
   CancelItems                               CancelItems[]
   sampleSizeDetails                         sampleSizeDetails[]
   requirementSizeDetails                    RequirementSizeDetails[]
+  orderSizeDetails                          orderSizeDetails[]
 }
 
 enum DeliveryType {
@@ -1025,56 +1031,56 @@ model Po {
   orderId                 Int?
   requirementPlanningForm RequirementPlanningForm? @relation(fields: [requirementId], references: [id], onDelete: Cascade)
   requirementId           Int?
-
-  PurchaseType String?
-  PoItems      PoItems[]
+  isPurchaseCancel        Boolean?                 @default(false)
+  PurchaseType            String?
+  PoItems                 PoItems[]
 }
 
 model PoItems {
-  id               Int                @id @default(autoincrement())
-  Po               Po?                @relation(fields: [poId], references: [id], onDelete: Cascade)
-  Fabric           Fabric?            @relation(fields: [fabricId], references: [id])
-  fabricId         Int?
-  Yarn             Yarn?              @relation(fields: [yarnId], references: [id])
-  yarnId           Int?
-  Accessory        Accessory?         @relation(fields: [accessoryId], references: [id])
-  accessoryId      Int?
-  accessoryGroup   AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId Int?
-  accessoryItem    AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId  Int?
-  Color            Color?             @relation(fields: [colorId], references: [id])
-  colorId          Int?
-  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId            Int?
-  Design           Design?            @relation(fields: [designId], references: [id])
-  Gauge            Gauge?             @relation(fields: [gaugeId], references: [id])
-  LoopLength       LoopLength?        @relation(fields: [loopLengthId], references: [id])
-  Gsm              Gsm?               @relation(fields: [gsmId], references: [id])
-  noOfBags         Int?
-  weightPerBag     Float?
-  percentage       Float?
-  requiredQty      Float?
-  qty              Float?
-  price            Float?
-  discountType     DiscountTypes?
-  discountValue    Float?             @default(0)
-  tax              Float?             @default(0)
-  Size             Size?              @relation(fields: [sizeId], references: [id])
-  sizeId           Int?
-  YarnType         YarnType?          @relation(fields: [yarncategoryId], references: [id])
-  yarncategoryId   Int?
-  weight           Float?
-  designId         Int?
-  gaugeId          Int?
-  loopLengthId     Int?
-  gsmId            Int?
-  poId             Int?
-  KDia             Dia?               @relation("kDiaPoItem", fields: [kDiaId], references: [id])
-  kDiaId           Int?
-  FDia             Dia?               @relation("fDiaPoItem", fields: [fDiaId], references: [id])
-  fDiaId           Int?
-
+  id                  Int                   @id @default(autoincrement())
+  Po                  Po?                   @relation(fields: [poId], references: [id], onDelete: Cascade)
+  Fabric              Fabric?               @relation(fields: [fabricId], references: [id])
+  fabricId            Int?
+  Yarn                Yarn?                 @relation(fields: [yarnId], references: [id])
+  yarnId              Int?
+  Accessory           Accessory?            @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  accessoryGroup      AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  accessoryItem       AccessoryItem?        @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId     Int?
+  Color               Color?                @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement?    @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Design              Design?               @relation(fields: [designId], references: [id])
+  Gauge               Gauge?                @relation(fields: [gaugeId], references: [id])
+  LoopLength          LoopLength?           @relation(fields: [loopLengthId], references: [id])
+  Gsm                 Gsm?                  @relation(fields: [gsmId], references: [id])
+  noOfBags            Int?
+  weightPerBag        Float?
+  percentage          Float?
+  requiredQty         Float?
+  qty                 Float?
+  price               Float?
+  discountType        DiscountTypes?
+  discountValue       Float?                @default(0)
+  tax                 Float?                @default(0)
+  Size                Size?                 @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  YarnType            YarnType?             @relation(fields: [yarncategoryId], references: [id])
+  yarncategoryId      Int?
+  weight              Float?
+  designId            Int?
+  gaugeId             Int?
+  loopLengthId        Int?
+  gsmId               Int?
+  poId                Int?
+  KDia                Dia?                  @relation("kDiaPoItem", fields: [kDiaId], references: [id])
+  kDiaId              Int?
+  FDia                Dia?                  @relation("fDiaPoItem", fields: [fDiaId], references: [id])
+  fDiaId              Int?
+  isPurchaseCancel    Boolean?              @default(false)
   PoInwardReturnItems PoInwardReturnItems[]
   BillEntryItems      BillEntryItems[]
   DirectReturnItems   DirectReturnItems[]
@@ -3006,64 +3012,68 @@ model Order {
   orderBy           String?
   draftSave         Boolean?  @default(false)
 
-  orderDetails            OrderDetails[]
-  Sample                  Sample[]
-  sampleDetails           sampleDetails[]
-  Po                      Po[]
-  RequirementPlanningForm RequirementPlanningForm[]
-  RaiseIndent             RaiseIndent[]
-  MaterialIssue           MaterialIssue[]
-  Stock                   Stock[]
-  DirectInwardOrReturn    DirectInwardOrReturn[]
-  FromOrder               StockTransfer[]           @relation(name: "fromOrder")
-  ToOrder                 StockTransfer[]           @relation(name: "toOrder")
+  orderDetails             OrderDetails[]
+  Sample                   Sample[]
+  sampleDetails            sampleDetails[]
+  Po                       Po[]
+  RequirementPlanningForm  RequirementPlanningForm[]
+  RaiseIndent              RaiseIndent[]
+  MaterialIssue            MaterialIssue[]
+  Stock                    Stock[]
+  DirectInwardOrReturn     DirectInwardOrReturn[]
+  FromOrder                StockTransfer[]            @relation(name: "fromOrder")
+  ToOrder                  StockTransfer[]            @relation(name: "toOrder")
+  RequirementPlanningItems RequirementPlanningItems[]
 }
 
 model OrderDetails {
-  id                      Int                       @id @default(autoincrement())
-  Order                   Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId                 Int?
-  yarnNeedleId            Int?
-  yarnNeedle              YarnNeedle?               @relation(fields: [yarnNeedleId], references: [id])
-  machineId               Int?
-  machine                 Machine?                  @relation(fields: [machineId], references: [id])
-  fiberContentId          Int?
-  fiberContent            FiberContent?             @relation(fields: [fiberContentId], references: [id])
-  description             String?                   @db.LongText
-  qty                     Float?
-  socksMaterialId         Int?
-  socksMaterial           SocksMaterial?            @relation(fields: [socksMaterialId], references: [id])
-  measurements            String?
-  sizeId                  Int?
-  size                    Size?                     @relation(fields: [sizeId], references: [id])
-  styleId                 Int?
-  style                   Style?                    @relation(fields: [styleId], references: [id])
-  Color                   Color?                    @relation(fields: [baseColorId], references: [id])
-  baseColorId             Int?
-  noOfStripes             String?
-  socksTypeId             Int?
-  socksType               SocksType?                @relation(fields: [socksTypeId], references: [id])
-  filePath                String?                   @db.LongText
-  orderSizeDetails        orderSizeDetails[]
-  orderYarnDetails        orderYarnDetails[]
-  RequirementPlanningForm RequirementPlanningForm[]
-  RaiseIndent             RaiseIndent[]
-  MaterialIssue           MaterialIssue[]
-  RaiseIndenetYarnItems   RaiseIndenetYarnItems[]
-  RaiseIndentItems        RaiseIndentItems[]
-  MaterialIssueItems      MaterialIssueItems[]
-  MaterialIssueYarnItems  MaterialIssueYarnItems[]
+  id                       Int                        @id @default(autoincrement())
+  Order                    Order?                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                  Int?
+  yarnNeedleId             Int?
+  yarnNeedle               YarnNeedle?                @relation(fields: [yarnNeedleId], references: [id])
+  machineId                Int?
+  machine                  Machine?                   @relation(fields: [machineId], references: [id])
+  fiberContentId           Int?
+  fiberContent             FiberContent?              @relation(fields: [fiberContentId], references: [id])
+  description              String?                    @db.LongText
+  qty                      Float?
+  socksMaterialId          Int?
+  socksMaterial            SocksMaterial?             @relation(fields: [socksMaterialId], references: [id])
+  measurements             String?
+  sizeId                   Int?
+  size                     Size?                      @relation(fields: [sizeId], references: [id])
+  styleId                  Int?
+  style                    Style?                     @relation(fields: [styleId], references: [id])
+  Color                    Color?                     @relation(fields: [baseColorId], references: [id])
+  baseColorId              Int?
+  noOfStripes              String?
+  socksTypeId              Int?
+  socksType                SocksType?                 @relation(fields: [socksTypeId], references: [id])
+  filePath                 String?                    @db.LongText
+  orderSizeDetails         orderSizeDetails[]
+  orderYarnDetails         orderYarnDetails[]
+  RequirementPlanningForm  RequirementPlanningForm[]
+  RaiseIndent              RaiseIndent[]
+  MaterialIssue            MaterialIssue[]
+  RaiseIndenetYarnItems    RaiseIndenetYarnItems[]
+  RaiseIndentItems         RaiseIndentItems[]
+  MaterialIssueItems       MaterialIssueItems[]
+  MaterialIssueYarnItems   MaterialIssueYarnItems[]
+  RequirementPlanningItems RequirementPlanningItems[]
 }
 
 model orderSizeDetails {
-  id              Int           @id @default(autoincrement())
-  size            Size?         @relation(fields: [sizeId], references: [id])
+  id              Int                @id @default(autoincrement())
+  size            Size?              @relation(fields: [sizeId], references: [id])
   sizeId          Int?
   sizeMeasurement String?
   qty             Float?
   weight          Float?
-  OrderDetails    OrderDetails? @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
+  OrderDetails    OrderDetails?      @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
   orderdetailsId  Int?
+  Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId           Int?
 }
 
 model orderYarnDetails {
@@ -3286,40 +3296,63 @@ model sampleYarnDetails {
 }
 
 model RequirementPlanningForm {
-  id                     Int                      @id @default(autoincrement())
-  docId                  String?
-  createdAt              DateTime?                @default(now())
-  updatedAt              DateTime?                @updatedAt
-  createdBy              User?                    @relation("createdBy", fields: [createdById], references: [id])
-  createdById            Int?
-  updatedBy              User?                    @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById            Int?
-  Branch                 Branch?                  @relation(fields: [branchId], references: [id])
-  branchId               Int?
-  Party                  Party?                   @relation(fields: [partyId], references: [id])
-  partyId                Int?
-  requirementDate        DateTime?
-  remarks                String?                  @db.LongText
-  specialInstructions    String?
-  order                  Order?                   @relation(fields: [orderId], references: [id])
-  orderId                Int?
-  OrderDetails           OrderDetails?            @relation(fields: [orderDetailsId], references: [id])
-  orderDetailsId         Int?
-  Style                  Style?                   @relation(fields: [styleId], references: [id])
-  styleId                Int?
-  jobNumber              String?
-  isMaterialRequst       Boolean?                 @default(false)
-  isMaterialIssue        Boolean?                 @default(false)
-  requirementSizeDetails RequirementSizeDetails[]
-  RequirementYarnDetails RequirementYarnDetails[]
-  Po                     Po[]
-  RaiseIndent            RaiseIndent[]
-  MaterialIssue          MaterialIssue[]
-  RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
-  RaiseIndentItems       RaiseIndentItems[]
-  MaterialIssueItems     MaterialIssueItems[]
-  MaterialIssueYarnItems MaterialIssueYarnItems[]
-  YarnTransferDetails    YarnTransferDetails[]
+  id                       Int                        @id @default(autoincrement())
+  docId                    String?
+  createdAt                DateTime?                  @default(now())
+  updatedAt                DateTime?                  @updatedAt
+  createdBy                User?                      @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int?
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  Branch                   Branch?                    @relation(fields: [branchId], references: [id])
+  branchId                 Int?
+  Party                    Party?                     @relation(fields: [partyId], references: [id])
+  partyId                  Int?
+  requirementDate          DateTime?
+  remarks                  String?                    @db.LongText
+  specialInstructions      String?
+  order                    Order?                     @relation(fields: [orderId], references: [id])
+  orderId                  Int?
+  OrderDetails             OrderDetails?              @relation(fields: [orderDetailsId], references: [id])
+  orderDetailsId           Int?
+  Style                    Style?                     @relation(fields: [styleId], references: [id])
+  styleId                  Int?
+  jobNumber                String?
+  isMaterialRequst         Boolean?                   @default(false)
+  isMaterialIssue          Boolean?                   @default(false)
+  requirementSizeDetails   RequirementSizeDetails[]
+  RequirementYarnDetails   RequirementYarnDetails[]
+  Po                       Po[]
+  RaiseIndent              RaiseIndent[]
+  MaterialIssue            MaterialIssue[]
+  RaiseIndenetYarnItems    RaiseIndenetYarnItems[]
+  RaiseIndentItems         RaiseIndentItems[]
+  MaterialIssueItems       MaterialIssueItems[]
+  MaterialIssueYarnItems   MaterialIssueYarnItems[]
+  ToOrderTransferTtems     ToOrderTransferTtems[]
+  RequirementPlanningItems RequirementPlanningItems[]
+}
+
+model RequirementPlanningItems {
+  id                        Int                      @id @default(autoincrement())
+  RequirementPlanningForm   RequirementPlanningForm? @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
+  requirementPlanningFormId Int?
+  order                     Order?                   @relation(fields: [orderId], references: [id])
+  orderId                   Int?
+  OrderDetails              OrderDetails?            @relation(fields: [orderDetailsId], references: [id])
+  orderDetailsId            Int?
+  percentage                Float?
+  Color                     Color?                   @relation(fields: [colorId], references: [id])
+  colorId                   Int?
+  Yarn                      Yarn?                    @relation(fields: [yarnId], references: [id])
+  yarnId                    Int?
+  Counts                    Counts?                  @relation(fields: [count], references: [id])
+  count                     Int?
+  poType                    String?
+  transType                 String?
+  Party                     Party?                   @relation(fields: [partyId], references: [id])
+  partyId                   Int?
+  requiredQty               Float?
 }
 
 model RequirementSizeDetails {
@@ -3509,25 +3542,28 @@ model MaterialIssueYarnItems {
 }
 
 model StockTransfer {
-  id                 Int                  @id @default(autoincrement())
-  docId              String?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  createdBy          User?                @relation("createdBy", fields: [createdById], references: [id])
-  createdById        Int?
-  updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById        Int?
-  fromOrder          Order?               @relation("fromOrder", fields: [fromOrderId], references: [id])
-  fromOrderId        Int?
-  toOrsder           Order?               @relation("toOrder", fields: [toOrderId], references: [id])
-  toOrderId          Int?
-  StockTransferItems StockTransferItems[]
-  YarnTransferDetails YarnTransferDetails[]
+  id                     Int                      @id @default(autoincrement())
+  docId                  String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  createdBy              User?                    @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?                    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  fromOrder              Order?                   @relation("fromOrder", fields: [fromOrderId], references: [id])
+  fromOrderId            Int?
+  toOrsder               Order?                   @relation("toOrder", fields: [toOrderId], references: [id])
+  toOrderId              Int?
+  transferType           String?
+  fromCustomerId         Int?
+  toCustomerId           Int?
+  FromOrderTransferItems FromOrderTransferItems[]
+  ToOrderTransferTtems   ToOrderTransferTtems[]
 }
 
-model StockTransferItems {
+model FromOrderTransferItems {
   id               Int             @id @default(autoincrement())
-  StockTransfer    StockTransfer?  @relation(fields: [stockTransferId], references: [id],onDelete: Cascade)
+  StockTransfer    StockTransfer?  @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
   stockTransferId  Int?
   Yarn             Yarn?           @relation(fields: [yarnId], references: [id])
   yarnId           Int?
@@ -3540,23 +3576,25 @@ model StockTransferItems {
   Color            Color?          @relation(fields: [colorId], references: [id])
   colorId          Int?
   transferQty      Float?
+  stockQty         Float?
 }
 
-model YarnTransferDetails {
+model ToOrderTransferTtems {
   id                      Int                      @id @default(autoincrement())
-  StockTransfer           StockTransfer?           @relation(fields: [stockTransferId], references: [id],onDelete: Cascade)
+  StockTransfer           StockTransfer?           @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
   stockTransferId         Int?
   RequirementPlanningForm RequirementPlanningForm? @relation(fields: [RequirementPlanningId], references: [id])
   RequirementPlanningId   Int?
   Color                   Color?                   @relation(fields: [colorId], references: [id])
   colorId                 Int?
   orderId                 Int?
-  Yarn                    Yarn?                   @relation(fields: [yarnId], references: [id])
+  Yarn                    Yarn?                    @relation(fields: [yarnId], references: [id])
   yarnId                  Int?
   style                   String?
   qty                     Float?
   transferQty             Float?
-
+  balanceQty              Float?
+  requiredQty             Float?
 }
 
 model DirectReturnOrPoReturn {

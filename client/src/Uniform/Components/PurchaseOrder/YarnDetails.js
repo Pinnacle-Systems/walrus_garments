@@ -10,7 +10,7 @@ const YarnDetails = ({ indentItems, setOrderDetails, poItems, setPoItems, gridIn
 
 
 
-
+    console.log(poItems,"poItems")
 
 
 
@@ -37,15 +37,18 @@ const YarnDetails = ({ indentItems, setOrderDetails, poItems, setPoItems, gridIn
   }
 
   const handleInputChange = (value, index, field) => {
+    console.log(gridIndex,value,"index",index ,"newBlend");
     let RaiseIndenetYarnItems = "RaiseIndenetYarnItems"
     const newBlend = structuredClone(poItems);
-    console.log(newBlend, "newBlend");
 
     newBlend[gridIndex][RaiseIndenetYarnItems][index][field] = value;
 
 
     setPoItems(newBlend);
   };
+  console.log(poItems, "PoItemns")
+
+  
   return (
     <>
 
@@ -70,7 +73,7 @@ const YarnDetails = ({ indentItems, setOrderDetails, poItems, setPoItems, gridIn
                 </tr>
               </thead>
               <tbody>
-                {indentItems?.RaiseIndenetYarnItems?.map((yarn, index) => (
+                {(indentItems?.RaiseIndenetYarnItems ||  [])?.map((yarn, index) => (
                   <tr key={index} className="border border-blue-gray-200 cursor-pointer">
                     <td className="py-0.5 border border-gray-300 text-[11px] text-center">
                       {index + 1}
@@ -107,12 +110,12 @@ const YarnDetails = ({ indentItems, setOrderDetails, poItems, setPoItems, gridIn
                 <tr>
                   <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Qty</td>
                   <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"> {
-                    (indentItems?.RaiseIndenetYarnItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)).toFixed(3)
+                    ((indentItems?.RaiseIndenetYarnItems ||  [])?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0))?.toFixed(3)
                   }
                   </td>
                     <td className="border border-gray-300 text-right font-bold text-[11px] py-1.5 px-2">
                       {(
-                        indentItems?.RaiseIndenetYarnItems?.reduce(
+                        (indentItems?.RaiseIndenetYarnItems  ||  [] )?.reduce(
                           (yarnSum, yarn) => yarnSum + Number(yarn.purchaseQty || 0),
                           0
                         ) ?? 0

@@ -526,6 +526,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails,  setPoItems,  poItems, 
                                                 <tr
                                                     className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
                                                     onClick={() => {
+                                                        
                                                         setRequirementId(indent?.requirementPlanningFormId)
 
                                                     }}

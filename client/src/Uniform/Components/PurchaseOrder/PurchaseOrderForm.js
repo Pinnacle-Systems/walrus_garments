@@ -1,10 +1,10 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput } from "../../../Inputs";
-import { poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
+import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { getCommonParams } from "../../../Utils/helper";
+import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import YarnPoItems from "./YarnPoItems";
@@ -20,6 +20,7 @@ import PrintFormat from "./PrintFormat-PO";
 import tw from "../../../Utils/tailwind-react-pdf";
 import OrderPurchase from "./OrderPurchase";
 import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
+import OrderDetailsSelection from "./OrderDetailsSelection";
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData }) => {
 
@@ -30,17 +31,18 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const componentRef = useRef();
 
   const [poItems, setPoItems] = useState([]);
+  const [tempPoItems, setTempPoItems] = useState([]);
   const [docId, setDocId] = useState("")
   const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [transType, setTransType] = useState("GreyYarn");
+  const [poType, setPoType] = useState("");
+  const [poMaterial,setPoMaterial]  =  useState("DyedYarn")
   const [supplierId, setSupplierId] = useState("");
 
   const [discountType, setDiscountType] = useState("Percentage");
   const [discountValue, setDiscountValue] = useState(0);
-  const [partyId, setPartyId] = useState(false);
   const [orderId, setOrderId] = useState("")
   const [remarks, setRemarks] = useState("")
   const [PurchaseType, setPurchaseType] = useState('General Purchase')
@@ -53,6 +55,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [orderSizeDetails, setOrderSizeDetails] = useState([])
   const [orderYarnDetails, setOrderYarnDetails] = useState([])
+  const [tableDataView, setTableDataView] = useState(false)
 
   const [requirementId, setRequirementId] = useState("");
   const [suppliers, setSuppliers] = useState([
@@ -130,7 +133,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     setReadOnly(true)
 
 
-    setTransType(data?.transType);
+    setPoType(data?.transType);
     setDate(data?.createdAt
       ? moment.utc(data.createdAt).format("YYYY-MM-DD")
       : moment.utc(new Date()).format("YYYY-MM-DD")
@@ -138,7 +141,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
     setPoItems(data?.PoItems || []);
     setDocId(data?.docId || "");
-    setPartyId(data?.partyId || "");
     setPayTermId(data?.payTermId || "");
     setDiscountType(data?.discountType || "Percentage");
     setDiscountValue(data?.discountValue || "0");
@@ -178,50 +180,68 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
   useEffect(() => {
 
+    if (!orderId) return
 
-            setPoItems(
-                singleOrderData?.data?.RequirementPlanningForm?.map(item => {
-                    const allColors = item?.RequirementYarnDetails
-                        ?.map(yarn => yarn?.Color?.name)
-                        .filter(Boolean)
-                        .join(" - ");
-                    const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-                        const qty = item?.requirementSizeDetails?.reduce(
-                            (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-                            0
-                        );
+    // setPoItems(
+    //   singleOrderData?.data?.RequirementPlanningForm?.map(item => {
+    //     // collect all colors just for display
+    //     const allColors = item?.RequirementYarnDetails
+    //       ?.map(yarn => yarn?.Color?.name)
+    //       .filter(Boolean)
+    //       .join(" - ");
 
-                        return {
-                            ...yarn,
-                            qty: Number(qty.toFixed(3)),
-                            orderDetailsId: item.orderDetailsId,
+    //     // calculate yarn qty for each yarn in this requirement
+    //     const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
+    //       const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
+    //         const sizeQty =
+    //           size?.qty || size?.quantity || size?.orderQty || size?.totalQty || 0;
+    //         return (
+    //           sum +
+    //           (size?.weight || 0) *
+    //           (yarn?.percentage / 100) *
+    //           sizeQty
+    //         );
+    //       }, 0);
 
-                        };
-                    });
-                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-                        (sum, yarn) => sum + yarn.qty,
-                        0
-                    );
-                    return {
-                        OrderDetails: {
-                            style: {
-                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                            }
-                        },
-                        requirementPlanningFormId: item.id,
-                        RaiseIndenetYarnItems,
-                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                    };
-                })
-            );
+    //       return {
+    //         ...yarn,
+    //         qty: Number(qty.toFixed(3)),
+    //         orderDetailsId: item.orderDetailsId,
+    //       };
+    //     });
+
+    //     // total yarn qty for this requirement item
+    //     const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+    //       (sum, yarn) => sum + yarn.qty,
+    //       0
+    //     );
+
+    //     return {
+    //       OrderDetails: {
+    //         style: {
+    //           name: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+    //         },
+    //       },
+    //       requirementPlanningFormId: item.id,
+    //       RaiseIndenetYarnItems,
+    //       totalYarnQty: Number(totalYarnQty.toFixed(3)),
+    //     };
+    //   })
+    // );
+    setTempPoItems(
+      singleOrderData?.data?.RequirementPlanningForm?.flatMap(
+        (item) => item.RequirementPlanningItems || []
+      ) || []
+    );
+
+
   }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
-  console.log(poItems, "PoItemns")
 
 
   let data = {
-    transType, supplierId, dueDate, payTermId,
+    transType: poType, supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
     poItems: poItems?.filter(po => po.yarnId || po.fabricId || po.accessoryId || po.yarncategoryId),
@@ -291,9 +311,21 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     }
   }
   return (
+
     <>
 
-
+      <Modal
+        isOpen={orderId && tableDataView}
+        onClose={() => setTableDataView(false)}
+        widthClass="  h-[70%] w-[70%]"
+      >
+        <OrderDetailsSelection
+          onClose={() => setTableDataView(false)}
+          tempPoItems={tempPoItems}
+          setPoItems={setPoItems}
+          poItems={poItems}
+        />
+      </Modal>
       <Modal
         isOpen={printModalOpen}
         onClose={() => setPrintModalOpen(false)}
@@ -350,30 +382,32 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
             <h2 className="font-medium text-slate-700 mb-2">
-
+              Po Details
             </h2>
-            <div className="grid grid-cols-2 gap-1 mt-8">
-              <DropdownInput name="DirectPoOrderPo"
-                options={purchaseType}
-                value={PurchaseType}
-                setValue={setPurchaseType}
+            <div className="grid grid-cols-2 gap-1 ">
+              <DropdownInput name="Material "
+                options={MaterialType}
+                value={poMaterial}
+                setValue={setPoMaterial}
                 required={true}
                 readOnly={readOnly}
               />
               <DropdownInput name="Po Type"
-                options={poTypes}
-                value={transType}
-                setValue={setTransType}
+                options={PoTypes}
+                value={poType}
+                setValue={setPoType}
                 required={true}
-                readOnly={readOnly} />
-              {PurchaseType === "Order Purchase" &&
+                readOnly={readOnly}
+                disabled={orderId}
+              />
+              {poType === "ORDER" &&
                 <DropdownWithSearch
                   label="Order No"
                   options={orderData?.data}
                   labelField={"docId"}
                   value={orderId}
                   required={true}
-                  setValue={setOrderId}
+                  setValue={(value) => { setOrderId(value); setTableDataView(true) }}
                 />
               }
 
@@ -383,34 +417,44 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </div>
           </div>
 
-
-
-
-
-
-
-
-
-
-
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Supplier Details
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
 
-            <div className="w flex flex-row gap-8 mt-8">
+              <div className="col-span-2">
 
-              <ReusableSearchableInput
-                label="Supplier Id"
-                component="PartyMaster"
-                placeholder="Search Supplier Id..."
-                optionList={supplierList?.data}
-                onAddItem={handleAddSupplier}
-                // onDeleteItem={onDeleteItem}
-                setSearchTerm={setSupplierId}
-                searchTerm={supplierId}
-                show={"isClient"}
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  onAddItem={handleAddSupplier}
+                  // onDeleteItem={onDeleteItem}
+                  setSearchTerm={setSupplierId}
+                  searchTerm={supplierId}
+                  show={"isClient"}
+                />
+              </div>
+
+
+              <TextInput
+                name="Contact Person"
+                placeholder="Contact name"
+                value={findFromList(supplierId, supplierList?.data, "contactPersonEmail")}
+                // setValue={setContactPersonName}
+                disabled={true}
+              />{console.log(findFromList(supplierId, supplierList?.data, "contactPersonNumber"), "phone")}
+              <TextInput
+                name="Phone"
+                placeholder="Contact name"
+                value={findFromList(supplierId, supplierList?.data, "contactPersonNumber")}
+                // setValue={setPhone}
+                disabled={true}
+              // onChange={(e) => setPhone(e.target.value)}
 
               />
-
-              {/* </div> */}
 
 
 
@@ -421,24 +465,35 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </div>
 
           </div>
+
+
+
+
+
+
+
+
+
+
         </div>
         <fieldset className=''>
-            {PurchaseType === "Order Purchase" ?
+          {
+          // PurchaseType === "Order Purchase" ?
 
-            <OrderPurchase  poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId}  requirementId={requirementId} id={id} 
-            />
-            :
-          // {
-            transType?.toLowerCase().includes("GreyYarn".toLowerCase())
+          //   <OrderPurchase poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId} requirementId={requirementId} id={id}
+          //   />
+          //   :
+
+            poMaterial?.toLowerCase().includes("GreyYarn".toLowerCase())
               ?
-              <YarnPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+              <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
               :
               (
-                transType?.toLowerCase().includes("DyedYarn".toLowerCase())
+                poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
                   ?
-                  <YarnPoItems greyFilter={transType.toLowerCase().includes("Dyed")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+                  <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
                   :
-                  <AccessoryPoItems id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+                  <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
               )
           }
 
@@ -540,48 +595,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </div>
           )}
 
-          {showDiscount && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-semibold">Add Discount</h3>
-                  <button onClick={() => setShowDiscount(false)} className="text-slate-400 hover:text-slate-600">
-                    <HiX className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g. Summer promotion"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
-                      <select className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <option>Percentage</option>
-                        <option>Fixed Amount</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Value</label>
-                      <input
-                        type="number"
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                  <button className="w-full bg-green-600 text-white py-1.5 px-3 rounded text-sm hover:bg-green-700 transition">
-                    Apply Discount
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+        
         </div>
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">

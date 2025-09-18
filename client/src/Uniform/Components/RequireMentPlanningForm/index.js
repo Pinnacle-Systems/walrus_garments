@@ -41,6 +41,9 @@ const RequirementPlanningForm = () => {
     const [jobNumber, setJobNumber] = useState("");
     const [yarnTotals, setYarnTotals] = useState([]);
 
+    const [requirementItems, setRequirementItems] = useState([])
+
+
     const params = {
         branchId, userId, finYearId
     };
@@ -140,6 +143,7 @@ const RequirementPlanningForm = () => {
         setOrderSizeDetails([])
         setOrderYarnDetails([])
         setJobNumber("")
+        setRequirementItems([])
 
     }
     // if (isLoading || isFetching) return <Loader />
@@ -154,7 +158,7 @@ const RequirementPlanningForm = () => {
 
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
 
-                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber}  yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
+                    dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems} setRequirementItems={setRequirementItems}
                 />
 
             ) : (

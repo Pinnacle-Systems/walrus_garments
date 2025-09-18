@@ -119,7 +119,7 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, searchDocId, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, fromOrderNo,toOrderNo, searchDelDate, searchDocDate, partyId,
 
     } = req.query
 
@@ -129,11 +129,19 @@ async function get(req) {
     let data = await xprisma.StockTransfer.findMany({
         where: {
             // branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(searchDocId) ?
+            docId: Boolean(serachDocNo) ?
                 {
-                    contains: searchDocId
+                    contains: serachDocNo
                 }
                 : undefined,
+            fromOrder: {
+                docId: fromOrderNo ? { contains: fromOrderNo } : undefined
+
+            },
+             toOrsder: {
+                docId: toOrderNo ? { contains: toOrderNo } : undefined
+
+            }
             // partyId: partyId ? parseInt(partyId) : undefined,
         },
         include: {
@@ -181,8 +189,31 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            StockTransferItems: true,
-            YarnTransferDetails : true
+            FromOrderTransferItems: true,
+            ToOrderTransferTtems: {
+                select: {
+                    id: true,
+                    stockTransferId: true,
+                    RequirementPlanningId: true,
+                    colorId: true,
+                    orderId: true,
+                    yarnId: true,
+                    style: true,
+                    transferQty: true,
+                    balanceQty: true,
+                    requiredQty: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
         }
 
     })
@@ -336,18 +367,20 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
-async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
 
     await tx.stock.create({
         data: {
-            itemType: poType,
-            // inOrOut: poInwardOrDirectInward,
+            // itemType: inOrOut,
+            inOrOut: inOrOut,
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
             gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
-            orderId : item["orderId"] ?  parseInt(item["orderId"])  :  undefined,
+            orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
 
 
         }
@@ -355,19 +388,20 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 }
 
-async function createYarnStockAgainstOrder(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item) {
 
     await tx.stock.create({
         data: {
-            itemType: poType,
-            // inOrOut: poInwardOrDirectInward,
+            // itemType: poType,
+            inOrOut: inOrOut,
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
             gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
             orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
-
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
 
         }
     })
@@ -415,30 +449,32 @@ async function createStocktransferItems(
     stockTransferId,
     stockItems,
     poType,
-    poInwardOrDirectInward,
+    inOrOut,
     storeId,
     branchId,
-    orderItems
+    orderItems,
 ) {
     if (stockItems?.length) {
         await Promise.all(
             stockItems.map(async (item) => {
-                await tx.StockTransferItems.create({
+                await tx.FromOrderTransferItems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
                         yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
+                        stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
                     },
                 });
 
                 await createYarnStock(
+
                     tx,
                     poType,
-                    poInwardOrDirectInward,
+                    inOrOut,
                     branchId,
                     storeId,
-                    item
+                    item,
                 );
             })
         );
@@ -461,7 +497,7 @@ async function createStocktransferItems(
     if (orderItems?.length) {
         await Promise.all(
             orderItems?.map(async (item) => {
-                await tx.YarnTransferDetails.create({
+                await tx.ToOrderTransferTtems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
                         RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
@@ -471,6 +507,8 @@ async function createStocktransferItems(
                         style: item?.style ? item?.style : undefined,
                         transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
                         qty: item?.qty ? parseFloat(item?.qty) : undefined,
+                        balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
+                        requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
 
 
                     },
@@ -479,7 +517,7 @@ async function createStocktransferItems(
                 await createYarnStockAgainstOrder(
                     tx,
                     poType,
-                    poInwardOrDirectInward,
+                    inOrOut,
                     branchId,
                     storeId,
                     item
@@ -493,11 +531,11 @@ async function createStocktransferItems(
 
 async function create(req) {
 
-    const { userId, branchId, fromOrderId, toOrderId, finYearId, draftSave,
+    const { userId, branchId, fromOrderId, toOrderId, finYearId, draftSave, transferType, fromCustomerId, toCustomerId,
         storeId, orderItems, stockItems, poType } = req.body
 
 
-    let poInwardOrDirectInward = "MaterialIssue"
+    let inOrOut = "StockTransfer"
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -514,13 +552,14 @@ async function create(req) {
                 docId,
                 fromOrderId: fromOrderId ? parseInt(fromOrderId) : undefined,
                 toOrderId: toOrderId ? parseInt(toOrderId) : undefined,
-
-
+                transferType: transferType ? transferType : undefined,
+                fromCustomerId: fromCustomerId ? parseInt(fromCustomerId) : undefined,
+                toCustomerId: toCustomerId ? parseInt(toCustomerId) : undefined,
 
 
             },
         });
-        await createStocktransferItems(tx, data.id, stockItems, poType, poInwardOrDirectInward, storeId, branchId, orderItems)
+        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems)
 
     })
 
@@ -629,7 +668,7 @@ const update = async (id, body) => {
 
 
 async function remove(id) {
-    const data = await prisma.MaterialIssue.delete({
+    const data = await prisma.StockTransfer.delete({
         where: {
             id: parseInt(id)
         },
