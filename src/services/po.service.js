@@ -731,6 +731,7 @@ export function getPoItemObject(poMaterial, item) {
         newItem.accessoryItemId = parseInt(item.accessoryItemId)
     }
 
+    newItem.RequirementPlanningItemsId = item?.id ? parseInt(item?.id)  :  undefined ,
     newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = parseInt(item.colorId);
     newItem.qty = parseFloat(item.qty);

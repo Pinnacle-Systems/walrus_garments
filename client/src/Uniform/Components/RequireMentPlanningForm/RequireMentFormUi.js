@@ -3,9 +3,9 @@ import { ReusableInput } from "../Order/CommonInput";
 import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdNewQuery, useGetOrderByIdQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -17,17 +17,17 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { Loader } from "../../../Basic/components";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 
-const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord, orderReftch,
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, yarnTotals, setYarnTotals,
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber,
 
-    setRequirementItems, requirementItems
+    setRequirementItems, requirementItems, onNew, allData
 }) => {
 
 
-    console.log(id, "iddddddd")
+    console.log(readOnly, "readOnly")
     const [combo, setCombo] = useState([])
 
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
@@ -37,7 +37,9 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     const [loading, setLoading] = useState(false);
 
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdNewQuery({ id: orderId, requirement : true }, { skip: !orderId });
+
     const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
 
 
@@ -85,9 +87,16 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     }, [orderId, id]);
 
 
+    const getNextDocId = useCallback(() => {
+        if (allData?.nextDocId) {
+            setDocId("New");
+        }
+    }, [allData]);
+
+    useEffect(getNextDocId, [getNextDocId]);
 
     useEffect(() => {
-        if (id && singleData?.data) {
+        if (singleData?.data) {
             syncFormWithDb(singleData?.data);
         }
 
@@ -109,7 +118,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     useEffect(() => {
         if (singleOrderData?.data?.orderDetails) {
-            const updated = singleOrderData?.data?.orderDetails.map(item => {
+            const updated = singleOrderData?.data?.OrderDetails?.filter(plan => !plan?.isPlanning)?.map(item => {
                 const yarns = item?.orderYarnDetails || [];
 
                 const combinedColors = yarns
@@ -177,6 +186,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
                 setId(returnData?.data?.id);
                 setShowOrderForm(false)
+                orderReftch()
 
 
                 Swal.fire({
@@ -259,7 +269,19 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
         }
     }
 
+    const orderRef = useRef(null);
+    const inputPartyRef = useRef(null);
+    const styleRef = useRef(null);
+
+    useEffect(() => {
+        if (orderRef.current) {
+            orderRef.current.focus();
+        }
+    }, []);
+
     if (isSingleFetching || isSingleLoading || isSupplierFetching || isSupplierLoading) return <Loader />
+
+
 
     return (
         <>
@@ -273,7 +295,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                         <button
                             onClick={() => {
                                 onClose()
-                                setId("")
+                                onNew()
                             }}
 
                             className="text-indigo-600 hover:text-indigo-700"
@@ -323,12 +345,12 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                                 value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
                                                 setValue={setJobNumber}
                                                 required={true}
-
+                                                orderRef={orderRef}
                                             />
 
                                             :
                                             <DropdownWithSearch
-                                                options={orderData?.data}
+                                                options={orderData?.data?.filter(item => !item?.isPlanning)}
                                                 value={orderId}
                                                 setValue={setOrderId}
                                                 readOnly={id ? true : false}
@@ -387,7 +409,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                             placeholder="Contact name"
                                             value={jobNumber}
                                             setValue={setJobNumber}
-
+                                            readOnly={readOnly}
                                         />
                                     </div>
 

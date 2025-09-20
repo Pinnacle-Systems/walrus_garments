@@ -63,7 +63,7 @@ export const MaterialType = [
 
 export const PoTypes = [
     { show: "ORDER", value: "ORDER" },
-    { show: "SAMPLE", value: "SAMPLE" },
+    // { show: "SAMPLE", value: "SAMPLE" },
     { show: "GENERAL", value: "GENERAL" },
 
 ]

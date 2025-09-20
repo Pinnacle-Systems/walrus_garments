@@ -3,16 +3,22 @@ import { TextArea, TextInput } from '../../../Inputs'
 import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
+import { useGetRequirementPlanningFormItemsQuery } from '../../../redux/uniformService/RequirementPlanningFormServices'
 
 
 
-export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
+export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems, onClose, tempStockItems,  setStockItems, 
 
 }) {
 
 
     console.log(tempPoItems, "tempPoItems")
-    console.log(poItems, "poItems")
+
+ 
+
+
+
+
 
 
     function handleDone() {
@@ -29,22 +35,8 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
         onClose()
     }
 
-    function handleCancel() {
-        setPoItems([]);
-        onClose()
-    }
 
 
-
-    // function addItem(id, obj) {
-    //     console.log(obj, "obj")
-
-    //     setPoItems(localInwardItems => {
-    //         let newItems = structuredClone(localInwardItems);
-    //         newItems.push(obj);
-    //         return newItems
-    //     });
-    // }
 
     function addItem(id, obj) {
         setPoItems(prevItems => {
@@ -111,12 +103,12 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
 
 
 
-            <div className="flex-1 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm ">
+            <div className="flex-1 overflow-y-auto rounded-md border border-gray-200  shadow-sm bg-[#f1f1f0]">
                 <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full">
                     <div className="flex flex-row w-full">
                         <div className="flex flex-col w-full">
                             <div className="mt-4 mb-5 w-full">
-                                <div className="max-h-[600px] w-full overflow-y-auto">
+                                <div className="max-h-[600px] w-[90vw] overflow-auto ">
                                     <table className="border-collapse w-full">
                                         <thead className="bg-gray-200 text-gray-800">
                                             <tr>
@@ -126,14 +118,13 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
                                                     />
                                                 </th>
                                                 <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Po Type</th>
-                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Order No</th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Customer Name</th> */}
-                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style No</th>
-                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Yarn</th>
-                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Color</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-20">Order No</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-64">Style No</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-96">Yarn</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-24">Color</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th>
-                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th>
+                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th> */}
                                                 {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th> */}
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th>
@@ -165,40 +156,33 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
                                                     <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                         {index + 1}
                                                     </td>
-                                                    <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                    <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                                         { }
                                                     </td>
-                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                         {item?.order?.docId}
                                                     </td>
-                                                    {/* <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        {item?.Party?.name}
-                                                    </td> */}
-                                                    <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                        {item?.OrderDetails?.style?.name}
+                                          
+                                                    <td className=" border border-gray-300 px-2 py-1 text-left text-xs">
+                                                        {item?.allColors}
                                                     </td>
-                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                         {item?.Yarn?.name}
-                                                    </td> 
-                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    </td>
+                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                         {item?.Color?.name}
-                                                    </td> 
-                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                    </td>
+                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                         {item?.Counts?.name}
-                                                    </td> 
-                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                       { }
-                                                   </td>
-                                                     {/* <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        {item?.Uom?.name}
-                                                    </td>  */}
-                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        {item?.requiredQty}
-                                                    </td> 
-                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        { }
-                                                    </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        { }
+                                                    </td>
+                                        
+                                                    <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                        {item?.requiredQty?.toFixed(3)}
+                                                    </td>
+                                                    <td className=" border border-gray-300 text-[11px]  text-right py-1.5 px-2">
+                                                        { item?.alreadyPoqty}
+                                                    </td>  <td className=" border border-gray-300 text-[11px]   text-right py-1.5 px-2">
+                                                        {parseFloat(item?.requiredQty)  - parseFloat( item?.alreadyPoqty)}
                                                     </td>
                                                 </tr>
                                             ))}

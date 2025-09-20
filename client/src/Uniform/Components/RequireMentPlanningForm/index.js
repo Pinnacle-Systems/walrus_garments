@@ -49,8 +49,13 @@ const RequirementPlanningForm = () => {
     };
 
     // const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
-    const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
+    const { data: orderData, isLoading: orderDatalDataLoading, isFetching: orderDatalDataFetching, refetch: orderReftch } = useGetOrderQuery({ params });
+    const { data: allData, isFetching, isLoading } = useGetRequirementPlanningFormQuery({
+        params: {
+            branchId,
 
+        }
+    });
     const [removeData] = useDeleteRequirementPlanningFormMutation();
 
 
@@ -118,6 +123,8 @@ const RequirementPlanningForm = () => {
                     return;
                 }
                 setId("");
+                orderReftch()
+
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
@@ -136,6 +143,7 @@ const RequirementPlanningForm = () => {
     };
     const onNew = () => {
         setId("");
+        setDocId("")
         setReadOnly(false);
         setOrderId("")
         setstyleId("")
@@ -153,7 +161,8 @@ const RequirementPlanningForm = () => {
         <>
             {form ? (
                 <RequirmentForm
-                setDocId={setDocId}
+                    setDocId={setDocId} onNew={onNew} allData={allData} orderReftch={orderReftch}
+
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
 
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} styleId={styleId} setstyleId={setstyleId}

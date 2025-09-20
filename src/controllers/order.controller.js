@@ -1,8 +1,9 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById , 
-    getOrderItemsByIdNew as _getOrderItemsByIdNew , getOrderItems as _getOrderItems ,getStockvalidationById as _getStockvalidationById
- } from '../services/order.service.js';
+import {
+    get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById,
+    getOrderItemsByIdNew as _getOrderItemsByIdNew, getOrderItems as _getOrderItems, getStockvalidationById as _getStockvalidationById, getOneNew as _getOneNew
+} from '../services/order.service.js';
 
 async function get(req, res, next) {
     try {
@@ -23,6 +24,16 @@ async function getOne(req, res, next) {
     }
 }
 
+export async function getOneNew(req, res, next) {
+    console.log("hitttttt")
+
+    try {
+        res.json(await _getOneNew(req.params.id, req.params.requirement));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
 
 export async function getOrderItems(req, res, next) {
     try {
@@ -44,7 +55,7 @@ export async function getOrderItemsById(req, res, next) {
 
 export async function getOrderItemsByIdNew(req, res, next) {
     try {
-        res.json(await _getOrderItemsByIdNew(req.params.id,req?.params?.stockValidation));
+        res.json(await _getOrderItemsByIdNew(req.params.id, req?.params?.stockValidation));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
@@ -52,7 +63,7 @@ export async function getOrderItemsByIdNew(req, res, next) {
 }
 
 
- export async function getStockvalidationById(req, res, next) {
+export async function getStockvalidationById(req, res, next) {
     try {
         res.json(await _getStockvalidationById(req.params.id));
         console.log(res.statusCode);
@@ -123,6 +134,6 @@ export {
     update,
     remove
 
-    
-    
+
+
 };

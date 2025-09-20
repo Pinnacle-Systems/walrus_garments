@@ -69,6 +69,19 @@ const OrderApi = createApi({
             },
             providesTags: ["Order"],
         }),
+        getOrderByIdNew: builder.query({
+            query: ({ id, requirement, packingCategory, packingType }) => {
+                return {
+                    url: `${ORDER_API}/${id}/getOrderNew/${requirement ? requirement : null}/${packingCategory ? packingCategory : null}/${packingType ? packingType : null}`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                };
+            },
+            providesTags: ["Order"],
+        }),
+        
         getOrderItemsById: builder.query({
             query: ({ id, prevProcessId, packingCategory, packingType }) => {
                 return {
@@ -138,6 +151,7 @@ export const {
     useLazyGetOrderQuery,
     useGetOrderQuery,
     useGetOrderByIdQuery,
+    useGetOrderByIdNewQuery,
     useGetOrderItemsQuery,
     useGetOrderItemsByIdQuery,
     useGetOrderItemsByIdNewQuery,

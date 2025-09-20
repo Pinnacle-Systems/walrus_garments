@@ -113,18 +113,7 @@ const YarnPoItems = ({
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
-                    {/* <div className="flex gap-2 items-center">
-
-                        <button
-                            onClick={() => {
-                                // addNewRow()
-                            }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                        >
-                            <HiPlus className="w-3 h-3 mr-1" />
-                            Add Item
-                        </button>
-                    </div> */}
+           
 
                 </div>
                 <div className={` relative w-full overflow-y-auto py-1`}>
@@ -138,7 +127,7 @@ const YarnPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-80 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Items
                                 </th>
@@ -150,7 +139,7 @@ const YarnPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Counts
                                 </th>
@@ -178,6 +167,12 @@ const YarnPoItems = ({
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Balance Purchase Qty  (kgs)
+                                </th>
+                                 <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                     Qty  (kgs)
                                 </th>
                                 <th
 
@@ -297,11 +292,15 @@ const YarnPoItems = ({
 
                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                         {row.requiredQty}
-                                    </td>  <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {row.alreadyPoQty}
+                                    </td> 
+                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                        {row.alreadyPoqty}
 
                                     </td>
+    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                        {parseFloat(row?.requiredQty)  - parseFloat( row?.alreadyPoqty)}
 
+                                    </td>
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input
                                             min="0"

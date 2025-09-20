@@ -303,6 +303,121 @@ async function getOne(id) {
 }
 
 
+export async function getRequirementItems(req) {
+
+    const { branchId } = req.query
+
+    const childRecord = 0;
+    let data = await prisma.RequirementPlanningItems.findMany({
+        where: {
+
+        },
+
+        select: {
+            id: true,
+            requirementPlanningFormId: true,
+            colorId: true,
+            // yarncategoryId: true,
+            yarnId: true,
+            count: true,
+            // yarnKneedleId: true,
+            // percentage: true,
+            processId: true,
+            isProcess: true,
+            lossPercentage: true,
+            requiredQty: true,
+
+            Yarn: {
+                select: {
+                    name: true
+                }
+            },
+            Color: {
+                select: {
+                    name: true
+                }
+            },
+            Counts: {
+                select: {
+                    name: true
+                }
+            },
+            order: {
+                select: {
+                    docId: true
+                }
+            },
+            PoItems: true,
+            OrderDetails: {
+
+                select: {
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    orderYarnDetails: {
+                        select: {
+                            id: true,
+                            yarncategoryId: true,
+                            yarnId: true,
+                            count: true,
+                            yarnKneedleId: true,
+                            orderdetailsId: true,
+                            colorId: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+
+                }
+            }
+
+        },
+
+
+
+
+
+    });
+
+
+    data = data?.map(item => {
+        const yarns = item?.OrderDetails || [];
+        const PoItems = item?.PoItems
+
+
+        const combinedColors = yarns?.orderYarnDetails?.map(yarn => yarn?.Color?.name)
+            .filter(Boolean)
+            .join("/");
+
+        const styleName = yarns?.style?.name
+
+        const poQty = item?.PoItems?.reduce((total, poItem) => {
+            return total + (poItem.qty || 0); // adjust field name if needed
+        }, 0) || 0;
+
+        return {
+            ...item,
+            allColors: `${combinedColors} - ${styleName}`,
+            alreadyPoqty: poQty,
+
+        };
+    });
+
+
+    return { statusCode: 0, data, childRecord };
+}
+
+
 
 export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
 
@@ -482,6 +597,25 @@ async function create(req) {
                     : undefined,
 
             },
+
+
+
+        });
+
+        await tx.orderDetails.update({
+            where: { id: parseInt(styleId) },
+            data: { isPlanning: true },
+        });
+
+
+        await tx.order.updateMany({
+            where: {
+                id: parseInt(orderId),
+                orderDetails: {
+                    every: { isPlanning: true },
+                },
+            },
+            data: { isPlanning: true },
         });
 
 
@@ -498,7 +632,7 @@ async function create(req) {
 
 const update = async (id, body) => {
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, jobNumber,requirementItems,
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, jobNumber, requirementItems,
     } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -507,7 +641,7 @@ const update = async (id, body) => {
 
 
     const dataFound = await prisma.requirementPlanningForm.findUnique({ where: { id: parseInt(id) } });
-    
+
     if (!dataFound) return { statusCode: 404, message: "No record found for requirementPlanningForm" };
 
 
@@ -515,9 +649,9 @@ const update = async (id, body) => {
     const incomingYarnIds = orderYarnDetails?.filter(i => i.id).map(i => parseInt(i.id));
     const incomingRequirementItems = requirementItems?.filter(i => i.id).map(i => parseInt(i.id));
 
-        console.log(requirementItems,"requirementItems")
+    console.log(requirementItems, "requirementItems")
 
-    console.log(incomingRequirementItems,"incomingRequirementItems")
+    console.log(incomingRequirementItems, "incomingRequirementItems")
 
     let data;
 
@@ -529,8 +663,8 @@ const update = async (id, body) => {
             },
             include: {
                 RequirementPlanningItems: true,
-                requirementSizeDetails : true ,
-                RequirementYarnDetails : true,
+                requirementSizeDetails: true,
+                RequirementYarnDetails: true,
             },
             data: {
                 // docId: draftSave ? docIdNumber : dataFound?.docId,
@@ -541,7 +675,7 @@ const update = async (id, body) => {
                 address,
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId), notes, term, orderBy, 
+                updatedById: parseInt(userId), notes, term, orderBy,
                 // orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
                 RequirementYarnDetails: {
@@ -623,11 +757,32 @@ const update = async (id, body) => {
 
 
 async function remove(id) {
-    const data = await prisma.requirementPlanningForm.delete({
-        where: {
-            id: parseInt(id)
-        },
+    let data;
+    await prisma.$transaction(async (tx) => {
+
+        data = await prisma.requirementPlanningForm.delete({
+            where: {
+                id: parseInt(id)
+            },
+        })
+        await tx.orderDetails.update({
+            where: { id: parseInt(data?.orderDetailsId) },
+            data: { isPlanning: false },
+        });
+
+
+        await tx.order.updateMany({
+            where: {
+                id: parseInt(data?.orderId),
+                orderDetails: {
+                    every: { isPlanning: false },
+                },
+            },
+            data: { isPlanning: false },
+        });
     })
+    console.log(data, "data")
+
     return { statusCode: 0, data };
 }
 

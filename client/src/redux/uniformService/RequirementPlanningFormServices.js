@@ -36,7 +36,7 @@ const RequirementPlanningFormApi = createApi({
     getRequirementPlanningFormItems: builder.query({
       query: ({ params }) => {
         return {
-          url: `${REQUIREMENT_FORM_API}/getPoItems`,
+          url: `${REQUIREMENT_FORM_API}/getRequirementItems`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",

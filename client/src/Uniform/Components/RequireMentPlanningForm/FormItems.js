@@ -143,8 +143,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
             }
             else {
+                console.log(newItems, "newItems");
                 newItems[index][field] = value;
-                console.log(lossPercentagetotal, "lossPercentagetotal");
 
                 const requirementArr = newItems?.map((yarn) => ({
                     yarn: yarn.Yarn.name,
@@ -322,9 +322,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Process</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">loss %</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Percentage</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Size</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td>
+                                <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-40">Size</td>
 
 
 
@@ -335,7 +335,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     return (
                                         <td
                                             key={index}
-                                            className="border border-gray-300 px-2 py-1 text-center text-xs w-20"
+                                            className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-20"
                                         >
                                             {item?.size?.name}
                                         </td>
@@ -349,12 +349,12 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                             <tr className="bg-white">
                                 <td colSpan={7} className="bg-white border-l border-gray-300">
                                 </td>
-                                <td className="border border-gray-300 px-2 py-1 text-end text-xs">
+                                <td className="border border-gray-300 px-2 py-1 text-left text-xs">
                                     Size Weight (grams)
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
-                                    <td key={index} className="border border-gray-300 px-2 py-1 text-center text-xs">
-                                        {item?.weight}
+                                    <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                        {item?.weight.toFixed(3)}
                                     </td>
                                 ))}
                                 <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
@@ -363,12 +363,12 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                             <tr className="bg-white">
                                 <td colSpan={7} className="bg-white border-l border-gray-300" >
                                 </td>
-                                <td className="border border-gray-300 px-2 py-1 text-end text-xs">
+                                <td className="border border-gray-300 px-2 py-1 text-left  text-xs w-16">
                                     Order Qty (kgs)
                                 </td>
                                 {orderSizeDetails?.map((item, index) => (
-                                    <td key={index} className="border border-gray-300 px-2 py-1 text-center text-xs">
-                                        {item?.qty}
+                                    <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                        {item?.qty?.toFixed(3)}
                                     </td>
                                 ))}
                                 <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
@@ -415,7 +415,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                     handleInputChange("", index, "processId");
                                                 }
                                             }}
-                                            disabled={readOnly || yarn?.isProcess !== "Yes"} // disable if "No"
+                                            disabled={readOnly || yarn?.isProcess !== "Yes"}
                                             className="text-left w-full rounded h-full py-1"
                                             value={yarn?.processId || ""}   // default empty
                                             onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "processId")}
@@ -431,7 +431,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     </td>
 
 
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                    <td className=" border border-gray-300 text-right text-[12px] py-1.5 px-2 text-xs">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
@@ -495,19 +495,19 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                             placeHolder="0.00"
                                         />
                                     </td>
-                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-[11px] "></td>
+                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]"></td>
 
 
                                     {(orderSizeDetails || []).map((size) => (
                                         <>
-                                            <td className="border border-gray-300 px-1 py-1  text-[11px] ">
+                                            <td className="border border-gray-300 px-1 py-1  text-[12px] ">
                                                 <input
                                                     type="number"
 
                                                     min={"0"}
                                                     onFocus={(e) => e.target.select()}
-                                                    className=" rounded  w-full text-right"
-                                                    value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId,) || "")}
+                                                    className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                    value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId) || "").toFixed(3)}
                                                     disabled={true}
 
                                                 />

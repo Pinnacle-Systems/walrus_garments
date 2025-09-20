@@ -7,33 +7,23 @@ import {
   useGetPoByIdQuery
 } from "../../../redux/uniformService/PoServices";
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
-import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
-import { useGetTaxTemplateQuery } from '../../../redux/services/TaxTemplateServices';
-import FormHeader from "../../../Basic/components/FormHeader";
+
 import { toast } from "react-toastify";
-import { DisabledInput, DropdownInput, DateInput, ReusableTable } from "../../../Inputs";
-import { dropDownListObject, } from '../../../Utils/contructObject';
-import { poTypes } from '../../../Utils/DropdownData';
-import YarnPoItems from "./YarnPoItems";
-import FabricPoItems from "./OrderPurchase";
-import AccessoryPoItems from "./AccessoryPoItems"
-import { PDFViewer } from "@react-pdf/renderer";
-import tw from "../../../Utils/tailwind-react-pdf";
+
+
 import moment from "moment";
-import PrintFormat from "./PrintFormat-PO/index";
-import Modal from "../../../UiComponents/Modal";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
-import { deliveryTypes } from "../../../Utils/DropdownData";
+
 
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
-import Consolidation from "./Cosolidation";
-import { useSelector } from "react-redux";
-import CommonTable from "../../../Shocks/CommonReport/CommonTable";
-import { FaPlus } from "react-icons/fa6";
+
+
+
 import PurchaseOrderForm from "./PurchaseOrderForm";
 import { Loader } from "../../../Basic/components";
-const MODEL = "Purchase Order";
+import Swal from "sweetalert2";
+import { FaPlus } from "react-icons/fa";
+import { ReusableTable } from "../../../Inputs";
+
 
 
 export default function Form() {
@@ -42,7 +32,6 @@ export default function Form() {
   const componentRef = useRef();
 
   const [readOnly, setReadOnly] = useState(false);
-  const [poItems, setPoItems] = useState([]);
   const [docId, setDocId] = useState("")
   const [id, setId] = useState("");
   const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
@@ -55,6 +44,9 @@ export default function Form() {
   const [discountType, setDiscountType] = useState("Percentage");
   const [discountValue, setDiscountValue] = useState(0);
   const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [poItems, setPoItems] = useState([]);
+  const [tempPoItems, setTempPoItems] = useState([]);
+
 
   const [remarks, setRemarks] = useState("")
 
@@ -273,7 +265,7 @@ export default function Form() {
       accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
       className: 'text-gray-800 uppercase w-[500px]'
     },
-  
+
 
   ];
 
@@ -295,8 +287,8 @@ export default function Form() {
     setReadOnly(false);
   };
 
-  console.log(childRecord?.current,"childrecord");
-  
+  console.log(childRecord?.current, "childrecord");
+
 
   const handleDelete = async (id) => {
     if (id) {
@@ -312,7 +304,16 @@ export default function Form() {
         await removeData(id)
         setId("");
         onNew();
-        toast.success("Deleted Successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
       } catch (error) {
         toast.error("something went wrong");
       }
@@ -322,7 +323,9 @@ export default function Form() {
   const onNew = () => {
     setId("");
     setReadOnly(false);
-    //  setOrderDetails([]);
+    setPoItems([])
+    setTempPoItems([])
+    
 
   }
 
@@ -336,7 +339,7 @@ export default function Form() {
       {purchaseOrderForm ? (
         <PurchaseOrderForm
           onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
-          docId={docId} setDocId = {setDocId}
+          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} PoItems={poItems} setPoItems={setPoItems} onNew={onNew}
         />
 
       ) : (

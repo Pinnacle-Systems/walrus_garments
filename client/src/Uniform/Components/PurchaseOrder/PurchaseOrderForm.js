@@ -1,6 +1,6 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInputNew, DropdownInput, DropdownWithSearch,  ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
@@ -13,25 +13,23 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa6";
 import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderItemsQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-PO";
 import tw from "../../../Utils/tailwind-react-pdf";
 import OrderPurchase from "./OrderPurchase";
-import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
+import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormItemsQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
 import OrderDetailsSelection from "./OrderDetailsSelection";
 import Modal from "../../../UiComponents/Modal";
 
-const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId }) => {
-
+const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId ,poItems ,setPoItems ,tempPoItems ,setTempPoItems ,onNew }) => {
 
 
 
   const today = new Date()
 
-  const [poItems, setPoItems] = useState([]);
-  const [tempPoItems, setTempPoItems] = useState([]);
+
   const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
@@ -69,6 +67,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   } = useGetOrderItemsByIdNewQuery({ id: orderId }, { skip: !orderId });
 
 
+  const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
+
+
 
   const {
     data: singleData,
@@ -87,6 +88,11 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
+  useEffect(() => {
+
+    setTempPoItems(requirementPlanningItemsData?.data)
+
+  }, [isRequirementFetching, isRequirementLoading, , requirementPlanningItemsData]);
 
 
   // const handleAddSupplier = (newName) => {
@@ -161,88 +167,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     // }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  useEffect(() => {
-
-    if (!orderId) return
-
-    // setPoItems(
-    //   singleOrderData?.data?.RequirementPlanningForm?.map(item => {
-    //     // collect all colors just for display
-    //     const allColors = item?.RequirementYarnDetails
-    //       ?.map(yarn => yarn?.Color?.name)
-    //       .filter(Boolean)
-    //       .join(" - ");
-
-    //     // calculate yarn qty for each yarn in this requirement
-    //     const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-    //       const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
-    //         const sizeQty =
-    //           size?.qty || size?.quantity || size?.orderQty || size?.totalQty || 0;
-    //         return (
-    //           sum +
-    //           (size?.weight || 0) *
-    //           (yarn?.percentage / 100) *
-    //           sizeQty
-    //         );
-    //       }, 0);
-
-    //       return {
-    //         ...yarn,
-    //         qty: Number(qty.toFixed(3)),
-    //         orderDetailsId: item.orderDetailsId,
-    //       };
-    //     });
-
-    //     // total yarn qty for this requirement item
-    //     const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-    //       (sum, yarn) => sum + yarn.qty,
-    //       0
-    //     );
-
-    //     return {
-    //       OrderDetails: {
-    //         style: {
-    //           name: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-    //         },
-    //       },
-    //       requirementPlanningFormId: item.id,
-    //       RaiseIndenetYarnItems,
-    //       totalYarnQty: Number(totalYarnQty.toFixed(3)),
-    //     };
-    //   })
-    // );
-
-
-    setTempPoItems(
-      singleOrderData?.data?.RequirementPlanningForm?.flatMap(
-        (item) => item.RequirementPlanningItems || []
-      ) || []
-    );
-
-
-    const poQtyMap = (data?.Po || []).reduce((acc, po) => {
-      (po.PoItems || []).forEach(item => {
-        const key = `${item.yarnId}_${item.count}_${item.colorId}`;
-        acc[key] = (acc[key] || 0) + parseFloat(item.qty || 0);
-      });
-      return acc;
-    }, {});
-
-
-    // Step 2: Merge RequirementPlanningItems with poQty and set state
-    // setTempPoItems(
-    //   (data?.RequirementPlanningForm?.flatMap(
-    //     item => item.RequirementPlanningItems || []
-    //   ) || []).map(rpItem => ({
-    //     ...rpItem,
-    //     poQty: poQtyMap[rpItem.yarnId] || 0
-    //   }))
-    // );
-
-
-
-  }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
-
 
 
 
@@ -276,6 +200,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           showConfirmButton: false,
           timer: 2000
         });
+
+        RequirementRefetch()
+        console.log("Hittttt")
         if (returnData.statusCode === 0) {
           if (nextProcess == "new" || nextProcess == "close") {
             syncFormWithDb(undefined);
@@ -286,16 +213,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
-          Swal.fire({
-            title: text + "  " + "Successfully",
-            icon: "success",
-            draggable: true,
-            timer: 1000,
-            showConfirmButton: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
 
         } else {
           toast.error(returnData?.message);
@@ -311,7 +228,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   console.log(data, "dataaaa")
 
   const validateData = (data) => {
-    if (data?.dueDate && data?.orderId && data?.poMaterial && data?.poType && data?.supplierId) {
+    if (data?.dueDate && data?.poMaterial && data?.poType && data?.supplierId) {
       return true;
     }
 
@@ -365,13 +282,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     <>
 
       <Modal
-        isOpen={orderId && tableDataView}
+        isOpen={tableDataView}
         onClose={() => setTableDataView(false)}
         widthClass="  h-[70%] w-[90%]"
       >
         <OrderDetailsSelection
           onClose={() => setTableDataView(false)}
           tempPoItems={tempPoItems}
+          requirementPlanningItemsData={requirementPlanningItemsData?.data}
           setPoItems={setPoItems}
           poItems={poItems}
         />
@@ -396,7 +314,12 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
           <button
-            onClick={onClose}
+            onClick={()  =>  {
+              onNew()
+              onClose()
+              RequirementRefetch()
+            }
+            }
             className="text-indigo-600 hover:text-indigo-700"
             title="Open Report"
           >
@@ -449,12 +372,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <DropdownInput name="Po Type"
                 options={PoTypes}
                 value={poType}
-                setValue={setPoType}
+                setValue={(value) => { setPoType(value); setTableDataView(true) }}
+
                 required={true}
                 readOnly={readOnly}
                 disabled={orderId}
               />
-              {poType === "ORDER" &&
+              {/* {poType === "ORDER" &&
                 <DropdownWithSearch
                   label="Order No"
                   options={orderData?.data}
@@ -463,7 +387,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   required={true}
                   setValue={(value) => { setOrderId(value); setTableDataView(true) }}
                 />
-              }
+              } */}
 
 
               <div>

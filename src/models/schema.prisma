@@ -1005,92 +1005,96 @@ enum DeliveryType {
 }
 
 model Po {
-  id                      Int                      @id @default(autoincrement())
-  supplier                Party?                   @relation("supplier", fields: [supplierId], references: [id])
-  transType               PoTypes
-  dueDate                 DateTime                 @db.Date
-  supplierId              Int?
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-  createdBy               User?                    @relation("createdBy", fields: [createdById], references: [id])
-  createdById             Int?
-  updatedBy               User?                    @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById             Int?
-  Branch                  Branch?                  @relation("poRaisedBranch", fields: [branchId], references: [id])
-  docId                   String?
-  branchId                Int?
-  active                  Boolean?                 @default(true)
-  discountType            DiscountTypes?
-  discountValue           Float?                   @default(0)
-  deliveryType            DeliveryType
-  DeliveryParty           Party?                   @relation("deliveryTo", fields: [deliveryPartyId], references: [id])
-  deliveryPartyId         Int?
-  DeliveryBranch          Branch?                  @relation("deliveryBranch", fields: [deliveryBranchId], references: [id])
-  deliveryBranchId        Int?
-  remarks                 String?                  @db.LongText
-  order                   Order?                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId                 Int?
-  requirementPlanningForm RequirementPlanningForm? @relation(fields: [requirementId], references: [id], onDelete: Cascade)
-  requirementId           Int?
-  isPurchaseCancel        Boolean?                 @default(false)
-  PurchaseType            String?
-  poMaterial              String?
-  poType                  String?
-  PoItems                 PoItems[]
+  id                         Int                       @id @default(autoincrement())
+  supplier                   Party?                    @relation("supplier", fields: [supplierId], references: [id])
+  transType                  PoTypes
+  dueDate                    DateTime                  @db.Date
+  supplierId                 Int?
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime                  @updatedAt
+  createdBy                  User?                     @relation("createdBy", fields: [createdById], references: [id])
+  createdById                Int?
+  updatedBy                  User?                     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                Int?
+  Branch                     Branch?                   @relation("poRaisedBranch", fields: [branchId], references: [id])
+  docId                      String?
+  branchId                   Int?
+  active                     Boolean?                  @default(true)
+  discountType               DiscountTypes?
+  discountValue              Float?                    @default(0)
+  deliveryType               DeliveryType
+  DeliveryParty              Party?                    @relation("deliveryTo", fields: [deliveryPartyId], references: [id])
+  deliveryPartyId            Int?
+  DeliveryBranch             Branch?                   @relation("deliveryBranch", fields: [deliveryBranchId], references: [id])
+  deliveryBranchId           Int?
+  remarks                    String?                   @db.LongText
+  order                      Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                    Int?
+  requirementPlanningForm    RequirementPlanningForm?  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  requirementId              Int?
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
+  RequirementPlanningItemsId Int?
+  isPurchaseCancel           Boolean?                  @default(false)
+  PurchaseType               String?
+  poMaterial                 String?
+  poType                     String?
+  PoItems                    PoItems[]
 }
 
 model PoItems {
-  id                  Int                   @id @default(autoincrement())
-  Po                  Po?                   @relation(fields: [poId], references: [id], onDelete: Cascade)
-  Fabric              Fabric?               @relation(fields: [fabricId], references: [id])
-  fabricId            Int?
-  Yarn                Yarn?                 @relation(fields: [yarnId], references: [id])
-  yarnId              Int?
-  Accessory           Accessory?            @relation(fields: [accessoryId], references: [id])
-  accessoryId         Int?
-  accessoryGroup      AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId    Int?
-  accessoryItem       AccessoryItem?        @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId     Int?
-  Color               Color?                @relation(fields: [colorId], references: [id])
-  colorId             Int?
-  Uom                 UnitOfMeasurement?    @relation(fields: [uomId], references: [id])
-  uomId               Int?
-  Design              Design?               @relation(fields: [designId], references: [id])
-  Gauge               Gauge?                @relation(fields: [gaugeId], references: [id])
-  LoopLength          LoopLength?           @relation(fields: [loopLengthId], references: [id])
-  Gsm                 Gsm?                  @relation(fields: [gsmId], references: [id])
-  noOfBags            Int?
-  weightPerBag        Float?
-  percentage          Float?
-  requiredQty         Float?
-  qty                 Float?
-  price               Float?
-  discountType        DiscountTypes?
-  discountValue       Float?                @default(0)
-  tax                 Float?                @default(0)
-  Size                Size?                 @relation(fields: [sizeId], references: [id])
-  sizeId              Int?
-  YarnType            YarnType?             @relation(fields: [yarncategoryId], references: [id])
-  yarncategoryId      Int?
-  weight              Float?
-  designId            Int?
-  gaugeId             Int?
-  loopLengthId        Int?
-  gsmId               Int?
-  poId                Int?
-  KDia                Dia?                  @relation("kDiaPoItem", fields: [kDiaId], references: [id])
-  kDiaId              Int?
-  FDia                Dia?                  @relation("fDiaPoItem", fields: [fDiaId], references: [id])
-  fDiaId              Int?
-  Counts              Counts?               @relation(fields: [count], references: [id])
-  count               Int?
-  isPurchaseCancel    Boolean?              @default(false)
-  PoInwardReturnItems PoInwardReturnItems[]
-  BillEntryItems      BillEntryItems[]
-  DirectReturnItems   DirectReturnItems[]
-  directItems         DirectItems[]
-  CancelItems         CancelItems[]
+  id                         Int                       @id @default(autoincrement())
+  Po                         Po?                       @relation(fields: [poId], references: [id], onDelete: Cascade)
+  Fabric                     Fabric?                   @relation(fields: [fabricId], references: [id])
+  fabricId                   Int?
+  Yarn                       Yarn?                     @relation(fields: [yarnId], references: [id])
+  yarnId                     Int?
+  Accessory                  Accessory?                @relation(fields: [accessoryId], references: [id])
+  accessoryId                Int?
+  accessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId           Int?
+  accessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId            Int?
+  Color                      Color?                    @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  Uom                        UnitOfMeasurement?        @relation(fields: [uomId], references: [id])
+  uomId                      Int?
+  Design                     Design?                   @relation(fields: [designId], references: [id])
+  Gauge                      Gauge?                    @relation(fields: [gaugeId], references: [id])
+  LoopLength                 LoopLength?               @relation(fields: [loopLengthId], references: [id])
+  Gsm                        Gsm?                      @relation(fields: [gsmId], references: [id])
+  noOfBags                   Int?
+  weightPerBag               Float?
+  percentage                 Float?
+  requiredQty                Float?
+  qty                        Float?
+  price                      Float?
+  discountType               DiscountTypes?
+  discountValue              Float?                    @default(0)
+  tax                        Float?                    @default(0)
+  Size                       Size?                     @relation(fields: [sizeId], references: [id])
+  sizeId                     Int?
+  YarnType                   YarnType?                 @relation(fields: [yarncategoryId], references: [id])
+  yarncategoryId             Int?
+  weight                     Float?
+  designId                   Int?
+  gaugeId                    Int?
+  loopLengthId               Int?
+  gsmId                      Int?
+  poId                       Int?
+  KDia                       Dia?                      @relation("kDiaPoItem", fields: [kDiaId], references: [id])
+  kDiaId                     Int?
+  FDia                       Dia?                      @relation("fDiaPoItem", fields: [fDiaId], references: [id])
+  fDiaId                     Int?
+  Counts                     Counts?                   @relation(fields: [count], references: [id])
+  count                      Int?
+  isPurchaseCancel           Boolean?                  @default(false)
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
+  RequirementPlanningItemsId Int?
+  PoInwardReturnItems        PoInwardReturnItems[]
+  BillEntryItems             BillEntryItems[]
+  DirectReturnItems          DirectReturnItems[]
+  directItems                DirectItems[]
+  CancelItems                CancelItems[]
 }
 
 model PInwardOrReturn {
@@ -3369,6 +3373,8 @@ model RequirementPlanningItems {
   Process                   Process?                 @relation(fields: [processId], references: [id])
   processId                 Int?
   lossPercentage            Float?
+  Po                        Po[]
+  PoItems                   PoItems[]
 }
 
 model RequirementSizeDetails {
