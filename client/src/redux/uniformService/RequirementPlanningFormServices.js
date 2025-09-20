@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import {  REQUIREMENT_FORM_API } from "../../Api";
+import { REQUIREMENT_FORM_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -78,6 +78,18 @@ const RequirementPlanningFormApi = createApi({
       }),
       invalidatesTags: ["RequirementPlanningForm"],
     }),
+    // updateRequirementPlanningForm: builder.mutation({
+    //   query: (payload) => {
+    //     const { id, ...body } = payload;
+
+    //     return {
+    //       url: `${REQUIREMENT_FORM_API}/${id}`,
+    //       method: "PUT",
+    //       body,
+    //     };
+    //   },
+    //   invalidatesTags: ["RequirementPlanningForm"],
+    // }),
     updateRequirementPlanningForm: builder.mutation({
       query: ({ id, ...body }) => {
         return {

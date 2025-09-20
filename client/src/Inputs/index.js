@@ -137,7 +137,7 @@ export const MultiSelectDropdown = ({
       padding: '8px 12px'
     }),
   };
-
+ 
   return (
     <div
       className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
@@ -151,38 +151,42 @@ export const MultiSelectDropdown = ({
         onChange={readOnly ? () => { } : setSelected}
         labelledBy="Select"
         hasSelectAll={false}
-        styles={{
-          container: (base) => ({
-            ...base,
-            fontSize: "12px",
-            minHeight: "28px",
-          }),
-          control: (base) => ({
-            ...base,
-            padding: "2px",
-            borderRadius: "10px",
-            boxShadow: "none",
-            border: "1px solid #ccc",
-            minHeight: "28px",
-          }),
-          option: (base, state) => ({
-            ...base,
-            fontSize: "12px",
-            backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
-            padding: "4px 8px",
-          }),
-          chips: (base) => ({
-            ...base,
-            fontSize: "12px",
-            padding: "2px 4px",
-          }),
-          searchBox: (base) => ({
-            ...base,
-            fontSize: "12px",
-            padding: "2px",
-          }),
-        }}
+        // styles={{
+        //   container: (base) => ({
+        //     ...base,
+        //     fontSize: "12px",
+        //     minHeight: "100px", // container height
+        //     width: "70px",       // container width
+        //   }),
+        //   control: (base) => ({
+        //     ...base,
+        //     padding: "2px",
+        //     borderRadius: "10px",
+        //     boxShadow: "none",
+        //     border: "1px solid #ccc",
+        //     minHeight: "100px", // control height
+        //     width: "70px",       // control width
+        //   }),
+        //   option: (base, state) => ({
+        //     ...base,
+        //     fontSize: "12px",
+        //     backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
+        //     padding: "4px 8px",
+        //   }),
+        //   chips: (base) => ({
+        //     ...base,
+        //     fontSize: "12px",
+        //     padding: "2px 4px",
+        //   }),
+        //   searchBox: (base) => ({
+        //     ...base,
+        //     fontSize: "12px",
+        //     padding: "2px",
+        //   }),
+        // }}
+        styles={customSelectStyles}
       />
+
 
 
     </div>
@@ -305,15 +309,18 @@ export const LongTextInput = ({
 }) => {
   return (
     <div className="input-group grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data gap-1">
-      <label className="md:text-start flex">
+      <label className="block text-xs font-bold text-gray-600 mb-1">
         {required ? <RequiredLabel name={name} /> : `${name}`}
       </label>
       <input
         tabIndex={tabIndex ? tabIndex : undefined}
+        cla
         type={type}
         disabled={disabled}
         required={required}
-        className={className}
+        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm"
         value={value}
         onChange={(e) => {
           type === "number"
@@ -531,7 +538,7 @@ export const TextArea = ({
 //         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
 //           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
 //           transition-all duration-150 shadow-sm
-      
+
 //           ${className}`}
 //         value={value}
 //         onChange={(e) => {
@@ -582,8 +589,8 @@ export const DropdownInput = forwardRef(({
   };
 
   const isDisabled = readOnly || disabled;
-  
-  console.log(openOnFocus,"openOnFocus")
+
+  console.log(openOnFocus, "openOnFocus")
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -911,7 +918,8 @@ export const DateInputNew = forwardRef(({
   return (
     <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
       {name && (
-        <label className="block font-bold text-slate-700 mb-1 text-ms">
+        <label className={`text-xs font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+          }`}>
           {name}
         </label>
       )}
@@ -1129,12 +1137,12 @@ export const DropdownWithSearch = forwardRef(({
   required = false,
   labelField,
   label,
-  nextRef = null, 
+  nextRef = null,
   classNameForOptions  // 👈 next input ref
 }, ref) => {
 
-    // 👈 next input ref
-  console.log(classNameForOptions,"classNameForOptions")
+  // 👈 next input ref
+  console.log(classNameForOptions, "classNameForOptions")
 
   const [currentIndex, setCurrentIndex] = useState("");
   useEffect(() => setCurrentIndex(Date.now()), []);
@@ -1166,27 +1174,27 @@ export const DropdownWithSearch = forwardRef(({
           {required ? <RequiredLabel name={label} /> : `${label}`}
         </label>
       )}
-    <select
-  ref={ref}
-  className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+      <select
+        ref={ref}
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
     focus:border-indigo-300 focus:outline-none transition-all duration-200
     hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} 
     ${className}`}
-  disabled={readOnly}
-  readOnly={readOnly}
-  value={value || ""}
-  onChange={(e) => setValue(e.target.value)}
->
-  <option value="">Select</option>
-  {(options || []).map((option) => (
-    <option
-      key={option.id}
-      value={option.id}
-    >
-        <span></span>   {option[labelField]}
-    </option>
-  ))}
-</select>
+        disabled={readOnly}
+        readOnly={readOnly}
+        value={value || ""}
+        onChange={(e) => setValue(e.target.value)}
+      >
+        <option value="">Select</option>
+        {(options || []).map((option) => (
+          <option
+            key={option.id}
+            value={option.id}
+          >
+            <span></span>   {option[labelField]}
+          </option>
+        ))}
+      </select>
     </div>
   );
 });
@@ -1491,50 +1499,15 @@ export const ReusableTable = ({
                 <th
                   key={index}
                   className={`${column.className ? column.className : ""
-                    } py-1.5 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50" : ""
+                    } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50" : ""
                     }`}
                 >
                   <span>{column.header}</span>
                 </th>
               ))}
-              <td className="border border-white/50"></td>
+              <td className="border border-white/50 font-medium text-[13px]"></td>
             </tr>
-            <tr className="">
-              {columns?.map((column, index) => (
-                <td key={index} className="py-1">
-                  {column.search && column.search !== "" && (
-                    <div className="relative">
-                      <svg
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-
-                      <input
-                        type="text"
-                        placeholder={`${column.search}`}
-                        value={column.value}
-                        onChange={(e) => column.setValue(e.target.value)}
-                        // onFocus={() => setActiveSearchCol(index)}
-                        className=" w-full border border-gray-300 rounded px-1 py-1 text-[12px] pl-7 focus:outline-none"
-                      />
-                    </div>
-                  )}
-                </td>
-              ))}
-
-              <td className="border border-white/50"></td>
-
-            </tr>
+       
 
 
 
@@ -1915,7 +1888,9 @@ export const ReusableSearchableInput = forwardRef(
       searchTerm,
       readOnly,
       nextRef,
-      show 
+      required,
+      show,
+      name
     },
     ref
   ) => {
@@ -1925,9 +1900,7 @@ export const ReusableSearchableInput = forwardRef(
     const companyId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
     );
-    const branchId = secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "currentBranchId"
-    );
+
     const userId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userId"
     );
@@ -2042,9 +2015,14 @@ export const ReusableSearchableInput = forwardRef(
         </Modal>
 
         <div className="relative text-sm w-full" id="pageSearch" ref={containerRef}>
-          <label className="block text-xs font-bold text-slate-700 mb-1">
+          {/* <label className="block text-xs font-bold text-slate-700 mb-1">
             {label}
-          </label>
+          </label> */}
+          {label && (
+            <label className="block text-xs font-bold text-gray-600 mb-1">
+              {required ? <RequiredLabel name={label ? label : name} /> : label}
+            </label>
+          )}
 
           <div className="flex gap-2">
             <div className="relative flex-grow">

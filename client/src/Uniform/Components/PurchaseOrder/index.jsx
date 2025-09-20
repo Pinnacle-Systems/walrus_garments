@@ -336,8 +336,7 @@ export default function Form() {
       {purchaseOrderForm ? (
         <PurchaseOrderForm
           onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
-        //  orderDetails={orderDetails} setOrderDetails={setOrderDetails}  id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-        //     partyData={partyData?.data}
+          docId={docId} setDocId = {setDocId}
         />
 
       ) : (

@@ -110,7 +110,7 @@ const RequirementPlanningFormReport = ({
                 </div>
                 <div className="flex gap-1">
                     <button
-                        onClick={() => handlePageChange(currentPage - 1)}
+                        // onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
                         className={`px-3 py-1 rounded-md ${currentPage === 1
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'

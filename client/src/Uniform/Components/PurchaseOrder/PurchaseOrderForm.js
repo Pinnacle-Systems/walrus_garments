@@ -1,6 +1,6 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInputNew, DropdownInput, DropdownWithSearch, Modal, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch,  ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
@@ -21,24 +21,23 @@ import tw from "../../../Utils/tailwind-react-pdf";
 import OrderPurchase from "./OrderPurchase";
 import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
 import OrderDetailsSelection from "./OrderDetailsSelection";
+import Modal from "../../../UiComponents/Modal";
 
-const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData }) => {
+const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId }) => {
 
 
 
 
   const today = new Date()
-  const componentRef = useRef();
 
   const [poItems, setPoItems] = useState([]);
   const [tempPoItems, setTempPoItems] = useState([]);
-  const [docId, setDocId] = useState("")
   const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [poType, setPoType] = useState("");
-  const [poMaterial,setPoMaterial]  =  useState("DyedYarn")
+  const [poMaterial, setPoMaterial] = useState("DyedYarn")
   const [supplierId, setSupplierId] = useState("");
 
   const [discountType, setDiscountType] = useState("Percentage");
@@ -51,23 +50,16 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   const [deliveryType, setDeliveryType] = useState("")
   const [deliveryToId, setDeliveryToId] = useState("")
   const [showExtraCharge, setShowExtraCharge] = useState(false)
-  const [showDiscount, setShowDiscount] = useState(false)
   const [printModalOpen, setPrintModalOpen] = useState(false);
-  const [orderSizeDetails, setOrderSizeDetails] = useState([])
-  const [orderYarnDetails, setOrderYarnDetails] = useState([])
   const [tableDataView, setTableDataView] = useState(false)
 
   const [requirementId, setRequirementId] = useState("");
-  const [suppliers, setSuppliers] = useState([
-    "Supplier One",
-    "Supplier Two",
-    "Supplier Three",
-  ]);
 
-  const { branchId, userId, companyId, finYearId } = getCommonParams();
-  const params = {
-    branchId, userId, finYearId
-  };
+
+  const { branchId, userId, finYearId } = getCommonParams();
+  const params = { branchId, userId, finYearId };
+
+
   const { data: orderData } = useGetOrderQuery({ params });
 
   const {
@@ -77,14 +69,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   } = useGetOrderItemsByIdNewQuery({ id: orderId }, { skip: !orderId });
 
 
-  const getNextDocId = useCallback(() => {
-    //   if (id || isLoading || isFetching) return
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId)
-    }
-  }, [allData, id])
-
-  useEffect(getNextDocId, [getNextDocId])
 
   const {
     data: singleData,
@@ -94,24 +78,22 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
   const [addData] = useAddPoMutation();
   const [updateData] = useUpdatePoMutation();
-  const [removeData] = useDeletePoMutation();
 
 
 
-  const { data: supplierList } =
-    useGetPartyQuery({ params: { ...params } });
-
+  const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
 
 
 
 
 
-  const handleAddSupplier = (newName) => {
-    if (!suppliers.includes(newName)) {
-      setSuppliers([...suppliers, newName]);
-    }
-  };
+
+  // const handleAddSupplier = (newName) => {
+  //   if (!suppliers.includes(newName)) {
+  //     setSuppliers([...suppliers, newName]);
+  //   }
+  // };
 
 
 
@@ -133,13 +115,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     setReadOnly(true)
 
 
-    setPoType(data?.transType);
+    setPoType(data?.poType ? data?.poType : "");
     setDate(data?.createdAt
       ? moment.utc(data.createdAt).format("YYYY-MM-DD")
       : moment.utc(new Date()).format("YYYY-MM-DD")
     );
+    setPoMaterial(data?.poMaterial ? data?.poMaterial : '')
 
-    setPoItems(data?.PoItems || []);
+    setPoItems(data?.PoItems ? data?.PoItems : []);
     setDocId(data?.docId || "");
     setPayTermId(data?.payTermId || "");
     setDiscountType(data?.discountType || "Percentage");
@@ -228,11 +211,34 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
     //     };
     //   })
     // );
+
+
     setTempPoItems(
       singleOrderData?.data?.RequirementPlanningForm?.flatMap(
         (item) => item.RequirementPlanningItems || []
       ) || []
     );
+
+
+    const poQtyMap = (data?.Po || []).reduce((acc, po) => {
+      (po.PoItems || []).forEach(item => {
+        const key = `${item.yarnId}_${item.count}_${item.colorId}`;
+        acc[key] = (acc[key] || 0) + parseFloat(item.qty || 0);
+      });
+      return acc;
+    }, {});
+
+
+    // Step 2: Merge RequirementPlanningItems with poQty and set state
+    // setTempPoItems(
+    //   (data?.RequirementPlanningForm?.flatMap(
+    //     item => item.RequirementPlanningItems || []
+    //   ) || []).map(rpItem => ({
+    //     ...rpItem,
+    //     poQty: poQtyMap[rpItem.yarnId] || 0
+    //   }))
+    // );
+
 
 
   }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
@@ -241,17 +247,19 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
 
 
   let data = {
-    transType: poType, supplierId, dueDate, payTermId,
+    supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
     poItems: poItems?.filter(po => po.yarnId || po.fabricId || po.accessoryId || po.yarncategoryId),
     deliveryType, deliveryToId,
     discountType,
     discountValue,
-    finYearId, orderId, PurchaseType, requirementId
+    finYearId, orderId, PurchaseType, requirementId, poMaterial, poType
   }
-  const handleSubmitCustom = async (callback, data, text) => {
-    console.log(callback, "callback")
+
+
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -268,16 +276,42 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
           showConfirmButton: false,
           timer: 2000
         });
-        setId("")
-        syncFormWithDb(undefined)
+        if (returnData.statusCode === 0) {
+          if (nextProcess == "new" || nextProcess == "close") {
+            syncFormWithDb(undefined);
+          }
+          else {
+            setId(returnData?.data?.id);
+          }
+
+
+
+          Swal.fire({
+            title: text + "  " + "Successfully",
+            icon: "success",
+            draggable: true,
+            timer: 1000,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+        } else {
+          toast.error(returnData?.message);
+        }
+        // setId()
+        // syncFormWithDb(undefined)
       }
     } catch (error) {
       console.log("handle");
     }
   };
 
+  console.log(data, "dataaaa")
+
   const validateData = (data) => {
-    if (data.dueDate) {
+    if (data?.dueDate && data?.orderId && data?.poMaterial && data?.poType && data?.supplierId) {
       return true;
     }
 
@@ -286,8 +320,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
   };
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", { position: "top-center" })
-      return
+      Swal.fire({
+        // title: "Total percentage exceeds 100%",
+        title: "Please fill all required fields...!",
+        icon: "error",
+        timer: 1500,
+        showConfirmButton: false,
+      }); return
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
@@ -310,6 +349,17 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   }
+
+  const dateRef = useRef(null);
+  const inputPartyRef = useRef(null);
+  const styleRef = useRef(null);
+
+  useEffect(() => {
+    if (dateRef.current) {
+      dateRef.current.focus();
+    }
+  }, []);
+
   return (
 
     <>
@@ -317,7 +367,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
       <Modal
         isOpen={orderId && tableDataView}
         onClose={() => setTableDataView(false)}
-        widthClass="  h-[70%] w-[70%]"
+        widthClass="  h-[70%] w-[90%]"
       >
         <OrderDetailsSelection
           onClose={() => setTableDataView(false)}
@@ -373,6 +423,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                 setValue={setDueDate}
                 type={"date"}
                 required={true}
+                ref={dateRef}
+                nextRef={inputPartyRef}
+
                 readOnly={readOnly}
               />
 
@@ -391,6 +444,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                 setValue={setPoMaterial}
                 required={true}
                 readOnly={readOnly}
+                disabled={orderId}
               />
               <DropdownInput name="Po Type"
                 options={PoTypes}
@@ -430,11 +484,12 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
                   component="PartyMaster"
                   placeholder="Search Supplier Id..."
                   optionList={supplierList?.data}
-                  onAddItem={handleAddSupplier}
+                  // onAddItem={handleAddSupplier}
                   // onDeleteItem={onDeleteItem}
                   setSearchTerm={setSupplierId}
                   searchTerm={supplierId}
                   show={"isClient"}
+                  required={true}
                 />
               </div>
 
@@ -478,11 +533,11 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
         </div>
         <fieldset className=''>
           {
-          // PurchaseType === "Order Purchase" ?
+            // PurchaseType === "Order Purchase" ?
 
-          //   <OrderPurchase poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId} requirementId={requirementId} id={id}
-          //   />
-          //   :
+            //   <OrderPurchase poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId} requirementId={requirementId} id={id}
+            //   />
+            //   :
 
             poMaterial?.toLowerCase().includes("GreyYarn".toLowerCase())
               ?
@@ -595,7 +650,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, allData 
             </div>
           )}
 
-        
+
         </div>
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">

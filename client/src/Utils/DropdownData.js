@@ -55,8 +55,8 @@ export const poTypes = [
 
 ]
 export const MaterialType = [
-    // { show: "GreyYarn", value: "GreyYarn" },
     { show: "DyedYarn", value: "DyedYarn" },
+    { show: "GreyYarn", value: "GreyYarn" },
     { show: "Accessory", value: "Accessory" },
 
 ]
@@ -268,5 +268,11 @@ export const Colors = [
 export const stockTransferType = [
     { show: "General To Order", value: "General" },
     { show: "Order To Order", value: "Order" },
+
+]
+
+export const Common = [
+    { show: "No", value: "No" },
+    { show: "Yes", value: "Yes" },
 
 ]

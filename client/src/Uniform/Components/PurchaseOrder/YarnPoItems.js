@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
+import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices";
 
 const YarnPoItems = ({
     id,
@@ -20,7 +21,7 @@ const YarnPoItems = ({
     greyFilter,
 }) => {
 
-console.log(poItems,"PoItems") 
+    console.log(poItems, "PoItems")
     useEffect(() => {
         if (poItems?.length >= 3) return
         setPoItems(prev => {
@@ -91,20 +92,16 @@ console.log(poItems,"PoItems")
     const { data: yarnList } = useGetYarnMasterQuery({ params });
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const {
-        data: colorList,
-        isLoading: isColorLoading,
-        isFetching: isColorFetching,
-    } = useGetColorMasterQuery({
-        params: { ...params, isGrey: greyFilter ? true : undefined },
-    });
-   
+        data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
 
-  
+    const { data: countsList } = useGetCountsMasterQuery({ params });
 
-  
 
-  
-    
+
+
+
+
+
 
 
 
@@ -141,7 +138,7 @@ console.log(poItems,"PoItems")
                                 </th>
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Items
                                 </th>
@@ -153,22 +150,34 @@ console.log(poItems,"PoItems")
                                 </th>
                                 <th
 
-                                    className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Counts
+                                </th>
+                                <th
+
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
                                 </th>
-                                {/* <th
+                                <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Lot Det.
-                                </th> */}
+                                    Required Qty (kgs)
+                                </th>
+                                <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Already Purchased Qty (kgs)
+                                </th>
 
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Quantity
+                                    Balance Purchase Qty  (kgs)
                                 </th>
                                 <th
 
@@ -176,12 +185,7 @@ console.log(poItems,"PoItems")
                                 >
                                     Price
                                 </th>
-                                {/* <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Price(with Tax)
-                                </th> */}
 
                                 <th
 
@@ -189,12 +193,7 @@ console.log(poItems,"PoItems")
                                 >
                                     Gross
                                 </th>
-                                {/* <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    DiscountType
-                                </th> */}
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -254,8 +253,29 @@ console.log(poItems,"PoItems")
 
 
 
+                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                        <select
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
+                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.count}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "count")}
+                                            onBlur={(e) => {
+                                                handleInputChange((e.target.value), index, "count")
+                                            }
+                                            }
+                                        >
+                                            <option hidden>
+                                            </option>
+                                            {(id ? countsList?.data : countsList?.data.filter(item => item.active))?.map((blend) =>
+                                                <option value={blend.id} key={blend.id}>
+                                                    {blend?.name}
+                                                </option>
+                                            )}
+                                        </select>
+                                    </td>
 
-                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+
+
+                                    <td className="w-12 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
                                             disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
@@ -275,11 +295,12 @@ console.log(poItems,"PoItems")
                                         </select>
                                     </td>
 
-                                    {/* <td className='w-40 border border-gray-300 text-[11px] py-0.5'>
-                                                <button onClick={() => (index)} className='w-full'>
-                                                    {VIEW}
-                                                </button>
-                                            </td> */}
+                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                        {row.requiredQty}
+                                    </td>  <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                        {row.alreadyPoQty}
+
+                                    </td>
 
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input
@@ -332,21 +353,7 @@ console.log(poItems,"PoItems")
                                             disabled={true}
                                         />
                                     </td>
-                                    {/* <td className='"w-40  py-0.5 border-blue-gray-200 text-[11px] text-right border border-gray-300'>
-                                                  <button
-                                                      className="text-center rounded py-1 w-20"
-                                                      onKeyDown={(e) => {
-                                                          if (e.key === "Enter") {
-                                                              setCurrentSelectedIndex(index);
-                                                          }
-                                                      }}
-                                                      onClick={() => {
-                                                          if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
-                                                          setCurrentSelectedIndex(index)
-                                                      }}>
-                                                      {VIEW}
-                                                  </button>
-                                              </td> */}
+                                  
 
 
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">

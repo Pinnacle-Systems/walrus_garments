@@ -31,8 +31,8 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            YarnOnYarnBlend: true ,
-             yarnCounts: true,
+            YarnOnYarnBlend: true,
+            yarnCounts: true,
         }
     })
     if (!data) return NoRecordFound("yarn");
@@ -59,12 +59,19 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active ,countsList } = await body
+    const { name, contentId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active, countsList } = await body
     const data = await prisma.yarn.create(
         {
             data: {
-                aliasName, hsn, companyId: parseInt(companyId), active ,name
-                ,
+                aliasName, hsn, companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
+                contentId: parseInt(contentId),
+                YarnOnYarnBlend: yarnBlendDetails ? {
+                    createMany: {
+                        data: yarnBlendDetails.map(blend => {
+                            return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
+                        })
+                    }
+                } : undefined,
                 yarnCounts: {
                     createMany: countsList?.length > 0 ? {
                         data: countsList?.map((temp) => {
@@ -85,7 +92,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, taxPercent, companyId, active ,countsList } = await body
+    const { name, yarnTypeId, countsId, aliasName, hsn, yarnBlendDetails, contentId, companyId, active, countsList } = await body
     const dataFound = await prisma.yarn.findUnique({
         where: {
             id: parseInt(id)
@@ -97,21 +104,29 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            aliasName, hsn,name,
-            companyId: parseInt(companyId), active,
-               yarnCounts: {
+            aliasName, hsn, companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
+            contentId: parseInt(contentId),
+            YarnOnYarnBlend: yarnBlendDetails ? {
+                deleteMany: {},
+                createMany: {
+                    data: yarnBlendDetails.map(blend => {
+                        return { yarnBlendId: parseInt(blend.yarnBlendId), percentage: parseInt(blend.percentage) }
+                    })
+                }
+            } : undefined,
+            yarnCounts: {
                 deleteMany: {},
                 createMany: countsList.length > 0
                     ? {
                         data: countsList.map((temp) => ({
-                            name: temp.label  ?  temp.label  :  undefined,
+                            name: temp.label ? temp.label : undefined,
                             value: temp.value ? String(temp.value) : undefined,
-                            active : temp.active ?   temp.active  : false
+                            active: temp.active ? temp.active : false
                         })),
                     }
                     : undefined,
             },
-  
+
         }
     })
     return { statusCode: 0, data };

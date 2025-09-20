@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
 import { useGetContentMasterQuery } from '../../redux/uniformService/ContentMasterServices';
 import { useGetYarnBlendMasterQuery } from '../../redux/uniformService/YarnBlendMasterServices';
 import { useGetYarnTypeMasterQuery } from '../../redux/uniformService/YarnTypeMasterServices';
 import { useAddYarnMasterMutation, useDeleteYarnMasterMutation, useGetYarnMasterByIdQuery, useGetYarnMasterQuery, useUpdateYarnMasterMutation } from '../../redux/uniformService/YarnMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
-import { DropdownInput, LongTextInput, MultiSelectDropdown, ReusableTable, TextInput, ToggleButton } from '../../Inputs';
+import { DropdownInput, DropdownWithSearch, LongTextInput, MultiSelectDropdown, ReusableTable, TextInput, ToggleButton } from '../../Inputs';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject, multiSelectOption } from '../../Utils/contructObject';
@@ -18,6 +18,7 @@ import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import { MultiSelect } from 'react-multi-select-component';
 const MODEL = 'Yarn Master'
 
 export default function Form() {
@@ -35,9 +36,10 @@ export default function Form() {
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState({});
   const [countsList, setCountslist] = useState([])
-
+  const [extra, setExtra] = useState("");
   const [taxPercent, setTaxPercent] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [yarnName, setYarnName] = useState("");
 
   const childRecord = useRef(0);
 
@@ -102,7 +104,6 @@ export default function Form() {
   const openPartyModal = useSelector((state) => state.party.openPartyModal);
   const lastTapName = useSelector((state) => state.party.lastTab)
 
-  console.log(lastTapName, "lastTapName")
   const activeTab = useSelector((state) =>
     state.openTabs.tabs.find((tab) => tab.active).name
   );
@@ -124,9 +125,9 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    aliasName, contentId,name,
+    aliasName, contentId, name, hsn,
     yarnBlendDetails: yarnBlendDetails ? yarnBlendDetails.filter(item => item.yarnBlendId) : undefined, yarnTypeId, hsn, taxPercent,
-    countsId, active, companyId, id, userId ,countsList
+    countsId, active, companyId, id, userId, countsList
   }
 
   const validatePercentage = () => {
@@ -138,31 +139,60 @@ export default function Form() {
 
   function findName(arr, id) {
     if (!arr) return ""
-    let data = arr.find(item => parseInt(item.id) === parseInt(id))
+    let data = arr?.find(item => parseInt(item.id) === parseInt(id))
     return data ? data.name : ""
   }
 
-  const calculateYarnName = () => {
-    let count = findName(countsList?.data, countsId)
-    let content = findName(contentList?.data, contentId)
-    let yarnType = findName(YarnTypeList?.data, yarnTypeId)
-
-    let yarnBlend = yarnBlendDetails ?
-      yarnBlendDetails?.filter(blend => blend.yarnBlendId && blend.percentage).map(blend => `${parseInt(blend.percentage)}%${findName(YarnBlendList?.data, blend.yarnBlendId)}`).join(' ') : "";
-
-    if (!count || !content || !yarnType) return ""
-    return `${count} / ${content} ( ${yarnBlend} )/ ${yarnType}`
-  }
 
   useEffect(() => {
-    if (id) return
-    setAliasName(calculateYarnName())
-  }, [calculateYarnName()])
 
+    const count = findName(countsData?.data, countsId);
+    const content = findName(contentList?.data, contentId);
+    const yarnType = findName(YarnTypeList?.data, yarnTypeId);
+
+    const yarnBlend = yarnBlendDetails
+      ?.filter(blend => blend.yarnBlendId && blend.percentage)
+      .map(blend => `${parseInt(blend.percentage)}%${findName(YarnBlendList?.data, blend.yarnBlendId)}`)
+      .join(", ") || "";
+
+    console.log(count, content, yarnBlend, yarnType, "yarnBlend");
+    // if (!count || !content || !yarnType) {
+    //   setYarnName(""); // fallback if incomplete
+    //   return;
+    // }
+
+    if (count || content || yarnType) {
+      setYarnName(`${count} / ${content}${yarnBlend ? ` (${yarnBlend})` : ""} / ${yarnType}`);
+      setName(`${count} / ${content}${yarnBlend ? ` (${yarnBlend})` : ""} / ${yarnType}`)
+    } else {
+      setYarnName(""); // optional, if you want to clear when any value is missing
+    }
+  }, [
+    countsData,
+    countsId,
+    contentList,
+    contentId,
+    YarnTypeList,
+    yarnTypeId,
+    yarnBlendDetails,
+    YarnBlendList
+  ]);
+  console.log(yarnName, "yarnName")
+
+  // const yarnName = calculateYarnName();
+  // setName(yarnName)
+  // useEffect(() => {
+  //   if (id) return
+  //   setAliasName(calculateYarnName())
+  // }, [calculateYarnName()])
+
+
+  console.log(name, "name")
+
+  console.log(aliasName, "aliasName")
 
   const validateData = (data) => {
-    return data.aliasName && data.contentId && data.yarnTypeId &&
-      data.hsn && data.countsId
+    return data?.contentId && data?.countsId && data?.hsn
   }
 
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
@@ -193,14 +223,35 @@ export default function Form() {
 
 
   const saveData = () => {
-    console.log("click button work")
     // if (!validatePercentage()) {
-    //     toast.error("Yarn Blend equal to 100...!", { position: "top-center" })
-    //     return
+    //   const yarnBlendPercentage = yarnBlendDetails?.filter(blend => blend.yarnBlendId).reduce((accumulator, currentValue) => {
+    //     return accumulator + parseInt(currentValue.percentage)
+    //   }, 0);
+    //   Swal.fire({
+    //     title: `Total yarn blend is ${Number(yarnBlendPercentage.toFixed(2))}%. It must equal 100%`,
+    //     icon: "success",
+    //     draggable: true,
+    //     timer: 1000,
+    //     showConfirmButton: false,
+    //     didOpen: () => {
+    //       Swal.showLoading();
+    //     }
+    //   });
+    //   return
     // }
     // if (!validateData(data)) {
-    //     toast.error("Please fill all required fields...!", { position: "top-center" })
-    //     return
+    //   // toast.error("Please fill all required fields...!", { position: "top-center" })
+    //   Swal.fire({
+    //     title: "Please fill all required fields...!",
+    //     icon: "success",
+    //     draggable: true,
+    //     timer: 1000,
+    //     showConfirmButton: false,
+    //     didOpen: () => {
+    //       Swal.showLoading();
+    //     }
+    //   });
+    //   return
     // }
 
     if (id) {
@@ -275,6 +326,7 @@ export default function Form() {
     setCountsId("");
     setTaxPercent(0);
     setActive(true);
+    setCountslist([])
 
     setYarnBlendDetails([
       { yarnBlendId: "", percentage: "" },
@@ -321,10 +373,10 @@ export default function Form() {
     },
 
     {
-      header: "Country Name",
+      header: "Yarn Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-72",
+      className: "font-medium text-gray-900 text-center uppercase w-96",
     },
 
     {
@@ -333,17 +385,18 @@ export default function Form() {
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-center uppercase w-16",
     },
-    {
-      header: "",
-      accessor: (item) => "",
-      //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 uppercase w-[65%]",
-    },
+
   ];
+
+  const options =
+    countsData?.data?.map((item) => ({
+      value: item.id, // actual value
+      label: item.name, // displayed name
+    })) || [];
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-2xl font-bold text-gray-800">Yarn Type Master</h5>
+        <h5 className="text-2xl font-bold text-gray-800">Yarn  Master</h5>
         <div className="flex items-center">
           <button
             onClick={() => {
@@ -352,7 +405,7 @@ export default function Form() {
             }}
             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Yarn Type
+            + Add New Yarn 
           </button>
         </div>
       </div>
@@ -373,21 +426,21 @@ export default function Form() {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[65%]"}
+            widthClass={"w-[60%] h-[90%]"}
             onClose={() => {
               setForm(false);
               setErrors({});
             }}
           >
-            <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="h-full flex flex-col bg-[f1f1f0] ">
               <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
                     {id
                       ? !readOnly
-                        ? "Edit Yarn Type Master"
-                        : "Yarn Type Master"
-                      : "Add New Yarn Type"}
+                        ? "Edit Yarn  Master"
+                        : "Yarn  Master"
+                      : "Add New Yarn "}
                   </h2>
                 </div>
                 <div className="flex gap-2">
@@ -422,32 +475,82 @@ export default function Form() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-3">
-                <div className="grid grid-cols-1  gap-3  h-full">
-                  <div className="lg:col-span- space-y-3">
+              <div className="flex-1 overflow-auto p-3 ">
+                <div className="grid grid-cols-1  gap-3  h-full ">
+                  <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
                         <div className="grid grid-cols-2  gap-3  h-full">
 
                           <fieldset className=' rounded mt-2 mb-5'>
-                            <div className=''>
-                              <div className="mb-3">
-                                <TextInput name="Yarn Type" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                              </div>
-                              <div className='h-20'>
-                                <MultiSelectDropdown
-                                  name="Counts List"
-                                  required={true}
-                                  options={multiSelectOption(countsData ? countsData?.data : [], "name", "id")}
-                                  selected={countsList}
-                                  setSelected={setCountslist} />
-                              </div>
-                              <div className="">
-                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                              </div>
+                            <div className='grid grid-cols-2 gap-4'>
+                              <DropdownInput name="Counts" options={dropDownListObject(id ? countsData?.data : countsData?.data?.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                              <DropdownWithSearch
+                                options={contentList?.data}
+                                value={contentId}
+                                setValue={setContentId}
+                                labelField={"name"}
+                                label={"Content"}
+                                required={true}
+                              />
                             </div>
-                          </fieldset>
 
+                            <YarnBlendDetails id={id} params={params} yarnBlend={yarnBlendDetails} setYarnBlend={setYarnBlendDetails} readOnly={readOnly} />
+
+                            <div className='mt-3'>
+
+                              <LongTextInput name="Yarn Name" className={'focus:outline-none  md:col-span-2 h-6 w-[500px] border border-gray-500 rounded'} type="text"
+                                value={yarnName}
+                                disabled={(childRecord.current > 0)} />
+
+                            </div>
+
+                            <div className='mt-3'>
+                              <TextInput name="Yarn Alias Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                            </div>
+                            <div className='mt-3'>
+                              <TextInput name="Hsn" type="text" value={hsn} setValue={setHsn} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                            </div>
+
+
+                            {/* <div className="w-64">
+                              <MultiSelect
+                                options={multiSelectOption(countsData ? countsData?.data : [], "name", "id")}
+                                selected={countsList}
+                                setSelected={setCountslist}
+                                labelledBy="Select Country"
+                                hasSelectAll={false}
+                                disableSearch={false} // searchable
+                                className="w-full px-1 text-xs rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm"
+                                styles={{
+                                  searchBox: {
+                                    minHeight: "28px",
+                                    fontSize: "12px",
+                                  },
+                                  option: (base) => ({
+                                    ...base,
+                                    fontSize: "12px",
+                                  }),
+                                }}
+                              />
+                            </div> */}
+                            <div className="mt-5">
+                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                            </div>
+
+                          </fieldset>
+                          <div>
+                            <div className='h-[100px] mt-3'>
+                              <MultiSelectDropdown
+                                name="Counts List"
+                                required={true}
+                                options={multiSelectOption(countsData ? countsData?.data : [], "name", "id")}
+                                selected={countsList}
+                                setSelected={setCountslist} />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -457,8 +560,8 @@ export default function Form() {
             </div>
           </Modal>
         )}
-      </div>
-    </div>
+      </div >
+    </div >
   )
 
 }

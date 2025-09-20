@@ -50,12 +50,18 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, io, companyId, active, code, isCutting, isPacking, isPcsStage, isPrintingJobWork, isStitching, isIroning } = await body
+    const { name, io, companyId, active, code, isCutting, isPacking, isPcsStage, isPrintingJobWork, isStitching, isIroning, hsn, tax } = await body
     const data = await prisma.process.create(
         {
             data: {
-                name, io: io ? io : undefined, companyId: parseInt(companyId), isStitching, isIroning,
-                active, code, isCutting, isPacking, isPcsStage, isPrintingJobWork
+                name,
+                io: io ? io : undefined,
+                companyId: parseInt(companyId),
+                active, code,
+                hsn: hsn ? hsn : undefined,
+                tax: tax ? parseFloat(tax) : undefined,
+                isStitching, isIroning,
+                isCutting, isPacking, isPcsStage, isPrintingJobWork
             }
         }
     )
@@ -65,7 +71,7 @@ async function create(body) {
 async function update(id, body) {
 
 
-    const { name, io, active, code, isCutting, isPacking, isPcsStage, isStitching, isPrintingJobWork, isIroning } = await body
+    const { name, io, active, code, isCutting, isPacking, isPcsStage, isStitching, isPrintingJobWork, isIroning ,hsn, tax } = await body
 
 
     const dataFound = await prisma.process.findUnique({
@@ -80,7 +86,10 @@ async function update(id, body) {
         },
         data:
         {
-            name, io: io ? io : undefined, active, code, isCutting, isPacking, isPcsStage,
+            name, io: io ? io : undefined, active, code,
+            hsn: hsn ? hsn : undefined,
+            tax: tax ? parseFloat(tax) : undefined,
+            isCutting, isPacking, isPcsStage,
             isPrintingJobWork, isStitching, isIroning
         },
     })

@@ -35,7 +35,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
                 // docId: {
                 //     not: findIsNumber(docId)
                 // },
-                draftSave: false,
+                // draftSave: false,
                 AND: [
                     {
                         createdAt: {
@@ -270,6 +270,10 @@ async function getOne(id) {
                     count: true,
                     yarnKneedleId: true,
                     percentage: true,
+                    processId: true,
+                    isProcess: true,
+                    lossPercentage: true,
+
                     Yarn: {
                         select: {
                             name: true
@@ -421,14 +425,6 @@ async function create(req) {
                 orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
 
-                // orderDetails: orderDetails?.length > 0
-                //     ? {
-                //         create: JSON.parse(orderDetails).map((item) => ({
-                //             styleId: item?.styleId ? parseInt(item.styleId) : undefined,
-                //             fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
-                //             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
-                //             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
-                //             filePath: item?.filePath ? item?.filePath : undefined,
 
                 RequirementPlanningItems: requirementItems?.length > 0
                     ? {
@@ -444,6 +440,9 @@ async function create(req) {
                                 count: sub?.count ? parseFloat(sub.count) : undefined,
                                 partyId: sub?.partyId ? parseInt(sub.partyId) : undefined,
                                 requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
+                                isProcess: sub?.isProcess ? sub.isProcess : undefined,
+                                processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                                lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
                             })),
                         },
                     }
@@ -473,7 +472,10 @@ async function create(req) {
                                 yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
                                 count: yarn?.count ? parseInt(yarn?.count) : undefined,
                                 yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                                styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined
+                                styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                                isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                                processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                                lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
                             })),
                         },
                     }
@@ -496,7 +498,7 @@ async function create(req) {
 
 const update = async (id, body) => {
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, jobNumber,
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, jobNumber,requirementItems,
     } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -504,14 +506,18 @@ const update = async (id, body) => {
     let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
 
-    const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
-    if (!dataFound) return { statusCode: 404, message: "No record found for order" };
+    const dataFound = await prisma.requirementPlanningForm.findUnique({ where: { id: parseInt(id) } });
+    
+    if (!dataFound) return { statusCode: 404, message: "No record found for requirementPlanningForm" };
 
-
-    const parsedOrderDetails = JSON.parse(orderDetails || "[]");
 
     const incomingSizeIds = orderSizeDetails?.filter(i => i.id).map(i => parseInt(i.id));
     const incomingYarnIds = orderYarnDetails?.filter(i => i.id).map(i => parseInt(i.id));
+    const incomingRequirementItems = requirementItems?.filter(i => i.id).map(i => parseInt(i.id));
+
+        console.log(requirementItems,"requirementItems")
+
+    console.log(incomingRequirementItems,"incomingRequirementItems")
 
     let data;
 
@@ -522,10 +528,12 @@ const update = async (id, body) => {
 
             },
             include: {
-                orderDetails: true
+                RequirementPlanningItems: true,
+                requirementSizeDetails : true ,
+                RequirementYarnDetails : true,
             },
             data: {
-                docId: draftSave ? docIdNumber : dataFound?.docId,
+                // docId: draftSave ? docIdNumber : dataFound?.docId,
                 partyId: partyId ? parseInt(partyId) : undefined,
                 packingCoverType,
                 branchId: branchId ? parseInt(branchId) : undefined,
@@ -533,48 +541,74 @@ const update = async (id, body) => {
                 address,
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                orderDetailsId: parseInt(styleId),
+                updatedById: parseInt(userId), notes, term, orderBy, 
+                // orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
                 RequirementYarnDetails: {
-                    deleteMany: {
-                        ...(incomingSizeIds?.length > 0 && {
-                            id: { notIn: incomingSizeIds }
-                        })
-                    },
 
-                    update: orderSizeDetails
-                        .filter(item => item.id)
-                        .map((sub) => ({
-                            where: { id: parseInt(sub.id) },
-                            data: {
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                            },
-                        })),
-                },
-
-                requirementSizeDetails: {
                     deleteMany: {
                         ...(incomingYarnIds?.length > 0 && {
                             id: { notIn: incomingYarnIds }
                         })
                     },
-
-                    update: orderYarnDetails?.filter(item => item.id)?.map((sub) => ({
-                        where: { id: parseInt(sub.id) },
+                    update: orderYarnDetails?.filter(item => item.id)?.map((yarn) => ({
+                        where: { id: parseInt(yarn.id) },
                         data: {
                             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
                             percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
                             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
                             count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                             styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                            isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                            processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                            lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
                         },
                     })),
+
+                },
+                RequirementPlanningItems: {
+                    deleteMany: {
+                        ...(incomingRequirementItems?.length > 0 && {
+                            id: { notIn: incomingRequirementItems }
+                        })
+                    },
+                    update: requirementItems?.filter(item => item.id)?.map((yarn) => ({
+                        where: { id: parseInt(yarn.id) },
+                        data: {
+                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                            isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                            processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                            lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
+                        },
+                    })),
+
+                },
+                requirementSizeDetails: {
+                    deleteMany: {
+                        ...(incomingSizeIds?.length > 0 && {
+                            id: { notIn: incomingSizeIds }
+                        })
+                    },
+                    update: orderSizeDetails
+                        .filter(item => item.id)
+                        .map((sub) => ({
+                            where: { id: parseInt(sub.id) },
+                            data: {
+                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+                            },
+                        })),
+
                 }
 
 

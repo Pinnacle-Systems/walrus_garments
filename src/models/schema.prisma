@@ -556,24 +556,24 @@ model Party {
   OnlineSalesReturn          OnlineSalesReturn[]
   CreditDebitNote            CreditDebitNote[]
 
-  ShippingAddress         ShippingAddress[]
-  ContactDetails          ContactDetails[]
-  Order                   Order[]
-  CertificateDetail       CertificateDetail[]
-  Sample                  Sample[]
-  partyBranch             PartyBranch[]
-  DirectReturnOrPoReturn  DirectReturnOrPoReturn[]
-  PurchaseCancel          PurchaseCancel[]
-  BranchType              BranchType[]
-  RawMaterial             RawMaterial[]
-  PartyMaterials          PartyMaterials[]
-  PartyContactDetails     PartyContactDetails[]
-  BranchContactDetails    BranchContactDetails[]
-  RequirementPlanningForm RequirementPlanningForm[]
-  PartyAttachments        PartyAttachments[]
-  RaiseIndent             RaiseIndent[]
-  MaterialIssue           MaterialIssue[]
-  RequirementPlanningItems  RequirementPlanningItems[]
+  ShippingAddress          ShippingAddress[]
+  ContactDetails           ContactDetails[]
+  Order                    Order[]
+  CertificateDetail        CertificateDetail[]
+  Sample                   Sample[]
+  partyBranch              PartyBranch[]
+  DirectReturnOrPoReturn   DirectReturnOrPoReturn[]
+  PurchaseCancel           PurchaseCancel[]
+  BranchType               BranchType[]
+  RawMaterial              RawMaterial[]
+  PartyMaterials           PartyMaterials[]
+  PartyContactDetails      PartyContactDetails[]
+  BranchContactDetails     BranchContactDetails[]
+  RequirementPlanningForm  RequirementPlanningForm[]
+  PartyAttachments         PartyAttachments[]
+  RaiseIndent              RaiseIndent[]
+  MaterialIssue            MaterialIssue[]
+  RequirementPlanningItems RequirementPlanningItems[]
 }
 
 model PartyBranch {
@@ -701,6 +701,7 @@ model Counts {
   active                   Boolean                    @default(true)
   Yarn                     Yarn[]
   RequirementPlanningItems RequirementPlanningItems[]
+  PoItems                  PoItems[]
 }
 
 model YarnType {
@@ -774,7 +775,7 @@ model yarnCounts {
   id         Int       @id @default(autoincrement())
   name       String?
   value      String?
-  Yarn       Yarn?     @relation(fields: [yarnId], references: [id])
+  Yarn       Yarn?     @relation(fields: [yarnId], references: [id], onDelete: Cascade)
   yarnId     Int?
   active     Boolean   @default(true)
   YarnType   YarnType? @relation(fields: [yarnTypeId], references: [id])
@@ -1005,20 +1006,20 @@ enum DeliveryType {
 
 model Po {
   id                      Int                      @id @default(autoincrement())
-  supplier                Party                    @relation("supplier", fields: [supplierId], references: [id])
+  supplier                Party?                   @relation("supplier", fields: [supplierId], references: [id])
   transType               PoTypes
   dueDate                 DateTime                 @db.Date
-  supplierId              Int
+  supplierId              Int?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
-  createdBy               User                     @relation("createdBy", fields: [createdById], references: [id])
-  createdById             Int
+  createdBy               User?                    @relation("createdBy", fields: [createdById], references: [id])
+  createdById             Int?
   updatedBy               User?                    @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById             Int?
-  Branch                  Branch                   @relation("poRaisedBranch", fields: [branchId], references: [id])
-  docId                   String
-  branchId                Int
-  active                  Boolean                  @default(true)
+  Branch                  Branch?                  @relation("poRaisedBranch", fields: [branchId], references: [id])
+  docId                   String?
+  branchId                Int?
+  active                  Boolean?                 @default(true)
   discountType            DiscountTypes?
   discountValue           Float?                   @default(0)
   deliveryType            DeliveryType
@@ -1033,6 +1034,8 @@ model Po {
   requirementId           Int?
   isPurchaseCancel        Boolean?                 @default(false)
   PurchaseType            String?
+  poMaterial              String?
+  poType                  String?
   PoItems                 PoItems[]
 }
 
@@ -1080,6 +1083,8 @@ model PoItems {
   kDiaId              Int?
   FDia                Dia?                  @relation("fDiaPoItem", fields: [fDiaId], references: [id])
   fDiaId              Int?
+  Counts              Counts?               @relation(fields: [count], references: [id])
+  count               Int?
   isPurchaseCancel    Boolean?              @default(false)
   PoInwardReturnItems PoInwardReturnItems[]
   BillEntryItems      BillEntryItems[]
@@ -1570,16 +1575,19 @@ enum ProcessIO {
 
 model Process {
   id                                        Int                                         @id @default(autoincrement())
-  name                                      String
-  code                                      String
+  name                                      String?
+  code                                      String?
   io                                        ProcessIO?
-  isCutting                                 Boolean                                     @default(false)
-  isPacking                                 Boolean                                     @default(false)
-  isPcsStage                                Boolean                                     @default(false)
-  isIroning                                 Boolean                                     @default(false)
-  active                                    Boolean                                     @default(true)
-  Company                                   Company                                     @relation(fields: [companyId], references: [id])
-  companyId                                 Int
+  isCutting                                 Boolean?                                    @default(false)
+  isPacking                                 Boolean?                                    @default(false)
+  isPcsStage                                Boolean?                                    @default(false)
+  isIroning                                 Boolean?                                    @default(false)
+  active                                    Boolean?                                    @default(true)
+  Company                                   Company?                                    @relation(fields: [companyId], references: [id])
+  companyId                                 Int?
+  hsn                                       String?
+  tax                                       Float?
+  processType                               String?
   PartyOnProcess                            PartyOnProcess[]
   ProcessDelivery                           ProcessDelivery[]
   Stock                                     Stock[]
@@ -1602,6 +1610,8 @@ model Process {
   StockTransferFinishedGoodsReceiptDetails  StockTransferFinishedGoodsReceiptDetails[]
   PrintingJobWorkDet                        PrintingJobWorkDet[]
   OnlineSalesDetails                        OnlineSalesDetails[]
+  RequirementPlanningItems                  RequirementPlanningItems[]
+  RequirementYarnDetails                    RequirementYarnDetails[]
 }
 
 model PartyOnProcess {
@@ -2983,35 +2993,35 @@ model CreditDebitNote {
 }
 
 model Order {
-  id                Int       @id @default(autoincrement())
-  docId             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  createdBy         User?     @relation("createdBy", fields: [createdById], references: [id])
-  createdById       Int?
-  updatedBy         User?     @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById       Int?
-  phone             String?
-  contactPersonName String
-  address           String?   @db.LongText
-  orderDate         DateTime?
-  validDate         DateTime?
-  gmail             String?
-  Branch            Branch?   @relation(fields: [branchId], references: [id])
-  branchId          Int?
-  Company           Company?  @relation(fields: [companyId], references: [id])
-  companyId         Int?
-  Party             Party?    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  partyId           Int?
-  packingCoverType  String?
-  active            Boolean   @default(true)
-  FinYear           FinYear?  @relation(fields: [finYearId], references: [id])
-  finYearId         Int?
-  notes             String?   @db.LongText
-  term              String?   @db.LongText
-  orderBy           String?
-  draftSave         Boolean?  @default(false)
-
+  id                       Int                        @id @default(autoincrement())
+  docId                    String?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  createdBy                User?                      @relation("createdBy", fields: [createdById], references: [id])
+  createdById              Int?
+  updatedBy                User?                      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById              Int?
+  phone                    String?
+  contactPersonName        String
+  address                  String?                    @db.LongText
+  orderDate                DateTime?
+  validDate                DateTime?
+  gmail                    String?
+  Branch                   Branch?                    @relation(fields: [branchId], references: [id])
+  branchId                 Int?
+  Company                  Company?                   @relation(fields: [companyId], references: [id])
+  companyId                Int?
+  Party                    Party?                     @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId                  Int?
+  packingCoverType         String?
+  active                   Boolean                    @default(true)
+  FinYear                  FinYear?                   @relation(fields: [finYearId], references: [id])
+  finYearId                Int?
+  notes                    String?                    @db.LongText
+  term                     String?                    @db.LongText
+  orderBy                  String?
+  draftSave                Boolean?                   @default(false)
+  isPlanning               Boolean?                   @default(false)
   orderDetails             OrderDetails[]
   Sample                   Sample[]
   sampleDetails            sampleDetails[]
@@ -3027,30 +3037,32 @@ model Order {
 }
 
 model OrderDetails {
-  id                       Int                        @id @default(autoincrement())
-  Order                    Order?                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId                  Int?
-  yarnNeedleId             Int?
-  yarnNeedle               YarnNeedle?                @relation(fields: [yarnNeedleId], references: [id])
-  machineId                Int?
-  machine                  Machine?                   @relation(fields: [machineId], references: [id])
-  fiberContentId           Int?
-  fiberContent             FiberContent?              @relation(fields: [fiberContentId], references: [id])
-  description              String?                    @db.LongText
-  qty                      Float?
-  socksMaterialId          Int?
-  socksMaterial            SocksMaterial?             @relation(fields: [socksMaterialId], references: [id])
-  measurements             String?
-  sizeId                   Int?
-  size                     Size?                      @relation(fields: [sizeId], references: [id])
-  styleId                  Int?
-  style                    Style?                     @relation(fields: [styleId], references: [id])
-  Color                    Color?                     @relation(fields: [baseColorId], references: [id])
-  baseColorId              Int?
-  noOfStripes              String?
-  socksTypeId              Int?
-  socksType                SocksType?                 @relation(fields: [socksTypeId], references: [id])
-  filePath                 String?                    @db.LongText
+  id              Int            @id @default(autoincrement())
+  Order           Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int?
+  yarnNeedleId    Int?
+  yarnNeedle      YarnNeedle?    @relation(fields: [yarnNeedleId], references: [id])
+  machineId       Int?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  fiberContentId  Int?
+  fiberContent    FiberContent?  @relation(fields: [fiberContentId], references: [id])
+  description     String?        @db.LongText
+  qty             Float?
+  socksMaterialId Int?
+  socksMaterial   SocksMaterial? @relation(fields: [socksMaterialId], references: [id])
+  measurements    String?
+  sizeId          Int?
+  size            Size?          @relation(fields: [sizeId], references: [id])
+  styleId         Int?
+  style           Style?         @relation(fields: [styleId], references: [id])
+  Color           Color?         @relation(fields: [baseColorId], references: [id])
+  baseColorId     Int?
+  noOfStripes     String?
+  socksTypeId     Int?
+  socksType       SocksType?     @relation(fields: [socksTypeId], references: [id])
+  filePath        String?        @db.LongText
+  isPlanning      Boolean?       @default(false)
+
   orderSizeDetails         orderSizeDetails[]
   orderYarnDetails         orderYarnDetails[]
   RequirementPlanningForm  RequirementPlanningForm[]
@@ -3353,6 +3365,10 @@ model RequirementPlanningItems {
   Party                     Party?                   @relation(fields: [partyId], references: [id])
   partyId                   Int?
   requiredQty               Float?
+  isProcess                 String?
+  Process                   Process?                 @relation(fields: [processId], references: [id])
+  processId                 Int?
+  lossPercentage            Float?
 }
 
 model RequirementSizeDetails {
@@ -3386,6 +3402,10 @@ model RequirementYarnDetails {
   count                   Int?
   YarnNeedle              YarnNeedle?              @relation(fields: [yarnKneedleId], references: [id])
   yarnKneedleId           Int?
+  isProcess               String?
+  Process                 Process?                 @relation(fields: [processId], references: [id])
+  processId               Int?
+  lossPercentage          Float?
 }
 
 model RaiseIndent {

@@ -260,20 +260,20 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     }
 
- 
+
     const dateRef = useRef(null);
     const inputPartyRef = useRef(null);
     const styleRef = useRef(null);
 
     useEffect(() => {
         if (dateRef.current) {
-            dateRef.current.focus(); 
+            dateRef.current.focus();
         }
     }, []);
 
 
 
-      if (isSingleFetching || isSingleLoading || isSingleSupplierLoading  || isSingleSupplierFetching ) return <Loader />
+    if (isSingleFetching || isSingleLoading || isSingleSupplierLoading || isSingleSupplierFetching) return <Loader />
 
 
     return (
@@ -347,7 +347,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                             searchTerm={partyId}
                                             ref={inputPartyRef}
                                             nextRef={styleRef}
-                                            show = {"isClient"}
+                                            show={"isClient"}
                                         />
                                     </div>
 
@@ -356,22 +356,18 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-                                    <div className="mb-3">
-                                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                                            Address
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                className="w-full pl-2.5 pr-8 py-1.5 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                                                placeholder="Select address"
-                                                disabled
-                                                value={address}
-                                            />
+                                    <div className="mb-3 col-span-2">
+                                        <TextInput
+                                            name="Address"
+                                            placeholder="Contact name"
+                                            value={findFromList(partyId, supplierList?.data, "address")}
+                                            setValue={setAddress}
+                                            disabled={true}
+                                        // onChange={(e) => setPhone(e.target.value)}
 
-                                        </div>
+                                        />
 
-                                      
+
 
                                     </div>
                                 </div>
@@ -389,20 +385,28 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <TextInput
                                     name="Contact Person"
                                     placeholder="Contact name"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
+                                    value={findFromList(partyId, supplierList?.data, "contactPersonName")}
                                     setValue={setContactPersonName}
                                     disabled={true}
-                                />{console.log(findFromList(partyId, supplierList?.data, "contactPersonNumber"), "phone")}
+                                />
                                 <TextInput
-                                    name="Phone"
-                                    placeholder="Contact name"
+                                    name="Contact Number"
+                                    placeholder="Contact Number"
                                     value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
                                     setValue={setPhone}
                                     disabled={true}
                                 // onChange={(e) => setPhone(e.target.value)}
 
                                 />
+                                <TextInput
+                                    name="Email"
+                                    placeholder="Email"
+                                    value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
+                                    setValue={setPhone}
+                                    disabled={true}
+                                // onChange={(e) => setPhone(e.target.value)}
 
+                                />
                             </div>
                         </div>
                     </div>

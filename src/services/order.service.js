@@ -906,6 +906,16 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                     orderDetailsId: true,
                 }
             },
+            Po : {
+                select : {
+                    id : true ,
+                    supplierId : true ,
+                    docId : true ,
+                    orderId : true ,
+                    PoItems : true
+                }
+            },
+            
 
         }
 

@@ -94,8 +94,8 @@ const RequirementPlanningForm = () => {
         setReadOnly(true);
     };
 
-    const handleEdit = (orderId) => {
-        setId(orderId)
+    const handleEdit = (id) => {
+        setId(id)
         setForm(true)
         setReadOnly(false);
     };
@@ -143,6 +143,7 @@ const RequirementPlanningForm = () => {
         setOrderSizeDetails([])
         setOrderYarnDetails([])
         setJobNumber("")
+        setPartyId("")
         setRequirementItems([])
 
     }
@@ -152,6 +153,7 @@ const RequirementPlanningForm = () => {
         <>
             {form ? (
                 <RequirmentForm
+                setDocId={setDocId}
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
 
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} styleId={styleId} setstyleId={setstyleId}

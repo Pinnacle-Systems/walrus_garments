@@ -506,7 +506,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     }
 
 
- 
+
 
 
 
@@ -594,7 +594,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     return {
         statusCode: 0, data: {
             ...data,
-            
+
             alreadyInwardedData,
             balanceQty,
             cancelQty,
@@ -704,17 +704,19 @@ function getStockObject(transType, item) {
     return newItem
 }
 
-export function getPoItemObject(transType, item) {
+export function getPoItemObject(poMaterial, item) {
     console.log(item, "item")
-    
+
     let newItem = {};
-    if (transType === "GreyYarn" || transType === "DyedYarn") {
+    if (poMaterial === "GreyYarn" || poMaterial === "DyedYarn") {
         newItem.yarnId = parseInt(item.yarnId);
-        newItem.noOfBags = item.noOfBags ?  parseInt(item.noOfBags)  : null;
-        newItem.weightPerBag = item.weightPerBag ?  parseFloat(item.weightPerBag) : null ;
-        newItem.percentage  =  item.percentage ?  parseFloat(item.percentage) : null;
-        newItem.requiredQty =  item.requiredQty ?  parseFloat(item.requiredQty) : null;
-    } else if (transType === "GreyFabric" || transType === "DyedFabric") {
+        newItem.noOfBags = item.noOfBags ? parseInt(item.noOfBags) : null;
+        newItem.weightPerBag = item.weightPerBag ? parseFloat(item.weightPerBag) : null;
+        newItem.percentage = item.percentage ? parseFloat(item.percentage) : null;
+        newItem.requiredQty = item.requiredQty ? parseFloat(item.requiredQty) : null;
+        newItem.count = item.count ? parseInt(item.count) : null;
+
+    } else if (poMaterial === "GreyFabric" || poMaterial === "DyedFabric") {
         newItem.fabricId = parseInt(item.fabricId);
         newItem.designId = parseInt(item.designId);
         newItem.gaugeId = parseInt(item.gaugeId);
@@ -722,14 +724,14 @@ export function getPoItemObject(transType, item) {
         newItem.gsmId = parseInt(item.gsmId);
         newItem.kDiaId = parseInt(item.kDiaId);
         newItem.fDiaId = parseInt(item.fDiaId);
-    } else if (transType === "Accessory") {
+    } else if (poMaterial === "Accessory") {
         newItem.accessoryId = parseInt(item.accessoryId);
         newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
         newItem.accessoryGroupId = parseInt(item.accessoryGroupId)
         newItem.accessoryItemId = parseInt(item.accessoryItemId)
     }
 
-    newItem.uomId = item.uomId  ?   parseInt(item.uomId)  :  null ;
+    newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = parseInt(item.colorId);
     newItem.qty = parseFloat(item.qty);
     newItem.price = parseFloat(item.price);
@@ -744,24 +746,26 @@ export function getPoItemObject(transType, item) {
 
 async function create(body) {
     const {
-        transType, dueDate, taxTemplateId,
+        transType, dueDate, poType, poMaterial,
         supplierId, poItems, payTermId, remarks,
         branchId, active, userId, deliveryType,
-        deliveryToId, finYearId, orderId, PurchaseType , requirementId
+        deliveryToId, finYearId, orderId, PurchaseType, requirementId
     } = await body;
 
     const finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate.startTime, finYearDate.endTime) : "";
     const docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
-    const prismaTransType = transType.replace(/\s/g, '');
+    // const prismaTransType = transType.replace(/\s/g, '');
 
-    const filteredPoItems = poItems?.filter(val => val.qty > 0)?.map(item => getPoItemObject(transType, item));
+    const filteredPoItems = poItems?.filter(val => val.qty > 0)?.map(item => getPoItemObject(poMaterial, item));
 
-    console.log(filteredPoItems,"filteredPoItems")
+    console.log(filteredPoItems, "filteredPoItems")
 
     const data = await prisma.po.create({
         data: {
-            transType: prismaTransType,
+            transType: transType ? transType : "DyedYarn",
+            poType: poType,
+            poMaterial: poMaterial,
             docId,
             dueDate: dueDate ? new Date(dueDate) : undefined,
             supplierId: parseInt(supplierId),
@@ -788,9 +792,9 @@ async function create(body) {
 
 
 async function update(id, body) {
-    const { transType, dueDate, taxTemplateId, remarks, payTermDay,
+    const { transType, dueDate, taxTemplateId, remarks, payTermDay, poType, poMaterial,
         supplierId, poItems, payTermId, deliveryType, deliveryToId,
-        branchId, active, userId  , requirementId , orderId} = await body
+        branchId, active, userId, requirementId, orderId } = await body
     console.log(supplierId, "supplierId")
     const dataFound = await prisma.po.findUnique({
         where: {
@@ -825,6 +829,8 @@ async function update(id, body) {
             data: {
                 transType,
                 // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
+                poMaterial : poMaterial,
+                poType : poType,
                 payTermDay: payTermDay,
                 dueDate: dueDate ? new Date(dueDate) : undefined,
                 supplierId: parseInt(supplierId),
@@ -836,10 +842,10 @@ async function update(id, body) {
                 deliveryBranchId: (deliveryType === "ToSelf") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 deliveryPartyId: (deliveryType === "ToParty") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 orderId: orderId ? parseInt(orderId) : undefined,
-                requirementId:  parseInt(requirementId) ,
+                requirementId: requirementId  ?   parseInt(requirementId)  :  undefined,
                 PoItems: {
                     createMany: {
-                        data: newPoItems?.map(item => getPoItemObject(transType, item))
+                        data: newPoItems?.map(item => getPoItemObject(poMaterial, item))
                     }
                 }
             }

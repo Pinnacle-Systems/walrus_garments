@@ -14,8 +14,10 @@ import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { Loader } from "../../../Basic/components";
+import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 
-const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
+const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord,
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, yarnTotals, setYarnTotals,
 
@@ -25,13 +27,14 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 }) => {
 
 
+    console.log(id, "iddddddd")
     const [combo, setCombo] = useState([])
 
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
     const [addData] = useAddRequirementPlanningFormMutation();
     const [updateData] = useUpdateRequirementPlanningFormMutation();
 
-
+    const [loading, setLoading] = useState(false);
 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
@@ -44,36 +47,24 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     const params = { branchId, userId, finYearId };
 
 
-    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
-    const { data: styleData } = useGetStyleMasterQuery({ params: { ...params } });
+    const { data: supplierList, isLoading: isSupplierLoading, isFetching: isSupplierFetching } = useGetPartyQuery({ params: { ...params } });
+    const { data: processList } = useGetProcessMasterQuery({ params: { ...params } });
 
 
 
     const syncFormWithDb = useCallback((data) => {
-        console.log(data, "data")
+
         if (orderId) {
             setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
             setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
-            // setRequirementItems(data  ?  data  :  {})
-            const updated = data?.orderDetails?.map(item => {
-                const yarns = item?.orderYarnDetails || [];
 
-                const combinedColors = yarns
-                    .map(yarn => yarn?.Color?.name)
-                    .filter(Boolean)
-                    .join("/");
-
-                return {
-                    ...item,
-                    allColors: combinedColors,
-                };
-            });
-
-            setCombo(updated);
         }
         if (id) {
+            setDocId(data?.docId ? data?.docId : "")
             setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
             setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
+            setRequirementItems(data?.RequirementPlanningItems ? data?.RequirementPlanningItems : [])
+            setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setChildrecord(data?.childRecord ? data?.childRecord : 0)
             // setOrderId(data?.orderId ? data?.orderId : "")
             setJobNumber(data?.jobNumber ? data?.jobNumber : "")
@@ -81,19 +72,19 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
             const combined = data?.RequirementYarnDetails
                 ?.map(item => `${data?.OrderDetails?.style?.name || ""} - ${item?.Color?.name || ""}`)
-                .filter(Boolean)  
-                .join(" / ");   
+                .filter(Boolean)
+                .join(" / ");
 
             setCombo([{ allColorsWithStyle: combined }]);
 
 
 
+            console.log(combo, "combo")
         }
 
     }, [orderId, id]);
 
 
-    console.log(combo, "combo")
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -113,34 +104,31 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     }, [orderItemsDataFetching, orderItemsDataLoading, styleId, syncFormWithDb, orderItemsData]);
 
 
-    const { data: socksMaterialData } =
-        useGetSocksMaterialQuery({ params: { ...params } });
 
-    if (orderId && singleOrderData?.data) {
-        setPartyId(singleOrderData?.data?.partyId || "")
-    }
 
-    // useEffect(() => {
-    //     if (singleOrderData?.data?.orderDetails) {
-    //         const updated = singleOrderData?.data?.orderDetails.map(item => {
-    //             const yarns = item?.orderYarnDetails || [];
 
-    //             const combinedColors = yarns
-    //                 .map(yarn => yarn?.Color?.name)
-    //                 .filter(Boolean)
-    //                 .join("/");
+    useEffect(() => {
+        if (singleOrderData?.data?.orderDetails) {
+            const updated = singleOrderData?.data?.orderDetails.map(item => {
+                const yarns = item?.orderYarnDetails || [];
 
-    //             return {
-    //                 ...item,
-    //                 allColors: combinedColors,
-    //             };
-    //         });
+                const combinedColors = yarns
+                    .map(yarn => yarn?.Color?.name)
+                    .filter(Boolean)
+                    .join("/");
 
-    //         setCombo(updated);
+                return {
+                    ...item,
+                    allColors: combinedColors,
+                };
+            });
+            setCombo(updated);
+            setPartyId(singleOrderData?.data?.partyId)
 
-    //     }
 
-    // }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+        }
+
+    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
     useEffect(() => {
         if (orderId && singleOrderData?.data) {
@@ -155,7 +143,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
     let data = {
 
         branchId, userId, companyId, docId,
-        active,
+        active, id, jobNumber,
         partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementForm, requirementItems
     }
 
@@ -175,7 +163,7 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
             let returnData;
             if (text === "Updated") {
-                returnData = await callback({ id, body: data }).unwrap();
+                returnData = await callback(data).unwrap();
             } else {
                 returnData = await callback(data).unwrap();
             }
@@ -214,17 +202,17 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
-            // toast.info("Please fill all required fields...!", { position: "top-center" })
-            Swal.fire({
-                // title: "Total percentage exceeds 100%",
-                title: "Please fill all required fields...!",
-                icon: "error",
-                timer: 1500,
-                showConfirmButton: false,
-            });
-            return
-        }
+        // if (!validateData(data)) {
+        //     // toast.info("Please fill all required fields...!", { position: "top-center" })
+        //     Swal.fire({
+        //         // title: "Total percentage exceeds 100%",
+        //         title: "Please fill all required fields...!",
+        //         icon: "error",
+        //         timer: 1500,
+        //         showConfirmButton: false,
+        //     });
+        //     return
+        // }
         const totalPercentage = orderYarnDetails?.reduce(
             (sum, yarn) => sum + (parseFloat(yarn.percentage) || 0),
             0
@@ -271,39 +259,44 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
         }
     }
 
+    if (isSingleFetching || isSingleLoading || isSupplierFetching || isSupplierLoading) return <Loader />
 
     return (
         <>
-            <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-                <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Requirement Planning Form</h1>
-                    <button
-                        onClick={() => {
-                            onClose()
-                            setId("")
-                        }}
+            {loading ? (
+                <div className="flex justify-center items-center p-4">
+                    <Loader />                </div>
+            ) : (
+                <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+                    <div className="flex justify-between items-center mb-1">
+                        <h1 className="text-xl font-bold text-gray-800">Requirement Planning Form</h1>
+                        <button
+                            onClick={() => {
+                                onClose()
+                                setId("")
+                            }}
 
-                        className="text-indigo-600 hover:text-indigo-700"
-                        title="Open Report"
-                    >
-                        <FaFileAlt className="w-5 h-5" />
-                    </button>
-                </div>
+                            className="text-indigo-600 hover:text-indigo-700"
+                            title="Open Report"
+                        >
+                            <FaFileAlt className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="space-y-3 h-full ">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Basic Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Doc.Id" readOnly value={docId} />
-                                <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                                <h2 className="font-medium text-slate-700 mb-2">
+                                    Basic Details
+                                </h2>
+                                <div className="grid grid-cols-2 gap-1">
+                                    <ReusableInput label="Doc.Id" readOnly value={docId} />
+                                    <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
+                                </div>
                             </div>
-                        </div>
 
 
 
@@ -311,188 +304,186 @@ const RequirmentForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, 
 
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
 
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Order Details
-                            </h2>
-                            <div className="grid grid-cols-6 gap-x-3">
-
-
-                        <div className="col-span-2">
-
-                                {id ?
+                                <h2 className="font-medium text-slate-700 mb-2">
+                                    Order Details
+                                </h2>
+                                <div className="grid grid-cols-6 gap-x-3">
 
 
+                                    <div className="col-span-2">
 
-                                        <TextInput
-                                            name="Order No"
-                                            value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
-                                            setValue={setJobNumber}
-                                            required={true}
-
-                                        />
-
-                                    :
-                                    <DropdownWithSearch
-                                        options={orderData?.data}
-                                        value={orderId}
-                                        setValue={setOrderId}
-                                        readOnly={id ? true : false}
-                                        labelField={"docId"}
-                                        label={"Order No"}
-                                        required={true}
-                                    />
-                                }
-                        </div>
+                                        {id ?
 
 
-                                <div className="col-span-4">
 
-                                {id ?
-
-
-                                    <>
-                                        {combo?.map((row, i) => (
                                             <TextInput
-                                                name="Stytle Name"
-                                                placeholder="Stytle Name"
-                                                value={row?.allColorsWithStyle || ""}
+                                                name="Order No"
+                                                value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
                                                 setValue={setJobNumber}
                                                 required={true}
 
                                             />
-                                        ))}
 
-                                    </>
+                                            :
+                                            <DropdownWithSearch
+                                                options={orderData?.data}
+                                                value={orderId}
+                                                setValue={setOrderId}
+                                                readOnly={id ? true : false}
+                                                labelField={"docId"}
+                                                label={"Order No"}
+                                                required={true}
+                                            />
+                                        }
+                                    </div>
 
-                                    :
 
-                                    <DropdownWithSearch
-                                        // options={singleOrderData?.data?.orderDetails?.map(o => ({
-                                        //     ...o,
-                                        //     displayLabel: `${o?.style?.name} - ${allColors}`
-                                        // }))}
-                                        options={combo?.map(o => ({
-                                            ...o,
-                                            displayLabel: `${o?.style?.name} - ${o?.allColors}`
-                                        }))}
-                                        value={styleId}
-                                        setValue={setstyleId}
-                                        labelField={"displayLabel"}
-                                        label={"Stytle Name"}
-                                        readOnly={id ? true : false}
-                                        required={true}
+                                    <div className="col-span-4">
 
-                                    />}
-                                    
+                                        {id ?
+
+
+                                            <>
+                                                {combo?.map((row, i) => (
+                                                    <TextInput
+                                                        name="Stytle Name"
+                                                        placeholder="Stytle Name"
+                                                        value={row?.allColorsWithStyle || ""}
+                                                        setValue={setJobNumber}
+                                                        required={true}
+
+                                                    />
+                                                ))}
+
+                                            </>
+
+                                            :
+
+                                            <DropdownWithSearch
+                                                // options={singleOrderData?.data?.orderDetails?.map(o => ({
+                                                //     ...o,
+                                                //     displayLabel: `${o?.style?.name} - ${allColors}`
+                                                // }))}
+                                                options={combo?.map(o => ({
+                                                    ...o,
+                                                    displayLabel: `${o?.style?.name} - ${o?.allColors}`
+                                                }))}
+                                                value={styleId}
+                                                setValue={setstyleId}
+                                                labelField={"displayLabel"}
+                                                label={"Stytle Name"}
+                                                readOnly={id ? true : false}
+                                                required={true}
+
+                                            />}
+
+                                    </div>
+                                    <div className='col-span-2'>
+
+                                        <TextInput
+                                            name="Job Number"
+                                            placeholder="Contact name"
+                                            value={jobNumber}
+                                            setValue={setJobNumber}
+
+                                        />
+                                    </div>
+
+
                                 </div>
-                                <div className='col-span-2'>
-
-                                <TextInput
-                                    name="Job Number"
-                                    placeholder="Contact name"
-                                    value={jobNumber}
-                                    setValue={setJobNumber}
-
-                                />
-                                </div>
-                                {/* <DropdownInput name="Leg Color" options={Colors} required={true} />
-                                <DropdownInput name="Foot Color" options={Colors} required={true} />
-                                <DropdownInput name="Stripes Color" options={Colors} required={true} />
-                                <DropdownWithSearch label={"socksType"} labelField={"name"} options={socksMaterialData?.data} type={"date"} required={true} />
-                                <DropdownInput name="Packing Cover" options={packingCover} required={true} /> */}
 
                             </div>
 
-                        </div>
+                            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
+                                <h2 className="font-medium text-slate-700 mb-2">
+                                    Contact Details
+                                </h2>
+                                <div className="grid grid-cols-2 gap-x-3">
+                                    <div className="col-span-2">
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Contact Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
-                                <div className="col-span-2">
+                                        <TextInput
+                                            name="Customer"
+                                            placeholder="Contact name"
+                                            value={findFromList(partyId, supplierList?.data, "name")}
+                                            // setValue={setContactPersonName}
+                                            disabled={true}
+                                        />
+                                    </div>
+                                    <TextInput
+                                        name="Contact Person"
+                                        placeholder="Contact Person"
+                                        value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
+                                        // setValue={setContactPersonName}
+                                        disabled={true}
+                                    />
+                                    <TextInput
+                                        name="Contact Number"
+                                        placeholder="Contact Number"
+                                        value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
+                                        // setValue={setPhone}
+                                        disabled={true}
+                                    // onChange={(e) => setPhone(e.target.value)}
 
-                                <TextInput
-                                    name="Customer"
-                                    placeholder="Contact name"
-                                    value={findFromList(partyId, supplierList?.data, "name")}
-                                    // setValue={setContactPersonName}
-                                    disabled={true}
-                                />
+                                    />
+
+
+
                                 </div>
-                                <TextInput
-                                    name="Contact Person"
-                                    placeholder="Contact Person"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
-                                    // setValue={setContactPersonName}
-                                    disabled={true}
-                                />
-                                <TextInput
-                                    name="Contact Number"
-                                    placeholder="Contact Number"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
-                                    // setValue={setPhone}
-                                    disabled={true}
-                                // onChange={(e) => setPhone(e.target.value)}
-
-                                />
-
-
-
                             </div>
                         </div>
-                    </div>
 
 
-                    <fieldset className=''>
+                        <fieldset className=''>
 
-                        <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems}
-                            setRequirementItems={setRequirementItems} orderItemsData={orderItemsData?.data}
-
-
-                        />
-
-                    </fieldset>
+                            <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems}
+                                setRequirementItems={setRequirementItems} orderItemsData={orderItemsData?.data} processList={processList?.data}
 
 
-                    <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-                        <div className="flex gap-2 flex-wrap">
-                            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <FiSave className="w-4 h-4 mr-2" />
-                                Save & New
-                            </button>
-                            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Save & Close
-                            </button>
-                            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Draft Save
-                            </button>
-                        </div>
+                            />
 
-                        <div className="flex gap-2 flex-wrap">
+                        </fieldset>
 
-                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                onClick={() => setReadOnly(false)}
-                            >
-                                <FiEdit2 className="w-4 h-4 mr-2" />
-                                Edit
-                            </button>
-                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                <FaWhatsapp className="w-4 h-4 mr-2" />
-                                WhatsApp
-                            </button>
-                            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
-                                <FiPrinter className="w-4 h-4 mr-2" />
-                                Print
-                            </button>
+
+                        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+                            <div className="flex gap-2 flex-wrap">
+                                <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                    <FiSave className="w-4 h-4 mr-2" />
+                                    Save & New
+                                </button>
+                                <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                    Save & Close
+                                </button>
+                                <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                                    Draft Save
+                                </button>
+                            </div>
+
+                            <div className="flex gap-2 flex-wrap">
+
+                                <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                                    onClick={() => setReadOnly(false)}
+                                >
+                                    <FiEdit2 className="w-4 h-4 mr-2" />
+                                    Edit
+                                </button>
+                                <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+                                    <FaWhatsapp className="w-4 h-4 mr-2" />
+                                    WhatsApp
+                                </button>
+                                <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
+                                    <FiPrinter className="w-4 h-4 mr-2" />
+                                    Print
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
+
         </>
     )
 }

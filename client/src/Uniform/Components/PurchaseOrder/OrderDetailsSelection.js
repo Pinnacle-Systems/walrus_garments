@@ -24,19 +24,7 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
                 )
             )
         );
-        // setStockItems(
-        //     tempStockItems?.filter((stockItem, index) => {
-        //         const orderItem = orderItems?.[index];
-        //         if (!orderItem) return false; // skip if no corresponding order item
 
-        //         return (
-        //             stockItem?.yarnId === orderItem?.yarnId &&
-        //             stockItem?.color === orderItem?.color &&
-        //             stockItem?.count === orderItem?.count &&
-        //             stockItem?.shade === orderItem?.shade
-        //         );
-        //     })
-        // );
 
         onClose()
     }
@@ -48,105 +36,29 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
 
 
 
-    // function handleInputChange(value, index, field) {
+    // function addItem(id, obj) {
+    //     console.log(obj, "obj")
 
-
-    //     console.log(value, "value", index)
-    //     let orderYarnDetails = "orderYarnDetails"
-
-
-    //     setOrderDetails(orderDetails => {
-    //         const newBlend = structuredClone(orderDetails);
-    //         newBlend[gridIndex][orderYarnDetails][index][field] = value;
-    //         return newBlend
-    //     }
-    //     );
-    // };
-
-    // function addNewRow() {
-    //     setOrderDetails(prev => {
-    //         const newPrev = structuredClone(prev);
-    //         const orderYarnDetailsKey = "orderYarnDetails";
-
-    //         if (!newPrev[selectedIndex][orderYarnDetailsKey]) {
-    //             newPrev[selectedIndex][orderYarnDetailsKey] = [];
-    //         }
-
-    //         console.log(newPrev[selectedIndex][orderYarnDetailsKey], "gridIndex");
-
-    //         newPrev[selectedIndex][orderYarnDetailsKey].push({
-    //             yarnId: '',
-    //         });
-
-    //         return newPrev;
-    //     });
-
-
-    // }
-
-    // function handleEdit(index) {
-    //     setOrderDetails(prev => {
-    //         const newPrev = structuredClone(prev);
-
-    //         const itemData = newPrev[index]?.orderDetailsSubGrid?.[0] || {};
-
-    //         if (!Array.isArray(newPrev[index].orderDetailsSubGrid)) {
-    //             newPrev[index].orderDetailsSubGrid = [];
-    //         }
-
-    //         newPrev[index].orderDetailsSubGrid.push({
-
-    //             size: "",
-    //             sizeMesaurement: "",
-    //             qty: 0,
-
-    //         });
-
-    //         return newPrev;
-    //     });
-    // }
-
-    // function deleteRow(yarnIndex) {
-    //     // if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-    //     // setOrderDetails(prev => prev.filter((_, i) => i !== index))
-    //     setOrderDetails(prev => {
-    //         // const updated = [...prev];
-    //         const updated = structuredClone(prev);
-    //         updated[gridIndex].orderYarnDetails
-    //             .splice(yarnIndex, 1);
-
-
-    //         if (updated[gridIndex].orderYarnDetails
-    //             .length === 0) {
-    //             updated.splice(gridIndex, 1);
-    //         }
-
-    //         return updated;
-    //     });
-    // }
-    // function deleteSubRow(rowIndex, subRowIndex) {
-
-    //     setOrderDetails(prev => {
-    //         // const updated = [...prev];
-    //         const updated = structuredClone(prev);
-    //         updated[rowIndex].orderYarnDetails.splice(subRowIndex, 1);
-
-
-    //         if (updated[rowIndex].orderDetailsSubGrid.length === 0) {
-    //             updated.splice(rowIndex, 1);
-    //         }
-
-    //         return updated;
+    //     setPoItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
+    //         newItems.push(obj);
+    //         return newItems
     //     });
     // }
 
     function addItem(id, obj) {
-        console.log(obj, "obj")
+        setPoItems(prevItems => {
+            let newItems = structuredClone(prevItems);
 
-        setPoItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems.push(obj);
-            return newItems
+            const index = newItems.findIndex(v => v?.yarnId === "");
+
+            if (index !== -1) {
+                newItems[index] = obj;
+            } else {
+                newItems.push(obj);
+            }
+
+            return newItems;
         });
     }
     function removeItem(id) {
@@ -167,7 +79,6 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
     }
 
     function isItemAdded(id) {
-          const index = poItems?.findIndex(v => v.yarnId === "" || v == null);
 
         return poItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
     }
@@ -184,147 +95,131 @@ export default function OrderDetailsSelection({ tempPoItems, setPoItems, poItems
         return poItems?.every(item => isItemAdded(item.id))
     }
 
-    function addItem(id, obj) {
-        console.log(obj, "obj")
 
-        setPoItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems.push(obj);
-            return newItems
-        });
-    }
-    function removeItem(id) {
-        setPoItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
-            return newItems
-        });
-    }
 
-    function handleChange(id, obj) {
-        if (isItemAdded(id, obj)) {
-            removeItem(id)
-        } else {
-            addItem(id, obj)
-        }
-    }
 
-    function isItemAdded(id) {
-        return poItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
-    }
 
-    function handleSelectAllChange(value, poItems) {
-        if (value) {
-            poItems?.forEach(item => addItem(item.id, item))
-        } else {
-            poItems?.forEach(item => removeItem(item.id))
-        }
-    }
-
-    function getSelectAll(poItems) {
-        return poItems?.every(item => isItemAdded(item.id))
-    }
 
     return (
 
         <>
 
-            <div className="h-full flex flex-col bg-[#f1f1f0] p-3 w-full">
-                <div className="flex flex-row w-full">
-                    <div className="flex flex-col w-full">
-                        <div className="mt-4 mb-5 w-full">
-                            <div className="max-h-[600px] w-full overflow-y-auto">
-                                <table className="border-collapse w-full">
-                                    <thead className="bg-gray-200 text-gray-800">
-                                        <tr>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
-                                                <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, tempPoItems ? tempPoItems : [])}
-                                                    checked={getSelectAll(tempPoItems ? tempPoItems : [])}
-                                                />
-                                            </th>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Po Type</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Order No</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Customer Name</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style No</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Yarn</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Color</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty</th>
-                                            <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price  Qty</th>
 
 
 
 
-                                        </tr>
-                                    </thead>
 
-                                    <tbody>
-                                        {tempPoItems?.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                                                    }`}
-                                                onClick={() => {
-                                                    if (item?.balanceQty !== 0) {
-                                                        handleChange(item.id, item)
-                                                    }
-                                                }}
-                                            >
-                                                <td className='py-1 text-center'>
-                                                    <input type="checkbox" name="" id=""
-                                                        checked={isItemAdded(item.id, item)}
-                                                        disabled={item?.balanceQty === 0} />
-                                                </td>
-                                                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
-                                                    {index + 1}
-                                                </td>
-                                                <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                    { }
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.order?.docId}
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.Party?.name}
-                                                </td>
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {item?.OrderDetails?.style?.name}
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.Yarn?.name}
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.Color?.name}
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.Counts?.name}
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.Uom?.name}
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {item?.requiredQty}
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    { }
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    { }
-                                                </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    { }
-                                                </td>
+
+
+            <div className="flex-1 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm ">
+                <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full">
+                    <div className="flex flex-row w-full">
+                        <div className="flex flex-col w-full">
+                            <div className="mt-4 mb-5 w-full">
+                                <div className="max-h-[600px] w-full overflow-y-auto">
+                                    <table className="border-collapse w-full">
+                                        <thead className="bg-gray-200 text-gray-800">
+                                            <tr>
+                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                                    <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, tempPoItems ? tempPoItems : [])}
+                                                        checked={getSelectAll(tempPoItems ? tempPoItems : [])}
+                                                    />
+                                                </th>
+                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Po Type</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Order No</th>
+                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Customer Name</th> */}
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style No</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Yarn</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Color</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th>
+                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th> */}
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty</th>
+
+
+
+
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+
+                                        <tbody>
+                                            {tempPoItems?.map((item, index) => (
+                                                <tr
+                                                    key={index}
+                                                    className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                        }`}
+                                                    onClick={() => {
+                                                        if (item?.balanceQty !== 0) {
+                                                            handleChange(item.id, item)
+                                                        }
+                                                    }}
+                                                >
+                                                    <td className='py-1 text-center'>
+                                                        <input type="checkbox" name="" id=""
+                                                            checked={isItemAdded(item.id, item, index)}
+                                                            disabled={item?.balanceQty === 0} />
+                                                    </td>
+                                                    <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                                                        {index + 1}
+                                                    </td>
+                                                    <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                        { }
+                                                    </td>
+                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.order?.docId}
+                                                    </td>
+                                                    {/* <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.Party?.name}
+                                                    </td> */}
+                                                    <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                        {item?.OrderDetails?.style?.name}
+                                                    </td>
+                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.Yarn?.name}
+                                                    </td> 
+                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.Color?.name}
+                                                    </td> 
+                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.Counts?.name}
+                                                    </td> 
+                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                       { }
+                                                   </td>
+                                                     {/* <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.Uom?.name}
+                                                    </td>  */}
+                                                     <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {item?.requiredQty}
+                                                    </td> 
+                                                    <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        { }
+                                                    </td>  <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        { }
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-
         </>
     )
 }
+
+
+
+
+
+
 
 
 
