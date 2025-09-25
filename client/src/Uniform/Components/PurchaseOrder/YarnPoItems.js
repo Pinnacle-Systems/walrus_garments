@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
+import { useGetYarnCountsQuery, useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 
@@ -8,6 +8,7 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices";
+import Swal from "sweetalert2";
 
 const YarnPoItems = ({
     id,
@@ -19,20 +20,18 @@ const YarnPoItems = ({
     isSupplierOutside,
     taxTypeId,
     greyFilter,
+    poMaterial,
 }) => {
 
-    console.log(poItems, "PoItems")
     useEffect(() => {
         if (poItems?.length >= 3) return
         setPoItems(prev => {
             let newArray = Array?.from({ length: 3 - prev?.length }, () => {
                 return {
                     yarnId: "",
-                    qty: "0",
                     tax: "0",
                     colorId: "",
                     uomId: "",
-                    price: "0",
                     discountValue: "0.00",
                     noOfBags: 0,
                     weightPerBag: 0,
@@ -44,24 +43,32 @@ const YarnPoItems = ({
         }
         )
     }, [setPoItems, poItems])
-    console.log(poItems, "poItems");
 
 
-    const handleInputChange = (value, index, field) => {
+    const handleInputChange = (value, index, field, balanceQty) => {
         const newBlend = structuredClone(poItems);
-        newBlend[index][field] = value;
-        // if (field === "yarnId") {
-        //     newBlend[index]["taxPercent"] = findYarnTax(value);
+        // if (field === "qty") {
+        //     if (parseFloat(balanceQty) < parseFloat(value)) {
+        //         // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+        //         Swal.fire({
+        //             title: "Purchase Qty Can not be more than balance Qty",
+        //             icon: "success",
+        //             draggable: true,
+        //             timer: 1000,
+        //             showConfirmButton: false,
+        //             didOpen: () => {
+        //                 Swal.showLoading();
+        //             }
+        //         });
+        //         return
+        //     }
         // }
-        // // if (field !== "qty") {
-        // //   newBlend[index]["qty"] = (
-        // //     parseFloat(newBlend[index]["noOfBags"]) *
-        // //     parseFloat(newBlend[index]["weightPerBag"])
-        // //   ).toFixed(3);
-        // // }
+        newBlend[index][field] = value;
+
         setPoItems(newBlend);
     };
 
+    console.log(poItems, "poItemspoItems")
 
 
     const addNewRow = () => {
@@ -94,7 +101,8 @@ const YarnPoItems = ({
     const {
         data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
 
-    const { data: countsList } = useGetCountsMasterQuery({ params });
+    // const { data: countsList } = useGetCountsMasterQuery({ params });
+    const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
 
@@ -113,7 +121,7 @@ const YarnPoItems = ({
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
-           
+
 
                 </div>
                 <div className={` relative w-full overflow-y-auto py-1`}>
@@ -129,25 +137,29 @@ const YarnPoItems = ({
 
                                     className={`w-80 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Items
+                                    Items<span className="text-red-500">*</span>
                                 </th>
+                                {poMaterial === "Dyedyarn" && (
+
                                 <th
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Colors
+                                    Color<span className="text-red-500">*</span>
                                 </th>
+                                )}
+                                
                                 <th
 
                                     className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Counts
+                                    Counts<span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    UOM
+                                    UOM<span className="text-red-500">*</span>
                                 </th>
                                 <th
 
@@ -168,17 +180,17 @@ const YarnPoItems = ({
                                 >
                                     Balance Purchase Qty  (kgs)
                                 </th>
-                                 <th
+                                <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                     Qty  (kgs)
+                                    Qty  (kgs)<span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Price
+                                    Price<span className="text-red-500">*</span>
                                 </th>
 
 
@@ -225,33 +237,41 @@ const YarnPoItems = ({
                                     </td>
 
 
+                                    {poMaterial === "Dyedyarn" && (
+                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+
+                                            <select
+                                                onKeyDown={e => {
+                                                    if (e.key === "Delete") {
+                                                        handleInputChange("", index, "colorId")
+                                                    }
+                                                }}
+                                                disabled={readOnly}
+                                                className="text-left w-full rounded py-1 table-data-input"
+                                                value={row.colorId}
+                                                onChange={e => handleInputChange(e.target.value, index, "colorId")}
+                                                onBlur={e => handleInputChange(e.target.value, index, "colorId")}
+                                            >
+                                                <option hidden></option>
+                                                {(id ? colorList?.data : colorList?.data.filter(item => item.active))?.map(blend => (
+                                                    <option value={blend.id} key={blend.id}>
+                                                        {blend?.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                        </td>
+
+                                    )}
+
+
+
 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                            onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "colorId")
-                                            }
-                                            }
-                                        >
-                                            <option hidden>
-                                            </option>
-                                            {(id ? colorList?.data : colorList?.data.filter(item => item.active))?.map((blend) =>
-                                                <option value={blend.id} key={blend.id}>
-                                                    {blend?.name}
-                                                </option>
-                                            )}
-                                        </select>
-                                    </td>
-
-
-
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                                        <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.count}
+                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                             value={row.count}
                                             onChange={(e) => handleInputChange(e.target.value, index, "count")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "count")
@@ -260,7 +280,7 @@ const YarnPoItems = ({
                                         >
                                             <option hidden>
                                             </option>
-                                            {(id ? countsList?.data : countsList?.data.filter(item => item.active))?.map((blend) =>
+                                            {(id ? countsList?.data : countsList?.data)?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>
@@ -291,68 +311,121 @@ const YarnPoItems = ({
                                     </td>
 
                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {row.requiredQty}
-                                    </td> 
-                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {row.alreadyPoqty}
+                                        {(row.requiredQty || 0.000)?.toFixed(3)}
+                                    </td>
+                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                        {(row.alreadyPoqty || 0.000)?.toFixed(3)}
 
                                     </td>
-    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                        {parseFloat(row?.requiredQty)  - parseFloat( row?.alreadyPoqty)}
-
+                                    <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                        {Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0))?.toFixed(3)}
                                     </td>
-                                    <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                    {/* <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input
                                             min="0"
                                             type="number"
                                             className="text-right rounded py-1 px-1 w-full table-data-input"
                                             onFocus={(e) => e.target.select()}
-                                            value={row?.qty ?? 0}
+                                            value={row?.qty || 0.000}
                                             onChange={(e) => {
-                                                const val = e.target.value;
-                                                handleInputChange(val === "" ? 0 : val, index, "qty");
+                                                const numVal = parseFloat(e.target.value) || 0;
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                                                handleInputChange(numVal, index, "qty", balanceQty);
+
+
                                             }}
                                             onBlur={(e) => {
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
                                                 const val = e.target.value;
-                                                handleInputChange(val === "" ? 0 : parseFloat(val).toFixed(2), index, "qty");
+                                                handleInputChange(val === "" ? 0 : parseFloat(val).toFixed(3), index, "qty", balanceQty);
                                             }}
-                                        />
-                                    </td>
 
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                        />
+                                    </td> */}
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
                                         <input
-                                            onKeyDown={e => {
-                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                if (e.key === "Delete") { handleInputChange("0.00", index, "price") }
-                                            }}
-                                            min={"0"}
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
-                                            className="text-right rounded py-1 w-full px-1 table-data-input"
-                                            onFocus={(e) => e.target.select()}
-                                            value={(!row.price) ? 0 : row.price}
+                                            step="0.01"
+                                            min="0"
+                                            value={row?.qty}
+
+
+
+                                            onFocus={e => e.target.select()}
+
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+
+                                            placeHolder="0.000"
+
                                             disabled={readOnly}
-                                            onChange={(e) =>
-                                                handleInputChange(e.target.value, index, "price")
-                                            }
+                                            onChange={(e) => {
+                                                const numVal = parseFloat(e.target.value) || 0;
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                                                handleInputChange(numVal, index, "qty", balanceQty);
+
+
+                                            }}
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+                                                const val = e.target.value;
+                                                const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                e.target.value = formatted;
+                                                handleInputChange(val === "" ? 0 : formatted, index, "qty", balanceQty);
+                                            }}
 
-                                            }
-                                            }
                                         />
-
                                     </td>
 
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                        <input
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={row?.price}
+
+
+
+                                            onFocus={e => e.target.select()}
+
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+
+                                            placeHolder="0.000"
+
+                                            disabled={readOnly}
+                                            onChange={(e) => {
+                                                const numVal = parseFloat(e.target.value) || 0;
+
+                                                handleInputChange(numVal, index, "price");
+
+
+                                            }}
+                                            onBlur={(e) => {
+                                                const val = e.target.value;
+                                                const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                e.target.value = formatted;
+                                                handleInputChange(val === "" ? 0 : formatted, index, "price");
+                                            }}
+
+                                        />
+                                    </td>
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
                                             className="text-right rounded py-1 w-16 px-1 table-data-input"
-                                            value={(!row.qty || !row.price) ? 0.00 : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(2)}
+                                            value={(!row.qty || !row.price) ? 0.00 : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(3)}
                                             disabled={true}
                                         />
                                     </td>
-                                  
+
 
 
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">

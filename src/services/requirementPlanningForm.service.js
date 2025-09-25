@@ -258,7 +258,37 @@ async function getOne(id) {
                     sizeId: true
                 }
             },
-            RequirementPlanningItems: true,
+            RequirementPlanningItems: {
+                select: {
+                    id: true,
+                    requirementPlanningFormId: true,
+                    colorId: true,
+                    yarnId: true,
+                    count: true,
+                    yarnType: true,
+                    processId: true,
+                    isProcess: true,
+                    lossPercentage: true,
+                    requiredQty: true,
+                    orderDetailsId: true,
+                    orderId: true,
+                    percentage: true,
+                    wastagePercentage: true,
+
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+
+                    RequirementPlanningProcessList: true
+                }
+            },
             RequirementYarnDetails: {
                 select: {
                     id: true,
@@ -273,7 +303,9 @@ async function getOne(id) {
                     processId: true,
                     isProcess: true,
                     lossPercentage: true,
-
+                    wastagePercentage: true,
+                    yarnType: true,
+                    RequirementYarnProcessList: true,
                     Yarn: {
                         select: {
                             name: true
@@ -305,7 +337,7 @@ async function getOne(id) {
 
 export async function getRequirementItems(req) {
 
-    const { branchId } = req.query
+    const { poMaterial } = req.query
 
     const childRecord = 0;
     let data = await prisma.RequirementPlanningItems.findMany({
@@ -321,7 +353,7 @@ export async function getRequirementItems(req) {
             yarnId: true,
             count: true,
             // yarnKneedleId: true,
-            // percentage: true,
+            yarnType: true,
             processId: true,
             isProcess: true,
             lossPercentage: true,
@@ -337,7 +369,7 @@ export async function getRequirementItems(req) {
                     name: true
                 }
             },
-            Counts: {
+            yarnCounts: {
                 select: {
                     name: true
                 }
@@ -412,7 +444,13 @@ export async function getRequirementItems(req) {
 
         };
     });
+    // if (poMaterial === "GreyYarn") {
+    //     data = data?.filter(i => i?.yarnType === "GreyYarn")
+    // }
+    // if (poMaterial === "DyedYarn") {
+    //     data = data?.filter(i => i?.yarnType === "DyedYarn")
 
+    // }
 
     return { statusCode: 0, data, childRecord };
 }
@@ -540,30 +578,6 @@ async function create(req) {
                 orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
 
-
-                RequirementPlanningItems: requirementItems?.length > 0
-                    ? {
-                        createMany: {
-                            data: requirementItems?.map((sub) => ({
-                                orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
-                                orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
-                                percentage: sub?.percentage ? parseFloat(sub.percentage) : undefined,
-                                colorId: sub?.colorId ? parseFloat(sub.colorId) : undefined,
-                                yarnId: sub?.yarnId ? parseFloat(sub.yarnId) : undefined,
-                                colorId: sub?.colorId ? parseFloat(sub.colorId) : undefined,
-                                // uomId: sub?.uomId ? parseFloat(sub.uomId) : undefined,
-                                count: sub?.count ? parseFloat(sub.count) : undefined,
-                                partyId: sub?.partyId ? parseInt(sub.partyId) : undefined,
-                                requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
-                                isProcess: sub?.isProcess ? sub.isProcess : undefined,
-                                processId: sub?.processId ? parseInt(sub.processId) : undefined,
-                                lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
-                            })),
-                        },
-                    }
-
-                    : undefined,
-
                 requirementSizeDetails: orderSizeDetails?.length > 0
                     ? {
                         createMany: {
@@ -576,23 +590,65 @@ async function create(req) {
                         },
                     }
                     : undefined,
+                RequirementPlanningItems: requirementItems?.length > 0
+                    ? {
+                        create: requirementItems.map((sub) => ({
+                            orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
+                            orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
+                            percentage: sub?.percentage ? parseFloat(sub.percentage) : undefined,
+                            colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                            yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
+                            count: sub?.count ? parseInt(sub.count) : undefined,
+                            partyId: sub?.partyId ? parseInt(sub.partyId) : undefined,
+                            requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
+                            isProcess: sub?.isProcess ?? undefined,
+                            processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                            lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                            wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
+                            yarnType: sub?.yarnType ? sub?.yarnType : undefined,
+
+                            RequirementPlanningProcessList: sub?.RequirementYarnProcessList?.length
+                                ? {
+                                    create: sub?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
+                                        processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                                        lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                                    })),
+                                }
+                                : undefined,
+                        })),
+                    }
+                    : undefined,
+
+
+
+
 
                 RequirementYarnDetails: orderYarnDetails?.length > 0
                     ? {
-                        createMany: {
-                            data: orderYarnDetails.map((yarn) => ({
-                                colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                                percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                                yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                                yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                                count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                                styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                                isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
-                                processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
-                                lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                            })),
-                        },
+                        create: orderYarnDetails.map((yarn) => ({
+                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                            isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                            processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                            lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
+                            wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+
+                            RequirementYarnProcessList: yarn?.RequirementYarnProcessList?.length > 0
+                                ? {
+                                    create: yarn?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
+                                        processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                                        lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                                    })),
+
+                                }
+                                : undefined,
+                        })),
+
                     }
                     : undefined,
 
@@ -678,50 +734,116 @@ const update = async (id, body) => {
                 updatedById: parseInt(userId), notes, term, orderBy,
                 // orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
+                // RequirementYarnDetails: {
+
+                //     deleteMany: {
+                //         ...(incomingYarnIds?.length > 0 && {
+                //             id: { notIn: incomingYarnIds }
+                //         })
+                //     },
+                //     update: orderYarnDetails?.filter(item => item.id)?.map((yarn) => ({
+                //         where: { id: parseInt(yarn.id) },
+                //         data: {
+                //             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                //             percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                //             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                //             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                //             count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                //             // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                //             styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                //             isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                //             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                //             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
+                //             wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                //             yarnType: yarn?.yarnType ? yarn.yarnType : undefined,
+
+                //         },
+                //     })),
+
+                // },
+                // RequirementPlanningItems: {
+                //     deleteMany: {
+                //         ...(incomingRequirementItems?.length > 0 && {
+                //             id: { notIn: incomingRequirementItems }
+                //         })
+                //     },
+                //     update: requirementItems?.filter(item => item.id)?.map((yarn) => ({
+                //         where: { id: parseInt(yarn.id) },
+                //         data: {
+                //             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                //             percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                //             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                //             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                //             count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                //             // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                //             styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                //             isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                //             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                //             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
+                //             wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                //             yarnType: yarn?.yarnType ? yarn.yarnType : undefined,
+
+                //         },
+                //     })),
+
+                // },
+
+
                 RequirementYarnDetails: {
+                    deleteMany: {},
+                    create: orderYarnDetails?.map((sub) => ({
+                        orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
+                        orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
+                        percentage: sub?.percentage ? parseFloat(sub.percentage) : undefined,
+                        colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                        yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
+                        count: sub?.count ? parseInt(sub.count) : undefined,
+                        partyId: sub?.partyId ? parseInt(sub.partyId) : undefined,
+                        // requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
+                        isProcess: sub?.isProcess ?? undefined,
+                        processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                        lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                        wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
+                        yarnType: sub?.yarnType ? sub?.yarnType : undefined,
+                        RequirementYarnProcessList: sub?.RequirementYarnProcessList?.length > 0
+                            ? {
+                                create: sub?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
+                                    processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                                    lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                                })),
 
-                    deleteMany: {
-                        ...(incomingYarnIds?.length > 0 && {
-                            id: { notIn: incomingYarnIds }
-                        })
-                    },
-                    update: orderYarnDetails?.filter(item => item.id)?.map((yarn) => ({
-                        where: { id: parseInt(yarn.id) },
-                        data: {
-                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                            isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
-                            processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
-                            lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                        },
+                            }
+                            : undefined,
+
                     })),
-
                 },
+
                 RequirementPlanningItems: {
-                    deleteMany: {
-                        ...(incomingRequirementItems?.length > 0 && {
-                            id: { notIn: incomingRequirementItems }
-                        })
-                    },
-                    update: requirementItems?.filter(item => item.id)?.map((yarn) => ({
-                        where: { id: parseInt(yarn.id) },
-                        data: {
-                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                            isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
-                            processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
-                            lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                        },
+                    deleteMany: {},
+                    create: requirementItems?.map((yarn) => ({
+                        orderId: yarn?.orderId ? parseInt(yarn.orderId) : undefined,
+                        orderDetailsId: yarn?.orderDetailsId ? parseInt(yarn?.orderDetailsId) : undefined,
+                        colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
+                        percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
+                        yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
+                        yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
+                        count: yarn?.count ? parseInt(yarn?.count) : undefined,
+                        requiredQty: yarn?.requiredQty ? parseFloat(yarn.requiredQty) : undefined,
+                        styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                        isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
+                        processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
+                        lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
+                        wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                        yarnType: yarn?.yarnType ? yarn?.yarnType : undefined,
+
+                        RequirementPlanningProcessList: yarn?.RequirementYarnProcessList?.length
+                            ? {
+                                create: yarn?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
+                                    processId: sub?.processId ? parseInt(sub.processId) : undefined,
+                                    lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
+                                })),
+                            }
+                            : undefined,
                     })),
 
                 },

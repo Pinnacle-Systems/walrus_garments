@@ -22,8 +22,9 @@ import OrderPurchase from "./OrderPurchase";
 import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormItemsQuery, useGetRequirementPlanningFormQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
 import OrderDetailsSelection from "./OrderDetailsSelection";
 import Modal from "../../../UiComponents/Modal";
+import { Loader } from "../../../Basic/components";
 
-const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId ,poItems ,setPoItems ,tempPoItems ,setTempPoItems ,onNew }) => {
+const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
 
 
 
@@ -55,16 +56,19 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
   const { branchId, userId, finYearId } = getCommonParams();
-  const params = { branchId, userId, finYearId };
+  const params = { branchId, userId, finYearId, poMaterial: poMaterial };
 
 
-  const { data: orderData } = useGetOrderQuery({ params });
 
-  const {
-    data: singleOrderData,
-    isFetching: isSingleOrderFetching,
-    isLoading: isSingleOrderLoading,
-  } = useGetOrderItemsByIdNewQuery({ id: orderId }, { skip: !orderId });
+  // useEffect(() => {
+  //   setCurrentPageNumber(1);
+  // }, [
+  //   serachDocNo,
+  //   searchClientName,
+  //   searchDate,
+  //   supplier,
+  //   searchMaterial,
+  // ]);
 
 
   const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
@@ -77,6 +81,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     isLoading: isSingleLoading,
   } = useGetPoByIdQuery(id, { skip: !id });
 
+  console.log(singleData, id, "idssssss")
+
+
   const [addData] = useAddPoMutation();
   const [updateData] = useUpdatePoMutation();
 
@@ -87,12 +94,18 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
+  console.log(poMaterial, "poMaterial")
+
+  console.log(requirementPlanningItemsData?.data?.filter(po => po.yarnType == poMaterial), "requirementPlanningItemsData?.data")
 
   useEffect(() => {
 
-    setTempPoItems(requirementPlanningItemsData?.data)
+    setTempPoItems(requirementPlanningItemsData?.data?.filter(po => po.yarnType === poMaterial)?.map(item => ({
+      ...item,
+      RequirementPlanningItemsId: item?.id  // assuming qty is the field you want to base 10% on
+    })))
 
-  }, [isRequirementFetching, isRequirementLoading, , requirementPlanningItemsData]);
+  }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
 
 
   // const handleAddSupplier = (newName) => {
@@ -202,7 +215,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         });
 
         RequirementRefetch()
-        console.log("Hittttt")
         if (returnData.statusCode === 0) {
           if (nextProcess == "new" || nextProcess == "close") {
             syncFormWithDb(undefined);
@@ -268,23 +280,26 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }
 
   const dateRef = useRef(null);
-  const inputPartyRef = useRef(null);
-  const styleRef = useRef(null);
+  // const inputPartyRef = useRef(null);
+  // const styleRef = useRef(null);
 
-  useEffect(() => {
-    if (dateRef.current) {
-      dateRef.current.focus();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (dateRef.current) {
+  //     dateRef.current.focus();
+  //   }
+  // }, []);
+
+  if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading) return <Loader />
+
 
   return (
 
     <>
 
       <Modal
-        isOpen={tableDataView}
-        onClose={() => setTableDataView(false)}
-        widthClass="  h-[70%] w-[90%]"
+        isOpen={tableDataView && poType !== "GENERAL"}
+        onClose={() => { setTableDataView(false); setPoType("") }}
+        widthClass="  h-[80%] w-[90%]"
       >
         <OrderDetailsSelection
           onClose={() => setTableDataView(false)}
@@ -292,6 +307,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           requirementPlanningItemsData={requirementPlanningItemsData?.data}
           setPoItems={setPoItems}
           poItems={poItems}
+          setPoType={setPoType}
+          poMaterial={poMaterial}
         />
       </Modal>
       <Modal
@@ -314,7 +331,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
           <button
-            onClick={()  =>  {
+            onClick={() => {
               onNew()
               onClose()
               RequirementRefetch()
@@ -347,7 +364,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 type={"date"}
                 required={true}
                 ref={dateRef}
-                nextRef={inputPartyRef}
+                // nextRef={inputPartyRef}
 
                 readOnly={readOnly}
               />
@@ -364,10 +381,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <DropdownInput name="Material "
                 options={MaterialType}
                 value={poMaterial}
-                setValue={setPoMaterial}
+                setValue={(value) => {
+                  setPoMaterial(value);
+                  setPoType("")
+                }}
                 required={true}
                 readOnly={readOnly}
-                disabled={orderId}
+                disabled={orderId || id}
               />
               <DropdownInput name="Po Type"
                 options={PoTypes}
@@ -376,7 +396,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
                 required={true}
                 readOnly={readOnly}
-                disabled={orderId}
+                disabled={orderId || id}
               />
               {/* {poType === "ORDER" &&
                 <DropdownWithSearch
@@ -412,8 +432,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   // onDeleteItem={onDeleteItem}
                   setSearchTerm={setSupplierId}
                   searchTerm={supplierId}
-                  show={"isClient"}
+                  show={"isSupplier"}
                   required={true}
+                  disabled={id}
                 />
               </div>
 
@@ -465,7 +486,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
             poMaterial?.toLowerCase().includes("GreyYarn".toLowerCase())
               ?
-              <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+              <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
+                poMaterial={poMaterial}
+              />
               :
               (
                 poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
@@ -588,10 +611,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
             </button>
-            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            {/* <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Draft Save
-            </button>
+            </button> */}
           </div>
 
           {/* Right Buttons */}

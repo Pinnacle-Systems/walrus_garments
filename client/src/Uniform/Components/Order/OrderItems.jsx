@@ -410,27 +410,33 @@ const OrderItems = forwardRef(function OrderItems(
                         </select>
                       </td>
 
-                      <td className="py-0.5 px-3 border border-gray-300 overflow-x-auto">
-                        <div className="flex gap-2">
+                      <td className=" py-0.5 px-3 border border-gray-300 overflow-x-auto">
+                        <div className='flex gap-2'>
+                          {(!readOnly && !item.filePath) &&
+                            <input
+                              title=" "
+                              type="file"
+                              disabled={(id ? gridEditableIndex !== index : false)}
+                              className='text-left w-full rounded h-full text-xs'
+                              onChange={(e) =>
+                                e.target.files[0] ? handleInputChange(renameFile(e.target.files[0]), index, "filePath") : () => { }
+                              }
+                            />
 
-
-
-                          <span className="text-xs">{item?.filePath?.name || item?.filePath || "No Data"}</span>
-                          <button className="text-xs" disabled={readOnly} onClick={() => openPreview(item.filePath)}>
-                            {VIEW}
-                          </button>
-                          {!readOnly && (
-                            <button
-                              className="text-xs"
-                              onClick={() => handleInputChange("", index, "filePath")}
-                              disabled={readOnly}
-                            >
-                              {CLOSE_ICON}
-                            </button>
-                          )}
+                          }
+                          {item.filePath &&
+                            <>
+                              <span className="text-xs">{item?.filePath?.name || item?.filePath}</span>
+                              <button className="text-xs" onClick={() => { openPreview(item.filePath) }}>
+                                {VIEW}
+                              </button>
+                              {!readOnly &&
+                                <button className="text-xs" onClick={() => { handleInputChange('', index, "filePath") }}>{CLOSE_ICON}</button>
+                              }
+                            </>
+                          }
                         </div>
                       </td>
-
 
                       <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                         <select

@@ -298,7 +298,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                 </option>
                                                                 {( allData?.data?.filter(count  =>  count.yarnId  == row.yarnId))?.map((blend) =>
                                                                     <option value={blend.id} key={blend.id}>
-                                                                        {blend?.name}
+                                                                        {blend?.id}
                                                                     </option>
                                                                 )}
                                                             </select>

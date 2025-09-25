@@ -1890,7 +1890,8 @@ export const ReusableSearchableInput = forwardRef(
       nextRef,
       required,
       show,
-      name
+      name,
+      disabled
     },
     ref
   ) => {
@@ -2044,7 +2045,7 @@ export const ReusableSearchableInput = forwardRef(
                     setIsDropdownOpen(true);
                     setIsListShow(true);
                   }}
-                  disabled={readOnly}
+                  disabled={disabled || readOnly}
                   tabIndex={0}
                   ref={ref}
                 />
@@ -2068,7 +2069,7 @@ export const ReusableSearchableInput = forwardRef(
                     setIsDropdownOpen(true);
                     setIsListShow(true);
                   }}
-                  disabled={readOnly}
+                  disabled={disabled || readOnly}
                   tabIndex={0}
                 />
               )}
@@ -2078,7 +2079,7 @@ export const ReusableSearchableInput = forwardRef(
               <button
                 className="h-full px-3 py-1.5 border border-green-500 rounded-md
               hover:bg-green-500 text-green-600 hover:text-white transition-colors flex items-center justify-center"
-                disabled={readOnly}
+                disabled={disabled || readOnly}
                 onClick={() => {
                   setEditingItem("new");
                   setOpenModel(true);

@@ -16,14 +16,15 @@ import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMat
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { Loader } from "../../../Basic/components";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
+import moment from "moment";
 
 const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord, orderReftch,
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, styleId, setstyleId, yarnTotals, setYarnTotals,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber,
+    partyId, setPartyId, docId, active, setShowOrderForm, date, setDate, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber,
 
-    setRequirementItems, requirementItems, onNew, allData
+    setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId
 }) => {
 
 
@@ -37,10 +38,14 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     const [loading, setLoading] = useState(false);
 
 
+
+
+
     // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdNewQuery({ id: orderId, requirement : true }, { skip: !orderId });
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching, refetch: singleOrderReftch } = useGetOrderByIdNewQuery({ id: orderId, requirement: true }, { skip: !orderId });
 
     const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
+
 
 
 
@@ -58,7 +63,15 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
         if (orderId) {
             setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
-            setOrderYarnDetails(data?.orderYarnDetails ? data?.orderYarnDetails : [])
+            setOrderYarnDetails(
+                (data?.orderYarnDetails || []).map(item => ({
+                    ...item,
+                    wastagePercentage: 10,
+                    RequirementYarnProcessList: [{ processId: "", lossPercentage: "" }]
+                }))
+            );
+            setTempOrderId(data?.orderId ? data?.orderId : "");
+            setTempOrderDetailsId(data?.id ? data?.id : "");
 
         }
         if (id) {
@@ -68,9 +81,11 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             setRequirementItems(data?.RequirementPlanningItems ? data?.RequirementPlanningItems : [])
             setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setChildrecord(data?.childRecord ? data?.childRecord : 0)
-            // setOrderId(data?.orderId ? data?.orderId : "")
+            setDate(data?.createdAt ? moment(data?.createdAt).format("YYYY-MM-DD") : "")
             setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setPartyId(data?.partyId ? data?.partyId : "")
+            setTempOrderId(data?.orderId ? data?.orderId : "");
+            setTempOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "");
 
             const combined = data?.RequirementYarnDetails
                 ?.map(item => `${data?.OrderDetails?.style?.name || ""} - ${item?.Color?.name || ""}`)
@@ -81,7 +96,6 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
 
 
-            console.log(combo, "combo")
         }
 
     }, [orderId, id]);
@@ -118,8 +132,11 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     useEffect(() => {
         if (singleOrderData?.data?.orderDetails) {
-            const updated = singleOrderData?.data?.OrderDetails?.filter(plan => !plan?.isPlanning)?.map(item => {
+
+            const updated = singleOrderData?.data?.orderDetails?.map(item => {
                 const yarns = item?.orderYarnDetails || [];
+                console.log(yarns, "yarns")
+                console.log(singleOrderData?.data?.orderDetails, "singleOrderData")
 
                 const combinedColors = yarns
                     .map(yarn => yarn?.Color?.name)
@@ -132,12 +149,17 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 };
             });
             setCombo(updated);
+
             setPartyId(singleOrderData?.data?.partyId)
 
 
         }
 
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
+
+
+    console.log(combo, "combo")
+
 
     useEffect(() => {
         if (orderId && singleOrderData?.data) {
@@ -147,23 +169,15 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, singleOrderData]);
 
 
-    console.log(partyId, 'partyId');
 
     let data = {
 
         branchId, userId, companyId, docId,
         active, id, jobNumber,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementForm, requirementItems
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementItems
     }
 
-    const validateData = (data) => {
-        if (data.orderId && data?.styleId) {
-            return true;
-        }
 
-
-        return false;
-    };
 
 
 
@@ -183,12 +197,6 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 else {
                     onClose()
                 }
-
-                setId(returnData?.data?.id);
-                setShowOrderForm(false)
-                orderReftch()
-
-
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
@@ -199,6 +207,12 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                         Swal.showLoading();
                     }
                 });
+                setId(returnData?.data?.id);
+                setShowOrderForm(false)
+                singleOrderReftch()
+
+
+
 
             } else {
                 toast.error(returnData?.message);
@@ -223,6 +237,18 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
         //     });
         //     return
         // }
+        const foundItem = allData?.data?.some(item => item.jobNumber === jobNumber);
+        if (!id && foundItem) {
+            Swal.fire({
+                text: "The Job Number already exists. Please use a different Job Number.",
+                icon: "warning",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return false;
+
+        }
+
         const totalPercentage = orderYarnDetails?.reduce(
             (sum, yarn) => sum + (parseFloat(yarn.percentage) || 0),
             0
@@ -315,7 +341,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                 </h2>
                                 <div className="grid grid-cols-2 gap-1">
                                     <ReusableInput label="Doc.Id" readOnly value={docId} />
-                                    <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                                    <ReusableInput label="Date" value={date} setValue={setDate} type={"date"} required={true} readOnly={true} disabled />
 
                                 </div>
                             </div>
@@ -410,7 +436,9 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                             value={jobNumber}
                                             setValue={setJobNumber}
                                             readOnly={readOnly}
+
                                         />
+
                                     </div>
 
 
@@ -461,6 +489,8 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
                             <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems}
                                 setRequirementItems={setRequirementItems} orderItemsData={orderItemsData?.data} processList={processList?.data}
+                                tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
+
 
 
                             />

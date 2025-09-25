@@ -7,20 +7,8 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 const prisma = new PrismaClient()
 
 
-function findIsNumber(docId) {
-    const parts = docId?.split('/');
-    const last = parts[parts?.length - 1];
 
 
-    if (last == "Drift") {
-        return false
-    }
-    else {
-        return true
-    }
-
-    // return !isNaN(Number(last));
-}
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, docId, isUpdate) {
 
@@ -355,11 +343,13 @@ async function getOne(id) {
 }
 
 export async function getOneNew(id) {
+        console.log("hitttttt")
+
     const childRecord = 0;
-    let data = await prisma.order.findFirst({
+    let data = await prisma.order.findUnique({
         where: {
             id: parseInt(id),
-            isPlanning: false,
+            // isPlanning: false,
 
         },
         include: {
@@ -1128,10 +1118,10 @@ async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
+
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
-    let orderDetailsParsed = [];
 
 
     console.log(orderDetails, "orderDetails");

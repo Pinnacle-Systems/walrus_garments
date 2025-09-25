@@ -4,38 +4,19 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { LongDropdownInput, DisabledInput, DropdownInput, DateInput, TextInput } from "../../../Inputs";
-import { dropDownListObject, } from '../../../Utils/contructObject';
+
 // import { poTypes, } from '../../../Utils/DropdownData';
-import YarnPoItems from "./YarnPoItems";
-import FabricPoItems from "./FabricPoItems";
-import AccessoryPoItems from "./AccessoryPoItems"
-import Consolidation from "../Consolidation";
-import PoItemsSelection from "./PoItemsSelection";
-import AccessoryInwardItems from "./AccessoryInwardItems";
-import FabricInwardItems from "./FabricInwardItems";
+
 import moment from "moment";
 // import PoSummary from "./PoSummary";
-import Modal from "../../../UiComponents/Modal";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
-import {
-  useGetLocationMasterQuery,
-} from "../../../redux/uniformService/LocationMasterServices";
-import { Loader } from '../../../Basic/components';
+
 import {
   useAddDirectCancelOrReturnMutation, useDeleteDirectCancelOrReturnMutation,
   useGetDirectCancelOrReturnByIdQuery, useGetDirectCancelOrReturnQuery, useUpdateDirectCancelOrReturnMutation
 }
   from "../../../redux/uniformService/DirectCancelOrReturnServices";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { directOrPo, directOrPoreturn, poTypes } from "../../../Utils/DropdownData";
-import InwardItemsSelection from "./InwardItemsSelection";
-import FabricDirectInwardItems from "./FabricDirectInwardItems";
-import AccessoryDirectInwardItems from "./AccessoryDirectInwardItems";
-import { PDFViewer } from "@react-pdf/renderer";
-import PrintFormat from "../PurchaseReturnCancel/PrintFormat-PR/index";
-import tw from "../../../Utils/tailwind-react-pdf";
+
 import PurchaseReturnForm from "./PurchaseReturnForm";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa";

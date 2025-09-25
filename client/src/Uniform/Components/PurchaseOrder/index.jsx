@@ -23,6 +23,7 @@ import { Loader } from "../../../Basic/components";
 import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
 import { ReusableTable } from "../../../Inputs";
+import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
 
 
 
@@ -32,7 +33,7 @@ export default function Form() {
   const componentRef = useRef();
 
   const [readOnly, setReadOnly] = useState(false);
-  const [docId, setDocId] = useState("")
+  const [docId, setDocId] = useState("new")
   const [id, setId] = useState("");
   const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
   const [taxTemplateId, setTaxTemplateId] = useState("");
@@ -81,14 +82,14 @@ export default function Form() {
   const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
 
 
-  const getNextDocId = useCallback(() => {
-    if (id || isLoading || isFetching) return
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId)
-    }
-  }, [allData, isLoading, isFetching, id])
+  // const getNextDocId = useCallback(() => {
+  //   if (id || isLoading || isFetching) return
+  //   if (allData?.nextDocId) {
+  //     setDocId(allData.nextDocId)
+  //   }
+  // }, [allData, isLoading, isFetching, id])
 
-  useEffect(getNextDocId, [getNextDocId])
+  // useEffect(getNextDocId, [getNextDocId])
 
   const {
     data: singleData,
@@ -209,11 +210,11 @@ export default function Form() {
 
 
 
-  useEffect(() => {
-    if (id) return
-    setPoItems([]);
-    setSupplierId("")
-  }, [transType, id])
+  // useEffect(() => {
+  //   if (id) return
+  //   setPoItems([]);
+  //   setSupplierId("")
+  // }, [transType, id])
 
   const allSuppliers = supplierList ? supplierList?.data : []
   console.log(allSuppliers, "allSuppliers")
@@ -281,8 +282,8 @@ export default function Form() {
     setReadOnly(true);
   };
 
-  const handleEdit = (orderId) => {
-    setId(orderId)
+  const handleEdit = (id) => {
+    setId(id)
     setPurchaseOrderForm(true)
     setReadOnly(false);
   };
@@ -325,7 +326,7 @@ export default function Form() {
     setReadOnly(false);
     setPoItems([])
     setTempPoItems([])
-    
+
 
   }
 
@@ -339,14 +340,13 @@ export default function Form() {
       {purchaseOrderForm ? (
         <PurchaseOrderForm
           onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
-          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} PoItems={poItems} setPoItems={setPoItems} onNew={onNew}
+          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} poItems={poItems} setPoItems={setPoItems} onNew={onNew}
         />
 
       ) : (
         <div className="p-2 bg-[#F1F1F0] min-h-screen">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Purchase Order</h1>
           <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
@@ -364,7 +364,8 @@ export default function Form() {
                 <option value="2022-2023">2022-2023</option>
               </select>
 
-            </div>
+            </div> */}
+            <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Purchase Order</h1>
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
               onClick={() => { setPurchaseOrderForm(true); onNew() }}
@@ -373,7 +374,7 @@ export default function Form() {
             </button>
           </div>
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <ReusableTable
+            <PurchaseOrderFormReport
               columns={columns}
               data={allData?.data || []}
               onView={handleView}

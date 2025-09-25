@@ -8,6 +8,7 @@ import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/D
 import PurchaseInwardForm from './PurchaseInwardFormUi';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
+import PurchaseInwardFormReport from './PurchaseinwardFormReport';
 
 
 
@@ -22,12 +23,12 @@ const PurchaseInward = () => {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [readOnly, setReadOnly] = useState(false);
     const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-    
+
     const params = {
         branchId, userId, finYearId
     };
     const [orderDetails, setOrderDetails] = useState([])
-  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
+    const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
     const { data: partyData } = useGetPartyQuery({ params })
     // const [removeData] = useDeleteOrderMutation();
     const columns = [
@@ -36,13 +37,13 @@ const PurchaseInward = () => {
             accessor: (item, index) => index + 1,
             cellClass: () => 'font-medium text-gray-900'
         },
-        
+
         {
             header: 'Inward No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
         },
-           {
+        {
             header: 'InwardType',
             accessor: (item) => item.poInwardOrDirectInward,
             cellClass: () => 'text-gray-800 uppercase'
@@ -53,7 +54,7 @@ const PurchaseInward = () => {
         },
         {
             header: 'Supplier',
-            accessor: (item) => findFromList(item.supplierId, partyData?.data ,"name"),
+            accessor: (item) => findFromList(item.supplierId, partyData?.data, "name"),
             cellClass: () => 'uppercase'
         },
         {
@@ -61,7 +62,7 @@ const PurchaseInward = () => {
             accessor: (item) => item.poType,
             cellClass: () => 'text-gray-800 uppercase'
         },
-     
+
     ];
 
 
@@ -106,7 +107,7 @@ const PurchaseInward = () => {
         <>
             {showManufacturer ? (
                 <PurchaseInwardForm
-                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId}
+                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
                 //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
                 //     partyData={partyData?.data}
                 />
@@ -143,13 +144,20 @@ const PurchaseInward = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <CommonTable
+                        {/* <CommonTable
                             columns={columns}
                             data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             itemsPerPage={10}
+                        /> */}
+                        <PurchaseInwardFormReport
+                            columns={columns}
+                            data={allData?.data || []}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     </div>
                 </div>

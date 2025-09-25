@@ -14,7 +14,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
     const [lotGrid, setLotGrid] = useState(false)
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item.poItemsId, purchaseInwardId }, { skip: !item.poItemsId })
 
-  console.log(item,"item")
+    console.log(item, "item")
 
     useEffect(() => {
         if (purchaseInwardId) return
@@ -66,11 +66,11 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                     addNewLotNo={addNewLotNo}
                     removeLotNo={removeLotNo}
                     handleInputChangeLotNo={handleInputChangeLotNo}
-                    index={index} 
+                    index={index}
                     inwardLotDetails={item?.inwardLotDetails ? item?.inwardLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
             <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>{console.log(item, "item")}
-                
+
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.poId, poList?.data, "docId")}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "aliasName")} </td>
@@ -78,16 +78,12 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
 
 
-        
 
 
 
 
-                {/* <td className='py-0.5 border border-gray-300 text-[11px]'>
-                    <button onClick={() => setLotGrid(true)} className='w-full'>
-                        {VIEW}
-                    </button>
-                </td> */}
+
+
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.poQty} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.cancelQty} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty} </td>
@@ -138,6 +134,8 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                             }
                             handleInputChange(event.target.value, index, "qty", item?.balanceQty);
                         }}
+                        onFocus={e => e.target.select()}
+
                         onKeyDown={e => {
                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
                         }}
@@ -151,14 +149,14 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                         }}
                     />
                 </td>
-               
-          
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2)  ||  0}</td> 
 
-             
-                        
-                 
+
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2) || 0}</td>
+
+
+
+
                 <td className="py-0.5 border border-gray-300 text-[11px]">
                     <div className="flex space-x-2  justify-center">
 
@@ -200,7 +198,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                     </div>
                 </td>
 
-        </tr>
+            </tr>
         </>
     )
 }

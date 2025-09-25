@@ -25,7 +25,6 @@ async function getOne(req, res, next) {
 }
 
 export async function getOneNew(req, res, next) {
-    console.log("hitttttt")
 
     try {
         res.json(await _getOneNew(req.params.id, req.params.requirement));

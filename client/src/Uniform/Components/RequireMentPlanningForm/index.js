@@ -41,6 +41,11 @@ const RequirementPlanningForm = () => {
     const [jobNumber, setJobNumber] = useState("");
     const [yarnTotals, setYarnTotals] = useState([]);
 
+
+    const [tempOrderId,setTempOrderId]=useState("");
+    const [tempOrderDetailsId,setTempOrderDetailsId]=useState("");
+
+
     const [requirementItems, setRequirementItems] = useState([])
 
 
@@ -50,6 +55,11 @@ const RequirementPlanningForm = () => {
 
     // const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
     const { data: orderData, isLoading: orderDatalDataLoading, isFetching: orderDatalDataFetching, refetch: orderReftch } = useGetOrderQuery({ params });
+  
+    const searchFields = {
+    jobNumber
+
+  };
     const { data: allData, isFetching, isLoading } = useGetRequirementPlanningFormQuery({
         params: {
             branchId,
@@ -155,13 +165,13 @@ const RequirementPlanningForm = () => {
         setRequirementItems([])
 
     }
-    // if (isLoading || isFetching) return <Loader />
+    if (isLoading || isFetching) return <Loader />
 
     return (
         <>
             {form ? (
-                <RequirmentForm
-                    setDocId={setDocId} onNew={onNew} allData={allData} orderReftch={orderReftch}
+                <RequirmentForm 
+                    setDocId={setDocId} onNew={onNew} allData={allData} orderReftch={orderReftch} setDate={setDate}
 
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
 
@@ -170,31 +180,33 @@ const RequirementPlanningForm = () => {
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} requirementForm={requirementForm} setRequirementForm={setRequirementForm}
 
                     dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems} setRequirementItems={setRequirementItems}
+
+                    tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
                 />
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Requirement Planning Form</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <div className="flex items-center gap-2">
+                        {/* <div className="flex items-center gap-2">
                             <select
-                                value={selectedPeriod}
-                                onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="px-3 py-1 border rounded-md text-sm"
+                            value={selectedPeriod}
+                            onChange={(e) => setSelectedPeriod(e.target.value)}
+                            className="px-3 py-1 border rounded-md text-sm"
                             >
-                                <option value="this-month">This Month</option>
-                                <option value="last-month">Last Month</option>
+                            <option value="this-month">This Month</option>
+                            <option value="last-month">Last Month</option>
                             </select>
                             <select
-                                value={selectedFinYear}
-                                onChange={(e) => setSelectedFinYear(e.target.value)}
-                                className="px-3 py-1 border rounded-md text-sm"
+                            value={selectedFinYear}
+                            onChange={(e) => setSelectedFinYear(e.target.value)}
+                            className="px-3 py-1 border rounded-md text-sm"
                             >
-                                <option value="2023-2024">2023-2024</option>
-                                <option value="2022-2023">2022-2023</option>
+                            <option value="2023-2024">2023-2024</option>
+                            <option value="2022-2023">2022-2023</option>
                             </select>
-
-                        </div>
+                            
+                            </div> */}
+                            <h1 className="text-2xl font-bold text-gray-800">Requirement Planning Form</h1>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
                             onClick={() => { setForm(true); onNew() }}

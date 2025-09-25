@@ -110,11 +110,11 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
 
-  useEffect(() => {
-    if (id) return
-    console.log(directInwardReturnItems, "hit", id)
-    setDirectInwardReturnItems([])
-  }, [transType, id])
+  // useEffect(() => {
+  //   if (id) return
+  //   console.log(directInwardReturnItems, "hit", id)
+  //   setDirectInwardReturnItems([])
+  // }, [transType, id])
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
@@ -393,9 +393,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   return (
     <>
-      <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
+      <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[85%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-          supplierId={supplierId}
+          supplierId={partyId}
           inwardItems={directInwardReturnItems}
           setInwardItems={setDirectInwardReturnItems} />
       </Modal>
@@ -417,12 +417,25 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            {/* <h2 className="font-medium text-slate-700 mb-2">
-                            Inward Details
-                        </h2> */}
+            <h2 className="font-medium text-slate-700 mb-2">
+              Basic Details
+            </h2>
             <div className="grid grid-cols-2 gap-1">
               <ReusableInput label="Doc. Id" readOnly value={docId} />
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+
+
+            </div>
+          </div>
+
+
+
+
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Inward Details
+            </h2>
+            <div className="grid grid-cols-3 gap-1">
               <DropdownInput name="Inward Type"
                 beforeChange={() => { setDirectInwardReturnItems([]) }}
                 options={directOrPo}
@@ -433,49 +446,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 setValue={setTransType}
                 required={true}
                 readOnly={readOnly} />
-
-            </div>
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-
-              {/* <ReusableSearchableInput
-                                            label="Customer"
-                                            component="PartyMaster"
-                                            placeholder="Search Parties..."
-                                            optionList={supplierList?.data}
-                                            onAddItem={handleAddSupplier}
-                                            onDeleteItem={onDeleteItem}
-                                            setSearchTerm={setPartyId}
-                                            searchTerm={partyId}
-                                            readOnly={readOnly}
-                                        />  */}
-              <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
-              <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
-              <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} />
-            </div>
-
-          </div>
-
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              {/* Inward Details */}
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableSearchableInput
-                label="Supplier Id"
-                component="PartyMaster"
-                placeholder="Search Customer Id..."
-                optionList={supplierList?.data}
-                onAddItem={handleAddSupplier}
-                // onDeleteItem={onDeleteItem}
-                setSearchTerm={setSupplierId}
-                searchTerm={supplierId}
-              />
+               
               <DropdownInput name="Location"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                 value={locationId}
@@ -492,16 +463,43 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 < div className="mt-5">
                   <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                     onClick={() => {
-                      // if (!supplierId) {
-                      //     toast.info("Please Select Suppplier", { position: "top-center" })
-                      //     return
-                      // }
+                      if (!partyId) {
+                          toast.info("Please Select Suppplier", { position: "top-center" })
+                          return
+                      }
                       setInwardItemSelection(true)
                     }}
                   >Select Items
                   </button>
                 </div>
               }
+            </div>
+
+          </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Supplier Details
+            </h2>
+            <div className="grid grid-cols-2 gap-1">
+
+              <div className="col-span-2">
+
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  onDeleteItem={onDeleteItem}
+                  setSearchTerm={setPartyId}
+                  searchTerm={partyId}
+                  // ref={inputPartyRef}
+                  // nextRef={styleRef}
+                  show={"isSupplier"}
+                />
+              </div>
+              <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+              <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+              {/* <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} /> */}
             </div>
 
           </div>

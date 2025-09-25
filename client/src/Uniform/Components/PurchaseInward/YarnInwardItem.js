@@ -106,6 +106,7 @@ const YarnInwardPoItems = ({
                     noOfBags: "0",
                     discountType: "",
                     weightPerBag: "0.00",
+                    id : ""
                 };
             });
             return [...prev, ...newArray];
@@ -303,7 +304,7 @@ const YarnInwardPoItems = ({
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Po Price
+                                     Price
                                 </th>
                                 <th
 

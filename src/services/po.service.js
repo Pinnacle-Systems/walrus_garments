@@ -50,8 +50,8 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 async function get(req) {
     const { branchId, active, pagination, pageNumber, dataPerPage,
         finYearId,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, supplierId, startDate, endDate, filterParties,
-        filterPoTypes
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, supplierId, startDate, endDate, filterParties, supplier,
+        filterPoTypes, serachDocNo, searchClientName, searchDate, searchMaterial
     } = req.query
     const { startTime: startDateStartTime } = getDateTimeRange(startDate);
     const { endTime: endDateEndTime } = getDateTimeRange(endDate);
@@ -92,9 +92,9 @@ async function get(req) {
             ],
             branchId: branchId ? parseInt(branchId) : undefined,
             active: active ? Boolean(active) : undefined,
-            docId: Boolean(searchDocId) ?
+            docId: Boolean(serachDocNo) ?
                 {
-                    contains: searchDocId
+                    contains: serachDocNo
                 }
                 : undefined,
             transType: (filterPoTypes && filterPoTypes.length > 0) ? {
@@ -111,8 +111,11 @@ async function get(req) {
                 }
             ] : undefined,
             supplier: {
-                aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-            }
+                aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined,
+                name: Boolean(supplier) ? { contains: supplier } : undefined,
+            },
+            poMaterial: searchMaterial ? { contains: searchMaterial } : undefined,
+
         },
         orderBy: {
             id: "desc",
@@ -120,7 +123,8 @@ async function get(req) {
         include: {
             supplier: {
                 select: {
-                    aliasName: true
+                    aliasName: true,
+                    name: true
                 }
             },
 
@@ -131,12 +135,12 @@ async function get(req) {
             }
         }
     });
-    data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
+    data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
     const totalCount = data.length
     data = await getTotalQty(data);
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
+    // if (pagination) {
+    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    // }
 
 
 
@@ -154,33 +158,7 @@ async function getOne(id) {
             id: parseInt(id),
         },
         include: {
-            PoItems: {
-                include: {
-                    Fabric: true,
-                    Yarn: true,
-                    Color: true,
-                    Accessory: true,
-                    Color: true,
-                    Uom: true,
-                    Design: true,
-                    Gauge: true,
-                    LoopLength: true,
-                    Gsm: true,
-                    Size: true,
-                    KDia: true,
-                    FDia: true,
-                    accessoryItem: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                    accessoryGroup: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
-            },
+            PoItems: true,
             supplier: {
                 select: {
                     aliasName: true,
@@ -256,52 +234,52 @@ export async function getPoItems(req) {
 
     let data;
 
+    console.log(supplierId,"supplierId")
+
     let totalCount;
     if (pagination) {
         data = await prisma.poItems.findMany({
             where: {
                 Po:
                 {
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    // docId: Boolean(searchDocId) ?
-                    //     {
-                    //         contains: searchDocId
-                    //     }
-                    //     : undefined,
+                  
                     supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    transType: poType,
-                    // supplier: {
-                    //     aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-                    // }
+                    // transType: poType ? poType : undefined,
+                   
                 },
             },
             include: {
                 Po: true,
+                Yarn : {
+                    select :{
+                        name : true
+                    }
+                }
             }
         });
-        console.log(data, "poType")
+        console.log(data, "poType",poType)
 
         data = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, data)
-        totalCount = data.length
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+        // totalCount = data.length
+        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
         data = await getAllDataPoItems(data, poType)
 
-        // if (isPurchaseInwardFilter) {
-        //     console.log(data,"data")
+        // console.log(data,"data")
+        if (isPurchaseInwardFilter) {
 
-        //     data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
-        //     data = data?.filter(j => parseFloat(j.balanceQty) > 0)
+            data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
+            data = data?.filter(j => parseFloat(j.balanceQty) > 0)
 
-        // }
+        }
 
-        // if (isPurchaseCancelFilter) {
-        //     data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
+        if (isPurchaseCancelFilter) {
+            data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
 
 
-        // }
-        // if (isPurchaseReturnFilter) {
-        //     data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
-        // }
+        }
+        if (isPurchaseReturnFilter) {
+            data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+        }
     } else {
 
 
@@ -318,7 +296,7 @@ export async function getPoItems(req) {
 export async function getAllDataPoItems(data, poType) {
 
 
-    let promises = data.map(async (item) => {
+    let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType)
 
 
@@ -731,8 +709,8 @@ export function getPoItemObject(poMaterial, item) {
         newItem.accessoryItemId = parseInt(item.accessoryItemId)
     }
 
-    newItem.RequirementPlanningItemsId = item?.id ? parseInt(item?.id)  :  undefined ,
-    newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
+    newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
+        newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = parseInt(item.colorId);
     newItem.qty = parseFloat(item.qty);
     newItem.price = parseFloat(item.price);
@@ -830,8 +808,8 @@ async function update(id, body) {
             data: {
                 transType,
                 // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
-                poMaterial : poMaterial,
-                poType : poType,
+                poMaterial: poMaterial,
+                poType: poType,
                 payTermDay: payTermDay,
                 dueDate: dueDate ? new Date(dueDate) : undefined,
                 supplierId: parseInt(supplierId),
@@ -843,7 +821,7 @@ async function update(id, body) {
                 deliveryBranchId: (deliveryType === "ToSelf") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 deliveryPartyId: (deliveryType === "ToParty") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 orderId: orderId ? parseInt(orderId) : undefined,
-                requirementId: requirementId  ?   parseInt(requirementId)  :  undefined,
+                requirementId: requirementId ? parseInt(requirementId) : undefined,
                 PoItems: {
                     createMany: {
                         data: newPoItems?.map(item => getPoItemObject(poMaterial, item))

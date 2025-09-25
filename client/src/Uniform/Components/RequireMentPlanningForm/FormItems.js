@@ -5,49 +5,28 @@ import Modal from "../../../UiComponents/Modal";
 import SubGrid from "./SubGrid";
 import { Common } from "../../../Utils/DropdownData";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData }) => {
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, tempOrderDetailsId }) => {
 
     console.log(orderSizeDetails, "orderSizeDetails");
-    console.log(orderYarnDetails, "orderYarnDetails")
+    console.log(tempOrderDetailsId, "tempOrderDetailsId")
     console.log(requirementItems, "requirementItems");
-    console.log(orderItemsData, "orderData")
+    console.log(requirementForm, "requirementForm")
+    console.log(processList, "processList")
+    console.log(orderYarnDetails, "orderYarnDetails")
 
     const [tableDataView, setTableDataView] = useState(false)
+    const [processView, setProcessView] = useState(false)
 
-    function calculateYarnTotals(yarnArr, sizeArr) {
-        return yarnArr.map(yarn => {
-            const total = sizeArr?.reduce((sum, size) => {
-                return sum + (yarn.percentage * size.weight / 100) * size.qty;
-            }, 0);
-
-            return {
-                yarnId: yarn.id,
-                yarnName: yarn.name,
-                totalRequired: total.toFixed(3)  // round to 3 decimals
-            };
-        });
-    }
-
-    console.log(calculateYarnTotals(orderYarnDetails, orderSizeDetails), "Totallll")
+    const [selectedIndex, setSelectedIndex] = useState("")
+    const [selectedItem, setSelectedItem] = useState("")
 
 
 
-    function newFunction(value, yarnId) {
-        setRequirementForm((prev) => {
-            const newItems = structuredClone(prev);
-            const percent = value === "" ? 0 : parseFloat(value);
-            newItems.forEach((item) => {
-                if (item.yarnId === yarnId) {
-                    item.requireWeight = Number(((parseFloat(item.weight) * percent) / 100).toFixed(5));
-                }
-            });
-            return newItems;
-        });
-    }
 
 
-    function handleInputChange(value, index, yarnId, field) {
-        console.log(field === "percentage", "field")
+
+    function handleInputChange(value, index, yarnId, field, subIndex) {
+
 
         const num = value === "" ? 0 : parseFloat(value);
 
@@ -58,10 +37,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 if (i === index) return sum;
                 return sum + (parseFloat(item.percentage) || 0);
             }, 0);
-            const lossPercentagetotal = newItems?.reduce((sum, item, i) => {
-                if (i === index) return sum;
-                return sum + (parseFloat(item.lossPercentage) || 0);
-            }, 0);
+
 
 
             if (field === "percentage") {
@@ -80,20 +56,27 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 else {
 
                     newItems[index]["percentage"] = num;
+                    console.log(newItems, "newItems");
+
                     const requirementArr = newItems?.map((yarn) => ({
                         yarn: yarn.Yarn.name,
                         percentage: yarn.percentage,
                         yarnKneedleId: yarn?.yarnKneedleId,
                         yarnId: yarn.yarnId,
-                        count: yarn.yarnId,
+                        count: yarn.count,
                         colorId: yarn?.colorId,
                         uomId: yarn?.uomId ? yarn?.uomId : 1,
-                        orderId: orderItemsData?.orderId,
-                        orderDetailsId: orderItemsData?.id,
+                        // orderId: orderItemsData?.orderId,
+                        // orderDetailsId: orderItemsData?.id,
+                        orderId: tempOrderId,
+                        orderDetailsId: tempOrderDetailsId,
                         partyId: orderItemsData?.order?.partyId,
                         isProcess: yarn?.isProcess,
                         lossPercentage: yarn?.lossPercentage,
                         processId: yarn?.processId,
+                        wastagePercentage: yarn?.wastagePercentage,
+                        yarnType: yarn?.isProcess ? 'GreyYarn' : 'DyedYarn',
+                        RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
 
                         // requiredQty: orderSizeDetails?.reduce(
                         //     (sum, size) =>
@@ -103,13 +86,17 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                         // ).toFixed(3),
                         requiredQty: orderSizeDetails?.reduce((sum, size) => {
                             const base = (yarn.percentage * size.weight / 100) * size.qty;
-                            const withLoss = base * ((parseFloat(yarn.lossPercentage) || 0) + 100) / 100;
+                            const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
+                                (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                                0
+                            );
+                            console.log(totalLossPercentage, "totalLossPercentage");
+                            const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
                             return sum + withLoss;
                         }, 0).toFixed(3),
                     }));
 
                     setRequirementItems((prev) => {
-                        console.log("prev snapshot:", JSON.parse(JSON.stringify(prev)));
 
                         const map = new Map();
 
@@ -137,13 +124,19 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 }
             }
             else if (field === "isProcess") {
-                newItems[index].processId = "";
-                newItems[index].lossPercentage = "";
+
+                newItems[index].yarnType = "GreyYarn";
                 newItems[index][field] = value;
 
             }
+            else if (field === "lossPercentage" || field === "processId") {
+                newItems[index].RequirementYarnProcessList[subIndex][field] = value;
+
+
+            }
             else {
-                console.log(newItems, "newItems");
+
+
                 newItems[index][field] = value;
 
                 const requirementArr = newItems?.map((yarn) => ({
@@ -151,28 +144,32 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     percentage: yarn.percentage,
                     yarnKneedleId: yarn?.yarnKneedleId,
                     yarnId: yarn.yarnId,
-                    count: yarn.yarnId,
+                    count: yarn.count,
                     colorId: yarn?.colorId,
                     uomId: yarn?.uomId ? yarn?.uomId : 1,
-                    orderId: orderItemsData?.orderId,
-                    orderDetailsId: orderItemsData?.id,
+                    orderId: tempOrderId,
+                    orderDetailsId: tempOrderDetailsId,
                     partyId: orderItemsData?.order?.partyId,
                     isProcess: yarn?.isProcess,
                     lossPercentage: yarn?.lossPercentage,
                     processId: yarn?.processId,
-
-                    // requiredQty: orderSizeDetails?.reduce(
-                    //     (sum, size) =>
-                    //         sum + (yarn.percentage * size.weight / 100) * size.qty,
-
-                    //     0
-                    // ).toFixed(3),
+                    wastagePercentage: yarn?.wastagePercentage,
+                    RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
+                    yarnType: yarn?.isProcess ? 'GreyYarn' : 'DyedYarn',
                     requiredQty: orderSizeDetails?.reduce((sum, size) => {
                         const base = (yarn.percentage * size.weight / 100) * size.qty;
-                        const withLoss = base * ((parseFloat(yarn.lossPercentage) || 0) + 100) / 100;
+                        const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
+                            (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                            0
+                        );
+                        const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
                         return sum + withLoss;
                     }, 0).toFixed(3),
+
+
+
                 }));
+
 
                 setRequirementItems((prev) => {
                     console.log("prev snapshot:", JSON.parse(JSON.stringify(prev)));
@@ -191,12 +188,13 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                         map.set(key, {
                             ...existing,
-                            ...item,    
+                            ...item,
                         });
                     });
 
                     return Array.from(map.values());
                 });
+
             }
 
 
@@ -219,13 +217,25 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
     }
 
-    // console.log(requirementForm, "requirementForm");
 
-    useEffect(() => {
-        orderYarnDetails?.forEach((yarn) => {
-            newFunction(yarn?.percentage, yarn?.yarnId);
+
+
+    function newFunction(value, yarnId) {
+        setRequirementForm((prev) => {
+            const newItems = structuredClone(prev);
+            const percent = value === "" ? 0 : parseFloat(value);
+            newItems.forEach((item) => {
+                if (item.yarnId === yarnId) {
+                    item.requireWeight = parseFloat(((parseFloat(item.weight) * percent) / 100).toFixed(5));
+                }
+            });
+            return newItems;
         });
-    }, [orderYarnDetails]);
+    }
+
+
+
+
 
 
 
@@ -238,8 +248,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
         const combined = [];
 
-        orderSizeDetails.forEach(size => {
-            orderYarnDetails.forEach(yarn => {
+        orderSizeDetails?.forEach(size => {
+            orderYarnDetails?.forEach(yarn => {
                 combined.push({
                     sizeId: size.sizeId,
                     yarnId: yarn.yarnId,
@@ -247,6 +257,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     requireWeight: 0,
                     weight: size.weight,
                     uomId: size.uomId,
+                    wastagePercentage: yarn?.wastagePercentage,
+                    RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
+                    isProcess: yarn?.isProcess,
                 });
             });
         });
@@ -255,7 +268,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         orderYarnDetails?.forEach((yarn) => {
             newFunction(yarn?.percentage, yarn?.yarnId);
         });
-    }, [orderSizeDetails]);
+    }, [orderSizeDetails, orderYarnDetails]);
 
     const getQtyYarnSize = (sizeId, yarnId, colorId) => {
         // console.log(sizeId, yarnId, colorId, "sizeId, yarnId, colorId");
@@ -276,22 +289,30 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             if (item.yarnId !== yarnId) return total;
 
             const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
-
             const base = parseFloat(item?.requireWeight || 0) * parseFloat(sizeQty || 0);
-            const withLoss = base * ((parseFloat(item?.lossPercentage) || 0) + 100) / 100;
+
+            const totalLossPercentage = (item?.RequirementYarnProcessList || []).reduce(
+                (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                0
+            );
+            const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
 
             return total + withLoss;
         }, 0).toFixed(3);
     };
 
-
+    useEffect(() => {
+        orderYarnDetails?.forEach((yarn) => {
+            newFunction(yarn?.percentage, yarn?.yarnId);
+        });
+    }, [orderYarnDetails]);
 
 
 
 
     return (
         <>
-            <Modal
+            {/* <Modal
                 isOpen={tableDataView}
                 onClose={() => setTableDataView(false)}
                 widthClass="  h-[50%] w-[60%]"
@@ -300,6 +321,23 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     onClose={() => setTableDataView(false)}
                     orderYarnDetails={orderYarnDetails}
                     getRequireWeight={getRequireWeight}
+                />
+            </Modal> */}
+            <Modal
+                isOpen={processView}
+                onClose={() => setProcessView(false)}
+                widthClass="  h-[50%] w-[60%]"
+            >
+                <SubGrid
+                    onClose={() => setProcessView(false)}
+                    orderYarnDetails={orderYarnDetails}
+                    getRequireWeight={getRequireWeight}
+                    processList={processList}
+                    selectedIndex={selectedIndex}
+                    selectedItem={selectedItem}
+                    setSelectedItem={setSelectedItem}
+                    handleInputChange={handleInputChange}
+                    setOrderYarnDetails={setOrderYarnDetails}
                 />
             </Modal>
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-y-auto">
@@ -321,9 +359,11 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Process</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
+                                {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td> */}
                                 <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
+                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Waste %</td>
+
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-40">Size</td>
 
 
@@ -341,13 +381,17 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                         </td>
                                     )
                                 })}
+
                                 <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
 
 
                             </tr>
 
                             <tr className="bg-white">
-                                <td colSpan={7} className="bg-white border-l border-gray-300">
+                                <td colSpan={7} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
+
+                                    Order Requirement Details
+
                                 </td>
                                 <td className="border border-gray-300 px-2 py-1 text-left text-xs">
                                     Size Weight (grams)
@@ -361,8 +405,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                             </tr>
                             <tr className="bg-white">
-                                <td colSpan={7} className="bg-white border-l border-gray-300" >
-                                </td>
+
                                 <td className="border border-gray-300 px-2 py-1 text-left  text-xs w-16">
                                     Order Qty (kgs)
                                 </td>
@@ -408,69 +451,31 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                         </select>
                                     </td>
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                                        <select
-                                            onKeyDown={e => {
-                                                if (e.key === "Delete") {
-                                                    handleInputChange("", index, "processId");
-                                                }
+                                    <td className="py-0.5 border border-gray-300 text-[11px]  flex justify-center items-center">
+
+                                        <button
+                                            onClick={() => {
+                                                setProcessView(true)
+                                                setSelectedItem(yarn)
+                                                setSelectedIndex(index)
                                             }}
-                                            disabled={readOnly || yarn?.isProcess !== "Yes"}
-                                            className="text-left w-full rounded h-full py-1"
-                                            value={yarn?.processId || ""}   // default empty
-                                            onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "processId")}
-                                            onBlur={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "processId")}
+                                            disabled={readOnly || yarn?.isProcess === "No"}
+                                            className="text-blue-800 flex items-center  py-1.5 bg-blue-50 rounded"
                                         >
-                                            <option value="">select</option>
-                                            {processList?.map(size => (
-                                                <option value={size.id || ""} key={size.id}>
-                                                    {size?.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            👁 <span className="text-xs"></span>
+                                        </button>
+
                                     </td>
 
 
-                                    <td className=" border border-gray-300 text-right text-[12px] py-1.5 px-2 text-xs">
-                                        <input
-                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={yarn?.lossPercentage || ""}
-
-
-
-                                            onFocus={e => e.target.select()}
-
-                                            onKeyDown={(e) => {
-                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                            }}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-
-                                                handleInputChange(val, index, yarn?.yarnId, "lossPercentage");
-                                            }}
-                                            placeHolder="0.00"
-
-                                            disabled={readOnly || yarn?.isProcess !== "Yes" || !yarn?.processId}
-                                            onBlur={(e) => {
-                                                const formatted =
-                                                    e.target.value === "" ? "" : Number(e.target.value).toFixed(2);
-                                                e.target.value = formatted;
-                                                handleInputChange(formatted, index, yarn?.yarnId, "lossPercentage");
-                                            }}
-
-                                        />
-                                    </td>
                                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={yarn?.percentage || ""}
                                             onFocus={e => e.target.select()}
+                                            value={yarn?.percentage}
 
 
 
@@ -480,7 +485,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
                                             onChange={(e) => {
-                                                const val = e.target.value;
+                                                const val = parseFloat(e.target.value).toFixed(3);
 
                                                 handleInputChange(val, index, yarn?.yarnId, "percentage");
 
@@ -488,14 +493,48 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                             }}
                                             onBlur={(e) => {
                                                 const formatted =
-                                                    e.target.value === "" ? "" : Number(e.target.value).toFixed(2);
+                                                    e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
                                                 e.target.value = formatted;
                                                 handleInputChange(formatted, index, yarn?.yarnId, "percentage");
                                             }}
-                                            placeHolder="0.00"
+                                            placeHolder="0.000"
                                         />
                                     </td>
-                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]"></td>
+                                    <td className="border border-gray-300 px-2 py-1 text-right text-[12px] ">
+                                        <input
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={(yarn?.wastagePercentage ?? 10?.toFixed(3))}
+                                            onFocus={e => e.target.select()}
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+
+                                                handleInputChange(val, index, yarn?.yarnId, "wastagePercentage");
+                                            }}
+                                            placeHolder="0.00"
+
+                                            disabled={readOnly || !yarn?.percentage}
+                                            onBlur={(e) => {
+                                                const formatted =
+                                                    e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                e.target.value = formatted;
+                                                handleInputChange(formatted, index, yarn?.yarnId, "wastagePercentage");
+                                            }}
+
+
+
+
+                                        />
+                                    </td>
+                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]">
+
+                                    </td>
 
 
                                     {(orderSizeDetails || []).map((size) => (
@@ -518,6 +557,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     ))}
 
 
+
+
                                     <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
 
 
@@ -531,15 +572,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     </table>
                 </div>
 
-                {/* <div className="flex item-center  py-1 mt-5">
-                    <button
-                        onClick={() => setTableDataView(true)}
-                        className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                        <span className="text-xs">👁</span>
-                        View Required Qty
-                    </button>
-                </div> */}
+
 
 
 

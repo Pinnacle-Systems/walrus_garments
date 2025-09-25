@@ -694,14 +694,12 @@ model Content {
 }
 
 model Counts {
-  id                       Int                        @id @default(autoincrement())
-  name                     String
-  Company                  Company?                   @relation(fields: [companyId], references: [id])
-  companyId                Int?
-  active                   Boolean                    @default(true)
-  Yarn                     Yarn[]
-  RequirementPlanningItems RequirementPlanningItems[]
-  PoItems                  PoItems[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  Company   Company?  @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean   @default(true)
+  Yarn      Yarn[]
 }
 
 model YarnType {
@@ -772,14 +770,18 @@ model Yarn {
 }
 
 model yarnCounts {
-  id         Int       @id @default(autoincrement())
-  name       String?
-  value      String?
-  Yarn       Yarn?     @relation(fields: [yarnId], references: [id], onDelete: Cascade)
-  yarnId     Int?
-  active     Boolean   @default(true)
-  YarnType   YarnType? @relation(fields: [yarnTypeId], references: [id])
-  yarnTypeId Int?
+  id                       Int                        @id @default(autoincrement())
+  name                     String?
+  value                    String?
+  Yarn                     Yarn?                      @relation(fields: [yarnId], references: [id], onDelete: Cascade)
+  yarnId                   Int?
+  active                   Boolean                    @default(true)
+  YarnType                 YarnType?                  @relation(fields: [yarnTypeId], references: [id])
+  yarnTypeId               Int?
+  RequirementPlanningItems RequirementPlanningItems[]
+  RequirementYarnDetails   RequirementYarnDetails[]
+  orderYarnDetails         orderYarnDetails[]
+  PoItems               PoItems[]
 }
 
 model YarnOnYarnBlend {
@@ -1085,7 +1087,7 @@ model PoItems {
   kDiaId                     Int?
   FDia                       Dia?                      @relation("fDiaPoItem", fields: [fDiaId], references: [id])
   fDiaId                     Int?
-  Counts                     Counts?                   @relation(fields: [count], references: [id])
+  yarnCounts                     yarnCounts?                   @relation(fields: [count], references: [id])
   count                      Int?
   isPurchaseCancel           Boolean?                  @default(false)
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
@@ -1616,6 +1618,8 @@ model Process {
   OnlineSalesDetails                        OnlineSalesDetails[]
   RequirementPlanningItems                  RequirementPlanningItems[]
   RequirementYarnDetails                    RequirementYarnDetails[]
+  RequirementPlanningProcessList            RequirementPlanningProcessList[]
+  RequirementYarnProcessList                RequirementYarnProcessList[]
 }
 
 model PartyOnProcess {
@@ -3100,6 +3104,7 @@ model orderYarnDetails {
   yarncategoryId Int?
   Yarn           Yarn?         @relation(fields: [yarnId], references: [id])
   yarnId         Int?
+  yarnCounts     yarnCounts?   @relation(fields: [count], references: [id])
   count          Int?
   YarnNeedle     YarnNeedle?   @relation(fields: [yarnKneedleId], references: [id])
   yarnKneedleId  Int?
@@ -3350,31 +3355,34 @@ model RequirementPlanningForm {
 }
 
 model RequirementPlanningItems {
-  id                        Int                      @id @default(autoincrement())
-  RequirementPlanningForm   RequirementPlanningForm? @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
-  requirementPlanningFormId Int?
-  order                     Order?                   @relation(fields: [orderId], references: [id])
-  orderId                   Int?
-  OrderDetails              OrderDetails?            @relation(fields: [orderDetailsId], references: [id])
-  orderDetailsId            Int?
-  percentage                Float?
-  Color                     Color?                   @relation(fields: [colorId], references: [id])
-  colorId                   Int?
-  Yarn                      Yarn?                    @relation(fields: [yarnId], references: [id])
-  yarnId                    Int?
-  Counts                    Counts?                  @relation(fields: [count], references: [id])
-  count                     Int?
-  poType                    String?
-  transType                 String?
-  Party                     Party?                   @relation(fields: [partyId], references: [id])
-  partyId                   Int?
-  requiredQty               Float?
-  isProcess                 String?
-  Process                   Process?                 @relation(fields: [processId], references: [id])
-  processId                 Int?
-  lossPercentage            Float?
-  Po                        Po[]
-  PoItems                   PoItems[]
+  id                             Int                              @id @default(autoincrement())
+  RequirementPlanningForm        RequirementPlanningForm?         @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
+  requirementPlanningFormId      Int?
+  order                          Order?                           @relation(fields: [orderId], references: [id])
+  orderId                        Int?
+  OrderDetails                   OrderDetails?                    @relation(fields: [orderDetailsId], references: [id])
+  orderDetailsId                 Int?
+  percentage                     Float?
+  Color                          Color?                           @relation(fields: [colorId], references: [id])
+  colorId                        Int?
+  Yarn                           Yarn?                            @relation(fields: [yarnId], references: [id])
+  yarnId                         Int?
+  yarnCounts                     yarnCounts?                      @relation(fields: [count], references: [id])
+  count                          Int?
+  poType                         String?
+  transType                      String?
+  Party                          Party?                           @relation(fields: [partyId], references: [id])
+  partyId                        Int?
+  requiredQty                    Float?
+  isProcess                      String?
+  Process                        Process?                         @relation(fields: [processId], references: [id])
+  processId                      Int?
+  lossPercentage                 Float?
+  wastagePercentage              Float?
+  yarnType                       String?
+  Po                             Po[]
+  PoItems                        PoItems[]
+  RequirementPlanningProcessList RequirementPlanningProcessList[]
 }
 
 model RequirementSizeDetails {
@@ -3395,23 +3403,47 @@ model RequirementSizeDetails {
 }
 
 model RequirementYarnDetails {
-  id                      Int                      @id @default(autoincrement())
-  RequirementPlanningForm RequirementPlanningForm? @relation(fields: [RequirementPlanningId], references: [id], onDelete: Cascade)
-  RequirementPlanningId   Int?
-  percentage              Int?
-  Color                   Color?                   @relation(fields: [colorId], references: [id])
-  colorId                 Int?
-  YarnType                YarnType?                @relation(fields: [yarncategoryId], references: [id])
-  yarncategoryId          Int?
-  Yarn                    Yarn?                    @relation(fields: [yarnId], references: [id])
-  yarnId                  Int?
-  count                   Int?
-  YarnNeedle              YarnNeedle?              @relation(fields: [yarnKneedleId], references: [id])
-  yarnKneedleId           Int?
-  isProcess               String?
-  Process                 Process?                 @relation(fields: [processId], references: [id])
-  processId               Int?
-  lossPercentage          Float?
+  id                         Int                          @id @default(autoincrement())
+  RequirementPlanningForm    RequirementPlanningForm?     @relation(fields: [RequirementPlanningId], references: [id], onDelete: Cascade)
+  RequirementPlanningId      Int?
+  percentage                 Int?
+  Color                      Color?                       @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  YarnType                   YarnType?                    @relation(fields: [yarncategoryId], references: [id])
+  yarncategoryId             Int?
+  Yarn                       Yarn?                        @relation(fields: [yarnId], references: [id])
+  yarnId                     Int?
+  yarnCounts                 yarnCounts?                  @relation(fields: [count], references: [id])
+  count                      Int?
+  YarnNeedle                 YarnNeedle?                  @relation(fields: [yarnKneedleId], references: [id])
+  yarnKneedleId              Int?
+  isProcess                  String?
+  Process                    Process?                     @relation(fields: [processId], references: [id])
+  processId                  Int?
+  lossPercentage             Float?
+  wastagePercentage          Float?
+  yarnType                   String?
+  RequirementYarnProcessList RequirementYarnProcessList[]
+}
+
+model RequirementYarnProcessList {
+  id                       Int                     @id @default(autoincrement())
+  RequirementYarnDetails   RequirementYarnDetails? @relation(fields: [requirementYarnDetailsId], references: [id], onDelete: Cascade)
+  requirementYarnDetailsId Int?
+  Process                  Process?                @relation(fields: [processId], references: [id])
+  processId                Int?
+  sequence                 Int?
+  lossPercentage           Float?
+}
+
+model RequirementPlanningProcessList {
+  id                         Int                       @id @default(autoincrement())
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
+  requirementPlanningItemsId Int?
+  Process                    Process?                  @relation(fields: [processId], references: [id])
+  processId                  Int?
+  sequence                   Int?
+  lossPercentage             Float?
 }
 
 model RaiseIndent {
