@@ -7,16 +7,11 @@ import YarnPoItemSelection from './YarnPoItemSelection';
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
+const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId));
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
-
-    const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
-        useGetPartyQuery({ params: { companyId, active: true } });
-
-    if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
         setLocalInwardItems(localInwardItems => {
@@ -40,7 +35,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         }
     }
     function isItemAdded(id) {
-        return localInwardItems.findIndex(item => parseInt(item) === parseInt(id)) !== -1
+        return localInwardItems?.findIndex(item => parseInt(item) === parseInt(id)) !== -1
     }
     function handleDone() {
         setInwardItems(prevInwardItems => {
@@ -57,10 +52,24 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         setLocalInwardItems([]);
         setInwardItemSelection(false);
     }
+
+    function handleSelectAllChange(value, poItems) {
+        if (value) {
+            poItems?.forEach(item => addItem(item.id, item))
+        } else {
+            poItems?.forEach(item => removeItem(item.id))
+        }
+    }
+
+    function getSelectAll(poItems) {
+        return poItems?.every(item => isItemAdded(item.id))
+    }
+
+
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-                <div className='flex justify-between text-center bg-blue-200 rounded-b-md sticky top-0'>
+                {/* <div className='flex justify-between text-center bg-blue-200 rounded-b-md sticky top-0'>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>TransType</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={transtype} disabled={true} />
@@ -69,19 +78,20 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                         <label className='text-xs font-semibold'>Supplier</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList.data, "aliasName")} disabled={true} />
                     </div>
-                </div>
+                </div> */}
                 <div className='h-full overflow-auto'>
                     {
                         <>
-                            {transtype.includes("Yarn") ?
-                                <YarnPoItemSelection poType={transtype} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} />
+                            {poType.includes("Yarn") ?
+                                <YarnPoItemSelection poType={poType} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleDone={handleDone} getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} />
                                 :
                                 <>
-                                    {transtype.includes("Fabric") ?
+                                    {
+                                        // transtype.includes("Fabric") ?
 
-                                        <FabricPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                                        :
-                                        <AccessoryPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                        //     <FabricPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                        //     :
+                                        <AccessoryPoItemSelection poType={poType} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} handleDone={handleDone} />
                                     }
                                 </>
                             }
@@ -90,14 +100,14 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                     }
                 </div>
             </div>
-            <div className='flex justify-end gap-4 mt-3'>
+            {/* <div className='flex justify-end gap-4 mt-3'>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>
                 <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                     Cancel
                 </button>
-            </div>
+            </div> */}
         </>
     )
 }

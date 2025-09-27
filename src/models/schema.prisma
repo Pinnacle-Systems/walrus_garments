@@ -156,6 +156,9 @@ model Branch {
   RequirementPlanningForm                RequirementPlanningForm[]
   RaiseIndent                            RaiseIndent[]
   MaterialIssue                          MaterialIssue[]
+  DeliveryBranchAccessoryPo              AccessoryPo[]                @relation(name: "deliveryBranch")
+  PoRaisedAccessoryPo                    AccessoryPo[]                @relation(name: "poRaisedBranch")
+  AccesssoryPurchaseCancel               AccesssoryPurchaseCancel[]
 }
 
 model UserOnBranch {
@@ -276,6 +279,10 @@ model User {
   MaterialIssueUpdateBy               MaterialIssue[]              @relation(name: "updatedBy")
   StockTransferCreatedBy              StockTransfer[]              @relation(name: "createdBy")
   StockTransferUpdateBy               StockTransfer[]              @relation(name: "updatedBy")
+  AccessoryPoCreatedBy                AccessoryPo[]                @relation(name: "createdBy")
+  AccessoryPoUpdateBy                 AccessoryPo[]                @relation(name: "updatedBy")
+  AccesssoryPurchaseCancelCreatedBy   AccesssoryPurchaseCancel[]   @relation(name: "createdBy")
+  AccesssoryPurchaseCancelUpdateBy    AccesssoryPurchaseCancel[]   @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -574,6 +581,9 @@ model Party {
   RaiseIndent              RaiseIndent[]
   MaterialIssue            MaterialIssue[]
   RequirementPlanningItems RequirementPlanningItems[]
+  AccessoryPoSupplier      AccessoryPo[]              @relation(name: "supplier")
+  AccessoryPoDelivery      AccessoryPo[]              @relation(name: "deliveryTo")
+  AccesssoryPurchaseCancel AccesssoryPurchaseCancel[]
 }
 
 model PartyBranch {
@@ -694,11 +704,11 @@ model Content {
 }
 
 model Counts {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  Company   Company?  @relation(fields: [companyId], references: [id])
+  Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
-  active    Boolean   @default(true)
+  active    Boolean  @default(true)
   Yarn      Yarn[]
 }
 
@@ -781,7 +791,7 @@ model yarnCounts {
   RequirementPlanningItems RequirementPlanningItems[]
   RequirementYarnDetails   RequirementYarnDetails[]
   orderYarnDetails         orderYarnDetails[]
-  PoItems               PoItems[]
+  PoItems                  PoItems[]
 }
 
 model YarnOnYarnBlend {
@@ -825,6 +835,7 @@ model Fabric {
   FiberBlend                    FiberBlend[]
   DirectReturnItems             DirectReturnItems[]
   CancelItems                   CancelItems[]
+  AccessoryCancelItems          AccessoryCancelItems[]
 }
 
 model FabricOnYarnBlend {
@@ -849,6 +860,8 @@ model AccessoryGroup {
   DirectReturnItems      DirectReturnItems[]
   CancelItems            CancelItems[]
   FromOrderTransferItems FromOrderTransferItems[]
+  AccessoryPoItems       AccessoryPoItems[]
+  AccessoryCancelItems   AccessoryCancelItems[]
 }
 
 model AccessoryItem {
@@ -867,6 +880,8 @@ model AccessoryItem {
   DirectReturnItems      DirectReturnItems[]
   CancelItems            CancelItems[]
   FromOrderTransferItems FromOrderTransferItems[]
+  AccessoryPoItems       AccessoryPoItems[]
+  AccessoryCancelItems   AccessoryCancelItems[]
 }
 
 model Accessory {
@@ -889,6 +904,8 @@ model Accessory {
   DirectReturnItems             DirectReturnItems[]
   CancelItems                   CancelItems[]
   FromOrderTransferItems        FromOrderTransferItems[]
+  AccessoryPoItems              AccessoryPoItems[]
+  AccessoryCancelItems          AccessoryCancelItems[]
 }
 
 enum AccessoryCategory {
@@ -967,6 +984,8 @@ model Color {
   FromOrderTransferItems   FromOrderTransferItems[]
   ToOrderTransferTtems     ToOrderTransferTtems[]
   RequirementPlanningItems RequirementPlanningItems[]
+  AccessoryPoItems         AccessoryPoItems[]
+  AccessoryCancelItems     AccessoryCancelItems[]
 }
 
 model UnitOfMeasurement {
@@ -999,6 +1018,8 @@ model UnitOfMeasurement {
   sampleSizeDetails                         sampleSizeDetails[]
   requirementSizeDetails                    RequirementSizeDetails[]
   orderSizeDetails                          orderSizeDetails[]
+  AccessoryPoItems                          AccessoryPoItems[]
+  AccessoryCancelItems                      AccessoryCancelItems[]
 }
 
 enum DeliveryType {
@@ -1087,7 +1108,7 @@ model PoItems {
   kDiaId                     Int?
   FDia                       Dia?                      @relation("fDiaPoItem", fields: [fDiaId], references: [id])
   fDiaId                     Int?
-  yarnCounts                     yarnCounts?                   @relation(fields: [count], references: [id])
+  yarnCounts                 yarnCounts?               @relation(fields: [count], references: [id])
   count                      Int?
   isPurchaseCancel           Boolean?                  @default(false)
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
@@ -1097,6 +1118,74 @@ model PoItems {
   DirectReturnItems          DirectReturnItems[]
   directItems                DirectItems[]
   CancelItems                CancelItems[]
+}
+
+model AccessoryPo {
+  id                         Int                       @id @default(autoincrement())
+  supplier                   Party?                    @relation("supplier", fields: [supplierId], references: [id])
+  transType                  PoTypes
+  dueDate                    DateTime                  @db.Date
+  supplierId                 Int?
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime                  @updatedAt
+  createdBy                  User?                     @relation("createdBy", fields: [createdById], references: [id])
+  createdById                Int?
+  updatedBy                  User?                     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                Int?
+  Branch                     Branch?                   @relation("poRaisedBranch", fields: [branchId], references: [id])
+  docId                      String?
+  branchId                   Int?
+  active                     Boolean?                  @default(true)
+  discountType               DiscountTypes?
+  discountValue              Float?                    @default(0)
+  deliveryType               DeliveryType
+  DeliveryParty              Party?                    @relation("deliveryTo", fields: [deliveryPartyId], references: [id])
+  deliveryPartyId            Int?
+  DeliveryBranch             Branch?                   @relation("deliveryBranch", fields: [deliveryBranchId], references: [id])
+  deliveryBranchId           Int?
+  remarks                    String?                   @db.LongText
+  order                      Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                    Int?
+  requirementPlanningForm    RequirementPlanningForm?  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  requirementId              Int?
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
+  RequirementPlanningItemsId Int?
+  isPurchaseCancel           Boolean?                  @default(false)
+  PurchaseType               String?
+  poMaterial                 String?
+  poType                     String?
+  AccessoryPoItems           AccessoryPoItems[]
+}
+
+model AccessoryPoItems {
+  id            Int          @id @default(autoincrement())
+  AccessoryPo   AccessoryPo? @relation(fields: [accessoryPoId], references: [id], onDelete: Cascade)
+  accessoryPoId Int?
+
+  Accessory            Accessory?             @relation(fields: [accessoryId], references: [id])
+  accessoryId          Int?
+  accessoryGroup       AccessoryGroup?        @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId     Int?
+  accessoryItem        AccessoryItem?         @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId      Int?
+  Color                Color?                 @relation(fields: [colorId], references: [id])
+  colorId              Int?
+  Uom                  UnitOfMeasurement?     @relation(fields: [uomId], references: [id])
+  uomId                Int?
+  Size                 Size?                  @relation(fields: [sizeId], references: [id])
+  sizeId               Int?
+  noOfBags             Int?
+  weightPerBag         Float?
+  percentage           Float?
+  requiredQty          Float?
+  qty                  Float?
+  price                Float?
+  discountType         DiscountTypes?
+  discountValue        Float?                 @default(0)
+  tax                  Float?                 @default(0)
+  weight               Float?
+  isPurchaseCancel     Boolean?               @default(false)
+  AccessoryCancelItems AccessoryCancelItems[]
 }
 
 model PInwardOrReturn {
@@ -1325,6 +1414,7 @@ model Design {
   RawMaterialOpeningStockItems  RawMaterialOpeningStockItems[]
   DirectReturnItems             DirectReturnItems[]
   CancelItems                   CancelItems[]
+  AccessoryCancelItems          AccessoryCancelItems[]
 }
 
 model LoopLength {
@@ -1363,6 +1453,7 @@ model Gsm {
   CancelItems                   CancelItems[]
   sampleSizeDetails             sampleSizeDetails[]
   requirementYarnDetails        RequirementSizeDetails[]
+  AccessoryCancelItems          AccessoryCancelItems[]
 }
 
 model Dia {
@@ -1428,6 +1519,8 @@ model Size {
   orderSizeDetails                          orderSizeDetails[]
   requirementYarnDetails                    RequirementSizeDetails[]
   RaiseIndentItems                          RaiseIndentItems[]
+  AccessoryCancelItems                      AccessoryCancelItems[]
+  AccessoryPoItems                          AccessoryPoItems[]
 }
 
 model SocksMaterial {
@@ -3042,6 +3135,7 @@ model Order {
   FromOrder                StockTransfer[]            @relation(name: "fromOrder")
   ToOrder                  StockTransfer[]            @relation(name: "toOrder")
   RequirementPlanningItems RequirementPlanningItems[]
+  AccessoryPo              AccessoryPo[]
 }
 
 model OrderDetails {
@@ -3352,6 +3446,7 @@ model RequirementPlanningForm {
   MaterialIssueYarnItems   MaterialIssueYarnItems[]
   ToOrderTransferTtems     ToOrderTransferTtems[]
   RequirementPlanningItems RequirementPlanningItems[]
+  AccessoryPo              AccessoryPo[]
 }
 
 model RequirementPlanningItems {
@@ -3383,6 +3478,7 @@ model RequirementPlanningItems {
   Po                             Po[]
   PoItems                        PoItems[]
   RequirementPlanningProcessList RequirementPlanningProcessList[]
+  AccessoryPo                    AccessoryPo[]
 }
 
 model RequirementSizeDetails {
@@ -3809,6 +3905,56 @@ model CancelItems {
   poQty            Float?
 }
 
+model AccesssoryPurchaseCancel {
+  id                     Int                    @id @default(autoincrement())
+  poInwardOrDirectInward String?
+  poType                 String?
+  supplier               Party?                 @relation(fields: [supplierId], references: [id])
+  supplierId             Int?
+  createdAt              DateTime?              @default(now())
+  updatedAt              DateTime?              @updatedAt
+  createdBy              User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  Branch                 Branch?                @relation(fields: [branchId], references: [id])
+  branchId               Int?
+  active                 Boolean?               @default(true)
+  docId                  String?
+  remarks                String?                @db.LongText
+  AccessoryCancelItems   AccessoryCancelItems[]
+}
+
+model AccessoryCancelItems {
+  id                         Int                       @id @default(autoincrement())
+  AccesssoryPurchaseCancel   AccesssoryPurchaseCancel? @relation(fields: [accesssoryPurchaseCancelId], references: [id], onDelete: Cascade)
+  Fabric                     Fabric?                   @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId                   Int?
+  Accessory                  Accessory?                @relation(fields: [accessoryId], references: [id])
+  accessoryId                Int?
+  AccessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId           Int?
+  AccessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId            Int?
+  Color                      Color?                    @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  Uom                        UnitOfMeasurement?        @relation(fields: [uomId], references: [id])
+  uomId                      Int?
+  Design                     Design?                   @relation(fields: [designId], references: [id])
+  Gsm                        Gsm?                      @relation(fields: [gsmId], references: [id])
+  price                      Float
+  Size                       Size?                     @relation(fields: [sizeId], references: [id])
+  sizeId                     Int?
+  designId                   Int?
+  gsmId                      Int?
+  accesssoryPurchaseCancelId Int?
+  qty                        Float?
+  AccessoryPoItems                  AccessoryPoItems?         @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId                  Int?
+  poNo              String?
+  poQty                      Float?
+}
+
 model InwardLotDetails {
   id            Int         @id @default(autoincrement())
   DirectItems   DirectItems @relation(fields: [directItemsId], references: [id], onDelete: Cascade)
@@ -3837,4 +3983,24 @@ model BranchType {
   aliasName    String?
   isMainBranch Boolean?      @default(false)
   PartyBranch  PartyBranch[]
+}
+
+model ExcessTolerance {
+  id                   Int                    @id @default(autoincrement())
+  docId                String?                @unique
+  docDate              String?
+  transaction          String?
+  excessType           String?
+  active               Boolean?               @default(false)
+  ExcessToleranceItems ExcessToleranceItems[]
+}
+
+model ExcessToleranceItems {
+  id                Int              @id @default(autoincrement())
+  ExcessTolerance   ExcessTolerance? @relation(fields: [excessToleranceId], references: [id], onDelete: Cascade)
+  excessToleranceId Int?
+  fromTolerance     Float?
+  toTolerance       Float?
+  qty               Float?
+  notes             String?
 }

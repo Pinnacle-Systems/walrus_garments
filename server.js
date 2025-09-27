@@ -41,7 +41,10 @@ import {
   Material,
   raiseIndent,
   materialIssue,
-  stockTransfer
+  stockTransfer,
+  excessTolerance,
+  accessoryPo,
+  accesssoryPurchaseCancel
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -181,6 +184,9 @@ app.use("/material",Material)
 app.use("/raiseIndenet",raiseIndent)
 app.use("/materialIssue",materialIssue)
 app.use("/stockTransfer",stockTransfer)
+app.use("/excessTolerance",excessTolerance)
+app.use("/accessoryPo",accessoryPo)
+app.use("/accesssoryPurchaseCancel",accesssoryPurchaseCancel)
 
 
 

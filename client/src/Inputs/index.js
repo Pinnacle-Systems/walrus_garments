@@ -918,7 +918,7 @@ export const DateInputNew = forwardRef(({
   return (
     <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
       {name && (
-        <label className={`text-xs font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+        <label className={`block  font-bold text-slate-700 mb-1 text-ms ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
           }`}>
           {name}
         </label>
@@ -2040,7 +2040,7 @@ export const ReusableSearchableInput = forwardRef(
                     setSearchTerm(e.target.value)
                   }}
                   onFocus={(e) => {
-                    setSearchTerm(e.target.value)
+                    // setSearchTerm(e.target.value)
 
                     setIsDropdownOpen(true);
                     setIsListShow(true);

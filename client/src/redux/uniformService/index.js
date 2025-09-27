@@ -10,6 +10,9 @@ export { default as UnitOfMeasurementApi } from './UnitOfMeasurementServices'
 export { default as LoopLengthApi } from './LoopLengthMasterServices'
 export { default as DiaApi } from './DiaMasterServices'
 export { default as PoApi } from './PoServices'
+export { default as AccessoryPoApi } from './AccessoryPoServices'
+
+
 
 export { default as AccessoryGroupMasterApi } from './AccessoryGroupMasterServices'
 export { default as AccessoryItemMasterApi } from './AccessoryItemMasterServices'

@@ -182,6 +182,8 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
+
+        console.log(nextProcess, "nextProcess")
         try {
 
             let returnData;
@@ -191,12 +193,6 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 returnData = await callback(data).unwrap();
             }
             if (returnData.statusCode === 0) {
-                if (nextProcess == "new") {
-                    syncFormWithDb(undefined);
-                }
-                else {
-                    onClose()
-                }
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
@@ -207,9 +203,24 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                         Swal.showLoading();
                     }
                 });
-                setId(returnData?.data?.id);
-                setShowOrderForm(false)
-                singleOrderReftch()
+                orderReftch()
+                if (nextProcess == "new") {
+                    syncFormWithDb(undefined);
+                    onNew()
+                    // singleOrderReftch()
+                    orderReftch()
+
+                }
+               else  if (nextProcess == "close") {
+                    onClose()
+                }
+                
+
+                // setId(returnData?.data?.id);
+                // singleOrderReftch()
+                // orderReftch()
+                // setShowOrderForm(false)
+                // singleOrderReftch()
 
 
 
@@ -225,18 +236,26 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
 
 
+    const validateData = (data) => {
+        if (data?.orderId, data?.jobNumber && data.styleId) {
+            return true;
+        }
+
+
+        return false;
+    };
     const saveData = (nextProcess) => {
-        // if (!validateData(data)) {
-        //     // toast.info("Please fill all required fields...!", { position: "top-center" })
-        //     Swal.fire({
-        //         // title: "Total percentage exceeds 100%",
-        //         title: "Please fill all required fields...!",
-        //         icon: "error",
-        //         timer: 1500,
-        //         showConfirmButton: false,
-        //     });
-        //     return
-        // }
+        if (!validateData(data)) {
+            // toast.info("Please fill all required fields...!", { position: "top-center" })
+            Swal.fire({
+                // title: "Total percentage exceeds 100%",
+                title: "Please fill all required fields...!",
+                icon: "error",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return
+        }
         const foundItem = allData?.data?.some(item => item.jobNumber === jobNumber);
         if (!id && foundItem) {
             Swal.fire({
@@ -436,7 +455,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                             value={jobNumber}
                                             setValue={setJobNumber}
                                             readOnly={readOnly}
-
+                                            required={true}
                                         />
 
                                     </div>

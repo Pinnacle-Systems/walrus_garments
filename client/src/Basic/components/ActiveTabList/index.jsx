@@ -4,8 +4,8 @@ import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
-import { FiberContent, YarnNeedle } from "../../../Shocks";
-import { BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
+import { ExcessToleranceQty, FiberContent, YarnNeedle } from "../../../Shocks";
+import { AccessoryPurchasecancel, AccessoryPurchaseOrder, BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 
@@ -123,7 +123,10 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
     "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
-    "STOCK TRANSFER"  :  <StockTransfer/>
+    "STOCK TRANSFER"  :  <StockTransfer/>,
+    "EXCESS TOLERANCE(%) ENTRY" : <ExcessToleranceQty/>,
+    "ACCESSORY PURCHASE ORDER" : <AccessoryPurchaseOrder/>,
+    "ACCESSORY PURCHASE CANCEL" : <AccessoryPurchasecancel/>
 
 
   };

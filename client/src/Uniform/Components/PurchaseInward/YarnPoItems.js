@@ -288,7 +288,7 @@ const YarnPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Items
                                 </th>
@@ -300,7 +300,7 @@ const YarnPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
                                 </th>

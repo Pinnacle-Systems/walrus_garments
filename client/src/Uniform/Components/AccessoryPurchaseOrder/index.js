@@ -1,0 +1,386 @@
+import moment from "moment";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useGetPoQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { FaPlus } from "react-icons/fa";
+import PurchaseOrderForm from "./AccessoryPurchaseOrderForm";
+import { Loader } from "../../../Basic/components";
+import { useGetAccessoryPoQuery } from "../../../redux/uniformService/AccessoryPoServices";
+import AccessoryPurchaseOrderFormReport from "./AccessoryPurchaseOrderFormReport";
+
+
+
+
+export default function Form() {
+
+  const today = new Date()
+  const componentRef = useRef();
+
+  const [readOnly, setReadOnly] = useState(false);
+  const [docId, setDocId] = useState("new")
+  const [id, setId] = useState("");
+  const [date, setDate] = useState(moment.utc(today).format('YYYY-MM-DD'));
+  const [taxTemplateId, setTaxTemplateId] = useState("");
+  const [payTermId, setPayTermId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [transType, setTransType] = useState("GreyYarn");
+  const [supplierId, setSupplierId] = useState("");
+
+  const [discountType, setDiscountType] = useState("Percentage");
+  const [discountValue, setDiscountValue] = useState(0);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [poItems, setPoItems] = useState([]);
+  const [tempPoItems, setTempPoItems] = useState([]);
+
+
+  const [remarks, setRemarks] = useState("")
+
+  const [formReport, setFormReport] = useState(false);
+
+  const [searchValue, setSearchValue] = useState("");
+  const [deliveryType, setDeliveryType] = useState("")
+  const [deliveryToId, setDeliveryToId] = useState("")
+
+  const childRecord = useRef(0);
+  const [purchaseOrderForm, setPurchaseOrderForm] = useState("")
+  const [selectedPeriod, setSelectedPeriod] = useState('this-month');
+  const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
+  const { branchId, companyId, finYearId, userId } = getCommonParams()
+
+  const params = {
+    branchId, companyId, finYearId
+  };
+
+  const { data: supplierList } =
+    useGetPartyQuery({ params: { ...params } });
+
+
+
+
+
+
+
+
+  const { data: allData, isLoading, isFetching,refetch } = useGetAccessoryPoQuery({ params, searchParams: searchValue });
+  const [removeData] = useDeletePoMutation();
+
+
+  // const getNextDocId = useCallback(() => {
+  //   if (id || isLoading || isFetching) return
+  //   if (allData?.nextDocId) {
+  //     setDocId(allData.nextDocId)
+  //   }
+  // }, [allData, isLoading, isFetching, id])
+
+  // useEffect(getNextDocId, [getNextDocId])
+
+  // const {
+  //   data: singleData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetPoByIdQuery(id, { skip: !id });
+
+  // const [addData] = useAddPoMutation();
+  // const [updateData] = useUpdatePoMutation();
+
+  // const syncFormWithDb = useCallback((data) => {
+  //   if (id) {
+  //     setReadOnly(true);
+  //   } else {
+  //     setReadOnly(false);
+  //   }
+
+  //   setTransType(data?.transType ? data.transType : "GreyYarn");
+  //   setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
+
+  //   setPoItems(data?.PoItems ? data?.PoItems : [])
+  //   if (data?.docId) {
+  //     setDocId(data?.docId)
+  //   }
+  //   if (data?.date) setDate(data?.date);
+
+  //   setPayTermId(data?.payTermId ? data?.payTermId : "");
+  //   setDiscountType(data?.discountType ? data?.discountType : "Percentage")
+  //   setDiscountValue(data?.discountValue ? data?.discountValue : "0")
+  //   setSupplierId(data?.supplierId ? data?.supplierId : "");
+  //   setDueDate(data?.dueDate ? moment.utc(data?.dueDate).format("YYYY-MM-DD") : "");
+  //   setDeliveryType(data?.deliveryType ? data?.deliveryType : "")
+  //   if (data) {
+  //     setDeliveryToId(data?.deliveryType === "ToSelf" ? data?.deliveryBranchId : data?.deliveryPartyId)
+  //   } else {
+  //     setDeliveryToId("")
+  //   }
+  //   setRemarks(data?.remarks ? data.remarks : "")
+
+  // }, [id]);
+
+
+
+
+  // useEffect(() => {
+  //   if (id) {
+  //     syncFormWithDb(singleData?.data);
+  //   } else {
+  //     syncFormWithDb(undefined);
+  //   }
+  // }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  // const data = {
+  //   transType, supplierId, dueDate, payTermId,
+  //   branchId, id, userId,
+  //   remarks,
+  //   poItems: poItems.filter(po => po.yarnId || po.fabricId || po.accessoryId),
+  //   deliveryType, deliveryToId,
+  //   discountType,
+  //   discountValue,
+  //   finYearId
+  // }
+
+
+
+
+  // const validateData = (data) => {
+  //   let mandatoryFields = ["uomId", "colorId", "qty", "price"];
+  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
+  //     mandatoryFields = [...mandatoryFields, ...["yarnId", "noOfBags"]]
+  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
+  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
+  //   }
+  //   return data.supplierId && data.dueDate && data.payTermId
+  //     && isGridDatasValid(data.poItems, false, mandatoryFields) && data.poItems.length !== 0
+  // }
+
+  // const handleSubmitCustom = async (callback, data, text) => {
+  //   try {
+  //     let returnData;
+  //     if (text === "Updated") {
+  //       returnData = await callback(data).unwrap();
+  //     } else {
+  //       returnData = await callback(data).unwrap();
+  //     }
+
+  //     if (returnData.statusCode === 1) {
+  //       toast.error(returnData.message);
+  //       return
+  //     }
+  //     setId("")
+  //     syncFormWithDb(undefined)
+  //     toast.success(text + "Successfully");
+  //   } catch (error) {
+  //     console.log("handle");
+  //   }
+  // };
+
+
+  // const saveData = () => {
+
+  //   if (id) {
+  //     handleSubmitCustom(updateData, data, "Updated");
+  //   } else {
+  //     handleSubmitCustom(addData, data, "Added");
+  //   }
+  // }
+
+
+  // const handleKeyDown = (event) => {
+  //   let charCode = String.fromCharCode(event.which).toLowerCase();
+  //   if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+  //     event.preventDefault();
+  //     saveData();
+  //   }
+  // };
+
+
+
+  // useEffect(() => {
+  //   if (id) return
+  //   setPoItems([]);
+  //   setSupplierId("")
+  // }, [transType, id])
+
+  const allSuppliers = supplierList ? supplierList?.data : []
+  console.log(allSuppliers, "allSuppliers")
+  function filterSupplier() {
+    let finalSupplier = []
+    if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
+      finalSupplier = allSuppliers.filter(s => s.isGy)
+    } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
+      finalSupplier = allSuppliers.filter(s => s.isDy)
+    } else {
+      finalSupplier = allSuppliers.filter(s => s.isAcc)
+    }
+    return finalSupplier
+  }
+  const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
+  console.log(clientDetail, "clientDetail")
+
+  let supplierListBasedOnSupply = filterSupplier()
+  transType.toLowerCase().includes("greyyarn".toLowerCase())
+  console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
+  console.log(supplierId, "supplierId")
+  const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+
+  console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
+  const columns = [
+    {
+      header: 'S.No',
+      accessor: (item, index) => parseInt(index) + 1,
+      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
+    },
+
+    {
+      header: 'Inward No',
+      accessor: (item) => item.docId,
+      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
+    },
+    {
+      header: 'TransType',
+      accessor: (item) => item.transType,
+      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
+    },
+    {
+      header: 'Inward Date',
+      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
+      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
+    },
+    {
+      header: 'Supplier',
+      accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
+      className: 'text-gray-800 uppercase w-[500px]'
+    },
+
+
+  ];
+
+
+
+
+
+
+  const handleView = (id) => {
+
+    setId(id)
+    setPurchaseOrderForm(true)
+    setReadOnly(true);
+  };
+
+  const handleEdit = (id) => {
+    setId(id)
+    setPurchaseOrderForm(true)
+    setReadOnly(false);
+  };
+
+  console.log(childRecord?.current, "childrecord");
+
+
+  const handleDelete = async (id) => {
+    if (id) {
+      if (childRecord.current > 0) {
+        toast.info("Child Record Exist", { position: "top-center" })
+        return
+
+      }
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        await removeData(id)
+        setId("");
+        onNew();
+        refetch()
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      } catch (error) {
+        toast.error("something went wrong");
+      }
+    }
+
+  };
+  const onNew = () => {
+    setId("");
+    setReadOnly(false);
+    setPoItems([])
+    setTempPoItems([])
+    setDocId("New")
+
+
+  }
+
+  if (isLoading || isFetching) return <Loader />
+
+  return (
+
+
+
+    <>
+      {purchaseOrderForm ? (
+        <PurchaseOrderForm
+          onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
+          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} poItems={poItems} setPoItems={setPoItems} onNew={onNew}
+        />
+
+      ) : (
+        <div className="p-2 bg-[#F1F1F0] min-h-screen">
+          <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+            {/* <div className="flex items-center gap-2">
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm"
+              >
+                <option value="this-month">This Month</option>
+                <option value="last-month">Last Month</option>
+              </select>
+              <select
+                value={selectedFinYear}
+                onChange={(e) => setSelectedFinYear(e.target.value)}
+                className="px-3 py-1.5 border rounded-md text-sm"
+              >
+                <option value="2023-2024">2023-2024</option>
+                <option value="2022-2023">2022-2023</option>
+              </select>
+
+            </div> */}
+            <h1 className="text-2xl font-bold text-gray-800 mb-1 shadow-2xl">Accessory Purchase Order</h1>
+            <button
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
+              onClick={() => { setPurchaseOrderForm(true); onNew() }}
+            >
+              <FaPlus /> Create New
+            </button>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {/* <PurchaseOrderFormReport
+              columns={columns}
+              data={allData?.data || []}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              itemsPerPage={10}
+            /> */}
+            <AccessoryPurchaseOrderFormReport
+                columns={columns}
+              data={allData?.data || []}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              itemsPerPage={10}
+            />
+          </div>
+
+        </div>
+      )}
+    </>
+  );
+}

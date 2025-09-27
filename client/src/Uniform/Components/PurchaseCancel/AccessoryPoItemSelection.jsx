@@ -7,7 +7,7 @@ import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange }) => {
+const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, handleCancel, readOnly, handleDone, handleSelectAllChange, getSelectAll }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -38,8 +38,8 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
     }, [poItems, isPoItemsFetching, isPoItemsLoading])
 
     return (
-        <div className="flex flex-col w-full h-[80%]">{console.log(poItems, "poItemsaccessory")}
-            <div className="md:flex md:items-center md:justify-between page-heading p-1">
+        <div className="flex flex-col w-full h-[100%] border border-gray-200  shadow-sm bg-[#f1f1f0]">
+            {/* <div className="md:flex md:items-center md:justify-between page-heading p-1">
                 <div className="heading text-center md:mx-10"> Purchase Order Items </div>
                 <div className=" sub-heading justify-center md:justify-start items-center">
                     <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
@@ -48,155 +48,208 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                         {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
                     </select>
                 </div>
-            </div>
+            </div> */}
             <>
-                <div
-                    className="h-[500px] overflow-auto"
-                >
-                    <table className="table-auto text-center w-full">
-                        <thead className="border-2 table-header">
-                            <tr className='h-2'>
-                                <th className='w-10'></th>
-                                <th
-                                    className="border-2  top-0 stick-bg">
-                                    S. no.
-                                </th>
-                                <th
-                                    className="border-2  top-0 stick-bg grid"
-                                >
-                                    <label>Po.No</label><input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={poNo}
-                                        onChange={(e) => {
-                                            setPoNo(e.target.value);
-                                        }}
-                                    />
-                                </th>
-                                <th
-                                    className="border-2  top-0 stick-bg"
-                                >
-                                    <label>Po.Date</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchPoDate}
-                                        onChange={(e) => {
-                                            setPoDate(e.target.value);
-                                        }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory Item</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Accessory Group</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Color</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Size</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Uom</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
+                <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                            Purchase Order Items
+                        </h2>
 
-                            </tr>
-                        </thead>
-                        {isLoadingIndicator ?
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Loader />
-                                    </td>
-                                </tr>
-                            </tbody>
-                            :
-                            <tbody className="border-2">
-                                {poItems.data.map((dataObj, index) => (
-                                    <tr
-                                        key={dataObj.id}
-                                        className="border-2 table-row "
-                                        onClick={() => handleChange(dataObj?.id)}
-                                    >
-                                        <td className='py-1'>
-                                            <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
-                                        </td>
-                                        <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                                        <td className='py-1'> {dataObj?.Po?.docId}</td>
-                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.Po.createdAt)} </td>
-                                        <td className='py-1'> {dataObj?.Accessory?.aliasName}</td>
-                                        <td className='py-1'> {dataObj.Accessory?.accessoryItem?.name}</td>
-                                        <td className='py-1'> {dataObj.Accessory?.accessoryItem?.AccessoryGroup?.name}</td>
-                                        <td className='py-1'> {dataObj?.Color?.name}</td>
-                                        <td className='py-1'> {dataObj?.Size?.name}</td>
-                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        }
-                    </table>
+                    </div>
+                    <div className="flex gap-2">
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleCancel();
+                                    // setSearchValue("");
+                                    // setId(false);
+                                }}
+                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        <div className="flex gap-2">
+                            {!readOnly && (
+                                <button
+                                    type="button"
+                                    onClick={handleDone}
+                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                        border border-green-600 flex items-center gap-1 text-xs"
+                                >
+                                    {/* <Check size={14} /> */}
+                                    Done
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
+                <div className="flex-1 overflow-y-auto rounded-md ">
+
+                    <div className=" flex flex-col bg-[#f1f1f0] px-1 w-full ">
+
+                        <div className="flex flex-row w-full">
+                            <div className="flex flex-col w-full ">
+                                <div className="mt-4 mb-5 w-full p-4">
+
+
+                                    <table className="table-auto text-center w-full">
+                                        <thead className="border-2 table-header">
+                                            <tr className='h-2'>
+                                                <th className='w-10'>
+                                                    <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
+                                                        checked={getSelectAll(poItems?.data ? poItems.data : [])}
+                                                    />
+                                                </th>
+                                                <th
+                                                    className="border-2  top-0 stick-bg">
+                                                    S. no.
+                                                </th>
+                                                <th
+                                                    className="border-2  top-0 stick-bg grid"
+                                                >
+                                                    <label>Po.No</label><input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={poNo}
+                                                        onChange={(e) => {
+                                                            setPoNo(e.target.value);
+                                                        }}
+                                                    />
+                                                </th>
+                                                <th
+                                                    className="border-2  top-0 stick-bg"
+                                                >
+                                                    <label>Po.Date</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchPoDate}
+                                                        onChange={(e) => {
+                                                            setPoDate(e.target.value);
+                                                        }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Accessory</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Accessory Item</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Accessory Group</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Color</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Size</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+                                                <th className="border-2  top-0 stick-bg">
+                                                    <label>Uom</label>
+                                                    <input
+                                                        type="text"
+                                                        className="text-black h-6 focus:outline-none border md:ml-3 border-gray-400 rounded-lg"
+                                                        placeholder="Search"
+                                                        value={searchDueDate}
+                                                    // onChange={(e) => {
+                                                    //     setDueDate(e.target.value);
+                                                    // }}
+                                                    />
+                                                </th>
+
+                                            </tr>
+                                        </thead>
+                                        {isLoadingIndicator ?
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <Loader />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            :
+                                            <tbody className="border-2">
+                                                {poItems.data.map((dataObj, index) => (
+                                                    <tr
+                                                        key={dataObj.id}
+                                                        className="border-2 table-row "
+                                                        onClick={() => handleChange(dataObj?.id)}
+                                                    >
+                                                        <td className='py-1'>
+                                                            <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
+                                                        </td>
+                                                        <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
+                                                        <td className='py-1'> {dataObj?.Po?.docId}</td>
+                                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj.Po.createdAt)} </td>
+                                                        <td className='py-1'> {dataObj?.Accessory?.aliasName}</td>
+                                                        <td className='py-1'> {dataObj.Accessory?.accessoryItem?.name}</td>
+                                                        <td className='py-1'> {dataObj.Accessory?.accessoryItem?.AccessoryGroup?.name}</td>
+                                                        <td className='py-1'> {dataObj?.Color?.name}</td>
+                                                        <td className='py-1'> {dataObj?.Size?.name}</td>
+                                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        }
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
             </>
             <ReactPaginate
                 previousLabel={"<"}
@@ -213,7 +266,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                 previousLinkClassName={"border p-1 text-center"}
                 nextLinkClassName={"border p-1"}
                 activeClassName={"bg-blue-900 text-white px-2"} />
-        </div>
+        </div >
     )
 
 }

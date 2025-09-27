@@ -126,6 +126,17 @@ async function get(req) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
                 // poInwardOrDirectInward,
+            },
+                 orderBy: {
+                id: "desc",
+            },
+            include: {
+                supplier: {
+                    select: {
+                        aliasName: true,
+                        name: true,
+                    }
+                }
             }
         });
     }

@@ -227,14 +227,14 @@ function manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType
 }
 
 export async function getPoItems(req) {
-    const { branchId, active, supplierId, poType, pagination, pageNumber, dataPerPage,
+    const { branchId, active, supplierId, poType, pagination, dataPerPage,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate,
-        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, stockStoreId
+        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward
     } = req.query
 
     let data;
+    let po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
 
-    console.log(supplierId,"supplierId")
 
     let totalCount;
     if (pagination) {
@@ -242,32 +242,44 @@ export async function getPoItems(req) {
             where: {
                 Po:
                 {
-                  
+                    docId: Boolean(searchDocId) ?
+                        {
+                            contains: searchDocId
+                        }
+                        : undefined,
                     supplierId: supplierId ? parseInt(supplierId) : undefined,
                     // transType: poType ? poType : undefined,
-                   
+
                 },
             },
             include: {
                 Po: true,
-                Yarn : {
-                    select :{
-                        name : true
+                Yarn: {
+                    select: {
+                        name: true
                     }
                 }
             }
         });
-        console.log(data, "poType",poType)
+        // console.log(data, "poType",poType)
 
         data = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, data)
+
         // totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-        data = await getAllDataPoItems(data, poType)
+        data = data?.filter(i => i?.Po?.poMaterial === poType && i.Po.poType === po)
 
-        // console.log(data,"data")
+
+        console.log(data,"Bef0ore")
+        
+        data = data?.filter(i => i.Po.supplierId == supplierId  && i.Po.poMaterial ==  poType    )
+
+        data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
+
         if (isPurchaseInwardFilter) {
 
             data = data.filter(item => parseFloat(balanceQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
+
             data = data?.filter(j => parseFloat(j.balanceQty) > 0)
 
         }
@@ -293,11 +305,12 @@ export async function getPoItems(req) {
     return { statusCode: 0, data, totalCount };
 }
 
-export async function getAllDataPoItems(data, poType) {
+export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
+        console.log(data, "data")
 
     let promises = data?.map(async (item) => {
-        let data = await getPoItemById(item.id, null, null, null, null, poType)
+        let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
 
 
         return data.data
@@ -307,7 +320,7 @@ export async function getAllDataPoItems(data, poType) {
 }
 
 
-export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType) {
+export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
     console.log(purchaseInwardReturnId, "purchaseInwardReturnId", storeId)
 
 
@@ -329,7 +342,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
                             dcNo: true,
                             dcDate: true,
                             createdAt: true,
-                            poType: true
+                            poType: true,
                         }
                     }
                 }
@@ -347,7 +360,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             },
             Yarn: {
                 select: {
-                    aliasName: true,
+                    name: true,
                 }
             },
             Fabric: {
@@ -410,6 +423,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
+    console.log(data,"dataaaaaaaaaaaaaa")
 
     const alreadyInwardedData = await prisma?.directItems?.aggregate({
         where: {
@@ -711,7 +725,7 @@ export function getPoItemObject(poMaterial, item) {
 
     newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
         newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
-    newItem.colorId = parseInt(item.colorId);
+    newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.qty = parseFloat(item.qty);
     newItem.price = parseFloat(item.price);
     newItem.discountType = item.discountType ?? null;
@@ -742,7 +756,7 @@ async function create(body) {
 
     const data = await prisma.po.create({
         data: {
-            transType: transType ? transType : "DyedYarn",
+            transType: transType ? transType : "",
             poType: poType,
             poMaterial: poMaterial,
             docId,

@@ -10,6 +10,7 @@ import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import PurchaseInwardForm from '../PurchaseInward/PurchaseInwardFormUi';
 import { useGetPurchaseCancelQuery } from '../../../redux/uniformService/PurchaseCancelServices';
 import PurchaseCancelForm from './PurchaseCancelForm';
+import PurchaseCancelFormReport from './PurchaseCancelFormReport';
 
 
 
@@ -141,14 +142,20 @@ const PurchaseCancel = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        <CommonTable
+                        {/* <CommonTable
                             columns={columns}
                             data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             itemsPerPage={10}
-                        />
+                        /> */}
+                        <PurchaseCancelFormReport  
+                         columns={columns}
+                            data={allData?.data || []}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}    />
                     </div>
                 </div>
             )}

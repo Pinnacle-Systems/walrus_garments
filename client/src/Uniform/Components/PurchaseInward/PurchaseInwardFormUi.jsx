@@ -21,26 +21,28 @@ import PoItemsSelection from "./PoItemsSelection";
 import YarnPoItems from "./YarnPoItems";
 import YarnInwardPoItems from "./YarnInwardItem";
 import AccessoryInwardItems from "./AccessoryInwardItems";
-const PurchaseInwardForm = ({ onClose, id, setId }) => {
+import Swal from "sweetalert2";
+const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
+  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew
+}) => {
 
 
 
 
-  const [docId, setDocId] = useState("")
-  const [date, setDate] = useState("")
-  const [readOnly, setReadOnly] = useState('')
-  const [transType, setTransType] = useState("GreyYarn");
-  const [dcNo, setDcNo] = useState("")
-  const [dcDate, setDcDate] = useState('')
-  const [supplierId, setSupplierId] = useState('')
-  const [payTermId, setPayTermId] = useState("");
-  const [locationId, setLocationId] = useState('');
-  const [storeId, setStoreId] = useState("")
-  const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-  const [inwardItemSelection, setInwardItemSelection] = useState(false)
-  const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
+  // const [docId, setDocId] = useState("")
+  // const [date, setDate] = useState("")
+  // const [readOnly, setReadOnly] = useState('')
+  // const [transType, setTransType] = useState("GreyYarn");
+  // const [dcNo, setDcNo] = useState("")
+  // const [dcDate, setDcDate] = useState('')
+  // const [supplierId, setSupplierId] = useState('')
+  // const [payTermId, setPayTermId] = useState("");
+  // const [locationId, setLocationId] = useState('');
+  // const [storeId, setStoreId] = useState("")
+  // const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
+  // const [inwardItemSelection, setInwardItemSelection] = useState(false)
+  // const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
 
-  // console.log(directInwardReturnItems,"directInwardReturnItems");
 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
   const [showDiscount, setShowDiscount] = useState(false)
@@ -56,7 +58,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
-  const [partyId, setPartyId] = useState('')
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
     "Supplier Two",
@@ -85,19 +86,18 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   const { data: payTermList } =
     useGetPaytermMasterQuery({ params: { ...params } });
 
-  const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
 
   const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
-  const getNextDocId = useCallback(() => {
-    if (isLoading || isFetching) return
-    if (id) return
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId)
-    }
-  }, [allData, isLoading, isFetching, id])
+  // const getNextDocId = useCallback(() => {
+  //   if (isLoading || isFetching) return
+  //   if (id) return
+  //   if (allData?.nextDocId) {
+  //     setDocId(allData.nextDocId)
+  //   }
+  // }, [allData, isLoading, isFetching, id])
 
-  useEffect(getNextDocId, [getNextDocId])
+  // useEffect(getNextDocId, [getNextDocId])
 
   const {
     data: singleData,
@@ -107,7 +107,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
   const [addData] = useAddDirectInwardOrReturnMutation();
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
-  const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
 
   // useEffect(() => {
@@ -124,8 +123,8 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     } else {
       setReadOnly(false);
     }
-    setTransType(data?.poType ? data.poType : "GreyYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
+    setTransType(data?.poType ? data.poType : "DyedYarn");
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "General Inward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
     if (data?.docId) {
@@ -137,7 +136,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     setSupplierId(data?.supplierId ? data?.supplierId : "");
     setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
     setDcNo(data?.dcNo ? data.dcNo : "")
-    setLocationId(data?.Store ? data.Store.locationId : "")
+    setLocationId(data?.branchId ? data?.branchId : "")
     setStoreId(data?.storeId ? data.storeId : "")
     setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
@@ -170,7 +169,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     remarks,
     specialInstructions,
     vehicleNo,
-    finYearId
+    finYearId,
+    locationId: locationId ? parseInt(locationId) : undefined,
+    partyId
   }
 
   console.log(data, "data")
@@ -183,9 +184,9 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       setSuppliers([...suppliers, newName]);
     }
   };
-  async function onDeleteItem(itemId) {
-    await removeData(itemId).unwrap();
-  }
+  // async function onDeleteItem(itemId) {
+  //   await removeData(itemId).unwrap();
+  // }
   // const validateData = (data) => {
   //   let mandatoryFields = ["uomId", "colorId", "price"];
   //   let lotMandatoryFields = ["qty"]
@@ -216,9 +217,54 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
 
 
 
-  // }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+
+
+  const validateData = (data) => {
+
+    if (data?.partyId && data?.locationId && data?.storeId && data?.poInwardOrDirectInward && data?.poType && data?.dcDate && data?.dcDate) {
+      return true
+    }
+
+    return false
+  }
+  console.log(data, "data")
+
+
+  // const handleSubmitCustom = async (callback, data, text) => {
+  //   try {
+  //     let returnData;
+  //     if (text === "Updated") {
+  //       returnData = await callback(data).unwrap();
+  //     } else {
+  //       returnData = await callback(data).unwrap();
+  //     }
+  //     if (returnData.statusCode === 1) {
+  //       toast.error(returnData.message);
+  //     } else {
+  //       // toast.success(text + "Successfully");
+  //       Swal.fire({
+  //         title: text + "Successfully",
+  //         icon: "success",
+  //         draggable: true,
+  //         timer: 1000,
+  //         showConfirmButton: false,
+  //         didOpen: () => {
+  //           Swal.showLoading();
+  //         }
+  //       });
+  //       setId("")
+  //       syncFormWithDb(undefined)
+  //     }
+  //   } catch (error) {
+  //     console.log("handle");
+  //   }
+  // };
+
+
+
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -229,9 +275,31 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
       if (returnData.statusCode === 1) {
         toast.error(returnData.message);
       } else {
-        toast.success(text + "Successfully");
-        setId("")
-        syncFormWithDb(undefined)
+        Swal.fire({
+          icon: 'success',
+          title: `${text || 'Saved'} Successfully`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+
+        if (returnData.statusCode === 0) {
+          if (nextProcess == "new" || nextProcess == "close") {
+            syncFormWithDb(undefined);
+            onNew()
+          }
+          else {
+            setId(returnData?.data?.id);
+
+          }
+
+
+
+
+        } else {
+          toast.error(returnData?.message);
+        }
+        // setId()
+        // syncFormWithDb(undefined)
       }
     } catch (error) {
       console.log("handle");
@@ -239,92 +307,14 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
   };
 
 
-  //   const saveData = () => {
-  //     if (!validateData(data)) {
-  //       toast.info("Please fill all required fields...!", { position: "top-center" })
-  //       return
-  //     }
-  //     if (id) {
-  //       handleSubmitCustom(updateData, data, "Updated");
-  //     } else {
-  //       handleSubmitCustom(addData, data, "Added");
-  //     }
-  //   }
-
-  // const deleteData = async () => {
-  //   if (id) {
-  //     if (!window.confirm("Are you sure to delete...?")) {
-  //       return;
-  //     }
-  //     try {
-  //       await removeData(id)
-  //       setId("");
-  //       onNew();
-  //       toast.success("Deleted Successfully");
-  //     } catch (error) {
-  //       toast.error("something went wrong");
-  //     }
-  //   }
-  // };
-
-  const handleKeyDown = (event) => {
-    let charCode = String.fromCharCode(event.which).toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-      event.preventDefault();
-      saveData();
-    }
-  };
-
-  const onNew = () => {
-    setId("");
-    setSearchValue("");
-    setReadOnly(false);
-    syncFormWithDb(undefined)
-    getNextDocId()
-  };
-
-  const tableHeadings = ["PoNo", "PoDate", "PoType", "DueDate", "Supplier"]
-  const tableDataNames = ['dataObj?.id', 'dataObj.active ? ACTIVE : INACTIVE']
 
 
 
 
-  const allSuppliers = supplierList ? supplierList.data : []
 
-  console.log(transType.toLowerCase().includes("yarn"), "condition", transType)
 
-  function filterSupplier() {
-    let finalSupplier = []
-    // if (transType.toLowerCase().includes("yarn")) {
-    //   finalSupplier = allSuppliers.filter(s => s.yarn)
-    // } else if (transType.toLowerCase().includes("fabric")) {
-    //   finalSupplier = allSuppliers.filter(s => s.fabric)
-    // } 
-    // else if (transType.toLowerCase() === "accessory" ) {
-    //   finalSupplier = allSuppliers.filter(s => s.accessoryGroup)
-    // } 
-    // else {
-    //   finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
 
-    // }
-    finalSupplier = allSuppliers.filter(s => s.isSupplier)
 
-    return finalSupplier
-  }
-  let supplierListBasedOnSupply = filterSupplier()
-
-  // const getTotalIssuedQty = () => {
-  //   if (transType === "Accessory") {
-  //     return directInwardReturnItems?.reduce((total, current) => total + current?.qty, 0)
-  //   }
-  //   else {
-
-  //     return directInwardReturnItems?.reduce((total, current) => {
-  //       return total + sumArray(current?.inwardLotDetails ? current.inwardLotDetails : [], "qty")
-  //     }, 0)
-  //   }
-
-  // }
 
   useEffect(() => {
     if (id) return
@@ -355,11 +345,40 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
     return newItem
   }) : directInwardReturnItems
 
+  console.log(directInwardReturnItems?.some(item => item.yarnId === "" || item.fabricId === "" || item.accessoryId === ""), "condition")
+
   const saveData = (nextProcess) => {
-    // if (!validateData(data)) {
-    //     toast.info("Please fill all required fields...!", { position: "top-center" })
-    //     return
-    // }
+    if (!validateData(data)) {
+      // toast.info("Please fill all required fields...!", { position: "top-center" })
+
+
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+        draggable: true,
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      return
+    }
+    if (directInwardReturnItems?.some(item => item.yarnId === "" || item.fabric === "" || item.accessoryId === "")
+    ) {
+      Swal.fire({
+        title: "Please select items...!",
+        icon: "success",
+        draggable: true,
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      return
+
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
@@ -397,11 +416,11 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
           supplierId={partyId}
           inwardItems={directInwardReturnItems}
-          setInwardItems={setDirectInwardReturnItems} />
+          setInwardItems={setDirectInwardReturnItems} poInwardOrDirectInward={poInwardOrDirectInward} />
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchse Inward </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward </h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -446,7 +465,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 setValue={setTransType}
                 required={true}
                 readOnly={readOnly} />
-               
+
               <DropdownInput name="Location"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                 value={locationId}
@@ -459,13 +478,13 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 value={storeId} setValue={setStoreId} required={true}
               // readOnly={id || readOnly}
               />
-              {(!readOnly && poInwardOrDirectInward == "PurchaseInward") &&
+              {(!readOnly && poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward") &&
                 < div className="mt-5">
                   <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                     onClick={() => {
                       if (!partyId) {
-                          toast.info("Please Select Suppplier", { position: "top-center" })
-                          return
+                        toast.info("Please Select Suppplier", { position: "top-center" })
+                        return
                       }
                       setInwardItemSelection(true)
                     }}
@@ -489,7 +508,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                   component="PartyMaster"
                   placeholder="Search Supplier Id..."
                   optionList={supplierList?.data}
-                  onDeleteItem={onDeleteItem}
+                  // onDeleteItem={onDeleteItem}
                   setSearchTerm={setPartyId}
                   searchTerm={partyId}
                   // ref={inputPartyRef}
@@ -507,7 +526,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         <fieldset>
           {
 
-            poInwardOrDirectInward == "DirectInward" &&
+            (poInwardOrDirectInward == "DirectInward" || poInwardOrDirectInward == "GeneralInward") &&
             (transType.toLowerCase().includes("yarn")
               ?
               <YarnPoItems
@@ -613,26 +632,7 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
                 />
               </div>
 
-              {/* <div className="border-t border-slate-200 pt-2 flex justify-between text-sm">
-                                                       <span className="text-slate-800 font-semibold">Grand Total</span>
-                                                       <span className="font-bold text-indigo-700">$1,200.00</span>
-                                                   </div> */}
-              {/* <div className="flex gap-5 items-center mb-1 text-xs">
-                                                       <button
-                                                           className="text-green-600 text-[14px] hover:text-white hover:bg-green-600 border border-green-700 px-2 py-1 rounded-md  flex items-center"
-                                                           onClick={() => setShowDiscount(true)}
-                                                       >
-                                                           <HiMinus className="w-2.5 h-2.5 mr-1" />
-                                                           <span>Add Discount</span>
-                                                       </button>
-                                                       <button
-                                                           className="text-indigo-600 text-[14px] hover:text-white hover:bg-indigo-600 border border-indigo-700 px-2 py-1 rounded-md flex items-center"
-                                                           onClick={() => setShowExtraCharge(true)}
-                                                       >
-                                                           <HiPlus className=" w-2.5 h-2.5 mr-1" />
-                                                           <span> Extra Charge</span>
-                                                       </button>
-                                                   </div> */}
+            
             </div>
           </div>
 
@@ -715,7 +715,6 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-          {/* Left Buttons */}
           <div className="flex gap-2 flex-wrap">
             <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
@@ -731,12 +730,8 @@ const PurchaseInwardForm = ({ onClose, id, setId }) => {
             </button>
           </div>
 
-          {/* Right Buttons */}
           <div className="flex gap-2 flex-wrap">
-            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                                   <FiShare2 className="w-4 h-4 mr-2" />
-                                                   Email
-                                               </button> */}
+   
             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
               onClick={() => setReadOnly(false)}
             >

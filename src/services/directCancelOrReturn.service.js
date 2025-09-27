@@ -101,12 +101,12 @@ async function get(req) {
                 id: "desc",
             },
             include: {
-                supplier: {
-                    select: {
-                        aliasName: true,
-                        name: true,
+                    supplier : {
+                        select : {
+                            name : true,
+                            
+                        }
                     }
-                }
             }
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
@@ -135,6 +135,13 @@ async function get(req) {
             orderBy: {
                 id: "desc",
             },
+            include : {
+                supplier : {
+                    select : {
+                        name : true
+                    }
+                }
+            }
         });
     }
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startTime, finYearDate?.endTime);

@@ -20,7 +20,7 @@ import {
 import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import moment from "moment";
-import { findFromList, getCommonParams } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
@@ -121,12 +121,87 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const validateData = (data) => {
 
-        if (orderDetails?.length > 0 && data.partyId) {
+        if (orderDetails?.length > 0 && data.partyId && data?.validDate) {
             return true
         }
 
         return false
     }
+
+    // const validateData = (data) => {
+
+
+    //     let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
+    //     let YarnmandatoryFields = ["colorId", "yarnId", "count", "yarnKneedleId"];
+    //     let SizemandatoryFields = ["sizeId", "weight", "qty"];
+
+
+    //     // let gridYarnDatasValid = data?.orderDetails.every(obj =>
+    //     //     obj?.YarnDetails?.every(yarn =>
+    //     //         YarnmandatoryFields.every(field =>
+    //     //             yarn?.[field] &&
+    //     //             yarn?.[field] !== "" &&
+    //     //             yarn?.[field] !== null &&
+    //     //             parseFloat(yarn?.[field]) !== 0
+    //     //         )
+    //     //     )
+    //     // );
+    //     // let gridSizeDatasValid = data?.orderDetails.every(obj =>
+    //     //     obj?.YarnDetails?.every(yarn =>
+    //     //         SizemandatoryFields.every(field =>
+    //     //             yarn?.[field] &&
+    //     //             yarn?.[field] !== "" &&
+    //     //             yarn?.[field] !== null &&
+    //     //             parseFloat(yarn?.[field]) !== 0
+    //     //         )
+    //     //     )
+    //     // );
+
+
+
+    //     // console.log(gridYarnDatasValid,"gridYarnDatasValid",gridSizeDatasValid,"gridSizeDatasValid")
+
+    //     // return data.partyId && data.validDate 
+    //     //     && isGridDatasValid(data.orderDetails, false, mandatoryFields) && data.orderDetails.length !== 0 
+
+    //     //        && gridYarnDatasValid &&  gridSizeDatasValid
+
+    //     if (!data?.orderDetails || data.orderDetails.length === 0) {
+    //             Swal.fire({
+    //                     title:"At least one order detail is required",
+    //                     icon: "success",
+    //                     draggable: true,
+    //                     timer: 1000,
+    //                     showConfirmButton: false,
+    //                     didOpen: () => {
+    //                         Swal.showLoading();
+    //                     }
+    //                 });
+    //     }
+
+    //     // for (let i = 0; i < data.orderDetails.length; i++) {
+    //     //     let order = data.orderDetails[i];
+    //     //     for (let field of mandatoryFields) {
+    //     //         if (!order?.[field] || order[field] === "" || order[field] === null || parseFloat(order[field]) === 0) {
+    //     //             // throw new Error(`Order ${i + 1}: Missing or invalid ${field}`);
+
+    //     //             Swal.fire({
+    //     //                 title:(`Order ${i + 1}: Missing or invalid ${field}`),
+    //     //                 icon: "success",
+    //     //                 draggable: true,
+    //     //                 timer: 1000,
+    //     //                 showConfirmButton: false,
+    //     //                 didOpen: () => {
+    //     //                     Swal.showLoading();
+    //     //                 }
+    //     //             });
+    //     //         }
+    //     //     }
+
+    //     // }
+    // }
+
+    console.log(data, "datatata")
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
@@ -186,7 +261,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", { position: "top-center" })
+            // toast.info("Please fill all required fields...!", { position: "top-center" })
             return
         }
         if (!window.confirm("Are you sure save the details ...?")) {
@@ -324,7 +399,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                                 <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
                                 <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}
-                                    nextRef={inputPartyRef}
+                                    nextRef={inputPartyRef} required={true}
                                 />
                             </div>
                         </div>

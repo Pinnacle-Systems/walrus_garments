@@ -8,16 +8,21 @@ import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection , poInwardOrDirectInward }) => {
 
 
-console.log(inwardItems,"statr")
+    console.log(inwardItems, "statr")
 
 
 
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.filter(i => i.poItemsId !== "")?.map(i => i.poItemsId));
-    
-    
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.filter(i => i.poItemsId !== ""));
+    // const [localInwardItems, setLocalInwardItems] = useState(
+    //     inwardItems
+    //         ?.filter(i => i.poItemsId !== "")
+    //         .map(i => ({ id: i.poItemsId }))
+    // );
+
+
     console.log(localInwardItems, "localInwardItems")
 
     // const [localInwardItems, setLocalInwardItems] = useState([]);
@@ -25,34 +30,35 @@ console.log(inwardItems,"statr")
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
 
-    const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
-        useGetPartyQuery({ params: { companyId, active: true } });
 
-    if (supplierFetching || supplierLoading) return <Loader />
+
 
     function addItem(id, obj) {
-        console.log(obj, "obj")
         // setInwardItems([])
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
+
             newItems.push(obj);
             return newItems
         });
     }
+
     function removeItem(id) {
         console.log(id, "removeid")
+        console.log(localInwardItems?.filter(item => item?.id), "localInwardItemsremove")
+
         setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems?.filter(item => item.id));
-            console.log(newItems, "newItems")
+            let newItems = structuredClone(localInwardItems.filter(item => item?.id));
             newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
             return newItems
         });
     }
 
+    // console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
     function isItemAdded(id) {
-        console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
-        return localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
+        return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId) === parseInt(id)) !== -1;
     }
+
     function handleChange(id, obj) {
         console.log("Hit", id, obj)
         if (isItemAdded(id, obj)) {
@@ -141,11 +147,11 @@ console.log(inwardItems,"statr")
                             {transtype.includes("Yarn") ?
 
                                 <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}
-                                    handleDone={handleDone} handleCancel={handleCancel}
+                                    handleDone={handleDone} handleCancel={handleCancel} poInwardOrDirectInward={poInwardOrDirectInward}
                                 />
                                 :
                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}
-                                    handleDone={handleDone} handleCancel={handleCancel}
+                                    handleDone={handleDone} handleCancel={handleCancel}  poInwardOrDirectInward={poInwardOrDirectInward}
 
                                 />
                             }

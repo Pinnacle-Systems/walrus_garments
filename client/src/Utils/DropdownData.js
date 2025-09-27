@@ -49,8 +49,8 @@ export const statusDropdown = [
 ]
 
 export const poTypes = [
-    { show: "GreyYarn", value: "GreyYarn" },
     { show: "DyedYarn", value: "DyedYarn" },
+    { show: "GreyYarn", value: "GreyYarn" },
     { show: "Accessory", value: "Accessory" },
 
 ]
@@ -61,10 +61,16 @@ export const MaterialType = [
 
 ]
 
+export const YarnMaterial = [
+    { show: "DyedYarn", value: "DyedYarn" },
+    { show: "GreyYarn", value: "GreyYarn" },
+
+]
+
 export const PoTypes = [
     // { show: "SAMPLE", value: "SAMPLE" },
-    { show: "ORDER", value: "ORDER" },
-    { show: "GENERAL", value: "GENERAL" },
+    { show: "ORDER", value: "Order Purchase" },
+    { show: "GENERAL", value: "General Purchase" },
 
 ]
 export const Generalpurchase = [
@@ -77,8 +83,11 @@ export const Generalpurchase = [
 ]
 
 export const directOrPo = [
-    { show: "Direct Inward", value: "DirectInward" },
+    { show: "General Inward", value: "GeneralInward" },
     { show: "Purchase Inward", value: "PurchaseInward" },
+    { show: "Direct Inward", value: "DirectInward" },
+
+
 
 ]
 export const purchaseType = [
@@ -274,5 +283,10 @@ export const stockTransferType = [
 export const Common = [
     { show: "No", value: "No" },
     { show: "Yes", value: "Yes" },
+]
 
+export const ExcessToleranceType = [
+    { show: "INWARD", value: "INWARD" },
+    { show: "PROCESS", value: "PROCESS" },
+    { show : "PURCHASE" , value : "PURCHASE"}
 ]

@@ -14,3 +14,4 @@ export { default as SocksMaterial } from "./SocksMaterial";
 export { default as SocksType } from "./SocksType";
 export { default as FiberContent } from "./FiberContentMaster";
 export { default as YarnNeedle } from "./YarnNeedleMaster";
+export { default as ExcessToleranceQty } from "./ExcessToleranceEntry";

@@ -4,7 +4,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import {  DropdownInput, DateInput } from "../../../Inputs";
+import {  DropdownInput, DateInput, TextInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
@@ -41,7 +41,7 @@ import ReturnItems from "./ReturnItems";
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
 
     const [readOnly, setReadOnly] = useState(false);
-    const [docId, setDocId] = useState("")
+    const [docId, setDocId] = useState("New")
     const [date, setDate] = useState();
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState("");
@@ -91,15 +91,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
-    const getNextDocId = useCallback(() => {
-        if (isLoading || isFetching) return
-        if (id) return
-        if (allData?.nextDocId) {
-            setDocId(allData.nextDocId)
-        }
-    }, [allData, isLoading, isFetching, id])
+    // const getNextDocId = useCallback(() => {
+    //     if (isLoading || isFetching) return
+    //     if (id) return
+    //     if (allData?.nextDocId) {
+    //         setDocId(allData.nextDocId)
+    //     }
+    // }, [allData, isLoading, isFetching, id])
 
-    useEffect(getNextDocId, [getNextDocId])
+    // useEffect(getNextDocId, [getNextDocId])
 
     const {
         data: singleData,
@@ -253,7 +253,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setSearchValue("");
         setReadOnly(false);
         syncFormWithDb(undefined)
-        getNextDocId()
+        // getNextDocId()
+        setDocId("New")
     };
 
 
@@ -379,7 +380,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc. Id." value={docId} required={true} readOnly
                                 />
-                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
+                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly}  />
 
 
 
@@ -404,24 +405,11 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                 Supplier Details
                             </h2>
                             <div className="grid grid-cols-2 gap-2">
-{/* 
-                                <div className="col-span-2">
-                                    <ReusableSearchableInput
-                                        label="Party"
-                                        component="PartyMaster"
-                                        placeholder="Search Parties..."
-                                        optionList={supplierListBasedOnSupply}
-                                        onAddItem={handleAddSupplier}
-                                        onDeleteItem={onDeleteItem}
-                                        setSearchTerm={setSupplierId}
-                                        searchTerm={supplierId}
-                                        readOnly={readOnly}
-                                    />
-                                </div> */}
+
 
                                 <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                                <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
-                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required /> */}
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             </div>
 

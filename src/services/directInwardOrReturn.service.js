@@ -114,8 +114,9 @@ async function get(req) {
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
         totalCount = data.length
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {
+
         data = await prisma.directInwardOrReturn.findMany({
             where: {
                 AND: (finYearDate) ? [
@@ -135,6 +136,9 @@ async function get(req) {
                 active: active ? Boolean(active) : undefined,
                 // poInwardOrDirectInward,
             },
+            orderBy: {
+                id: "desc",
+            },
             include: {
                 supplier: {
                     select: {
@@ -145,8 +149,12 @@ async function get(req) {
                 }
             }
         });
+        console.log(data, "data")
+
     }
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+
+
     return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
@@ -268,12 +276,12 @@ export async function getDirectItems(req) {
             data = data?.filter(val => val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward")?.filter(item => balanceReturnQtyCalculation(item.qty, 0, item.alreadyInwardedQty, item.alreadyReturnedData._sum?.qty) > 0)
         }
 
-        // if (isPurchaseCancelFilter) {
-        //     data = data.filter(item => balanceQtyCalculation(item.qty, item.alreadyCancelData._sum?.qty, item.alreadyInwardedData._sum?.qty, item.alreadyReturnedData._sum?.qty) > 0)
-        // }
-        // if (isPurchaseReturnFilter) {
-        //     data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum?.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
-        // }
+        if (isPurchaseCancelFilter) {
+            data = data.filter(item => balanceQtyCalculation(item.qty, item.alreadyCancelData._sum?.qty, item.alreadyInwardedData._sum?.qty, item.alreadyReturnedData._sum?.qty) > 0)
+        }
+        if (isPurchaseReturnFilter) {
+            data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum?.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+        }
     }
     else {
         data = await prisma.directItems.findMany({
@@ -919,7 +927,7 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 }
 
 async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
-    console.log(item,"item")
+    console.log(item, "item")
     await tx.stock.create({
         data: {
             itemType: poType,
@@ -932,7 +940,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             storeId: storeId ? parseInt(storeId) : undefined,
             qty: (item.qty) ? parseFloat(item.qty) : undefined,
             price: item.price ? parseFloat(item.price) : undefined,
-            orderId : item.orderId ?  item.orderId  : undefined,
+            orderId: item.orderId ? item.orderId : undefined,
         }
     })
     console.log("Eror")
@@ -1028,7 +1036,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
 
 async function create(body) {
     const { poType, poInwardOrDirectInward,
-        supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
+        partyId, directInwardReturnItems, dcNo, dcDate, storeId,
         payTermId, processValid = false,
         vehicleNo, specialInstructions, remarks, orderId,
         branchId, active, userId, finYearId } = await body
@@ -1043,7 +1051,7 @@ async function create(body) {
             data: {
                 poType,
                 poInwardOrDirectInward: poInwardOrDirectInward ? poInwardOrDirectInward : undefined,
-                supplierId: supplierId ? parseInt(supplierId) : undefined,
+                supplierId: partyId ? parseInt(partyId) : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
                 storeId: storeId ? parseInt(storeId) : undefined,
                 dcNo,
@@ -1298,7 +1306,7 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 async function update(id, body) {
     const { poType, poInwardOrDirectInward,
         supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
-        vehicleNo, specialInstructions, remarks,orderId,
+        vehicleNo, specialInstructions, remarks, orderId,locationId,partyId,
         branchId, active, userId } = await body
 
 
@@ -1327,15 +1335,15 @@ async function update(id, body) {
             },
             data: {
                 poType, poInwardOrDirectInward,
-                supplierId: parseInt(supplierId),
-                branchId: parseInt(branchId),
+                supplierId: parseInt(partyId),
+                branchId: parseInt(locationId),
                 storeId: parseInt(storeId),
                 dcNo,
                 dcDate: dcDate ? new Date(dcDate) : undefined,
                 vehicleNo, specialInstructions, remarks,
                 active,
                 updatedById: parseInt(userId),
-                orderId: parseInt(orderId),
+                
 
             },
         })

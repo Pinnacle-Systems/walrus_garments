@@ -5,8 +5,12 @@ import { DELETE } from '../../../icons'
 import { substract } from '../../../Utils/helper'
 import { toast } from "react-toastify"
 import { HiPencil, HiTrash } from 'react-icons/hi'
+import Swal from 'sweetalert2'
 
 const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteRow, removeItem, purchaseInwardId, weightPerBag }) => {
+
+
+
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: poItemId, purchaseInwardId }, { skip: !poItemId })
 
     const poItem = data?.data
@@ -17,7 +21,7 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
     let poQty = parseFloat(poItem?.qty).toFixed(3)
     let poBags = parseFloat(poItem?.noOfBags).toFixed(3)
     let alreadyCancelQty = poItem?.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
-    let alreadyInwardedQty = poItemId  ? poItem?.alreadyInwardedQty  :   poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
+    let alreadyInwardedQty = poItemId ? poItem?.alreadyInwardedQty : poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
 
     let alreadyReturnedQty = poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
     let alreadyCancelBags = poItem?.alreadyCancelData?._sum.noOfBags ? poItem.alreadyCancelData._sum.noOfBags : "0.000";
@@ -35,86 +39,26 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
             handleInputChange(parseFloat(data.data.weightPerBag).toFixed(3), index, "weightPerBag", 0, poItem)
         }
     }, [isFetching, isLoading, data, purchaseInwardId])
+
+
     if (isLoading || isFetching) return <Loader />
 
     return (
         <tr key={poItemId} className="border border-blue-gray-200 cursor-pointer "  >
             <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
             <td className="py-0.5 border border-gray-300 text-[11px] ">{poItem?.Po?.docId}</td>
-            <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Yarn?.aliasName}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Yarn?.name}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Color?.name}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Uom?.name}</td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">{poQty}</td>
-            {/* <td className='text-right  table-data'>{poBags}</td> */}
-            {/* <td className='text-right  table-data'>{alreadyCancelQty}</td>
-            <td className='text-right  table-data'>{alreadyCancelBags}</td>
-            <td className='text-right  table-data'>{alreadyInwardedBags}</td> */}
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{alreadyInwardedQty}</td>
-
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">{alreadyCancelQty}</td>
-            {/* <td className='text-right  table-data'>{alreadyReturnedBags}</td> */}
-            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{balanceQty}</td>
-            {/* <td  className="py-0.5 border border-gray-300 text-[11px]">{balanceBags}</td> */}
-            {/* <td className='text-left w-16  table-data'>
-                <input
-                    onKeyDown={e => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                        if (e.key === "Delete") { handleInputChange("0", index, "noOfBags", balanceQty) }
-                    }}
-                    min={"0"}
-                    type="number"
-                    className="text-right rounded py-1   w-full table-data-input"
-                    value={noOfBags}
-                    disabled={readOnly}
-                    onChange={(event) => {
-                        if (event.target.value < 0) return
-                        if (!event.target.value) {
-                            handleInputChange(0, index, "noOfBags", balanceQty);
-                            return
-                        }
-                        if (event.target.value > balanceBags) {
-                            toast.info("Cancel Bags Cannot be More than Bal. Bags", { position: 'top-center' })
-                            return
-                        }
-                        handleInputChange(event.target.value, index, "noOfBags", balanceBags);
-                    }}
-                    onBlur={(e) => {
-                        if (!e.target.value) {
-                            handleInputChange(0.000, index, "noOfBags", balanceBags);
-                            return
-                        }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "noOfBags", balanceBags)
-                    }}
-                />
-            </td> */}
-            {/* <td className='text-right w-16  table-data'>
-                <input
-                    onKeyDown={e => {
-                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                        if (e.altKey) { e.preventDefault() }
-                    }}
-                    min={"0"}
-                    type="number"
-                    className="text-right rounded py-1 w-full table-data-input"
-                    value={weightPerBag}
-                    disabled={readOnly}
-                    onChange={(event) => {
-                        if (event.target.value < 0) return
-                        if (!event.target.value) {
-                            handleInputChange(0, index, "weightPerBag", balanceQty);
-                            return
-                        }
-                        handleInputChange(event.target.value, index, "weightPerBag", balanceQty);
-                    }}
-                    onBlur={(e) => {
-                        if (!e.target.value) {
-                            handleInputChange(0.000, index, "weightPerBag", balanceQty);
-                            return
-                        }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "weightPerBag", balanceQty)
-                    }}
-                />
-            </td> */}
+
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{(alreadyReturnedQty)}</td>
+
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseInt(balanceQty).toFixed(3)}</td>
+
+
             <td className="py-0.5 border border-gray-300 text-[11px]">
                 <input
                     min={"0"}
@@ -136,36 +80,45 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
                         //     }
                         // }
                     }}
+                    onFocus={(e) => e.target.select()}
                     onChange={(event) => {
                         if (event.target.value < 0) return
-                        if (!event.target.value) {
-                            handleInputChange(0, index, "qty", balanceQty);
-                            return
-                        }
-                        if (event.target.value > balanceQty) {
-                            toast.info("Cancel Qty Cannot be More than Bal. Qty", { position: 'top-center' })
-                            return
-                        }
-                        handleInputChange(event.target.value, index, "qty", balanceQty);
-
-                    }}
-                    onBlur={(e) => {
-                        if (!e.target.value) {
-                            handleInputChange(0.000, index, "qty", balanceQty);
-                            return
-                        }
-                        // let value = e.target.value
-                        // let qty = parseInt(noOfBags) * parseFloat(weightPerBag)
-                        // let excessQty = parseInt(noOfBags) * 2
-                        // if ((substract(qty, excessQty)) > parseFloat(value)) {
-                        //     toast.info("Deficient Qty Cannot be Less than 2kg Per Bag", { position: 'top-center' })
-                        //     e.target.focus()
+                        // if (!event.target.value) {
+                        //     handleInputChange(0, index, "qty", balanceQty);
                         //     return
                         // }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty", balanceQty)
+              
+                        else{
+
+                            handleInputChange(event.target.value, index, "qty", balanceQty);
+                        }
+
                     }}
+                    // onBlur={(e) => {
+                    //     if (!e.target.value) {
+                    //         handleInputChange(0.000, index, "qty", balanceQty);
+                    //         return
+                    //     }
+                    //     // let value = e.target.value
+                    //     // let qty = parseInt(noOfBags) * parseFloat(weightPerBag)
+                    //     // let excessQty = parseInt(noOfBags) * 2
+                    //     // if ((substract(qty, excessQty)) > parseFloat(value)) {
+                    //     //     toast.info("Deficient Qty Cannot be Less than 2kg Per Bag", { position: 'top-center' })
+                    //     //     e.target.focus()
+                    //     //     return
+                    //     // }
+                    //     handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty", balanceQty)
+                    // }}
+                    onBlur={(e) => {
+                        const formatted =
+                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                        e.target.value = formatted;
+                        handleInputChange(formatted, index, "qty", balanceQty);
+                    }}
+                    placeHolder="0.000"
                 />
             </td>
+
             <td className="w-16 px-1 py-1 text-center">
                 <div className="flex space-x-2  justify-center">
 

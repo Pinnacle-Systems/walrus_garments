@@ -99,7 +99,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 
                 </div>
                 <div className="flex gap-2">
-                    <div>
+                    {/* <div>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -111,7 +111,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                             >
                                 Cancel
                             </button>
-                    </div>
+                    </div> */}
                     <div className="flex gap-2">
                         {!readOnly && (
                             <button

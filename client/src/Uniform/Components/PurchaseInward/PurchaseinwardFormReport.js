@@ -232,7 +232,7 @@ const PurchaseInwardFormReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Material</div>
+                    <div>poType</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -350,7 +350,7 @@ const PurchaseInwardFormReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poMaterial} </td>
+                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (

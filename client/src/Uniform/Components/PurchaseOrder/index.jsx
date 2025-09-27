@@ -79,7 +79,7 @@ export default function Form() {
 
 
 
-  const { data: allData, isLoading, isFetching } = useGetPoQuery({ params, searchParams: searchValue });
+  const { data: allData, isLoading, isFetching,refetch } = useGetPoQuery({ params, searchParams: searchValue });
 
 
   // const getNextDocId = useCallback(() => {
@@ -305,6 +305,7 @@ export default function Form() {
         await removeData(id)
         setId("");
         onNew();
+        refetch()
         Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
@@ -326,6 +327,7 @@ export default function Form() {
     setReadOnly(false);
     setPoItems([])
     setTempPoItems([])
+    setDocId("New")
 
 
   }

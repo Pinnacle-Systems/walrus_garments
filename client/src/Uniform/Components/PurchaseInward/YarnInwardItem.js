@@ -106,7 +106,7 @@ const YarnInwardPoItems = ({
                     noOfBags: "0",
                     discountType: "",
                     weightPerBag: "0.00",
-                    id : ""
+                    poItemsId : ""
                 };
             });
             return [...prev, ...newArray];
@@ -122,7 +122,8 @@ const YarnInwardPoItems = ({
             price: "",
             discountTypes: "",
             discountValue: "0.00",
-            noOfBags: "0.00"
+            noOfBags: "0.00",
+            poItemsId :""
         };
         setInwardItems([...inwardItems, newRow]);
     };
@@ -228,7 +229,7 @@ const YarnInwardPoItems = ({
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Items
                                 </th>

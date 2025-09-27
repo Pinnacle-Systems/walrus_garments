@@ -1,10 +1,10 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType } from "../../../Utils/DropdownData";
+import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType, YarnMaterial } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
-import { findFromList, getCommonParams } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import YarnPoItems from "./YarnPoItems";
@@ -142,7 +142,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setPoMaterial(data?.poMaterial ? data?.poMaterial : '')
 
     setPoItems(data?.PoItems ? data?.PoItems : []);
-    setDocId(data?.docId || "");
+    setDocId(data?.docId ? data?.docId :  "New");
     setPayTermId(data?.payTermId || "");
     setDiscountType(data?.discountType || "Percentage");
     setDiscountValue(data?.discountValue || "0");
@@ -214,13 +214,15 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           timer: 2000
         });
 
-        RequirementRefetch()
         if (returnData.statusCode === 0) {
           if (nextProcess == "new" || nextProcess == "close") {
             syncFormWithDb(undefined);
+            RequirementRefetch()
           }
           else {
             setId(returnData?.data?.id);
+            RequirementRefetch()
+
           }
 
 
@@ -240,13 +242,43 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   console.log(data, "dataaaa")
 
   const validateData = (data) => {
-    if (data?.dueDate && data?.poMaterial && data?.poType && data?.supplierId) {
-      return true;
+    let mandatoryFields = ["uomId", "price"];
+    if (poMaterial === "GreyYarn" || poMaterial === "DyedYarn") {
+      mandatoryFields = [...mandatoryFields, "yarnId"]
+    } else if (poMaterial === "GreyFabric" || poMaterial === "DyedFabric") {
+      mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
+    } else if (poMaterial === "Accessory") {
+      mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
     }
 
 
-    return false;
-  };
+
+
+    return data.poMaterial && data.supplierId && data?.dueDate
+      // &&
+      // (
+      //   (data.poType === "Accessory")
+      //     ?
+      //     isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
+      //     :
+      //     data.directInwardReturnItems.every(item =>  isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
+      // )
+      && isGridDatasValid(data?.poItems, false, mandatoryFields)
+      && data?.poItems?.length !== 0
+
+
+
+  }
+
+
+  // const validateData = (data) => {
+  //   if (data?.dueDate && data?.poMaterial && data?.poType && data?.supplierId) {
+  //     return true;
+  //   }
+
+
+  //   return false;
+  // };
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
       Swal.fire({
@@ -297,8 +329,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     <>
 
       <Modal
-        isOpen={tableDataView && poType !== "GENERAL"}
-        onClose={() => { setTableDataView(false); setPoType("") }}
+        isOpen={tableDataView && poType !== "General Purchase"}
+        onClose={() => { setTableDataView(false); setPoType(""); setPoItems([]); setSupplierId("") }}
         widthClass="  h-[80%] w-[90%]"
       >
         <OrderDetailsSelection
@@ -379,7 +411,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             </h2>
             <div className="grid grid-cols-2 gap-1 ">
               <DropdownInput name="Material "
-                options={MaterialType}
+                options={YarnMaterial}
                 value={poMaterial}
                 setValue={(value) => {
                   setPoMaterial(value);
@@ -392,7 +424,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <DropdownInput name="Po Type"
                 options={PoTypes}
                 value={poType}
-                setValue={(value) => { setPoType(value); setTableDataView(true) }}
+                setValue={(value) => { setPoType(value); }}
 
                 required={true}
                 readOnly={readOnly}
@@ -430,7 +462,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   optionList={supplierList?.data}
                   // onAddItem={handleAddSupplier}
                   // onDeleteItem={onDeleteItem}
-                  setSearchTerm={setSupplierId}
+                  // setSearchTerm={setSupplierId}
+                  setSearchTerm={(value) => { setSupplierId(value); setTableDataView(true) }}
+
                   searchTerm={supplierId}
                   show={"isSupplier"}
                   required={true}
@@ -493,7 +527,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               (
                 poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
                   ?
-                  <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+                  <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
+                    poMaterial={poMaterial}
+                  />
                   :
                   <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
               )

@@ -183,7 +183,8 @@ export function ReusableSearchableInput({
   searchTerm,
   readOnly,
   ref,
-  nextRef
+  nextRef,
+  show
 
 }) {
   const companyId = secureLocalStorage.getItem(

@@ -61,6 +61,8 @@ export const GSM_API = "gsm"
 export const LOOPLENGTH_API = "looplength"
 export const DIA_API = "dia"
 export const PO_API = 'po'
+export const ACCESSORY_PO_API = 'accessoryPo'
+
 export const PAY_TERM_API = 'payTerm'
 export const TAX_TERM_API = 'taxTerm'
 export const TAX_TEMPLATE_API = 'taxTemplate'
@@ -70,8 +72,13 @@ export const ACCESSORY_API = 'accessory'
 export const TERMS_AND_CONDITIONS_API = "termsAndCondition"
 export const LOCATION_API = 'location'
 export const DIRECT_INWARD_OR_RETURN_API = "directInwardOrReturn"
+export const ACCESSORT_PURCHASE_INWARD_API = "accessoryInward"
+
 export const DIRECT_CANCEL_OR_RETURN_API = "directCancelOrReturn"
+
 export const PURCHASE_CANCEL_API = "purchaseCancel"
+export const ACCESSORT_PURCHASE_CANCEL_API = "accesssoryPurchaseCancel"
+
 export const CUTTING_DELIVERY_API = "cuttingDelivery"
 export const CUTTING_RECEIPT_API = "cuttingReceipt"
 export const LOSS_REASON_API = "lossReason"
@@ -96,3 +103,4 @@ export const REQUIREMENT_FORM_API   = "requirementPlanningForm"
 export const RAISE_INDENET_API   = "raiseIndenet"
 export const MATERIAL_ISSUE_API   = "materialIssue"
 export const STOCK_TRANSFER_API   = "stockTransfer"
+export const EXCESSTOLERANCEAPI   = "excessTolerance"

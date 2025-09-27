@@ -40,7 +40,8 @@ import {
   GeneralPurchaseApi, RawMaterialOpeningStockApi, SocksMaterialApi, SocksTypeApi, UnitOfMeasurementApi,
   MeasurementMasterApi,
   FiberContentMasterApi,
-  requirementPlanningFormApi
+  requirementPlanningFormApi,
+  AccessoryPoApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -60,6 +61,8 @@ import MaterialMasterApi from "./uniformService/MaterialMaster";
 import RaiseIndentApi from "./uniformService/RaiseIndenetServices";
 import MaterialIssueApi from "./uniformService/MaterialIssueServices";
 import StockTransferApi from "./uniformService/StockTransferService";
+import ExcessToleranceMasterApi from "./services/ExcessToleranceServices";
+import AccessoryPurchaseCancelApi from "./uniformService/AccessoryPurchaseCancelServices";
 
 const commonReducers = {
   openTabs, party,
@@ -159,6 +162,9 @@ const commonReducers = {
   RaiseIndent: RaiseIndentApi.reducer,
   MaterialIssue: MaterialIssueApi.reducer,
   StockTransfer : StockTransferApi.reducer,
+  ExcessToleranceMaster : ExcessToleranceMasterApi.reducer,
+  accessoryPo : AccessoryPoApi.reducer,
+  AccessoryPurchaseCancel : AccessoryPurchaseCancelApi.reducer
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -256,6 +262,9 @@ MaterialMasterApi.middleware,
 RaiseIndentApi.middleware,
 MaterialIssueApi.middleware ,
 StockTransferApi.middleware,
+ExcessToleranceMasterApi.middleware,
+AccessoryPoApi.middleware,
+AccessoryPurchaseCancelApi.middleware,
 ];
 
 

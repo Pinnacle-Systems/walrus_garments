@@ -68,7 +68,7 @@ const YarnPoItems = ({
         setPoItems(newBlend);
     };
 
-    console.log(poItems, "poItemspoItems")
+    console.log(poMaterial === "DyedYarn", "poItemspoItems",poMaterial)
 
 
     const addNewRow = () => {
@@ -139,7 +139,7 @@ const YarnPoItems = ({
                                 >
                                     Items<span className="text-red-500">*</span>
                                 </th>
-                                {poMaterial === "Dyedyarn" && (
+                                {poMaterial === "DyedYarn" && (
 
                                 <th
 
@@ -237,7 +237,7 @@ const YarnPoItems = ({
                                     </td>
 
 
-                                    {poMaterial === "Dyedyarn" && (
+                                    {poMaterial === "DyedYarn" && (
                                         <td className="py-0.5 border border-gray-300 text-[11px]">
 
                                             <select
