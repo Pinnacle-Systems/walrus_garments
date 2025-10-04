@@ -19,22 +19,24 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     console.log(data, taxTermMaster, '19');
 
 
-   function getFormula(key) {
-    // Direct row fields
-    if (row[key] !== undefined) {
-        return isNaN(row[key]) ? row[key] : parseFloat(row[key]);
+
+
+    function getFormula(key) {
+        if (row[key] !== undefined) {
+            return isNaN(row[key]) ? row[key] : parseFloat(row[key]);
+        }
+
+        const formulaObj = formulas.find(f =>
+            f.name?.toUpperCase() === key.replace('_AMOUNT', '').replace('_VALUE', '').toUpperCase()
+        );
+
+        if (formulaObj) {
+            return Number(getRegex(formulaObj.amount)) || 0;
+        }
+
+        return 0;
     }
-
-    // Check already calculated formulas
-    const formulaObj = formulas.find(f => f.name?.toUpperCase() === key.toUpperCase());
-    if (formulaObj) {
-        return Number(getRegex(formulaObj.amount)) || 0;
-    }
-
-    return 0;
-}
-
-
+    const row = poItems[index];
 
     function getRegex(formula) {
         if (!formula) return 0;
@@ -48,15 +50,22 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
             });
         }
 
+        input = input.replace(/substract/g, "substractFn");
+        const substractFn = (a, b) => a - b;
+
         try {
-  
-            const result = eval(input); // ⚠️ formula comes from DB, safe because backend controls it
+            const result = eval(input);
             return result || 0;
         } catch (e) {
             console.error("Error evaluating formula:", formula, e);
             return 0;
         }
     }
+
+
+
+
+   
 
 
 
@@ -88,7 +97,6 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     if (!formulas || isFetching || isLoading || isTemplateTermFetching || isTemplateTermLoading) {
         return <Loader />
     }
-    const row = poItems[index];
 
     console.log(row, "row72")
 
