@@ -10,64 +10,33 @@ import { useGetTaxTermMasterQuery } from '../../../redux/services/TaxTermMasterS
 const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId }) => {
     const substract = s
     const [formulas, setFormulas] = useState([])
-    console.log(poItems, "poItems")
+    console.log(poItems,"poItems")
 
     const { data, isLoading, isFetching } = useGetTaxTemplateByIdQuery(taxTypeId, { skip: !taxTypeId })
 
     const { data: taxTermMaster, isLoading: isTemplateTermLoading, isFetching: isTemplateTermFetching } = useGetTaxTermMasterQuery(taxTypeId)
 
-    console.log(data, taxTermMaster, '19');
+    function getFormula(constant) {
+        console.log(constant, "constant")
 
-
-
-
-    function getFormula(key) {
-        if (row[key] !== undefined) {
-            return isNaN(row[key]) ? row[key] : parseFloat(row[key]);
-        }
-
-        const formulaObj = formulas.find(f =>
-            f.name?.toUpperCase() === key.replace('_AMOUNT', '').replace('_VALUE', '').toUpperCase()
-        );
-
-        if (formulaObj) {
-            return Number(getRegex(formulaObj.amount)) || 0;
-        }
-
-        return 0;
+        const split = constant.split("_");
+        let name = split[0];
+        let value = split[1];
+        let formula = formulas.find(f => f.name === name)
+        return formula ? formula[value.toLowerCase()] : ""
     }
-    const row = poItems[index];
 
     function getRegex(formula) {
-        if (!formula) return 0;
         let input = formula;
+        const words = formula.match(/\{(.*?)\}/g)
+        if (!words) return formula
+        words.forEach(element => {
+            input = input.replace(element, getFormula(element.slice(1, -1)))
+        });
+        console.log(input, "input")
 
-        const words = formula.match(/\{(.*?)\}/g);
-        if (words) {
-            words.forEach(element => {
-                const key = element.slice(1, -1);
-                input = input.replace(element, getFormula(key));
-            });
-        }
-
-        input = input.replace(/substract/g, "substractFn");
-        const substractFn = (a, b) => a - b;
-
-        try {
-            const result = eval(input);
-            return result || 0;
-        } catch (e) {
-            console.error("Error evaluating formula:", formula, e);
-            return 0;
-        }
+        return getRegex(input)
     }
-
-
-
-
-   
-
-
 
     const getName = useCallback((id) => {
         if (!taxTermMaster) return ""
@@ -97,12 +66,14 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     if (!formulas || isFetching || isLoading || isTemplateTermFetching || isTemplateTermLoading) {
         return <Loader />
     }
+    const row = poItems[index];
 
-    console.log(row, "row72")
+    console.log(formulas,"formulas")
 
     if (!row) return null
 
-
+    let overAllDiscountType = "Flat"
+    let overAllDiscountValue = 0;
 
     let price = isNaN(parseFloat(row["price"])) ? 0 : parseFloat(row["price"])
     let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"])
@@ -110,9 +81,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     let discountValue = isNaN(parseFloat(row["discountValue"])) ? 0 : parseFloat(row["discountValue"]);
     let taxPercent = isNaN(parseFloat(row["taxPercent"])) ? 0 : parseFloat(row["taxPercent"])
     if (!taxTermMaster || !formulas) return <div>Tax Term Not Loaded</div>
-    console.log(price, qty, "formulas85")
-
-
+    console.log(formulas, "formulas")
 
     return (
         <div className={`${(Number.isInteger(index)) ? "block" : "hidden"} bg-gray-200 z-50 overflow-auto `}>
@@ -172,14 +141,15 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                         <tr key={i}>
                             <td className="border border-gray-500 font-semibold">{f.displayName}</td>
                             <td className="border border-gray-500 font-semibold text-right">
-                                {Number(getRegex(f.value)).toFixed(2)}
+                                {eval(getRegex(f.value))}
                             </td>
                             <td className="border border-gray-500 font-semibold text-right">
-                                {Number(getRegex(f.amount)).toFixed(2)}
+                                {
+                                    eval(getRegex(f.amount))
+                                }
                             </td>
                         </tr>
                     )}
-
                 </tbody>
             </table>
         </div>
