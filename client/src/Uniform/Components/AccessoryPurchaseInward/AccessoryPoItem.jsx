@@ -4,27 +4,27 @@ import { Loader } from "lucide-react"
 import { findFromList } from "../../../Utils/helper"
 import { DELETE } from "../../../icons"
 import { HiPencil, HiTrash } from "react-icons/hi"
+import { useGetAccessoryPoItemByIdQuery } from "../../../redux/uniformService/AccessoryPoServices"
 
 
 const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId }) => {
-   
-   
-   
-    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId }, { skip: !item?.poItemsId })
-
-    console.log(item, "item")
-
-    useEffect(() => {
-        if (purchaseInwardId) return
-        if (isLoading || isFetching) return
-        const poItem = data?.data
-
-        if (data?.data) {
-            handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+    
+    
+    
+    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId }, { skip: !item?.poItemsId })
 
 
-        }
-    }, [isFetching, isLoading, data, purchaseInwardId])
+    // useEffect(() => {
+    //     if (purchaseInwardId) return
+    //     if (isLoading || isFetching) return
+    //     const poItem = data?.data
+
+    //     if (data?.data) {
+    //         handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+
+
+    //     }
+    // }, [isFetching, isLoading, data, purchaseInwardId])
     if (isLoading || isFetching) return <Loader />
 
 
@@ -65,7 +65,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty || 0}</td>
- {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+            {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
                         className="text-right rounded py-1  px-1 w-full table-data-input"
@@ -127,7 +127,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
             {!readOnly &&
-                 <td className="py-0.5 border border-gray-300 text-[11px]">
+                <td className="py-0.5 border border-gray-300 text-[11px]">
                     <div className="flex space-x-2  justify-center">
 
                         <button

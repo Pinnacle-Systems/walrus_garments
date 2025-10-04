@@ -1,36 +1,64 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { discountTypes } from '../../../Utils/DropdownData';
-import { useGetTaxTemplateByIdQuery } from '../../../redux/services/TaxTemplateServices';
-import { useGetTaxTermMasterQuery } from '../../../redux/services/TaxTermMasterServices';
+
 import { Loader } from '../../../Basic/components';
 import { substract as s } from '../../../Utils/helper';
+import { useGetTaxTemplateByIdQuery } from '../../../redux/services/TaxTemplateServices';
+import { useGetTaxTermMasterQuery } from '../../../redux/services/TaxTermMasterServices';
 
 
 const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId }) => {
     const substract = s
     const [formulas, setFormulas] = useState([])
+    console.log(poItems, "poItems")
 
     const { data, isLoading, isFetching } = useGetTaxTemplateByIdQuery(taxTypeId, { skip: !taxTypeId })
 
     const { data: taxTermMaster, isLoading: isTemplateTermLoading, isFetching: isTemplateTermFetching } = useGetTaxTermMasterQuery(taxTypeId)
 
-    function getFormula(constant) {
-        const split = constant.split("_");
-        let name = split[0];
-        let value = split[1];
-        let formula = formulas.find(f => f.name === name)
-        return formula ? formula[value.toLowerCase()] : ""
+    console.log(data, taxTermMaster, '19');
+
+
+   function getFormula(key) {
+    // Direct row fields
+    if (row[key] !== undefined) {
+        return isNaN(row[key]) ? row[key] : parseFloat(row[key]);
     }
 
-    function getRegex(formula) {
-        let input = formula;
-        const words = formula.match(/\{(.*?)\}/g)
-        if (!words) return formula
-        words.forEach(element => {
-            input = input.replace(element, getFormula(element.slice(1, -1)))
-        });
-        return getRegex(input)
+    // Check already calculated formulas
+    const formulaObj = formulas.find(f => f.name?.toUpperCase() === key.toUpperCase());
+    if (formulaObj) {
+        return Number(getRegex(formulaObj.amount)) || 0;
     }
+
+    return 0;
+}
+
+
+
+    function getRegex(formula) {
+        if (!formula) return 0;
+        let input = formula;
+
+        const words = formula.match(/\{(.*?)\}/g);
+        if (words) {
+            words.forEach(element => {
+                const key = element.slice(1, -1);
+                input = input.replace(element, getFormula(key));
+            });
+        }
+
+        try {
+  
+            const result = eval(input); // ⚠️ formula comes from DB, safe because backend controls it
+            return result || 0;
+        } catch (e) {
+            console.error("Error evaluating formula:", formula, e);
+            return 0;
+        }
+    }
+
+
 
     const getName = useCallback((id) => {
         if (!taxTermMaster) return ""
@@ -45,9 +73,11 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
         if (!data) return false
         return data.isPoWise
     }, [taxTermMaster])
+
+
     useEffect(() => {
         if (data && taxTermMaster) {
-            setFormulas(data.data.TaxTemplateDetails.map(f => {
+            setFormulas(data?.data?.TaxTemplateDetails?.map(f => {
                 return { name: (getName(f.taxTermId)), isPowise: getIsPoItem(f.taxTermId), displayName: f.displayName, value: f.value, amount: f.amount }
             }))
         }
@@ -60,10 +90,11 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     }
     const row = poItems[index];
 
+    console.log(row, "row72")
+
     if (!row) return null
 
-    let overAllDiscountType = "Flat"
-    let overAllDiscountValue = 0;
+
 
     let price = isNaN(parseFloat(row["price"])) ? 0 : parseFloat(row["price"])
     let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"])
@@ -71,6 +102,10 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     let discountValue = isNaN(parseFloat(row["discountValue"])) ? 0 : parseFloat(row["discountValue"]);
     let taxPercent = isNaN(parseFloat(row["taxPercent"])) ? 0 : parseFloat(row["taxPercent"])
     if (!taxTermMaster || !formulas) return <div>Tax Term Not Loaded</div>
+    console.log(price, qty, "formulas85")
+
+
+
     return (
         <div className={`${(Number.isInteger(index)) ? "block" : "hidden"} bg-gray-200 z-50 overflow-auto `}>
             <div className=" flex text-sm justify-around text-center border-t border-r border-l border-gray-500 bo font-bold p-1">
@@ -129,15 +164,14 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                         <tr key={i}>
                             <td className="border border-gray-500 font-semibold">{f.displayName}</td>
                             <td className="border border-gray-500 font-semibold text-right">
-                                {eval(getRegex(f.value))}
+                                {Number(getRegex(f.value)).toFixed(2)}
                             </td>
                             <td className="border border-gray-500 font-semibold text-right">
-                                {
-                                    eval(getRegex(f.amount))
-                                }
+                                {Number(getRegex(f.amount)).toFixed(2)}
                             </td>
                         </tr>
                     )}
+
                 </tbody>
             </table>
         </div>

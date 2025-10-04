@@ -45,6 +45,32 @@ const ExcessToleranceMasterApi = createApi({
             },
             providesTags: ["ExcessToleranceMaster"],
         }),
+        getExcessToleranceItems: builder.query({
+            query: ({ params }) => {
+                return {
+                    url: `${EXCESSTOLERANCEAPI}/getExcessToleranceItems`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["ExcessToleranceMaster"],
+        }),
+        getToleranceItems: builder.query({
+            query: ({ params }) => {
+                return {
+                    url: `${EXCESSTOLERANCEAPI}/getToleranceItems`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["ExcessToleranceMaster"],
+        }),
         addExcessTolerance: builder.mutation({
             query: (payload) => ({
                 url: EXCESSTOLERANCEAPI,
@@ -80,6 +106,8 @@ const ExcessToleranceMasterApi = createApi({
 export const {
     useGetExcessToleranceQuery,
     useGetExcessToleranceByIdQuery,
+    useGetExcessToleranceItemsQuery,
+    useLazyGetExcessToleranceItemsQuery,
     useAddExcessToleranceMutation,
     useUpdateExcessToleranceMutation,
     useDeleteExcessToleranceMutation,

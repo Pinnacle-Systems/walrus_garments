@@ -22,6 +22,7 @@ import {
   machineMasterApi,
   partyBranchContactMasterApi,
   partyContactMasterApi,
+  TermsandCondtionsApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -57,12 +58,13 @@ import CountsMasterApi from "./uniformService/CountsMasterServices";
 import YarnNeedleMasterApi from "./uniformService/YarnNeedleMasterservices";
 import branchTypeMasterApi from "./uniformService/BranchTypeMaster";
 import partyBranchMasterApi from "./services/PartyBranchMasterService";
-import MaterialMasterApi from "./uniformService/MaterialMaster";
 import RaiseIndentApi from "./uniformService/RaiseIndenetServices";
 import MaterialIssueApi from "./uniformService/MaterialIssueServices";
 import StockTransferApi from "./uniformService/StockTransferService";
 import ExcessToleranceMasterApi from "./services/ExcessToleranceServices";
 import AccessoryPurchaseCancelApi from "./uniformService/AccessoryPurchaseCancelServices";
+import AccessoryPurchaseInwardApi from "./uniformService/AccessoryInwardServices";
+import MaterialMasterApi from "./uniformService/MaterialMasterServices";
 
 const commonReducers = {
   openTabs, party,
@@ -164,7 +166,9 @@ const commonReducers = {
   StockTransfer : StockTransferApi.reducer,
   ExcessToleranceMaster : ExcessToleranceMasterApi.reducer,
   accessoryPo : AccessoryPoApi.reducer,
-  AccessoryPurchaseCancel : AccessoryPurchaseCancelApi.reducer
+  AccessoryPurchaseCancel : AccessoryPurchaseCancelApi.reducer ,
+  AccessoryPurchaseInward : AccessoryPurchaseInwardApi.reducer ,
+  TermsandCondtions : TermsandCondtionsApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -265,6 +269,8 @@ StockTransferApi.middleware,
 ExcessToleranceMasterApi.middleware,
 AccessoryPoApi.middleware,
 AccessoryPurchaseCancelApi.middleware,
+AccessoryPurchaseInwardApi.middleware,
+TermsandCondtionsApi.middleware,
 ];
 
 

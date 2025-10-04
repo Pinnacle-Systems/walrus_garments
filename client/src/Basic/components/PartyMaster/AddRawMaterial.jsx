@@ -9,7 +9,7 @@ import { useDeletePartyMaterialMutation, useGetPartyByIdQuery, useGetPartyMateri
 import { FaPlus } from "react-icons/fa";
 import { findFromList } from "../../../Utils/helper";
 import Swal from "sweetalert2";
-import { useAddMaterialMasterMutation } from "../../../redux/uniformService/MaterialMaster";
+import { useAddMaterialMasterMutation } from "../../../redux/uniformService/MaterialMasterServices";
 
 const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, materialActive, setMaterialActive
   , form, allData, setMaterialForm, materialForm, setMaterialId, materialId, }) => {

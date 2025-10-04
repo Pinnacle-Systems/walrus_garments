@@ -8,7 +8,7 @@ const AccessoryPurchaseInwardApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
   }),
-  tagTypes: ["DirectInwardOrReturn"],
+  tagTypes: ["AccessoryPurchaseInward"],
   endpoints: (builder) => ({
     getAccessoryPurchaseInward: builder.query({
       query: ({ params, searchParams }) => {
@@ -31,7 +31,7 @@ const AccessoryPurchaseInwardApi = createApi({
           params
         };
       },
-      providesTags: ["AccessoryPurchaseInwardApi"],
+      providesTags: ["AccessoryPurchaseInward"],
     }),
     getAccessoryPurchaseInwardById: builder.query({
       query: (id) => {
@@ -43,7 +43,7 @@ const AccessoryPurchaseInwardApi = createApi({
           },
         };
       },
-      providesTags: ["AccessoryPurchaseInwardApi"],
+      providesTags: ["AccessoryPurchaseInward"],
     }),
     getDirectItems: builder.query({
       query: ({ params }) => {
@@ -56,7 +56,7 @@ const AccessoryPurchaseInwardApi = createApi({
           params
         };
       },
-      providesTags: ["AccessoryPurchaseInwardApi"],
+      providesTags: ["AccessoryPurchaseInward"],
     }),
     getPoItemsandDirectInwardItems: builder.query({
       query: ({ params }) => {
@@ -69,7 +69,7 @@ const AccessoryPurchaseInwardApi = createApi({
           params
         };
       },
-      providesTags: ["AccessoryPurchaseInwardApi"],
+      providesTags: ["AccessoryPurchaseInward"],
     }),
     getDirectItemById: builder.query({
       query: ({ id, purchaseInwardId, stockId, storeId, billEntryId }) => {
@@ -81,7 +81,7 @@ const AccessoryPurchaseInwardApi = createApi({
           },
         };
       },
-      providesTags: ["AccessoryPurchaseInwardApi"],
+      providesTags: ["AccessoryPurchaseInward"],
     }),
 
     addAccessoryPurchaseInward: builder.mutation({
@@ -90,7 +90,7 @@ const AccessoryPurchaseInwardApi = createApi({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: ["AccessoryPurchaseInwardApi"],
+      invalidatesTags: ["AccessoryPurchaseInward"],
     }),
     updateAccessoryPurchaseInward: builder.mutation({
       query: ({ id, ...body }) => {
@@ -100,14 +100,14 @@ const AccessoryPurchaseInwardApi = createApi({
           body,
         };
       },
-      invalidatesTags: ["AccessoryPurchaseInwardApi"],
+      invalidatesTags: ["AccessoryPurchaseInward"],
     }),
     deleteAccessoryPurchaseInward: builder.mutation({
       query: (id) => ({
         url: `${ACCESSORT_PURCHASE_INWARD_API}/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["AccessoryPurchaseInwardApi"],
+      invalidatesTags: ["AccessoryPurchaseInward"],
     }),
   }),
 });

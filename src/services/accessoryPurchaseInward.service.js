@@ -1,5 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+
+
+
 import { billItemsFiltration, getDateFromDateTime, getRemovedItems, getYearShortCodeForFinYear, substract, balanceQtyCalculation, balanceReturnQtyCalculation, getYearShortCode } from '../utils/helper.js';
 import { getTableRecordWithId } from "../utils/helperQueries.js"
 import { createManyStockWithId, updateManyStockWithId } from '../utils/stockHelper.js';
@@ -7,19 +10,13 @@ import { getAllDataPoItems, getPoItemObject } from './po.service.js';
 import { getDirectInwardReturnItemsAlreadyData, getDirectInwardReturnItemsLotBreakUp } from '../utils/directInwardReturnQueries.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
-
-
-
-
-
-
 const prisma = new PrismaClient()
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
         case "DirectInward":
-            return "DI"
+            return "ADI"
         case "PurchaseInward":
-            return "GRN"
+            return "APIN"
         default:
             break;
     }
@@ -28,7 +25,7 @@ function getInwardOrReturnShortCode(poInwardOrDirectInward) {
 async function getNextDocId(branchId, poInwardOrDirectInward, shortCode, startTime, endTime) {
 
 
-    let lastObject = await prisma.directInwardOrReturn.findFirst({
+    let lastObject = await prisma.AccessoryInward.findFirst({
         where: {
             // poInwardOrDirectInward,
             branchId: parseInt(branchId),
@@ -77,7 +74,7 @@ async function get(req) {
     console.log(finYearDate, "finYearDate")
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     if (pagination) {
-        data = await prisma.directInwardOrReturn.findMany({
+        data = await prisma.AccessoryInward.findMany({
             where: {
                 AND: (finYearDate) ? [
                     {
@@ -120,7 +117,7 @@ async function get(req) {
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {
 
-        data = await prisma.directInwardOrReturn.findMany({
+        data = await prisma.AccessoryInward.findMany({
             where: {
                 AND: (finYearDate) ? [
                     {
@@ -170,7 +167,7 @@ export async function getDirectItems(req) {
     let totalCount;
     console.log(pagination, "pagination")
     if (pagination) {
-        data = await prisma.directItems.findMany({
+        data = await prisma.AccessoryInwardItems.findMany({
             where: {
                 // DirectInwardOrReturn:
                 // {
@@ -287,7 +284,7 @@ export async function getDirectItems(req) {
         }
     }
     else {
-        data = await prisma.directItems.findMany({
+        data = await prisma.AccessoryInwardItems.findMany({
             where: {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
@@ -325,7 +322,7 @@ export async function getAllDataDirectItems(data, storeId) {
 }
 
 export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnId, storeId, stockId) {
-    let data = await prisma.directItems.findUnique({
+    let data = await prisma.AccessoryInwardItems.findUnique({
         where: {
             id: parseInt(id)
         },
@@ -955,7 +952,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
     if (poType == "GreyYarn" || poType == "DyedYarn") {
 
         promises = directItems?.map(async (item, index) => {
-            const data = await tx.directItems.create({
+            const data = await tx.AccessoryInwardItems.create({
                 data: {
                     directInwardOrReturnId: parseInt(directInwardOrReturnId),
                     yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
@@ -992,7 +989,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
     else {
         // console.log(directItems,"directItems")
         promises = directItems?.map(async (item, index) => {
-            const data = await tx.directItems.create({
+            const data = await tx.AccessoryInwardItems.create({
                 data: {
                     directInwardOrReturnId: directInwardOrReturnId ? parseInt(directInwardOrReturnId) : undefined,
                     accessoryId: item?.accessoryId ? parseInt(item["accessoryId"]) : undefined,
@@ -1050,7 +1047,7 @@ async function create(body) {
 
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.directInwardOrReturn.create({
+        data = await tx.AccessoryInward.create({
             data: {
                 poType,
                 poInwardOrDirectInward: poInwardOrDirectInward ? poInwardOrDirectInward : undefined,
@@ -1194,7 +1191,7 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
         }
         else {
 
-            return await tx.directItems.update({
+            return await tx.AccessoryInwardItems.update({
                 where: {
                     id: parseInt(item.id)
                 },
@@ -1295,8 +1292,8 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                     // }
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
         }
+        await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
 
     }
 }
@@ -1313,12 +1310,12 @@ async function update(id, body) {
         branchId, active, userId } = await body
 
 
-    const dataFound = await prisma.directInwardOrReturn.findUnique({
+    const dataFound = await prisma.AccessoryInward.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            DirectItems: true
+            AccessoryInwardItems: true
         }
     })
     if (!dataFound) return NoRecordFound("directInwardOrReturn");
@@ -1332,7 +1329,7 @@ async function update(id, body) {
     await prisma.$transaction(async (tx) => {
 
         await deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardReturnIds);
-        piData = await tx.directInwardOrReturn.update({
+        piData = await tx.AccessoryInward.update({
             where: {
                 id: parseInt(id)
             },

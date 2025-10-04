@@ -5,7 +5,9 @@ const prisma = new PrismaClient()
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.ExcessTolerance.findMany({
-        
+           include: {
+            ExcessToleranceItems: true
+        }
     });
     return { statusCode: 0, data };
 }
@@ -17,52 +19,81 @@ async function getOne(id) {
         where: {
             id: parseInt(id)
         },
-        include : {
-                ExcessToleranceItems : true
-            
+        include: {
+            ExcessToleranceItems: true
         }
+
     })
     if (!data) return NoRecordFound("counts");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
+export async function getToleranceItems(req) {
+    const { companyId, active } = req.query
+    const data = await prisma.ExcessToleranceItems.findMany({
+       
+    });
+    return { statusCode: 0, data };
+}
+
+export async function getExcessToleranceItems(req) {
+    const { companyId, active, materialId  ,poMaterial } = req.query;
+    const allData = await prisma.ExcessToleranceItems.findMany({});
+
+        console.log("materialId",materialId)
+
+    const data = materialId
+        ? allData.filter(item => item?.materialId === materialId)
+        : allData;
+
+    return { statusCode: 0, data };
+}
+
+
+
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active } = req.query
     const data = await prisma.ExcessTolerance.findMany({
-      
+
     })
     return { statusCode: 0, data: data };
 }
 
 async function create(body) {
-    const { transaction, excessType, toleranceItems , active} = await body
-    const data = await prisma.ExcessTolerance.create(
-        {
-            data: {
-                transaction, excessType,active,
-                ExcessToleranceItems: {
-                    createMany: toleranceItems?.length > 0 ? {
-                        data: toleranceItems?.map((temp) => {
-                            let newItem = {}
-                            newItem["fromTolerance"] = temp["fromTolerance"] ? parseFloat(temp["fromTolerance"]) : null;
-                            newItem["toTolerance"] = temp["toTolerance"] ? parseFloat(temp["toTolerance"]) : null;
-                            newItem["qty"] = temp["qty"] ? parseFloat(temp["qty"]) : null;
-                            newItem["notes"] = temp["notes"] ? parseFloat(temp["notes"]) : null;
+    const { transaction, excessType, toleranceItems, materialId } = body; // no await needed
 
 
-                            return newItem
-                        })
-                    } : undefined
-                }
-            }
-        }
-    )
+    const data = await prisma.ExcessTolerance.create({
+        data: {
+            materialId: materialId ? parseInt(materialId) : undefined,
+            ExcessToleranceItems: {
+                createMany: toleranceItems.length > 0
+                    ? {
+                        data: toleranceItems.map((temp) => ({
+                            excessType: temp.excessType ? temp.excessType : undefined,
+                            orderType: temp.orderType ? temp.orderType : undefined,
+                            roundOfType: temp.roundOfType ? temp.roundOfType : "",
+                            qty: temp?.qty ? temp?.qty : undefined,
+                            from: temp?.from ? temp?.from : undefined,
+                            to: temp?.to ? temp?.to : undefined,
+                            excessQty: temp?.excessQty ? temp?.excessQty : undefined,
+                            active: temp?.active ? temp?.active : false,
+                            materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
+                            material : temp?.material ?  temp?.material : undefined ,
+                        })),    
+                    }
+                    : undefined,
+            },
+        },
+
+    });
+
     return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    const { transaction, excessType, toleranceItems , active} = await body
+    const { transaction, excessType, toleranceItems, materialId } = await body
     const dataFound = await prisma.ExcessTolerance.findUnique({
         where: {
             id: parseInt(id)
@@ -73,19 +104,23 @@ async function update(id, body) {
         where: {
             id: parseInt(id),
         },
-        data:
-        {
-            transaction, excessType,active,
+        data: {
+            materialId: materialId ? parseInt(materialId) : undefined,
             ExcessToleranceItems: {
                 deleteMany: {},
                 createMany: toleranceItems.length > 0
                     ? {
                         data: toleranceItems.map((temp) => ({
-                            fromTolerance: temp.fromTolerance ? parseFloat(temp.fromTolerance) : undefined,
-                            toTolerance: temp.toTolerance ? parseFloat(temp.toTolerance) : undefined,
-                            qty: temp.qty ? parseFloat(temp.qty) : "",
-                            notes: temp.notes ? parseFloat(temp.notes) : "",
-
+                            excessType: temp.excessType ? temp.excessType : undefined,
+                            orderType: temp.orderType ? temp.orderType : undefined,
+                            roundOfType: temp.roundOfType ? temp.roundOfType : "",
+                            qty: temp?.qty ? temp?.qty : undefined,
+                            from: temp?.from ? temp?.from : undefined,
+                            to: temp?.to ? temp?.to : undefined,
+                            excessQty: temp?.excessQty ? temp?.excessQty : undefined,
+                            active: temp?.active ? temp?.active : false,
+                            materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
+                            material : temp?.material ?  temp?.material : undefined ,
 
                         })),
                     }

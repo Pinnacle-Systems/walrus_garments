@@ -7,7 +7,7 @@
   "scripts": {
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
-    "start":  "node --max-old-space-size=4096 server.js",
+    "start": "node --max-old-space-size=4096 server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "server": "NODE_OPTIONS = --max-old-space-size=8192",
     "dev": "nodemon server.js",
@@ -25,6 +25,7 @@
     "express": "^4.18.2",
     "joi": "^17.8.3",
     "jsonwebtoken": "^9.0.0",
+    "mathjs": "^14.8.1",
     "moment": "^2.30.1",
     "multer": "^1.4.5-lts.1",
     "mysql": "^2.18.1",

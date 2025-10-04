@@ -101,6 +101,8 @@ export { default as raiseIndent } from "./materialRequst.route.js"
 export { default as materialIssue } from "./materialIssue.route.js"
 export { default as stockTransfer } from "./StockTransfer.route.js"
 export { default as excessTolerance } from "./excessTolerance.route.js"
-
 export { default as accessoryPo } from "./accessoryPo.route.js"
 export { default as accesssoryPurchaseCancel } from "./accesssoryPurchaseCancel.route.js"
+export { default as accessoryPurchaseInward } from "./accessoryPurchaseInward.route.js"
+export { default as terms$conditions } from "./termsAndConditionMaster.route.js"
+

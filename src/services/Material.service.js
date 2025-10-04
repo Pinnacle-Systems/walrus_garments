@@ -6,7 +6,6 @@ async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.rawMaterial.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
@@ -45,13 +44,13 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, companyId,  material,
+    const { name, code, active,  material,
     materialActive,
     materialId } = await body
     const data = await prisma.rawMaterial.create(
         {
             data: {
-            name  :  material , code, active : materialActive
+            name  :  name , code, active 
             }
         }
     )
@@ -74,7 +73,7 @@ async function update(id, body) {
         },
         data:
         {
-            name  :  material , code, active : materialActive
+            name  :  name , code, active 
         },
     })
     return { statusCode: 0, data };

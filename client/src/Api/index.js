@@ -72,7 +72,7 @@ export const ACCESSORY_API = 'accessory'
 export const TERMS_AND_CONDITIONS_API = "termsAndCondition"
 export const LOCATION_API = 'location'
 export const DIRECT_INWARD_OR_RETURN_API = "directInwardOrReturn"
-export const ACCESSORT_PURCHASE_INWARD_API = "accessoryInward"
+export const ACCESSORT_PURCHASE_INWARD_API = "accessoryPurchaseInward"
 
 export const DIRECT_CANCEL_OR_RETURN_API = "directCancelOrReturn"
 
@@ -104,3 +104,4 @@ export const RAISE_INDENET_API   = "raiseIndenet"
 export const MATERIAL_ISSUE_API   = "materialIssue"
 export const STOCK_TRANSFER_API   = "stockTransfer"
 export const EXCESSTOLERANCEAPI   = "excessTolerance"
+export const TERMS_CONDITIONS_API   = "termsconditions"

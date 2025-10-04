@@ -1,11 +1,17 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch,  create, update, remove} from '../controllers/excessTolerance.controller.js';
+import { get, getOne, getSearch,  create, update, remove, getExcessToleranceItems, getToleranceItems} from '../controllers/excessTolerance.controller.js';
 
 
 router.post('/', create);
 
 router.get('/', get);
+
+router.get('/getToleranceItems', getToleranceItems);
+
+
+router.get('/getExcessToleranceItems', getExcessToleranceItems);
+
 
 router.get('/:id', getOne);
 

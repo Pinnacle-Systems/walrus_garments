@@ -44,7 +44,10 @@ import {
   stockTransfer,
   excessTolerance,
   accessoryPo,
-  accesssoryPurchaseCancel
+  accesssoryPurchaseCancel,
+  accessoryPurchaseInward,
+  
+  terms$conditions,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -187,6 +190,8 @@ app.use("/stockTransfer",stockTransfer)
 app.use("/excessTolerance",excessTolerance)
 app.use("/accessoryPo",accessoryPo)
 app.use("/accesssoryPurchaseCancel",accesssoryPurchaseCancel)
+app.use("/accessoryPurchaseInward",accessoryPurchaseInward)
+app.use("/termsconditions",terms$conditions)
 
 
 
@@ -206,6 +211,7 @@ const io = new Server(httpServer, {
 io.on("connection", socketMain);
 
 const PORT = process.env.PORT || 9000;
+
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });

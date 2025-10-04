@@ -288,5 +288,30 @@ export const Common = [
 export const ExcessToleranceType = [
     { show: "INWARD", value: "INWARD" },
     { show: "PROCESS", value: "PROCESS" },
-    { show : "PURCHASE" , value : "PURCHASE"}
+    { show: "PURCHASE", value: "PURCHASE" }
+]
+
+export const Transactions = [
+    { show: "YARN", value: "INWARD" },
+    { show: "PROCESS", value: "PROCESS" },
+    { show: "PURCHASE", value: "PURCHASE" }
+]
+
+export const OrderType = [
+    { show: "ORDER", value: "ORDER" },
+    { show: "PLANNING", value: "PLANNING" },
+    { show: "SAMPLE", value: "SAMPLE" },
+    { show: "GENERAL", value: "GENERAL" },
+
+]
+export const QtyType = [
+    { show: "QTY(KG)", value: "QTY" },
+    { show: "PERCENTAGE", value: "PERCENTAGE" },
+    { show: "ROUNDOFF", value: "ROUNDOFF" },
+
+]
+export const RoundOff = [
+    { show: "BAG", value: "BAG" },
+    // { show: "WEIGHT", value: "WEIGHT" },
+
 ]

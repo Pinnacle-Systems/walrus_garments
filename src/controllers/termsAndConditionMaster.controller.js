@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client'
 import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/termsAndConditionMaster.service.js';
 
 async function get(req, res, next) {
+        console.log("Hit")
+
     try {
         res.json(await _get(req));
         console.log(res.statusCode);
@@ -30,6 +32,7 @@ async function getSearch(req, res, next) {
 }
 
 async function create(req, res, next) {
+    console.log(req,"req")
     try {
         res.json(await _create(req.body));
         console.log(res.statusCode);

@@ -33,7 +33,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
         setPoItems(prevItems => {
             let newItems = structuredClone(prevItems);
 
-            const index = newItems.findIndex(v => v?.yarnId === "");
+            const index = newItems?.findIndex(v => v?.yarnId === "");
 
 
             if (index !== -1) {

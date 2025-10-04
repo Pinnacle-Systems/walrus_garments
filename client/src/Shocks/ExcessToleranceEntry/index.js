@@ -5,12 +5,15 @@ import toast from 'react-hot-toast';
 import { useAddCountsMasterMutation, useDeleteCountsMasterMutation, useGetCountsMasterByIdQuery, useGetCountsMasterQuery, useUpdateCountsMasterMutation } from '../../redux/uniformService/CountsMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
-import { DropdownInput, ReusableTable, TextInput, ToggleButton } from '../../Inputs';
-import { ExcessToleranceType, statusDropdown } from '../../Utils/DropdownData';
+import { DropdownInput, DropdownWithSearch, ReusableTable, TextInput, ToggleButton } from '../../Inputs';
+import { ExcessToleranceType, OrderType, QtyType, RoundOff, statusDropdown } from '../../Utils/DropdownData';
 import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
 import Swal from 'sweetalert2';
-import { useAddExcessToleranceMutation, useDeleteExcessToleranceMutation, useGetExcessToleranceByIdQuery, useGetExcessToleranceQuery, useUpdateExcessToleranceMutation } from '../../redux/services/ExcessToleranceServices';
+import { useAddExcessToleranceMutation, useDeleteExcessToleranceMutation, useGetExcessToleranceByIdQuery, useGetExcessToleranceItemsQuery, useGetExcessToleranceQuery, useLazyGetExcessToleranceItemsQuery, useUpdateExcessToleranceMutation } from '../../redux/services/ExcessToleranceServices';
+import { useGetMaterialMasterQuery } from '../../redux/uniformService/MaterialMasterServices';
+import { HiTrash } from 'react-icons/hi';
+import { findFromList } from '../../Utils/helper';
 
 
 export default function Form() {
@@ -19,37 +22,69 @@ export default function Form() {
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [transaction, setTransaction] = useState("");
+    const [orderType, setOrderType] = useState("");
+
+    const [qty, setQty] = useState("");
+    const [roundOfType, setRoundOfType] = useState("");
+    const [from, setFrom] = useState("");
+    const [to, setTo] = useState("");
+    const [excessQty, setExcessQty] = useState("");
+    const [tempId, setTempId] = useState('')
+    const [bagWeight, setBagWeight] = useState('')
+
+    const [material, setMaterial] = useState("")
+    const [materialId, setMaterialId] = useState("")
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({})
     const [excessType, setExcessType] = useState("")
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
     const [toleranceItems, setToleranceItems] = useState([])
+    const [tolerancePercentageItems, setTolerancePercentageItems] = useState([])
+
+
+
+
 
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
+    const newParams = {
+        materialId
+
+    }
     const { data: allData, isLoading, isFetching } = useGetExcessToleranceQuery({ params, searchParams: searchValue });
+    const {
+        data: materialData,
+
+    } = useGetMaterialMasterQuery({ params });
+
+
+    // useEffect(() => {
+    //     if (toleranceItems?.length >= 1) return
+    //     setToleranceItems(prev => {
+    //         let newArray = Array?.from({ length: 1 - prev?.length }, () => {
+    //             return {
+
+    //                 materialId: "",
+    //                 toTolerance: "0",
+
+    //             }
+    //         })
+    //         return [...prev, ...newArray]
+    //     }
+    //     )
+    // }, [setToleranceItems, toleranceItems])
+
+
+    const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
 
     useEffect(() => {
-        if (toleranceItems?.length >= 1) return
-        setToleranceItems(prev => {
-            let newArray = Array?.from({ length: 1 - prev?.length }, () => {
-                return {
 
-                    fromTolerance: "",
-                    toTolerance: "0",
-
-                }
-            })
-            return [...prev, ...newArray]
-        }
-        )
-    }, [setToleranceItems, toleranceItems])
-
-
+        setToleranceItems(excessToleranceItems?.data)
+    }, [isExcessFetching, isExcessLoading, excessToleranceItems]);
 
     const {
         data: singleData,
@@ -71,9 +106,9 @@ export default function Form() {
 
 
             } else {
-                setTransaction(data?.transaction ?  data?.transaction :  "");
-                setExcessType(data?.excessType  ?  data?.excessType  : "")
-                setToleranceItems(data?.ExcessToleranceItems  ? data?.ExcessToleranceItems  : [])
+                setMaterialId(data?.materialId ? data?.materialId : "");
+                setExcessType(data?.excessType ? data?.excessType : "")
+                setToleranceItems(data?.ExcessToleranceItems ? data?.ExcessToleranceItems : [])
             }
         },
         [id]
@@ -84,15 +119,20 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, transaction, excessType, toleranceItems,active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, materialId,
+        excessType, toleranceItems
+        , active, material: findFromList(materialId, materialData?.data, "name"),
+        companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
-    const validateData = (data) => {
-        if (data.transaction && data?.excessType) {
-            return true;
-        }
-        return false;
-    }
+    console.log(data, "data")
+
+    // const validateData = (data) => {
+    //     if (data.transaction && data?.excessType) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     const handleSubmitCustom = async (callback, data, text) => {
         try {
@@ -117,22 +157,22 @@ export default function Form() {
     };
 
     const saveData = () => {
-        if (!validateData(data)) {
-            // toast.error("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
-            Swal.fire({
-                title:  "Please fill all required fields...!",
-                icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            return;
-        }
+        // if (!validateData(data)) {
+        //     toast.error("Please fill all required fields...!", {
+        //         position: "top-center",
+        //     });
+        //     Swal.fire({
+        //         title: "Please fill all required fields...!",
+        //         icon: "success",
+        //         draggable: true,
+        //         timer: 1000,
+        //         showConfirmButton: false,
+        //         didOpen: () => {
+        //             Swal.showLoading();
+        //         }
+        //     });
+        //     return;
+        // }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
@@ -187,11 +227,37 @@ export default function Form() {
         setSearchValue("");
         syncFormWithDb(undefined);
         setReadOnly(false);
-        setTransaction("")
+        setOrderType("")
         setExcessType("")
         setToleranceItems([])
+        setRoundOfType('')
+        setBagWeight("")
+        setTempId("")
+        setMaterialId("")
+        setFrom("")
+        setTo("")
+        setExcessQty("")
+        setQty("");
+
 
     };
+
+    const emptyRecoreds = () => {
+
+        // setMaterialId("");
+        setExcessType("");
+        setOrderType("");
+        setQty("");
+        setRoundOfType("");
+        setFrom("");
+        setTo("");
+        setBagWeight("")
+        setExcessQty("")
+
+    };
+
+
+
 
     function onDataClick(id) {
         setId(id);
@@ -217,29 +283,25 @@ export default function Form() {
         },
 
         {
-            header: "Transaction",
-            accessor: (item) => item?.transaction,
+            header: "Material",
+            accessor: (item) => findFromList(item?.materialId, materialData?.data, "name"),
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-center uppercase w-72",
         },
-        {
-            header: "Type",
-            accessor: (item) => item?.excessType,
-            //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-72",
-        },
-        {
-            header: "active",
-            accessor: (item) => (item.active ? ACTIVE : INACTIVE),
-            //   cellClass: () => "font-medium text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-16",
-        },
 
-
-
+        // {
+        //     header: "active",
+        //     accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+        //     //   cellClass: () => "font-medium text-gray-900",
+        //     className: "font-medium text-gray-900 text-center uppercase w-16",
+        // },
 
     ];
+
+
+
     const handleInputChange = (value, index, field) => {
+        console.log(value, "value")
         const newBlend = structuredClone(toleranceItems);
         newBlend[index][field] = value;
         setToleranceItems(newBlend);
@@ -247,18 +309,96 @@ export default function Form() {
 
 
 
+
     const handleView = (id) => {
         setId(id);
         setForm(true);
         setReadOnly(true);
-        console.log("view");
     };
     const handleEdit = (id) => {
         setId(id);
         setForm(true);
         setReadOnly(false);
-        console.log("Edit");
     };
+
+    const handleDone = () => {
+
+        if (!materialId && !excessType && !orderType && !qty && !roundOfType) {
+            toast.error("Please fill all required fields...!", {
+                position: "top-center",
+            });
+            return
+        }
+        else {
+
+            const newRecord = {
+                materialId,
+                excessType,
+                orderType,
+                qty,
+                roundOfType,
+                from,
+                to,
+                excessQty,
+                material: findFromList(materialId, materialData?.data, "name"),
+                tempId: Date.now(),
+            };
+
+            setToleranceItems(prevItems => {
+                let newItems = structuredClone(prevItems);
+
+                let index;
+                console.log(tempId, "tempId")
+                if (tempId) {
+                    index = newItems?.findIndex(v => v?.tempId || v.id === tempId);
+                } else {
+                    index = newItems?.findIndex(v => v?.materialId === "");
+                }
+                if (index !== -1) {
+                    newItems[index] = newRecord;
+                }
+                else {
+                    newItems.push(newRecord);
+                }
+                return newItems;
+            });
+
+            emptyRecoreds();
+        }
+    };
+
+
+
+
+
+
+
+    console.log(toleranceItems, "toleranceItems")
+
+    const handleSelectRecord = (record) => {
+
+        console.log(record, "record")
+
+
+        setMaterialId(record.materialId);
+        setExcessType(record.excessType);
+        setOrderType(record.orderType);
+        setQty(record.qty);
+        setRoundOfType(record.roundOfType);
+        setFrom(record.from);
+        setTo(record.to);
+        setExcessQty(record.excessQty)
+        setTempId(record?.tempId ? record?.tempId : record.id)
+    };
+
+
+    const deleteRow = (id) => {
+        setToleranceItems((yarnBlend) =>
+            yarnBlend.filter((row, index) => index !== parseInt(id))
+        );
+    };
+
+
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
@@ -293,7 +433,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[70%] h-[90%]"}
+                        widthClass={"w-[90%] h-[90%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -319,6 +459,8 @@ export default function Form() {
                                                     setForm(false);
                                                     setSearchValue("");
                                                     setId(false);
+                                                    onNew()
+                                                    emptyRecoreds()
                                                 }}
                                                 className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                                             >
@@ -342,40 +484,69 @@ export default function Form() {
                                 </div>
                             </div>
 
-                            {/* <div className="flex-1 overflow-auto p-3">
-                                <div className="grid grid-cols-1  gap-3  h-full">
-                                    <div className="lg:col-span-2 space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="space-y-4 ">
-                                                <fieldset className=' rounded mt-2'>
-                                                    <div className=''>
-                                                        <div className='mb-3 w-[48%]'>
-                                                            <TextInput name="Transaction" type="text" value={transaction} setValue={setTransaction} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
-                                                        <div className='mb-3 w-[48%]'>
-                                                            <DropdownInput name="Type" options={ExcessToleranceType}  value={transaction} setValue={setTransaction} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
-                                                        <div className='mb-5'>
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                        </div>
-                                                    </div>
-                                                </fieldset>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> */}
+
                             <div className='flex-1 overflow-auto p-3 space-y-3'>
-                                <div className='grid grid-cols-4  gap-5'>
+                                <div className='grid grid-cols-8 gap-3'>
                                     <div className='mb-3'>
-                                        <TextInput name="Transaction" type="text" value={transaction} setValue={setTransaction} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <DropdownWithSearch 
+                                        label="Material"
+                                            labelField={"name"}
+                                            options={materialData?.data} type="text" value={materialId}
+                                            setValue={(value) => {
+                                                setMaterialId(value)
+                                                fetchExcessToleranceItems({ params: newParams, materialId });
+                                            }}
+                                            required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
                                     <div className=' '>
-                                        <DropdownInput name="Type" options={ExcessToleranceType} value={excessType} setValue={setExcessType} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <DropdownInput name="Transaction Type" options={ExcessToleranceType} value={excessType} setValue={setExcessType} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
-                                    <div className='mt-5'>
-                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+
+                                    <div className='mb-3'>
+                                        <DropdownInput name="Order Type" type="text " options={OrderType} value={orderType} setValue={setOrderType} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                     </div>
+                                    <div className='mb-3'>
+                                        <DropdownInput name="Qty Type" type="text " options={QtyType} value={qty} setValue={setQty} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                    </div>
+
+                                    <div className='mb-3'>
+                                        <DropdownInput name="Round Of" type="text" disabled={qty !== "ROUNDOFF"} options={RoundOff} value={roundOfType} setValue={setRoundOfType} required={true} readOnly={readOnly} />
+                                    </div>
+                                    <div className='mb-3'>
+                                        <TextInput name="Bag Weight" type="text" disabled={roundOfType !== "BAG"} value={bagWeight} setValue={setBagWeight} required={true} readOnly={readOnly} />
+                                    </div>
+
+                                    <div className='mb-3'>
+                                        <TextInput name="From" type="text" value={from} setValue={setFrom} required={true} readOnly={readOnly} />
+                                    </div>
+                                    <div className='mb-3'>
+                                        <TextInput name="To" type="text " value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                    </div>
+
+                                    <div className='mb-3'>
+
+                                        <TextInput name="Excess" type="text " value={excessQty} setValue={setExcessQty} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                    </div>
+
+
+
+
+                                    <div className="flex justify-start h-8">
+
+                                        <div className="flex gap-2 mt-6 h-6">
+                                            <button
+                                                type="button"
+                                                onClick={handleDone}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                                  border border-blue-600 flex items-center gap-1 text-xs"
+                                            >
+                                                add
+
+                                            </button>
+                                        </div>
+                                    </div>
+
+
                                 </div>
                                 <div>
                                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
@@ -395,37 +566,70 @@ export default function Form() {
                                                         </th>
                                                         <th
 
-                                                            className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                                         >
-                                                            From Tolerance
+                                                            Material
+                                                        </th>
+                                                        <th
+
+                                                            className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                                        >
+                                                            Transaction Type
                                                         </th>
 
 
                                                         <th
 
-                                                            className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                                         >
-                                                            To Tolerance
+                                                            OrderType
+                                                        </th>
+
+                                                        <th
+
+                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                                        >
+                                                            RoundOff
+                                                        </th>
+
+                                                        <th
+
+                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                                        >
+                                                            From
+                                                        </th>
+
+                                                        <th
+
+                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                                        >
+                                                            To
                                                         </th>
                                                         <th
 
-                                                            className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                                            className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                                         >
-                                                            Qty
+                                                            Qty Type
                                                         </th>
                                                         <th
 
                                                             className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                                         >
-                                                            Notes
+                                                            ExcessQty
+                                                        </th>
+                                                        <th
+
+                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                                        >
+                                                            Active
                                                         </th>
 
+                                                        <th
 
+                                                            className={`w-7 px-3 py-2 text-center font-medium text-[13px] `}
+                                                        >
 
-
-
-
-
+                                                        </th>
 
                                                     </tr>
                                                 </thead>
@@ -433,48 +637,122 @@ export default function Form() {
                                                 <tbody>
 
                                                     {(toleranceItems ? toleranceItems : [])?.map((row, index) =>
-                                                        <tr className="border border-blue-gray-200 cursor-pointer " >
+                                                        <tr className="border border-blue-gray-200 cursor-pointer "
+                                                            onClick={() => handleSelectRecord(row, row?.tempId)}
+                                                        >
                                                             <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">
-                                                                <input
-                                                                    className=" rounded px-4 ml-2 w-full py-0.5 text-xs focus:outline-none text-right table-data-input"
 
-                                                                    value={row?.fromTolerance}
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <select
+                                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "materialId") } }}
+                                                                    disabled={true} className='text-left w-full rounded py-1 table-data-input' value={row.materialId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                                                    onBlur={(e) => {
+                                                                        handleInputChange((e.target.value), index, "materialId")
+                                                                    }}
+                                                                    readOnly={true}
+
+                                                                >
+
+                                                                    <option hidden>
+                                                                    </option>
+                                                                    {(id ? materialData?.data : materialData?.data?.filter(item => item.active))?.map((blend) =>
+                                                                        <option value={blend.id} key={blend.id}>
+                                                                            {blend.name}
+                                                                        </option>
+                                                                    )}
+                                                                </select>
+                                                            </td>
+                                                            <td className=" border border-gray-300 text-[11px]  text-left p-0.5 cursor-pointer">
+                                                                <input
+                                                                    className="px-1 rounded  w-full py-0.5 text-xs focus:outline-none text-left "
+
+                                                                    value={row?.excessType}
                                                                     onFocus={e => e.target.select()}
-                                                                    disabled={readOnly}
+                                                                    readOnly={true}
                                                                     onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "fromTolerance")
+                                                                        handleInputChange(e.target.value, index, "excessType")
                                                                     }}
                                                                     onBlur={(e) => {
 
-                                                                        handleInputChange(e.target.value, index, "fromTolerance");
+                                                                        handleInputChange(e.target.value, index, "excessType");
+                                                                    }}
+                                                                />
+                                                            </td>
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <input
+                                                                    className="rounded px-1  w-full py-0.5 text-xs focus:outline-none text-left "
+
+                                                                    value={row?.orderType}
+                                                                    onFocus={e => e.target.select()}
+                                                                    readOnly={true}
+                                                                    onChange={(e) => {
+                                                                        handleInputChange(e.target.value, index, "orderType")
+                                                                    }}
+                                                                    onBlur={(e) => {
+
+                                                                        handleInputChange(e.target.value, index, "orderType");
+                                                                    }}
+                                                                />
+                                                            </td>
+
+
+
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <input
+                                                                    className="rounded px-4  w-full py-0.5 text-xs focus:outline-none text-left"
+
+                                                                    value={row?.roundOfType}
+                                                                    onFocus={e => e.target.select()}
+                                                                    readOnly={true}
+                                                                    onChange={(e) => {
+                                                                        handleInputChange(e.target.value, index, "roundOfType")
+                                                                    }}
+                                                                    onBlur={(e) => {
+
+                                                                        handleInputChange(e.target.value, index, "roundOfType");
+                                                                    }}
+                                                                />
+                                                            </td>
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <input
+                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
+
+                                                                    value={parseFloat(row?.from || 0).toFixed(3)}
+                                                                    onFocus={e => e.target.select()}
+                                                                    readOnly={true}
+                                                                    onChange={(e) => {
+                                                                        handleInputChange(e.target.value, index, "from")
+                                                                    }}
+                                                                    onBlur={(e) => {
+
+                                                                        handleInputChange(e.target.value, index, "from");
                                                                     }}
                                                                 />
 
                                                             </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
                                                                 <input
-                                                                    className=" rounded px-4 ml-2 w-full py-0.5 text-xs focus:outline-none text-right table-data-input"
+                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
 
-                                                                    value={row?.toTolerance}
+                                                                    value={parseFloat(row?.to || 0).toFixed(3)}
                                                                     onFocus={e => e.target.select()}
-                                                                    disabled={readOnly}
+                                                                    readOnly={true}
                                                                     onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "toTolerance")
+                                                                        handleInputChange(e.target.value, index, "to")
                                                                     }}
                                                                     onBlur={(e) => {
 
-                                                                        handleInputChange(e.target.value, index, "toTolerance");
+                                                                        handleInputChange(e.target.value, index, "to");
                                                                     }}
                                                                 />
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">
-                                                                <input
-                                                                    className=" rounded px-4 ml-2 w-full py-0.5 text-xs focus:outline-none text-right table-data-input"
 
+                                                            </td>
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <input
+                                                                    className="rounded px-1   w-full py-0.5 text-xs focus:outline-none text-left "
                                                                     value={row?.qty}
                                                                     onFocus={e => e.target.select()}
-                                                                    disabled={readOnly}
+                                                                    readOnly={true}
                                                                     onChange={(e) => {
                                                                         handleInputChange(e.target.value, index, "qty")
                                                                     }}
@@ -484,21 +762,51 @@ export default function Form() {
                                                                     }}
                                                                 />
                                                             </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
                                                                 <input
-                                                                    className="rounded px-4 ml-2 w-full py-0.5 text-xs focus:outline-none text-right table-data-input"
+                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
 
-                                                                    value={row?.notes}
+                                                                    value={parseFloat(row?.excessQty || 0).toFixed(3)}
                                                                     onFocus={e => e.target.select()}
-                                                                    disabled={readOnly}
+                                                                    readOnly={true}
                                                                     onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "notes")
+                                                                        handleInputChange(e.target.value, index, "excessQty")
                                                                     }}
                                                                     onBlur={(e) => {
 
-                                                                        handleInputChange(e.target.value, index, "notes");
+                                                                        handleInputChange(e.target.value, index, "excessQty");
                                                                     }}
                                                                 />
+
+                                                            </td>
+                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+
+                                                                <div className="flex items-center">
+                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="sr-only peer"
+                                                                            checked={row.active}
+                                                                            onChange={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleInputChange(e.target.checked, index, "active");
+                                                                            }}
+                                                                        />
+                                                                        <div className="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 peer transition duration-300"></div>
+                                                                        <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-6 transition-transform duration-300 shadow-sm"></div>
+                                                                    </label>
+
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-1.5  border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                                <button
+                                                                    onClick={() => deleteRow(index)}
+                                                                    className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                                                >
+                                                                    <HiTrash className="w-4 h-4" />
+
+                                                                </button>
+
                                                             </td>
 
                                                         </tr>
@@ -508,6 +816,7 @@ export default function Form() {
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </Modal>

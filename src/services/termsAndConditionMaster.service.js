@@ -6,11 +6,9 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { companyId, active,poType } = req.query
-    const data = await prisma.termsAndConditions.findMany({
+    const data = await prisma.TermsAndConditionsNew.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
-            itemType: poType,
 
         }
     });
@@ -20,7 +18,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.termsAndConditions.findUnique({
+    const data = await prisma.TermsAndConditionsNew.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -32,7 +30,7 @@ async function getOne(id) {
 async function getSearch(req) {
     const { companyId, active } = req.query
     const { searchKey } = req.params
-    const data = await prisma.termsAndConditions.findMany({
+    const data = await prisma.TermsAndConditionsNew.findMany({
         where: {
             country: {
                 companyId: companyId ? parseInt(companyId) : undefined,
@@ -51,41 +49,36 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { itemType, description, companyId, userId, active,isPurchaseOrder } = await body
-    const data = await prisma.termsAndConditions.create({
+    const {      termsAndCondition , active } = await body
+    const data = await prisma.TermsAndConditionsNew.create({
         data: {
-            itemType, description,
-            createdById: parseInt(userId),
-            active, companyId: parseInt(companyId),
-            isPurchaseOrder
+            termsAndCondition , active
         },
     });
     return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    const { itemType, description, userId, active,isPurchaseOrder } = await body
-    const dataFound = await prisma.termsAndConditions.findUnique({
+    const { termsAndCondition , active} = await body
+    const dataFound = await prisma.TermsAndConditionsNew.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("termsAndConditions");
-    const data = await prisma.termsAndConditions.update({
+    const data = await prisma.TermsAndConditionsNew.update({
         where: {
             id: parseInt(id),
         },
         data: {
-            itemType, description,
-            updatedById: parseInt(userId),
-            active, isPurchaseOrder
+           termsAndCondition , active
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.termsAndConditions.delete({
+    const data = await prisma.TermsAndConditionsNew.delete({
         where: {
             id: parseInt(id)
         },

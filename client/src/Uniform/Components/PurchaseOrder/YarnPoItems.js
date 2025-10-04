@@ -9,10 +9,15 @@ import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices";
 import Swal from "sweetalert2";
+import Modal from "../../../UiComponents/Modal";
+import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
+import { toast } from "react-toastify";
+import { VIEW } from "../../../icons";
+import { useGetExcessToleranceItemsQuery, useGetExcessToleranceQuery } from "../../../redux/services/ExcessToleranceServices";
 
 const YarnPoItems = ({
     id,
-    transType,
+    taxTemplateId,
     poItems,
     setPoItems,
     readOnly,
@@ -22,6 +27,11 @@ const YarnPoItems = ({
     greyFilter,
     poMaterial,
 }) => {
+
+    const { data: excessToleranceData } = useGetExcessToleranceItemsQuery({ params });
+
+    const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
+
 
     useEffect(() => {
         if (poItems?.length >= 3) return
@@ -45,30 +55,51 @@ const YarnPoItems = ({
     }, [setPoItems, poItems])
 
 
-    const handleInputChange = (value, index, field, balanceQty) => {
+    const handleInputChange = (value, index, field, requiredQty,balanceQty ) => {
+
+        let filterArray =  excessToleranceData?.data?.filter(item  => item.excessType  == "PURCHASE"  &&  item.material  == "GREYYARN")
+        console.log(filterArray, "filterArray", requiredQty >  0)
+
         const newBlend = structuredClone(poItems);
-        // if (field === "qty") {
-        //     if (parseFloat(balanceQty) < parseFloat(value)) {
-        //         // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
-        //         Swal.fire({
-        //             title: "Purchase Qty Can not be more than balance Qty",
-        //             icon: "success",
-        //             draggable: true,
-        //             timer: 1000,
-        //             showConfirmButton: false,
-        //             didOpen: () => {
-        //                 Swal.showLoading();
-        //             }
-        //         });
-        //         return
-        //     }
-        // }
-        newBlend[index][field] = value;
+        if (field === "qty" &&  requiredQty >  0) {
+
+            let cost = 0;
+            for (let rule of filterArray) {
+                console.log(rule.from, requiredQty, rule.to, "rule", rule.excessQty ,balanceQty)
+                if (rule.from <= requiredQty && requiredQty <= rule.to) {
+                    cost = rule.excessQty;
+                    break;
+                }
+            }
+            console.log(cost, "cost")
+            if (parseFloat(cost) + parseFloat(balanceQty)   < value) {
+                // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                Swal.fire({
+                    title: `allowed Purchase Qty  ${parseFloat(cost) + parseFloat(balanceQty)}`,
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                return
+            }
+            else {
+                newBlend[index][field] = value;
+
+            }
+        }
+        else {
+
+            newBlend[index][field] = value;
+        }
 
         setPoItems(newBlend);
     };
 
-    console.log(poMaterial === "DyedYarn", "poItemspoItems",poMaterial)
+    console.log(poMaterial === "DyedYarn", "poItemspoItems", poMaterial)
 
 
     const addNewRow = () => {
@@ -101,7 +132,6 @@ const YarnPoItems = ({
     const {
         data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
 
-    // const { data: countsList } = useGetCountsMasterQuery({ params });
     const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
@@ -116,7 +146,10 @@ const YarnPoItems = ({
 
     return (
         <>
-
+            <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
+                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside}
+                />
+            </Modal>
 
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
@@ -141,14 +174,14 @@ const YarnPoItems = ({
                                 </th>
                                 {poMaterial === "DyedYarn" && (
 
-                                <th
+                                    <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Color<span className="text-red-500">*</span>
-                                </th>
+                                        className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    >
+                                        Color<span className="text-red-500">*</span>
+                                    </th>
                                 )}
-                                
+
                                 <th
 
                                     className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
@@ -200,7 +233,12 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
+                                <th
 
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    View Tax
+                                </th>
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -271,7 +309,7 @@ const YarnPoItems = ({
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                             disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
-                                             value={row.count}
+                                            value={row.count}
                                             onChange={(e) => handleInputChange(e.target.value, index, "count")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "count")
@@ -366,7 +404,7 @@ const YarnPoItems = ({
                                                 const numVal = parseFloat(e.target.value) || 0;
                                                 const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
 
-                                                handleInputChange(numVal, index, "qty", balanceQty);
+                                                handleInputChange(numVal, index, "qty", row.requiredQty,balanceQty);
 
 
                                             }}
@@ -375,7 +413,7 @@ const YarnPoItems = ({
                                                 const val = e.target.value;
                                                 const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
                                                 e.target.value = formatted;
-                                                handleInputChange(val === "" ? 0 : formatted, index, "qty", balanceQty);
+                                                handleInputChange(val === "" ? 0 : formatted, index, "qty", row.requiredQty,balanceQty);
                                             }}
 
                                         />
@@ -425,28 +463,42 @@ const YarnPoItems = ({
                                             disabled={true}
                                         />
                                     </td>
-
+                                    <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
+                                        <button
+                                            className="text-center rounded py-1 w-20"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    setCurrentSelectedIndex(index);
+                                                }
+                                            }}
+                                            onClick={() => {
+                                                if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
+                                                setCurrentSelectedIndex(index)
+                                            }}>
+                                            {VIEW}
+                                        </button>
+                                    </td>
 
 
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                         <div className="flex space-x-2  justify-center">
 
-                                            <button
+                                            {/* <button
                                                 // onClick={() => handleView(index)}
                                                 // onMouseEnter={() => setTooltipVisible(true)}
                                                 // onMouseLeave={() => setTooltipVisible(false)}
                                                 className="text-blue-800 flex items-center  bg-blue-50 rounded"
                                             >
                                                 👁 <span className="text-xs"></span>
-                                            </button>
+                                            </button> */}
                                             <span className="tooltip-text">View</span>
-                                            <button
+                                            {/* <button
                                                 // onClick={() => handleEdit(index)}
                                                 className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
                                             >
                                                 <HiPencil className="w-4 h-4" />
 
-                                            </button>
+                                            </button> */}
                                             <span className="tooltip-text">Edit</span>
                                             <button
                                                 onClick={() => deleteRow(index)}
@@ -457,15 +509,6 @@ const YarnPoItems = ({
                                             </button>
                                             <span className="tooltip-text">Delete</span>
 
-                                            {/* {tooltipVisible && (
-                                                          <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                              <div className="flex items-start">
-                                                                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                                  <span>View</span>
-                                                              </div>
-                                                              <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                          </div>
-                                                      )} */}
                                         </div>
                                     </td>
 

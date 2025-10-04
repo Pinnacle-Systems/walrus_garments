@@ -23,6 +23,9 @@ import { useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormIt
 import OrderDetailsSelection from "./OrderDetailsSelection";
 import Modal from "../../../UiComponents/Modal";
 import { Loader } from "../../../Basic/components";
+import { useLazyGetExcessToleranceItemsQuery } from "../../../redux/services/ExcessToleranceServices";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
 
@@ -107,12 +110,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
 
-
-  // const handleAddSupplier = (newName) => {
-  //   if (!suppliers.includes(newName)) {
-  //     setSuppliers([...suppliers, newName]);
-  //   }
-  // };
+  const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
 
 
 
@@ -124,6 +122,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     return parseInt(qty)
   }
 
+  const { data: taxTypeList } =
+    useGetTaxTemplateQuery({ params: { ...params } });
 
 
 
@@ -142,7 +142,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setPoMaterial(data?.poMaterial ? data?.poMaterial : '')
 
     setPoItems(data?.PoItems ? data?.PoItems : []);
-    setDocId(data?.docId ? data?.docId :  "New");
+    setDocId(data?.docId ? data?.docId : "New");
     setPayTermId(data?.payTermId || "");
     setDiscountType(data?.discountType || "Percentage");
     setDiscountValue(data?.discountValue || "0");
@@ -184,6 +184,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
   let data = {
+    
     supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
@@ -223,12 +224,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             setId(returnData?.data?.id);
             RequirementRefetch()
 
-          }
-
-
-
-
-        } else {
+          }} 
+          else {
           toast.error(returnData?.message);
         }
         // setId()
@@ -238,6 +235,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
       console.log("handle");
     }
   };
+
+
+
+
 
   console.log(data, "dataaaa")
 
@@ -416,6 +417,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 setValue={(value) => {
                   setPoMaterial(value);
                   setPoType("")
+                  fetchExcessToleranceItems({ params: params });
+
                 }}
                 required={true}
                 readOnly={readOnly}
@@ -439,7 +442,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   required={true}
                   setValue={(value) => { setOrderId(value); setTableDataView(true) }}
                 />
-              } */}
+              } */}                          <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
+
 
 
               <div>

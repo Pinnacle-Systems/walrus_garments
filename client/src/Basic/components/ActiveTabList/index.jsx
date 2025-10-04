@@ -4,10 +4,11 @@ import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
-import { ExcessToleranceQty, FiberContent, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchasecancel, AccessoryPurchaseOrder, BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
+import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
+import { AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
+import { TermsAndCondition } from "..";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -105,7 +106,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
     "SOCKS TYPE MASTER": <SocksType />,
-    "PURCHASE ORDER": <PurchaseOrder />,
+    "YARN PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
     "GSM MASTER": <GsmMaster />,
     "PAY TERM MASTER": <PayTermMaster />,
@@ -114,6 +115,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "FIBER CONTENT MASTER": <FiberContent />,
     "YARN NEEDLE MASTER": <YarnNeedle />,
     "SAMPLE ENTRY": <Sample />,
+    "MATERIAL MASTER": <MaterialMaster />,
     "SAMPLE FOLLOW": <SampleFollow />,
     "PURCHASE INWARD": <PurchaseInward />,
     "PURCHASE RETURN": <PurchaseReturn />,
@@ -123,10 +125,13 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
     "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
-    "STOCK TRANSFER"  :  <StockTransfer/>,
-    "EXCESS TOLERANCE(%) ENTRY" : <ExcessToleranceQty/>,
-    "ACCESSORY PURCHASE ORDER" : <AccessoryPurchaseOrder/>,
-    "ACCESSORY PURCHASE CANCEL" : <AccessoryPurchasecancel/>
+    "STOCK TRANSFER": <StockTransfer />,
+    "EXCESS TOLERANCE(%) ENTRY": <ExcessToleranceQty />,
+    "ACCESSORY PURCHASE ORDER": <AccessoryPurchaseOrder />,
+    "ACCESSORY PURCHASE CANCEL": <AccessoryPurchasecancel />,
+    "ACCESSORY PURCHASE INWARD": <AccessoryPurchaseInward />,
+    "TERMS & CONDTIONS MASTER" : <TermsandCondition/>
+
 
 
   };
@@ -136,9 +141,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
   const itemsToShow = innerWidth / 130;
   let currentShowingTabs = openTabs.tabs.slice(0, parseInt(itemsToShow));
   const hiddenTabs = openTabs.tabs.slice(parseInt(itemsToShow));
-  const userId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
-  );
+
 
   function initialTab() {
     if (currentShowingTabs?.length == 0 && !isSuperAdmin) {
