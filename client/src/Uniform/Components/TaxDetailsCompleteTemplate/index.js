@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { discountTypes } from '../../../Utils/DropdownData';
 
 import { Loader } from '../../../Basic/components';
-import { substract as s } from '../../../Utils/helper';
+import { findFromList, substract as s } from '../../../Utils/helper';
 import { useGetTaxTemplateByIdQuery } from '../../../redux/services/TaxTemplateServices';
 import { useGetTaxTermMasterQuery } from '../../../redux/services/TaxTermMasterServices';
 
 
-const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId }) => {
+const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId  , hsnData }) => {
     const substract = s
     const [formulas, setFormulas] = useState([])
     console.log(poItems,"poItems")
@@ -17,7 +17,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     const { data: taxTermMaster, isLoading: isTemplateTermLoading, isFetching: isTemplateTermFetching } = useGetTaxTermMasterQuery(taxTypeId)
 
     function getFormula(constant) {
-        console.log(constant, "constant")
+        // console.log(constant, "constant")
 
         const split = constant.split("_");
         let name = split[0];
@@ -33,7 +33,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
         words.forEach(element => {
             input = input.replace(element, getFormula(element.slice(1, -1)))
         });
-        console.log(input, "input")
+        // console.log(input, "input")
 
         return getRegex(input)
     }
@@ -68,7 +68,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     }
     const row = poItems[index];
 
-    console.log(formulas,"formulas")
+    console.log(row,"row")
 
     if (!row) return null
 
@@ -80,8 +80,12 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
     let discountType = row["discountType"];
     let discountValue = isNaN(parseFloat(row["discountValue"])) ? 0 : parseFloat(row["discountValue"]);
     let taxPercent = isNaN(parseFloat(row["taxPercent"])) ? 0 : parseFloat(row["taxPercent"])
+    // let taxPercent =  parseFloat(row["Yarn"]["hsnId"])  ?  findFromList(row["Yarn"]["hsnId"],hsnData,"tax")  : 0
+
+
     if (!taxTermMaster || !formulas) return <div>Tax Term Not Loaded</div>
     console.log(formulas, "formulas")
+    console.log(taxPercent,"taxPercenttaxPercent",discountType) 
 
     return (
         <div className={`${(Number.isInteger(index)) ? "block" : "hidden"} bg-gray-200 z-50 overflow-auto `}>
@@ -107,7 +111,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                                 value={discountType}
                                 onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
                             >
-                                <option hidden>
+                                <option value={""}>
                                     Select
                                 </option>
                                 {discountTypes.map((option, index) => <option key={index} value={option.value} >
@@ -120,7 +124,9 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                         <td className="border border-gray-500">Discount</td>
                         <td className="border border-gray-500" colSpan={2}
                         >
-                            <input type="text" disabled={readOnly} className='h-7 w-full text-right' value={discountValue} onChange={(e) => handleInputChange(e.target.value, index, "discountValue")} />
+                            <input type="text" disabled={readOnly || !discountType} className='h-7 w-full text-right' value={discountValue}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => handleInputChange(e.target.value, index, "discountValue")} />
                         </td>
                     </tr>
                     <tr className='h-7'>
@@ -148,6 +154,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                                     eval(getRegex(f.amount))
                                 }
                             </td>
+                            
                         </tr>
                     )}
                 </tbody>

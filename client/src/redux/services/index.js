@@ -42,7 +42,9 @@ export { default as TermsAndConditionsMasterApi } from "./TermsAndConditionsServ
 export { default as machineMasterApi } from "./MachineMasterService"
 export {default as partyBranchContactMasterApi }  from "./PartyBranchContactMasterService"
 export  {default as partyContactMasterApi  }   from "./PartyContactMasterService"
-export  {default as TermsandCondtionsApi  }   from "./Term&ConditionsMasterService"
+export  { default as TermsandCondtionsApi  }   from "./Term&ConditionsMasterService"
+export  { default as HsnMasterApi  }   from "./HsnMasterServices"
+
 
 
 

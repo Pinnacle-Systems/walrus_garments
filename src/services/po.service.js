@@ -731,6 +731,7 @@ export function getPoItemObject(poMaterial, item) {
     newItem.discountType = item.discountType ?? null;
     newItem.discountValue = parseFloat(item.discountValue ?? 0);
     newItem.tax = parseFloat(item.tax ?? 0);
+    newItem.taxPercent = parseFloat(item.taxPercent ?? 0);
 
     return newItem;
 }
@@ -742,7 +743,7 @@ async function create(body) {
         transType, dueDate, poType, poMaterial,
         supplierId, poItems, payTermId, remarks,
         branchId, active, userId, deliveryType,
-        deliveryToId, finYearId, orderId, PurchaseType, requirementId
+        deliveryToId, finYearId, orderId, PurchaseType, requirementId , taxTemplateId
     } = await body;
 
     const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -756,7 +757,7 @@ async function create(body) {
 
     const data = await prisma.po.create({
         data: {
-            transType: transType ? transType : "",
+            transType: poMaterial ? poMaterial : "",
             poType: poType,
             poMaterial: poMaterial,
             docId,
@@ -771,6 +772,7 @@ async function create(body) {
             createdById: parseInt(userId),
             orderId: orderId ? parseInt(orderId) : undefined,
             requirementId: requirementId ? parseInt(requirementId) : undefined,
+            taxTemplateId : taxTemplateId ? parseInt(taxTemplateId) : undefined,
             PurchaseType: PurchaseType,
             PoItems: {
                 createMany: {

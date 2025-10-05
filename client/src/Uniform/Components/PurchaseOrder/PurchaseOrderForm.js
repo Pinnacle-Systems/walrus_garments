@@ -26,6 +26,9 @@ import { Loader } from "../../../Basic/components";
 import { useLazyGetExcessToleranceItemsQuery } from "../../../redux/services/ExcessToleranceServices";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useGetTermsandCondtionsQuery } from "../../../redux/services/Term&ConditionsMasterService";
+import PoSummary from "./PoSummary";
+import GeneralYarnPoItems from "./GeneralYarnPoItems";
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
 
@@ -41,12 +44,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const [poType, setPoType] = useState("");
   const [poMaterial, setPoMaterial] = useState("DyedYarn")
   const [supplierId, setSupplierId] = useState("");
+  const [term, setTerm] = useState("")
 
   const [discountType, setDiscountType] = useState("Percentage");
   const [discountValue, setDiscountValue] = useState(0);
   const [orderId, setOrderId] = useState("")
   const [remarks, setRemarks] = useState("")
   const [PurchaseType, setPurchaseType] = useState('General Purchase')
+  const [summary, setSummary] = useState(false);
 
 
   const [deliveryType, setDeliveryType] = useState("")
@@ -93,24 +98,39 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+  const { data: termsData } = useGetTermsandCondtionsQuery({ params: { ...params } });
 
 
 
 
-  console.log(poMaterial, "poMaterial")
-
-  console.log(requirementPlanningItemsData?.data?.filter(po => po.yarnType == poMaterial), "requirementPlanningItemsData?.data")
 
   useEffect(() => {
+    if (!requirementPlanningItemsData?.data) return;
 
-    setTempPoItems(requirementPlanningItemsData?.data?.filter(po => po.yarnType === poMaterial)?.map(item => ({
-      ...item,
-      RequirementPlanningItemsId: item?.id  // assuming qty is the field you want to base 10% on
-    })))
+    const filtered = requirementPlanningItemsData.data
+      .filter(po => po.yarnType === poMaterial)
+      .map(item => ({
+        ...item,
+        RequirementPlanningItemsId: item?.id ,
+        taxPercent : item?.Yarn?.Hsn?.tax
+      }));
 
+    // calculate how many empty rows needed to make total = 10
+    const emptyCount = Math.max(15 - filtered.length, 0);
+
+    const emptyRows = Array.from({ length: emptyCount }, () => ({
+      RequirementPlanningItemsId: null,
+      yarnType: '',
+      qty: '',
+      rate: '',
+      amount: '',
+    }));
+
+    setTempPoItems([...filtered, ...emptyRows]);
   }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
 
-  const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
+
+  // const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
 
 
 
@@ -122,7 +142,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     return parseInt(qty)
   }
 
-  const { data: taxTypeList } =
+  const { data: taxTypeList , isLoading : isTaxLoading , isFetching : isTaxfetching } =
     useGetTaxTemplateQuery({ params: { ...params } });
 
 
@@ -161,11 +181,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setPurchaseType(data?.PurchaseType ? data?.PurchaseType : "")
     setOrderId(data?.orderId ? data?.orderId : "")
     setRequirementId(data?.requirementId ? data?.requirementId : "")
+    setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "")
 
-    // Optional: If you need to track branch ID
-    // if (data?.branchId) {
-    //   branchIdFromApi.current = data.branchId;
-    // }
   }, [id]);
 
 
@@ -184,7 +201,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
   let data = {
-    
+
     supplierId, dueDate, payTermId,
     branchId, id, userId,
     remarks,
@@ -192,7 +209,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     deliveryType, deliveryToId,
     discountType,
     discountValue,
-    finYearId, orderId, PurchaseType, requirementId, poMaterial, poType
+    finYearId, orderId, PurchaseType, requirementId, poMaterial, poType , taxTemplateId
   }
 
 
@@ -224,8 +241,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             setId(returnData?.data?.id);
             RequirementRefetch()
 
-          }} 
-          else {
+          }
+        }
+        else {
           toast.error(returnData?.message);
         }
         // setId()
@@ -313,16 +331,16 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }
 
   const dateRef = useRef(null);
-  // const inputPartyRef = useRef(null);
-  // const styleRef = useRef(null);
+  const inputPartyRef = useRef(null);
+  const styleRef = useRef(null);
 
-  // useEffect(() => {
-  //   if (dateRef.current) {
-  //     dateRef.current.focus();
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (dateRef.current) {
+      dateRef.current.focus();
+    }
+  }, []);
 
-  if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading) return <Loader />
+  if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading  || isTaxfetching) return <Loader />
 
 
   return (
@@ -332,7 +350,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
       <Modal
         isOpen={tableDataView && poType !== "General Purchase"}
         onClose={() => { setTableDataView(false); setPoType(""); setPoItems([]); setSupplierId("") }}
-        widthClass="  h-[80%] w-[90%]"
+        widthClass="  h-[85%] w-[92%]"
       >
         <OrderDetailsSelection
           onClose={() => setTableDataView(false)}
@@ -343,6 +361,16 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           setPoType={setPoType}
           poMaterial={poMaterial}
         />
+      </Modal>
+      <Modal isOpen={summary} onClose={() => setSummary(false)} widthClass={"p-10"}>
+        <PoSummary
+          remarks={remarks}
+          setRemarks={setRemarks}
+          discountType={discountType}
+          setDiscountType={setDiscountType}
+          discountValue={discountValue}
+          setDiscountValue={setDiscountValue}
+          poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} />
       </Modal>
       <Modal
         isOpen={printModalOpen}
@@ -397,7 +425,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 type={"date"}
                 required={true}
                 ref={dateRef}
-                // nextRef={inputPartyRef}
+                nextRef={inputPartyRef}
 
                 readOnly={readOnly}
               />
@@ -417,7 +445,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 setValue={(value) => {
                   setPoMaterial(value);
                   setPoType("")
-                  fetchExcessToleranceItems({ params: params });
+                  // fetchExcessToleranceItems({ params: params });
 
                 }}
                 required={true}
@@ -442,7 +470,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   required={true}
                   setValue={(value) => { setOrderId(value); setTableDataView(true) }}
                 />
-              } */}                          <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
+              } */}
+              <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
 
 
 
@@ -457,23 +486,37 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             </h2>
             <div className="grid grid-cols-2 gap-2">
 
-              <div className="col-span-2">
 
-                <ReusableSearchableInput
-                  label="Supplier Id"
-                  component="PartyMaster"
-                  placeholder="Search Supplier Id..."
-                  optionList={supplierList?.data}
-                  // onAddItem={handleAddSupplier}
-                  // onDeleteItem={onDeleteItem}
-                  // setSearchTerm={setSupplierId}
-                  setSearchTerm={(value) => { setSupplierId(value); setTableDataView(true) }}
+              <div className="col-span-2"
+                onClick={() => {
+                  if (!poMaterial || !poType) {
+                    Swal.fire({
+                      icon: 'success',
+                      title: `} Successfully`,
+                      showConfirmButton: false,
+                      timer: 2000
+                    });
+                  }
+                }}
+              >
+                {(poMaterial || poType) && (
 
-                  searchTerm={supplierId}
-                  show={"isSupplier"}
-                  required={true}
-                  disabled={id}
-                />
+                  <ReusableSearchableInput
+
+                    label="Supplier Id"
+                    component="PartyMaster"
+                    placeholder="Search Supplier Id..."
+                    optionList={supplierList?.data}
+                    setSearchTerm={(value) => { setSupplierId(value); setTableDataView(true) }}
+                    searchTerm={supplierId}
+                    show={"isSupplier"}
+                    required={true}
+                    disabled={id}
+
+                  />
+                )}
+
+
               </div>
 
 
@@ -481,16 +524,17 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 name="Contact Person"
                 placeholder="Contact name"
                 value={findFromList(supplierId, supplierList?.data, "contactPersonEmail")}
-                // setValue={setContactPersonName}
                 disabled={true}
-              />{console.log(findFromList(supplierId, supplierList?.data, "contactPersonNumber"), "phone")}
+              />
+
+
               <TextInput
                 name="Phone"
                 placeholder="Contact name"
                 value={findFromList(supplierId, supplierList?.data, "contactPersonNumber")}
-                // setValue={setPhone}
+
                 disabled={true}
-              // onChange={(e) => setPhone(e.target.value)}
+
 
               />
 
@@ -522,39 +566,60 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             //   />
             //   :
 
-            poMaterial?.toLowerCase().includes("GreyYarn".toLowerCase())
+            poType == "Order Purchase"
               ?
               <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
                 poMaterial={poMaterial}
               />
               :
-              (
-                poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
-                  ?
-                  <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
-                    poMaterial={poMaterial}
-                  />
-                  :
-                  <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
-              )
+              <GeneralYarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
+                poMaterial={poMaterial}
+              />
+
+            // (
+            //   poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
+            //     ?
+            //     <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
+            //       poMaterial={poMaterial}
+            //     />
+            //     :
+            //     <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+            // )
           }
 
         </fieldset>
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-            <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
-            <textarea
-              readOnly={readOnly}
-              //    value={term}
-              onChange={(e) => {
-                //    setTerm(e.target.value)
-              }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
 
-            />
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
 
+            <div className="flex flex-col gap-2">
+              <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
+              <select
+                disabled={readOnly}
+                className="text-left w-full rounded py-1 border-2 border-gray-200 text-[13px]"
+                onChange={e => {
+                  const selected = termsData?.data?.find(t => t.id === parseInt(e.target.value))
+                  setTerm(selected?.termsAndCondition || '')
+                }}
+              >
+                <option hidden value="">
+                  Select Terms & Conditions
+                </option>
+                {(id ? termsData?.data : termsData?.data?.filter(item => item.active))?.map(blend => (
+                  <option value={blend.id} key={blend.id}>
+                    {blend?.termsAndCondition?.substring(0, 50)}...
+                  </option>
+                ))}
+              </select>
+              <textarea
+                disabled={readOnly}
+                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                value={term}
+                onChange={e => setTerm(e.target.value)}
+                placeholder="Select or type Terms & Conditions..."
+              />
+            </div>
           </div>
 
 
@@ -568,7 +633,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               onChange={(e) => {
                 //    setNotes(e.target.value)
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full mt-11 h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
           </div>
@@ -576,66 +641,22 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-bold text-slate-800 mb-2 text-base">
-              Qty Summary
+              Po Summary
             </h2>
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-800 font-bold">Total Qty</span>
-                <span className="font-bold">{parseInt(getTotalQty())}   No's</span>
-              </div>
-
-
-
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600 font-bold">Order By</span>
-                <input
-                  type="text"
-                  className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                  placeholder="Order By"
-                  readOnly
-                //    value={orderBy}
-                //    onChange={(e) => setOrderBy(e.target.value)}
-                />
-              </div>
-
-
-            </div>
+            <button className="text-sm bg-sky-500 hover:text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
+              onClick={() => {
+                if (!taxTemplateId) {
+                  toast.info("Please Select Tax Template !", { position: "top-center" })
+                  return
+                }
+                setSummary(true)
+              }}>
+              View Po Summary
+            </button>
           </div>
 
-          {showExtraCharge && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-semibold">Add Extra Charge</h3>
-                  <button onClick={() => setShowExtraCharge(false)} className="text-slate-400 hover:text-slate-600">
-                    <HiX className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g. Delivery fee"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                    <input
-                      type="number"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <button className="w-full bg-indigo-600 text-white py-1.5 px-3 rounded text-sm hover:bg-indigo-700 transition">
-                    Apply Charge
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+
 
 
         </div>

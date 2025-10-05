@@ -23,6 +23,7 @@ import {
   partyBranchContactMasterApi,
   partyContactMasterApi,
   TermsandCondtionsApi,
+  HsnMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -169,6 +170,7 @@ const commonReducers = {
   AccessoryPurchaseCancel : AccessoryPurchaseCancelApi.reducer ,
   AccessoryPurchaseInward : AccessoryPurchaseInwardApi.reducer ,
   TermsandCondtions : TermsandCondtionsApi.reducer,
+  hsnMaster : HsnMasterApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -271,6 +273,7 @@ AccessoryPoApi.middleware,
 AccessoryPurchaseCancelApi.middleware,
 AccessoryPurchaseInwardApi.middleware,
 TermsandCondtionsApi.middleware,
+HsnMasterApi.middleware,
 ];
 
 

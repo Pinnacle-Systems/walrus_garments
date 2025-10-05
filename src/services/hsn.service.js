@@ -52,11 +52,11 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, companyId, active } = await body
+    const { name, code, companyId, active ,tax } = await body
     const data = await prisma.hsn.create(
         {
             data: {
-                name, code, companyId: parseInt(companyId), active
+                name, code, tax, companyId: parseInt(companyId), active
             }
         }
     )
@@ -64,7 +64,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, active } = await body
+    const { name, code, active , tax } = await body
     const dataFound = await prisma.hsn.findUnique({
         where: {
             id: parseInt(id)
@@ -77,7 +77,7 @@ async function update(id, body) {
         },
         data:
         {
-            name, code, active
+            name, code, active , tax
         },
     })
     return { statusCode: 0, data };

@@ -11,6 +11,8 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
 
     if (isTaxHookDetailsLoading) return <Loader />
 
+    console.log(taxDetails,"taxDetails")
+
     return (
         <div className={`bg-gray-200 rounded z-50 w-[700px] `}>
             <table className="border border-gray-500 w-full text-xs text-start">
@@ -46,7 +48,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                                 value={discountType}
                                 onChange={(e) => { setDiscountType(e.target.value) }}
                             >
-                                <option hidden>
+                              <option value={""}>
                                     Select
                                 </option>
                                 {discountTypes.map((option, index) => <option key={index} value={option.value} >
@@ -59,7 +61,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         <td className="border border-gray-500">Discount</td>
                         <td className="border border-gray-500"
                         >
-                            <input type="text" name='value' disabled={readOnly} className='h-7 w-full' value={discountValue}
+                            <input type="text" name='value' disabled={readOnly || !discountType} className='h-7 w-full' value={discountValue}
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
                                     if (e.key === "Delete") { setDiscountValue(0) }
@@ -80,7 +82,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         >
                             <input disabled type="text" name='value' className='h-7 w-full text-right'
                                 value={
-                                    taxDetails.netAmount
+                                    taxDetails?.netAmount
                                 }
                             />
                         </td>
@@ -91,7 +93,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         >
                             <input disabled type="text" name='value' className='h-7 w-full text-right'
                                 value={
-                                    parseFloat(taxDetails.roundOffAmount).toFixed(2)
+                                    parseFloat(taxDetails?.roundOffAmount).toFixed(2)
                                 }
                             />
                         </td>
@@ -102,7 +104,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         >
                             <input disabled type="text" name='value' className='h-7 w-full text-right'
                                 value={
-                                    numberToText.convertToText(taxDetails.netAmount, { language: "en-in" }) + " Only"
+                                    numberToText.convertToText(taxDetails?.netAmount, { language: "en-in" }) + " Only"
                                 }
                             />
                         </td>

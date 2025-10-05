@@ -48,6 +48,7 @@ import {
   accessoryPurchaseInward,
   
   terms$conditions,
+  hsn,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -146,6 +147,7 @@ app.use("/po", po);
 app.use("/taxTemplate", taxTemplate);
 app.use("/taxTerm", taxTerm);
 app.use("/dia", dia);
+app.use("/hsn", hsn);
 app.use("/accessory", accessory);
 app.use("/gsm", gsm);
 app.use("/accessoryItem", accessoryItem);

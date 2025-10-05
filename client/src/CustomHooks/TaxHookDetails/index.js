@@ -48,7 +48,7 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
     }
 
     function getFormulaByName(formulaName) {
-        let formula = formulas.find(f => f.name === formulaName)
+        let formula = formulas?.find(f => f.name === formulaName)
         return formula ? formula : ''
     }
 
@@ -62,7 +62,8 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
     function getTotalQuantity(taxTerm, valueOrAmount) {
         let calculateItems = structuredClone(poItems)
         let formula = getRegex(getFormulaByName(taxTerm)[valueOrAmount])
-        const total = calculateItems.reduce((accumulator, currentItem) => {
+        console.log(formula,"formula")
+        const total = calculateItems?.reduce((accumulator, currentItem) => {
             let price = isNaN(parseFloat(currentItem["price"])) ? 0 : parseFloat(currentItem["price"])
             let qty = isNaN(parseFloat(currentItem["qty"])) ? 0 : parseFloat(currentItem["qty"])
             let discountType = currentItem["discountType"];

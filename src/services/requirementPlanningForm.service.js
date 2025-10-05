@@ -361,7 +361,15 @@ export async function getRequirementItems(req) {
 
             Yarn: {
                 select: {
-                    name: true
+                    name: true,
+                    countsId : true,
+                    hsnId: true,
+                    Hsn : {
+                        select : {
+                            tax : true
+                        }
+                    }
+
                 }
             },
             Color: {
@@ -399,7 +407,9 @@ export async function getRequirementItems(req) {
                             colorId: true,
                             Yarn: {
                                 select: {
-                                    name: true
+                                    name: true,
+                                    hsnId: true,
+
                                 }
                             },
                             Color: {

@@ -8,7 +8,6 @@ import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, Ya
 import { AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, BranchType, GsmMaster, OpeningStock, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
-import { TermsAndCondition } from "..";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -59,6 +58,8 @@ const FabricMaster = lazy(() => import("../../../Uniform/Components/FabricMaster
 const Order = lazy(() => import("../../../Uniform/Components/Order"));
 const Sample = lazy(() => import("../../../Uniform/Components/SampleEntry"));
 const SampleFollow = lazy(() => import("../../../Uniform/Components/SampleFollow"));
+const HsnMaster = lazy(() => import("../../components/HsnMaster"));
+
 const ActiveTabList = ({ isSuperAdmin }) => {
   const openTabs = useSelector((state) => state.openTabs);
   const dispatch = useDispatch();
@@ -130,7 +131,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY PURCHASE ORDER": <AccessoryPurchaseOrder />,
     "ACCESSORY PURCHASE CANCEL": <AccessoryPurchasecancel />,
     "ACCESSORY PURCHASE INWARD": <AccessoryPurchaseInward />,
-    "TERMS & CONDTIONS MASTER" : <TermsandCondition/>
+    "TERMS & CONDTIONS MASTER" : <TermsandCondition/> ,
+    "HSN MASTER" : <HsnMaster/> ,
 
 
 

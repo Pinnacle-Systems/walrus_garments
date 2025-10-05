@@ -30,7 +30,7 @@ export default function Form() {
     const [to, setTo] = useState("");
     const [excessQty, setExcessQty] = useState("");
     const [tempId, setTempId] = useState('')
-    const [bagWeight, setBagWeight] = useState('')
+    const [bagweight, setBagWeight] = useState('')
 
     const [material, setMaterial] = useState("")
     const [materialId, setMaterialId] = useState("")
@@ -40,7 +40,6 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
     const [toleranceItems, setToleranceItems] = useState([])
-    const [tolerancePercentageItems, setTolerancePercentageItems] = useState([])
 
 
 
@@ -51,10 +50,7 @@ export default function Form() {
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
-    const newParams = {
-        materialId
 
-    }
     const { data: allData, isLoading, isFetching } = useGetExcessToleranceQuery({ params, searchParams: searchValue });
     const {
         data: materialData,
@@ -62,21 +58,7 @@ export default function Form() {
     } = useGetMaterialMasterQuery({ params });
 
 
-    // useEffect(() => {
-    //     if (toleranceItems?.length >= 1) return
-    //     setToleranceItems(prev => {
-    //         let newArray = Array?.from({ length: 1 - prev?.length }, () => {
-    //             return {
 
-    //                 materialId: "",
-    //                 toTolerance: "0",
-
-    //             }
-    //         })
-    //         return [...prev, ...newArray]
-    //     }
-    //     )
-    // }, [setToleranceItems, toleranceItems])
 
 
     const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
@@ -125,7 +107,7 @@ export default function Form() {
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
-    console.log(data, "data")
+    console.log(toleranceItems, "toleranceItems")
 
     // const validateData = (data) => {
     //     if (data.transaction && data?.excessType) {
@@ -238,12 +220,14 @@ export default function Form() {
         setTo("")
         setExcessQty("")
         setQty("");
+        setBagWeight("")
 
 
     };
 
     const emptyRecoreds = () => {
 
+        console.log("hiot")
         // setMaterialId("");
         setExcessType("");
         setOrderType("");
@@ -322,6 +306,7 @@ export default function Form() {
     };
 
     const handleDone = () => {
+        console.log(bagweight, "bagweight")
 
         if (!materialId && !excessType && !orderType && !qty && !roundOfType) {
             toast.error("Please fill all required fields...!", {
@@ -332,6 +317,7 @@ export default function Form() {
         else {
 
             const newRecord = {
+                bagweight,
                 materialId,
                 excessType,
                 orderType,
@@ -374,23 +360,24 @@ export default function Form() {
 
 
     console.log(toleranceItems, "toleranceItems")
-
     const handleSelectRecord = (record) => {
+        // Always clear before setting
+        emptyRecoreds();
 
-        console.log(record, "record")
+        // Now set new record safely
+        if (!record) return;
 
-
-        setMaterialId(record.materialId);
-        setExcessType(record.excessType);
-        setOrderType(record.orderType);
-        setQty(record.qty);
-        setRoundOfType(record.roundOfType);
-        setFrom(record.from);
-        setTo(record.to);
-        setExcessQty(record.excessQty)
-        setTempId(record?.tempId ? record?.tempId : record.id)
+        setMaterialId(record?.materialId ?? "");
+        setExcessType(record?.excessType ?? "");
+        setOrderType(record?.orderType ?? "");
+        setQty(record?.qty ?? "");
+        setRoundOfType(record?.roundOfType ?? "");
+        setFrom(record?.from ?? "");
+        setTo(record?.to ?? "");
+        setExcessQty(record?.excessQty ?? "");
+        setTempId(record?.tempId ?? record?.id ?? "");
+        setBagWeight(record?.bagWeight ?? record?.bagweight ?? "");
     };
-
 
     const deleteRow = (id) => {
         setToleranceItems((yarnBlend) =>
@@ -488,15 +475,15 @@ export default function Form() {
                             <div className='flex-1 overflow-auto p-3 space-y-3'>
                                 <div className='grid grid-cols-8 gap-3'>
                                     <div className='mb-3'>
-                                        <DropdownWithSearch 
-                                        label="Material"
+                                        <DropdownWithSearch
+                                            label="Material"
                                             labelField={"name"}
                                             options={materialData?.data} type="text" value={materialId}
                                             setValue={(value) => {
                                                 setMaterialId(value)
-                                                fetchExcessToleranceItems({ params: newParams, materialId });
+                                                fetchExcessToleranceItems({ params: { materialId: value } });
                                             }}
-                                            required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                            required={true} readOnly={readOnly} disabled={toleranceItems?.length > 0} />
                                     </div>
                                     <div className=' '>
                                         <DropdownInput name="Transaction Type" options={ExcessToleranceType} value={excessType} setValue={setExcessType} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
@@ -513,19 +500,19 @@ export default function Form() {
                                         <DropdownInput name="Round Of" type="text" disabled={qty !== "ROUNDOFF"} options={RoundOff} value={roundOfType} setValue={setRoundOfType} required={true} readOnly={readOnly} />
                                     </div>
                                     <div className='mb-3'>
-                                        <TextInput name="Bag Weight" type="text" disabled={roundOfType !== "BAG"} value={bagWeight} setValue={setBagWeight} required={true} readOnly={readOnly} />
+                                        <TextInput name="Bag Weight" type="text" disabled={roundOfType !== "BAG"} value={bagweight} setValue={setBagWeight} required={true} readOnly={readOnly} />
                                     </div>
 
                                     <div className='mb-3'>
-                                        <TextInput name="From" type="text" value={from} setValue={setFrom} required={true} readOnly={readOnly} />
+                                        <TextInput name="From" type="text" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={roundOfType === "BAG"} />
                                     </div>
                                     <div className='mb-3'>
-                                        <TextInput name="To" type="text " value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <TextInput name="To" type="text " value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={roundOfType === "BAG"} />
                                     </div>
 
                                     <div className='mb-3'>
 
-                                        <TextInput name="Excess" type="text " value={excessQty} setValue={setExcessQty} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                        <TextInput name="Excess" type="text " value={excessQty} setValue={setExcessQty} required={true} readOnly={readOnly} disabled={roundOfType === "BAG"} />
                                     </div>
 
 
@@ -549,272 +536,100 @@ export default function Form() {
 
                                 </div>
                                 <div>
-                                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+                                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[340px]">
                                         <div className="flex justify-between items-center mb-2">
                                             <h2 className="font-bold text-slate-700">List Of Items</h2>
-
-
                                         </div>
-                                        <div className={` relative w-[70%] overflow-y-auto py-1`}>
+
+                                        <div className="relative w-[90%] py-1">
                                             <table className="w-full border-collapse table-fixed">
-                                                <thead className="bg-gray-200 text-gray-900">
-                                                    <tr>
-                                                        <th
-                                                            className={`w-2 px-4 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            S.No
-                                                        </th>
-                                                        <th
-
-                                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            Material
-                                                        </th>
-                                                        <th
-
-                                                            className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            Transaction Type
-                                                        </th>
-
-
-                                                        <th
-
-                                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            OrderType
-                                                        </th>
-
-                                                        <th
-
-                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            RoundOff
-                                                        </th>
-
-                                                        <th
-
-                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            From
-                                                        </th>
-
-                                                        <th
-
-                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            To
-                                                        </th>
-                                                        <th
-
-                                                            className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            Qty Type
-                                                        </th>
-                                                        <th
-
-                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            ExcessQty
-                                                        </th>
-                                                        <th
-
-                                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-                                                            Active
-                                                        </th>
-
-                                                        <th
-
-                                                            className={`w-7 px-3 py-2 text-center font-medium text-[13px] `}
-                                                        >
-
-                                                        </th>
-
+                                                <thead className="bg-gray-200 text-gray-900 block">
+                                                    <tr className="flex w-full">
+                                                        <th className="w-[40px] px-2 py-2 text-center font-medium text-[13px]">S.No</th>
+                                                        <th className="w-[120px] px-2 py-2 text-center font-medium text-[13px]">Material</th>
+                                                        <th className="w-[150px] px-2 py-2 text-center font-medium text-[13px]">Transaction Type</th>
+                                                        <th className="w-[120px] px-2 py-2 text-center font-medium text-[13px]">OrderType</th>
+                                                        <th className="w-[120px] px-2 py-2 text-center font-medium text-[13px]">RoundOff</th>
+                                                        <th className="w-[120px] px-2 py-2 text-center font-medium text-[13px]">Bag weight(kgs)</th>
+                                                        <th className="w-[100px] px-2 py-2 text-center font-medium text-[13px]">From</th>
+                                                        <th className="w-[100px] px-2 py-2 text-center font-medium text-[13px]">To</th>
+                                                        <th className="w-[100px] px-2 py-2 text-center font-medium text-[13px]">Qty Type</th>
+                                                        <th className="w-[100px] px-2 py-2 text-center font-medium text-[13px]">Excess</th>
+                                                        <th className="w-[80px] px-2 py-2 text-center font-medium text-[13px]">Active</th>
+                                                        <th className="w-[50px] px-2 py-2"></th>
                                                     </tr>
                                                 </thead>
 
-                                                <tbody>
-
-                                                    {(toleranceItems ? toleranceItems : [])?.map((row, index) =>
-                                                        <tr className="border border-blue-gray-200 cursor-pointer "
-                                                            onClick={() => handleSelectRecord(row, row?.tempId)}
+                                                <tbody className="block max-h-[250px] overflow-y-auto w-full">
+                                                    {(toleranceItems ? toleranceItems : [])?.map((row, index) => (
+                                                        <tr
+                                                            key={index}
+                                                            className="flex w-full border-b border-gray-300 cursor-pointer"
+                                                            onClick={() => {
+                                                                emptyRecoreds();
+                                                                setBagWeight()
+                                                                handleSelectRecord(row, row?.tempId);
+                                                            }}
                                                         >
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                            <td className="w-[40px] text-[11px] text-center p-0.5 border">{index + 1}</td>
+                                                            <td className="w-[120px] text-[11px] text-center p-0.5 border">
                                                                 <select
-                                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "materialId") } }}
-                                                                    disabled={true} className='text-left w-full rounded py-1 table-data-input' value={row.materialId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
-                                                                    onBlur={(e) => {
-                                                                        handleInputChange((e.target.value), index, "materialId")
-                                                                    }}
-                                                                    readOnly={true}
-
+                                                                    disabled
+                                                                    value={row.materialId}
+                                                                    onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                                                    className="text-left w-full rounded py-1 table-data-input"
                                                                 >
-
-                                                                    <option hidden>
-                                                                    </option>
-                                                                    {(id ? materialData?.data : materialData?.data?.filter(item => item.active))?.map((blend) =>
+                                                                    <option hidden></option>
+                                                                    {(id ? materialData?.data : materialData?.data?.filter((item) => item.active))?.map((blend) => (
                                                                         <option value={blend.id} key={blend.id}>
                                                                             {blend.name}
                                                                         </option>
-                                                                    )}
+                                                                    ))}
                                                                 </select>
                                                             </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-left p-0.5 cursor-pointer">
+                                                            <td className="w-[150px] text-[11px] text-left p-0.5 border">
                                                                 <input
-                                                                    className="px-1 rounded  w-full py-0.5 text-xs focus:outline-none text-left "
-
+                                                                    className="w-full px-1 py-0.5 text-xs rounded focus:outline-none text-left"
                                                                     value={row?.excessType}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "excessType")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "excessType");
-                                                                    }}
+                                                                    readOnly
                                                                 />
                                                             </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                            <td className="w-[120px] text-[11px] text-left p-0.5 border">{row?.orderType}</td>
+                                                            <td className="w-[120px] text-[11px] text-left p-0.5 border">{row?.roundOfType}</td>
+                                                            <td className="w-[120px] text-[11px] text-right p-0.5 border">
+                                                                {parseFloat(row?.bagweight || 0).toFixed(3)}
+                                                            </td>
+                                                            <td className="w-[100px] text-[11px] text-right p-0.5 border">{parseFloat(row?.from || 0).toFixed(3)}</td>
+                                                            <td className="w-[100px] text-[11px] text-right p-0.5 border">{parseFloat(row?.to || 0).toFixed(3)}</td>
+                                                            <td className="w-[100px] text-[11px] text-left p-0.5 border">{row?.qty}</td>
+                                                            <td className="w-[100px] text-[11px] text-right p-0.5 border">
+                                                                {parseFloat(row?.excessQty || 0).toFixed(3)}
+                                                            </td>
+                                                            <td className="w-[80px] text-[11px] text-center p-0.5 border">
                                                                 <input
-                                                                    className="rounded px-1  w-full py-0.5 text-xs focus:outline-none text-left "
-
-                                                                    value={row?.orderType}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
+                                                                    type="checkbox"
+                                                                    checked={row.active}
                                                                     onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "orderType")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "orderType");
+                                                                        e.stopPropagation();
+                                                                        handleInputChange(e.target.checked, index, "active");
                                                                     }}
                                                                 />
                                                             </td>
-
-
-
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-                                                                <input
-                                                                    className="rounded px-4  w-full py-0.5 text-xs focus:outline-none text-left"
-
-                                                                    value={row?.roundOfType}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "roundOfType")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "roundOfType");
-                                                                    }}
-                                                                />
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-                                                                <input
-                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
-
-                                                                    value={parseFloat(row?.from || 0).toFixed(3)}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "from")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "from");
-                                                                    }}
-                                                                />
-
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-                                                                <input
-                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
-
-                                                                    value={parseFloat(row?.to || 0).toFixed(3)}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "to")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "to");
-                                                                    }}
-                                                                />
-
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-                                                                <input
-                                                                    className="rounded px-1   w-full py-0.5 text-xs focus:outline-none text-left "
-                                                                    value={row?.qty}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "qty")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "qty");
-                                                                    }}
-                                                                />
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-                                                                <input
-                                                                    className=" rounded px-1  w-full py-0.5 text-xs focus:outline-none text-right "
-
-                                                                    value={parseFloat(row?.excessQty || 0).toFixed(3)}
-                                                                    onFocus={e => e.target.select()}
-                                                                    readOnly={true}
-                                                                    onChange={(e) => {
-                                                                        handleInputChange(e.target.value, index, "excessQty")
-                                                                    }}
-                                                                    onBlur={(e) => {
-
-                                                                        handleInputChange(e.target.value, index, "excessQty");
-                                                                    }}
-                                                                />
-
-                                                            </td>
-                                                            <td className=" border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
-
-                                                                <div className="flex items-center">
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="sr-only peer"
-                                                                            checked={row.active}
-                                                                            onChange={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleInputChange(e.target.checked, index, "active");
-                                                                            }}
-                                                                        />
-                                                                        <div className="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 peer transition duration-300"></div>
-                                                                        <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-6 transition-transform duration-300 shadow-sm"></div>
-                                                                    </label>
-
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-1.5  border border-gray-300 text-[11px]  text-center p-0.5 cursor-pointer">
+                                                            <td className="w-[50px] text-[11px] text-center p-0.5 border">
                                                                 <button
                                                                     onClick={() => deleteRow(index)}
-                                                                    className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                                                                    className="text-red-600 hover:text-red-800 bg-red-50 py-1 rounded text-xs flex items-center justify-center"
                                                                 >
                                                                     <HiTrash className="w-4 h-4" />
-
                                                                 </button>
-
                                                             </td>
-
                                                         </tr>
-                                                    )}
+                                                    ))}
                                                 </tbody>
                                             </table>
                                         </div>
                                     </div>
+
                                 </div>
 
                             </div>

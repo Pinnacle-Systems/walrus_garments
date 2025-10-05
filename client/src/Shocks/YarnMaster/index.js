@@ -19,6 +19,8 @@ import Modal from '../../UiComponents/Modal';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import { MultiSelect } from 'react-multi-select-component';
+import { useGetHsnMasterQuery } from '../../redux/services/HsnMasterServices';
+import { findFromList } from '../../Utils/helper';
 const MODEL = 'Yarn Master'
 
 export default function Form() {
@@ -64,6 +66,9 @@ export default function Form() {
 
   const { data: countsData } =
     useGetCountsMasterQuery({ params });
+
+  const { data: hsnData } =
+    useGetHsnMasterQuery({ params });
 
   const { data: allData, isLoading, isFetching } = useGetYarnMasterQuery({ params, searchParams: searchValue });
 
@@ -405,7 +410,7 @@ export default function Form() {
             }}
             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Yarn 
+            + Add New Yarn
           </button>
         </div>
       </div>
@@ -485,6 +490,7 @@ export default function Form() {
                           <fieldset className=' rounded mt-2 mb-5'>
                             <div className='grid grid-cols-2 gap-4'>
                               <DropdownInput name="Counts" options={dropDownListObject(id ? countsData?.data : countsData?.data?.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                          
                               <DropdownWithSearch
                                 options={contentList?.data}
                                 value={contentId}
@@ -508,34 +514,31 @@ export default function Form() {
                             <div className='mt-3'>
                               <TextInput name="Yarn Alias Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                             </div>
-                            <div className='mt-3'>
-                              <TextInput name="Hsn" type="text" value={hsn} setValue={setHsn} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+
+                            <div className=' grid grid-cols-2 '>
+                              <div className='flex flex-grow gap-4 '>
+                                <div className='col-span-1 w-full'>
+
+                                  <DropdownWithSearch
+                                    options={hsnData?.data}
+                                    value={hsn}
+                                    setValue={setHsn}
+                                    labelField={"name"}
+                                    label={"Hsn"}
+                                    required={true}
+                                  />
+                                </div>
+                              <div>
+                                <TextInput name="Tax" type="text" value={findFromList(hsn,hsnData?.data,"tax")} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                              </div>
+                              </div>
+
                             </div>
 
+                           
 
-                            {/* <div className="w-64">
-                              <MultiSelect
-                                options={multiSelectOption(countsData ? countsData?.data : [], "name", "id")}
-                                selected={countsList}
-                                setSelected={setCountslist}
-                                labelledBy="Select Country"
-                                hasSelectAll={false}
-                                disableSearch={false} // searchable
-                                className="w-full px-1 text-xs rounded-lg
-          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm"
-                                styles={{
-                                  searchBox: {
-                                    minHeight: "28px",
-                                    fontSize: "12px",
-                                  },
-                                  option: (base) => ({
-                                    ...base,
-                                    fontSize: "12px",
-                                  }),
-                                }}
-                              />
-                            </div> */}
                             <div className="mt-5">
                               <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                             </div>

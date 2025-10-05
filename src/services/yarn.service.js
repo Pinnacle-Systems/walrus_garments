@@ -63,7 +63,7 @@ async function create(body) {
     const data = await prisma.yarn.create(
         {
             data: {
-                aliasName, hsn, companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
+                aliasName, hsnId : parseInt(hsn) , companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
                 contentId: parseInt(contentId),
                 YarnOnYarnBlend: yarnBlendDetails ? {
                     createMany: {
@@ -104,7 +104,7 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            aliasName, hsn, companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
+            aliasName, hsnId : parseInt(hsn), companyId: parseInt(companyId), active, name, countsId: parseInt(countsId),
             contentId: parseInt(contentId),
             YarnOnYarnBlend: yarnBlendDetails ? {
                 deleteMany: {},

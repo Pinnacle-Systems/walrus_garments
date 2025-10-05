@@ -105,4 +105,5 @@ export { default as accessoryPo } from "./accessoryPo.route.js"
 export { default as accesssoryPurchaseCancel } from "./accesssoryPurchaseCancel.route.js"
 export { default as accessoryPurchaseInward } from "./accessoryPurchaseInward.route.js"
 export { default as terms$conditions } from "./termsAndConditionMaster.route.js"
+export { default as hsn } from "./hsn.route.js"
 

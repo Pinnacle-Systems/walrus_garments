@@ -37,5 +37,6 @@ export { default as MachineMaster } from "./MachineMaster";
 export { default as GridTable } from "./GridTable";
 export { default as UomMaster } from "./Uommaster";
 export { default as MeasurementMaster } from "./MeasurementMaster";
+export { default as HsnMaster } from "./HsnMaster";
 
 

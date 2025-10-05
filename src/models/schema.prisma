@@ -735,6 +735,8 @@ model Hsn {
   Company   Company? @relation(fields: [companyId], references: [id])
   companyId Int?
   active    Boolean  @default(true)
+  tax       String?
+  Yarn      Yarn[]
 }
 
 model YarnBlend {
@@ -757,7 +759,8 @@ model Yarn {
   counts                        Counts?                         @relation(fields: [countsId], references: [id])
   countsId                      Int?
   aliasName                     String?
-  hsn                           String?
+  Hsn                           Hsn?                            @relation(fields: [hsnId], references: [id])
+  hsnId                         Int?
   taxPercent                    Float?                          @default(0)
   Company                       Company?                        @relation(fields: [companyId], references: [id])
   companyId                     Int?
@@ -1040,7 +1043,7 @@ enum DeliveryType {
 model Po {
   id                         Int                       @id @default(autoincrement())
   supplier                   Party?                    @relation("supplier", fields: [supplierId], references: [id])
-  transType                  PoTypes
+  transType                  String?
   dueDate                    DateTime                  @db.Date
   supplierId                 Int?
   createdAt                  DateTime                  @default(now())
@@ -1071,8 +1074,11 @@ model Po {
   PurchaseType               String?
   poMaterial                 String?
   poType                     String?
+  TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
+  taxTemplateId              Int?
   PoItems                    PoItems[]
 }
+
 
 model PoItems {
   id                         Int                       @id @default(autoincrement())
@@ -1123,6 +1129,7 @@ model PoItems {
   isPurchaseCancel           Boolean?                  @default(false)
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
   RequirementPlanningItemsId Int?
+  taxPercent                 Float?
   PoInwardReturnItems        PoInwardReturnItems[]
   BillEntryItems             BillEntryItems[]
   DirectReturnItems          DirectReturnItems[]
@@ -1463,6 +1470,7 @@ model TaxTemplate {
   CreditDebitNote        CreditDebitNote[]
   DirectReturnOrPoReturn DirectReturnOrPoReturn[]
   AccessoryInward        AccessoryInward[]
+  Po                     Po[]
 }
 
 model TaxTemplateDetails {
@@ -4113,6 +4121,7 @@ model ExcessToleranceItems {
   orderType         String?
   qty               String?
   roundOfType       String?
+  bagweight         String?
   from              String?
   to                String?
   excessQty         String?
@@ -4121,6 +4130,6 @@ model ExcessToleranceItems {
 
 model TermsAndConditionsNew {
   id                Int      @id @default(autoincrement())
-  termsAndCondition String?
+  termsAndCondition String?  @db.LongText
   active            Boolean? @default(false)
 }

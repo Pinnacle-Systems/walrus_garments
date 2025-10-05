@@ -14,10 +14,8 @@ import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import { toast } from "react-toastify";
 import { VIEW } from "../../../icons";
 import { useGetExcessToleranceItemsQuery, useGetExcessToleranceQuery } from "../../../redux/services/ExcessToleranceServices";
-import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
-import { findFromList } from "../../../Utils/helper";
 
-const YarnPoItems = ({
+const GeneralYarnPoItems = ({
     id,
     transType,
     poItems,
@@ -41,9 +39,12 @@ const YarnPoItems = ({
             let newArray = Array?.from({ length: 3 - prev?.length }, () => {
                 return {
                     yarnId: "",
+                    tax: "0",
                     colorId: "",
                     uomId: "",
                     discountValue: "0.00",
+                    noOfBags: 0,
+                    weightPerBag: 0,
 
 
                 }
@@ -58,13 +59,13 @@ const YarnPoItems = ({
 
         let filterArray = excessToleranceData?.data?.filter(item => item.excessType == "PURCHASE" && item.material == "GREYYARN")
 
-        console.log(value, "field", field,index)
+        console.log(filterArray, "filterArray", requiredQty > 0)
 
         const newBlend = structuredClone(poItems);
 
 
         // if (field === "qty" && requiredQty > 0) {
-        //     let cost = 0;
+        //          let cost = 0;   
 
         //     for (let rule of filterArray) {
         //         console.log(rule.from, requiredQty, rule.to, "rule", rule.excessQty, balanceQty)
@@ -100,7 +101,7 @@ const YarnPoItems = ({
         setPoItems(newBlend);
     };
 
-    console.log("poItems", poItems)
+    console.log(poMaterial === "DyedYarn", "poItemspoItems", poMaterial)
 
 
     const addNewRow = () => {
@@ -136,8 +137,6 @@ const YarnPoItems = ({
     const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
-    const { data: hsnData } =
-        useGetHsnMasterQuery({ params });
 
 
 
@@ -150,7 +149,7 @@ const YarnPoItems = ({
     return (
         <>
             <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
-                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside}  hsnData={hsnData?.data}
+                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside}
                 />
             </Modal>
 
@@ -175,12 +174,7 @@ const YarnPoItems = ({
                                 >
                                     Items<span className="text-red-500">*</span>
                                 </th>
-                                <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Hsn<span className="text-red-500">*</span>
-                                </th>
                                 <th
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
@@ -200,7 +194,7 @@ const YarnPoItems = ({
                                 >
                                     UOM<span className="text-red-500">*</span>
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -218,7 +212,7 @@ const YarnPoItems = ({
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Balance Purchase Qty  (kgs)
-                                </th>
+                                </th> */}
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -263,7 +257,7 @@ const YarnPoItems = ({
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
-                                            tabIndex={"0"} disabled={readOnly || transType == "Order Purchase" || !transType} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly || transType == "Order Purchase" || !transType } className='text-left w-full rounded py-1 table-data-input'
                                             value={row.yarnId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
                                             onBlur={(e) => {
@@ -280,9 +274,7 @@ const YarnPoItems = ({
                                                 </option>)}
                                         </select>
                                     </td>
-                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                                        {findFromList(row?.Yarn?.hsnId, hsnData?.data, "name")}
-                                    </td>
+
 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
 
@@ -292,7 +284,7 @@ const YarnPoItems = ({
                                                     handleInputChange("", index, "colorId")
                                                 }
                                             }}
-                                            disabled={readOnly || transType == "Order Purchase" || !transType || !row?.yarnId}
+                                            disabled={readOnly || transType == "Order Purchase" || !transType ||  !row?.yarnId}
                                             className="text-left w-full rounded py-1 table-data-input"
                                             value={row.colorId}
                                             onChange={e => handleInputChange(e.target.value, index, "colorId")}
@@ -315,7 +307,7 @@ const YarnPoItems = ({
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly || transType == "Order Purchase" || !transType || !row?.yarnId}
+                                            disabled={readOnly || transType == "Order Purchase" || !transType ||  !row?.yarnId}
                                             className='text-left w-full rounded py-1 table-data-input'
                                             value={row.count}
                                             onChange={(e) => handleInputChange(e.target.value, index, "count")}
@@ -339,7 +331,7 @@ const YarnPoItems = ({
                                     <td className="w-12 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            disabled={readOnly || !transType || !row?.yarnId} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                            disabled={readOnly || !transType ||  !row?.yarnId} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
@@ -355,17 +347,17 @@ const YarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
-
+{/* 
                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                         {(row.requiredQty || 0.000)?.toFixed(3)}
                                     </td>
                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                         {(row.alreadyPoqty || 0.000)?.toFixed(3)}
 
-                                    </td>
-                                    <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                    </td> */}
+                                    {/* <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                         {Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0))?.toFixed(3)}
-                                    </td>
+                                    </td> */}
                                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
@@ -384,8 +376,8 @@ const YarnPoItems = ({
 
                                             placeHolder="0.000"
 
-                                            disabled={readOnly || !transType || !row?.yarnId}
-                                            onChange={(e) => {
+                                            disabled={readOnly || !transType ||  !row?.yarnId   }
+                                             onChange={(e) => {
                                                 const numVal = parseFloat(e.target.value) || 0;
                                                 const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
 
@@ -422,7 +414,7 @@ const YarnPoItems = ({
 
                                             placeHolder="0.000"
 
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType ||  !row?.yarnId}
                                             onChange={(e) => {
                                                 const numVal = parseFloat(e.target.value) || 0;
 
@@ -444,11 +436,8 @@ const YarnPoItems = ({
                                             type="number"
                                             onFocus={(e) => e.target.select()}
                                             className="text-right rounded py-1 w-16 px-1 table-data-input"
-                                            value={
-                                                isFinite(parseFloat(row.qty)) && isFinite(parseFloat(row.price))
-                                                    ? (parseFloat(row.qty || 0) * parseFloat(row.price || 0)).toFixed(3)
-                                                    : "0.000"
-                                            } disabled={true}
+                                            value={(!row.qty || !row.price) ? 0.00 : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(3)}
+                                            disabled={true}
                                         />
                                     </td>
                                     <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
@@ -499,4 +488,4 @@ const YarnPoItems = ({
     );
 };
 
-export default YarnPoItems;
+export default GeneralYarnPoItems;

@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.ExcessTolerance.findMany({
-           include: {
+        include: {
             ExcessToleranceItems: true
         }
     });
@@ -31,20 +31,33 @@ async function getOne(id) {
 export async function getToleranceItems(req) {
     const { companyId, active } = req.query
     const data = await prisma.ExcessToleranceItems.findMany({
-       
+
     });
     return { statusCode: 0, data };
 }
 
 export async function getExcessToleranceItems(req) {
-    const { companyId, active, materialId  ,poMaterial } = req.query;
-    const allData = await prisma.ExcessToleranceItems.findMany({});
+    const { companyId, active, materialId, poMaterial } = req.query;
+    let data;
 
-        console.log("materialId",materialId)
+    data = await prisma.ExcessToleranceItems.findMany({});
 
-    const data = materialId
-        ? allData.filter(item => item?.materialId === materialId)
-        : allData;
+    if (materialId) {
+        data = data?.filter(item => item?.materialId == materialId)
+    }
+
+    if (poMaterial) {
+        data = data?.filter(item => item?.material == poMaterial)
+
+    }
+
+    // const allData = await prisma.ExcessToleranceItems.findMany({});
+
+    //     console.log("materialId",materialId)
+
+    // const data = materialId
+    //     ? allData.filter(item => item?.materialId === materialId)
+    //     : allData;
 
     return { statusCode: 0, data };
 }
@@ -80,8 +93,9 @@ async function create(body) {
                             excessQty: temp?.excessQty ? temp?.excessQty : undefined,
                             active: temp?.active ? temp?.active : false,
                             materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
-                            material : temp?.material ?  temp?.material : undefined ,
-                        })),    
+                            material: temp?.material ? temp?.material : undefined,
+                            bagweight: temp?.bagweight ? temp?.bagweight : undefined,
+                        })),
                     }
                     : undefined,
             },
@@ -120,7 +134,9 @@ async function update(id, body) {
                             excessQty: temp?.excessQty ? temp?.excessQty : undefined,
                             active: temp?.active ? temp?.active : false,
                             materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
-                            material : temp?.material ?  temp?.material : undefined ,
+                            material: temp?.material ? temp?.material : undefined,
+                            bagweight: temp?.bagweight ? temp?.bagweight : undefined,
+
 
                         })),
                     }

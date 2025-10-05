@@ -19,16 +19,6 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 
     }
 
-
-    function handleCancel() {
-        setPoItems([]);
-        onClose()
-        setPoType("")
-    }
-
-
-
-
     function addItem(id, obj) {
         setPoItems(prevItems => {
             let newItems = structuredClone(prevItems);
@@ -99,19 +89,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 
                 </div>
                 <div className="flex gap-2">
-                    {/* <div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                     handleCancel();
-                                    // setSearchValue("");
-                                    // setId(false);
-                                }}
-                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                            >
-                                Cancel
-                            </button>
-                    </div> */}
+        
                     <div className="flex gap-2">
                         {!readOnly && (
                             <button
@@ -120,7 +98,6 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                                         border border-green-600 flex items-center gap-1 text-xs"
                             >
-                                {/* <Check size={14} /> */}
                                 Done
                             </button>
                         )}
@@ -129,7 +106,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
             </div>
             <div className="flex-1 overflow-y-auto rounded-md ">
 
-                <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full max-h-[450px]">
+                <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full max-h-[500px]">
 
                     <div className="flex flex-row w-full">
                         <div className="flex flex-col w-full">
@@ -146,20 +123,11 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                     />
                                                 </th>
                                                 <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
                                                 <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-20">Order No</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-64">Style No</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-96">Yarn</th>
-
-
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs text-gray-800  w-24">Color</th>
-
-
-
-
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th> */}
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th> */}
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty </th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty </th>
@@ -167,8 +135,15 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 
 
 
+
+
+                                       
                                             </tr>
                                         </thead>
+
+
+
+
 
                                         <tbody>
 
