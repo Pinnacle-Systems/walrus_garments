@@ -34,7 +34,7 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
     }
     useEffect(() => {
         if (data) {
-            setFormulas(data.data.TaxTemplateDetails.map(f => { return { name: (getName(f.taxTermId)), isPowise: getIsPoItem(f?.taxTermId), displayName: f.displayName, value: f.value, amount: f.amount } }))
+            setFormulas(data?.data?.TaxTemplateDetails?.map(f => { return { name: (getName(f.taxTermId)), isPowise: getIsPoItem(f?.taxTermId), displayName: f.displayName, value: f.value, amount: f.amount } }))
         }
 
     }, [isLoading, isFetching, isTemplateTermFetching, isTemplateTermLoading, taxTypeId])
@@ -62,7 +62,7 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
     function getTotalQuantity(taxTerm, valueOrAmount) {
         let calculateItems = structuredClone(poItems)
         let formula = getRegex(getFormulaByName(taxTerm)[valueOrAmount])
-        console.log(formula,"formula")
+        console.log(formula, "formula")
         const total = calculateItems?.reduce((accumulator, currentItem) => {
             let price = isNaN(parseFloat(currentItem["price"])) ? 0 : parseFloat(currentItem["price"])
             let qty = isNaN(parseFloat(currentItem["qty"])) ? 0 : parseFloat(currentItem["qty"])
@@ -71,6 +71,8 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
             let taxPercent = isNaN(parseFloat(currentItem["taxPercent"])) ? 0 : parseFloat(currentItem["taxPercent"])
             return accumulator + eval(formula)
         }, 0)
+        console.log(total, "total")
+
         return total
     }
 

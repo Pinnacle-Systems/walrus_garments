@@ -8,44 +8,49 @@ import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection , poInwardOrDirectInward }) => {
-
-
-    console.log(inwardItems, "statr")
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, poInwardOrDirectInward }) => {
 
 
 
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.filter(i => i.poItemsId !== ""));
-    // const [localInwardItems, setLocalInwardItems] = useState(
-    //     inwardItems
-    //         ?.filter(i => i.poItemsId !== "")
-    //         .map(i => ({ id: i.poItemsId }))
-    // );
 
-
+    
+    console.log(inwardItems, "inwardItems")
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i  => i.poItemsId));    // const [localInwardItems, setLocalInwardItems] = useState(
+        
     console.log(localInwardItems, "localInwardItems")
 
+
     // const [localInwardItems, setLocalInwardItems] = useState([]);
-    const companyId = secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "userCompanyId"
-    )
 
 
 
 
     function addItem(id, obj) {
         // setInwardItems([])
-        setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
+        // setLocalInwardItems(localInwardItems => {
+        //     let newItems = structuredClone(localInwardItems);
 
-            newItems.push(obj);
-            return newItems
+        //     newItems.push(obj);
+        //     return newItems
+        // });
+        setLocalInwardItems(prevItems => {
+            let newItems = structuredClone(prevItems);
+
+            const index = newItems?.findIndex(v => v?.yarnId === "");
+
+
+            if (index !== -1) {
+                newItems[index] = obj;
+            } else {
+                newItems.push(obj);
+            }
+
+            return newItems;
         });
     }
 
     function removeItem(id) {
-        console.log(id, "removeid")
-        console.log(localInwardItems?.filter(item => item?.id), "localInwardItemsremove")
+        // console.log(localInwardItems?.filter(item => item?.id), "localInwardItemsremove")
 
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems.filter(item => item?.id));
@@ -56,7 +61,8 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     // console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
     function isItemAdded(id) {
-        return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId) === parseInt(id)) !== -1;
+        return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId || item) === parseInt(id)) !== -1;
+
     }
 
     function handleChange(id, obj) {
@@ -85,15 +91,18 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         setInwardItemSelection([])
         setInwardItems(prevInwardItems => {
             let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item.poItemsId))
+            console.log(localInwardItems, "localInwardItemsssssss")
+            console.log(prevInwardItems, "prevInwardItems")
+
             let newInwardItems = localInwardItems?.filter(item => {
-                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) ===   parseInt(item.id)) === -1
             })
             console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {
                 return {
 
                     poItemsId: poItem?.id,
-                    orderId: poItem?.Po.orderId,
+                    orderId: poItem?.Po?.orderId,
                     poNo: poItem?.Po?.docId,
                     fabricId: poItem?.fabricId,
                     colorId: poItem?.colorId,
@@ -120,6 +129,95 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         });
         setInwardItemSelection(false);
     }
+
+
+    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));
+
+    // console.log(localInwardItems, "localInwardItems")
+    // console.log(inwardItems, "inwardItems");
+
+    // function addItem(id, obj) {
+    //     setLocalInwardItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
+    //         newItems.push(obj);
+    //         return newItems
+    //     });
+    // }
+    // function removeItem(id) {
+    //     setLocalInwardItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
+    //         newItems = newItems.filter(item => parseInt(item) !== parseInt(id))
+    //         return newItems
+    //     });
+    // }
+
+
+    // function handleChange(id, obj) {
+    //     if (isItemAdded(id, obj)) {
+    //         removeItem(id)
+    //     } else {
+    //         addItem(id, obj)
+    //     }
+    // }
+    // function isItemAdded(id) {
+    //     return localInwardItems.findIndex(item => parseInt(item) === parseInt(id)) !== -1
+    // }
+
+    // function handleSelectAllChange(value, poItems) {
+    //     if (value) {
+    //         poItems.forEach(item => addItem(item.id, item))
+    //     } else {
+    //         poItems.forEach(item => removeItem(item.id))
+    //     }
+    // }
+
+    // function getSelectAll(poItems) {
+    //     return poItems.every(item => isItemAdded(item.id))
+    // }
+
+    // function handleDone() {
+    //     setInwardItemSelection([])
+    //     setInwardItems(prevInwardItems => {
+    //         let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item.poItemsId))
+    //         console.log(localInwardItems, "localInwardItems")
+    //         console.log(prevInwardItems, "prevInwardItems")
+
+    //         let newInwardItems = localInwardItems?.filter(item => {
+    //             return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
+    //         })
+    //         console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
+    //         return [...oldInwardItems, ...newInwardItems?.map(poItem => {
+    //             return {
+
+    //                 poItemsId: poItem?.id,
+    //                 orderId: poItem?.Po?.orderId,
+    //                 poNo: poItem?.Po?.docId,
+    //                 fabricId: poItem?.fabricId,
+    //                 colorId: poItem?.colorId,
+    //                 gaugeId: poItem?.gaugeId,
+    //                 gsmId: poItem?.gsmId,
+    //                 fDiaId: poItem?.fDiaId,
+    //                 designId: poItem?.designId,
+    //                 discountAmount: poItem?.discountAmount,
+    //                 discountType: poItem?.discountType,
+    //                 kDiaId: poItem?.kDiaId,
+    //                 loopLengthId: poItem?.loopLengthId,
+    //                 poId: poItem?.poId,
+    //                 price: poItem?.price,
+    //                 taxPercent: poItem?.tax,
+    //                 uomId: poItem?.uomId,
+    //                 poQty: poItem?.poQty,
+    //                 yarnId: poItem?.yarnId,
+    //                 cancelQty: poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000",
+    //                 alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000",
+    //                 alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000",
+    //                 balanceQty: poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000"
+    //             }
+    //         })]
+    //     });
+    //     setInwardItemSelection(false);
+    // }
+
 
     function handleCancel() {
         setLocalInwardItems([]);
@@ -151,7 +249,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                                 />
                                 :
                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}
-                                    handleDone={handleDone} handleCancel={handleCancel}  poInwardOrDirectInward={poInwardOrDirectInward}
+                                    handleDone={handleDone} handleCancel={handleCancel} poInwardOrDirectInward={poInwardOrDirectInward}
 
                                 />
                             }

@@ -218,3 +218,9 @@ httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
+setInterval(() => {
+  const used = process.memoryUsage();
+  console.log(
+    `Heap Used: ${(used.heapUsed / 1024 / 1024).toFixed(2)} MB / ${(used.heapTotal / 1024 / 1024).toFixed(2)} MB`
+  );
+}, 10000);

@@ -229,11 +229,30 @@ function manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType
 export async function getPoItems(req) {
     const { branchId, active, supplierId, poType, pagination, dataPerPage,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate,
-        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward
+        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward,
+
     } = req.query
 
+
     let data;
-    let po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
+
+    // let po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
+    //  po  == poType ?  
+
+    let po
+
+
+    if (poInwardOrDirectInward == "Order Purchase" || poInwardOrDirectInward == "General Purchase") {
+        po = poInwardOrDirectInward
+    } else {
+        po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
+    }
+
+
+    // console.log(po, "po", poInwardOrDirectInward == "Order Purchase")
+
+
+
 
 
     let totalCount;
@@ -267,14 +286,25 @@ export async function getPoItems(req) {
 
         // totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-        data = data?.filter(i => i?.Po?.poMaterial === poType && i.Po.poType === po)
+
+        // data = data?.filter(i => i?.Po?.poMaterial === poType && i.Po.poType === po)
 
 
-        console.log(data,"Bef0ore")
-        
-        data = data?.filter(i => i.Po.supplierId == supplierId  && i.Po.poMaterial ==  poType    )
+        console.log(data, "Bef0ore")
+
+        if(poInwardOrDirectInward != "PurchaseReturn"){
+        data = data?.filter(i => i.Po.supplierId == supplierId && i.Po.poMaterial == poType && i.Po.poType === po)
+
+        }
+
+
+        console.log(data, "cernter")
+
 
         data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
+
+        console.log(data, "Bef0ore")
+
 
         if (isPurchaseInwardFilter) {
 
@@ -307,7 +337,7 @@ export async function getPoItems(req) {
 
 export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
-        console.log(data, "data")
+    // console.log(data, "data")
 
     let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
@@ -423,7 +453,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    console.log(data,"dataaaaaaaaaaaaaa")
+    // console.log(data, "dataaaaaaaaaaaaaa")
 
     const alreadyInwardedData = await prisma?.directItems?.aggregate({
         where: {
@@ -707,6 +737,8 @@ export function getPoItemObject(poMaterial, item) {
         newItem.percentage = item.percentage ? parseFloat(item.percentage) : null;
         newItem.requiredQty = item.requiredQty ? parseFloat(item.requiredQty) : null;
         newItem.count = item.count ? parseInt(item.count) : null;
+        newItem.hsnId = item.hsnId ? parseInt(item.hsnId) : null;
+
 
     } else if (poMaterial === "GreyFabric" || poMaterial === "DyedFabric") {
         newItem.fabricId = parseInt(item.fabricId);
@@ -741,9 +773,9 @@ export function getPoItemObject(poMaterial, item) {
 async function create(body) {
     const {
         transType, dueDate, poType, poMaterial,
-        supplierId, poItems, payTermId, remarks,
-        branchId, active, userId, deliveryType,
-        deliveryToId, finYearId, orderId, PurchaseType, requirementId , taxTemplateId
+        supplierId, poItems, term, remarks,
+        branchId, active, userId, deliveryType, discountValue, discountType,
+        deliveryToId, finYearId, orderId, PurchaseType, requirementId, taxTemplateId
     } = await body;
 
     const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -772,7 +804,10 @@ async function create(body) {
             createdById: parseInt(userId),
             orderId: orderId ? parseInt(orderId) : undefined,
             requirementId: requirementId ? parseInt(requirementId) : undefined,
-            taxTemplateId : taxTemplateId ? parseInt(taxTemplateId) : undefined,
+            taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
+            discountType: discountType ? discountType : null,
+            discountValue: discountValue ? parseFloat(discountValue) : undefined,
+            termsAndCondtion: term ? term : undefined,
             PurchaseType: PurchaseType,
             PoItems: {
                 createMany: {
@@ -788,9 +823,9 @@ async function create(body) {
 
 async function update(id, body) {
     const { transType, dueDate, taxTemplateId, remarks, payTermDay, poType, poMaterial,
-        supplierId, poItems, payTermId, deliveryType, deliveryToId,
+        supplierId, poItems, term, deliveryType, deliveryToId, discountValue, discountType,
         branchId, active, userId, requirementId, orderId } = await body
-    console.log(supplierId, "supplierId")
+    console.log(discountType ? true : false, "discountType")
     const dataFound = await prisma.po.findUnique({
         where: {
             id: parseInt(id)
@@ -838,6 +873,11 @@ async function update(id, body) {
                 deliveryPartyId: (deliveryType === "ToParty") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 orderId: orderId ? parseInt(orderId) : undefined,
                 requirementId: requirementId ? parseInt(requirementId) : undefined,
+                taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
+                discountType: discountType ? discountType : "",
+                discountValue: discountValue ? parseFloat(discountValue) : undefined,
+                termsAndCondtion: term ? term : undefined,
+
                 PoItems: {
                     createMany: {
                         data: newPoItems?.map(item => getPoItemObject(poMaterial, item))

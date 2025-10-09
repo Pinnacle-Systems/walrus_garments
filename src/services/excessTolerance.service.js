@@ -37,29 +37,35 @@ export async function getToleranceItems(req) {
 }
 
 export async function getExcessToleranceItems(req) {
-    const { companyId, active, materialId, poMaterial } = req.query;
+    const { companyId, active, materialId, poMaterial, excessType, orderType ,applyon} = req.query;
     let data;
 
     data = await prisma.ExcessToleranceItems.findMany({});
+    
+    console.log(data?.filter(item =>
+             item?.materialId == materialId 
+          &&   item?.excessType == excessType 
+         &&    item?.orderType == orderType
+        )
+         ,"data")
 
-    if (materialId) {
-        data = data?.filter(item => item?.materialId == materialId)
+    if (materialId && excessType && orderType &&  applyon) {
+        data = data?.filter(item =>
+            ( item?.materialId == materialId) &&
+            ( item?.excessType == excessType) &&
+            ( item?.orderType == orderType)  && 
+             ( item?.applyon == applyon) 
+        );
     }
+
+
 
     if (poMaterial) {
-        data = data?.filter(item => item?.material == poMaterial)
-
+        const lowerMaterial = poMaterial.toLowerCase();
+        data = data?.filter(item => item?.material?.toLowerCase() === lowerMaterial);
     }
 
-    // const allData = await prisma.ExcessToleranceItems.findMany({});
-
-    //     console.log("materialId",materialId)
-
-    // const data = materialId
-    //     ? allData.filter(item => item?.materialId === materialId)
-    //     : allData;
-
-    return { statusCode: 0, data };
+    return { statusCode: 0, data, id: data?.[0]?.excessToleranceId };
 }
 
 
@@ -95,6 +101,7 @@ async function create(body) {
                             materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
                             material: temp?.material ? temp?.material : undefined,
                             bagweight: temp?.bagweight ? temp?.bagweight : undefined,
+                            applyon: temp?.applyon ? temp?.applyon : undefined,
                         })),
                     }
                     : undefined,
@@ -136,6 +143,7 @@ async function update(id, body) {
                             materialId: temp?.materialId ? parseInt(temp?.materialId) : "",
                             material: temp?.material ? temp?.material : undefined,
                             bagweight: temp?.bagweight ? temp?.bagweight : undefined,
+                            applyon: temp?.applyon ? temp?.applyon : undefined,
 
 
                         })),

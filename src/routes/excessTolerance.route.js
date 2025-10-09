@@ -7,7 +7,7 @@ router.post('/', create);
 
 router.get('/', get);
 
-router.get('/getToleranceItems', getToleranceItems);
+router.get('/getLazyToleranceItems', getToleranceItems);
 
 
 router.get('/getExcessToleranceItems', getExcessToleranceItems);

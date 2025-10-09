@@ -59,11 +59,11 @@ const AccessoryPoItems = ({
           taxPercent: "0.000",
           sizeId: "",
           uomId: "",
-         
+
           price: "",
           discountType: "Percentage",
           discountValue: 0,
-          noOfBags : 0.00,
+          noOfBags: 0.00,
           weightPerBag: 0.00,
 
         };
@@ -119,20 +119,20 @@ const AccessoryPoItems = ({
     return acc ? acc.accessoryItem.name : null;
   }
 
-    const addNewRow = () => {
-      const newRow = {
-        yarnId: "",
-        qty: "",
-        tax: "0",
-        colorId: "",
-        uomId: "",
-        price: "",
-        discountTypes: "",
-        discountValue: "0.00",
-        noOfBags : "0.00"
-      };
-      setPoItems([...poItems, newRow]);
+  const addNewRow = () => {
+    const newRow = {
+      yarnId: "",
+      qty: "",
+      tax: "0",
+      colorId: "",
+      uomId: "",
+      price: "",
+      discountTypes: "",
+      discountValue: "0.00",
+      noOfBags: "0.00"
     };
+    setPoItems([...poItems, newRow]);
+  };
   function findAccessoryGroupName(id) {
     if (!accessoryList) return 0;
     let acc = accessoryList.data.find(
@@ -258,7 +258,7 @@ const AccessoryPoItems = ({
     dispatch(push({ name: masterName }));
   };
 
-    const deleteRow = (id) => {
+  const deleteRow = (id) => {
     setPoItems((yarnBlend) =>
       yarnBlend.filter((row, index) => index !== parseInt(id))
     );
@@ -279,86 +279,86 @@ const AccessoryPoItems = ({
         />
       </Modal>
       <div className={` relative w-full overflow-y-auto p-3 max-h-[250px] overflow-auto`}>
-              <div className="flex justify-between items-center mb-2">
-                            <h2 className="font-bold text-slate-700">List Of Items</h2>
-                            <div className="flex gap-2 items-center">
-        
-                                <button
-                                    onClick={() => {
-                                        addNewRow()
-                                    }}
-                                    className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                                >
-                                    <HiPlus className="w-3 h-3 mr-1" />
-                                    Add Item
-                                </button>
-                            </div>
-        
-                        </div>
-            <table className="w-full border-collapse table-fixed ">
-                                <thead className="bg-gray-200 text-gray-800">
-              <tr>
-                                        <th
-                                            className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            S.No
-                                        </th>
-                                        <th
-        
-                                            className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Accessory Group
-                                        </th>
-                                        <th
-        
-                                            className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Accessory Item
-                                        </th>
-                                        <th
-        
-                                            className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Accessory Name
-                                        </th>
-                                       
-                                        <th
-        
-                                            className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Colors
-                                        </th>
-                                        <th
-        
-                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Size
-                                        </th>
-                                        <th
-        
-                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            UOM
-                                        </th>
-                                        <th
-        
-                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Quantity
-                                        </th>
-          <th
-        
-                                            className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Price
-                                        </th>
-                                        <th
-        
-                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Gross
-                                        </th>
-                                         {/* <th
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="font-bold text-slate-700">List Of Items</h2>
+          <div className="flex gap-2 items-center">
+
+            <button
+              onClick={() => {
+                addNewRow()
+              }}
+              className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+            >
+              <HiPlus className="w-3 h-3 mr-1" />
+              Add Item
+            </button>
+          </div>
+
+        </div>
+        <table className="w-full border-collapse table-fixed ">
+          <thead className="bg-gray-200 text-gray-800">
+            <tr>
+              <th
+                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                S.No
+              </th>
+              <th
+
+                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Accessory Group
+              </th>
+              <th
+
+                className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Accessory Item
+              </th>
+              <th
+
+                className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Accessory Name
+              </th>
+
+              <th
+
+                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Colors
+              </th>
+              <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Size
+              </th>
+              <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                UOM
+              </th>
+              <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Quantity
+              </th>
+              <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Price
+              </th>
+              <th
+
+                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+              >
+                Gross
+              </th>
+              {/* <th
         
                                             className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                         >
@@ -370,86 +370,86 @@ const AccessoryPoItems = ({
                                         >
                                              Price With Tax
                                         </th> */}
-                                         <th
-        
-                                            className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                            Actions
-                                        </th>
-                                        {/* ))} */}
-                                    </tr>
+              <th
+
+                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+              >
+                Actions
+              </th>
+              {/* ))} */}
+            </tr>
           </thead>
-           <tbody>
-                          
-                                         {poItems?.map((row, index) => (
-                                    <tr key={index} className="border border-blue-gray-200 cursor-pointer">
-                                        <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
-                                            {index + 1}
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
-                                                disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "accessoryGroupId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.name}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
-                                                disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "accessoryItemId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "accessoryItemId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || []).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.name}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                                                disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "fabricaccessoryId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? (accessoryList.data || []) : accessoryList.data.filter(item => item.active && item?.accessoryItemId == row?.accessoryItemId) || []).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.aliasName}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        {/* <td className='table-data'>
+          <tbody>
+
+            {poItems?.map((row, index) => (
+              <tr key={index} className="border border-blue-gray-200 cursor-pointer">
+                <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                  {index + 1}
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
+                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "accessoryGroupId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.name}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
+                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryItemId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "accessoryItemId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || []).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.name}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
+                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "fabricaccessoryId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? (accessoryList.data || []) : accessoryList.data.filter(item => item.active && item?.accessoryItemId == row?.accessoryItemId) || []).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.aliasName}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                {/* <td className='table-data'>
                                             <input
                                                 type="text-left px-1"
                                                 onFocus={(e) => e.target.select()}
@@ -468,155 +468,155 @@ const AccessoryPoItems = ({
                                                 disabled={true}
                                             />
                                         </td> */}
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "colorId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? colorList.data : colorList.data.filter(item => item.active)).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.name}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                                disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "sizeId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? sizeList.data : sizeList.data.filter(item => item.active)).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.name}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                                disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
-                                                onBlur={(e) => {
-        
-                                                    handleInputChange(e.target.value, index, "uomId")
-        
-                                                }
-                                                }
-                                            >
-                                                <option hidden>
-                                                </option>
-                                                {(id ? uomList.data : uomList.data.filter(item => item.active)).map((blend) =>
-                                                    <option value={blend.id} key={blend.id}>
-                                                        {blend.name}
-                                                    </option>
-                                                )}
-                                            </select>
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <input
-                                                onKeyDown={e => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                value={(!row.qty) ? 0 : row.qty}
-                                                disabled={readOnly}
-                                                onChange={(e) =>
-                                                    handleInputChange(parseFloat(e.target.value), index, "qty")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
-        
-                                                }
-                                                }
-        
-                                            />
-        
-                                        </td>
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <input
-                                                onKeyDown={e => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0.00", index, "price") }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                value={(!row.price) ? 0 : row.price}
-                                                disabled={readOnly}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "price")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
-                                                }
-                                                }
-                                            />
-                                        </td>
-        
-                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                            <input
-                                                type="number"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-right rounded py-1 px-1 w-full"
-                                                value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
-                                                disabled={true}
-                                            />
-                                        </td>
-                                    
-                                          <td className="w-16 px-1 py-1 text-center">
-                                                <div className="flex space-x-2  justify-center">
-        
-                                                    <button
-                                                        // onClick={() => handleView(index)}
-                                                        // onMouseEnter={() => setTooltipVisible(true)}
-                                                        // onMouseLeave={() => setTooltipVisible(false)}
-                                                        className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                                                    >
-                                                        👁 <span className="text-xs"></span>
-                                                    </button>
-                                                    <span className="tooltip-text">View</span>
-                                                    <button
-                                                        // onClick={() => handleEdit(index)}
-                                                        className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                                                    >
-                                                        <HiPencil className="w-4 h-4" />
-        
-                                                    </button>
-                                                    <span className="tooltip-text">Edit</span>
-                                                    <button
-                                                        onClick={() => deleteRow(index)}
-                                                        className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                                                    >
-                                                        <HiTrash className="w-4 h-4" />
-        
-                                                    </button>
-                                                    <span className="tooltip-text">Delete</span>
-        
-                                                    {/* {tooltipVisible && (
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
+                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "colorId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? colorList.data : colorList.data.filter(item => item.active)).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.name}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
+                    disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "sizeId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? sizeList.data : sizeList.data.filter(item => item.active)).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.name}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
+                    disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                    onBlur={(e) => {
+
+                      handleInputChange(e.target.value, index, "uomId")
+
+                    }
+                    }
+                  >
+                    <option hidden>
+                    </option>
+                    {(id ? uomList.data : uomList.data.filter(item => item.active)).map((blend) =>
+                      <option value={blend.id} key={blend.id}>
+                        {blend.name}
+                      </option>
+                    )}
+                  </select>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    onKeyDown={e => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                      if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                    }}
+                    min={"0"}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    value={(!row.qty) ? 0 : row.qty}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      handleInputChange(parseFloat(e.target.value), index, "qty")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+
+                    }
+                    }
+
+                  />
+
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    onKeyDown={e => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                      if (e.key === "Delete") { handleInputChange("0.00", index, "price") }
+                    }}
+                    min={"0"}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    value={(!row.price) ? 0 : row.price}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      handleInputChange(e.target.value, index, "price")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+                    }
+                    }
+                  />
+                </td>
+
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full"
+                    value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
+                    disabled={true}
+                  />
+                </td>
+
+                <td className="w-16 px-1 py-1 text-center">
+                  <div className="flex space-x-2  justify-center">
+
+                    <button
+                      // onClick={() => handleView(index)}
+                      // onMouseEnter={() => setTooltipVisible(true)}
+                      // onMouseLeave={() => setTooltipVisible(false)}
+                      className="text-blue-800 flex items-center  bg-blue-50 rounded"
+                    >
+                      👁 <span className="text-xs"></span>
+                    </button>
+                    <span className="tooltip-text">View</span>
+                    <button
+                      // onClick={() => handleEdit(index)}
+                      className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
+                    >
+                      <HiPencil className="w-4 h-4" />
+
+                    </button>
+                    <span className="tooltip-text">Edit</span>
+                    <button
+                      onClick={() => deleteRow(index)}
+                      className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
+                    >
+                      <HiTrash className="w-4 h-4" />
+
+                    </button>
+                    <span className="tooltip-text">Delete</span>
+
+                    {/* {tooltipVisible && (
                                                         <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
                                                             <div className="flex items-start">
                                                                 <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
@@ -625,13 +625,13 @@ const AccessoryPoItems = ({
                                                             <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
                                                         </div>
                                                     )} */}
-                                                </div>
-                                            </td>
-                                                  
-                                     
-                                    </tr>
-                                ))}            
-                                 </tbody>
+                  </div>
+                </td>
+
+
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </>

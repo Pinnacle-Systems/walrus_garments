@@ -96,8 +96,9 @@ export const purchaseType = [
 
 ]
 export const directOrPoreturn = [
-    { show: "Direct Return", value: "DirectReturn" },
+    { show: "General Return", value: "GeneralReturn" },
     { show: "Purchase Return", value: "PurchaseReturn" },
+    { show: "Direct Return", value: "DirectReturn" },
 
 
 ]
@@ -302,16 +303,26 @@ export const OrderType = [
     { show: "PLANNING", value: "PLANNING" },
     { show: "SAMPLE", value: "SAMPLE" },
     { show: "GENERAL", value: "GENERAL" },
-
 ]
+export const OverallOptions = [
+    { show: "", value: "" },
+
+    { show: "APPLY OVERALL", value: "APPLYOVERALL" },
+    { show: "APPLY INDIVIDUALLY", value: "APPLYINDIVIDUALLY" },
+];
 export const QtyType = [
     { show: "QTY(KG)", value: "QTY" },
     { show: "PERCENTAGE", value: "PERCENTAGE" },
-    { show: "ROUNDOFF", value: "ROUNDOFF" },
+    { show: "BAG", value: "BAG" },
 
 ]
 export const RoundOff = [
     { show: "BAG", value: "BAG" },
     // { show: "WEIGHT", value: "WEIGHT" },
+
+]
+export const cancelTypes = [
+    { show: "CANCEL", value: "CANCEL" },
+    { show: "SHORTCLOSE", value: "SHORTCLOSE" },
 
 ]

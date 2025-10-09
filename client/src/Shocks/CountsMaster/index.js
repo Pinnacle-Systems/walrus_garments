@@ -102,8 +102,15 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
+                draggable: true,
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
             return;
         }
@@ -199,24 +206,24 @@ export default function Form() {
             //   cellClass: () => "font-medium text-gray-900",
             className: "font-medium text-gray-900 text-center uppercase w-16",
         },
-        
 
 
-        
+
+
     ];
-    
-      const handleView = (id) => {
-    setId(id);
-    setForm(true);
-    setReadOnly(true);
-    console.log("view");
-  };
-  const handleEdit = (id) => {
-    setId(id);
-    setForm(true);
-    setReadOnly(false);
-    console.log("Edit");
-  };
+
+    const handleView = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(true);
+        console.log("view");
+    };
+    const handleEdit = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(false);
+        console.log("Edit");
+    };
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
@@ -238,9 +245,9 @@ export default function Form() {
             <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 ">
                 <ReusableTable
                     columns={columns}
-                      data={allData?.data}
-                      onView={handleView}
-                      onEdit={handleEdit}
+                    data={allData?.data}
+                    onView={handleView}
+                    onEdit={handleEdit}
                     onDelete={deleteData}
                     itemsPerPage={15}
                 />
@@ -263,8 +270,8 @@ export default function Form() {
                                     <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
                                         {id
                                             ? !readOnly
-                                                ? "Edit Counts Master"
-                                                : "Counts Master"
+                                                ? "Edit Counts "
+                                                : "Counts "
                                             : "Add New Counts"}
                                     </h2>
                                 </div>

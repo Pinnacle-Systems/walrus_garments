@@ -283,9 +283,9 @@ export default function Form() {
   };
 
   const handleEdit = (id) => {
+    setReadOnly(false);
     setId(id)
     setPurchaseOrderForm(true)
-    setReadOnly(false);
   };
 
   console.log(childRecord?.current, "childrecord");

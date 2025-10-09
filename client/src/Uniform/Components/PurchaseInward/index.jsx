@@ -22,7 +22,7 @@ const PurchaseInward = () => {
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
     const { branchId, userId, companyId, finYearId } = getCommonParams();
-    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("General Inward");
+    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("GeneralInward");
 
 
     const [docId, setDocId] = useState("New")

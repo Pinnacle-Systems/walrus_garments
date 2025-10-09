@@ -88,7 +88,7 @@ export default function Form() {
     setContentId(data?.contentId ? data?.contentId : "");
     setYarnBlendDetails(data?.YarnOnYarnBlend ? data?.YarnOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
     setYarnTypeId(data?.yarnTypeId ? data?.yarnTypeId : "");
-    setHsn(data?.hsn ? data?.hsn : "");
+    setHsn(data?.hsnId ? data?.hsnId : "");
     setCountsId(data?.countsId ? data?.countsId : "");
     setTaxPercent(data?.taxPercent ? data?.taxPercent : 0);
     setActive(id ? (data?.active ? data.active : false) : true);

@@ -8,9 +8,10 @@ import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/D
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import PurchaseInwardForm from '../PurchaseInward/PurchaseInwardFormUi';
-import { useGetPurchaseCancelQuery } from '../../../redux/uniformService/PurchaseCancelServices';
+import { useDeletePurchaseCancelMutation, useGetPurchaseCancelQuery } from '../../../redux/uniformService/PurchaseCancelServices';
 import PurchaseCancelForm from './PurchaseCancelForm';
 import PurchaseCancelFormReport from './PurchaseCancelFormReport';
+import Swal from 'sweetalert2';
 
 
 
@@ -25,34 +26,33 @@ const PurchaseCancel = () => {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [readOnly, setReadOnly] = useState(false);
     const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-    
+
     const params = {
         branchId, userId, finYearId
     };
-    const [orderDetails, setOrderDetails] = useState([])
-  const { data: allData, isLoading, isFetching } = useGetPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
+    const { data: allData, isLoading, isFetching } = useGetPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
     const { data: partyData } = useGetPartyQuery({ params })
-    // const [removeData] = useDeleteOrderMutation();
+    const [removeData] = useDeletePurchaseCancelMutation();
     const columns = [
         {
             header: 'S.No',
             accessor: (item, index) => index + 1,
             cellClass: () => 'font-medium text-gray-900'
         },
-        
+
         {
             header: 'Doc No.',
             accessor: (item) => item.docId,
             cellClass: () => 'font-medium text-gray-900'
         },
-       
+
         {
             header: 'Inward Date',
             accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
         },
         {
             header: 'Supplier',
-            accessor: (item) => findFromList(item.supplierId, partyData?.data ,"name"),
+            accessor: (item) => findFromList(item.supplierId, partyData?.data, "name"),
             cellClass: () => 'uppercase'
         },
         {
@@ -60,7 +60,7 @@ const PurchaseCancel = () => {
             accessor: (item) => item.poType,
             cellClass: () => 'text-gray-800 uppercase'
         },
-     
+
     ];
 
 
@@ -84,10 +84,20 @@ const PurchaseCancel = () => {
                 return;
             }
             try {
-                // await removeData(orderId)
+                await removeData(orderId)
                 setId("");
                 onNew();
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -97,7 +107,6 @@ const PurchaseCancel = () => {
     const onNew = () => {
         setId("");
         setReadOnly(false);
-        setOrderDetails([]);
 
     }
 
@@ -105,9 +114,8 @@ const PurchaseCancel = () => {
         <>
             {showManufacturer ? (
                 <PurchaseCancelForm
-                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}  id={id}  setId={setId}
-                //  orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
-                //     partyData={partyData?.data}
+                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
+
                 />
 
             ) : (
@@ -150,12 +158,12 @@ const PurchaseCancel = () => {
                             onDelete={handleDelete}
                             itemsPerPage={10}
                         /> */}
-                        <PurchaseCancelFormReport  
-                         columns={columns}
+                        <PurchaseCancelFormReport
+                            columns={columns}
                             data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
-                            onDelete={handleDelete}    />
+                            onDelete={handleDelete} />
                     </div>
                 </div>
             )}

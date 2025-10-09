@@ -19,7 +19,9 @@ function getInwardOrReturnShortCode(poInwardOrDirectInward) {
         case "DirectInward":
             return "DI"
         case "PurchaseInward":
-            return "GRN"
+            return "PI"
+        case "GeneralInward":
+            return "GI"
         default:
             break;
     }
@@ -1309,7 +1311,7 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 async function update(id, body) {
     const { poType, poInwardOrDirectInward,
         supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
-        vehicleNo, specialInstructions, remarks, orderId,locationId,partyId,
+        vehicleNo, specialInstructions, remarks, orderId, locationId, partyId,
         branchId, active, userId } = await body
 
 
@@ -1346,7 +1348,7 @@ async function update(id, body) {
                 vehicleNo, specialInstructions, remarks,
                 active,
                 updatedById: parseInt(userId),
-                
+
 
             },
         })

@@ -13,7 +13,7 @@ import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
 import { DropdownInput, DisabledInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
-import { poTypes, YarnMaterial } from '../../../Utils/DropdownData';
+import { PoTypes, poTypes, YarnMaterial } from '../../../Utils/DropdownData';
 import { useDispatch } from "react-redux";
 import Modal from "../../../UiComponents/Modal";
 import PoItemsSelection from "./PoItemsSelection";
@@ -42,18 +42,20 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   const [date, setDate] = useState(getDateFromDateTime(today));
   const [poType, setPoType] = useState("GreyYarn");
   const [supplierId, setSupplierId] = useState("");
-
-  const [docId, setDocId] = useState("");
-
+  const [docId, setDocId] = useState("New");
   const [inwardItems, setInwardItems] = useState([]);
-
   const [formReport, setFormReport] = useState(false);
-
   const [searchValue, setSearchValue] = useState("");
-
   const [remarks, setRemarks] = useState("")
-
   const childRecord = useRef(0);
+  const [po, setPo] = useState("")
+  const [contextMenu, setContextMenu] = useState(null);
+
+
+
+
+
+
 
   const { branchId, companyId, finYearId, userId } = getCommonParams()
 
@@ -105,17 +107,18 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
     setSupplierId(data?.supplierId ? data?.supplierId : "");
     setRemarks(data?.remarks ? data.remarks : "")
+    setPo(data?.po ? data?.po : "")
   }, [id]);
 
-  const getNextDocId = useCallback(() => {
-    if (isLoading || isFetching) return
-    if (id) return
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId)
-    }
-  }, [allData, isLoading, isFetching, id])
+  // const getNextDocId = useCallback(() => {
+  //   if (isLoading || isFetching) return
+  //   if (id) return
+  //   if (allData?.nextDocId) {
+  //     setDocId(allData.nextDocId)
+  //   }
+  // }, [allData, isLoading, isFetching, id])
 
-  useEffect(getNextDocId, [getNextDocId])
+  // useEffect(getNextDocId, [getNextDocId])
 
   useEffect(() => {
     if (id) {
@@ -133,7 +136,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     branchId, id, userId,
     remarks,
     cancelItems: inwardItems,
-    finYearId
+    finYearId, po
   }
 
   const validateData = (data) => {
@@ -183,6 +186,9 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     //   toast.info("Please fill all required fields...!", { position: "top-center" })
     //   return
     // }
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return
+    }
     if (id) {
       console.log(id, "id", data, "dataaa")
       handleSubmitCustom(updateData, data, "Updated");
@@ -250,7 +256,6 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
       return total + parseFloat(current?.qty)
     }, 0)
   }
-  console.log(inwardItems, "inwardItems")
 
   return (
     <>
@@ -279,14 +284,14 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
       </Modal>
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} poType={poType}
-          supplierId={supplierId}
+          supplierId={supplierId} po={po}
           inwardItems={inwardItems}
           setInwardItems={setInwardItems} />
       </Modal>
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Cancel </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Cancel </h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -317,26 +322,28 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
             </div>
           </div>
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+          <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-medium text-slate-700 mb-2">
               Supplier Details
             </h2>
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               <DropdownInput
                 className={"w-[110px]"}
-                name="Po Type"
+                name="Material"
                 beforeChange={() => { setSupplierId(""); setInwardItems([]); }}
                 options={YarnMaterial}
+
                 value={poType}
-                setValue={setPoType}
+                setValue={(value) => { setPoType(value); }}
                 required={true}
                 readOnly={readOnly}
               />
-              <div className="col-span-3">
 
-                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id || readOnly} />
+              <div className="">
+
+                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} />
               </div>
-              <div className="item-center gap-5">
+              {/* <div className="item-center gap-5">
                 <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                   onClick={() => {
                     if (!supplierId || !poType) {
@@ -346,8 +353,16 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
                     setInwardItemSelection(true)
                   }}
                 >Select Items</button>
-              </div>
+              </div> */}
+              <DropdownInput name="Po Type"
+                options={PoTypes}
+                value={po}
+                setValue={setPo}
 
+                required={true}
+                readOnly={readOnly}
+                disabled={readOnly}
+              />
 
 
 
@@ -357,40 +372,29 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
           </div>
 
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              {/* Inward Details */}
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
 
-
-              <div className="col-span-1 pt-0.5">
-
-              </div>
-
-              <div className="col-span-1 pt-0.5">
-
-              </div>
-
-            </div>
-
-          </div>
         </div>
         <fieldset className=''>
-          {
+          {/* {
             poType.toLowerCase().includes("yarn")
-              ?
-              <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
-                transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
-                readOnly={readOnly} isSupplierOutside={isSupplierOutside()} id={id} />
-              :
-              // poType.toLowerCase().includes("fabric")
-              //   ?
-              //   <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
-              //     inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-              //   :
-              <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-          }
+              ? */}
+          <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
+            transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} setInwardItemSelection={setInwardItemSelection}
+            readOnly={readOnly} isSupplierOutside={isSupplierOutside()} id={id} supplierId={supplierId}
+
+            contextMenu={contextMenu} setContextMenu={setContextMenu}
+
+          />
+          {/* :
+              poType.toLowerCase().includes("fabric")
+                ?
+                <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
+                  inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                :
+              <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
+              setInwardItemSelection={setInwardItemSelection}
+              />
+          } */}
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">

@@ -205,7 +205,9 @@ export const TextInput = ({
   tabIndex = null,
   onBlur = null,
   width = "full",
+  max
 }) => {
+  console.log(max,"max")
   return (
     <div className={`mb-2 ${width}`}>
       {name && (
@@ -226,6 +228,7 @@ export const TextInput = ({
         readOnly={readOnly}
         disabled={disabled}
         tabIndex={tabIndex ?? undefined}
+        max={max ? String(max)  : undefined}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
@@ -590,7 +593,7 @@ export const DropdownInput = forwardRef(({
 
   const isDisabled = readOnly || disabled;
 
-  console.log(openOnFocus, "openOnFocus")
+  console.log(options, "options")
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -623,7 +626,7 @@ export const DropdownInput = forwardRef(({
         disabled={isDisabled}
       >
         <option value="" hidden={!clear} className="text-gray-800">
-          Select {name || "option"}
+          Select 
         </option>
         {options?.map((option, index) => (
           <option
@@ -1180,7 +1183,7 @@ export const DropdownWithSearch = forwardRef(({
     focus:border-indigo-300 focus:outline-none transition-all duration-200
     hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} 
     ${className}`}
-        disabled={readOnly}
+        disabled={disabled}
         readOnly={readOnly}
         value={value || ""}
         onChange={(e) => setValue(e.target.value)}

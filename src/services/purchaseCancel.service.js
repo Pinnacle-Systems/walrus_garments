@@ -190,7 +190,7 @@ async function getOne(id) {
                     LoopLength: true,
                     Gsm: true,
                     price: true,
-
+                    cancelType : true,    
                     Size: true,
                     designId: true,
                     gaugeId: true,
@@ -216,7 +216,7 @@ async function getOne(id) {
         },
     })
 
-console.log(data,"data")
+// console.log(data,"data")
     data["cancelItems"] = await getCancelItemsAlreadyData(data.id, "PurchaseCancel", data?.poType, data?.cancelItems)
     if (!data) return NoRecordFound("purchaseCancel");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -287,8 +287,7 @@ async function getSearch(req) {
 async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poInwardOrDirectInward, storeId, branchId) {
     let promises
 
-    console.log(poType == "DyedYarn"  ||  poType == "GreyYarn"  )
-    if (poType == "DyedYarn"  ||  poType == "GreyYarn"   ) {
+    // if (poType == "DyedYarn"  ||  poType == "GreyYarn"   ) {
 
         promises = cancelItems.map(async (item, index) => {
             const data = await tx.cancelItems.create({
@@ -302,7 +301,7 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
                     qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-                    // gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+                    cancelType: item["cancelType"] ? item["cancelType"] : undefined,
                 
 
 
@@ -315,45 +314,45 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
         )
 
 
-    }
-    else {
+    // }
+    // else {
 
-        promises = cancelItems.map(async (item, index) => {
-            const data = await tx.cancelItems.create({
-                data: {
+    //     promises = cancelItems.map(async (item, index) => {
+    //         const data = await tx.cancelItems.create({
+    //             data: {
 
-                    purchaseCancelId :  purchaseCancelId  ?  parseInt(purchaseCancelId)  :  ""   ,
-                    accessoryId  :  item["accessoryId"]   ?   parseInt(item["accessoryId"])  :  ""  ,
-                    accessoryGroupId  :    item["accessoryGroupId"]   ?     parseInt(item["accessoryGroupId"])   :  ""  ,
-                    accessoryItemId   :  item["accessoryItemId"] ?  parseInt(item["accessoryItemId"])   :  ""  ,
-                    sizeId   :   item["sizeId"] ? parseInt(item["sizeId"]) : ""  ,
-                    colorId: item["colorId"] ? parseInt(item["colorId"]) : "" ,
-                    uomId: item["uomId"] ? parseInt(item["uomId"]) : "",
+    //                 purchaseCancelId :  purchaseCancelId  ?  parseInt(purchaseCancelId)  :  ""   ,
+    //                 accessoryId  :  item["accessoryId"]   ?   parseInt(item["accessoryId"])  :  ""  ,
+    //                 accessoryGroupId  :    item["accessoryGroupId"]   ?     parseInt(item["accessoryGroupId"])   :  ""  ,
+    //                 accessoryItemId   :  item["accessoryItemId"] ?  parseInt(item["accessoryItemId"])   :  ""  ,
+    //                 sizeId   :   item["sizeId"] ? parseInt(item["sizeId"]) : ""  ,
+    //                 colorId: item["colorId"] ? parseInt(item["colorId"]) : "" ,
+    //                 uomId: item["uomId"] ? parseInt(item["uomId"]) : "",
 
-                    qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-                    price: item["price"] ? parseFloat(item["price"]) : 0,
-                    poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                    poNo: item["poNo"] ? item["poNo"] : "",
-                    poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : "",
+    //                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
+    //                 price: item["price"] ? parseFloat(item["price"]) : 0,
+    //                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
+    //                 poNo: item["poNo"] ? item["poNo"] : "",
+    //                 poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : "",
 
-                    // purchaseCancelId: parseInt(purchaseCancelId),
-                    // accessoryId: parseInt(item["accessoryId"]),
-                    // accessoryGroupId: parseInt(item["accessoryGroupId"]),
-                    // accessoryItemId: parseInt(item["accessoryItemId"]),
-                    // sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : "",
-                    // colorId: item["colorId"] ? parseInt(item["colorId"]) : "",
+    //                 // purchaseCancelId: parseInt(purchaseCancelId),
+    //                 // accessoryId: parseInt(item["accessoryId"]),
+    //                 // accessoryGroupId: parseInt(item["accessoryGroupId"]),
+    //                 // accessoryItemId: parseInt(item["accessoryItemId"]),
+    //                 // sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : "",
+    //                 // colorId: item["colorId"] ? parseInt(item["colorId"]) : "",
                    
             
 
 
-                }
-            })
-        }
+    //             }
+    //         })
+    //     }
 
 
 
-        )
-    }
+    //     )
+    // }
 
 
 
@@ -362,7 +361,7 @@ async function createCancelItems(tx, purchaseCancelId, cancelItems, poType, poIn
 
 
 async function create(body) {
-    const { poType, poInwardOrDirectInward,
+    const { poType, poInwardOrDirectInward,po,
         supplierId, cancelItems, dcNo, dcDate, storeId,
         payTermId,
         vehicleNo, specialInstructions, remarks,
@@ -380,6 +379,7 @@ async function create(body) {
                 poType, poInwardOrDirectInward,
                 supplierId: parseInt(supplierId),
                 branchId: parseInt(branchId),
+                po,
 
                 active,
                 createdById: parseInt(userId),
@@ -398,99 +398,16 @@ async function create(body) {
 
 
 
-// async function deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardReturnIds) {
-//     return await tx.cancelItems.deleteMany({
-//         where: {
-//             id: {
-//                 in: removeItemsPurchaseInwardReturnIds
-//             }
-//         }
-//     })
-// }
-
-
-
-
-
-
-
-// async function updateOrCreate(tx, item, purchaseCancelId, poType, poInwardOrDirectInward, storeId, branchId) {
-
-//     if (item?.id) {
-
-//         const updatedata = await tx.cancelItems.update({
-//             where: {
-//                 id: parseInt(item.id)
-//             },
-//             data: {
-//                 purchaseCancelId: parseInt(purchaseCancelId),
-//                 fabricId: item["fabricId"] ? parseInt(item["fabricId"]) : undefined,
-//                 designId: item["designId"] ? parseInt(item["designId"]) : undefined,
-//                 gaugeId: item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
-//                 loopLengthId: item["loopLengthId"] ? parseInt(item["loopLengthId"]) : undefined,
-//                 gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-//                 kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-//                 fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-//                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-//                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-//                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-
-//                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-//                 poNo: item["poNo"] ? item["poNo"] : undefined,
-//                 noOfRolls: item["noOfRolls"] ? parseInt(item["noOfRolls"]) : 0,
-//                 price: item["price"] ? parseFloat(item["price"]) : 0,
-//                 poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-//                 taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
-//                 inwardLotDetails: {
-//                     deleteMany: {},
-//                 }
-//             }
-//         })
-
-
-//         return await createLotGridItems(tx, updatedata?.id, item?.inwardLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-
-//     } else {
-//         const data = await tx.cancelItems.create({
-//             data: {
-//                 purchaseCancelId: parseInt(purchaseCancelId),
-//                 fabricId: item["fabricId"] ? parseInt(item["fabricId"]) : undefined,
-//                 designId: item["designId"] ? parseInt(item["designId"]) : undefined,
-//                 gaugeId: item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
-//                 loopLengthId: item["loopLengthId"] ? parseInt(item["loopLengthId"]) : undefined,
-//                 gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-//                 kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-//                 fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-//                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-//                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-//                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-
-//                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-//                 poNo: item["poNo"] ? item["poNo"] : undefined,
-
-//                 price: item["price"] ? parseFloat(item["price"]) : 0,
-//                 poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-//                 taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
-//             }
-//         })
-//         return await createLotGridItems(tx, data?.id, item?.inwardLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-//     }
-
-// }
-
-// async function updateAllPInwardReturnItems(tx, directInwardReturnItems, purchaseCancelId, poType, poInwardOrDirectInward, storeId, branchId) {
-//     let promises = directInwardReturnItems.map(async (item) => await updateOrCreate(tx, item, purchaseCancelId, poType, poInwardOrDirectInward, storeId, branchId))
-//     return Promise.all(promises)
-// }
 
 async function update(id, body) {
 
     let processValid = false;
     const { poType, poInwardOrDirectInward,
-        supplierId, cancelItems,
+        supplierId, cancelItems,po,
         remarks,
         branchId, active, userId } = await body
 
+        console.log("Hit")
 
     const dataFound = await prisma.purchaseCancel.findUnique({
         where: {
@@ -514,7 +431,7 @@ async function update(id, body) {
                 supplierId: parseInt(supplierId),
                 branchId: parseInt(branchId),
                 remarks,
-                active,
+                active,po,
                 updatedById: parseInt(userId),
                 cancelItems: {
                     deleteMany: {},
@@ -524,8 +441,8 @@ async function update(id, body) {
                             let newItem = {};
                             newItem["fabricId"] = item["fabricId"] ? parseInt(item["fabricId"]) : undefined,
                                 newItem["accessoryId"] = item["accessoryId"] ? parseInt(item["accessoryId"]) : undefined,
-                                accessoryGroupId = item["accessoryGroupId"] ? parseInt(item["accessoryGroupId"]) : undefined,
-                                accessoryItemId = item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : undefined,
+                                newItem["accessoryGroupId"] = item["accessoryGroupId"] ? parseInt(item["accessoryGroupId"]) : undefined,
+                                newItem["accessoryItemId"] = item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : undefined,
                                 newItem["designId"] = item["designId"] ? parseInt(item["designId"]) : undefined,
                                 newItem["gaugeId"] = item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
                                 newItem["loopLengthId"] = item["loopLengthId"] ? parseInt(item["loopLengthId"]) : undefined,
@@ -538,9 +455,10 @@ async function update(id, body) {
                                 newItem["sizeId"] = item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                                 newItem["poQty"] = item["poQty"] ? parseFloat(item["poQty"]) : 0,
                                 newItem["poNo"] = item["poNo"] ? item["poNo"] : undefined,
-
                                 newItem["price"] = item["price"] ? parseFloat(item["price"]) : 0,
                                 newItem["poItemsId"] = item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined;
+                                newItem["cancelType"] = item["cancelType"] ? (item["cancelType"]) : undefined;
+
                             return newItem
                         })
                     } : undefined

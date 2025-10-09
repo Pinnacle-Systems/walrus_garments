@@ -3,8 +3,8 @@ import secureLocalStorage from "react-secure-storage";
 import { findFromList, getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from "../../../Utils/helper";
 import { useGetPoItemsQuery } from "../../../redux/uniformService/PoServices";
 import { showEntries } from "../../../Utils/DropdownData";
-import { Loader } from "lucide-react";
 import ReactPaginate from "react-paginate";
+import { Loader } from "../../../Basic/components";
 
 
 

@@ -415,8 +415,8 @@ async function getAlreadyReturnDataByCancel(poInwardOrDirectInward, cancelItemsI
 export async function getCancelItemsAlreadyData(purchaseCancelId, poInwardOrDirectInward, poType, cancelItems, storeId) {
 
 
-    console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
-    console.log(cancelItems, "cancelItems");
+    // console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
+    // console.log(cancelItems, "cancelItems");
 
 
     let cancelItemsData = [];

@@ -730,13 +730,14 @@ model YarnType {
 }
 
 model Hsn {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  Company   Company? @relation(fields: [companyId], references: [id])
+  Company   Company?  @relation(fields: [companyId], references: [id])
   companyId Int?
-  active    Boolean  @default(true)
+  active    Boolean   @default(true)
   tax       String?
   Yarn      Yarn[]
+  PoItems   PoItems[]
 }
 
 model YarnBlend {
@@ -949,7 +950,8 @@ enum P_InwardOrReturn {
   GeneralPo
   OrderAgainstPo
   MaterialIssue
-  StockTransfer
+  StockTransfer 
+  GeneralInward
 }
 
 model Color {
@@ -1056,7 +1058,7 @@ model Po {
   docId                      String?
   branchId                   Int?
   active                     Boolean?                  @default(true)
-  discountType               DiscountTypes?
+  discountType               String?
   discountValue              Float?                    @default(0)
   deliveryType               DeliveryType
   DeliveryParty              Party?                    @relation("deliveryTo", fields: [deliveryPartyId], references: [id])
@@ -1076,9 +1078,9 @@ model Po {
   poType                     String?
   TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
   taxTemplateId              Int?
-  PoItems                    PoItems[]
+  termsAndCondtion           String?                  @db.LongText
+  PoItems PoItems[]
 }
-
 
 model PoItems {
   id                         Int                       @id @default(autoincrement())
@@ -1107,7 +1109,7 @@ model PoItems {
   requiredQty                Float?
   qty                        Float?
   price                      Float?
-  discountType               DiscountTypes?
+  discountType               String?
   discountValue              Float?                    @default(0)
   tax                        Float?                    @default(0)
   Size                       Size?                     @relation(fields: [sizeId], references: [id])
@@ -1130,12 +1132,15 @@ model PoItems {
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
   RequirementPlanningItemsId Int?
   taxPercent                 Float?
-  PoInwardReturnItems        PoInwardReturnItems[]
-  BillEntryItems             BillEntryItems[]
-  DirectReturnItems          DirectReturnItems[]
-  directItems                DirectItems[]
-  CancelItems                CancelItems[]
+  Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
+  hsnId               Int?
+  PoInwardReturnItems PoInwardReturnItems[]
+  BillEntryItems      BillEntryItems[]
+  DirectReturnItems   DirectReturnItems[]
+  directItems         DirectItems[]
+  CancelItems         CancelItems[]
 }
+
 
 model AccessoryPo {
   id                         Int                       @id @default(autoincrement())
@@ -3976,6 +3981,7 @@ model PurchaseCancel {
   active                 Boolean?      @default(true)
   docId                  String?
   remarks                String?       @db.LongText
+  po                     String?  
   cancelItems            CancelItems[]
 }
 
@@ -4017,6 +4023,7 @@ model CancelItems {
   poItemsId        Int?
   poNo             String?
   poQty            Float?
+  cancelType       String?
 }
 
 model AccesssoryPurchaseCancel {
@@ -4126,6 +4133,7 @@ model ExcessToleranceItems {
   to                String?
   excessQty         String?
   active            Boolean?         @default(false)
+  applyon           String?
 }
 
 model TermsAndConditionsNew {

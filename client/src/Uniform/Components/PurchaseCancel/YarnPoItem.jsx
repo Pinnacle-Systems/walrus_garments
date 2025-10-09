@@ -6,8 +6,9 @@ import { substract } from '../../../Utils/helper'
 import { toast } from "react-toastify"
 import { HiPencil, HiTrash } from 'react-icons/hi'
 import Swal from 'sweetalert2'
+import { cancelTypes } from '../../../Utils/DropdownData'
 
-const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteRow, removeItem, purchaseInwardId, weightPerBag }) => {
+const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelType, deleteRow, removeItem, purchaseInwardId, handleRightClick }) => {
 
 
 
@@ -17,10 +18,9 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
 
 
 
-
-    let poQty = parseFloat(poItem?.qty).toFixed(3)
+    let poQty = poItem?.qty  ?  parseFloat(poItem?.qty).toFixed(3)  :  "0.000"
     let poBags = parseFloat(poItem?.noOfBags).toFixed(3)
-    let alreadyCancelQty = poItem?.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
+    let alreadyCancelQty = poItem?.alreadyCancelData?._sum.qty ? poItem?.alreadyCancelData?._sum.qty : "0.000";
     let alreadyInwardedQty = poItemId ? poItem?.alreadyInwardedQty : poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
 
     let alreadyReturnedQty = poItem?.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
@@ -50,16 +50,64 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Yarn?.name}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Color?.name}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Uom?.name}</td>
-            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{poQty}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{alreadyInwardedQty}</td>
-            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{alreadyCancelQty}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseFloat(poQty).toFixed(3)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(alreadyInwardedQty).toFixed(3)}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseFloat(alreadyCancelQty).toFixed(3)}</td>
 
-            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{(alreadyReturnedQty)}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseFloat(alreadyReturnedQty).toFixed(3)}</td>
 
-            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseInt(balanceQty).toFixed(3)}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px] text-right">{parseFloat(balanceQty).toFixed(3)}</td>
+
+            {/* <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                <input
+                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                    type="number"
+                    value={row?.noOfBags}
+                    onFocus={e => e.target.select()}
+                    placeHolder="0.000"
+                    disabled={readOnly || !transType || !row?.yarnId}
+                    onChange={(e) => {
+                        const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                        handleInputChange(e.target.value, index, "noOfBags", row.requiredQty, balanceQty, row.weightPerBag);
+                    }}
+                    onBlur={(e) => {
+                        const val = e.target.value;
+                        const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                        const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                        e.target.value = formatted;
+                        handleInputChange(val === "" ? 0 : formatted, index, "noOfBags", row.requiredQty, balanceQty, row.weightPerBag);
+                    }}
 
 
-            <td className="py-0.5 border border-gray-300 text-[11px]">
+                />
+            </td>*/}
+
+            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
+                    disabled={readOnly} className='text-left w-full rounded py-1 text-xs' value={cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
+                    onBlur={(e) => {
+                        handleInputChange((e.target.value), index, "cancelType")
+                    }
+                    }
+                >
+
+                    <option hidden>
+                    </option>
+                    <option value="" >
+                        Select
+                    </option>
+                    {cancelTypes?.map((option, index) => (
+                        <option key={index} value={option.value}>
+                            {option.show}
+                        </option>
+                    ))}
+                </select>
+            </td>
+
+            <td className="w-28 py-0.5 border border-gray-300 text-[11px]">
                 <input
                     min={"0"}
                     type="number"
@@ -83,12 +131,12 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
                     onFocus={(e) => e.target.select()}
                     onChange={(event) => {
                         if (event.target.value < 0) return
-                        // if (!event.target.value) {
-                        //     handleInputChange(0, index, "qty", balanceQty);
-                        //     return
-                        // }
-              
-                        else{
+                        if (!event.target.value) {
+                            handleInputChange(0, index, "qty", balanceQty);
+                            return
+                        }
+
+                        else {
 
                             handleInputChange(event.target.value, index, "qty", balanceQty);
                         }
@@ -120,12 +168,10 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
             </td>
 
             <td className="w-16 px-1 py-1 text-center">
-                <div className="flex space-x-2  justify-center">
+                {/* <div className="flex space-x-2  justify-center">
 
                     <button
-                        // onClick={() => handleView(index)}
-                        // onMouseEnter={() => setTooltipVisible(true)}
-                        // onMouseLeave={() => setTooltipVisible(false)}
+                  
                         className="text-blue-800 flex items-center  bg-blue-50 rounded"
                     >
                         👁 <span className="text-xs"></span>
@@ -148,24 +194,25 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, deleteR
                     </button>
                     <span className="tooltip-text">Delete</span>
 
-                    {/* {tooltipVisible && (
-                                                          <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                              <div className="flex items-start">
-                                                                  <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                                  <span>View</span>
-                                                              </div>
-                                                              <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                          </div>
-                                                      )} */}
-                </div>
+           
+                </div> */}
+                <input
+                    readOnly
+                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                    // onKeyDown={(e) => {
+                    //     if (e.key === "Enter") {
+                    //         e.preventDefault();
+                    //         addNewRow();
+                    //     }
+                    // }}
+                    onContextMenu={(e) => {
+                        if (!readOnly) {
+                            handleRightClick(e, index, "shiftTimeHrs");
+                        }
+                    }}
+                />
             </td>
-            {/* {!readOnly &&
-                <td className='table-data w-12'>
-                    <div tabIndex={-1} onClick={() => removeItem(poItemId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
-                        {DELETE}
-                    </div>
-                </td>
-            } */}
+
         </tr>
     )
 }

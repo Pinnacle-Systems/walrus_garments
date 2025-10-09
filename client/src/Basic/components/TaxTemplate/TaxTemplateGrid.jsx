@@ -59,7 +59,7 @@ const TaxTemplateGrid = ({ taxTemplateItems, setTaxTemplateItems, readOnly, para
             {
                 taxTemplateItems.length !== 0 ?
                     <>
-                        <div className={`w-full overflow-y-auto py-3 `}>
+                        <div className={`w-full overflow-y-auto p-3 `}>
                             <table className=" border border-gray-600 text-xs table-auto w-full">
                                 <thead className='bg-gray-100 top-0'>
                                     <tr>

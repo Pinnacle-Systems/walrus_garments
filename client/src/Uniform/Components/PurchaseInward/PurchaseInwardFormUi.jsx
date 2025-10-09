@@ -3,7 +3,7 @@ import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInpu, ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { directOrPo, poTypes } from "../../../Utils/DropdownData";
+import { directOrPo, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
@@ -29,19 +29,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  // const [docId, setDocId] = useState("")
-  // const [date, setDate] = useState("")
-  // const [readOnly, setReadOnly] = useState('')
-  // const [transType, setTransType] = useState("GreyYarn");
-  // const [dcNo, setDcNo] = useState("")
-  // const [dcDate, setDcDate] = useState('')
-  // const [supplierId, setSupplierId] = useState('')
-  // const [payTermId, setPayTermId] = useState("");
-  // const [locationId, setLocationId] = useState('');
-  // const [storeId, setStoreId] = useState("")
-  // const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-  // const [inwardItemSelection, setInwardItemSelection] = useState(false)
-  // const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
+
 
 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
@@ -58,6 +46,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
+  const [contextMenu, setContextMenu] = useState(false)
+
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
     "Supplier Two",
@@ -124,7 +114,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       setReadOnly(false);
     }
     setTransType(data?.poType ? data.poType : "DyedYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "General Inward")
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "GeneralInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
     if (data?.docId) {
@@ -132,6 +122,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     }
     if (data?.date) setDate(data?.date);
     // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
+    setPartyId(data?.supplierId ? data?.supplierId  : "" )
     setPayTermId(data?.payTermId ? data?.payTermId : "");
     setSupplierId(data?.supplierId ? data?.supplierId : "");
     setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
@@ -316,11 +307,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  useEffect(() => {
-    if (id) return
-    setDirectInwardReturnItems([]);
-    setSupplierId("")
-  }, [transType])
+
 
   const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
@@ -410,6 +397,21 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     return false
   }
 
+  const handleRightClick = (event, rowIndex, type) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      rowId: rowIndex,
+      type,
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+
   return (
     <>
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[85%] py-10"}>
@@ -459,12 +461,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 beforeChange={() => { setDirectInwardReturnItems([]) }}
                 options={directOrPo}
                 value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+
               <DropdownInput name="Po Type"
-                options={poTypes}
+                options={YarnMaterial}
                 value={transType}
                 setValue={setTransType}
                 required={true}
-                readOnly={readOnly} />
+                readOnly={readOnly}
+              />
 
               <DropdownInput name="Location"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
@@ -478,7 +482,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 value={storeId} setValue={setStoreId} required={true}
               // readOnly={id || readOnly}
               />
-              {(!readOnly && poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward") &&
+              {/* {(!readOnly && poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward") &&
                 < div className="mt-5">
                   <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                     onClick={() => {
@@ -491,7 +495,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   >Select Items
                   </button>
                 </div>
-              }
+              } */}
             </div>
 
           </div>
@@ -526,50 +530,31 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
         <fieldset>
           {
 
-            (poInwardOrDirectInward == "DirectInward" || poInwardOrDirectInward == "GeneralInward") &&
-            (transType.toLowerCase().includes("yarn")
-              ?
-              <YarnPoItems
-                poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} />
-              :
+            (poInwardOrDirectInward == "DirectInward" ) &&
 
-              // transType.toLowerCase().includes("fabric")
-              //   ?
-              //   <FabricPoItems greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} params={params} poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-              //   :
-              <AccessoryPoItems
-                poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems}
-              //  id={id} transType={transType}  params={params}  readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
-              />
+            <YarnPoItems
+              poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+              handleCloseContextMenu={handleCloseContextMenu} 
+            />
 
-            )
           }
 
 
           {
 
 
-            poInwardOrDirectInward == "PurchaseInward" &&
-            (
+          (  poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward")  &&
 
-              transType.toLowerCase().includes("yarn") ?
-                <YarnInwardPoItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems}
-                  removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params}
-                  readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-                />
-                :
 
-                transType.toLowerCase().includes("fabric")
-                  ?
-                  // <FabricPoItems 
-                  // greyFilter={transType.toLowerCase().includes("grey")} id={id} transType={transType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
-                  // />
-                  <></>
-                  :
-                  <AccessoryInwardItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly}
-                  //  id={id} transType={transType} taxTypeId={taxTemplateId} params={params}  isSupplierOutside={isSupplierOutside()} 
-                  />
-            )
+            <YarnInwardPoItems inwardItems={directInwardReturnItems}  setInwardItems={setDirectInwardReturnItems}
+              removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params} supplierId={partyId}
+              readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection}
+
+              handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+
+
+            />
+
           }
         </fieldset>
 
@@ -632,7 +617,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 />
               </div>
 
-            
+
             </div>
           </div>
 
@@ -731,7 +716,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           </div>
 
           <div className="flex gap-2 flex-wrap">
-   
+
             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
               onClick={() => setReadOnly(false)}
             >

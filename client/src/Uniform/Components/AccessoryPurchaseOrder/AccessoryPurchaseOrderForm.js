@@ -13,7 +13,7 @@ import PrintFormat from "../CuttingOrderGeneration/PrintFormat-CO";
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { MaterialType, PoTypes } from "../../../Utils/DropdownData";
+import { deliveryTypes, MaterialType, PoTypes } from "../../../Utils/DropdownData";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa6";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
@@ -21,6 +21,9 @@ import AccessoryPoItems from "./AccessoryPoItems";
 import { Loader } from "../../../Basic/components";
 import OrderDetailsSelection from "./OrderDetailsSelection";
 import { useAddAccessoryPoMutation, useGetAccessoryPoByIdQuery, useUpdateAccessoryPoMutation } from "../../../redux/uniformService/AccessoryPoServices";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
@@ -91,11 +94,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
 
+  const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
+    useGetTaxTemplateQuery({ params: { ...params } });
+
+  const { data: branchList } = useGetBranchQuery({ params: { ...params } });
 
 
-  console.log(poMaterial, "poMaterial")
 
-  console.log(requirementPlanningItemsData?.data?.filter(po => po.yarnType == poMaterial), "requirementPlanningItemsData?.data")
 
   useEffect(() => {
 
@@ -107,11 +112,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
 
 
-  // const handleAddSupplier = (newName) => {
-  //   if (!suppliers.includes(newName)) {
-  //     setSuppliers([...suppliers, newName]);
-  //   }
-  // };
 
 
 
@@ -129,7 +129,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const syncFormWithDb = useCallback((data) => {
 
-    console.log(data,"dataaaaa")
+    console.log(data, "dataaaaa")
 
     setReadOnly(true)
 
@@ -142,7 +142,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setPoMaterial(data?.poMaterial ? data?.poMaterial : 'Accessory')
 
     setPoItems(data?.AccessoryPoItems ? data?.AccessoryPoItems : []);
-    setDocId(data?.docId ? data?.docId :  "New");
+    setDocId(data?.docId ? data?.docId : "New");
     setPayTermId(data?.payTermId || "");
     setDiscountType(data?.discountType || "Percentage");
     setDiscountValue(data?.discountValue || "0");
@@ -167,7 +167,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     //   branchIdFromApi.current = data.branchId;
     // }
   }, [id]);
-    console.log(poItems, "poItems");
+  console.log(poItems, "poItems");
 
 
 
@@ -176,7 +176,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     if (id && singleData?.data) {
       syncFormWithDb(singleData.data);
     }
- 
+
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
 
@@ -377,7 +377,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
       </div>
       <div className="space-y-3 h-full py-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
 
 
@@ -439,6 +439,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   setValue={(value) => { setOrderId(value); setTableDataView(true) }}
                 />
               } */}
+              <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
 
 
               <div>
@@ -498,7 +499,43 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             </div>
 
           </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Delivery Details
+            </h2>
+            <div className="grid grid-cols-3 gap-2">
 
+
+              <DropdownInput name="Delivery Type"
+                options={deliveryTypes}
+                // option={delivery}
+                value={deliveryType}
+                setValue={setDeliveryType}
+                required={true} readOnly={readOnly} />
+              <div className="col-span-2">
+
+                {deliveryType == "ToSelf"
+                  ?
+                  <DropdownInput name="Delivery To" options={ dropDownListObject(branchList ? branchList.data : [], "branchName", "id") } value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
+                  :
+
+                  <DropdownInput name="Delivery To" options={dropDownListObject(supplierList?.data?.filter(val => val.isSupplier), "code", "id")} value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
+                }
+
+              </div>
+
+
+
+
+
+
+
+
+
+
+            </div>
+
+          </div>
 
 
 
@@ -530,7 +567,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                     poMaterial={poMaterial}
                   />
                   : */}
-                  <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
+          <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
           {/* //     )
           // } */}
 

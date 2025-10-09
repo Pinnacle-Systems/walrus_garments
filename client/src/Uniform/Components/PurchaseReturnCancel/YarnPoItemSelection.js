@@ -7,7 +7,7 @@ import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange }) => {
+const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange ,poInwardOrDirectInward }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -27,7 +27,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetPoItemsQuery({
         params: {
             branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
-            isPurchaseInwardFilter: true
+            isPurchaseInwardFilter: true , poInwardOrDirectInward 
         }
     })
 
@@ -71,7 +71,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                     className="border-2  top-0 stick-bg w-48"
                                 >
                                     <label>Po.No</label>
-                                    <input
+                                    {/* <input
                                         type="text"
                                         className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
                                         placeholder="Search"
@@ -79,7 +79,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                         onChange={(e) => {
                                             setPoNo(e.target.value);
                                         }}
-                                    />
+                                    /> */}
                                 </th>
                                 <th
                                     className="border-2  top-0 stick-bg"
@@ -89,44 +89,13 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Yarn</label>
-                                    {/* <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                        onChange={(e) => {
-                                            setDueDate(e.target.value);
-                                        }}
-                                    /> */}
+                                
                                 </th>
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Color</label>
 
                                 </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Design</label>
-
-                                </th>
-                                {/* <th className="border-2  top-0 stick-bg">
-                                    <label>Gauge</label>
-
-                                </th> */}
-                                {/* <th className="border-2  top-0 stick-bg">
-                                    <label>LL</label>
-
-                                </th> */}
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>GSM</label>
-
-                                </th>
-                                {/* <th className="border-2  top-0 stick-bg">
-                                    <label>K-Dia</label>
-
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>F-Dia</label>
-
-                                </th> */}
+                            
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Uom</label>
 
@@ -155,14 +124,10 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                         <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
                                         <td className='py-1'> {dataObj?.Po?.docId}</td>
                                         <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Po?.createdAt)} </td>
-                                        <td className='py-1'> {dataObj?.Fabric?.name}</td>
+                                        <td className='py-1'> {dataObj?.Yarn?.name}</td>
                                         <td className='py-1'> {dataObj?.Color?.name}</td>
-                                        <td className='py-1'> {dataObj?.Design?.name}</td>
-                                        {/* <td className='py-1'> {dataObj?.Gauge?.name}</td> */}
-                                        {/* <td className='py-1'> {dataObj?.LoopLength?.name}</td> */}
-                                        <td className='py-1'> {dataObj?.Gsm?.name}</td>
-                                        {/* <td className='py-1'> {dataObj?.KDia?.name}</td>
-                                        <td className='py-1'> {dataObj?.FDia?.name}</td> */}
+                                    
+                               
                                         <td className='py-1'> {dataObj?.Uom?.name}</td>
                                     </tr>
                                 ))}

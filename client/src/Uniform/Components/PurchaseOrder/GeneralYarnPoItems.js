@@ -14,6 +14,8 @@ import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
 import { toast } from "react-toastify";
 import { VIEW } from "../../../icons";
 import { useGetExcessToleranceItemsQuery, useGetExcessToleranceQuery } from "../../../redux/services/ExcessToleranceServices";
+import { findFromList } from "../../../Utils/helper";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
 const GeneralYarnPoItems = ({
     id,
@@ -26,11 +28,20 @@ const GeneralYarnPoItems = ({
     taxTypeId,
     greyFilter,
     poMaterial,
+    hsnData,
+    supplierId,
+
+
+    yarnList,
+    uomList,
+    colorList,
+    countsList,
 }) => {
 
     const { data: excessToleranceData } = useGetExcessToleranceItemsQuery({ params });
 
     const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
+    const [contextMenu, setContextMenu] = useState(null);
 
 
     useEffect(() => {
@@ -55,7 +66,7 @@ const GeneralYarnPoItems = ({
     }, [setPoItems, poItems])
 
 
-    const handleInputChange = (value, index, field, requiredQty, balanceQty) => {
+    const handleInputChange = (value, index, field, requiredQty, balanceQty, weightPerBag) => {
 
         let filterArray = excessToleranceData?.data?.filter(item => item.excessType == "PURCHASE" && item.material == "GREYYARN")
 
@@ -64,39 +75,26 @@ const GeneralYarnPoItems = ({
         const newBlend = structuredClone(poItems);
 
 
-        // if (field === "qty" && requiredQty > 0) {
-        //          let cost = 0;   
 
-        //     for (let rule of filterArray) {
-        //         console.log(rule.from, requiredQty, rule.to, "rule", rule.excessQty, balanceQty)
-        //         if (rule.from <= requiredQty && requiredQty <= rule.to) {
-        //             cost = rule.excessQty;
-        //             break;
-        //         }
-        //     }
-        //     console.log(cost, "cost")
-        //     if (parseFloat(cost) + parseFloat(balanceQty) < value) {
-        //         Swal.fire({
-        //             title: `allowed Purchase Qty  ${parseFloat(cost) + parseFloat(balanceQty)}`,
-        //             icon: "success",
-        //             draggable: true,
-        //             timer: 1000,
-        //             showConfirmButton: false,
-        //             didOpen: () => {
-        //                 Swal.showLoading();
-        //             }
-        //         });
-        //         return
-        //     }
-        //     else {
-        //         newBlend[index][field] = value;
+        if (field === "yarnId") {
+            if (field === "yarnId") {
+                const selectedYarn = yarnList?.data?.find(item => parseInt(item.id) === parseInt(value));
+                const hsnId = selectedYarn?.hsnId || 0;
+                const selectedTaxPercent = hsnData?.data?.find(item => parseInt(item.id) === parseInt(hsnId));
+                const taxPercent = selectedTaxPercent?.tax || 0;
 
-        //     }
-        // }
-        // else {
+                console.log(hsnId, "hsnId")
+                newBlend[index]["hsnId"] = hsnId
+                newBlend[index]["taxPercent"] = taxPercent
 
+                newBlend[index][field] = value
+
+            }
+
+        } else {
             newBlend[index][field] = value;
-        // }
+        }
+
 
         setPoItems(newBlend);
     };
@@ -129,18 +127,40 @@ const GeneralYarnPoItems = ({
         state.openTabs.tabs.find((tab) => tab.active).name
     );
 
-    const { data: yarnList } = useGetYarnMasterQuery({ params });
-    const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-    const {
-        data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
-
-    const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
 
 
 
+    const handleDeleteRow = (id) => {
+        setPoItems((yarnBlend) => {
+            if (yarnBlend.length <= 1) {
+                return yarnBlend;
+            }
+            return yarnBlend.filter((_, index) => index !== parseInt(id));
+        });
+    };
+    const handleDeleteAllRows = () => {
+        setPoItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
+    };
 
+
+    const handleRightClick = (event, rowIndex, type) => {
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
 
 
 
@@ -174,7 +194,12 @@ const GeneralYarnPoItems = ({
                                 >
                                     Items<span className="text-red-500">*</span>
                                 </th>
+                                <th
 
+                                    className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Hsn<span className="text-red-500">*</span>
+                                </th>
                                 <th
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
@@ -182,12 +207,12 @@ const GeneralYarnPoItems = ({
                                     Color<span className="text-red-500">*</span>
                                 </th>
 
-                                <th
+                                {/* <th
 
                                     className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Counts<span className="text-red-500">*</span>
-                                </th>
+                                </th> */}
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -213,6 +238,18 @@ const GeneralYarnPoItems = ({
                                 >
                                     Balance Purchase Qty  (kgs)
                                 </th> */}
+                                <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Weight Per Bag
+                                </th>
+                                <th
+
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    No of Bags
+                                </th>
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -254,10 +291,11 @@ const GeneralYarnPoItems = ({
                             {(poItems ? poItems : [])?.map((row, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer " >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
+
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
-                                            tabIndex={"0"} disabled={readOnly || transType == "Order Purchase" || !transType } className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly || transType == "Order Purchase" || !transType} className='text-left w-full rounded py-1 table-data-input'
                                             value={row.yarnId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
                                             onBlur={(e) => {
@@ -274,7 +312,9 @@ const GeneralYarnPoItems = ({
                                                 </option>)}
                                         </select>
                                     </td>
-
+                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                        {findFromList(row?.hsnId, hsnData?.data, "name")}
+                                    </td>
 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
 
@@ -284,7 +324,7 @@ const GeneralYarnPoItems = ({
                                                     handleInputChange("", index, "colorId")
                                                 }
                                             }}
-                                            disabled={readOnly || transType == "Order Purchase" || !transType ||  !row?.yarnId}
+                                            disabled={readOnly || transType == "Order Purchase" || !transType || !row?.yarnId}
                                             className="text-left w-full rounded py-1 table-data-input"
                                             value={row.colorId}
                                             onChange={e => handleInputChange(e.target.value, index, "colorId")}
@@ -304,7 +344,7 @@ const GeneralYarnPoItems = ({
 
 
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                    {/* <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                             disabled={readOnly || transType == "Order Purchase" || !transType ||  !row?.yarnId}
@@ -324,14 +364,14 @@ const GeneralYarnPoItems = ({
                                                 </option>
                                             )}
                                         </select>
-                                    </td>
+                                    </td> */}
 
 
 
                                     <td className="w-12 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            disabled={readOnly || !transType ||  !row?.yarnId} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                            disabled={readOnly || !transType || !row?.yarnId} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
@@ -347,17 +387,59 @@ const GeneralYarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
-{/* 
-                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {(row.requiredQty || 0.000)?.toFixed(3)}
-                                    </td>
-                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {(row.alreadyPoqty || 0.000)?.toFixed(3)}
+                              
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                        <input
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={row?.weightPerBag}
+                                            onFocus={e => e.target.select()}
+                                            placeHolder="0.000"
+                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            onChange={(e) => {
 
-                                    </td> */}
-                                    {/* <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0))?.toFixed(3)}
-                                    </td> */}
+                                                handleInputChange(e.target.value, index, "weightPerBag");
+                                            }}
+                                            onBlur={(e) => {
+                                                const val = e.target.value;
+                                                const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                e.target.value = formatted;
+                                                handleInputChange(val === "" ? 0 : formatted, index, "weightPerBag");
+                                            }}
+
+
+
+                                        />
+                                    </td>
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                        <input
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={row?.noOfBags}
+                                            onFocus={e => e.target.select()}
+                                            placeHolder="0.000"
+                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            onChange={(e) => {
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                                                handleInputChange(e.target.value, index, "noOfBags", row.requiredQty, balanceQty, row.weightPerBag);
+                                            }}
+                                            onBlur={(e) => {
+                                                const val = e.target.value;
+                                                const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+
+                                                e.target.value = formatted;
+                                                handleInputChange(val === "" ? 0.000 : formatted, index, "noOfBags", row.requiredQty, balanceQty, row.weightPerBag);
+                                            }}
+
+
+                                        />
+                                    </td>
                                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
@@ -376,8 +458,8 @@ const GeneralYarnPoItems = ({
 
                                             placeHolder="0.000"
 
-                                            disabled={readOnly || !transType ||  !row?.yarnId   }
-                                             onChange={(e) => {
+                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            onChange={(e) => {
                                                 const numVal = parseFloat(e.target.value) || 0;
                                                 const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
 
@@ -414,7 +496,7 @@ const GeneralYarnPoItems = ({
 
                                             placeHolder="0.000"
 
-                                            disabled={readOnly || !transType ||  !row?.yarnId}
+                                            disabled={readOnly || !transType || !row?.yarnId}
                                             onChange={(e) => {
                                                 const numVal = parseFloat(e.target.value) || 0;
 
@@ -442,6 +524,8 @@ const GeneralYarnPoItems = ({
                                     </td>
                                     <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
                                         <button
+                                            disabled={readOnly || !transType || !row?.yarnId}
+
                                             className="text-center rounded py-1 w-20"
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -458,22 +542,21 @@ const GeneralYarnPoItems = ({
 
 
                                     <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
-                                        <div className="flex space-x-2  justify-center">
-
-
-                                            <span className="tooltip-text">View</span>
-
-                                            <span className="tooltip-text">Edit</span>
-                                            <button
-                                                onClick={() => deleteRow(index)}
-                                                className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                                            >
-                                                <HiTrash className="w-4 h-4" />
-
-                                            </button>
-                                            <span className="tooltip-text">Delete</span>
-
-                                        </div>
+                                        <input
+                                            readOnly
+                                            className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    addNewRow();
+                                                }
+                                            }}
+                                            onContextMenu={(e) => {
+                                                if (!readOnly) {
+                                                    handleRightClick(e, index, "shiftTimeHrs");
+                                                }
+                                            }}
+                                        />
                                     </td>
 
 
@@ -483,6 +566,44 @@ const GeneralYarnPoItems = ({
                         </tbody>
                     </table>
                 </div>
+                {contextMenu && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: `${contextMenu.mouseY - 50}px`,
+                            left: `${contextMenu.mouseX - 30}px`,
+
+                            // background: "gray",
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                        }}
+                        className="bg-gray-100"
+                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                    >
+                        <div className="flex flex-col gap-1">
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteRow(contextMenu.rowId);
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete{" "}
+                            </button>
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteAllRows();
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

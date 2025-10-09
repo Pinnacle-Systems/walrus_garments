@@ -7,11 +7,15 @@ import YarnPoItemSelection from './YarnPoItemSelection';
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
-const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId));
-    const companyId = secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "userCompanyId"
-    )
+const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, setInwardItemSelection , po }) => {
+   
+   
+    console.log(inwardItems,"inwardItems")
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));
+
+
+    console.log(localInwardItems,"localInwardItems")
+
 
     function addItem(id) {
         setLocalInwardItems(localInwardItems => {
@@ -82,18 +86,16 @@ const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, set
                 <div className='h-full overflow-auto'>
                     {
                         <>
-                            {poType.includes("Yarn") ?
-                                <YarnPoItemSelection poType={poType} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleDone={handleDone} getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} />
-                                :
-                                <>
-                                    {
-                                        // transtype.includes("Fabric") ?
+                            {/* {poType.includes("Yarn") ? */}
+                                <YarnPoItemSelection poType={poType} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleDone={handleDone} getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange}    po={po} />
+                              {
+                                //         transtype.includes("Fabric") ?
 
-                                        //     <FabricPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
-                                        //     :
-                                        <AccessoryPoItemSelection poType={poType} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} handleDone={handleDone} />
-                                    }
-                                </>
+                                //             <FabricPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                //             :
+                                //         <AccessoryPoItemSelection poType={poType} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} handleDone={handleDone} />
+                                //     }
+                                // </>
                             }
 
                         </>

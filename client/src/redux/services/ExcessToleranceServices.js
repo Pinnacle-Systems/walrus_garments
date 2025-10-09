@@ -61,7 +61,7 @@ const ExcessToleranceMasterApi = createApi({
         getToleranceItems: builder.query({
             query: ({ params }) => {
                 return {
-                    url: `${EXCESSTOLERANCEAPI}/getToleranceItems`,
+                    url: `${EXCESSTOLERANCEAPI}/getLazyToleranceItems`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",

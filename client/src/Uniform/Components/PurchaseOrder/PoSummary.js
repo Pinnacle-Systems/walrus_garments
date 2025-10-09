@@ -11,7 +11,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
 
     if (isTaxHookDetailsLoading) return <Loader />
 
-    console.log(taxDetails,"taxDetails")
+    console.log(taxDetails, "taxDetails")
 
     return (
         <div className={`bg-gray-200 rounded z-50 w-[700px] `}>
@@ -48,7 +48,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                                 value={discountType}
                                 onChange={(e) => { setDiscountType(e.target.value) }}
                             >
-                              <option value={""}>
+                                <option value={""}>
                                     Select
                                 </option>
                                 {discountTypes.map((option, index) => <option key={index} value={option.value} >
@@ -67,12 +67,35 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                                     if (e.key === "Delete") { setDiscountValue(0) }
                                 }}
                                 min={"0"}
+                                onFocus={(e) => e.target.select()}
                                 onChange={(e) => { setDiscountValue(e.target.value) }}
                             />
                         </td>
                         <td className="border border-gray-500"
                         >
                             <input disabled type="text" name='value' className='h-7 w-full text-right' value={taxDetails.overAllDiscountAmount}
+                            />
+                        </td>
+                    </tr>
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">Tax Amount(CGST,SGST)</td>
+                        <td className="border border-gray-500" colSpan={2}
+                        >
+                            <input disabled type="text" name='value' className='h-7 w-full text-right'
+                                value={
+                                    parseFloat(taxDetails?.sgstAmount) + parseFloat(taxDetails?.cgstAmount)
+                                }
+                            />
+                        </td>
+                    </tr>
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">IGST Amount</td>
+                        <td className="border border-gray-500" colSpan={2}
+                        >
+                            <input disabled type="text" name='value' className='h-7 w-full text-right'
+                                value={
+                                    parseFloat(taxDetails?.igstAmount) 
+                                }
                             />
                         </td>
                     </tr>

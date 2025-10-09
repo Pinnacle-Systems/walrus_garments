@@ -7,7 +7,7 @@ import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, handleCancel, handleDone, readOnly, id }) => {
+const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, handleCancel, handleDone, readOnly ,po }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -26,8 +26,8 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
 
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetPoItemsQuery({
         params: {
-            branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber, isPurchaseCancelFilter: true
-        }
+            branchId, supplierId, poType , ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber, isPurchaseCancelFilter: true  , poInwardOrDirectInward : po
+        } 
     })
     const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
     useEffect(() => {

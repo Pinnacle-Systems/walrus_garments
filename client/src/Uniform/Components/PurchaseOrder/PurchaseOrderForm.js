@@ -1,7 +1,7 @@
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType, YarnMaterial } from "../../../Utils/DropdownData";
+import { deliveryTypes, MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType, YarnMaterial } from "../../../Utils/DropdownData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
@@ -29,6 +29,11 @@ import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServi
 import { useGetTermsandCondtionsQuery } from "../../../redux/services/Term&ConditionsMasterService";
 import PoSummary from "./PoSummary";
 import GeneralYarnPoItems from "./GeneralYarnPoItems";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetYarnCountsQuery, useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
 
@@ -46,7 +51,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const [supplierId, setSupplierId] = useState("");
   const [term, setTerm] = useState("")
 
-  const [discountType, setDiscountType] = useState("Percentage");
+  const [discountType, setDiscountType] = useState("");
   const [discountValue, setDiscountValue] = useState(0);
   const [orderId, setOrderId] = useState("")
   const [remarks, setRemarks] = useState("")
@@ -68,20 +73,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
-  // useEffect(() => {
-  //   setCurrentPageNumber(1);
-  // }, [
-  //   serachDocNo,
-  //   searchClientName,
-  //   searchDate,
-  //   supplier,
-  //   searchMaterial,
-  // ]);
+
 
 
   const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
 
-
+  const { data: hsnData } =
+    useGetHsnMasterQuery({ params });
 
   const {
     data: singleData,
@@ -89,7 +87,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     isLoading: isSingleLoading,
   } = useGetPoByIdQuery(id, { skip: !id });
 
-  console.log(singleData, id, "idssssss")
 
 
   const [addData] = useAddPoMutation();
@@ -99,8 +96,15 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
   const { data: termsData } = useGetTermsandCondtionsQuery({ params: { ...params } });
+  const { data: branchList } = useGetBranchQuery({ params: { ...params } });
 
 
+
+  const { data: yarnList } = useGetYarnMasterQuery({ params });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+  const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, } });
+
+  const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
 
@@ -111,8 +115,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
       .filter(po => po.yarnType === poMaterial)
       .map(item => ({
         ...item,
-        RequirementPlanningItemsId: item?.id ,
-        taxPercent : item?.Yarn?.Hsn?.tax
+        RequirementPlanningItemsId: item?.id,
+        taxPercent: item?.Yarn?.Hsn?.tax,
+        hsnId: item?.Yarn?.hsnId
       }));
 
     // calculate how many empty rows needed to make total = 10
@@ -137,12 +142,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
-  function getTotalQty() {
-    let qty = poItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-    return parseInt(qty)
-  }
-
-  const { data: taxTypeList , isLoading : isTaxLoading , isFetching : isTaxfetching } =
+  const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
     useGetTaxTemplateQuery({ params: { ...params } });
 
 
@@ -151,7 +151,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const syncFormWithDb = useCallback((data) => {
 
 
-    setReadOnly(true)
+    // setReadOnly(true)
 
 
     setPoType(data?.poType ? data?.poType : "");
@@ -164,7 +164,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setPoItems(data?.PoItems ? data?.PoItems : []);
     setDocId(data?.docId ? data?.docId : "New");
     setPayTermId(data?.payTermId || "");
-    setDiscountType(data?.discountType || "Percentage");
+    setDiscountType(data?.discountType || "");
     setDiscountValue(data?.discountValue || "0");
     setSupplierId(data?.supplierId || "");
     setDueDate(data?.dueDate
@@ -182,7 +182,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setOrderId(data?.orderId ? data?.orderId : "")
     setRequirementId(data?.requirementId ? data?.requirementId : "")
     setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "")
-
+    setTerm(data?.termsAndCondtion ? data?.termsAndCondtion : "")
   }, [id]);
 
 
@@ -209,7 +209,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     deliveryType, deliveryToId,
     discountType,
     discountValue,
-    finYearId, orderId, PurchaseType, requirementId, poMaterial, poType , taxTemplateId
+    finYearId, orderId, PurchaseType, requirementId, poMaterial, poType, taxTemplateId, term
   }
 
 
@@ -233,9 +233,15 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new" || nextProcess == "close") {
-            syncFormWithDb(undefined);
+          if (nextProcess == "new") {
+            // syncFormWithDb(undefined);
+            onNew()
             RequirementRefetch()
+          }
+          if (nextProcess == "close") {
+            // syncFormWithDb(undefined);
+            onNew()
+            onClose()
           }
           else {
             setId(returnData?.data?.id);
@@ -330,17 +336,37 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     }
   }
 
+
+
   const dateRef = useRef(null);
   const inputPartyRef = useRef(null);
   const styleRef = useRef(null);
 
   useEffect(() => {
-    if (dateRef.current) {
+    if (dateRef.current && !id) {
       dateRef.current.focus();
     }
   }, []);
 
-  if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading  || isTaxfetching) return <Loader />
+  const allSuppliers = supplierList ? supplierList.data : []
+
+  function filterSupplier() {
+    let finalSupplier = []
+    if (poMaterial.toLowerCase().includes("yarn")) {
+      finalSupplier = allSuppliers.filter(s => s.yarn)
+    } else if (poMaterial.toLowerCase().includes("fabric")) {
+      finalSupplier = allSuppliers.filter(s => s.fabric)
+    } else {
+      finalSupplier = allSuppliers.filter(s => s.PartyOnAccessoryItems?.length > 0)
+    }
+    return finalSupplier
+  }
+  let supplierListBasedOnSupply = filterSupplier()
+
+  // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading || isTaxfetching) return <Loader />
+
+
+  if (isTaxLoading || isTaxfetching) return <Loader />
 
 
   return (
@@ -407,7 +433,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
       </div>
       <div className="space-y-3 h-full py-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
 
 
@@ -426,9 +452,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 required={true}
                 ref={dateRef}
                 nextRef={inputPartyRef}
-
                 readOnly={readOnly}
               />
+
 
             </div>
 
@@ -488,33 +514,22 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
               <div className="col-span-2"
-                onClick={() => {
-                  if (!poMaterial || !poType) {
-                    Swal.fire({
-                      icon: 'success',
-                      title: `} Successfully`,
-                      showConfirmButton: false,
-                      timer: 2000
-                    });
-                  }
-                }}
+
               >
-                {(poMaterial || poType) && (
 
-                  <ReusableSearchableInput
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setSupplierId(value); }}
+                  searchTerm={supplierId}
+                  show={"isSupplier"}
+                  required={true}
+                  disabled={id}
+                />
 
-                    label="Supplier Id"
-                    component="PartyMaster"
-                    placeholder="Search Supplier Id..."
-                    optionList={supplierList?.data}
-                    setSearchTerm={(value) => { setSupplierId(value); setTableDataView(true) }}
-                    searchTerm={supplierId}
-                    show={"isSupplier"}
-                    required={true}
-                    disabled={id}
 
-                  />
-                )}
 
 
               </div>
@@ -549,7 +564,43 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           </div>
 
 
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Delivery Details
+            </h2>
+            <div className="grid grid-cols-3 gap-2">
 
+
+              <DropdownInput name="Delivery Type"
+                options={deliveryTypes}
+                // option={delivery}
+                value={deliveryType}
+                setValue={setDeliveryType}
+                required={true} readOnly={readOnly} />
+              <div className="col-span-2">
+
+                {deliveryType == "ToSelf"
+                  ?
+                  <DropdownInput name="Delivery To" options={(deliveryType === "ToSelf") ? dropDownListObject(branchList ? branchList.data : [], "branchName", "id") : dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
+                  :
+
+                  <DropdownInput name="Delivery To" options={dropDownListObject(supplierList?.data?.filter(val => val.isSupplier), "code", "id")} value={deliveryToId} setValue={setDeliveryToId} required={true} readOnly={readOnly} />
+                }
+
+              </div>
+
+
+
+
+
+
+
+
+
+
+            </div>
+
+          </div>
 
 
 
@@ -569,11 +620,15 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             poType == "Order Purchase"
               ?
               <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
-                poMaterial={poMaterial}
+                poMaterial={poMaterial} hsnData={hsnData} setTableDataView={setTableDataView} supplierId={supplierId}
+
+                yarnList={yarnList} uomList={uomList} colorList={colorList}
+
               />
               :
-              <GeneralYarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
-                poMaterial={poMaterial}
+              <GeneralYarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} yarnList={yarnList} uomList={uomList} colorList={colorList}
+
+                poMaterial={poMaterial} hsnData={hsnData} setTableDataView={setTableDataView} supplierId={supplierId}
               />
 
             // (
@@ -595,13 +650,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
             <div className="flex flex-col gap-2">
               <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
-              <select
+              {/* <select
                 disabled={readOnly}
                 className="text-left w-full rounded py-1 border-2 border-gray-200 text-[13px]"
                 onChange={e => {
                   const selected = termsData?.data?.find(t => t.id === parseInt(e.target.value))
                   setTerm(selected?.termsAndCondition || '')
                 }}
+              value={term}
               >
                 <option hidden value="">
                   Select Terms & Conditions
@@ -611,30 +667,36 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                     {blend?.termsAndCondition?.substring(0, 50)}...
                   </option>
                 ))}
-              </select>
-              <textarea
-                disabled={readOnly}
-                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              </select> */}
+              <select
                 value={term}
-                onChange={e => setTerm(e.target.value)}
-                placeholder="Select or type Terms & Conditions..."
-              />
+                onChange={e => {
+                  setTerm(e.target.value)
+                }}
+                className="text-left w-full rounded py-1 border-2 border-gray-200 text-[13px]"
+
+              >
+                <option >
+                </option>
+                {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
+                  <option value={blend.id} key={blend.id}>
+                    {blend?.termsAndCondition.substring(0, 50)}
+                  </option>)}
+              </select>
             </div>
           </div>
 
 
 
 
+
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
             <textarea
-              readOnly={readOnly}
-              //    value={notes}
-              onChange={(e) => {
-                //    setNotes(e.target.value)
-              }}
-              className="w-full mt-11 h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
+              disabled={readOnly}
+              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              value={findFromList(term, termsData?.data, "termsAndCondition")}
+              onChange={e => setTerm(e.target.value)}
+              placeholder="Select or type Terms & Conditions..."
             />
           </div>
 
@@ -672,10 +734,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
             </button>
-            {/* <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Draft Save
-            </button> */}
+            </button>
           </div>
 
           {/* Right Buttons */}

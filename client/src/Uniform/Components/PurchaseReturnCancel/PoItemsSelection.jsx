@@ -8,7 +8,7 @@ import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection }) => {
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection ,poInwardOrDirectInward }) => {
     // const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.poItemsId));
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
 
@@ -111,9 +111,9 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                             {transtype.toLowerCase().includes("yarn") ?
 
-                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward} />
                                 :
-                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />
+                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward} />
                             }
                         </>
                     }

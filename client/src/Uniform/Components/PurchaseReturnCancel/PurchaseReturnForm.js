@@ -28,7 +28,7 @@ import {
 }
     from "../../../redux/uniformService/DirectCancelOrReturnServices";
 import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { directOrPo, directOrPoreturn, poTypes } from "../../../Utils/DropdownData";
+import { directOrPo, directOrPoreturn, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 
 import {  FaFileAlt, FaWhatsapp } from "react-icons/fa";
@@ -338,9 +338,9 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
         <>
             <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
                 {
-                    (poInwardOrDirectInward == "PurchaseReturn") ?
+                    (poInwardOrDirectInward == "PurchaseReturn"  ||  poInwardOrDirectInward == "GeneralReturn"  )   ?
                         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-                            supplierId={supplierId}
+                            supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems}
                             // storeId={storeId} 
@@ -348,7 +348,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                         :
                         <InwardItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
                             supplierId={supplierId}
-                            storeId={storeId}
+                            storeId={storeId}  poInwardOrDirectInward = {poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems} />
                 }
@@ -390,7 +390,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
                                 <DropdownInput name="Po Type"
 
-                                    options={poTypes}
+                                    options={YarnMaterial}
                                     value={transType}
                                     setValue={setTransType}
                                     required={true}
@@ -406,8 +406,10 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                             </h2>
                             <div className="grid grid-cols-2 gap-2">
 
+                                <div className="col-span-2">
 
                                 <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                                </div>
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
@@ -428,7 +430,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                     options={dropDownListObject(id ? storeOptions : storeOptions.filter(item => item.active), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
-                                {(!readOnly && (poInwardOrDirectInward == "PurchaseReturn") || (poInwardOrDirectInward == "DirectReturn")) &&
+                                {(!readOnly && (poInwardOrDirectInward == "PurchaseReturn") || (poInwardOrDirectInward == "DirectReturn") || poInwardOrDirectInward ==  "GeneralReturn") &&
                                     < div className="">
                                         <button className="p-1.5 mt-2 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                             onClick={() => {

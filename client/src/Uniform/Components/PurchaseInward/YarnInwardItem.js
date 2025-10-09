@@ -16,6 +16,7 @@ import { useGetDiaQuery } from "../../../redux/uniformService/DiaMasterServices"
 import PurchaseYarnPoItems from "./YarnPoItem";
 import { HiPlus } from "react-icons/hi";
 import { useGetPoQuery } from "../../../redux/uniformService/PoServices";
+import Swal from "sweetalert2";
 
 const YarnInwardPoItems = ({
     id,
@@ -24,7 +25,7 @@ const YarnInwardPoItems = ({
     setInwardItems,
     readOnly,
     params,
-    removeItem, purchaseInwardId
+    removeItem, purchaseInwardId, setInwardItemSelection, supplierId, handleRightClick, contextMenu, handleCloseContextMenu
 }) => {
     const { data: yarnList } =
         useGetYarnMasterQuery({ params });
@@ -90,6 +91,7 @@ const YarnInwardPoItems = ({
 
         setInwardItems(newBlend);
     };
+
     useEffect(() => {
         if (id) return
         if (inwardItems?.length >= 1) return;
@@ -106,7 +108,7 @@ const YarnInwardPoItems = ({
                     noOfBags: "0",
                     discountType: "",
                     weightPerBag: "0.00",
-                    poItemsId : ""
+                    poItemsId: ""
                 };
             });
             return [...prev, ...newArray];
@@ -123,12 +125,12 @@ const YarnInwardPoItems = ({
             discountTypes: "",
             discountValue: "0.00",
             noOfBags: "0.00",
-            poItemsId :""
+            poItemsId: ""
         };
         setInwardItems([...inwardItems, newRow]);
     };
 
-    const deleteRow = (id) => {
+    const handleDeleteRow = (id) => {
         setInwardItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
@@ -142,8 +144,8 @@ const YarnInwardPoItems = ({
 
     function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
         console.log(value, index, field, "value, index, field")
-
         let allowedBalance = findBalanceQty(balanceQty)
+
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
             if (!newBlend[index]["inwardLotDetails"]) return inwardItems
@@ -201,14 +203,30 @@ const YarnInwardPoItems = ({
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
 
-                        <button
-                            onClick={() => {
-                                addNewRow()
+                        <button className="font-bold text-slate-700 bord"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    setInwardItemSelection(true)
+
+                                }
                             }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
+                            onClick={() => {
+                                if (!supplierId) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: ` Choose Supplier`,
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    });
+                                }
+                                else {
+
+                                    setInwardItemSelection(true)
+                                }
+                            }}
                         >
-                            <HiPlus className="w-3 h-3 mr-1" />
-                            Add Item
+                            Fill Po Items
                         </button>
                     </div>
 
@@ -305,7 +323,7 @@ const YarnInwardPoItems = ({
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                     Price
+                                    Price
                                 </th>
                                 <th
 
@@ -320,16 +338,19 @@ const YarnInwardPoItems = ({
                                     Actions
                                 </th>
                             </tr>
-                        </thead>
+                        </thead>{console.log(inwardItems,"inwardItemsinIndividual")}
                         <tbody className='overflow-y-auto  h-full w-full'>
-                            {(inwardItems || [])?.map((item, index) => <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
-                                colorList={colorList} deleteRow={deleteRow} designList={designList} gsmList={gsmList}
+                            {(inwardItems || [])?.map((item, index) =>
+                             <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
+                                colorList={colorList} deleteRow={handleDeleteRow} designList={designList} gsmList={gsmList}
                                 loopLengthList={loopLengthList}
                                 diaList={diaList} poList={poList}
                                 removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
                                 removeItem={removeItem} key={item.poItemsId}
-                                item={item} index={index} handleInputChange={handleInputChange}
+                                item={item} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick}
                                 purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
+
+
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
                                 <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 6 }).map(i =>
@@ -343,6 +364,44 @@ const YarnInwardPoItems = ({
                         </tbody>
                     </table>
                 </div>
+                {contextMenu && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: `${contextMenu.mouseY - 50}px`,
+                            left: `${contextMenu.mouseX - 30}px`,
+
+                            // background: "gray",
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                        }}
+                        className="bg-gray-100"
+                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                    >
+                        <div className="flex flex-col gap-1">
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteRow(contextMenu.rowId);
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete{" "}
+                            </button>
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    // handleDeleteAllRows();
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

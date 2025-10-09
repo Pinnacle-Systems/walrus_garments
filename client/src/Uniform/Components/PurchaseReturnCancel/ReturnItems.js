@@ -230,7 +230,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                     }
                     {
-                        poInwardOrDirectInward === "PurchaseReturn" &&
+                       (  poInwardOrDirectInward === "PurchaseReturn" ||  poInwardOrDirectInward === "GeneralReturn" )    &&
                         (
                             transType.toLowerCase().includes("yarn")
                                 ?

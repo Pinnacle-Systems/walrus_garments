@@ -338,6 +338,8 @@ async function getOne(id) {
 export async function getRequirementItems(req) {
 
     const { poMaterial } = req.query
+    console.log(req, "Hit")
+
 
     const childRecord = 0;
     let data = await prisma.RequirementPlanningItems.findMany({
@@ -362,11 +364,11 @@ export async function getRequirementItems(req) {
             Yarn: {
                 select: {
                     name: true,
-                    countsId : true,
+                    countsId: true,
                     hsnId: true,
-                    Hsn : {
-                        select : {
-                            tax : true
+                    Hsn: {
+                        select: {
+                            tax: true
                         }
                     }
 
@@ -387,7 +389,48 @@ export async function getRequirementItems(req) {
                     docId: true
                 }
             },
-            PoItems: true,
+            PoItems: {
+                select: {
+                    id: true,
+                    fabricId: true,
+                    yarnId: true,
+                    accessoryId: true,
+                    accessoryGroupId: true,
+                    accessoryItemId: true,
+                    colorId: true,
+                    uomId: true,
+                    noOfBags: true,
+                    weightPerBag: true,
+                    percentage: true,
+                    requiredQty: true,
+                    qty: true,
+                    price: true,
+                    discountType: true,
+                    discountValue: true,
+                    sizeId: true,
+                    YarnType: true,
+                    yarncategoryId: true,
+                    weight: true,
+                    designId: true,
+                    gaugeId: true,
+                    loopLengthId: true,
+                    gsmId: true,
+                    poId: true,
+                    KDia: true,
+                    kDiaId: true,
+                    FDia: true,
+                    fDiaId: true,
+                    yarnCounts: true,
+                    count: true,
+                    isPurchaseCancel: true,
+                    RequirementPlanningItemsId: true,
+                    taxPercent: true,
+                    hsnId: true,
+                    CancelItems: true,
+
+                }
+            },
+            Po: true,
             OrderDetails: {
 
                 select: {
@@ -431,29 +474,76 @@ export async function getRequirementItems(req) {
 
     });
 
+    console.log(data, "data")
 
-    data = data?.map(item => {
-        const yarns = item?.OrderDetails || [];
-        const PoItems = item?.PoItems
+    data = data
+        ?.filter(item => {
+            const poQty = item?.PoItems?.reduce((t, p) => t + (p.qty || 0), 0) || 0;
+
+            let cancelQty = 0;
+            let shortCloseQty = 0;
+
+            // Loop through all PO items
+            item?.PoItems?.forEach(p => {
+                p?.CancelItems?.forEach(c => {
+                    const qty = c?.qty || 0;
+                    if (c?.cancelType == "CANCEL") {
+                        cancelQty += qty;
+                    } else if (c?.cancelType == "SHORTCLOSE") {
+                        shortCloseQty += qty;
+                    }
+                });
+            });
+
+            // console.log(cancelQty, "cancelQty", poQty)
+            // console.log(shortCloseQty, "shortCloseQty")
+            console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
+
+            // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
+            return (parseFloat(poQty) - parseFloat(cancelQty) ) < parseFloat(item?.requiredQty || 0);
+
+        })
+        ?.map(item => {
+            const yarns = item?.OrderDetails || [];
 
 
-        const combinedColors = yarns?.orderYarnDetails?.map(yarn => yarn?.Color?.name)
-            .filter(Boolean)
-            .join("/");
+            const combinedColors = yarns?.orderYarnDetails?.map(yarn => yarn?.Color?.name)
+                .filter(Boolean)
+                .join("/");
 
-        const styleName = yarns?.style?.name
+            const styleName = yarns?.style?.name
 
-        const poQty = item?.PoItems?.reduce((total, poItem) => {
-            return total + (poItem.qty || 0); // adjust field name if needed
-        }, 0) || 0;
+            const poQty = item?.PoItems?.reduce((total, poItem) => {
+                return total + (poItem.qty || 0);
+            }, 0) || 0;
 
-        return {
-            ...item,
-            allColors: `${combinedColors} - ${styleName}`,
-            alreadyPoqty: poQty,
 
-        };
-    });
+            let cancelQty = 0;
+            let shortCloseQty = 0;
+
+            item?.PoItems?.forEach(poItem => {
+                poItem?.CancelItems?.forEach(c => {
+                    const qty = c?.qty || 0;
+                    if (c?.cancelType === "CANCEL") {
+                        cancelQty += qty;
+                    } else if (c?.cancelType === "SHORTCLOSE") {
+                        shortCloseQty += qty;
+                    }
+                });
+            });
+
+            console.log(cancelQty, "cancelQty", poQty)
+            console.log(shortCloseQty, "shortCloseQty")
+
+            return {
+                ...item,
+                allColors: `${combinedColors} - ${styleName}`,
+                alreadyPoqty: poQty,
+                alreadyCancelQty: cancelQty,
+                balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty )
+
+            };
+        });
     // if (poMaterial === "GreyYarn") {
     //     data = data?.filter(i => i?.yarnType === "GreyYarn")
     // }
@@ -461,6 +551,7 @@ export async function getRequirementItems(req) {
     //     data = data?.filter(i => i?.yarnType === "DyedYarn")
 
     // }
+    console.log(data, "data")
 
     return { statusCode: 0, data, childRecord };
 }
