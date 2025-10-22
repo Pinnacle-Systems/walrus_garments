@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, LayoutDashboard, PanelLeftClose, PanelRightClose, Settings, Table, UserRoundPen, Grtransaction } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, PanelLeftClose, PanelRightClose, Settings, Table, UserRoundPen, FileChartColumn } from 'lucide-react';
 import './Sidebar.css';
 import secureLocalStorage from 'react-secure-storage';
 import { toast } from 'react-toastify';
@@ -347,6 +347,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
 
 
 
+    console.log(transactionsGroup,"transactionsGroup")
 
   const headers = [
 
@@ -362,10 +363,15 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
       groups: transactionsGroup,
       pages: transactions
     },
-
+    {
+      heading: 'Reports',
+      logo: <FileChartColumn size={24} />,
+      groups: reportGroups,
+      pages: reports
+    },
   ]
 
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
   return (
     <>

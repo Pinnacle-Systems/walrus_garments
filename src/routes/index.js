@@ -106,4 +106,5 @@ export { default as accesssoryPurchaseCancel } from "./accesssoryPurchaseCancel.
 export { default as accessoryPurchaseInward } from "./accessoryPurchaseInward.route.js"
 export { default as terms$conditions } from "./termsAndConditionMaster.route.js"
 export { default as hsn } from "./hsn.route.js"
+export { default as billEntry } from "./billEntry.route.js"
 

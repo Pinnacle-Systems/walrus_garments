@@ -20,6 +20,7 @@ import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../..
 import PurchaseReturnForm from "./PurchaseReturnForm";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa";
+import PurchaseCancelFormReport from "./PurchaseReturnFormReport";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -40,32 +41,37 @@ export default function Form() {
   const { data: allData, isLoading, isFetching } = useGetDirectCancelOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
   const { data: partyData } = useGetPartyQuery({ params })
   const [removeData] = useDeleteDirectCancelOrReturnMutation();
-  const columns = [
+
+
+ const columns = [
     {
       header: 'S.No',
-      accessor: (item, index) => index + 1,
-      cellClass: () => 'font-medium text-gray-900'
+      accessor: (item, index) => parseInt(index) + 1,
+      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
     },
+
     {
-      header: 'Doc.Id',
+      header: 'Inward No',
       accessor: (item) => item.docId,
-      cellClass: () => 'font-medium text-gray-900'
+      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
     },
     {
-      header: 'Doc Date',
-      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
+      header: 'TransType',
+      accessor: (item) => item.transType,
+      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
     },
     {
-      header: 'Party',
-      accessor: (item) => findFromList(item.supplierId, partyData?.data ,"name"),
-      cellClass: () => 'uppercase'
+      header: 'Return Date',
+      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
+      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
     },
-    {
-      header: 'Inward Type',
-      accessor: (item) => item.poInwardOrDirectInward,
-      cellClass: () => 'text-gray-800 uppercase'
-    },
- 
+    // {
+    //   header: 'Supplier',
+    //   accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
+    //   className: 'text-gray-800 uppercase w-[500px]'
+    // },
+
+
   ];
 
 
@@ -106,7 +112,7 @@ export default function Form() {
 
   }
 
-console.log(directInwardReturnItems,'directInwardReturnItems')
+  console.log(directInwardReturnItems, 'directInwardReturnItems')
   return (
     <>
       {showManufacturer ? (
@@ -146,13 +152,19 @@ console.log(directInwardReturnItems,'directInwardReturnItems')
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <CommonTable
+            {/* <CommonTable
               columns={columns}
               data={allData?.data || []}
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={10}
+            /> */}
+            <PurchaseCancelFormReport
+              data={allData?.data || []}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           </div>
         </div>

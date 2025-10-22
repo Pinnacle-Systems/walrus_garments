@@ -950,8 +950,9 @@ enum P_InwardOrReturn {
   GeneralPo
   OrderAgainstPo
   MaterialIssue
-  StockTransfer 
+  StockTransfer
   GeneralInward
+  GeneralReturn
 }
 
 model Color {
@@ -1078,8 +1079,8 @@ model Po {
   poType                     String?
   TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
   taxTemplateId              Int?
-  termsAndCondtion           String?                  @db.LongText
-  PoItems PoItems[]
+  termsAndCondtion           String?                   @db.LongText
+  PoItems                    PoItems[]
 }
 
 model PoItems {
@@ -1131,16 +1132,17 @@ model PoItems {
   isPurchaseCancel           Boolean?                  @default(false)
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
   RequirementPlanningItemsId Int?
+  order                      Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                    Int?
   taxPercent                 Float?
   Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
-  hsnId               Int?
-  PoInwardReturnItems PoInwardReturnItems[]
-  BillEntryItems      BillEntryItems[]
-  DirectReturnItems   DirectReturnItems[]
-  directItems         DirectItems[]
-  CancelItems         CancelItems[]
+  hsnId                      Int?
+  PoInwardReturnItems        PoInwardReturnItems[]
+  BillEntryItems             BillEntryItems[]
+  DirectReturnItems          DirectReturnItems[]
+  directItems                DirectItems[]
+  CancelItems                CancelItems[]
 }
-
 
 model AccessoryPo {
   id                         Int                       @id @default(autoincrement())
@@ -2350,7 +2352,7 @@ model BillEntry {
   taxTemplateId        Int?
   partyBillNo          String?
   netBillValue         Int?
-  discountType         DiscountTypes?
+  discountType         String?
   discountValue        Float?                 @default(0)
   partyBillDate        DateTime?              @db.Date
   BillEntryItems       BillEntryItems[]
@@ -2379,7 +2381,7 @@ model BillEntryItems {
   ProcessDeliveryProgramDetails   ProcessDeliveryProgramDetails? @relation(fields: [processDeliveryProgramDetailsId], references: [id])
   processDeliveryProgramDetailsId Int?
   qty                             Float
-  discountType                    DiscountTypes?
+  discountType                    String?
   discountValue                   Float?                         @default(0)
   price                           Float?                         @default(0)
   taxPercent                      Float?
@@ -3253,6 +3255,7 @@ model Order {
   RequirementPlanningItems RequirementPlanningItems[]
   AccessoryPo              AccessoryPo[]
   AccessoryInward          AccessoryInward[]
+  PoItems                  PoItems[]
 }
 
 model OrderDetails {
@@ -3981,7 +3984,7 @@ model PurchaseCancel {
   active                 Boolean?      @default(true)
   docId                  String?
   remarks                String?       @db.LongText
-  po                     String?  
+  po                     String?
   cancelItems            CancelItems[]
 }
 

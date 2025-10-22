@@ -21,7 +21,7 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
         useGetPartyQuery({ params: { companyId, active: true } });
 
-    if (supplierFetching || supplierLoading) return <Loader />
+    // if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
         console.log(id,"id")
@@ -97,15 +97,15 @@ console.log(localInwardItems,"localInwardItems")
                 </div>
                 <div className='h-[500px] overflow-auto'>
                     {
-                        <>
+                        // <>
 
-                            {transtype.includes("Yarn") ?
+                        //     {transtype.includes("Yarn") ?
 
                                 <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
-                                :
-                                <AccessoryInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
-                            }
-                        </>
+                        //         :
+                        //         <AccessoryInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
+                        //     }
+                        // </>
                     }
 
 

@@ -27,7 +27,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetPoItemsQuery({
         params: {
             branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
-            isPurchaseInwardFilter: true , poInwardOrDirectInward 
+            isPurchaseReturnFilter: true , poInwardOrDirectInward ,
         }
     })
 
@@ -112,7 +112,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                             </tbody>
                             :
                             <tbody className="border-2">
-                                {poItems?.data?.filter(val => val.balanceQty !== 0)?.map((dataObj, index) => (
+                                {poItems?.data?.map((dataObj, index) => (
                                     <tr
                                         key={dataObj.id}
                                         className="border-2 table-row "

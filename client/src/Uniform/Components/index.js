@@ -47,4 +47,5 @@ export { default as StockTransfer } from "./StockTransfer";
 export { default as AccessoryPurchaseOrder } from "./AccessoryPurchaseOrder";
 export { default as AccessoryPurchasecancel } from "./AccessoryPurchaseCancel";
 export { default as AccessoryPurchaseInward } from "./AccessoryPurchaseInward";
+export { default as PurchaseBillEntry } from "./PurchaseBillEntry";
 

@@ -3,7 +3,7 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { billItemsFiltration, getDateFromDateTime, getRemovedItems, getYearShortCodeForFinYear, substract, balanceQtyCalculation, balanceReturnQtyCalculation, getYearShortCode } from '../utils/helper.js';
 import { getTableRecordWithId } from "../utils/helperQueries.js"
 import { createManyStockWithId, updateManyStockWithId } from '../utils/stockHelper.js';
-import { getAllDataPoItems, getPoItemObject } from './po.service.js';
+import { getPoItemObject } from './po.service.js';
 import { getDirectInwardReturnItemsAlreadyData, getDirectInwardReturnItemsLotBreakUp } from '../utils/directInwardReturnQueries.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
@@ -702,9 +702,357 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 }
 
 
+async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId, yarnId) {
+    let sql;
+
+    console.log("itemTypePOID", itemType == "Accessory", colorId, uomId, sizeId, accessoryId, storeId)
+
+    // if (itemType == "DyedFabric") {
+    //     sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+    //     where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId} and gsmId=${gsmId}  and fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
+    //     storeId=${storeId};
+    //             `
+    // }
+
+    if (itemType == "Accessory") {
+
+        sql = `select sum(qty) as stockQty, sum(noOfRolls) as stockRolls  from stock
+        where colorId=${colorId} and uomId=${uomId}  and sizeId=${sizeId} and accessoryId=${accessoryId} and  storeId=${storeId}; 
+                `
+    }
+    else {
+        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+        where colorId=${colorId} and uomId=${uomId} ;`
+    }
+
+    const stockData = await prisma.$queryRawUnsafe(sql);
+    return stockData[0]
+
+
+
+}
+
+async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
+
+
+    let promises = data?.map(async (item) => {
+        let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
+
+
+        return data.data
+    }
+    )
+    return Promise.all(promises)
+}
+
+
+async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
+
+    console.log(id,"poItemsId")
+
+    let data = await prisma.poItems.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            Po: true,
+            directItems: {
+                include: {
+                    inwardLotDetails: true,
+                    DirectReturnItems: true,
+                    DirectInwardOrReturn: {
+                        select: {
+                            docId: true,
+                            poInwardOrDirectInward: true,
+                            dcNo: true,
+                            dcDate: true,
+                            createdAt: true,
+                            poType: true,
+                        }
+                    }
+                }
+            },
+
+            Color: {
+                select: {
+                    name: true
+                }
+            },
+            Uom: {
+                select: {
+                    name: true
+                }
+            },
+            Yarn: {
+                select: {
+                    name: true,
+                }
+            },
+            Fabric: {
+                select: {
+                    aliasName: true,
+                    // name: true,
+                }
+            },
+            Gauge: {
+                select: {
+                    name: true
+                }
+            },
+            LoopLength: {
+                select: {
+                    name: true
+                }
+            },
+            Design: {
+                select: {
+                    name: true
+                }
+            },
+            Gsm: {
+                select: {
+                    name: true
+                }
+            },
+            KDia: {
+                select: {
+                    name: true
+                }
+            },
+            FDia: {
+                select: {
+                    name: true
+                }
+            },
+            Accessory: {
+                select: {
+                    aliasName: true,
+                    accessoryItem: {
+                        select: {
+                            name: true,
+                            AccessoryGroup: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            Size: {
+                select: {
+                    name: true
+                }
+            }
+        }
+    });
+
+
+
+    const alreadyInwardedData = await prisma?.directItems?.aggregate({
+        where: {
+            poItemsId: parseInt(id),
+            // DirectInwardOrReturn: {
+            //     poInwardOrDirectInward: "PurchaseInward"
+            // },
+            directInwardOrReturnId: {
+                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            }
+        },
+        _sum: {
+            qty: true,
+            noOfBags: true,
+            noOfRolls: true
+        }
+    });
+
+
+    const alreadyReturnedData = await prisma?.directReturnItems?.aggregate({
+        where: {
+            poItemsId: parseInt(id),
+            // DirectReturnOrPoReturn: {
+            //     poInwardOrDirectInward: "PurchaseReturn"
+            // },
+            directReturnOrPoReturnId: {
+                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            }
+        },
+        _sum: {
+            qty: true,
+            noOfBags: true,
+            noOfRolls: true
+        }
+    });
+
+
+
+    const alreadyCancelData = await prisma.cancelItems.aggregate({
+        where: {
+            poItemsId: parseInt(id),
+            // PurchaseCancel: {
+            //     poInwardOrDirectInward: "PurchaseCancel"
+            // },
+            purchaseCancelId: {
+                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            }
+        },
+        _sum: {
+            qty: true,
+
+        }
+    });
+
+
+    async function getLotWiseDatas(inwardData) {
+
+
+        return {
+            lotNo: inwardData?.lotNo,
+            inwardNoOfRolls: inwardData?.noOfRolls,
+            inwardQty: inwardData?.qty,
+            qty: 0,
+            noOfRolls: 0,
+            alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotRolls,
+            alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty,
+            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId))?.stockQty || 0),
+
+            allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty || 0))
+        }
+
+    }
+
+
+    const alreadyBillEntryData = await prisma?.billEntryItems?.aggregate({
+        where: {
+            poItemsId: parseInt(id),
+            // DirectReturnOrPoReturn: {
+            //     poInwardOrDirectInward: "PurchaseReturn"
+            // },
+            // directReturnOrPoReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
+        },
+        _sum: {
+            qty: true,
+     
+        }
+    });
+
+        console.log(alreadyBillEntryData,"alreadyBillEntryData")
+
+
+    let poQty = parseFloat(data?.qty || 0).toFixed(3)
+    let cancelQty = alreadyCancelData?._sum.qty ? parseFloat(alreadyCancelData?._sum.qty).toFixed(3) : "0.000";
+    let alreadyInwardedQty = alreadyInwardedData?._sum?.qty ? parseFloat(alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
+    let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
+    let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
+    let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
+    console.log(poQty, cancelQty, substract(poQty, cancelQty), "subtract", alreadyInwardedQty, alreadyReturnedQty, "substract", substract(alreadyInwardedQty, alreadyReturnedQty))
+    // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
+    let balanceQty = substract(substract(poQty, cancelQty), alreadyReturnedQty)
+
+    let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
+    let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
+
+
+
+
+
+    let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
+    let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
+    let alreadyBillEntryQty = alreadyBillEntryData?._sum?.qty ? parseInt(alreadyBillEntryData._sum.qty) : "0";
+
+
+
+    // let stockQty = substract(alreadyInwardedQty, alreadyReturnedQty)
+    // let stockRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
+    let alreadyInwardLotWiseData = [];
+
+
+
+    //     let inwardLotDetailsdata = `select lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from poItems
+    //  left join directItems on directItems.poitemsid=poItems.id left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id
+    //  WHERE  poItems.ID=${id}
+    //  group By lotNo`
+
+    //     inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
+
+
+
+    //     for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
+    //         let inwardData = inwardLotDetailsdata[i]
+    //         alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
+    //     }
+    //     const poItemObj = getStockObject(data.Po.transType, data)
+
+
+    // let stockData;
+    // if (data.Po.transType === "Accessory") {
+    //     stockData = await prisma.stock.aggregate({
+    //         where: {
+    //             ...poItemObj,
+    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
+    //             id: {
+    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
+    //             },
+
+    //         },
+    //         _sum: {
+    //             qty: true,
+    //             noOfBags: true,
+    //             noOfRolls: true
+    //         }
+    //     });
+    // } else {
+    //     stockData = await prisma.stock.groupBy({
+    //         where: {
+    //             ...poItemObj,
+    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
+    //             id: {
+    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
+    //             },
+
+    //         },
+    //         by: ["yarnId", "colorId", "uomId", "fabricId", "gaugeId", "loopLengthId", "designId", "gsmId", "kDiaId", "fDiaId", "sizeId", "storeId", "branchId", "lotNo"],
+    //         _sum: {
+    //             qty: true,
+    //             noOfBags: true,
+    //             noOfRolls: true
+    //         }
+    //     });
+
+    // }
+
+
+
+
+    return {
+        statusCode: 0, data: {
+            ...data,
+
+            alreadyInwardedData,
+            balanceQty,
+            cancelQty,
+            poQty,
+            stockQty,
+            stockRolls,
+            allowedReturnRolls,
+            allowedReturnQty,
+            alreadyInwardedQty,
+            alreadyReturnedQty,
+            alreadyReturnedData,
+            alreadyCancelData,
+            // stockData,
+            alreadyBillEntryData,
+            alreadyBillEntryQty,
+
+        }
+    };
+}
+
 export async function getPoItemsandDirectInwardItems(req) {
     const { branchId, active, pageNumber, dataPerPage, poType,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, supplierId } = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, supplierId, isYarnFilter } = req.query
     let poItems;
     let directItems;
     let data;
@@ -729,6 +1077,7 @@ export async function getPoItemsandDirectInwardItems(req) {
             }
         });
         directItems = manualFilterSearchDataDirectItems(searchPoDate, searchDueDate, searchPoType, directItems)
+
         poItems = await prisma.poItems.findMany({
             where: {
                 Po:
@@ -751,19 +1100,51 @@ export async function getPoItemsandDirectInwardItems(req) {
             }
         });
         poItems = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, poItems)
+
+
+
+        if (isYarnFilter) {
+            poItems = poItems?.filter(item => item?.Po?.poMaterial == poType && item?.Po?.supplierId == supplierId)
+        }
+        console.log("poItemsBefore", poItems)
+
+
         poItems = await getAllDataPoItems(poItems)
+
+        console.log("poItemsAter", poItems)
+
         poItems = poItems.filter(item =>
             billItemsFiltration(
                 item?.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData?._sum?.qty : 0,
-                item?.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData._sum?.qty : 0))
-        poItems = poItems.map(item => { return { ...item, isPoItem: true } })
-        data = [...poItems, ...directItems]
-        totalCount = data.length
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-        let poItemsAfterSlice = data.filter(item => item.isPoItem)
-        let directItemsAfterSlice = data.filter(item => !(item.isPoItem))
-        directItemsAfterSlice = await getAllDataDirectItems(directItemsAfterSlice)
-        data = [...directItemsAfterSlice, ...poItemsAfterSlice]
+                item?.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData._sum?.qty : 0
+            ))
+
+        console.log("billItemsFiltration", poItems)
+
+        data = [...poItems]
+
+
+        // poItems = poItems.map(item => { return { ...item, isPoItem: true } })
+
+
+        // data = [...poItems, ...directItems]
+
+
+        // totalCount = data.length
+
+        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+
+        // let poItemsAfterSlice = data.filter(item => item.isPoItem)
+
+        // let directItemsAfterSlice = data.filter(item => !(item.isPoItem))
+
+        // directItemsAfterSlice = await getAllDataDirectItems(directItemsAfterSlice)
+
+        // data = [...directItemsAfterSlice, ...poItemsAfterSlice]
+
+
+
+
     } else {
         data = await prisma.directItems.findMany({
             where: {

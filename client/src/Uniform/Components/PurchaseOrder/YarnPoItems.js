@@ -389,13 +389,6 @@ const YarnPoItems = ({
                                 >
                                     Required Qty (kgs)
                                 </th>
-                                {/* <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Already Purchased Qty (kgs)
-                                </th> */}
-
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}

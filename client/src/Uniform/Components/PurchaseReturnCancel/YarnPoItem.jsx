@@ -73,7 +73,7 @@ const YarnPoItem = ({ yarnList, uomList,
             <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "aliasName")} </td>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
             
@@ -145,28 +145,28 @@ const YarnPoItem = ({ yarnList, uomList,
                  <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <input
                                         type="number"
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "returnQty") } }}
+                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
                                         onFocus={(e) => e.target.select()}
                                         className="text-right rounded py-1 w-full px-1 table-data-input"
-                                        value={(!item.returnQty) ? 0 : item.returnQty}
+                                        value={(!item.qty) ? 0 : item.qty}
                                         disabled={readOnly}
                                         onChange={(event) => {
                                             if (!event.target.value) {
-                                                handleInputChange(0, index, "returnQty");
+                                                handleInputChange(0, index, "qty");
                                                 return
                                             }
                                             if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
-                                                handleInputChange(event.target.value.replace(/^0+/, ''), index, "returnQty")
+                                                handleInputChange(event.target.value.replace(/^0+/, ''), index, "qty")
                                             } else {
                                                 toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
                                             }
                                         }}
                                         onBlur={(e) => {
                                             if (!e.target.value) {
-                                                handleInputChange(0.000, index, "returnQty");
+                                                handleInputChange(0.000, index, "qty");
                                                 return
                                             }
-                                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "returnQty")
+                                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
                                         }
 
                                         }
@@ -183,7 +183,7 @@ const YarnPoItem = ({ yarnList, uomList,
                                         type="number"
                                         onFocus={(e) => e.target.select()}
                                         className="text-right rounded py-1 px-1 w-16 table-data-input"
-                                        value={(item.price * item.returnQty).toFixed(2)}
+                                        value={(item.price * item.qty).toFixed(2)}
                                         disabled={true}
                                     />
                                 </td>
@@ -216,15 +216,7 @@ const YarnPoItem = ({ yarnList, uomList,
                                                     </button>
                                                     <span className="tooltip-text">Delete</span>
         
-                                                    {/* {tooltipVisible && (
-                                                        <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                            <div className="flex items-start">
-                                                                <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                                <span>View</span>
-                                                            </div>
-                                                            <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                        </div>
-                                                    )} */}
+                                                  
                                                 </div>
                                              </td>
              

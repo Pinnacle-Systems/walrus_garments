@@ -360,7 +360,9 @@ export async function getRequirementItems(req) {
             isProcess: true,
             lossPercentage: true,
             requiredQty: true,
-
+            orderId : true ,
+            orderDetailsId : true,
+            partyId : true,
             Yarn: {
                 select: {
                     name: true,

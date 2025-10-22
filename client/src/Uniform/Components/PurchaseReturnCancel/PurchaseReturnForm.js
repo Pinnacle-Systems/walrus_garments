@@ -4,7 +4,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import {  DropdownInput, DateInput, TextInput } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
@@ -31,11 +31,12 @@ import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/help
 import { directOrPo, directOrPoreturn, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 
-import {  FaFileAlt, FaWhatsapp } from "react-icons/fa";
+import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { ReusableInput, ReusableSearchableInput } from "../Order/CommonInput";
 import ReturnItems from "./ReturnItems";
+import Swal from "sweetalert2";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
@@ -69,7 +70,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         "Supplier Three",
     ]);
 
-    console.log(storeId,"storeId")
+    console.log(storeId, "storeId")
 
     const branchIdFromApi = useRef(branchId);
     const params = {
@@ -201,7 +202,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             if (returnData.statusCode === 1) {
                 toast.error(returnData.message);
             } else {
-                toast.success(text + "Successfully");
+                // toast.success(text + "Successfully");
+                Swal.fire({
+                    icon: 'success',
+                    title: `${text || 'Saved'} Successfully`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
                 setId("")
                 syncFormWithDb(undefined)
             }
@@ -217,6 +225,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         //     toast.info("Please fill all required fields...!", { position: "top-center" })
         //     return
         // }
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return
+        }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");
         } else {
@@ -233,7 +244,13 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 await removeData(id)
                 setId("");
                 onNew();
-                toast.success("Deleted Successfully");
+                Swal.fire({
+                    icon: 'success',
+                    title: `Deleted Successfully`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -265,7 +282,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
+    console.log(transType === "DyedYarn" || transType === "GreyYarn", "party")
     function filterSupplier() {
         let finalSupplier = []
         // if (transType === "DyedYarn" ||  transType  === "GreyYarn") {
@@ -277,7 +294,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
         // else {
         //     finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
         // }
-          finalSupplier = supplierList?.data?.filter(s => s.isSupplier )
+        finalSupplier = supplierList?.data?.filter(s => s.isSupplier)
         return finalSupplier
     }
     let supplierListBasedOnSupply = filterSupplier()
@@ -338,17 +355,17 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
         <>
             <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
                 {
-                    (poInwardOrDirectInward == "PurchaseReturn"  ||  poInwardOrDirectInward == "GeneralReturn"  )   ?
+                    (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn") ?
                         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-                            supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward}
+                            supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems}
-                            // storeId={storeId} 
-                            />
+                        // storeId={storeId} 
+                        />
                         :
                         <InwardItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
                             supplierId={supplierId}
-                            storeId={storeId}  poInwardOrDirectInward = {poInwardOrDirectInward}
+                            storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems} />
                 }
@@ -380,7 +397,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc. Id." value={docId} required={true} readOnly
                                 />
-                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly}  />
+                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
 
 
 
@@ -408,7 +425,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
 
                                 <div className="col-span-2">
 
-                                <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
+                                    <DropdownInput name="Supplier" options={dropDownListObject(supplierListBasedOnSupply, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id} />
                                 </div>
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
@@ -430,7 +447,7 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                                     options={dropDownListObject(id ? storeOptions : storeOptions.filter(item => item.active), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
-                                {(!readOnly && (poInwardOrDirectInward == "PurchaseReturn") || (poInwardOrDirectInward == "DirectReturn") || poInwardOrDirectInward ==  "GeneralReturn") &&
+                                {(!readOnly && (poInwardOrDirectInward == "PurchaseReturn") || (poInwardOrDirectInward == "DirectReturn") || poInwardOrDirectInward == "GeneralReturn") &&
                                     < div className="">
                                         <button className="p-1.5 mt-2 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
                                             onClick={() => {
@@ -448,11 +465,11 @@ console.log(transType === "DyedYarn" ||  transType  === "GreyYarn","party")
                         </div>
                     </div>
 
-                    
+
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} />
 
-                        
+
                     <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>

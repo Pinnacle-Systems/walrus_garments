@@ -22,7 +22,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
         useGetPartyQuery({ params: { companyId, active: true } });
 
-    if (supplierFetching || supplierLoading) return <Loader />
+    // if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
         setLocalInwardItems(localInwardItems => {

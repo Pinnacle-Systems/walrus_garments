@@ -244,19 +244,21 @@ export async function getPoItems(req) {
 
     if (poInwardOrDirectInward == "Order Purchase" || poInwardOrDirectInward == "General Purchase") {
         po = poInwardOrDirectInward
-    } else {
-        po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
+    }
+    else {
+        po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : poInwardOrDirectInward === "GeneralReturn" ? "General Purchase" : "Order Purchase"
     }
 
 
-    // console.log(po, "po", poInwardOrDirectInward == "Order Purchase")
-
-
-
-
-
+    console.log(po, "pooooo")
     let totalCount;
+
+
+
+
+
     if (pagination) {
+
         data = await prisma.poItems.findMany({
             where: {
                 Po:
@@ -286,24 +288,20 @@ export async function getPoItems(req) {
 
         // totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+        // if (poInwardOrDirectInward != "PurchaseReturn" && poInwardOrDirectInward != "GeneralReturn") {
+        // }
 
-        // data = data?.filter(i => i?.Po?.poMaterial === poType && i.Po.poType === po)
+
+
+        data = data?.filter(i => i.Po.supplierId == supplierId && i.Po.poMaterial == poType && i.Po.poType === po)
+
 
 
         console.log(data, "Bef0ore")
-
-        if(poInwardOrDirectInward != "PurchaseReturn"){
-        data = data?.filter(i => i.Po.supplierId == supplierId && i.Po.poMaterial == poType && i.Po.poType === po)
-
-        }
-
-
-        console.log(data, "cernter")
-
 
         data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
 
-        console.log(data, "Bef0ore")
+        console.log(data, "After")
 
 
         if (isPurchaseInwardFilter) {
@@ -322,9 +320,10 @@ export async function getPoItems(req) {
         if (isPurchaseReturnFilter) {
             data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
         }
+
+
+
     } else {
-
-
         data = await prisma.poItems.findMany({
             where: {
                 branchId: branchId ? parseInt(branchId) : undefined,
@@ -332,12 +331,14 @@ export async function getPoItems(req) {
             }
         });
     }
+
     return { statusCode: 0, data, totalCount };
 }
 
+
 export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
-    // console.log(data, "data")
+    console.log(data, "data")
 
     let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
@@ -351,8 +352,8 @@ export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
-    console.log(purchaseInwardReturnId, "purchaseInwardReturnId", storeId)
 
+    console.log(purchaseInwardReturnId, "purchaseInwardReturnId", storeId)
 
 
     let data = await prisma.poItems.findUnique({
@@ -453,14 +454,13 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    // console.log(data, "dataaaaaaaaaaaaaa")
 
     const alreadyInwardedData = await prisma?.directItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
-            DirectInwardOrReturn: {
-                poInwardOrDirectInward: "PurchaseInward"
-            },
+            // DirectInwardOrReturn: {
+            //     poInwardOrDirectInward: "PurchaseInward"
+            // },
             directInwardOrReturnId: {
                 lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
             }
@@ -476,9 +476,9 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     const alreadyReturnedData = await prisma?.directReturnItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
-            DirectReturnOrPoReturn: {
-                poInwardOrDirectInward: "PurchaseReturn"
-            },
+            // DirectReturnOrPoReturn: {
+            //     poInwardOrDirectInward: "PurchaseReturn"
+            // },
             directReturnOrPoReturnId: {
                 lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
             }
@@ -495,9 +495,10 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     const alreadyCancelData = await prisma.cancelItems.aggregate({
         where: {
             poItemsId: parseInt(id),
-            PurchaseCancel: {
-                poInwardOrDirectInward: "PurchaseCancel"
-            },
+            // PurchaseCancel: {
+            //     poInwardOrDirectInward: "PurchaseCancel"
+            // },
+            cancelType: "CANCEL",
             purchaseCancelId: {
                 lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
             }
@@ -505,6 +506,34 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
         _sum: {
             qty: true,
 
+        }
+    });
+
+
+    // const alreadyBillData = await prisma?.billEntryItems?.aggregate({
+    //     where: {
+    //         poItemsId: parseInt(id),
+    //         // DirectReturnOrPoReturn: {
+    //         //     poInwardOrDirectInward: "PurchaseReturn"
+    //         // },
+    //         // directReturnOrPoReturnId: {
+    //         //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+    //         // }
+    //     },
+    //     _sum: {
+    //         qty: true,
+
+    //     }
+    // });
+    const alreadyBillData = await prisma.billEntryItems.aggregate({
+        where: {
+            poItemsId: parseInt(id),
+            billEntryId: {
+                lt: JSON.parse(billEntryId) ? parseInt(billEntryId) : undefined
+            }
+        },
+        _sum: {
+            qty: true,
         }
     });
 
@@ -538,7 +567,11 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
+    console.log(poQty, cancelQty, substract(poQty, cancelQty), "subtract", alreadyInwardedQty, alreadyReturnedQty, "substract", substract(alreadyInwardedQty, alreadyReturnedQty))
     let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
+    // let balanceQty = substract(substract(poQty, cancelQty), alreadyReturnedQty)
+    let alreadyBilledQty = alreadyBillData?._sum?.qty ? parseInt(alreadyBillData._sum.qty) : "0";
+
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
 
@@ -629,6 +662,8 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             alreadyReturnedQty,
             alreadyReturnedData,
             alreadyCancelData,
+            alreadyBilledQty,
+            alreadyBillData
             // stockData,
             // alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(val => parseFloat(val?.stockQty) !== 0),
 
@@ -756,6 +791,7 @@ export function getPoItemObject(poMaterial, item) {
     }
 
     newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
+        newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
         newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.qty = parseFloat(item.qty);
@@ -764,6 +800,7 @@ export function getPoItemObject(poMaterial, item) {
     newItem.discountValue = parseFloat(item.discountValue ?? 0);
     newItem.tax = parseFloat(item.tax ?? 0);
     newItem.taxPercent = parseFloat(item.taxPercent ?? 0);
+
 
     return newItem;
 }
@@ -792,6 +829,7 @@ async function create(body) {
             transType: poMaterial ? poMaterial : "",
             poType: poType,
             poMaterial: poMaterial,
+            orderId: orderId ? parseInt(orderId) : '',
             docId,
             dueDate: dueDate ? new Date(dueDate) : undefined,
             supplierId: parseInt(supplierId),

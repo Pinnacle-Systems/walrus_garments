@@ -105,7 +105,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
     const { data: uomList } =
         useGetUnitOfMeasurementMasterQuery({ params: { companyId } });
 
-    if (!yarnList || !colorList || !uomList || !poList) return <Loader />
+    // if (!yarnList || !colorList || !uomList || !poList) return <Loader />
     return (
         <>
         

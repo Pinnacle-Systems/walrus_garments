@@ -213,7 +213,7 @@ export function substract(num1, num2) {
 export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
   console.log(inwardedQty,"inwardedQty",returnedQty,"returnedQty",stockQty,"stockQty")
   let balanceReturnQty = parseFloat(inwardedQty) + parseFloat(returnedQty);
-  console.log(balanceReturnQty < stockQty,"balanceReturnQty",stockQty)
+  console.log(balanceReturnQty < stockQty,"balanceReturnQty",balanceReturnQty , "stockQty",stockQty)
   return (balanceReturnQty < parseFloat(stockQty)) ? balanceReturnQty : parseFloat(stockQty)
 }
 

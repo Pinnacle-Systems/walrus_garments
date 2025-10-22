@@ -46,17 +46,12 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange,  directInwardRetu
     const { data: yarnList } =
         useGetYarnMasterQuery({ params });
 
-    const { data: designList } =
-        useGetdesignQuery({ params });
 
-    const { data: gsmList } =
-        useGetgsmQuery({ params });
 
-    const { data: loopLengthList } =
-        useGetLoopLengthQuery({ params });
 
-    const { data: diaList } =
-        useGetDiaQuery({ params });
+
+
+
 
     function findStockQty(stockDatas) {
         let qty = stockDatas.reduce((total, current) => {

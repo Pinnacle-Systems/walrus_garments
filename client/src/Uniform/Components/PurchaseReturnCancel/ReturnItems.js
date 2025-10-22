@@ -215,35 +215,35 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                         poInwardOrDirectInward == "DirectReturn" &&
 
-                        (
-                            transType.toLowerCase().includes("yarn")
-                                ?
+                        // (
+                        //     transType.toLowerCase().includes("yarn")
+                        //         ?
                                 <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                                     handleInputChangeLotNo={handleInputChangeLotNo} 
                                     storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
                                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                                :
-                                <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
-                                    transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-                                    readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        )
+                        //         :
+                        //         <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
+                        //             transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
+                        //             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                        // )
 
                     }
                     {
                        (  poInwardOrDirectInward === "PurchaseReturn" ||  poInwardOrDirectInward === "GeneralReturn" )    &&
-                        (
-                            transType.toLowerCase().includes("yarn")
-                                ?
+                        // (
+                        //     transType.toLowerCase().includes("yarn")
+                        //         ?
                                 <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
                                     storeId={storeId} handleView={handleView}
                                     transType={transType} directInwardReturnItems={directInwardReturnItems}
                                     setDirectInwardReturnItems={setDirectInwardReturnItems}
                                     readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                                :
-                                <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType}
-                                    directInwardReturnItems={directInwardReturnItems} deleteRow={deleteRow}
-                                    setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        )
+                        //         :
+                        //         <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType}
+                        //             directInwardReturnItems={directInwardReturnItems} deleteRow={deleteRow}
+                        //             setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                        // )
 
                     }
                 </fieldset>

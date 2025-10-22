@@ -43,7 +43,8 @@ import {
   MeasurementMasterApi,
   FiberContentMasterApi,
   requirementPlanningFormApi,
-  AccessoryPoApi
+  AccessoryPoApi,
+  billEntryApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -171,6 +172,7 @@ const commonReducers = {
   AccessoryPurchaseInward : AccessoryPurchaseInwardApi.reducer ,
   TermsandCondtions : TermsandCondtionsApi.reducer,
   hsnMaster : HsnMasterApi.reducer,
+  billEntry : billEntryApi.reducer ,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -274,6 +276,7 @@ AccessoryPurchaseCancelApi.middleware,
 AccessoryPurchaseInwardApi.middleware,
 TermsandCondtionsApi.middleware,
 HsnMasterApi.middleware,
+billEntryApi.middleware
 ];
 
 

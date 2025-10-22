@@ -23,13 +23,15 @@ import YarnInwardPoItems from "./YarnInwardItem";
 import AccessoryInwardItems from "./AccessoryInwardItems";
 import Swal from "sweetalert2";
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew
+  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew ,branchList , locationData , supplierList
 }) => {
 
 
 
 
-
+  const storeOptions = locationData ?
+    locationData.data.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
+    [];
 
 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
@@ -63,8 +65,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     branchId, companyId
   };
 
-  const { data: supplierList } =
-    useGetPartyQuery({ params: { ...params } });
+  // const { data: supplierList } =
+  //   useGetPartyQuery({ params: { ...params } });
 
 
   const { data: taxTypeList } =
@@ -73,11 +75,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-  const { data: payTermList } =
-    useGetPaytermMasterQuery({ params: { ...params } });
 
 
-  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  // const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
   // const getNextDocId = useCallback(() => {
   //   if (isLoading || isFetching) return
@@ -99,11 +99,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
 
 
-  // useEffect(() => {
-  //   if (id) return
-  //   console.log(directInwardReturnItems, "hit", id)
-  //   setDirectInwardReturnItems([])
-  // }, [transType, id])
+
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
@@ -175,6 +171,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       setSuppliers([...suppliers, newName]);
     }
   };
+
+  
   // async function onDeleteItem(itemId) {
   //   await removeData(itemId).unwrap();
   // }
@@ -309,11 +307,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
+  // const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
-  const storeOptions = locationData ?
-    locationData.data.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
-    [];
+
 
   function removeItem(id) {
     setDirectInwardReturnItems(directInwardItems => {

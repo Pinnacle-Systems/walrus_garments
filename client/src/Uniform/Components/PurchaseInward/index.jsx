@@ -8,8 +8,10 @@ import { useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnQuery 
 import PurchaseInwardForm from './PurchaseInwardFormUi';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
-import PurchaseInwardFormReport from './PurchaseinwardFormReport';
 import Swal from 'sweetalert2';
+import PurchaseInwardFormReport from './PurchaseInwardFormReport';
+import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
+import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 
 
 
@@ -44,6 +46,9 @@ const PurchaseInward = () => {
         branchId, userId, finYearId
     };
 
+    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
+    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
     const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
     const [removeData] = useDeleteDirectInwardOrReturnMutation();
@@ -95,7 +100,7 @@ const PurchaseInward = () => {
         setId("");
         setReadOnly(false);
         setSupplierId("")
-        setPartyId('')    
+        setPartyId('')
     }
 
     return (
@@ -110,8 +115,8 @@ const PurchaseInward = () => {
                     poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-                    partyId={partyId} setPartyId={setPartyId} onNew={onNew}
- 
+                    partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
+                    supplierList={supplierList}
 
 
 

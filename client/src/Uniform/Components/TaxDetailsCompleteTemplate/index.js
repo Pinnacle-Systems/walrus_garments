@@ -40,7 +40,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
 
     const getName = useCallback((id) => {
         if (!taxTermMaster) return ""
-        let data = taxTermMaster.data.find(t => parseInt(t.id) === parseInt(id))
+        let data = taxTermMaster?.data?.find(t => parseInt(t.id) === parseInt(id))
         if (!data) return ""
         return data.name
     }, [taxTermMaster])
@@ -140,7 +140,9 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                             }
                         >
                             <input type="text" disabled={readOnly} className='h-7 w-full text-right'
-                                value={taxPercent} onChange={(e) => { handleInputChange(e.target.value, index, "taxPercent") }} />
+                                value={taxPercent} onChange={(e) => { handleInputChange(e.target.value, index, "taxPercent") }} 
+                                onFocus={(e) => e.target.select()}
+                                />
                         </td>
                     </tr>
                     {formulas.filter(item => !item.isPowise).map((f, i) =>

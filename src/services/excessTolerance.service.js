@@ -40,7 +40,11 @@ export async function getExcessToleranceItems(req) {
     const { companyId, active, materialId, poMaterial, excessType, orderType ,applyon} = req.query;
     let data;
 
-    data = await prisma.ExcessToleranceItems.findMany({});
+    data = await prisma.ExcessToleranceItems.findMany({
+        where: {
+            active: active ? Boolean(active) : undefined,
+        }
+    });
     
     console.log(data?.filter(item =>
              item?.materialId == materialId 

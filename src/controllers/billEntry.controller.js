@@ -1,10 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import {
-    get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
-    getDirectReturnItems as _getDirectReturnItems, getPoItemsandDirectReturnItems as _getPoItemsandDirectReturnItems,
-    getDirectReturnItemById as _getDirectReturnItemById
-} from '../services/directCancelOrReturn.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/billEntry.service.js';
 
 async function get(req, res, next) {
     try {
@@ -15,37 +11,9 @@ async function get(req, res, next) {
     }
 }
 
-export async function getDirectReturnItems(req, res, next) {
-    try {
-        res.json(await _getDirectReturnItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
-export async function getDirectReturnItemById(req, res, next) {
-    try {
-        res.json(await _getDirectReturnItemById(req.params.id, req.params.billEntryId));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
-export async function getPoItemsandDirectReturnItems(req, res, next) {
-    try {
-        res.json(await _getPoItemsandDirectReturnItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
 async function getOne(req, res, next) {
-    console.log(req,":reqqq")
     try {
-        res.json(await _getOne(req.params.id));
+        res.json(await _getOne(req.params.id, req.params.payOutId, req.params.advanceAdjustmentId));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

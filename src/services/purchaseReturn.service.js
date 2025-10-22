@@ -165,6 +165,7 @@ async function getSearch(req) {
 
 async function createpoReturnItems(tx, poReturnItems, purchaseReturn) {
 
+    consoler.log("Hit")
 
     const promises = poReturnItems.map(async (item) => {
         return await tx.poReturnItems.create({

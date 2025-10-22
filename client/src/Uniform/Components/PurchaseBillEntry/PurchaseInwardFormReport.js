@@ -11,12 +11,12 @@ import {
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { useGetBillEntryQuery } from '../../../redux/uniformService/BillEntryServices';
 
 
 
 
-
-const PurchaseCancelFormReport = ({
+const PurchaseBillEntryFormReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -74,7 +74,7 @@ const PurchaseCancelFormReport = ({
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetPoQuery({
+  const { data: allData, isFetching, isLoading } = useGetBillEntryQuery({
     params: {
       branchId,
       ...searchFields,
@@ -207,7 +207,7 @@ const PurchaseCancelFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po No</div>
+                    <div>Doc No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -219,7 +219,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po Date</div>
+                    <div>Doc Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -349,9 +349,9 @@ const PurchaseCancelFormReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poMaterial} </td>
+                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
 
-                      <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
+                      <td className="py-1.5 text-left"> {dataObj?.supplier?.aliasName}</td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -410,4 +410,4 @@ const PurchaseCancelFormReport = ({
   );
 };
 
-export default PurchaseCancelFormReport;
+export default PurchaseBillEntryFormReport;

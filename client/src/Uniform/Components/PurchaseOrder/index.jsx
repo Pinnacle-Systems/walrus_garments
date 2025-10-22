@@ -79,7 +79,7 @@ export default function Form() {
 
 
 
-  const { data: allData, isLoading, isFetching,refetch } = useGetPoQuery({ params, searchParams: searchValue });
+  const { data: allData, isLoading, isFetching, refetch } = useGetPoQuery({ params, searchParams: searchValue });
 
 
   // const getNextDocId = useCallback(() => {
@@ -302,12 +302,40 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id)
+        const result = await removeData(id)
         setId("");
         onNew();
         refetch()
+        console.log(result,"result")
+        if (result?.data?.statusCode == 0) {
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            draggable: true,
+            timer: 1000,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+        }
+        else {
+          Swal.fire({
+            title: result?.data?.message,
+            icon: "error",
+            draggable: true,
+            timer: 1000,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+        }
+
+      } catch (error) {
+        // toast.error("something went wrong");
         Swal.fire({
-          title: "Deleted Successfully",
+          title: error,
           icon: "success",
           draggable: true,
           timer: 1000,
@@ -316,8 +344,6 @@ export default function Form() {
             Swal.showLoading();
           }
         });
-      } catch (error) {
-        toast.error("something went wrong");
       }
     }
 
