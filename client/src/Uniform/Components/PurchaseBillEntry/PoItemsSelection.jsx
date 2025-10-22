@@ -72,7 +72,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-                <div className='flex justify-between text-center bg-blue-200 rounded-b-md sticky top-0'>
+                {/* <div className='flex justify-between text-center bg-blue-200 rounded-b-md sticky top-0'>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>TransType</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={transtype} disabled={true} />
@@ -81,7 +81,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                         <label className='text-xs font-semibold'>Supplier</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList.data, "aliasName")} disabled={true} />
                     </div>
-                </div>
+                </div> */}
                 <div className='overflow-auto h-[400px]'>
 
 
@@ -95,14 +95,14 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                 </div>
             </div>
-            <div className='flex justify-end gap-4 mt-3'>
+            {/* <div className='flex justify-end gap-4 mt-3'>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>
                 <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                     Cancel
                 </button>
-            </div>
+            </div> */}
         </>
     )
 }

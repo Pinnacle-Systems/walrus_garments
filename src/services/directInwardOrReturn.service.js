@@ -1113,7 +1113,7 @@ export async function getPoItemsandDirectInwardItems(req) {
 
         console.log("poItemsAter", poItems)
 
-        poItems = poItems.filter(item =>
+        poItems = poItems?.filter(item =>
             billItemsFiltration(
                 item?.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData?._sum?.qty : 0,
                 item?.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData._sum?.qty : 0
