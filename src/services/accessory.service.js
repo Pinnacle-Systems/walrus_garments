@@ -61,10 +61,10 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId } = await body
+    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId , taxPercent } = await body
     const data = await prisma.accessory.create({
         data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsn, accessoryCategory,
+            aliasName, accessoryItemId: parseInt(accessoryItemId), hsnId : hsn ? parseInt(hsn) : undefined, accessoryCategory,
             active, companyId: parseInt(companyId)
         },
     });
@@ -72,7 +72,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId } = await body
+    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId  , taxPercent} = await body
     const dataFound = await prisma.accessory.findUnique({
         where: {
             id: parseInt(id)
@@ -84,8 +84,8 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsn, accessoryCategory,
-            active, companyId: parseInt(companyId)
+            aliasName, accessoryItemId: parseInt(accessoryItemId), hsnId : hsn ? parseInt(hsn) : undefined, accessoryCategory,
+            active, companyId: parseInt(companyId) 
         },
     })
     return { statusCode: 0, data };

@@ -59,7 +59,6 @@ const Dashboard = () => {
         ],
     };
 
-    // Dummy data for the table (e.g., top products)
     const dummyProducts = [
         { id: 1, name: "Product A", sales: 120 },
         { id: 2, name: "Product B", sales: 80 },

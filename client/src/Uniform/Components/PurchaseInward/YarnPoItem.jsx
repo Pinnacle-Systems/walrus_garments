@@ -10,17 +10,17 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 
 const PurchaseYarnPoItems = ({ yarnList, uomList,
     colorList, gaugeList, designList, poList,
-    index, handleInputChange, readOnly, deleteRow, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo ,
+    index, handleInputChange, readOnly, deleteRow, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
     handleRightClick
 }) => {
-   
-   
-   
-   
-        const [lotGrid, setLotGrid] = useState(false)
+
+
+
+
+    const [lotGrid, setLotGrid] = useState(false)
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item.poItemsId, purchaseInwardId }, { skip: !item.poItemsId })
 
-    console.log(item, "item")
+    console.log(item, "itemmmmmmmmmmmm")
 
     useEffect(() => {
         if (purchaseInwardId) return
@@ -97,7 +97,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty} </td>
 
 
-        
+
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
                     <input
                         type="number"
@@ -131,7 +131,11 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
 
 
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(parseFloat(item?.price) * parseFloat(item?.qty)).toFixed(2) || 0}</td>
+                <td className="py-0.5 border border-gray-300 text-[11px] text-right">
+                    {Number.isFinite(parseFloat(item?.price)) && Number.isFinite(parseFloat(item?.qty))
+                        ? (parseFloat(item.price) * parseFloat(item.qty)).toFixed(4)
+                        : "0.0000"}
+                </td>
 
 
 

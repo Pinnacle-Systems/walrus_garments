@@ -11,7 +11,7 @@ import Modal from "../../../UiComponents/Modal";
 
 import { toast } from "react-toastify";
 import PurchaseInwardFormReport from "./PurchaseInwardFormReport";
-import { DisabledInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInputNew, DisabledInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { poTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
@@ -45,8 +45,8 @@ export const PurchaseBillEntry = ({
     partyBillDate, setPartyBillDate,
     netBillValue, setNetBillValue,
     taxTemplateId, setTaxTemplateId,
-    setContextMenu, contextMenu ,
-    supplierList , taxTypeList
+    setContextMenu, contextMenu,
+    supplierList, taxTypeList
 }) => {
 
 
@@ -60,17 +60,12 @@ export const PurchaseBillEntry = ({
     const params = {
         branchId, companyId
     };
-    // const { data:  } =
-    //     useGetPartyByIdQuery(id, { skip: !id });
 
-    // const { data: supplierList } =
-    //     useGetPartyQuery({});
 
     const { data: supplierDetails } =
         useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-    // const { data: taxTypeList } =
-    //     useGetTaxTemplateQuery({ params: { ...params } });
+
 
     const { data: allData, isLoading, isFetching } = useGetBillEntryQuery({ params: { branchId, finYearId } });
 
@@ -198,19 +193,19 @@ export const PurchaseBillEntry = ({
                 timer: 1500,
                 showConfirmButton: false,
             });
-             return
+            return
         }
 
         if (parseFloat(taxDetails?.netAmount) !== parseFloat(netBillValue)) {
 
-                Swal.fire({
+            Swal.fire({
                 // title: "Total percentage exceeds 100%",
                 title: "Net Bill Value Not Matching Net Amount...!",
                 icon: "error",
                 timer: 1500,
                 showConfirmButton: false,
             });
-             return
+            return
             // toast.info("Net Bill Value Not Matching Net Amount...!", { position: "top-center" })
             return
         }
@@ -270,6 +265,7 @@ export const PurchaseBillEntry = ({
 
 
     function removeItem(id, isPoItem) {
+        console.log(id, "iddddddddd", isPoItem)
         setInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems = newItems.filter(item => !((parseInt(item?.isPoItem ? item.poItemsId : item.directItemsId) === parseInt(id)) && (item.isPoItem === isPoItem)))
@@ -296,13 +292,16 @@ export const PurchaseBillEntry = ({
 
     // if (!branchList?.data) return <Loader />
 
-    const handleRightClick = (event, rowIndex, type) => {
+    const handleRightClick = (event, rowIndex, gridId, isPoItem) => {
         event.preventDefault();
         setContextMenu({
             mouseX: event.clientX,
             mouseY: event.clientY,
             rowId: rowIndex,
-            type,
+            gridId: gridId,
+            isPoItem: isPoItem
+
+
         });
     };
     const handleCloseContextMenu = () => {
@@ -393,25 +392,14 @@ export const PurchaseBillEntry = ({
                         </h2>
                         <div className="grid grid-cols-2 gap-1">
 
-                            <TextInput name={"PartyBill.No"} required value={partyBillNo} setValue={setPartyBillNo} readOnly={readOnly} />
+                            <TextInput name={"PartyBill No"} required value={partyBillNo} setValue={setPartyBillNo} readOnly={readOnly} />
 
-                            <TextInput name={"PartyBill.Date."} required value={partyBillDate} setValue={setPartyBillDate} type={"date"} readOnly={readOnly} />
-                            <TextInput name={"NetBillValue"} value={netBillValue} setValue={setNetBillValue} readOnly={readOnly} required />
+                            <DateInputNew name={"PartyBill Date"} required value={partyBillDate} setValue={setPartyBillDate} type={"date"} readOnly={readOnly} />
+                          
+                            <TextInput name={"Net Bill Value"} value={netBillValue} setValue={setNetBillValue} readOnly={readOnly} required />
 
                             <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
-                            {/* {!readOnly &&
-                                <div className="">
-                                    <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                                        onClick={() => {
-                                            if (!supplierId || !poType) {
-                                                toast.info("Please Select Inward/Return , Po type and Suppplier", { position: "top-center" })
-                                                return
-                                            }
-                                            setInwardItemSelection(true)
-                                        }}
-                                    >Select Items</button>
-                                </div>
-                            } */}
+
                         </div>
 
                     </div>
@@ -419,7 +407,6 @@ export const PurchaseBillEntry = ({
                 </div>
                 <fieldset>
                     {
-                        // poType.toLowerCase().includes("yarn")
                         <YarnInwardItems billEntryId={id} handleDeleteRow={removeItem}
                             transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
                             readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
@@ -427,15 +414,7 @@ export const PurchaseBillEntry = ({
                             handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} taxTemplateId={taxTemplateId} hsnData={hsnData}
 
                         />
-                        //   ?
 
-                        //   :
-                        //   poType.toLowerCase().includes("fabric")
-                        //     ?
-                        //     <FabricInwardItems removeItem={removeItem} transType={poType} billEntryId={id}
-                        //       inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        //     :
-                        //     <AccessoryInwardItems billEntryId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                     }
                 </fieldset>
 

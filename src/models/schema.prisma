@@ -730,14 +730,16 @@ model YarnType {
 }
 
 model Hsn {
-  id        Int       @id @default(autoincrement())
-  name      String
-  Company   Company?  @relation(fields: [companyId], references: [id])
-  companyId Int?
-  active    Boolean   @default(true)
-  tax       String?
-  Yarn      Yarn[]
-  PoItems   PoItems[]
+  id               Int                @id @default(autoincrement())
+  name             String
+  Company          Company?           @relation(fields: [companyId], references: [id])
+  companyId        Int?
+  active           Boolean            @default(true)
+  tax              String?
+  Yarn             Yarn[]
+  PoItems          PoItems[]
+  Accessory        Accessory[]
+  AccessoryPoItems AccessoryPoItems[]
 }
 
 model YarnBlend {
@@ -896,12 +898,15 @@ model AccessoryItem {
 }
 
 model Accessory {
-  id                            Int                             @id @default(autoincrement())
-  aliasName                     String
-  accessoryCategory             AccessoryCategory
-  accessoryItem                 AccessoryItem                   @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId               Int
-  hsn                           String
+  id                Int               @id @default(autoincrement())
+  aliasName         String
+  accessoryCategory AccessoryCategory
+  accessoryItem     AccessoryItem     @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId   Int
+  Hsn               Hsn?              @relation(fields: [hsnId], references: [id])
+  hsnId             Int?
+  taxPercent        Float?
+
   Company                       Company                         @relation(fields: [companyId], references: [id])
   companyId                     Int
   active                        Boolean                         @default(true)
@@ -1081,6 +1086,7 @@ model Po {
   taxTemplateId              Int?
   termsAndCondtion           String?                   @db.LongText
   PoItems                    PoItems[]
+  DirectItems                DirectItems[]
 }
 
 model PoItems {
@@ -1178,6 +1184,9 @@ model AccessoryPo {
   PurchaseType               String?
   poMaterial                 String?
   poType                     String?
+  TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
+  taxTemplateId              Int?
+  termsAndCondtion           String?
   AccessoryPoItems           AccessoryPoItems[]
 }
 
@@ -1186,31 +1195,38 @@ model AccessoryPoItems {
   AccessoryPo   AccessoryPo? @relation(fields: [accessoryPoId], references: [id], onDelete: Cascade)
   accessoryPoId Int?
 
-  Accessory            Accessory?             @relation(fields: [accessoryId], references: [id])
-  accessoryId          Int?
-  accessoryGroup       AccessoryGroup?        @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId     Int?
-  accessoryItem        AccessoryItem?         @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId      Int?
-  Color                Color?                 @relation(fields: [colorId], references: [id])
-  colorId              Int?
-  Uom                  UnitOfMeasurement?     @relation(fields: [uomId], references: [id])
-  uomId                Int?
-  Size                 Size?                  @relation(fields: [sizeId], references: [id])
-  sizeId               Int?
-  noOfBags             Int?
-  weightPerBag         Float?
-  percentage           Float?
-  requiredQty          Float?
-  qty                  Float?
-  price                Float?
-  discountType         DiscountTypes?
-  discountValue        Float?                 @default(0)
-  tax                  Float?                 @default(0)
-  weight               Float?
-  isPurchaseCancel     Boolean?               @default(false)
-  AccessoryCancelItems AccessoryCancelItems[]
-  AccessoryInwardItems AccessoryInwardItems[]
+  Accessory                  Accessory?                @relation(fields: [accessoryId], references: [id])
+  accessoryId                Int?
+  accessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId           Int?
+  accessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId            Int?
+  Color                      Color?                    @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  Uom                        UnitOfMeasurement?        @relation(fields: [uomId], references: [id])
+  uomId                      Int?
+  Size                       Size?                     @relation(fields: [sizeId], references: [id])
+  sizeId                     Int?
+  noOfBags                   Int?
+  weightPerBag               Float?
+  percentage                 Float?
+  requiredQty                Float?
+  qty                        Float?
+  price                      Float?
+  discountType               String?
+  discountValue              Float?                    @default(0)
+  tax                        Float?                    @default(0)
+  weight                     Float?
+  isPurchaseCancel           Boolean?                  @default(false)
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
+  RequirementPlanningItemsId Int?
+  order                      Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                    Int?
+  taxPercent                 Float?
+  Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
+  hsnId                      Int?
+  AccessoryCancelItems       AccessoryCancelItems[]
+  AccessoryInwardItems       AccessoryInwardItems[]
 }
 
 model PInwardOrReturn {
@@ -1294,8 +1310,8 @@ model DirectInwardOrReturn {
 
 model DirectItems {
   id                     Int                   @id @default(autoincrement())
-  DirectInwardOrReturn   DirectInwardOrReturn? @relation(fields: [directInwardOrReturnId], references: [id])
-  Fabric                 Fabric?               @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  DirectInwardOrReturn   DirectInwardOrReturn? @relation(fields: [directInwardOrReturnId], references: [id], onDelete: Cascade)
+  Fabric                 Fabric?               @relation(fields: [fabricId], references: [id])
   fabricId               Int?
   Yarn                   Yarn?                 @relation(fields: [yarnId], references: [id])
   yarnId                 Int?
@@ -1345,6 +1361,8 @@ model DirectItems {
   cancelQty              Float?
   poNo                   String?
   poQty                  Float?
+  Po                     Po?                   @relation(fields: [poId], references: [id])
+  poId                   Int?
   BillEntryItems         BillEntryItems[]
   DirectReturnItems      DirectReturnItems[]
   inwardLotDetails       InwardLotDetails[]
@@ -1478,6 +1496,7 @@ model TaxTemplate {
   DirectReturnOrPoReturn DirectReturnOrPoReturn[]
   AccessoryInward        AccessoryInward[]
   Po                     Po[]
+  AccessoryPo            AccessoryPo[]
 }
 
 model TaxTemplateDetails {
@@ -1737,6 +1756,7 @@ model Stock {
   orderId                                   Int?
   AccessoryInwardItems                      AccessoryInwardItems?                    @relation(fields: [accessoryInwardItemsId], references: [id])
   accessoryInwardItemsId                    Int?
+  transactionId                             Int?
 }
 
 model Location {
@@ -2332,7 +2352,7 @@ model BillEntry {
   Store                Location?              @relation(fields: [storeId], references: [id])
   Process              Process?               @relation(fields: [processId], references: [id])
   processId            Int?
-  poType               PoTypes?
+  poType               String?
   supplier             Party                  @relation(fields: [supplierId], references: [id])
   supplierId           Int
   createdAt            DateTime               @default(now())
@@ -3256,6 +3276,7 @@ model Order {
   AccessoryPo              AccessoryPo[]
   AccessoryInward          AccessoryInward[]
   PoItems                  PoItems[]
+  AccessoryPoItems         AccessoryPoItems[]
 }
 
 model OrderDetails {
@@ -3599,6 +3620,7 @@ model RequirementPlanningItems {
   PoItems                        PoItems[]
   RequirementPlanningProcessList RequirementPlanningProcessList[]
   AccessoryPo                    AccessoryPo[]
+  AccessoryPoItems               AccessoryPoItems[]
 }
 
 model RequirementSizeDetails {

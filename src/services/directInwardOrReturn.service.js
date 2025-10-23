@@ -748,7 +748,7 @@ async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
 
-    console.log(id,"poItemsId")
+    console.log(id, "poItemsId")
 
     let data = await prisma.poItems.findUnique({
         where: {
@@ -934,11 +934,11 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
         },
         _sum: {
             qty: true,
-     
+
         }
     });
 
-        console.log(alreadyBillEntryData,"alreadyBillEntryData")
+    console.log(alreadyBillEntryData, "alreadyBillEntryData")
 
 
     let poQty = parseFloat(data?.qty || 0).toFixed(3)
@@ -948,8 +948,8 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
     console.log(poQty, cancelQty, substract(poQty, cancelQty), "subtract", alreadyInwardedQty, alreadyReturnedQty, "substract", substract(alreadyInwardedQty, alreadyReturnedQty))
-    // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
-    let balanceQty = substract(substract(poQty, cancelQty), alreadyReturnedQty)
+    let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
+    // let balanceQty = substract(substract(poQty, cancelQty), alreadyReturnedQty)
 
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
@@ -1312,11 +1312,12 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 
 }
 
-async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directInwardOrReturnGridId) {
     console.log(item, "item")
     await tx.stock.create({
         data: {
             itemType: poType,
+            transactionId: directInwardOrReturnGridId ? parseInt(directInwardOrReturnGridId) : undefined,
             inOrOut: poInwardOrDirectInward,
             branchId: parseInt(branchId),
             yarnId: item.yarnId ? parseInt(item.yarnId) : undefined,
@@ -1364,8 +1365,9 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
 
                 }
             })
+            console.log(data, "datadata")
             // return await createLotGridItems(tx, data?.id, item?.inwardLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-            await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+            await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id)
 
         }
         )
@@ -1463,25 +1465,6 @@ async function create(body) {
 
 
 
-// function findRemovedItems(dataFound, directInwardReturnItems) {
-//     let removedItems = dataFound.directItems.filter(oldItem => {
-//         let result = directInwardReturnItems.find(newItem => parseInt(newItem.id) === parseInt(oldItem.id))
-//         if (result) return false
-//         return true
-//     })
-//     return removedItems
-// }
-
-// async function deleteItemsFromStock(tx, removeItemsStockIds) {
-//     return await tx.stock.deleteMany({
-//         where: {
-//             inwardLotDetailsId: {
-//                 in: removeItemsStockIds
-//             }
-//         }
-//     })
-// }
-
 
 
 
@@ -1499,37 +1482,30 @@ async function deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardRetu
 
 
 
-// async function updateOrCreate(tx, item, directInwardOrReturnId, poType) {
-//     let newItem = { ...getPoItemObject(poType, item) }
-//     newItem["qty"] = parseFloat(item["qty"]);
-//     newItem["lotNo"] = item["lotNo"];
-//     if (item.hasOwnProperty("lotNoCommonIndex") && item["lotNoCommonIndex"] !== null) {
-//         newItem["lotNoCommonIndex"] = parseInt(item.lotNoCommonIndex);
-//     }
-//     if (poType === "GreyYarn" || poType === "DyedYarn") {
-//         newItem["noOfBags"] = parseInt(item["noOfBags"]);
-//         newItem["weightPerBag"] = parseFloat(item["weightPerBag"]);
-//     } else if (poType === "GreyFabric" || poType === "DyedFabric") {
-//         newItem["noOfRolls"] = parseInt(item["noOfRolls"]);
-//     }
-//     newItem["stockId"] = parseInt(item["stockId"]);
-//     if (item?.id) {
-//         await tx.directItems.update({
-//             where: {
-//                 id: parseInt(item.id)
-//             },
-//             data: newItem
-//         })
-//     } else {
-//         await tx.directItems.create({
-//             data: {
-//                 ...newItem,
-//                 directInwardOrReturnId: parseInt(directInwardOrReturnId)
-//             }
-//         })
-//     }
-//     return newItem
-// }
+async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, stockTransactionId) {
+    console.log(stockTransactionId, "stockTransactionId")
+    await tx.stock.update({
+        where: {
+            transactionId: parseInt(stockTransactionId)
+        },
+        data: {
+            // itemType: poType,
+            // transactionId: stockTransactionId ? parseInt(stockTransactionId) : undefined,
+            // inOrOut: poInwardOrDirectInward,
+            // branchId: parseInt(branchId),
+            // yarnId: item.yarnId ? parseInt(item.yarnId) : undefined,
+            // colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+            // uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+            // gsmId: item?.gsmId ? parseInt(item.gsmId) : undefined,
+            // storeId: storeId ? parseInt(storeId) : undefined,
+            qty: (item.qty) ? parseFloat(item.qty) : undefined,
+            price: item.price ? parseFloat(item.price) : undefined,
+            // orderId: item.orderId ? item.orderId : undefined,
+        }
+    })
+    console.log("Eror")
+}
+
 
 
 
@@ -1572,8 +1548,8 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 }
             })
 
+            await createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
 
-            // return await createLotGridItems(tx, updatedata?.id, item?.inwardLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
         }
         else {
 
@@ -1595,25 +1571,9 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-                    // Stock: {
-                    //     create: {
-                    //         itemType: poType,
-                    //         inOrOut: poInwardOrDirectInward,
-                    //         branchId: parseInt(branchId),
-                    //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
-                    //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
-                    //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
-                    //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                    //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-                    //         storeId: parseInt(storeId),
-                    //         qty: parseFloat(item.qty),
-                    //         price: parseFloat(item.price)
-                    //     }
-                    // }
+
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
         }
 
     }

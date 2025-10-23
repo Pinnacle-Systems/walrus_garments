@@ -11,14 +11,17 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 const YarnPoItem = ({ yarnList, uomList,
     colorList, gaugeList, designList, deleteRow,
     loopLengthList, setInwardItems, storeId,
-    diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo }) => {
-   
-        
-        
-        const [lotGrid, setLotGrid] = useState(false)
-        const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId })
-        
-        console.log(data,"data")
+    diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo ,
+    handleRightClick
+
+}) =>{
+
+
+
+    const [lotGrid, setLotGrid] = useState(false)
+    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId })
+
+    console.log(data, "data")
 
 
     useEffect(() => {
@@ -35,7 +38,7 @@ const YarnPoItem = ({ yarnList, uomList,
     }, [isFetching, isLoading, data, purchaseInwardId])
 
     // if (isLoading || isFetching) return <Loader />
-    
+
     // const poItem = data?.data
     // let poQty = parseFloat(poItem?.qty || 0).toFixed(3)
     // let cancelQty = poItem?.alreadyCancelData?._sum.qty ? parseFloat(poItem.alreadyCancelData?._sum.qty).toFixed(3) : "0.000";
@@ -76,150 +79,81 @@ const YarnPoItem = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
-            
+
 
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.stockQty} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty).toFixed(3) || 0}</td>
 
-                  {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                    <input
-                                        type="number"
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0", index, "noOfBags") } }}
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-right w-full rounded py-1 table-data-input"
-                                        value={(!item.noOfBags) ? 0 : item.noOfBags}
-                                        disabled={readOnly}
-                                        inputMode='decimal'
-                                        onChange={(e) => {
-                                            if (!e.target.value) {
-                                                handleInputChange(0, index, "noOfBags");
-                                                return
-                                            }
-                                            let tempReturnQty = parseFloat(item?.weightPerBag ? item.weightPerBag : 0) * parseFloat(e.target.value)
-                                            console.log(tempReturnQty,"tempReturnQty")
-                                            if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), tempReturnQty)) {
-                                                handleInputChange(e.target.value.replace(/^0+/, ''), index, "noOfBags")
-                                            } else {
-                                                toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
-                                            }
-                                        }
-                                        }
-                                        onBlur={(e) =>
-                                            handleInputChange(parseFloat(e.target.value), index, "noOfBags")
-                                        }
-                                    />
-                                </td>
-                    <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                    <input
-                                        type="number"
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "weightPerBag") } }}
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 w-full px-1 table-data-input"
-                                        value={(!item.weightPerBag) ? 0 : item.weightPerBag}
-                                        disabled={readOnly}
-                                        inputMode='decimal'
-                                        onChange={(e) => {
-                                            if (!e.target.value) {
-                                                handleInputChange(0, index, "weightPerBag");
-                                                return
-                                            }
-                                            let tempReturnQty = parseFloat(item?.noOfBags ? item.noOfBags : 0) * parseFloat(e.target.value)
-                                            if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), tempReturnQty)) {
-                                                handleInputChange(e.target.value.replace(/^0+/, ''), index, "weightPerBag")
-                                            } else {
-                                                toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
-                                            }
-                                        }
-                                        }
-                                        onBlur={(e) =>
-                                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "weightPerBag")
-                                        }
-                                    />
-                                </td> */}
-             
 
 
 
 
-           
-                 <td className='py-0.5 border border-gray-300 text-[11px]'>
-                                    <input
-                                        type="number"
-                                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 w-full px-1 table-data-input"
-                                        value={(!item.qty) ? 0 : item.qty}
-                                        disabled={readOnly}
-                                        onChange={(event) => {
-                                            if (!event.target.value) {
-                                                handleInputChange(0, index, "qty");
-                                                return
-                                            }
-                                            if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
-                                                handleInputChange(event.target.value.replace(/^0+/, ''), index, "qty")
-                                            } else {
-                                                toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
-                                            }
-                                        }}
-                                        onBlur={(e) => {
-                                            if (!e.target.value) {
-                                                handleInputChange(0.000, index, "qty");
-                                                return
-                                            }
-                                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
-                                        }
 
-                                        }
-                                    />
-                                    <div className='text-center'>
-                                    </div>
-                                </td>
-                                <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
-                                    {parseFloat(item.price).toFixed(2)}
-                                </td>
-                                
-                                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                    <input
-                                        type="number"
-                                        onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
-                                        value={(item.price * item.qty).toFixed(2)}
-                                        disabled={true}
-                                    />
-                                </td>
-                                         <td className="py-0.5 border border-gray-300 text-[11px]">
-                                                <div className="flex space-x-2  justify-center">
-        
-                                                    <button
-                                                        // onClick={() => handleView(index)}
-                                                        // onMouseEnter={() => setTooltipVisible(true)}
-                                                        // onMouseLeave={() => setTooltipVisible(false)}
-                                                        className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                                                    >
-                                                        👁 <span className="text-xs"></span>
-                                                    </button>
-                                                    <span className="tooltip-text">View</span>
-                                                    <button
-                                                        // onClick={() => handleEdit(index)}
-                                                        className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                                                    >
-                                                        <HiPencil className="w-4 h-4" />
-        
-                                                    </button>
-                                                    <span className="tooltip-text">Edit</span>
-                                                    <button
-                                                        onClick={() => deleteRow(index)}
-                                                        className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                                                    >
-                                                        <HiTrash className="w-4 h-4" />
-        
-                                                    </button>
-                                                    <span className="tooltip-text">Delete</span>
-        
-                                                  
-                                                </div>
-                                             </td>
-             
+
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                    <input
+                        type="number"
+                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
+                        onFocus={(e) => e.target.select()}
+                        className="text-right rounded py-1 w-full px-1 table-data-input"
+                        value={(!item.qty) ? 0 : item.qty}
+                        disabled={readOnly}
+                        onChange={(event) => {
+                            if (!event.target.value) {
+                                handleInputChange(0, index, "qty");
+                                return
+                            }
+                            if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
+                                handleInputChange(event.target.value.replace(/^0+/, ''), index, "qty")
+                            } else {
+                                toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
+                            }
+                        }}
+                        onBlur={(e) => {
+                            if (!e.target.value) {
+                                handleInputChange(0.000, index, "qty");
+                                return
+                            }
+                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
+                        }
+
+                        }
+                    />
+                    <div className='text-center'>
+                    </div>
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
+                    {parseFloat(item.price).toFixed(2)}
+                </td>
+
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                    <input
+                        type="number"
+                        onFocus={(e) => e.target.select()}
+                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                        value={(item.price * item.qty).toFixed(2)}
+                        disabled={true}
+                    />
+                </td>
+                <td className="py-0.5 border border-gray-300 text-[11px]">
+                    <input
+                        readOnly
+                        className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                        // onKeyDown={(e) => {
+                        //     if (e.key === "Enter") {
+                        //         e.preventDefault();
+                        //         addNewRow();
+                        //     }
+                        // }}
+                        onContextMenu={(e) => {
+                            if (!readOnly) {
+                                handleRightClick(e, index, "shiftTimeHrs");
+                            }
+                        }}
+                    />
+
+                </td>
+
             </tr>
         </>
     )

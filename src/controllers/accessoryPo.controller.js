@@ -21,7 +21,7 @@ async function getOne(req, res, next) {
 }
 
 export async function getPoItemById(req, res, next) {
-        console.log(req.params,"getPoItemById")
+    console.log(req.params, "getPoItemById")
 
     try {
         res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType));
@@ -71,6 +71,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
     try {
         res.json(await _update(req.params.id, req.body));
+
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);

@@ -23,13 +23,15 @@ import FabricInwardItems from './FabricInwardItems';
 import AccessoryInwardItems from './AccessoryInwardItems';
 import YarnInwardItems from './YarnInwardItems';
 import YarnDirectInwardItems from './YarnDirectInwardItems';
+import Swal from 'sweetalert2';
 
-export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id }) {
+export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection }) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [tableDataView, setTableDataView] = useState(false)
     const [currentItem, setCurrentItem] = useState();
     const [currentIndex, setCurrentIndex] = useState("");
     const [gridEditableIndex, setGridEditableIndex] = useState(null);
+    const [contextMenu, setContextMenu] = useState(false)
 
     const params = {
         branchId, userId, finYearId
@@ -73,8 +75,8 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
         newBlend[index][field] = value
-        console.log(poItem,"poItem")
-        if(poItem){
+        console.log(poItem, "poItem")
+        if (poItem) {
 
             newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
             newBlend[index]["yarnId"] = poItem?.yarnId
@@ -110,7 +112,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         }
         setDirectInwardReturnItems(newBlend);
     };
-    console.log(directInwardReturnItems,  "directInwardReturnItems")
+    console.log(directInwardReturnItems, "directInwardReturnItems")
 
     function handleInputChangeLotNo(value, index, lotIndex, field, stockQty, allowedReturnQty) {
         const balanceQty = Math.min(stockQty, allowedReturnQty);
@@ -159,58 +161,85 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
     }
 
 
-  const addNewRow = () => {
-     const newRow = {
-       yarnId: "",
-       qty: "",
-       tax: "0",
-       colorId: "",
-       uomId: "",
-       price: "",
-       discountTypes: "",
-       discountValue: "0.00",
-       noOfBags : "0.00"
-     };
-     setDirectInwardReturnItems([...directInwardReturnItems, newRow]);
-   };
+    const addNewRow = () => {
+        const newRow = {
+            yarnId: "",
+            qty: "",
+            tax: "0",
+            colorId: "",
+            uomId: "",
+            price: "",
+            discountTypes: "",
+            discountValue: "0.00",
+            noOfBags: "0.00"
+        };
+        setDirectInwardReturnItems([...directInwardReturnItems, newRow]);
+    };
 
 
-     const deleteRow = (id) => {
-    setDirectInwardReturnItems((yarnBlend) =>
-      yarnBlend?.filter((row, index) => index !== parseInt(id))
-    );
-  };
+    const deleteRow = (id) => {
+        setDirectInwardReturnItems((yarnBlend) =>
+            yarnBlend?.filter((row, index) => index !== parseInt(id))
+        );
+    };
 
-    function handleEdit(index) {
-        setGridEditableIndex(index)
+    function handleDeleteAllRows(index) {
+        setDirectInwardReturnItems([index])
     }
 
     function handleView(index) {
         setCurrentIndex(index)
         setTableDataView(true)
     }
+    const handleRightClick = (event, rowIndex, type) => {
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
 
 
     return (
         <>
             <div className="p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    {/* <div className="flex gap-2 items-center">
-                        <button
-                            onClick={() => {
-                                addNewRow()
-                            }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                        >
-                            <HiPlus className="w-3 h-3 mr-1" />
-                            Add Item
-                        </button>
-                    </div> */}
+                    <h2 className="font-bold text-slate-700">List Of Items</h2>
+                    <button className="font-bold text-slate-700 bord"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                setInwardItemSelection(true)
+
+                            }
+                        }}
+                        onClick={() => {
+                            if (!supplierId) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: ` Choose Supplier`,
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                            else {
+
+                                setInwardItemSelection(true)
+                            }
+                        }}
+                    >
+                        Fill Inward Items
+                    </button>
                 </div>
                 <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
                     max-h-[250px] w-full overflow-auto'>
-                   
+
                     {
 
                         poInwardOrDirectInward == "DirectReturn" &&
@@ -218,10 +247,10 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         // (
                         //     transType.toLowerCase().includes("yarn")
                         //         ?
-                                <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
-                                    handleInputChangeLotNo={handleInputChangeLotNo} 
-                                    storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
-                                    directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                        <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
+                            handleInputChangeLotNo={handleInputChangeLotNo}
+                            storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
+                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
                         //         :
                         //         <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
                         //             transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
@@ -230,21 +259,16 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                     }
                     {
-                       (  poInwardOrDirectInward === "PurchaseReturn" ||  poInwardOrDirectInward === "GeneralReturn" )    &&
-                        // (
-                        //     transType.toLowerCase().includes("yarn")
-                        //         ?
-                                <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
-                                    storeId={storeId} handleView={handleView}
-                                    transType={transType} directInwardReturnItems={directInwardReturnItems}
-                                    setDirectInwardReturnItems={setDirectInwardReturnItems}
-                                    readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        //         :
-                        //         <AccessoryInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem} transType={transType}
-                        //             directInwardReturnItems={directInwardReturnItems} deleteRow={deleteRow}
-                        //             setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        // )
-
+                        (poInwardOrDirectInward === "PurchaseReturn" || poInwardOrDirectInward === "GeneralReturn") &&
+           
+                        <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
+                            storeId={storeId} handleView={handleView}
+                            transType={transType} directInwardReturnItems={directInwardReturnItems}
+                            setDirectInwardReturnItems={setDirectInwardReturnItems}
+                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()} handleDeleteRow={deleteRow} handleDeleteAllRows={handleDeleteAllRows}
+                            handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+                        />
+                 
                     }
                 </fieldset>
             </div>

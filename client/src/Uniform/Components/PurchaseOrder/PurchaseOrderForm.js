@@ -363,10 +363,13 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }
   let supplierListBasedOnSupply = filterSupplier()
 
+
+  
+
   // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading || isTaxfetching) return <Loader />
 
 
-  if (isTaxLoading || isTaxfetching) return <Loader />
+  // if (isTaxLoading || isTaxfetching) return <Loader />
 
 
   return (

@@ -53,7 +53,7 @@ function manualFilterSearchData(searchPoType, searchPoDate, searchPartyBillNo, d
 
 async function get(req) {
     const { branchId, active, pageNumber, dataPerPage,
-        searchDocId, searchSupplierAliasName, searchPoType, searchPartyBillNo, searchPoDate, pagination, payOutFiltration, isProcessBillEntry, finYearId, payerType } = req.query
+        searchDocId, searchSupplierAliasName, searchPoType, searchPartyBillNo, searchPoDate, pagination, payOutFiltration, isProcessBillEntry, finYearId, payerType , searchDate , supplier , searchMaterial } = req.query
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -82,13 +82,14 @@ async function get(req) {
                 printingJobWorkId: null,
                 finishedGoodsSalesId: null,
                 rawMaterialsSalesId: null,
+                poType : searchMaterial ? searchMaterial  :  undefined ,
                 docId: Boolean(searchDocId) ?
                     {
                         contains: searchDocId
                     }
                     : undefined,
                 supplier: {
-                    name: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                    name: Boolean(supplier) ? { contains: supplier } : undefined
                 },
             },
             select: {
@@ -110,7 +111,7 @@ async function get(req) {
             data = data.filter(item => parseFloat(item.alreadyPaidAmount) < parseFloat(item.netBillValue))
         }
 
-        data = manualFilterSearchData(searchPoType, searchPoDate, searchPartyBillNo, data)
+        data = manualFilterSearchData(searchPoType, searchDate, searchPartyBillNo, data)
         
         totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)

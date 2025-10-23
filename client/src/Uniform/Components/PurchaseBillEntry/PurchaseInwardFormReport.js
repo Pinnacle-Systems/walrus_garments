@@ -30,7 +30,7 @@ const PurchaseBillEntryFormReport = ({
 
 
   const [dataPerPage, setDataPerPage] = useState("1");
-  const [serachDocNo, setSerachDocNo] = useState("");
+  const [searchDocId, setSearchDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -46,7 +46,7 @@ const PurchaseBillEntryFormReport = ({
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
   const searchFields = {
-    serachDocNo,
+     searchDocId,
     searchClientName,
     searchDate,
     supplier,
@@ -57,7 +57,7 @@ const PurchaseBillEntryFormReport = ({
   useEffect(() => {
     setCurrentPageNumber(1);
   }, [
-    serachDocNo,
+    searchDocId,
     searchClientName,
     searchDate,
     supplier,
@@ -270,9 +270,9 @@ const PurchaseBillEntryFormReport = ({
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={serachDocNo}
+                      value={searchDocId}
                       onChange={(e) => {
-                        setSerachDocNo(e.target.value);
+                        setSearchDocNo(e.target.value);
                       }}
                     />
                   </th>
@@ -349,7 +349,7 @@ const PurchaseBillEntryFormReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
+                      <td className="py-1.5 text-center uppercase ">{dataObj.poType} </td>
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.aliasName}</td>
                       {rowActions && (

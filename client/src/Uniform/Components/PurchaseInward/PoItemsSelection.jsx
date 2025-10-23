@@ -13,10 +13,10 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
 
-    
+
     console.log(inwardItems, "inwardItems")
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i  => i.poItemsId));    // const [localInwardItems, setLocalInwardItems] = useState(
-        
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));    // const [localInwardItems, setLocalInwardItems] = useState(
+
     console.log(localInwardItems, "localInwardItems")
 
 
@@ -26,15 +26,10 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
     function addItem(id, obj) {
-        // setInwardItems([])
-        // setLocalInwardItems(localInwardItems => {
-        //     let newItems = structuredClone(localInwardItems);
 
-        //     newItems.push(obj);
-        //     return newItems
-        // });
         setLocalInwardItems(prevItems => {
             let newItems = structuredClone(prevItems);
+            console.log(newItems, "newItemsnewItems")
 
             const index = newItems?.findIndex(v => v?.yarnId === "");
 
@@ -52,21 +47,30 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     function removeItem(id) {
         // console.log(localInwardItems?.filter(item => item?.id), "localInwardItemsremove")
 
+
+        // setLocalInwardItems(localInwardItems => {
+        //     let newItems = structuredClone(localInwardItems.filter(item => item?.id));
+        //     newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
+        //     return newItems
+        // });
         setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems.filter(item => item?.id));
-            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
+            let newItems = structuredClone(localInwardItems);
+            newItems = newItems?.filter(item => parseInt(item) !== parseInt(id))
             return newItems
         });
     }
 
-    // console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
     function isItemAdded(id) {
+        console.log(localInwardItems, "localInwardItemsremove")
+
         return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId || item) === parseInt(id)) !== -1;
 
     }
 
     function handleChange(id, obj) {
         console.log("Hit", id, obj)
+        console.log(isItemAdded(id, obj), "isItemAdded")
+
         if (isItemAdded(id, obj)) {
             removeItem(id)
         } else {
@@ -95,7 +99,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
             console.log(prevInwardItems, "prevInwardItems")
 
             let newInwardItems = localInwardItems?.filter(item => {
-                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) ===   parseInt(item.id)) === -1
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item.id)) === -1
             })
             console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {

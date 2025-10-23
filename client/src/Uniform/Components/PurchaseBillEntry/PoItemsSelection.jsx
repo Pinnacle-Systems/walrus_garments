@@ -67,6 +67,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     function handleCancel() {
         setLocalInwardItems([]);
+        setInwardItems([])
         setInwardItemSelection(false);
     }
     return (
@@ -85,7 +86,9 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                 <div className='overflow-auto h-[400px]'>
 
 
-                    <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded}   handleRightClick = {handleRightClick} />
+                    <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded}   handleRightClick = {handleRightClick} 
+                    handleDone={handleDone} handleCancel={handleCancel}
+                    />
 
 
 

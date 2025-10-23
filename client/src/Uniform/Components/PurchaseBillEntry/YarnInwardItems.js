@@ -5,7 +5,7 @@ import YarnPoItem from './YarnPoItem';
 import TaxDetailsFullTemplate from '../TaxDetailsCompleteTemplate';
 import Modal from '../../../UiComponents/Modal';
 
-const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, billEntryId, supplierId, setInwardItemSelection, handleCloseContextMenu, contextMenu, handleDeleteRow, handleRightClick, taxTemplateId, isSupplierOutside, hsnData }) => {
+const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, supplierId, setInwardItemSelection, handleCloseContextMenu, contextMenu, handleDeleteRow, handleRightClick, taxTemplateId, isSupplierOutside, hsnData }) => {
 
 
     const handleInputChange = (value, index, field) => {
@@ -24,42 +24,7 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, bi
                 <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTemplateId} currentIndex={currentSelectedIndex} poItems={inwardItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside} hsnData={hsnData?.data}
                 />
             </Modal>
-            {/* <div className={`w-full overflow-y-auto py-1`}>
-                <table className=" text-xs border border-gray-500 table-auto w-full">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
-                        <tr className='h-8'>
-                    
-                            {!readOnly &&
-                                <th className='table-data  w-12'>Delete</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody className='overflow-y-auto  h-full w-full'>
-                        {inwardItems.map((item, index) =>
-                            <>
-                                {item?.isPoItem ?
-                                    <YarnPoItem item={item} billEntryId={billEntryId} removeItem={removeItem}
-                                        readOnly={readOnly} key={index} index={index} handleInputChange={handleInputChange} />
-                                    :
-                                    <YarnDirectItem item={item} billEntryId={billEntryId} removeItem={removeItem}
-                                        readOnly={readOnly} key={index} index={index} handleInputChange={handleInputChange} />
-                                }
-                            </>
-                        )}
-                        {
-                            Array.from({ length: 8 - inwardItems.length }).map(i =>
-                                <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                    {Array.from({ length: 20 }).map(i =>
-                                        <td className="table-data   "></td>
-                                    )}
-                                    {!readOnly &&
-                                        <td className="table-data w-10"></td>
-                                    }
-                                </tr>)
-                        }
-                    </tbody>
-                </table>
-            </div> */}
+
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
@@ -125,18 +90,7 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, bi
                                 >
                                     UOM
                                 </th>
-                                {/* <th
-            
-                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                                Po Qty
-                                            </th> */}
-                                {/* <th
-            
-                                                className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                                Lot Det.
-                                            </th> */}
+              
 
                                 <th
 
@@ -219,31 +173,15 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, bi
                         <tbody className='overflow-y-auto  h-full w-full'>
                             {inwardItems.map((item, index) =>
                                 <>
-                                    <YarnPoItem item={item} billEntryId={billEntryId} removeItem={removeItem}
+                                    <YarnPoItem item={item} billEntryId={billEntryId} 
                                         readOnly={readOnly} key={index} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick} taxTemplateId={taxTemplateId}
 
-                                        setCurrentSelectedIndex={setCurrentSelectedIndex}
+                                        setCurrentSelectedIndex={setCurrentSelectedIndex} 
                                     />
-                                    {/* {item?.isPoItem ?
-                                        <YarnPoItem item={item} billEntryId={billEntryId} removeItem={removeItem}
-                                            readOnly={readOnly} key={index} index={index} handleInputChange={handleInputChange} handleRightClick = {handleRightClick} />
-                                        :
-                                        <YarnDirectItem item={item} billEntryId={billEntryId} removeItem={removeItem}
-                                            readOnly={readOnly} key={index} index={index} handleInputChange={handleInputChange} 
-                                            handleRightClick = {handleRightClick}
-                                            />
-                                    } */}
+                    
                                 </>
                             )}
-                            {/* {
-                                Array.from({ length: 5 - inwardItems.length }).map(i =>
-                                    <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                        {Array.from({ length: 12 }).map(i =>
-                                            <td className="table-data   "></td>
-                                        )}
-                                    
-                                    </tr>)
-                            } */}
+                 
                         </tbody>
                     </table>
                 </div>
@@ -267,9 +205,10 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, bi
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
                                 onClick={() => {
-                                    handleDeleteRow(contextMenu.rowId);
+                                    handleDeleteRow(contextMenu.rowId ,contextMenu.isPoItem  );
                                     handleCloseContextMenu();
                                 }}
+                                // (item.isPoItem ? item.poItemsId : item.directItemsId, item?.isPoItem ? true : false)
                             >
                                 Delete{" "}
                             </button>

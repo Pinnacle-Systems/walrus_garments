@@ -15,7 +15,6 @@ import {
   productCategory,
   productSubCategory,
   product,
-  purchaseBill,
   stock,
   salesBill,
   purchaseReturn,
@@ -114,7 +113,6 @@ app.use("/socksMaterial", socksMaterial)
 app.use("/productCategory", productCategory);
 app.use("/productSubCategory", productSubCategory);
 app.use("/product", product);
-app.use("/purchaseBill", purchaseBill);
 app.use("/stock", stock);
 app.use("/salesBill", salesBill);
 app.use("/purchaseReturn", purchaseReturn)
@@ -220,9 +218,3 @@ httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
-setInterval(() => {
-  const used = process.memoryUsage();
-  console.log(
-    `Heap Used: ${(used.heapUsed / 1024 / 1024).toFixed(2)} MB / ${(used.heapTotal / 1024 / 1024).toFixed(2)} MB`
-  );
-}, 10000);

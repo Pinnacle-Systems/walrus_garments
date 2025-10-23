@@ -8,9 +8,9 @@ import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnPoItemSelection from './YarnPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection ,poInwardOrDirectInward }) => {
-    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.poItemsId));
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection ,poInwardOrDirectInward ,readOnly }) => {
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.poItemsId));
+    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
 
     console.log(localInwardItems,"localInwardItems")
     // console.log(inwardItems,"inwardItems")
@@ -95,7 +95,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-                <div className='flex justify-between text-center bg-gray-300 rounded-b-md sticky top-0'>
+                {/* <div className='flex justify-between text-center bg-gray-300 rounded-b-md sticky top-0'>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>TransType</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={transtype} disabled={true} />
@@ -104,16 +104,16 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                         <label className='text-xs font-semibold'>Supplier</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList?.data, "name")} disabled={true} />
                     </div>
-                </div>
+                </div> */}
                 <div className='h-[500px] overflow-auto'>
                     {
                         <>
 
                             {transtype.toLowerCase().includes("yarn") ?
 
-                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward} />
+                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward}  handleDone={handleDone} readOnly={readOnly} />
                                 :
-                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward} />
+                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward}  handleDone={handleDone} readOnly={readOnly} />
                             }
                         </>
                     }
@@ -121,14 +121,14 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                 </div>
             </div>
-            <div className='flex justify-end gap-4 '>
+            {/* <div className='flex justify-end gap-4 '>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>
                 <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                     Cancel
                 </button>
-            </div>
+            </div> */}
         </>
     )
 }

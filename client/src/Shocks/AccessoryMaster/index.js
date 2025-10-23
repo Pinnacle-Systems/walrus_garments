@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import secureLocalStorage from 'react-secure-storage';
 import { useGetAccessoryItemMasterQuery } from '../../redux/uniformService/AccessoryItemMasterServices';
@@ -8,11 +7,15 @@ import { useGetAccessoryGroupMasterQuery } from '../../redux/uniformService/Acce
 import { useAddAccessoryMasterMutation, useDeleteAccessoryMasterMutation, useGetAccessoryMasterByIdQuery, useGetAccessoryMasterQuery, useUpdateAccessoryMasterMutation } from '../../redux/uniformService/AccessoryMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
-import { DropdownInput, LongTextInput,  TextInput,  ToggleButton } from '../../Inputs';
+import { DropdownInput, DropdownWithSearch, LongTextInput, TextArea, TextInput, ToggleButton } from '../../Inputs';
 import { accessoryCategoryList, statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
 import { Check, Plus } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
+import { useGetHsnMasterQuery } from '../../redux/services/HsnMasterServices';
+import { findFromList } from '../../Utils/helper';
+import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 
 
 const MODEL = "Accessory Master"
@@ -26,6 +29,8 @@ export default function Form() {
     const [yarnBlendDetails, setYarnBlendDetails] = useState("");
     const [accessoryItemId, setAccessoryItemId] = useState("");
     const [hsn, setHsn] = useState("");
+    const [taxPercent, setTaxPercent] = useState("");
+
     const [accessoryGroupId, setAccessoryGroupId] = useState("");
     const [accessoryCategory, setAccessoryCategory] = useState();
     const [active, setActive] = useState(true);
@@ -47,12 +52,8 @@ export default function Form() {
     const params = {
         companyId
     };
-
-    // const { data: contentList } =
-    //     useGetContentMasterQuery({ params: { ...params, active: true } });
-
-    // const { data: YarnBlendList } =
-    //     useGetYarnBlendMasterQuery({ params: { ...params, active: true } });
+    const { data: hsnData } =
+        useGetHsnMasterQuery({ params });
 
     const { data: accessoryItemList } =
         useGetAccessoryItemMasterQuery({ params });
@@ -82,14 +83,14 @@ export default function Form() {
             setAccessoryItemId("");
             setHsn("");
             setAccessoryGroupId("");
-                  setActive(id ? (data?.active ) : true);
+            setActive(id ? (data?.active) : true);
 
         } else {
             setReadOnly(true);
             setAliasName(data?.aliasName || "");
             setAccessoryCategory(data?.accessoryCategory || "");
             setAccessoryItemId(data?.accessoryItemId || "");
-            setHsn(data?.hsn || "");
+            setHsn(data?.hsnId ? data?.hsnId : "");
             setAccessoryGroupId(data?.accessoryItem.accessoryGroupId || "");
             setActive(id ? (data?.active ?? false) : true);
         }
@@ -105,7 +106,7 @@ export default function Form() {
 
     const data = {
         aliasName, accessoryCategory,
-        accessoryItemId, hsn, accessoryGroupId, active, companyId, id, userId
+        accessoryItemId, hsn, accessoryGroupId, active, companyId, id, userId, taxPercent
     }
 
     const validatePercentage = () => {
@@ -154,7 +155,17 @@ export default function Form() {
                 returnData = await callback(data).unwrap();
             }
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+            Swal.fire({
+                title: text + "Successfully",
+                icon: "success",
+                draggable: true,
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
             dispatch({
                 type: `AccessoryGroupMaster/invalidateTags`,
                 payload: ['Accessory Group'],
@@ -172,6 +183,16 @@ export default function Form() {
         // }
         if (!validateData(data)) {
             toast.error("Please fill all required fields...!", { position: "top-center" })
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
+                draggable: true,
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
             return
         }
 
@@ -233,19 +254,19 @@ export default function Form() {
         <div onKeyDown={handleKeyDown}>
             <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                 <h5 className='my-1'>Accessory Master</h5>
-                 <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => {
-                              setForm(true);
-                              onNew();
-                            }}
-                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                          >
-                            <Plus size={16} />
-                            Add Accessory 
-                          </button>
-                  
-                      </div>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => {
+                            setForm(true);
+                            onNew();
+                        }}
+                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                    >
+                        <Plus size={16} />
+                        Add Accessory
+                    </button>
+
+                </div>
             </div>
             <div className='w-full flex items-start'>
                 <Mastertable
@@ -259,98 +280,47 @@ export default function Form() {
                     data={allData?.data}
                     loading={
                         isLoading || isFetching
-                    } />
-            </div>
-            {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[45%] h-[90%]"} onClose={() => { setForm(false); setErrors({}); }}>
-                <MastersForm
-                    onNew={onNew}
-                    onClose={() => {
-                        setForm(false);
-                        setSearchValue("");
-                        setId(false);
-                    }}
-                    model={MODEL}
-                    childRecord={childRecord.current}
-                    saveData={saveData}
+                    } 
                     setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                    readOnly={readOnly}
-                    emptyErrors={() => setErrors({})}
-                >
-                    <fieldset className='mb-3'>
-                        <div className='sub-heading'>Accessories</div>
-                        <div className='flex justify-between gap-3'>
-                            <div className="mb-3 w-[48%] mt-2">
-                                <DropdownInput
-                                    name="Accessory Category"
-                                    options={accessoryCategoryList}
-                                    value={accessoryCategory}
-                                    setValue={setAccessoryCategory}
-                                    required={true}
-                                    readOnly={readOnly}
-                                    disabled={(childRecord.current > 0)}
-                                />
-                            </div>
-                            <div className="mb-3 w-[48%] mt-2">
-                                <DropdownInput name="Accessory Group" options={dropDownListObject(id ? accessoryGroupList?.data : accessoryGroupList?.data?.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                            </div>
-                        </div>
-                        <div className="mb-3 w-[48%]">
-                            <DropdownInput name="Accessory Item" options={dropDownListObject(id ? accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)) : accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)).filter(item => item.active), "name", "id")} value={accessoryItemId} setValue={(value) => { setAccessoryItemId(value) }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                        </div>
+                    />
+            </div>
 
-                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
-
-                    </fieldset>
-                    <fieldset className='mb-5'>
-                        <div className=''>Accessory Details</div>
-                        <div className=''>
-                            <LongTextInput readOnly name="Accessory Name" className={'focus:outline-none cursor-not-allowed md:col-span-2 h-6 mb-1 rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
-                            <div className="">
-                                <LongTextInput name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 mb-1 border border-gray-500 rounded w-[75%]'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                <LongTextInput name="HSN Code" className={'focus:outline-none md:col-span-2 h-6  border border-gray-500 rounded w-[15%]'} type="text" value={hsn} setValue={setHsn} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                            </div>
-                        </div>
-                    </fieldset>
-                </MastersForm>
-            </Modal>} */}
-  {form && (
-               <Modal
+            {form && (
+                <Modal
                     isOpen={form}
                     form={form}
                     widthClass={"w-[40%] max-w-6xl h-[60vh]"}
                     onClose={() => {
-                    setForm(false);
-                    setErrors({});
+                        setForm(false);
+                        setErrors({});
                     }}
                 >
-                                <div className="h-full flex flex-col bg-[f1f1f0]">
-                                <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-                                    <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                        {id ? (!readOnly ? "Edit Accessory Group " : "Fiber Accessory Group ") : "Add New Accessory Group"}
-                                    </h2>
-                                    
-                                    </div>
-                                    <div className="flex gap-2">
-                                    <div>
-                                        {readOnly && (
+                    <div className="h-full flex flex-col bg-[f1f1f0] ">
+                        <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                    {id ? (!readOnly ? "Edit Accessory  " : "Accessory  Master") : "Add New Accessory "}
+                                </h2>
+
+                            </div>
+                            <div className="flex gap-2">
+                                <div>
+                                    {readOnly && (
                                         <button
                                             type="button"
                                             onClick={() => {
-                                            setForm(false);
-                                            setSearchValue("");
-                                            setId(false);
+                                                setForm(false);
+                                                setSearchValue("");
+                                                setId(false);
                                             }}
                                             className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                                         >
                                             Cancel
                                         </button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {!readOnly && (
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    {(
                                         <button
                                             type="button"
                                             onClick={saveData}
@@ -360,22 +330,21 @@ export default function Form() {
                                             <Check size={14} />
                                             {id ? "Update" : "Save"}
                                         </button>
-                                        )}
-                                    </div>
-                                    </div>
+                                    )}
                                 </div>
+                            </div>
+                        </div>
 
-         <div className="flex-1 overflow-auto p-3">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                        <div className="flex-1 overflow-auto p-3">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
-                    <div className="col-span-4  gap-3  h-full">
-                                    {/* <div className='sub-heading'>Accessories</div> */}
+                                <div className="col-span-4  gap-8  h-full">
                                     <div className='flex flex-col'>
                                         <div className="">
                                             <DropdownInput
                                                 name="Accessory Category"
                                                 options={accessoryCategoryList}
-                                                value={accessoryCategory}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+                                                value={accessoryCategory}
                                                 setValue={setAccessoryCategory}
                                                 required={true}
                                                 readOnly={readOnly}
@@ -385,33 +354,43 @@ export default function Form() {
                                         <div className="">
                                             <DropdownInput name="Accessory Group" options={dropDownListObject(id ? accessoryGroupList?.data : accessoryGroupList?.data?.filter(item => item.active), "name", "id")} value={accessoryGroupId} setValue={(value) => { setAccessoryGroupId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
                                         </div>
-                                   
-                                    <div className="">
-                                        <DropdownInput name="Accessory Item" options={dropDownListObject(id ? accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)) : accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)).filter(item => item.active), "name", "id")} value={accessoryItemId} setValue={(value) => { setAccessoryItemId(value) }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+
+                                        <div className="">
+                                            <DropdownInput name="Accessory Item" options={dropDownListObject(id ? accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)) : accessoryItemList?.data?.filter(item => parseInt(accessoryGroupId) === parseInt(item.accessoryGroupId)).filter(item => item.active), "name", "id")} value={accessoryItemId} setValue={(value) => { setAccessoryItemId(value) }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                        </div>
                                     </div>
-                                 </div>
                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
 
 
-                
-                      </div>
-                <div className="col-span-4  gap-3  h-full">
 
-                    <fieldset className=''>
-                        <div className=''>
-                            <TextInput readOnly name="Accessory Name" className={'focus:outline-none cursor-not-allowed md:col-span-2 h-6 mb-1 rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
-                            <div className="">
-                                <TextInput name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 mb-1 border border-gray-500 rounded w-[75%]'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                                <TextInput name="HSN Code" className={'focus:outline-none md:col-span-2 h-6  border border-gray-500 rounded w-[15%]'} type="text" value={hsn} setValue={setHsn} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
+                                </div>
+                                <div className="col-span-4  gap-8  h-full">
+
+                                    <fieldset className=''>
+                                        <div className=''>
+                                            <TextArea readOnly name="Accessory Name" className={'focus:outline-none cursor-not-allowed md:col-span-2 h-6 mb-1 rounded'} type="text" value={calculateYarnName()} disabled={(childRecord.current > 0)} />
+                                            <div className="">
+                                                <TextArea name="Alias Name" className={'focus:outline-none md:col-span-2 h-6 mb-1 border border-gray-500 rounded w-[75%]'} type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} required={true}  />
+
+                                                <DropdownWithSearch
+                                                    options={hsnData?.data}
+                                                    value={hsn}
+                                                    setValue={setHsn}
+                                                    labelField={"name"}
+                                                    label={"Hsn"}
+                                                    required={true}
+                                                />
+                                                <TextInput name="Tax" type="text" value={findFromList(hsn, hsnData?.data, "tax")} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                            </div>
+
+                                        </div>
+                                    </fieldset>
+                                </div>
                             </div>
                         </div>
-                    </fieldset>    
-                                    </div>
-                                    </div>
-                                </div>
-                          </div>
-                            </Modal>
-         )}
+                    </div>
+                </Modal>
+            )}
         </div>
     )
 }

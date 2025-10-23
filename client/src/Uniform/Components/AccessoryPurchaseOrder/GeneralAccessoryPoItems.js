@@ -22,7 +22,9 @@ import {
 } from "../../../redux/features/openModel";
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 import Swal from "sweetalert2";
-const AccessoryPoItems = ({
+
+
+const GeneralAccessoryPoItems = ({
   accessoryList,
   accessoryGroupList,
   accessoryItemList,
@@ -37,7 +39,10 @@ const AccessoryPoItems = ({
   isSupplierOutside,
   taxTypeId,
   supplierId,
-  setTableDataView ,
+  setTableDataView,
+  hsnData,
+  contextMenu,
+  handleRightClick,
   handleCloseContextMenu
 }) => {
 
@@ -45,16 +50,45 @@ const AccessoryPoItems = ({
   const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
 
   const handleInputChange = (value, index, field) => {
+
+
     const newBlend = structuredClone(poItems);
-    newBlend[index][field] = value;
+
+    // newBlend[index][field] = value;
+    // if (field === "accessoryId") {
+    //   newBlend[index]["taxPercent"] = findYarnTax(value);
+    // }
+
     if (field === "accessoryId") {
-      newBlend[index]["taxPercent"] = findYarnTax(value);
+      if (field === "accessoryId") {
+        const selected = accessoryList?.data?.find(item => parseInt(item.id) === parseInt(value));
+        const hsnId = selected?.hsnId || 0;
+        const selectedTaxPercent = hsnData?.data?.find(item => parseInt(item.id) === parseInt(hsnId));
+        const taxPercent = selectedTaxPercent?.tax || 0;
+
+        console.log(hsnId, "hsnId")
+        newBlend[index]["hsnId"] = hsnId
+        newBlend[index]["taxPercent"] = taxPercent
+
+        newBlend[index][field] = value
+
+      }
+
+    } else {
+      newBlend[index][field] = value;
     }
     setPoItems(newBlend);
   };
+
+
+
+
+
   const activeTab = useSelector(
     (state) => state.openTabs.tabs.find((tab) => tab.active).name
   );
+
+
   useEffect(() => {
     if (id) return;
     if (poItems.length >= 1) return;
@@ -71,7 +105,7 @@ const AccessoryPoItems = ({
           uomId: "",
 
           price: "",
-          discountType: "Percentage",
+          discountType: "",
           discountValue: 0,
           noOfBags: 0.00,
           weightPerBag: 0.00,
@@ -82,52 +116,15 @@ const AccessoryPoItems = ({
     });
   }, [setPoItems, poItems]);
 
-  const addRow = () => {
-    const newRow = {
-      accessoryItemId: "",
-      accessoryGroupId: "",
-      accessoryId: "",
-      qty: "",
-      colorId: "",
-      taxPercent: "0.000",
-      sizeId: "",
-      uomId: "",
-      qty: "",
-      price: "",
-      discountType: "",
-      discountValue: 0,
-    };
-    setPoItems([...poItems, newRow]);
-  };
+
   const handleDeleteRow = (id) => {
     setPoItems((yarnBlend) =>
       yarnBlend.filter((row, index) => index !== parseInt(id))
     );
   };
-
-  // const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
-  //   params,
-  // });
-
-  // const { data: accessoryItemList } = useGetAccessoryItemMasterQuery({
-  //   params,
-  // });
-
-  // const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
-
-  // const { data: colorList } = useGetColorMasterQuery({ params });
-
-  // const { data: uomList } = useGetUomQuery({ params });
-
-  // const { data: sizeList } = useGetSizeMasterQuery({ params });
-
-  function findAccessoryItemName(id) {
-    if (!accessoryList) return 0;
-    let acc = accessoryList.data.find(
-      (item) => parseInt(item.id) === parseInt(id)
-    );
-    return acc ? acc.accessoryItem.name : null;
-  }
+  const handleDeleteAllRows = () => {
+    setPoItems([]);
+  };
 
   const addNewRow = () => {
     const newRow = {
@@ -143,6 +140,15 @@ const AccessoryPoItems = ({
     };
     setPoItems([...poItems, newRow]);
   };
+  function findAccessoryItemName(id) {
+    if (!accessoryList) return 0;
+    let acc = accessoryList.data.find(
+      (item) => parseInt(item.id) === parseInt(id)
+    );
+    return acc ? acc.accessoryItem.name : null;
+  }
+
+
   function findAccessoryGroupName(id) {
     if (!accessoryList) return 0;
     let acc = accessoryList.data.find(
@@ -275,8 +281,17 @@ const AccessoryPoItems = ({
   };
   return (
     <>
-      <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
-        <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside}
+      <Modal
+        isOpen={Number.isInteger(currentSelectedIndex)}
+        onClose={() => setCurrentSelectedIndex("")}
+      >
+        <TaxDetailsFullTemplate
+          readOnly={readOnly}
+          taxTypeId={taxTypeId}
+          currentIndex={currentSelectedIndex}
+          poItems={poItems}
+          handleInputChange={handleInputChange}
+          isSupplierOutside={isSupplierOutside}
         />
       </Modal>
       <div className={` relative w-full overflow-y-auto p-3 max-h-[250px] overflow-auto`}>
@@ -408,7 +423,7 @@ const AccessoryPoItems = ({
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data?.filter(item => item.active) || [])?.map((blend) =>
+                    {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -429,7 +444,7 @@ const AccessoryPoItems = ({
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || [])?.map((blend) =>
+                    {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || []).map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -443,7 +458,7 @@ const AccessoryPoItems = ({
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                     onBlur={(e) => {
 
-                      handleInputChange(e.target.value, index, "fabricaccessoryId")
+                      handleInputChange(e.target.value, index, "accessoryId")
 
                     }
                     }
@@ -457,25 +472,7 @@ const AccessoryPoItems = ({
                     )}
                   </select>
                 </td>
-                {/* <td className='table-data'>
-                                            <input
-                                                type="text-left px-1"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-center rounded w-36 py-1 table-data-input"
-                                                value={findAccessoryItemName(row.accessoryId)}
-                                                disabled={true}
-        
-                                            />
-                                        </td>
-                                        <td className='table-data'>
-                                            <input
-                                                type="text"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-center rounded w-36 py-1 table-data-input"
-                                                value={findAccessoryGroupName(row.accessoryId)}
-                                                disabled={true}
-                                            />
-                                        </td> */}
+
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -488,7 +485,8 @@ const AccessoryPoItems = ({
                     }
                     }
                   >
-                    {/* <option hidden>   </option> */}
+                    <option hidden>
+                    </option>
                     {(id ? colorList?.data : colorList?.data?.filter(item => item.active))?.map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
@@ -510,7 +508,7 @@ const AccessoryPoItems = ({
                   >
                     <option hidden>
                     </option>
-                    {(id ? sizeList?.data : sizeList?.data.filter(item => item.active))?.map((blend) =>
+                    {(id ? sizeList?.data : sizeList?.data?.filter(item => item.active))?.map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -578,7 +576,7 @@ const AccessoryPoItems = ({
                       handleInputChange(e.target.value, index, "price")
                     }
                     onBlur={(e) => {
-                      handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price");
                     }
                     }
                   />
@@ -589,14 +587,14 @@ const AccessoryPoItems = ({
                     type="number"
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full"
-                    value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
+                    value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty || 0) * parseFloat(row.price || 0)).toFixed(3)}
                     disabled={true}
                   />
                 </td>
 
                 <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
                   <button
-                    disabled={readOnly  || !row?.accessoryId}
+                    disabled={readOnly || !row?.accessoryId}
 
                     className="text-center rounded py-1 w-20"
                     onKeyDown={(e) => {
@@ -605,18 +603,26 @@ const AccessoryPoItems = ({
                       }
                     }}
                     onClick={() => {
-                      if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
+                      if (!taxTypeId) return Swal.fire({
+                        title: "Please select Tax Type",
+                        icon: "success",
+                        draggable: true,
+                        timer: 1000,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                          Swal.showLoading();
+                        }
+                      });
+
                       setCurrentSelectedIndex(index)
                     }}>
                     {VIEW}
                   </button>
                 </td>
-
-
-                <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                <td className="w-16 px-1 py-1 border border-gray-300 text-center">
                   <input
                     readOnly
-                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                    className="w-full bg-transparent  text-right pr-2"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -625,12 +631,11 @@ const AccessoryPoItems = ({
                     }}
                     onContextMenu={(e) => {
                       if (!readOnly) {
-                        // handleRightClick(e, index, "shiftTimeHrs");
+                        handleRightClick(e, index, "shiftTimeHrs");
                       }
                     }}
                   />
                 </td>
-
 
 
               </tr>
@@ -638,8 +643,46 @@ const AccessoryPoItems = ({
           </tbody>
         </table>
       </div>
+      {contextMenu && (
+        <div
+          style={{
+            position: "absolute",
+            top: `${contextMenu.mouseY - 50}px`,
+            left: `${contextMenu.mouseX - 30}px`,
+
+            // background: "gray",
+            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+            padding: "8px",
+            borderRadius: "4px",
+            zIndex: 1000,
+          }}
+          className="bg-gray-100"
+          onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+        >
+          <div className="flex flex-col gap-1">
+            <button
+              className=" text-black text-[12px] text-left rounded px-1"
+              onClick={() => {
+                handleDeleteRow(contextMenu.rowId);
+                handleCloseContextMenu();
+              }}
+            >
+              Delete{" "}
+            </button>
+            <button
+              className=" text-black text-[12px] text-left rounded px-1"
+              onClick={() => {
+                handleDeleteAllRows();
+                handleCloseContextMenu();
+              }}
+            >
+              Delete All
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default AccessoryPoItems;
+export default GeneralAccessoryPoItems;

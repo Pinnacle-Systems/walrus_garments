@@ -137,7 +137,7 @@ export const MultiSelectDropdown = ({
       padding: '8px 12px'
     }),
   };
- 
+
   return (
     <div
       className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
@@ -207,7 +207,7 @@ export const TextInput = ({
   width = "full",
   max
 }) => {
-  console.log(max,"max")
+  console.log(max, "max")
   return (
     <div className={`mb-2 ${width}`}>
       {name && (
@@ -228,7 +228,7 @@ export const TextInput = ({
         readOnly={readOnly}
         disabled={disabled}
         tabIndex={tabIndex ?? undefined}
-        max={max ? String(max)  : undefined}
+        max={max ? String(max) : undefined}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
@@ -626,7 +626,7 @@ export const DropdownInput = forwardRef(({
         disabled={isDisabled}
       >
         <option value="" hidden={!clear} className="text-gray-800">
-          Select 
+          Select
         </option>
         {options?.map((option, index) => (
           <option
@@ -918,6 +918,13 @@ export const DateInputNew = forwardRef(({
       ref.current.showPicker();
     }
   };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      console.log("Enter pressed!");
+      ref?.current?.showPicker();
+    }
+  };
   return (
     <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
       {name && (
@@ -939,6 +946,7 @@ export const DateInputNew = forwardRef(({
         id="id"
         value={value}
         onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
 
         onChange={(e) => {
           setValue(e.target.value)
@@ -1510,7 +1518,7 @@ export const ReusableTable = ({
               ))}
               <td className="border border-white/50 font-medium text-[13px]"></td>
             </tr>
-       
+
 
 
 

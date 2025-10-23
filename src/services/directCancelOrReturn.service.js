@@ -643,12 +643,13 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
     })
 
 }
-async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item , directReturnOrPoReturnId) {
 
     await tx.stock.create({
         data: {
             itemType: poType,
             inOrOut: poInwardOrDirectInward,
+            transactionId : directReturnOrPoReturnId ? parseInt(directReturnOrPoReturnId)  : undefined ,
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
             // weightPerBag: item["weightPerBag"] ? parseInt(item["weightPerBag"]) : undefined,
             // discountType: item["discountType"] ? (item["discountType"]) : undefined,
@@ -711,7 +712,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 }
             })
             // return await createReturnLotGridItems(tx, data?.id, item?.returnLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-            await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+            await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item , data?.id)
 
         }
         )

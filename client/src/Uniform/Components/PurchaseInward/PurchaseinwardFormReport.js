@@ -25,11 +25,11 @@ const PurchaseInwardFormReport = ({
   onDelete,
   rowActions = true,
 }) => {
+  
+  
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
-
-
   const [dataPerPage, setDataPerPage] = useState("1");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
@@ -243,18 +243,7 @@ const PurchaseInwardFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>poType</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
-                  </th>
+
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input

@@ -145,7 +145,6 @@ async function get(req) {
 
 
     let docId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
-    console.log(data, "data")
     return { statusCode: 0, data, nextDocId: docId, totalCount };
 }
 
@@ -253,10 +252,10 @@ export async function getPoItems(req) {
                 },
             },
             include: {
-            AccessoryPo : true,
-                Uom : {
-                    select : {
-                        name : true
+                AccessoryPo: true,
+                Uom: {
+                    select: {
+                        name: true
                     }
                 }
             }
@@ -358,9 +357,9 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
                     name: true
                 }
             },
-            Size : {
-                select : {
-                    name : true
+            Size: {
+                select: {
+                    name: true
                 }
             },
             // Yarn: {
@@ -680,62 +679,30 @@ async function getStockQtyByLot(lotNo, storeId, itemType, accessoryId, colorId, 
 }
 
 
-function getStockObject(transType, item) {
-    let newItem = {};
-    if ((transType === "GreyYarn") || (transType === "DyedYarn")) {
-        newItem["yarnId"] = parseInt(item["yarnId"]);
-    } else if ((transType === "GreyFabric") || (transType === "DyedFabric")) {
-        newItem["fabricId"] = parseInt(item["fabricId"]);
-        newItem["designId"] = parseInt(item["designId"]);
-        newItem["gaugeId"] = parseInt(item["gaugeId"]);
-        newItem["loopLengthId"] = parseInt(item["loopLengthId"]);
-        newItem["gsmId"] = parseInt(item["gsmId"]);
-        newItem["kDiaId"] = parseInt(item["kDiaId"]);
-        newItem["fDiaId"] = parseInt(item["fDiaId"]);
-    } else if (transType === "Accessory") {
-        newItem["accessoryId"] = parseInt(item["accessoryId"])
-        newItem["sizeId"] = item["sizeId"] ? parseInt(item["sizeId"]) : undefined;
-    }
-    newItem["uomId"] = parseInt(item["uomId"])
-    newItem["colorId"] = parseInt(item["colorId"])
-    return newItem
-}
 
 export function getPoItemObject(poMaterial, item) {
     console.log(item, "item")
 
     let newItem = {};
-    if (poMaterial === "GreyYarn" || poMaterial === "DyedYarn") {
-        newItem.yarnId = parseInt(item.yarnId);
-        newItem.noOfBags = item.noOfBags ? parseInt(item.noOfBags) : null;
-        newItem.weightPerBag = item.weightPerBag ? parseFloat(item.weightPerBag) : null;
-        newItem.percentage = item.percentage ? parseFloat(item.percentage) : null;
-        newItem.requiredQty = item.requiredQty ? parseFloat(item.requiredQty) : null;
-        newItem.count = item.count ? parseInt(item.count) : null;
 
-    } else if (poMaterial === "GreyFabric" || poMaterial === "DyedFabric") {
-        newItem.fabricId = parseInt(item.fabricId);
-        newItem.designId = parseInt(item.designId);
-        newItem.gaugeId = parseInt(item.gaugeId);
-        newItem.loopLengthId = parseInt(item.loopLengthId);
-        newItem.gsmId = parseInt(item.gsmId);
-        newItem.kDiaId = parseInt(item.kDiaId);
-        newItem.fDiaId = parseInt(item.fDiaId);
-    } else if (poMaterial === "Accessory") {
+    if (poMaterial === "Accessory") {
         newItem.accessoryId = parseInt(item.accessoryId);
         // newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
         newItem.accessoryGroupId = parseInt(item.accessoryGroupId)
         newItem.accessoryItemId = parseInt(item.accessoryItemId)
+        newItem.hsnId = item.hsnId ? parseInt(item.hsnId) : null;
+        newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
+
     }
 
     newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
-        newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
-    newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
-    newItem.qty = parseFloat(item.qty);
+        newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
+    newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
+    newItem.qty = item.qty ? parseFloat(item.qty) : undefined;
     newItem.price = parseFloat(item.price);
-    newItem.discountType = item.discountType ?? null;
-    newItem.discountValue = parseFloat(item.discountValue ?? 0);
-    newItem.tax = parseFloat(item.tax ?? 0);
+    newItem.discountType = item.discountType ? item.discountType : undefined;
+    newItem.discountValue = item.discountValue ? parseFloat(item.discountValue) : undefined
+    newItem.taxPercent = item.taxPercent ? parseFloat(item.taxPercent) : 0;
 
     return newItem;
 }
@@ -747,7 +714,7 @@ async function create(body) {
         transType, dueDate, poType, poMaterial,
         supplierId, poItems, payTermId, remarks,
         branchId, active, userId, deliveryType,
-        deliveryToId, finYearId, orderId, PurchaseType, requirementId
+        deliveryToId, finYearId, orderId, PurchaseType, requirementId, taxTemplateId, discountType, discountValue, term
     } = await body;
 
     const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -755,7 +722,7 @@ async function create(body) {
     const docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     // const prismaTransType = transType.replace(/\s/g, '');
 
-    const filteredPoItems = poItems?.filter(val => val.qty > 0)?.map(item => getPoItemObject(poMaterial, item));
+    const filteredPoItems = poItems?.filter(val => val?.qty > 0)?.map(item => getPoItemObject(poMaterial, item));
 
     console.log(filteredPoItems, "filteredPoItems")
 
@@ -777,6 +744,10 @@ async function create(body) {
             orderId: orderId ? parseInt(orderId) : undefined,
             requirementId: requirementId ? parseInt(requirementId) : undefined,
             PurchaseType: PurchaseType,
+            taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
+            discountType: discountType ? discountType : null,
+            discountValue: discountValue ? parseFloat(discountValue) : undefined,
+            termsAndCondtion: term ? term : undefined,
             AccessoryPoItems: {
                 createMany: {
                     data: filteredPoItems,
@@ -790,35 +761,48 @@ async function create(body) {
 
 
 async function update(id, body) {
+
+
     const { transType, dueDate, taxTemplateId, remarks, payTermDay, poType, poMaterial,
         supplierId, poItems, payTermId, deliveryType, deliveryToId,
-        branchId, active, userId, requirementId, orderId } = await body
-    console.log(supplierId, "supplierId")
-    const dataFound = await prisma.po.findUnique({
+        branchId, active, userId, requirementId, orderId, discountType, discountValue, term } = await body
+
+
+    const dataFound = await prisma.AccessoryPo.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            PoItems: true
+            AccessoryPoItems: true
         }
     })
-    if (!dataFound) return NoRecordFound("po");
+    if (!dataFound) return NoRecordFound("Acessory po");
     // const isValid = await poUpdateValidator(poItems)
 
     // if (!isValid) return { statusCode: 1, message: "Child Record Exists" };
+    console.log(dataFound, "dataFound")
 
     const isAlreadyItemAdded = id => {
-        let item = dataFound.PoItems.find(item => parseInt(item.id) === parseInt(id))
+        let item = dataFound?.AccessoryPoItems?.find(item => parseInt(item.id) === parseInt(id))
         if (!item) return false
         return true
     }
 
-    let newPoItems = poItems.filter(item => !item?.id)
-    let updatePoItems = poItems.filter(item => isAlreadyItemAdded(item.id))
-    let deletedItems = dataFound.PoItems.filter(item => {
+    let newPoItems = poItems?.filter(item => !item?.id)
+    let updatePoItems = poItems?.filter(item => isAlreadyItemAdded(item.id))
+
+    let deletedItems = dataFound?.AccessoryPoItems?.filter(item => {
         return !(poItems.filter(item => item?.id).some(poItem => parseInt(poItem.id) === parseInt(item.id)))
     }).map(item => parseInt(item.id))
+
     let data;
+
+
+    console.log(newPoItems, "newPoItems")
+    console.log(updatePoItems, "updatePoItems")
+    console.log(deletedItems, "deletedItems")
+
+
     await prisma.$transaction(async (tx) => {
         data = await tx.AccessoryPo.update({
             where: {
@@ -826,7 +810,6 @@ async function update(id, body) {
             },
             data: {
                 transType,
-                // taxTemplateId: parseInt(taxTemplateId) ? parseInt(taxTemplateId) : undefined,
                 poMaterial: poMaterial,
                 poType: poType,
                 payTermDay: payTermDay,
@@ -841,6 +824,10 @@ async function update(id, body) {
                 deliveryPartyId: (deliveryType === "ToParty") ? (deliveryToId ? parseInt(deliveryToId) : undefined) : undefined,
                 orderId: orderId ? parseInt(orderId) : undefined,
                 requirementId: requirementId ? parseInt(requirementId) : undefined,
+                taxTemplateId: taxTemplateId ? parseInt(taxTemplateId) : undefined,
+                discountType: discountType ? discountType : null,
+                discountValue: discountValue ? parseFloat(discountValue) : undefined,
+                termsAndCondtion: term ? term : undefined,
                 AccessoryPoItems: {
                     createMany: {
                         data: newPoItems?.map(item => getPoItemObject(poMaterial, item))
@@ -850,7 +837,7 @@ async function update(id, body) {
         });
         const updatePoItemsFunc = async () => {
             let promises = updatePoItems.map(async (item) => {
-                return await tx.poItems.update({
+                return await tx.AccessoryPoItems.update({
                     where: {
                         id: parseInt(item.id)
                     },

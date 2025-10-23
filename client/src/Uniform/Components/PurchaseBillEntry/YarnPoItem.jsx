@@ -5,13 +5,14 @@ import { substract } from '../../../Utils/helper'
 import { discountTypes } from '../../../Utils/DropdownData';
 import { toast } from 'react-toastify'
 import { useGetPoItemByIdQuery } from '../../../redux/uniformService/PoServices';
+import Swal from 'sweetalert2';
 
 const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, billEntryId, handleRightClick, taxTemplateId, setCurrentSelectedIndex }) => {
 
     const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item.poItemsId, billEntryId }, { skip: !(item?.poItemsId) })
 
     const poItem = data?.data
-    console.log(poItem, "poItem",billEntryId)
+    console.log(poItem, "poItem", billEntryId)
 
 
     useEffect(() => {
@@ -130,22 +131,36 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
                         if (event.target.value < 0) return
                         console.log(event.target.value, balanceQty, "balance")
                         if (parseFloat(event.target.value) > parseFloat(balanceQty)) {
-                            toast.info("Bill Qty  Cannot be more than Balance Qty", { position: "top-center" });
+                            // toast.info("Bill Qty  Cannot be more than Balance Qty", { position: "top-center" });
+                            Swal.fire({
+                                // title: "Total percentage exceeds 100%",
+                                title: "Bill Qty  Cannot be more than Balance Qty",
+                                icon: "error",
+                                timer: 1500,
+                                showConfirmButton: false,
+                            });
                             return
+                        } else {
+                            handleInputChange(event.target.value, index, "qty");
+
                         }
+
                         if (!event.target.value) {
                             handleInputChange(0, index, "qty");
                             return
                         }
-                        handleInputChange(event.target.value, index, "qty");
                     }}
 
                     onBlur={(e) => {
-                        if (!e.target.value) {
-                            handleInputChange(0.000, index, "qty");
+                        const val = e.target.value;
+                        const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                        e.target.value = formatted;
+                        if (parseFloat(val) > parseFloat(balanceQty)) {
                             return
+                        } else {
+                            handleInputChange(val === "" ? 0 : formatted, index, "qty");
                         }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
+
                     }}
                 />
             </td>
@@ -185,7 +200,7 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
 
                     onContextMenu={(e) => {
                         if (!readOnly) {
-                            handleRightClick(e, index, "shiftTimeHrs");
+                            handleRightClick(e, index, item.isPoItem ? item.poItemsId : item.directItemsId, item?.isPoItem ? true : false);
                         }
                     }}
                 />
