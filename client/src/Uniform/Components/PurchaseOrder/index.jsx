@@ -291,63 +291,36 @@ export default function Form() {
   console.log(childRecord?.current, "childrecord");
 
 
-  const handleDelete = async (id) => {
-    if (id) {
-      if (childRecord.current > 0) {
-        toast.info("Child Record Exist", { position: "top-center" })
-        return
-
-      }
-      if (!window.confirm("Are you sure to delete...?")) {
-        return;
-      }
-      try {
-        const result = await removeData(id)
-        setId("");
-        onNew();
-        refetch()
-        console.log(result,"result")
-        if (result?.data?.statusCode == 0) {
-          Swal.fire({
-            title: "Deleted Successfully",
-            icon: "success",
-            draggable: true,
-            timer: 1000,
-            showConfirmButton: false,
-            didOpen: () => {
-              Swal.showLoading();
+    const handleDelete = async (id) => {
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
+                return;
             }
-          });
-        }
-        else {
-          Swal.fire({
-            title: result?.data?.message,
-            icon: "error",
-            draggable: true,
-            timer: 1000,
-            showConfirmButton: false,
-            didOpen: () => {
-              Swal.showLoading();
+            try {
+                let deldata = await removeData(id).unwrap();
+                if (deldata?.statusCode == 1) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Child record Exists",
+                        text: deldata.data?.message || "Data cannot be deleted!",
+                    });
+                    return;
+                }
+                setId("");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    timer: 1000,
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Submission error",
+                    text: error.data?.message || "Something went wrong!",
+                });
             }
-          });
         }
-
-      } catch (error) {
-        // toast.error("something went wrong");
-        Swal.fire({
-          title: error,
-          icon: "success",
-          draggable: true,
-          timer: 1000,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-      }
-    }
-
-  };
+    };
   const onNew = () => {
     setId("");
     setReadOnly(false);

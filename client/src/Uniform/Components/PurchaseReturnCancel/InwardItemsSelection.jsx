@@ -24,7 +24,7 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     // if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
-        console.log(id,"id")
+        console.log(id, "id")
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems.push(id);
@@ -66,12 +66,12 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     function handleDone() {
         setInwardItems(prevInwardItems => {
             let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.poItemsId))
-            console.log(oldInwardItems,"oldInwardItems")
+            console.log(oldInwardItems, "oldInwardItems")
             let newInwardItems = localInwardItems.filter(item => {
                 return prevInwardItems.findIndex(prevItem => parseInt(prevItem.poItemsId) === parseInt(item)) === -1
             })
-console.log(localInwardItems,"localInwardItems")
-            console.log([...oldInwardItems, ...newInwardItems],"inwardIOtems")
+            console.log(localInwardItems, "localInwardItems")
+            console.log([...oldInwardItems, ...newInwardItems], "inwardIOtems")
 
             return [...oldInwardItems, ...newInwardItems.map(i => { return { poItemsId: i } })]
         });
@@ -85,40 +85,31 @@ console.log(localInwardItems,"localInwardItems")
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-                <div className='flex justify-between text-center bg-gray-300 rounded-b-md sticky top-0'>
+                {/* <div className='flex justify-between text-center bg-gray-300 rounded-b-md sticky top-0'>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>TransType</label>
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={transtype} disabled={true} />
                     </div>
                     <div className='p-2 rounded-lg flex items-center gap-5'>
                         <label className='text-xs font-semibold'>Supplier</label>
-                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList.data, "name")} disabled={true} />
+                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList?.data, "name")} disabled={true} />
                     </div>
-                </div>
+                </div> */}
                 <div className='h-[500px] overflow-auto'>
-                    {
-                        // <>
 
-                        //     {transtype.includes("Yarn") ?
-
-                                <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
-                        //         :
-                        //         <AccessoryInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} />
-                        //     }
-                        // </>
-                    }
-
+                    <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone} />
 
                 </div>
+
             </div>
-            <div className='flex justify-end gap-4 mt-3'>
+            {/* <div className='flex justify-end gap-4 mt-3'>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>
                 <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                     Cancel
                 </button>
-            </div>
+            </div> */}
         </>
     )
 }

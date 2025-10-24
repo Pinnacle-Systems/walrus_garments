@@ -11,7 +11,7 @@ import { useGetAccessoryPoItemsQuery } from '../../../redux/uniformService/Acces
 const AccessoryPoItemSelection = ({
 
     setInwardItems, inwardItems, setInwardItemSelection, onClose,
-    poType, supplierId, readOnly }) => {
+    poType, supplierId, readOnly, po }) => {
 
 
 
@@ -34,7 +34,7 @@ const AccessoryPoItemSelection = ({
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetAccessoryPoItemsQuery({
         params: {
             branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage,
-            pageNumber: currentPageNumber, isPurchaseCancelFilter: true
+            pageNumber: currentPageNumber, isPurchaseCancelFilter: true, poInwardOrDirectInward: po
         }
 
     })
@@ -70,7 +70,7 @@ const AccessoryPoItemSelection = ({
             poId: poItem?.AccessoryPo?.id,
             accessoryGroupId: poItem?.accessoryGroupId,
             accessoryItemId: poItem?.accessoryItemId,
-            accessoryId : poItem?.accessoryId,
+            accessoryId: poItem?.accessoryId,
             colorId: poItem?.colorId,
             sizeId: poItem?.sizeId,
             discountAmount: poItem?.discountAmount,
@@ -244,7 +244,7 @@ const AccessoryPoItemSelection = ({
                                     <table className="table-auto text-center w-full">
                                         <thead className="border-2 table-header">
                                             <tr className='h-2'>
-                                                <th className='w-10'>
+                                                <th className='w-12'>
                                                     <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
                                                         checked={getSelectAll(poItems?.data ? poItems.data : [])}
                                                     />
@@ -355,11 +355,14 @@ const AccessoryPoItemSelection = ({
 
                                             </tr>
                                         </thead>
-                                        {isLoadingIndicator ?
+                                        {tempInwardItems?.length <= 0 ?
                                             <tbody>
                                                 <tr>
-                                                    <td>
-                                                        <Loader />
+                                                    <td
+                                                        colSpan="10"
+                                                        className="text-center py-4 text-gray-600 bg-gray-50 font-medium"
+                                                    >
+                                                        No Data Available
                                                     </td>
                                                 </tr>
                                             </tbody>

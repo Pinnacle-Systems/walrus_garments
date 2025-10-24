@@ -23,7 +23,8 @@ import Swal from 'sweetalert2';
 import SizeDetailsSubGrid from './SizeDetails';
 
 const OrderItems = forwardRef(function OrderItems(
-  { readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems },
+  { readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
+    yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData },
   styleRef
 ) {
 
@@ -32,12 +33,7 @@ const OrderItems = forwardRef(function OrderItems(
 
 
 
-  // useEffect(() => {
-  //   const focusRowIndex = 0; // first row
-  //   if (styleRef.current[focusRowIndex]?.current) {
-  //     styleRef.current[focusRowIndex].current.focus();
-  //   }
-  // }, [orderDetails, setOrderDetails]);
+
 
   const { branchId, userId, companyId, finYearId } = getCommonParams();
   const [tableDataView, setTableDataView] = useState(false)
@@ -49,34 +45,33 @@ const OrderItems = forwardRef(function OrderItems(
   const params = {
     branchId, userId, finYearId
   };
-  const { data: supplierList } =
-    useGetPartyQuery({ params: { ...params } });
 
-  const { data: socksMaterialData } =
-    useGetSocksMaterialQuery({ params: { ...params } });
+
+
 
 
   let GridIndex;
 
+  // const { data: socksMaterialData } =
+  //   useGetSocksMaterialQuery({ params: { ...params } });
+  // const { data: socksTypeData } =
+  //   useGetSocksTypeQuery({ params: { ...params } });
+  // const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
+  // const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
+  // const { data: yarnNeedleList } = useGetYarnNeedleMasterQuery({ params: { ...params } });
+  // const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
+  // const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
 
-  const { data: socksTypeData } =
-    useGetSocksTypeQuery({ params: { ...params } });
-  const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
-  const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-  const { data: yarnNeedleList } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-  const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
-  const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
 
 
+  // const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
+  // const { data: yarnTypeList } = useGetYarnTypeMasterQuery({ params: { ...params } });
 
-  const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
-  const { data: yarnTypeList } = useGetYarnTypeMasterQuery({ params: { ...params } });
-
-  const {
-    data: colorlist,
-    isLoading: isColorListLoading,
-    isFetching: isColorListFetching,
-  } = useGetColorMasterQuery({ params });
+  // const {
+  //   data: colorlist,
+  //   isLoading: isColorListLoading,
+  //   isFetching: isColorListFetching,
+  // } = useGetColorMasterQuery({ params });
 
   function addNewRow() {
     if (readOnly) {
@@ -146,7 +141,8 @@ const OrderItems = forwardRef(function OrderItems(
 
         sizeId: "",
         sizeMesaurement: "",
-        qty: 0,
+        qty: 0.000,
+        weight: 0.000,
 
       });
 
@@ -204,8 +200,12 @@ const OrderItems = forwardRef(function OrderItems(
   // },[orderDetails,setOrderDetails])
 
   const [contextMenu, setContextMenu] = useState(null);
+  const [contextSubGridMenu, setContextSubGridMenu] = useState(null);
+
 
   const handleRightClick = (event, rowIndex, type) => {
+    console.log(rowIndex, "rowIndexs");
+
     event.preventDefault();
     setContextMenu({
       mouseX: event.clientX,
@@ -219,8 +219,22 @@ const OrderItems = forwardRef(function OrderItems(
     setContextMenu(null);
   };
 
+  const handleRightSubGridClick = (event, rowIndex, type) => {
+    console.log(rowIndex, "rowIndexs");
+
+    event.preventDefault();
+    setContextSubGridMenu({
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      rowId: rowIndex,
+      type,
+    });
+  };
+
+  const handleCloseSubGridContextMenu = () => {
+    setContextSubGridMenu(null);
+  };
   const handleDeleteRow = (id) => {
-    console.log(id, "rowId");
 
     // setOrderDetails((yarnBlend) => {
     //   // if (yarnBlend.length <= 1) {
@@ -228,7 +242,7 @@ const OrderItems = forwardRef(function OrderItems(
     //   // }
     //   return yarnBlend.filter((_, index) => index !== parseInt(id));
     // });
-
+    console.log(id, "ids");
     setOrderDetails((prevOrderDetails) =>
       prevOrderDetails.filter((_, index) => index !== Number(id))
     );
@@ -244,34 +258,11 @@ const OrderItems = forwardRef(function OrderItems(
       return [prevRows[0]];
     });
   };
-  function autoFocusAndOpenSelect(el, condition = true, refObj = null) {
-    if (el && condition) {
-      // Auto focus
-      el.focus();
-
-      // Try to open dropdown (works in Chrome/Edge/Firefox)
-      const keyboardEvent = new KeyboardEvent("keydown", {
-        bubbles: true,
-        cancelable: true,
-        key: "ArrowDown",
-        code: "ArrowDown",
-      });
-      el.dispatchEvent(keyboardEvent);
-    }
-
-    // keep ref if passed
-    if (refObj) {
-      refObj.current = el;
-    }
-  }
 
 
-  const handleKeyDown = (e) => {
-    if (e.key === " ") { // Space
-      e.preventDefault();
-      e.target.click(); // this reliably opens the dropdown
-    }
-  };
+
+
+
 
   return (
 
@@ -309,18 +300,7 @@ const OrderItems = forwardRef(function OrderItems(
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
-          {/* <div className="flex gap-2 items-center">
 
-            <button
-              onClick={() => {
-                addNewRow()
-              }}
-              className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-            >
-              <HiPlus className="w-3 h-3 mr-1" />
-              Add Item
-            </button>
-          </div> */}
 
         </div>
 
@@ -503,26 +483,8 @@ const OrderItems = forwardRef(function OrderItems(
                           ))}
                         </select>
                       </td>
-                      {/* <td className="py-0.5 border border-gray-300 text-[11px] ">
-                        <select
-                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "baseColorId") } }}
-                          tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
-                          value={item.baseColorId}
-                          onChange={(e) => handleInputChange(e.target.value, index, "baseColorId")}
-                          onBlur={(e) => {
-                            handleInputChange((e.target.value), index, "baseColorId")
-                          }
-                          }
-                        >
-                          <option >
-                          </option>
-                          {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
-                            <option value={blend.id} key={blend.id}>
-                              {blend?.name}
-                            </option>)}
-                        </select>
-                      </td> */}
-                      <td className='flex items-center justify-center border border-gray-300 text-[11px] '>
+
+                      {/* <td className='flex items-center justify-center border border-gray-300 text-[11px] '>
                         <button
                           onClick={() => {
                             handleView(index)
@@ -537,10 +499,24 @@ const OrderItems = forwardRef(function OrderItems(
                         >
                           <span className=''>👁</span>
                         </button>
-                      </td>
+                      </td> */}
 
+                      <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
+                        <button
+                          readOnly={readOnly}
+                          className="text-center rounded py-1 "
+
+                          onClick={() => {
+                            handleView(index)
+                            setIndex(index)
+                            GridIndex = index
+                          }}
+                        >
+                          {VIEW}
+                        </button>
+                      </td>
                       <td
-                        className="w-2 border border-gray-300"
+                        className="w-10 border border-gray-300"
 
                       >
                         <input
@@ -561,44 +537,7 @@ const OrderItems = forwardRef(function OrderItems(
                         />
                       </td>
                     </tr>
-                    {contextMenu && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: `${contextMenu.mouseY - 50}px`,
-                          left: `${contextMenu.mouseX + 20}px`,
 
-                          // background: "gray",
-                          boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                          padding: "8px",
-                          borderRadius: "4px",
-                          zIndex: 1000,
-                        }}
-                        className="bg-gray-100"
-                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
-                      >
-                        <div className="flex flex-col gap-1">
-                          <button
-                            className=" text-black text-[12px] text-left rounded px-1"
-                            onClick={() => {
-                              handleDeleteRow(contextMenu.rowId);
-                              handleCloseContextMenu();
-                            }}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className=" text-black text-[12px] text-left rounded px-1"
-                            onClick={() => {
-                              handleDeleteAllRows();
-                              handleCloseContextMenu();
-                            }}
-                          >
-                            Delete All
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     <SizeDetailsSubGrid
                       gridIndex={index}
@@ -612,7 +551,11 @@ const OrderItems = forwardRef(function OrderItems(
                       handleInputChange={handleInputChange}
                       index={index}
                       deleteSubRow={deleteSubRow}
+                      handleCloseSubGridContextMenu={handleCloseSubGridContextMenu}
 
+                      contextSubGridMenu={contextSubGridMenu}
+                      setContextSubGridMenu={setContextSubGridMenu}
+                      handleRightSubGridClick={handleRightSubGridClick}
                     />
 
                   </React.Fragment>
@@ -623,10 +566,47 @@ const OrderItems = forwardRef(function OrderItems(
 
             </tbody>
           </table>
-
-
         </div>
       </div>
+      {contextMenu && (
+        <div
+          style={{
+            position: "absolute",
+            top: `${contextMenu.mouseY - 50}px`,
+            left: `${contextMenu.mouseX - 30}px`,
+
+            // background: "gray",
+            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+            padding: "8px",
+            borderRadius: "4px",
+            zIndex: 1000,
+          }}
+          className="bg-gray-100"
+          onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+        >
+          <div className="flex flex-col gap-1">
+            <button
+              className=" text-black text-[12px] text-left rounded px-1"
+              onClick={() => {
+                handleDeleteRow(contextMenu.rowId);
+                handleCloseContextMenu();
+              }}
+            >
+              Delete{" "}
+            </button>
+            <button
+              className=" text-black text-[12px] text-left rounded px-1"
+              onClick={() => {
+                handleDeleteAllRows();
+                handleCloseContextMenu();
+              }}
+            >
+              Delete All
+            </button>
+          </div>
+        </div>
+      )}
+
     </>
 
 

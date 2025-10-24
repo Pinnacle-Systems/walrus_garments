@@ -8,7 +8,7 @@ import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPagi
 import { useGetDirectInwardOrReturnQuery, useGetDirectItemsQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 
 
-const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId }) => {
+const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -41,210 +41,372 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
     }, [poItems, isPoItemsFetching, isPoItemsLoading])
 
     const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
+
+
     return (
-        <div className="flex flex-col w-full h-[80%]">{console.log(poItems, "poItemspoItemspoItems")}
-            <div className="md:flex md:items-center md:justify-between page-heading p-1">
-                <div className="heading text-center md:mx-10">Inward Items </div>
-                <div className=" sub-heading justify-center md:justify-start items-center">
-                    <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
-                    <select value={dataPerPage}
-                        onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
-                        {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
-                    </select>
+        // <div className="flex flex-col w-full h-[80%]">{console.log(poItems, "poItemspoItemspoItems")}
+        //     <div className="md:flex md:items-center md:justify-between page-heading p-1">
+        //         <div className="heading text-center md:mx-10">Inward Items </div>
+        //         <div className=" sub-heading justify-center md:justify-start items-center">
+        //             <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
+        //             <select value={dataPerPage}
+        //                 onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
+        //                 {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
+        //             </select>
+        //         </div>
+        //     </div>
+        //     <>
+        //         <div
+        //             className="min-h-[400px]"
+        //         >
+        //             <table className=" text-center w-full">
+        //                 <thead className="border-2 table-header">
+        //                     <tr className='h-2'>
+        //                         <th className='w-10'>
+        //                             <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
+        //                                 checked={getSelectAll(poItems?.data ? poItems.data : [])}
+        //                             />
+        //                         </th>
+        //                         <th
+        //                             className="border-2  top-0 stick-bg w-16">
+        //                             S. no.
+        //                         </th>
+        //                         <th
+        //                             className="border-2  top-0 stick-bg "
+        //                         >
+        //                             <label>Inward Doc No</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
+        //                                 placeholder="Search"
+        //                                 value={poNo}
+        //                                 onChange={(e) => {
+        //                                     setPoNo(e.target.value);
+        //                                 }}
+        //                             />
+        //                         </th>
+        //                         <th
+        //                             className="border-2  top-0 stick-bg"
+        //                         >
+        //                             <label>Inward Date</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
+        //                                 placeholder="Search"
+        //                                 value={searchPoDate}
+        //                                 onChange={(e) => {
+        //                                     setPoDate(e.target.value);
+        //                                 }}
+        //                             />
+        //                         </th>
+
+        //                         <th className="border-2  top-0 stick-bg">
+        //                             <label>Yarn</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
+        //                                 placeholder="Search"
+        //                                 value={searchDueDate}
+        //                             // onChange={(e) => {
+        //                             //     setDueDate(e.target.value);
+        //                             // }}
+        //                             />
+        //                         </th>
+        //                         <th className="border-2  top-0 stick-bg">
+        //                             <label>Color</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
+        //                                 placeholder="Search"
+        //                                 value={searchDueDate}
+        //                             // onChange={(e) => {
+        //                             //     setDueDate(e.target.value);
+        //                             // }}
+        //                             />
+        //                         </th>
+
+
+
+
+        //                         <th className="border-2  top-0 stick-bg">
+        //                             <label>Uom</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
+        //                                 placeholder="Search"
+        //                                 value={searchDueDate}
+        //                             // onChange={(e) => {
+        //                             //     setDueDate(e.target.value);
+        //                             // }}
+        //                             />
+        //                         </th>
+        //                     </tr>
+        //                 </thead>
+        //                 {isLoadingIndicator ?
+        //                     <tbody>
+        //                         <tr>
+        //                             <td>
+        //                                 <Loader />
+        //                             </td>
+        //                         </tr>
+        //                     </tbody>
+        //                     :
+        //                     <tbody className="border-2">
+        //                         {poItems?.data?.map((dataObj, index) => (
+        //                             <tr
+        //                                 key={dataObj.id}
+        //                                 className="border-2 table-row "
+        //                                 onClick={() => handleChange(dataObj?.id)}
+        //                             >
+        //                                 <td className='py-1'>
+        //                                     <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
+        //                                 </td>
+        //                                 <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
+        //                                 <td className='py-1'> {dataObj?.DirectInwardOrReturn?.docId}</td>
+        //                                 <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.DirectInwardOrReturn?.createdAt)} </td>
+        //                                 <td className='py-1'> {dataObj?.Color?.name}</td>
+        //                                 <td className='py-1'> {dataObj?.Design?.name}</td>
+        //                                 <td className='py-1'> {dataObj?.Uom?.name}</td>
+        //                             </tr>
+        //                         ))}
+        //                     </tbody>
+        //                 }
+        //             </table>
+        //         </div>
+        //     </>
+        //     <ReactPaginate
+        //         previousLabel={"<"}
+        //         nextLabel={">"}
+        //         breakLabel={"..."}
+        //         breakClassName={"break-me"}
+        //         forcePage={pageNumberToReactPaginateIndex(currentPageNumber)}
+        //         pageCount={Math.ceil(totalCount / dataPerPage)}
+        //         marginPagesDisplayed={1}
+        //         onPageChange={handleOnclick}
+        //         containerClassName={"flex justify-center m-2 gap-5 items-center"}
+        //         pageClassName={"border custom-circle text-center"}
+        //         disabledClassName={"p-1 bg-gray-200"}
+        //         previousLinkClassName={"border p-1 text-center"}
+        //         nextLinkClassName={"border p-1"}
+        //         activeClassName={"bg-blue-900 text-white px-2"} />
+        // </div>
+        <div className='border border-gray-200  shadow-sm bg-[#f1f1f0]'>
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+                <div className="flex items-center gap-2">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                        Po Items
+                    </h2>
+
+                </div>
+                <div className="flex gap-2">
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                // handleCancel();
+                                // setSearchValue("");
+                                // setId(false);
+                            }}
+                            className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                    <div className="flex gap-2">
+                        {!readOnly && (
+                            <button
+                                type="button"
+                                onClick={handleDone}
+                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                        border border-green-600 flex items-center gap-1 text-xs"
+                            >
+                                Done
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
-            <>
-                <div
-                    className="min-h-[400px]"
-                >
-                    <table className=" text-center w-full">
-                        <thead className="border-2 table-header">
-                            <tr className='h-2'>
-                                <th className='w-10'>
-                                    <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
-                                        checked={getSelectAll(poItems?.data ? poItems.data : [])}
-                                    />
-                                </th>
-                                <th
-                                    className="border-2  top-0 stick-bg w-16">
-                                    S. no.
-                                </th>
-                                <th
-                                    className="border-2  top-0 stick-bg "
-                                >
-                                    <label>Inw.No</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={poNo}
-                                        onChange={(e) => {
-                                            setPoNo(e.target.value);
-                                        }}
-                                    />
-                                </th>
-                                <th
-                                    className="border-2  top-0 stick-bg"
-                                >
-                                    <label>Inw.Date</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchPoDate}
-                                        onChange={(e) => {
-                                            setPoDate(e.target.value);
-                                        }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Fabric</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Color</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Design</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Gauge</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>LL</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>GSM</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>K-Dia</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>F-Dia</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                                <th className="border-2  top-0 stick-bg">
-                                    <label>Uom</label>
-                                    <input
-                                        type="text"
-                                        className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg"
-                                        placeholder="Search"
-                                        value={searchDueDate}
-                                    // onChange={(e) => {
-                                    //     setDueDate(e.target.value);
-                                    // }}
-                                    />
-                                </th>
-                            </tr>
-                        </thead>
-                        {isLoadingIndicator ?
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Loader />
-                                    </td>
-                                </tr>
-                            </tbody>
-                            :
-                            <tbody className="border-2">
-                                {poItems?.data?.map((dataObj, index) => (
-                                    <tr
-                                        key={dataObj.id}
-                                        className="border-2 table-row "
-                                        onClick={() => handleChange(dataObj?.id)}
-                                    >
-                                        <td className='py-1'>
-                                            <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
-                                        </td>
-                                        <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-                                        <td className='py-1'> {dataObj?.DirectInwardOrReturn?.docId}</td>
-                                        <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.DirectInwardOrReturn?.createdAt)} </td>
-                                        <td className='py-1'> {dataObj?.Fabric?.name}</td>
-                                        <td className='py-1'> {dataObj?.Color?.name}</td>
-                                        <td className='py-1'> {dataObj?.Design?.name}</td>
-                                        <td className='py-1'> {dataObj?.Gauge?.name}</td>
-                                        <td className='py-1'> {dataObj?.LoopLength?.name}</td>
-                                        <td className='py-1'> {dataObj?.Gsm?.name}</td>
-                                        <td className='py-1'> {dataObj?.KDia?.name}</td>
-                                        <td className='py-1'> {dataObj?.FDia?.name}</td>
-                                        <td className='py-1'> {dataObj?.Uom?.name}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        }
-                    </table>
+            <div className="flex-1 overflow-y-auto rounded-md ">
+
+                <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full ">
+
+                    <div className="flex flex-row w-full">
+                        <div className="flex flex-col w-full">
+                            <div className="mt-4 mb-5 w-full">
+
+                                <div className="  overflow-auto ">
+
+                                    <table className="border-collapse w-full">
+                                        <thead className="bg-gray-200 text-gray-800">
+                                            <tr>
+                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+
+                                                    <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
+                                                        checked={getSelectAll(poItems?.data ? poItems.data : [])}
+                                                    />
+                                                </th>
+                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</th>
+                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
+                                                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
+
+                                                    <label>Inward Doc No</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={poNo}
+                                                                onChange={(e) => {
+                                                                    setPoNo(e.target.value);
+                                                                }}
+                                                            /> */}
+
+                                                </th>
+                                                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
+                                                    <label>Inward Date</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchPoDate}
+                                                                onChange={(e) => {
+                                                                    setPoDate(e.target.value);
+                                                                }}
+                                                            /> */}
+
+                                                </th>
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-64">
+
+                                                    <label>Yarn</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchDueDate}
+                                                                onChange={(e) => {
+                                                                    setDueDate(e.target.value);
+                                                                }}
+                                                            /> */}
+                                                </th>
+
+
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-32">
+
+                                                    <label>Color</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchDueDate}
+                                                            // onChange={(e) => {
+                                                            //     setDueDate(e.target.value);
+                                                            // }}
+                                                            /> */}
+                                                </th>
+
+
+
+
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
+                                                    <label>Uom</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchDueDate}
+                                                            // onChange={(e) => {
+                                                            //     setDueDate(e.target.value);
+                                                            // }}
+                                                            /> */}
+
+                                                </th>
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
+                                                    <label>Price</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchDueDate}
+                                                                onChange={(e) => {
+                                                                    setDueDate(e.target.value);
+                                                                }}
+                                                            />  */}
+                                                </th>
+
+                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Stock Qty</th> */}
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">AllowedReturnQty </th>
+
+
+
+
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+
+                                            {poItems?.data?.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={9} className="px-4 py-4 text-center text-gray-500">
+                                                        No data found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                poItems?.data?.map((item, index) => (
+                                                    <tr
+                                                        key={index}
+                                                        className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                            }`}
+                                                        onClick={() => {
+                                                            handleChange(item.id, item)
+
+                                                        }}
+                                                    >
+                                                        <td className='py-1 text-center' key={index}>
+                                                            <input type="checkbox" name="" id=""
+                                                                checked={isItemAdded(item.id)}
+                                                            />
+                                                        </td>
+                                                        <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                                                            {index + 1}
+                                                        </td>
+
+                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                            {item?.DirectInwardOrReturn?.docId}
+                                                        </td>
+
+                                                        <td className=" border border-gray-300 px-2 py-1 text-left text-xs">
+                                                            {getDateFromDateTimeToDisplay(item?.DirectInwardOrReturn?.createdAt)}
+                                                        </td>
+                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                            {item?.Yarn?.name}
+                                                        </td>
+
+                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                            {item?.Color?.name}
+                                                        </td>
+
+                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                            {item?.Uom?.name}
+                                                        </td>
+                                                        <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                            {parseInt(item?.price).toFixed(3)}
+                                                        </td>
+                                                        <td className=" border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                                            {parseInt(item?.allowedReturnQty).toFixed(3)}
+                                                        </td>
+
+
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
-            </>
+            </div>
             <ReactPaginate
                 previousLabel={"<"}
                 nextLabel={">"}

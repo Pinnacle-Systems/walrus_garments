@@ -375,9 +375,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
         </div>
         <fieldset className=''>
-          {/* {
-            poType.toLowerCase().includes("yarn")
-              ? */}
+      
           <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
             transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} setInwardItemSelection={setInwardItemSelection}
             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} id={id} supplierId={supplierId}
@@ -385,16 +383,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
             contextMenu={contextMenu} setContextMenu={setContextMenu}
 
           />
-          {/* :
-              poType.toLowerCase().includes("fabric")
-                ?
-                <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
-                  inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                :
-              <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} 
-              setInwardItemSelection={setInwardItemSelection}
-              />
-          } */}
+
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">

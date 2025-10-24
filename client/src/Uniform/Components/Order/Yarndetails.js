@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { TextArea, TextInput } from '../../../Inputs'
 import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
@@ -6,21 +6,39 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 
-export default function TableGridItems({ item, gridIndex, id, setOrderDetails, orderDetails,  readOnly, yarnList, selectedIndex,
+export default function TableGridItems({ item, gridIndex, id, setOrderDetails, orderDetails, readOnly, yarnList, selectedIndex,
 
     yarnNeedleList, countsList, colorlist, onClose
 }) {
 
 
+    const [contextMenu, setContextMenu] = useState(null);
 
 
-    const { data: allData } = useGetYarnCountsQuery({params})
+    const handleRightClick = (event, rowIndex, type) => {
+        console.log(rowIndex, "rowIndexs");
+
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
+
+    const { data: allData } = useGetYarnCountsQuery({ params })
 
 
 
     function handleInputChange(value, index, field) {
-        
-        
+
+
         console.log(value, "value", index)
         let orderYarnDetails = "orderYarnDetails"
 
@@ -34,7 +52,18 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
     };
 
 
+    function handleDeleteAllRows(gridIndex) {
+        setOrderDetails(prev => {
+            const updated = structuredClone(prev);
+            const details = updated[gridIndex]?.orderYarnDetails;
 
+            if (Array.isArray(details) && details.length > 1) {
+                updated[gridIndex].orderYarnDetails = [details[0]]; // keep only first row
+            }
+
+            return updated;
+        });
+    }
 
 
     function addNewRow() {
@@ -82,8 +111,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
     }
 
     function deleteRow(yarnIndex) {
-        // if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        // setOrderDetails(prev => prev.filter((_, i) => i !== index))
+
         setOrderDetails(prev => {
             // const updated = [...prev];
             const updated = structuredClone(prev);
@@ -115,7 +143,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
         });
     }
 
-    console.log(orderDetails,"orderdetails")
+    console.log(orderDetails, "orderdetails")
     return (
 
         <>
@@ -172,7 +200,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
                                     <div className="flex justify-between items-center mb-2">
                                         <h2 className="font-medium text-slate-700">List Of Items</h2>
-                                        <div className="flex gap-2 items-center">
+                                        {/* <div className="flex gap-2 items-center">
 
                                             <button
                                                 onClick={() => {
@@ -183,7 +211,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                 <HiPlus className="w-3 h-3 mr-1" />
                                                 Add Item
                                             </button>
-                                        </div>
+                                        </div> */}
 
                                     </div>
                                     <div className={` relative w-full max-h-[300px] overflow-y-auto  py-1`}>
@@ -282,7 +310,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                             </select>
                                                         </td>
 
-                                                  
+
                                                         <td className="py-0.5 border border-gray-300 text-[11px]">
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -296,7 +324,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                             >
                                                                 <option hidden>
                                                                 </option>
-                                                                {( allData?.data?.filter(count  =>  count.yarnId  == row.yarnId))?.map((blend) =>
+                                                                {(allData?.data?.filter(count => count.yarnId == row.yarnId))?.map((blend) =>
                                                                     <option value={blend.id} key={blend.id}>
                                                                         {blend?.id}
                                                                     </option>
@@ -322,52 +350,33 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                 )}
                                                             </select>
                                                         </td>
+                                                        <td
+                                                            className="w-10 border border-gray-300"
 
+                                                        >
+                                                            <input
 
+                                                                onContextMenu={(e) => {
+                                                                    if (!readOnly) {
+                                                                        handleRightClick(e, index, "notes");
+                                                                    }
+                                                                }}
+                                                                className='w-full '
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        addNewRow();
+                                                                    }
+                                                                }}
 
-
-
-
-                                                        <td className="w-16 px-1 py-1 text-center">
-                                                            <div className="flex space-x-2  justify-center">
-
-                                                                <button
-                                                                    // onClick={() => handleView(index)}
-                                                                    // onMouseEnter={() => setTooltipVisible(true)}
-                                                                    // onMouseLeave={() => setTooltipVisible(false)}
-                                                                    className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                                                                >
-                                                                    👁 <span className="text-xs"></span>
-                                                                </button>
-                                                                <span className="tooltip-text">View</span>
-                                                                <button
-                                                                    // onClick={() => handleEdit(index)}
-                                                                    className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                                                                >
-                                                                    <HiPencil className="w-4 h-4" />
-
-                                                                </button>
-                                                                <span className="tooltip-text">Edit</span>
-                                                                <button
-                                                                    onClick={() => deleteRow(index)}
-                                                                    className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                                                                >
-                                                                    <HiTrash className="w-4 h-4" />
-
-                                                                </button>
-                                                                <span className="tooltip-text">Delete</span>
-
-                                                                {/* {tooltipVisible && (
-                                                                   <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                                       <div className="flex items-start">
-                                                                           <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                                           <span>View</span>
-                                                                       </div>
-                                                                       <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                                   </div>
-                                                               )} */}
-                                                            </div>
+                                                            />
                                                         </td>
+
+
+
+
+
+
 
 
 
@@ -375,9 +384,48 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                 )}
                                             </tbody>
                                         </table>
-                                    </div>
-                                </div>
 
+                                    </div>
+
+                                </div>
+                                {contextMenu && (
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: `${contextMenu.mouseY - 120}px`,
+                                            left: `${contextMenu.mouseX - 200}px`,
+
+                                            // background: "gray",
+                                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                            padding: "8px",
+                                            borderRadius: "4px",
+                                            zIndex: 1000,
+                                        }}
+                                        className="bg-gray-100"
+                                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <button
+                                                className=" text-black text-[12px] text-left rounded px-1"
+                                                onClick={() => {
+                                                    deleteRow(contextMenu.rowId);
+                                                    handleCloseContextMenu();
+                                                }}
+                                            >
+                                                Delete{" "}
+                                            </button>
+                                            <button
+                                                className=" text-black text-[12px] text-left rounded px-1"
+                                                onClick={() => {
+                                                    handleDeleteAllRows(gridIndex);
+                                                    handleCloseContextMenu();
+                                                }}
+                                            >
+                                                Delete All
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
 

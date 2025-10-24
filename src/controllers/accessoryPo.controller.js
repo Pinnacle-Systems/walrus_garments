@@ -32,7 +32,6 @@ export async function getPoItemById(req, res, next) {
 }
 
 export async function getPoItems(req, res, next) {
-    console.log("getPoItems ")
     try {
         res.json(await _getPoItems(req));
         console.log(res.statusCode);

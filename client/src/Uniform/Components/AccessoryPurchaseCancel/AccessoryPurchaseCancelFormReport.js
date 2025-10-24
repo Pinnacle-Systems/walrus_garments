@@ -48,7 +48,8 @@ const PurchaseCancelFormReport = ({
     searchClientName,
     searchDate,
     supplier,
-    searchMaterial
+    searchPoType : searchMaterial ,
+    
 
   };
 
@@ -68,7 +69,12 @@ const PurchaseCancelFormReport = ({
 
 
 
-  const { data: allData, isLoading, isFetching } = useGetAccessoryPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
+  const { data: allData, isLoading, isFetching } = useGetAccessoryPurchaseCancelQuery({
+    params: {
+      branchId, inwardOrReturn: "PurchaseCancel", finYearId,
+      ...searchFields ,pagination : true
+    }
+  });
 
   console.log(allData, "entire");
 

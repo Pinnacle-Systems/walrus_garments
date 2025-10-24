@@ -11,7 +11,7 @@ import Modal from "../../../UiComponents/Modal";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DropdownInput } from "../../../Inputs";
-import { MaterialType, YarnMaterial } from "../../../Utils/DropdownData";
+import { MaterialType, PoTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
@@ -30,16 +30,16 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   const [date, setDate] = useState(getDateFromDateTime(today));
   const [poType, setPoType] = useState("Accessory");
   const [supplierId, setSupplierId] = useState("");
+  const [po, setPo] = useState("");
 
-  const [docId, setDocId] = useState("");
-
+  const [docId, setDocId] = useState("New");
   const [inwardItems, setInwardItems] = useState([]);
-
+  const [remarks, setRemarks] = useState("")
   const [formReport, setFormReport] = useState(false);
-
   const [searchValue, setSearchValue] = useState("");
 
-  const [remarks, setRemarks] = useState("")
+  const [contextMenu, setContextMenu] = useState(null);
+
 
   const childRecord = useRef(0);
 
@@ -57,8 +57,6 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
-
-  const { data: allData, isLoading, isFetching } = useGetAccessoryPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
 
   const {
     data: singleData,
@@ -86,7 +84,8 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     if (data?.docId) {
       setDocId(data?.docId)
     }
-    setPoType(data?.poType ? data.poType : "Accessory");
+    setPoType(data?.poMaterial ? data.poMaterial : "Accessory");
+    setPo(data?.po ? data.po : "");
 
     setInwardItems(data?.AccessoryCancelItems ? structuredClone(data.AccessoryCancelItems) : [])
     if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
@@ -94,15 +93,15 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     setRemarks(data?.remarks ? data.remarks : "")
   }, [id]);
 
-  const getNextDocId = useCallback(() => {
-    if (isLoading || isFetching) return
-    if (id) return
-    if (allData?.nextDocId) {
-      setDocId(allData.nextDocId)
-    }
-  }, [allData, isLoading, isFetching, id])
+  // const getNextDocId = useCallback(() => {
+  //   if (isLoading || isFetching) return
+  //   if (id) return
+  //   if (allData?.nextDocId) {
+  //     setDocId(allData.nextDocId)
+  //   }
+  // }, [allData, isLoading, isFetching, id])
 
-  useEffect(getNextDocId, [getNextDocId])
+  // useEffect(getNextDocId, [getNextDocId])
 
   useEffect(() => {
     if (id) {
@@ -120,18 +119,75 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     branchId, id, userId,
     remarks,
     cancelItems: inwardItems,
-    finYearId
+    finYearId, po
   }
 
+  // const validateData = (data) => {
+
+  //   let mandatoryFields = ["poItemsId", "qty"];
+
+
+  //   return data.poType && data.supplierId && data.po
+  //     && isGridDatasValid(data.cancelItems, false, mandatoryFields)
+  //     && data.cancelItems.length !== 0
+  // }
   const validateData = (data) => {
     let mandatoryFields = ["poItemsId", "qty"];
-    if (poType === "GreyYarn" || poType === "DyedYarn") {
-      mandatoryFields.push("noOfBags")
+
+    if (!data.poType) {
+      Swal.fire({
+        icon: 'success',
+        title: "Please select Material",
+        showConfirmButton: false,
+        timer: 2000
+      });
+      return false;
     }
-    return data.poType && data.supplierId
-      && isGridDatasValid(data.cancelItems, false, mandatoryFields)
-      && data.cancelItems.length !== 0
-  }
+
+    if (!data.supplierId) {
+      Swal.fire({
+        icon: 'success',
+        title: "Please select Supplier",
+        showConfirmButton: false,
+        timer: 2000
+      });
+      return false;
+    }
+
+    if (!data.po) {
+      Swal.fire({
+        icon: 'success',
+        title: "Please select Po Type",
+        showConfirmButton: false,
+        timer: 2000
+      });
+      return false;
+    }
+
+    if (!data.cancelItems || data.cancelItems.length === 0 ||
+      data.cancelItems.every(item => !item.accessoryId && !item.accessoryItemId)) {
+      Swal.fire({
+        icon: 'success',
+        title: "Please add at least one Cancel Item",
+        showConfirmButton: false,
+        timer: 2000
+      });
+      return false;
+    }
+
+    if (!isGridDatasValid(data.cancelItems, false, mandatoryFields)) {
+      Swal.fire({
+        icon: 'success',
+        title: "Please fill all mandatory fields: Cancel qty",
+        showConfirmButton: false,
+        timer: 2000
+      });
+      return false;
+    }
+
+    return true;
+  };
+
 
   const handleSubmitCustom = async (callback, data, text) => {
     try {
@@ -166,10 +222,18 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
   const saveData = () => {
 
-    // if (!validateData(data)) {
-    //   toast.info("Please fill all required fields...!", { position: "top-center" })
-    //   return
-    // }
+    if (!validateData(data)) {
+      // Swal.fire({
+      //   icon: 'success',
+      //   title: "Please fill all required fields...!",
+      //   showConfirmButton: false,
+      //   timer: 2000
+      // });
+      return
+    }
+    if (!window.confirm("Are you sure to delete...?")) {
+      return;
+    }
     if (id) {
       console.log(id, "id", data, "dataaa")
       handleSubmitCustom(updateData, data, "Updated");
@@ -225,35 +289,38 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   }
   console.log(inwardItems, "inwardItems")
 
+  const handleRightClick = (event, rowIndex, type) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      rowId: rowIndex,
+      type,
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const dateRef = useRef(null);
+  const inputPartyRef = useRef(null);
+  const styleRef = useRef(null);
+
+  useEffect(() => {
+    if (dateRef.current) {
+      dateRef.current.focus();
+    }
+  }, []);
   return (
     <>
 
 
-      {/* <Modal isOpen={formReport} onClose={() => setFormReport(false)} widthClass={"px-2 h-[70%] w-[90%]"}>
-        <PurchaseInwardFormReport
-          heading={MODEL}
-          loading={
-            isLoading || isFetching
-          }
 
-          allData={allData}
-          tableWidth="100%"
-          data={allData?.data}
-
-          onClick={(id) => {
-            setId(id);
-            setFormReport(false);
-          }
-          }
-          onNew={onNew}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-        />
-      </Modal> */}
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
         <AccessoryPoItemSelection setInwardItemSelection={setInwardItemSelection} poType={poType}
           supplierId={supplierId} onClose={() => setInwardItemSelection(false)}
-          inwardItems={inwardItems}
+          inwardItems={inwardItems} po={po}
           setInwardItems={setInwardItems} />
       </Modal>
 
@@ -290,14 +357,17 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
             </div>
           </div>
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+
+
+
+          <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-medium text-slate-700 mb-2">
               Supplier Details
             </h2>
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-3 gap-1">
               <DropdownInput
                 className={"w-[110px]"}
-                name="Po Type"
+                name="Material"
                 beforeChange={() => { setSupplierId(""); setInwardItems([]); }}
                 options={MaterialType}
                 value={poType}
@@ -305,63 +375,33 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
                 required={true}
                 disabled={true}
               />
-              <div className="col-span-3">
 
-                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={id || readOnly} />
-              </div>
-              <div className="item-center gap-5">
-                <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                  onClick={() => {
-                    if (!supplierId || !poType) {
-                      toast.info("Please Select Inward/Return , Po type and Suppplier", { position: "top-center" })
-                      return
-                    }
-                    setInwardItemSelection(true)
-                  }}
-                >Select Items</button>
+              <div className="">
+
+                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} disabled={id} />
               </div>
 
+              <DropdownInput name="Po Type"
+                options={PoTypes}
+                value={po}
+                setValue={setPo}
+                disabled={id}
+                required={true}
+                readOnly={readOnly}
+              />
 
 
 
-
-            </div>
-
-          </div>
-
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              {/* Inward Details */}
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-
-
-              <div className="col-span-1 pt-0.5">
-
-              </div>
-
-              <div className="col-span-1 pt-0.5">
-
-              </div>
 
             </div>
 
           </div>
         </div>
         <fieldset className=''>
-             {/* poType.toLowerCase().includes("yarn")
-               ?
-               <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
-            //     transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
-            //     readOnly={readOnly} isSupplierOutside={isSupplierOutside()} id={id} />
-            //   :
-            //   // poType.toLowerCase().includes("fabric")
-            //   //   ?
-            //   //   <FabricCancelItems params={params} removeItem={removeItem} transType={poType} purchaseInwardId={id}
-            //   //     inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            //   //   : */}
-              <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+
+          <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection} supplierId={supplierId}
+            contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu} handleRightClick={handleRightClick}
+          />
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">

@@ -228,12 +228,22 @@ function manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType
 export async function getPoItems(req) {
     const { branchId, active, supplierId, poType, pagination, dataPerPage,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate,
-        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward
+        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward ,poMaterial
     } = req.query
 
     let data;
-    let po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : undefined
+    let po
 
+
+    if (poInwardOrDirectInward == "Order Purchase" || poInwardOrDirectInward == "General Purchase") {
+        po = poInwardOrDirectInward
+    }
+    else {
+        po = poInwardOrDirectInward === "GeneralInward" ? "General Purchase" : poInwardOrDirectInward === "PurchaseInward" ? "Order Purchase" : poInwardOrDirectInward === "GeneralReturn" ? "General Purchase" : "Order Purchase"
+    }
+
+
+    console.log(po,"Pooooooo")
 
     let totalCount;
     if (pagination) {
@@ -271,7 +281,7 @@ export async function getPoItems(req) {
 
         console.log(data, "Bef0ore")
 
-        data = data?.filter(i => i.AccessoryPo.supplierId == supplierId && i.AccessoryPo.poMaterial == poType)
+        data = data?.filter(i => i.AccessoryPo.supplierId == supplierId && i.AccessoryPo.poMaterial == poType  && i.AccessoryPo.poType === po)
 
         data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
 
@@ -777,9 +787,10 @@ async function update(id, body) {
         }
     })
     if (!dataFound) return NoRecordFound("Acessory po");
+    
     // const isValid = await poUpdateValidator(poItems)
-
     // if (!isValid) return { statusCode: 1, message: "Child Record Exists" };
+    
     console.log(dataFound, "dataFound")
 
     const isAlreadyItemAdded = id => {
@@ -835,6 +846,7 @@ async function update(id, body) {
                 }
             }
         });
+        
         const updatePoItemsFunc = async () => {
             let promises = updatePoItems.map(async (item) => {
                 return await tx.AccessoryPoItems.update({

@@ -31,7 +31,12 @@ import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
 import { Loader } from "../../../Basic/components";
 
-const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, partyData, setShowOrderForm }) => {
+const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, supplierList, setShowOrderForm,
+
+    socksTypeData, sizeList, styleList, yarnNeedleList,
+    yarnList, countsList, fiberContent, yarnTypeList , colorlist , socksMaterialData
+
+}) => {
 
     const [editingItem, setEditingItem] = useState("");
     const [term, setTerm] = useState("");
@@ -60,8 +65,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const params = {
         branchId, userId, finYearId
     };
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
+
 
 
     const {
@@ -73,9 +77,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [updateData] = useUpdateOrderMutation();
     const [removeData] = useDeletePartyMutation();
 
-
-    const { data: singleSupplier, isLoading: isSingleSupplierLoading, isFetching: isSingleSupplierFetching } =
-        useGetPartyByIdQuery(partyId, { skip: !partyId });
 
 
     const syncFormWithDb = useCallback((data) => {
@@ -348,7 +349,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-    if (isSingleFetching || isSingleLoading || isSingleSupplierLoading || isSingleSupplierFetching) return <Loader />
+    // if (isSingleFetching || isSingleLoading || isSingleSupplierLoading || isSingleSupplierFetching) return <Loader />
 
 
     return (
@@ -489,6 +490,10 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                         <OrderItems readOnly={readOnly} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
                             yarnItems={yarnItems} setYarnItems={setYarnItems} styleRef={styleRef}
+
+                            socksTypeData={socksTypeData} sizeList={sizeList} styleList={styleList} yarnNeedleList={yarnNeedleList}
+                            yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist} socksMaterialData={socksMaterialData}
+
                         />
                     </fieldset>
 

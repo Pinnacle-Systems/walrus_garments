@@ -4068,6 +4068,7 @@ model AccesssoryPurchaseCancel {
   active                 Boolean?               @default(true)
   docId                  String?
   remarks                String?                @db.LongText
+  po                     String?
   AccessoryCancelItems   AccessoryCancelItems[]
 }
 
@@ -4099,6 +4100,7 @@ model AccessoryCancelItems {
   poItemsId                  Int?
   poNo                       String?
   poQty                      Float?
+  cancelType                 String?
 }
 
 model InwardLotDetails {

@@ -8,17 +8,12 @@ import secureLocalStorage from 'react-secure-storage'
 import { HiTrash } from 'react-icons/hi'
 
 
-const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gridIndex, handleAdd, orderDetails }) => {
+const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gridIndex, handleAdd, contextSubGridMenu, handleCloseSubGridContextMenu,
+  handleRightSubGridClick, addNewRow
+}) => {
 
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("");
-  const [panelGridOpen, setPanelGridOpen] = useState(false)
-  const [arrayName, setArrayName] = useState("");
 
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
-  )
-
-console.log(readOnly,"readOnly")
+  console.log(contextSubGridMenu, "contextSubGridMenu")
 
 
 
@@ -34,17 +29,25 @@ console.log(readOnly,"readOnly")
     );
   };
 
+  function handleDeleteAllRows(gridIndex) {
+    setOrderDetails(prev => {
+      const updated = structuredClone(prev);
+      const details = updated[gridIndex]?.orderSizeDetails;
 
-  function deleteRow(gridIndex, index) {
-    setOrderDetails(prev => prev.filter((_, i) => i !== index))
+      if (Array.isArray(details) && details.length > 1) {
+        updated[gridIndex].orderSizeDetails = [details[0]]; // keep only first row
+      }
+
+      return updated;
+    });
   }
-  function deleteSubRow(gridIndex, index) {
+
+
+  function handleDeleteRow(gridIndex, index) {
 
     setOrderDetails(prev => {
-      // const updated = [...prev];
       const updated = structuredClone(prev);
-      // console.log(updated[gridIndex],"deletesuybro")
-      updated[gridIndex].orderSizeDetails.splice(index, 1);
+      updated[gridIndex]?.orderSizeDetails?.splice(index, 1);
 
 
       if (updated[gridIndex].orderSizeDetails.length === 0) {
@@ -75,12 +78,7 @@ console.log(readOnly,"readOnly")
                   <th className="w-44 px-4 py-1.5 text-center font-medium text-[13px]">Size Measurement</th>
                   <th className="w-24 px-4 py-1.5 text-center font-medium text-[13px]">Qty</th>
                   <th className="w-11 px-4 py-1.5 text-right font-medium text-[13px]">
-                    <button
-                      onClick={() => handleAdd(gridIndex)}
-                      className="rounded text-xs flex items-center"
-                    >
-                      ➕
-                    </button>
+
                   </th>
 
                 </tr>
@@ -115,7 +113,7 @@ console.log(readOnly,"readOnly")
                     </td>
 
 
-
+                    {/* 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <input
                         type="number"
@@ -126,12 +124,37 @@ console.log(readOnly,"readOnly")
                         min="0"
                         onFocus={e => e.target.select()}
                         className="text-right rounded w-full py-1 text-xs table-data-input"
-                        value={(yarn.weight)}
+                        value={parseFloat(yarn.weight).toFixed}
                         disabled={readOnly}
                         onChange={e => handleInputChange(e.target.value, index, "weight")}
                         onBlur={e => handleInputChange(e.target.value, index, "weight")}
                       />
+                    </td> */}
+
+
+                    <td className='py-0.5 border border-gray-300 text-[11px]'>
+                      <input
+                        onKeyDown={e => {
+                          if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                          if (e.key === "Delete") { handleInputChange("0.00", index, "weight") }
+                        }}
+                        min={"0"}
+                        type="number"
+                        placeholder='0.000'
+                        onFocus={(e) => e.target.select()}
+                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        value={((!yarn.weight) ? 0.000 : yarn.weight)}
+                        disabled={readOnly}
+                        onChange={(e) =>
+                          handleInputChange(e.target.value, index, "weight")
+                        }
+                        onBlur={(e) => {
+                          handleInputChange(parseFloat(e.target.value).toFixed(3), index, "weight");
+                        }
+                        }
+                      />
                     </td>
+
                     <td className="py-0.5 border border-gray-300 text-[11px]">
                       <input
                         type="text"
@@ -164,15 +187,26 @@ console.log(readOnly,"readOnly")
                         onBlur={e => handleInputChange(e.target.value, index, "qty")}
                       />
                     </td>
-                    <td>
-                      <div className="flex justify-end items-center">
-                        <button
-                          onClick={() => deleteSubRow(gridIndex, index)}
-                          className="text-red-600 hover:text-red-800 bg-red-50 p-1 rounded text-xs flex items-center"
-                        >
-                          <HiTrash className="w-4 h-4" />
-                        </button>
-                      </div>
+                    <td
+                      className="w-10 border border-gray-300"
+
+                    >
+                      <input
+
+                        onContextMenu={(e) => {
+                          if (!readOnly) {
+                            handleRightSubGridClick(e, index, "notes");
+                          }
+                        }}
+                        className='w-full '
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAdd(gridIndex);
+                          }
+                        }}
+
+                      />
                     </td>
 
                   </tr>
@@ -180,8 +214,46 @@ console.log(readOnly,"readOnly")
               </tbody>
             </table>
           </div>
+          {contextSubGridMenu && (
+            <div
+              style={{
+                position: "absolute",
+                top: `${contextSubGridMenu.mouseY - 50}px`,
+                left: `${contextSubGridMenu.mouseX - 30}px`,
+
+                // background: "gray",
+                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                padding: "8px",
+                borderRadius: "4px",
+                zIndex: 1000,
+              }}
+              className="bg-gray-100"
+              onMouseLeave={handleCloseSubGridContextMenu} // Close when the mouse leaves
+            >
+              <div className="flex flex-col gap-1">
+                <button
+                  className=" text-black text-[12px] text-left rounded px-1"
+                  onClick={() => {
+                    handleDeleteRow(gridIndex, contextSubGridMenu.rowId);
+                    handleCloseSubGridContextMenu();
+                  }}
+                >
+                  Delete{" "}
+                </button>
+                <button
+                  className=" text-black text-[12px] text-left rounded px-1"
+                  onClick={() => {
+                    handleDeleteAllRows(gridIndex);
+                    handleCloseSubGridContextMenu();
+                  }}
+                >
+                  Delete All
+                </button>
+              </div>
+            </div>
+          )}
         </td>
-      </tr>
+      </tr >
 
 
 

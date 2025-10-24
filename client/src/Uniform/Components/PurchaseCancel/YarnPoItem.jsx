@@ -168,34 +168,7 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
             </td>
 
             <td className="w-16 px-1 py-1 text-center">
-                {/* <div className="flex space-x-2  justify-center">
-
-                    <button
-                  
-                        className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                    >
-                        👁 <span className="text-xs"></span>
-                    </button>
-                    <span className="tooltip-text">View</span>
-                    <button
-                        // onClick={() => handleEdit(index)}
-                        className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                    >
-                        <HiPencil className="w-4 h-4" />
-
-                    </button>
-                    <span className="tooltip-text">Edit</span>
-                    <button
-                        onClick={() => deleteRow(index)}
-                        className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                    >
-                        <HiTrash className="w-4 h-4" />
-
-                    </button>
-                    <span className="tooltip-text">Delete</span>
-
-           
-                </div> */}
+    
                 <input
                     readOnly
                     className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"

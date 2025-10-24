@@ -200,7 +200,8 @@ export async function getDirectItems(req) {
                 DirectReturnItems: true,
                 Yarn: {
                     select: {
-                        aliasName: true
+                        aliasName: true ,
+                        name : true
                     }
                 },
                 Color: {
@@ -228,26 +229,7 @@ export async function getDirectItems(req) {
                         name: true
                     }
                 },
-                Design: {
-                    select: {
-                        name: true
-                    }
-                },
-                Gsm: {
-                    select: {
-                        name: true
-                    }
-                },
-                KDia: {
-                    select: {
-                        name: true
-                    }
-                },
-                FDia: {
-                    select: {
-                        name: true
-                    }
-                },
+           
                 Accessory: {
                     select: {
                         aliasName: true,
@@ -347,7 +329,8 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
             },
             Yarn: {
                 select: {
-                    aliasName: true
+                    aliasName: true ,
+                    name : true
                 }
             },
             Color: {

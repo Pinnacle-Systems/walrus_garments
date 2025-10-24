@@ -97,8 +97,8 @@ export default function Form() {
                 if (deldata?.statusCode == 1) {
                     Swal.fire({
                         icon: "error",
-                        title: "Child record Exists",
-                        text: deldata.data?.message || "Data cannot be deleted!",
+                        title:deldata?.message 
+                        // text: deldata.data?.message || "Data cannot be deleted!",
                     });
                     return;
                 }
@@ -165,14 +165,7 @@ export default function Form() {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        {/* <CommonTable
-                            columns={columns}
-                            data={allData?.data || []}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            itemsPerPage={10}
-                        /> */}
+                 
                         <PurchaseCancelFormReport
                             columns={columns}
                             data={allData?.data || []}

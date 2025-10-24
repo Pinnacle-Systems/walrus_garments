@@ -5,8 +5,9 @@ import { DELETE } from '../../../icons'
 import { findFromList, substract } from '../../../Utils/helper'
 import { HiPencil, HiTrash } from 'react-icons/hi'
 import { useGetAccessoryPoItemByIdQuery } from '../../../redux/uniformService/AccessoryPoServices'
+import { cancelTypes } from '../../../Utils/DropdownData'
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, qty, deleteRow, purchaseInwardId }) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, qty, deleteRow, handleRightClick }) => {
 
 
 
@@ -19,7 +20,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
 
         let accessoryObj = accessoryArray?.find(item => parseInt(item.id) == accessoryId)
 
-        console.log(accessoryList,"accessoryList")
+        console.log(accessoryList, "accessoryList")
         if (field == "accessoryItem") {
             return accessoryObj?.accessoryItem?.name
         }
@@ -45,23 +46,23 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
 
     return (
         <tr key={poItemId}>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{index + 1}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-            <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>{console.log(item.uomId, "uom", uomList)}
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
+            <td className='py-0.5  px-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+            <td className='py-0.5 px-0.5  border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
 
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.poQty || 0}</td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
 
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0)}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty}</td>
+            {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0).toFixed(3)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyInwardedQty || 0).toFixed(3)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyReturnedQty || 0).toFixed(3)}</td> */}
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.balanceQty || 0).toFixed(3)}</td>
 
-            <td className='py-0.5 border border-gray-300 text-[11px]'>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -72,6 +73,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     className="text-right rounded   w-full py-1 table-data-input"
                     value={item?.qty}
                     disabled={readOnly}
+                    onFocus={(e) => e.target.select()}
                     onChange={(event) => {
                         if (event.target.value < 0) return
                         if (!event.target.value) {
@@ -89,51 +91,53 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                 />
             </td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.price}</td>
+            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                <select
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
+                    disabled={readOnly || !item.accessoryId} className='text-left w-full rounded py-1 text-xs' value={item.cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
+                    onBlur={(e) => {
+                        handleInputChange((e.target.value), index, "cancelType")
+                    }
+                    }
+                    
+                >
+
+                    <option hidden>
+                    </option>
+                    <option value="" >
+                        Select
+                    </option>
+                    {cancelTypes?.map((option, index) => (
+                        <option key={index} value={option.value}>
+                            {option.show}
+                        </option>
+                    ))}
+                </select>
+            </td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(3)}</td>
 
 
 
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price) * parseFloat(item?.qty).toFixed(3) || "0.000"}</td>
+            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat((item?.price || 0) * parseFloat(item?.qty || 0)).toFixed(3)}</td>
 
-            <td className="py-0.5 border border-gray-300 text-[11px]">
-                <div className="flex space-x-2  justify-center">
 
-                    <button
-                        // onClick={() => handleView(index)}
-                        // onMouseEnter={() => setTooltipVisible(true)}
-                        // onMouseLeave={() => setTooltipVisible(false)}
-                        className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                    >
-                        👁 <span className="text-xs"></span>
-                    </button>
-                    <span className="tooltip-text">View</span>
-                    <button
-                        // onClick={() => handleEdit(index)}
-                        className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                    >
-                        <HiPencil className="w-4 h-4" />
 
-                    </button>
-                    <span className="tooltip-text">Edit</span>
-                    <button
-                        onClick={() => deleteRow(index)}
-                        className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                    >
-                        <HiTrash className="w-4 h-4" />
-
-                    </button>
-                    <span className="tooltip-text">Delete</span>
-
-                    {/* {tooltipVisible && (
-                                                                     <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
-                                                                         <div className="flex items-start">
-                                                                             <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
-                                                                             <span>View</span>
-                                                                         </div>
-                                                                         <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
-                                                                     </div>
-                                                                 )} */}
-                </div>
+            <td className="py-0.5 px-0.5 border border-gray-300 text-[11px]">
+                <input
+                    readOnly
+                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                    // onKeyDown={(e) => {
+                    //     if (e.key === "Enter") {
+                    //         e.preventDefault();
+                    //         addNewRow();
+                    //     }
+                    // }}
+                    onContextMenu={(e) => {
+                        if (!readOnly) {
+                            handleRightClick(e, index, "shiftTimeHrs");
+                        }
+                    }}
+                />
             </td>
         </tr>
     )
