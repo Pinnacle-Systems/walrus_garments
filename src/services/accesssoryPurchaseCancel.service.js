@@ -401,8 +401,8 @@ async function create(body) {
 
 
 export function getPoItemObject(item) {
+    
     console.log(item, "item")
-
     let newItem = {};
         newItem["accessoryId"] = item["accessoryId"] ? parseInt(item["accessoryId"]) : "",
         newItem["accessoryGroupId"] = item["accessoryGroupId"] ? parseInt(item["accessoryGroupId"]) : "",
@@ -446,7 +446,7 @@ async function update(id, body) {
             AccessoryCancelItems: true
         }
     })
-    if (!dataFound) return NoRecordFound("purchaseCancel");
+    if (!dataFound) return NoRecordFound("accessoryPurchaseCancel");
 
     const isAlreadyItemAdded = id => {
         let item = dataFound?.AccessoryCancelItems?.find(item => parseInt(item.id) === parseInt(id))

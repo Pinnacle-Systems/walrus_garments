@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 import Sangeethatex from "../../../../../src/assets/Sangeethatex.png";
 import tw from "../../../../Utils/tailwind-react-pdf";
@@ -26,6 +27,11 @@ const PrintFormat = ({
   transportCost,
   shippingAddress,
 }) => {
+
+  Font.register({
+    family: "Roboto",
+    src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.woff2",
+  });
 
   const getProductName = (item) => {
     if (item?.Product?.name) return item.Product.name;
@@ -126,7 +132,7 @@ const PrintFormat = ({
     { label: "Amount", flex: 1.5, align: "center" },
   ];
   // Calculate totals before rendering
-  
+
   // let grandTotalInWords = numberToWords.toWords(Math.round(grandTotal));
 
   // grandTotalInWords =
@@ -140,7 +146,7 @@ const PrintFormat = ({
         <Page
           size="A4"
           style={{
-            fontFamily: "Roboto",
+            fontFamily: "",
             ...tw("relative pb-[50px] px-8 mt-6"),
           }}
           wrap
@@ -190,7 +196,7 @@ const PrintFormat = ({
                   },
                 ]}
               >
-                
+
               </Text>
             </View>
 
@@ -228,14 +234,14 @@ const PrintFormat = ({
                   </Text>
 
                   <Text style={{ fontSize: 10, marginBottom: 5 }}>
-                   36192, 2/99 Sangitha Textiles Palla Thottam Kaliyapuram Annur Tk,{"\n"} TN (33)
+                    36192, 2/99 Sangitha Textiles Palla Thottam Kaliyapuram Annur Tk,{"\n"} TN (33)
                     Coimbatore, Kamanaikenpalayam Annur Road, Annur-641653
                   </Text>
                   <Text style={{ fontSize: 10, marginBottom: 5 }}>
                     +9042762263
                   </Text>
                   <Text style={{ fontSize: 10, marginBottom: 5 }}>
-                    sangithatextile@ssgroups.in 
+                    sangithatextile@ssgroups.in
                   </Text>
                   <View style={tw("flex flex-row gap-x-2")}>
                     <Text
@@ -305,13 +311,13 @@ const PrintFormat = ({
             </View>
           </View>
 
-        
 
 
-          
+
+
 
           {/* Totals Section */}
-       
+
 
           {/* <Page2 /> */}
 

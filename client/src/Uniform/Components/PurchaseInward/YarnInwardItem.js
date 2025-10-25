@@ -135,6 +135,11 @@ const YarnInwardPoItems = ({
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
     };
+    const handleDeleteAllRows = (id) => {
+        setInwardItems((yarnBlend) =>
+            yarnBlend.filter((row, index) => index !== parseInt(id))
+        );
+    };
     function findBalanceQty(balanceQty) {
 
         let balanceNos = parseFloat(balanceQty) * parseFloat(0.10)
@@ -307,12 +312,7 @@ const YarnInwardPoItems = ({
                                 >
                                     Balance Qty
                                 </th>
-                                {/* <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                >
-                                   No Of Bags
-                                </th>  */}
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -338,17 +338,17 @@ const YarnInwardPoItems = ({
                                     Actions
                                 </th>
                             </tr>
-                        </thead>{console.log(inwardItems,"inwardItemsinIndividual")}
+                        </thead>{console.log(inwardItems, "inwardItemsinIndividual")}
                         <tbody className='overflow-y-auto  h-full w-full'>
                             {(inwardItems || [])?.map((item, index) =>
-                             <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
-                                colorList={colorList} deleteRow={handleDeleteRow} designList={designList} gsmList={gsmList}
-                                loopLengthList={loopLengthList}
-                                diaList={diaList} poList={poList}
-                                removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
-                                removeItem={removeItem} key={item.poItemsId}
-                                item={item} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick}
-                                purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
+                                <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
+                                    colorList={colorList} deleteRow={handleDeleteRow} designList={designList} gsmList={gsmList}
+                                    loopLengthList={loopLengthList}
+                                    diaList={diaList} poList={poList}
+                                    removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
+                                    removeItem={removeItem} key={item.poItemsId}
+                                    item={item} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick}
+                                    purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
 
 
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
@@ -393,7 +393,7 @@ const YarnInwardPoItems = ({
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
                                 onClick={() => {
-                                    // handleDeleteAllRows();
+                                    handleDeleteAllRows();
                                     handleCloseContextMenu();
                                 }}
                             >

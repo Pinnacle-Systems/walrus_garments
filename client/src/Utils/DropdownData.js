@@ -83,8 +83,8 @@ export const Generalpurchase = [
 ]
 
 export const directOrPo = [
-    { show: "General Inward", value: "GeneralInward" },
-    { show: "Purchase Inward", value: "PurchaseInward" },
+    { show: "General Purchase Inward", value: "GeneralInward" },
+    { show: "Order Purchase Inward", value: "PurchaseInward" },
     { show: "Direct Inward", value: "DirectInward" },
 
 

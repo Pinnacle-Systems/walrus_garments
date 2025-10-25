@@ -2,16 +2,59 @@ import { useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import { FaPlus } from "react-icons/fa";
 import PurchaseInwardForm from "./PurchaseInwardFormUi";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetAccessoryItemMasterQuery } from "../../../redux/uniformService/AccessoryItemMasterServices";
 
 
 export default function Form() {
+
+    const { branchId, userId, companyId, finYearId } = getCommonParams();
+
+    const params = {
+        branchId, userId, finYearId
+    };
+
+
+    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+
+    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+
+    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
+
+    const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
+        params,
+    });
+
+    const { data: accessoryItemList } = useGetAccessoryItemMasterQuery({
+        params,
+    });
+
+
+    const { data: colorList } =
+        useGetColorMasterQuery({ params: { ...params } });
+
+
+    const { data: uomList } =
+        useGetUomQuery({ params });
+
+    const { data: accessoryList } =
+        useGetAccessoryMasterQuery({ params });
+
+    const { data: sizeList } =
+        useGetSizeMasterQuery({ params });
 
 
     const [selectedPeriod, setSelectedPeriod] = useState('this-month');
     const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
-    const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("General Inward");
 
 
@@ -30,13 +73,9 @@ export default function Form() {
     const [partyId, setPartyId] = useState('')
 
 
-    const params = {
-        branchId, userId, finYearId
-    };
 
 
-    // const { data: allData, isLoading, isFetching } = useGetAccessoryPurchaseInwardQuery({ params: { branchId, poInwardOrDirectInward } });
-    // const [removeData] = useDeleteAccessoryPurchaseInwardMutation();
+
 
 
 
@@ -55,38 +94,7 @@ export default function Form() {
         setReadOnly(false);
     };
 
-    // const handleDelete = async (id) => {
-    //     if (id) {
-    //         if (!window.confirm("Are you sure to delete...?")) {
-    //             return;
-    //         }
-    //         try {
-    //             await removeData(id)
-    //             setId("");
-    //             onNew();
-    //             // toast.success("Deleted Successfully");
-    //             Swal.fire({
-    //                 title: "Deleted Successfully",
-    //                 icon: "success",
-    //                 draggable: true,
-    //                 timer: 1000,
-    //                 showConfirmButton: false,
-    //                 didOpen: () => {
-    //                     Swal.showLoading();
-    //                 }
-    //             });
-    //         } catch (error) {
-    //             toast.error("something went wrong");
-    //         }
-    //     }
 
-    // };
-    // const onNew = () => {
-    //     setId("");
-    //     setReadOnly(false);
-    //     setSupplierId("")
-    //     setPartyId('')    
-    // }
 
     return (
         <>
@@ -100,9 +108,10 @@ export default function Form() {
                     poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-                    partyId={partyId} setPartyId={setPartyId} 
-                    // onNew={onNew}
- 
+                    partyId={partyId} setPartyId={setPartyId} branchList={branchList} supplierList={supplierList} locationData={locationData}
+
+                    colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
+
 
 
 
@@ -133,7 +142,7 @@ export default function Form() {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setShowManufacturer(true);  }}
+                            onClick={() => { setShowManufacturer(true); }}
                         >
                             <FaPlus /> Create New
                         </button>

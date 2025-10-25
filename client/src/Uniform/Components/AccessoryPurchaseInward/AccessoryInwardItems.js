@@ -6,31 +6,24 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { HiPlus } from 'react-icons/hi';
 import { useEffect } from 'react';
 import AccessoryPoItem from './AccessoryPoItem';
+import Swal from 'sweetalert2';
 
-const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params, id }) => {
+const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, id, supplierId ,
+    contextMenu ,handleCloseContextMenu ,handleRightClick ,   colorList, uomList, accessoryList, sizeList
 
-    console.log(inwardItems,"inwardItems")
+ }) => {
 
-    const { data: colorList } =
-        useGetColorMasterQuery({ params: { ...params } });
+    console.log(inwardItems, "inwardItems")
 
 
-    const { data: uomList } =
-        useGetUomQuery({ params });
-
-    const { data: accessoryList } =
-        useGetAccessoryMasterQuery({ params });
-
-    const { data: sizeList } =
-        useGetSizeMasterQuery({ params });
 
 
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         console.log(poItem, "poItem")
         const newBlend = structuredClone(inwardItems);
-        console.log(inwardItems,"inwardItems")
-        
+        console.log(inwardItems, "inwardItems")
+
         newBlend[index][field] = value;
 
 
@@ -63,6 +56,9 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
         }
         setInwardItems(newBlend);
     };
+
+
+
     useEffect(() => {
         if (id) return
         if (inwardItems?.length >= 1) return;
@@ -148,7 +144,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    <div className="flex gap-2 items-center">
+                    {/* <div className="flex gap-2 items-center">
 
                         <button
                             onClick={() => {
@@ -159,8 +155,35 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                             <HiPlus className="w-3 h-3 mr-1" />
                             Add Item
                         </button>
-                    </div>
+                    </div> */}
+                    <div className="flex gap-2 items-center">
 
+                        <button className="font-bold text-slate-700 bord"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    setInwardItemSelection(true)
+
+                                }
+                            }}
+                            onClick={() => {
+                                if (!supplierId) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: ` Choose Supplier`,
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    });
+                                }
+                                else {
+
+                                    setInwardItemSelection(true)
+                                }
+                            }}
+                        >
+                            Fill Accessory Po Items
+                        </button>
+                    </div>
                 </div>
                 <div className={` relative w-full overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed">
@@ -284,7 +307,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                         </thead>
                         <tbody className='overflow-y-auto  h-full w-full'>
                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow}
-                                readOnly={readOnly} key={item.poItemsId} index={index}
+                                readOnly={readOnly} key={item.poItemsId} index={index} handleRightClick={handleRightClick}
                                 handleInputChange={handleInputChange}
                             />)}
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
@@ -300,6 +323,44 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                         </tbody>
                     </table>
                 </div>
+                {contextMenu && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: `${contextMenu.mouseY - 50}px`,
+                            left: `${contextMenu.mouseX - 30}px`,
+
+                            // background: "gray",
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                        }}
+                        className="bg-gray-100"
+                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                    >
+                        <div className="flex flex-col gap-1">
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    deleteRow(contextMenu.rowId);
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete{" "}
+                            </button>
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    // handleDeleteAllRows();
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     )

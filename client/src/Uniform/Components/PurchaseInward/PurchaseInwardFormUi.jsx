@@ -452,7 +452,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             <h2 className="font-medium text-slate-700 mb-2">
               Inward Details
             </h2>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-2 gap-1">
               <DropdownInput name="Inward Type"
                 beforeChange={() => { setDirectInwardReturnItems([]) }}
                 options={directOrPo}

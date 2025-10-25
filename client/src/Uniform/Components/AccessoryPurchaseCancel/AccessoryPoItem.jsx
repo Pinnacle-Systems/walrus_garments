@@ -91,10 +91,10 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                 />
             </td>
-            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+            <td className="border border-gray-300 text-right font-medium text-[13px] py-1.5 text-xs">
                 <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                    disabled={readOnly || !item.accessoryId} className='text-left w-full rounded py-1 text-xs' value={item.cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
+                    disabled={readOnly || !item.accessoryId} className='text-left w-full rounded py-1 text-[11px]  text-xs' value={item.cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
                     onBlur={(e) => {
                         handleInputChange((e.target.value), index, "cancelType")
                     }
@@ -102,13 +102,11 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     
                 >
 
-                    <option hidden>
-                    </option>
-                    <option value="" >
-                        Select
-                    </option>
+                    <option hidden>   </option>
+                    <option value="" className='font-medium text-[13px]'>Select</option>
+                   
                     {cancelTypes?.map((option, index) => (
-                        <option key={index} value={option.value}>
+                        <option key={index} value={option.value} className='font-medium text-[13px]'>
                             {option.show}
                         </option>
                     ))}
@@ -116,22 +114,13 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
             </td>
             <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(3)}</td>
 
-
-
             <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat((item?.price || 0) * parseFloat(item?.qty || 0)).toFixed(3)}</td>
-
-
 
             <td className="py-0.5 px-0.5 border border-gray-300 text-[11px]">
                 <input
                     readOnly
                     className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                    // onKeyDown={(e) => {
-                    //     if (e.key === "Enter") {
-                    //         e.preventDefault();
-                    //         addNewRow();
-                    //     }
-                    // }}
+                 
                     onContextMenu={(e) => {
                         if (!readOnly) {
                             handleRightClick(e, index, "shiftTimeHrs");
@@ -139,6 +128,10 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                 />
             </td>
+
+
+
+
         </tr>
     )
 }
