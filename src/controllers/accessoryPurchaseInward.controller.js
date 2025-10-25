@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import {
     get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
     getDirectItems as _getDirectItems, getPoItemsandDirectInwardItems as _getPoItemsandDirectInwardItems, getDirectItemById as _getDirectItemById
-} from '../services/directInwardOrReturn.service.js';
+} from '../services/accessoryPurchaseInward.service.js';
 
 async function get(req, res, next) {
     try {

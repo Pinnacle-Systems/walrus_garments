@@ -9,7 +9,7 @@ router.get('/', get);
 
 router.get('/getPoItems', getPoItems);
 
-router.get('/getPoItems/:id/:purchaseInwardReturnId/:stockId/:storeId/:billEntryId/:poType', getPoItemById);
+router.get('/getPoItems/:id/:purchaseInwardReturnId/:stockId/:storeId/:billEntryId/:poType/:poInwardOrDirectInward', getPoItemById);
 
 router.get('/:id', getOne);
 

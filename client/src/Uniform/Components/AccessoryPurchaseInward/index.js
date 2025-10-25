@@ -11,6 +11,10 @@ import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/Access
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
 import { useGetAccessoryItemMasterQuery } from "../../../redux/uniformService/AccessoryItemMasterServices";
+import AccessoryInwardFormReport from "./Report";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import { useDeleteAccessoryPurchaseInwardMutation } from "../../../redux/uniformService/AccessoryInwardServices";
 
 
 export default function Form() {
@@ -21,6 +25,7 @@ export default function Form() {
         branchId, userId, finYearId
     };
 
+    const [removeData] = useDeleteAccessoryPurchaseInwardMutation();
 
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -95,7 +100,32 @@ export default function Form() {
     };
 
 
+    const handleDelete = async (id) => {
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
+                return;
+            }
+            try {
+                await removeData(id)
+                setId("");
+                // onNew();
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            } catch (error) {
+                toast.error("something went wrong");
+            }
+        }
 
+    };
     return (
         <>
             {showManufacturer ? (
@@ -157,13 +187,12 @@ export default function Form() {
                             onDelete={handleDelete}
                             itemsPerPage={10}
                         /> */}
-                        {/* <PurchaseInwardFormReport
+                        <AccessoryInwardFormReport
 
-                            data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                        /> */}
+                        />
                     </div>
                 </div>
             )}

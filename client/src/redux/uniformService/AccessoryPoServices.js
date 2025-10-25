@@ -47,9 +47,9 @@ const AccessoryPoApi = createApi({
       providesTags: ["accessoryPo"],
     }),
     getAccessoryPoItemById: builder.query({
-      query: ({ id, purchaseInwardId, stockId, storeId, billEntryId, poType }) => {
+      query: ({ id, purchaseInwardId, stockId, storeId, billEntryId, poType ,poInwardOrDirectInward }) => {
         return {
-          url: `${ACCESSORY_PO_API}/getPoItems/${id}/${purchaseInwardId ? purchaseInwardId : null}/${stockId ? stockId : null}/${storeId ? storeId : null}/${billEntryId ? billEntryId : null}/${poType ? poType : null}`,
+          url: `${ACCESSORY_PO_API}/getPoItems/${id}/${purchaseInwardId ? purchaseInwardId : null}/${stockId ? stockId : null}/${storeId ? storeId : null}/${billEntryId ? billEntryId : null}/${poType ? poType : null}/${poInwardOrDirectInward ? poInwardOrDirectInward : null}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",

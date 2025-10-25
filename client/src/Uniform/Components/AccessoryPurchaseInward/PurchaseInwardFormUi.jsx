@@ -25,8 +25,8 @@ import DirectInward from "./DirectInward";
 
 
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, supplierList, locationData ,
-  colorList, uomList, accessoryList, sizeList , accessoryGroupList, accessoryItemList
+  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, supplierList, locationData,
+  colorList, uomList, accessoryList, sizeList, accessoryGroupList, accessoryItemList
 }) => {
 
 
@@ -122,7 +122,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     setTransType(data?.poType ? data.poType : "Accessory");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "General Inward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
+    setDirectInwardReturnItems(data?.AccessoryInwardItems ? data.AccessoryInwardItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
@@ -552,7 +552,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             <AccessoryInwardItems
               inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
               colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
-
+              poInwardOrDirectInward={poInwardOrDirectInward}
 
             />
           }

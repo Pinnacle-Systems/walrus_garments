@@ -1,4 +1,4 @@
-import { FaFileAlt } from "react-icons/fa";
+import { FaEye, FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { deliveryTypes, MaterialType, poMaterial, PoTypes, poTypes, purchaseType, stockTransferType, YarnMaterial } from "../../../Utils/DropdownData";
@@ -34,6 +34,10 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetYarnCountsQuery, useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import PrintFormatGreyYarnPurchaseOrder from "./NewPrintFormat/index.js"
+import { useReactToPrint } from "@etsoo/reactprint";
+import NewModal from "../../../UiComponents/NewModal/index.js";
+
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
 
@@ -73,8 +77,24 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
+  // const componentRef = useRef();
 
+  // const handlePrint = useReactToPrint({
+  //   content: () => componentRef.current,
+  //   documentTitle: docId,
+  //   pageStyle: ` `
+  // });
 
+  const componentRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: "Purchase Order",
+    pageStyle: `
+      @page { size: A4; margin: 10mm; }
+      body { font-family: 'Roboto', sans-serif; }
+    `
+  });
 
   const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
 
@@ -98,7 +118,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { data: termsData } = useGetTermsandCondtionsQuery({ params: { ...params } });
   const { data: branchList } = useGetBranchQuery({ params: { ...params } });
 
-
+  const { data: supplierDetails } =
+    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
   const { data: yarnList } = useGetYarnMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -364,7 +385,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   let supplierListBasedOnSupply = filterSupplier()
 
 
-  
+
 
   // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading || isTaxfetching) return <Loader />
 
@@ -401,22 +422,44 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           setDiscountValue={setDiscountValue}
           poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} />
       </Modal>
-      <Modal
+      {/* <NewModal
         isOpen={printModalOpen}
         onClose={() => setPrintModalOpen(false)}
         widthClass={"w-[90%] h-[90%]"}
-      >
-        <PDFViewer style={tw("w-full h-full")}>
-          {/* <PrintFormat
-            data={id ? singleData?.data : "Null"}
-            singleData={id ? singleData?.data : "Null"}
-            date={id ? singleData?.data?.selectedDate : date}
-            docId={docId ? docId : ""}
+        onPrint={handlePrint}
 
-          /> */}
-          
-        </PDFViewer>
-      </Modal>
+      >
+        <PrintFormatGreyYarnPurchaseOrder
+          remarks={remarks}
+          discountType={discountType}
+          poType={poType}
+          discountValue={discountValue}
+          ref={componentRef}
+          poNumber={docId} poDate={date} dueDate={dueDate} payTermId={payTermId}
+          poItems={poItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
+          supplierDetails={supplierDetails ? supplierDetails?.data : null}
+          singleData={singleData ? singleData.data : null}
+          deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+        />
+
+      </NewModal> */}
+      <div className="hidden">
+
+        <PrintFormatGreyYarnPurchaseOrder
+          remarks={remarks}
+          discountType={discountType}
+          poType={poType}
+          discountValue={discountValue}
+          ref={componentRef}
+          poNumber={docId} poDate={date} dueDate={dueDate} payTermId={payTermId}
+          poItems={poItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
+          supplierDetails={supplierDetails ? supplierDetails?.data : null}
+          singleData={singleData ? singleData.data : null}
+          deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+          yarnList={yarnList} uomList={uomList} colorList={colorList}
+        />
+
+      </div>
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
@@ -756,12 +799,18 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit
             </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
-            </button>
+            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm"
+              onClick={() => {
+                setPrintModalOpen(true)
+              }}
+            >
+              <FaEye className="w-4 h-4 mr-2" />
+              Preview
+            </button> */}
             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              onClick={() => setPrintModalOpen(true)}
+              onClick={() => {
+                handlePrint()
+              }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print

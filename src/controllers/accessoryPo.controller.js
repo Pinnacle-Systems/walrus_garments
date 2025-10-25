@@ -24,7 +24,7 @@ export async function getPoItemById(req, res, next) {
     console.log(req.params, "getPoItemById")
 
     try {
-        res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType));
+        res.json(await _getPoItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId, req.params.poType, req.params.poInwardOrDirectInward ));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

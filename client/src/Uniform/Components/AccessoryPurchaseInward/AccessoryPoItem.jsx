@@ -7,24 +7,24 @@ import { HiPencil, HiTrash } from "react-icons/hi"
 import { useGetAccessoryPoItemByIdQuery } from "../../../redux/uniformService/AccessoryPoServices"
 
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, handleRightClick, purchaseInwardId }) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, handleRightClick, purchaseInwardId  ,poInwardOrDirectInward}) => {
 
 
 
-    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId }, { skip: !item?.poItemsId })
+    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId ,poInwardOrDirectInward }, { skip: !item?.poItemsId })
 
 
-    // useEffect(() => {
-    //     if (purchaseInwardId) return
-    //     if (isLoading || isFetching) return
-    //     const poItem = data?.data
+    useEffect(() => {
+        if (purchaseInwardId) return
+        if (isLoading || isFetching) return
+        const poItem = data?.data
 
-    //     if (data?.data) {
-    //         handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+        if (data?.data) {
+            handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
 
 
-    //     }
-    // }, [isFetching, isLoading, data, purchaseInwardId])
+        }
+    }, [isFetching, isLoading, data, purchaseInwardId])
     if (isLoading || isFetching) return <Loader />
 
 

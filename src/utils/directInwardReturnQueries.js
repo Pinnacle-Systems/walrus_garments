@@ -781,3 +781,40 @@ and ProductionReceiptDetails.id < ${id}
 
 
 }
+
+async function getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+
+
+    console.log(poInwardOrDirectInward,"poInwardOrDirectInward", directItemsId,"directItemsId", poItemsId, "poItemsId", poType, "getAlreadyAcessoryInwardData")
+    const sql = `
+   select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from AccessoryInward left join AccessoryInwardItems
+ on AccessoryInward.id=AccessoryInwardItems.AccessoryInwardId
+ WHERE  AccessoryInward.poInwardOrDirectInward="${poInwardOrDirectInward}" AND  AccessoryInwardItems.ID < ${directItemsId} AND AccessoryInwardItems.poItemsId=${poItemsId}
+ AND AccessoryInward.poType="${poType}"
+    `
+    const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
+
+    return alreadyInwardData[0]
+}
+
+export async function getDirectInwardAccessoryReturnItemsAlreadyData(directInwardOrReturnId, poInwardOrDirectInward, poType, AccessoryInwardItems) {
+    let AccessoryInwardItemsData = [];
+    for (let i = 0; i < AccessoryInwardItems?.length; i++) {
+
+        let directItem = AccessoryInwardItems[i]
+        let obj = {
+            ...directItem, alreadyInwardedQty: (await getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
+            alreadyInwardedRolls: (await getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedRolls
+        }
+
+
+        AccessoryInwardItemsData.push(obj)
+
+    }
+
+
+    return AccessoryInwardItemsData
+
+
+}
+

@@ -11,9 +11,9 @@ import {
   useGetBranchByIdQuery
 } from '../../../redux/services/BranchMasterService';
 import { useGetPartyByIdQuery, useGetPartyQuery } from '../../../redux/services/PartyMasterService';
-import useTaxDetailsHook from '../../../CustomHooks/TaxHookDetails';
 import TaxDetails from './TaxDetails';
 import { useGetTermsAndConditionsQuery } from '../../../redux/services/TermsAndConditionsService';
+import useTaxDetailsHook from '../../../CustomHooks/TaxHookDetails';
 const numberToText = require('number-to-text')
 require('number-to-text/converters/en-in');
 
@@ -49,7 +49,7 @@ export default function Form({ poType, innerRef, poItems, supplierDetails, singl
   if (!supplierDetails || !singleData || !supplierList || isTaxHookDetailsLoading || !termsAndCondition) return null
 
   return (
-    <div className="h-[950px] w-full flex flex-col justify-between border-2 m-0 border-black" id='poPrint' ref={innerRef}>
+    <div className="h-[900px] w-full flex flex-col justify-between border-2 m-0 border-black" id='poPrint' ref={innerRef}>
       <div>
         <div className='font-bold text-green-700 text-md text-center'>{branchData.branchName}</div>
         <div className='flex'>

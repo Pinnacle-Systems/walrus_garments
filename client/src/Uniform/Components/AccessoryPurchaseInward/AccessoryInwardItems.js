@@ -9,7 +9,7 @@ import AccessoryPoItem from './AccessoryPoItem';
 import Swal from 'sweetalert2';
 
 const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, id, supplierId ,
-    contextMenu ,handleCloseContextMenu ,handleRightClick ,   colorList, uomList, accessoryList, sizeList
+    contextMenu ,handleCloseContextMenu ,handleRightClick ,   colorList, uomList, accessoryList, sizeList ,poInwardOrDirectInward
 
  }) => {
 
@@ -308,6 +308,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                         <tbody className='overflow-y-auto  h-full w-full'>
                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow}
                                 readOnly={readOnly} key={item.poItemsId} index={index} handleRightClick={handleRightClick}
+                                poInwardOrDirectInward={poInwardOrDirectInward}
                                 handleInputChange={handleInputChange}
                             />)}
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>

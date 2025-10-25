@@ -1,6 +1,6 @@
 import React from 'react'
-import useTaxDetailsHook from '../../../CustomHooks/TaxHookDetails'
-import { groupBy } from '../../../Utils/helper'
+import useTaxDetailsHook from '../../../../CustomHooks/TaxHookDetails'
+import { groupBy } from 'lodash'
 
 const TaxDetail = ({ items, taxTemplateId, discountType, discountValue, taxKey }) => {
     const { isLoading: isTaxHookDetailsLoading, ...taxDetails } =

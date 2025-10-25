@@ -228,7 +228,7 @@ function manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType
 export async function getPoItems(req) {
     const { branchId, active, supplierId, poType, pagination, dataPerPage,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate,
-        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward ,poMaterial
+        isPurchaseInwardFilter, isPurchaseCancelFilter, isPurchaseReturnFilter, poInwardOrDirectInward, poMaterial
     } = req.query
 
     let data;
@@ -243,7 +243,7 @@ export async function getPoItems(req) {
     }
 
 
-    console.log(po,"Pooooooo")
+    console.log(po, "Pooooooo")
 
     let totalCount;
     if (pagination) {
@@ -281,7 +281,7 @@ export async function getPoItems(req) {
 
         console.log(data, "Bef0ore")
 
-        data = data?.filter(i => i.AccessoryPo.supplierId == supplierId && i.AccessoryPo.poMaterial == poType  && i.AccessoryPo.poType === po)
+        data = data?.filter(i => i.AccessoryPo.supplierId == supplierId && i.AccessoryPo.poMaterial == poType && i.AccessoryPo.poType === po)
 
         data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
 
@@ -437,17 +437,17 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    console.log(data, "dataStockQty")
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
 
-    const alreadyInwardedData = await prisma?.directItems?.aggregate({
+    const alreadyInwardedData = await prisma?.AccessoryInwardItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
-            DirectInwardOrReturn: {
-                poInwardOrDirectInward: "PurchaseInward"
+            AccessoryInward: {
+                poInwardOrDirectInward: `${poInwardOrDirectInward}`
             },
-            directInwardOrReturnId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // directInwardOrReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -457,15 +457,15 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    const alreadyReturnedData = await prisma?.directReturnItems?.aggregate({
+    const alreadyReturnedData = await prisma?.AccessoryInwardItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
-            DirectReturnOrPoReturn: {
-                poInwardOrDirectInward: "PurchaseReturn"
+            AccessoryInward: {
+                poInwardOrDirectInward: `${poInwardOrDirectInward}`
             },
-            directReturnOrPoReturnId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // directReturnOrPoReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -480,7 +480,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
         where: {
             poItemsId: parseInt(id),
             AccesssoryPurchaseCancel: {
-                poInwardOrDirectInward: "PurchaseCancel"
+                poInwardOrDirectInward: `${poInwardOrDirectInward}`
             },
             accesssoryPurchaseCancelId: {
                 lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
@@ -787,10 +787,10 @@ async function update(id, body) {
         }
     })
     if (!dataFound) return NoRecordFound("Acessory po");
-    
+
     // const isValid = await poUpdateValidator(poItems)
     // if (!isValid) return { statusCode: 1, message: "Child Record Exists" };
-    
+
     console.log(dataFound, "dataFound")
 
     const isAlreadyItemAdded = id => {
@@ -846,7 +846,7 @@ async function update(id, body) {
                 }
             }
         });
-        
+
         const updatePoItemsFunc = async () => {
             let promises = updatePoItems.map(async (item) => {
                 return await tx.AccessoryPoItems.update({

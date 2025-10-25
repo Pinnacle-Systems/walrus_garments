@@ -26,13 +26,13 @@ const Address = ({ deliveryTo, supplierDetails, deliveryType }) => {
                   <h2 className='font-bold text-sm text-green-700'>{deliveryTo?.branchName}</h2>
                   <div>{deliveryTo?.address}</div>
                   <div>Mobile No :{deliveryTo?.contactMobile}</div>
-                  {deliveryTo.panNo &&
+                  {/* {deliveryTo.panNo &&
                     <div className=''>PAN NO :{deliveryTo?.panNo}</div>
-                  }
-                  {deliveryTo.gstNo &&
+                  } */}
+                  {deliveryTo?.gstNo &&
                     <div className=''>GST No :{deliveryTo?.gstNo}</div>
                   }
-                  {deliveryTo.contactEmail &&
+                  {deliveryTo?.contactEmail &&
                     <div className=''>EMAIL :{deliveryTo?.contactEmail}</div>
                   }
                 </td>

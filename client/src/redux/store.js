@@ -81,7 +81,9 @@ const commonReducers = {
   roleMaster: rolesMasterApi.reducer,
   userMaster: userMasterApi.reducer,
   employeeMaster: employeeMasterApi.reducer,
-  branchMaster: branchMasterApi.reducer,
+  // branchMaster: branchMasterApi.reducer,
+
+  [branchMasterApi.reducerPath]: branchMasterApi.reducer,
   companyMaster: companyMasterApi.reducer,
   pageGroupMaster: pageGroupMasterApi.reducer,
   productBrandMaster: productBrandMasterApi.reducer,
