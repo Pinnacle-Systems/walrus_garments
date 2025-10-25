@@ -9,7 +9,7 @@ import PurchaseInwardForm from './PurchaseInwardFormUi';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
-import PurchaseInwardFormReport from './PurchaseInwardFormReport';
+import PurchaseInwardFormReport from './PurchaseinwardFormReport';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 
