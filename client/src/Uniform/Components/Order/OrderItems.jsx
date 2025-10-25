@@ -14,7 +14,7 @@ import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/Fib
 import { autoFocusSelect, getCommonParams, renameFile } from '../../../Utils/helper';
 import { useGetMachineQuery } from "../../../redux/services/MachineMasterService";
 import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
-import TableGridItems from './YarnDetails';
+import TableGridItems from './Yarndetails';
 import Modal from "../../../UiComponents/Modal";
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetCountsMasterQuery } from '../../../redux/uniformService/CountsMasterServices';

@@ -407,13 +407,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PrintFormat
+          {/* <PrintFormat
             data={id ? singleData?.data : "Null"}
             singleData={id ? singleData?.data : "Null"}
             date={id ? singleData?.data?.selectedDate : date}
             docId={docId ? docId : ""}
 
-          />
+          /> */}
+          
         </PDFViewer>
       </Modal>
 
