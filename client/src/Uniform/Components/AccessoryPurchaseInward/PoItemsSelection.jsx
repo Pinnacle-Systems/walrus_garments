@@ -24,13 +24,35 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
 
-    function addItem(id, obj) {
-        // setInwardItems([])
-        setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
+    // function addItem(id, obj) {
+    //     // setInwardItems([])
+    //     setLocalInwardItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
 
-            newItems.push(obj);
-            return newItems
+    //         newItems.push(obj);
+    //         return newItems
+    //     });
+    // }
+
+    
+
+    function addItem(id, obj) {
+        setInwardItems([])
+        setLocalInwardItems(prevItems => {
+            let newItems = structuredClone(prevItems);
+
+            console.log(newItems, "newItems")
+
+            const index = newItems.findIndex(v => v?.accessoryId === "");
+
+
+            if (index !== -1) {
+                newItems[index] = obj;
+            } else {
+                newItems.push(obj);
+            }
+
+            return newItems;
         });
     }
 

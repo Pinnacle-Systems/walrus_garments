@@ -126,6 +126,24 @@ export default function Form() {
         }
 
     };
+
+
+    const onNew = () => {
+        setId("");
+        setReadOnly(false);
+        setSupplierId("")
+        setPartyId('')
+        setDocId("New")
+        setDate("")
+        setTransType("Accessory");
+        setDcNo("")
+        setDcDate('')
+        setPayTermId("");
+        setLocationId('');
+        setStoreId("")
+        setPoInwardOrDirectInward("General Inward")
+        setDirectInwardReturnItems([]);
+    }
     return (
         <>
             {showManufacturer ? (
@@ -172,7 +190,7 @@ export default function Form() {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setShowManufacturer(true); }}
+                            onClick={() => { setShowManufacturer(true);onNew() }}
                         >
                             <FaPlus /> Create New
                         </button>

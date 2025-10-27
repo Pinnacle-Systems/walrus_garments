@@ -522,7 +522,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
-    let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
+    let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty , 0))
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
 

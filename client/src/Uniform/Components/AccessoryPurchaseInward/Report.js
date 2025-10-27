@@ -210,52 +210,20 @@ const AccessoryInwardFormReport = ({
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Po No</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Po Date</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+                
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>poType</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+          
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+    
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -313,7 +281,7 @@ const AccessoryInwardFormReport = ({
                     />
                   </th> */}
                   <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    <input
+                    {/* <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
@@ -321,7 +289,7 @@ const AccessoryInwardFormReport = ({
                       onChange={(e) => {
                         setSupplier(e.target.value);
                       }}
-                    />
+                    /> */}
                   </th>
 
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">

@@ -73,6 +73,7 @@ export const TERMS_AND_CONDITIONS_API = "termsAndCondition"
 export const LOCATION_API = 'location'
 export const DIRECT_INWARD_OR_RETURN_API = "directInwardOrReturn"
 export const ACCESSORT_PURCHASE_INWARD_API = "accessoryPurchaseInward"
+export const ACCESSORT_PURCHASE_RETURN_API = "accessoryPurchaseReturn"
 
 export const DIRECT_CANCEL_OR_RETURN_API = "directCancelOrReturn"
 

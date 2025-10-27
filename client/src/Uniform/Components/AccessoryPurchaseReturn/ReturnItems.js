@@ -15,14 +15,9 @@ import { getCommonParams, renameFile } from '../../../Utils/helper';
 import { useGetMachineQuery } from "../../../redux/services/MachineMasterService";
 import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
 // import TableGridItems from './TableGridItems';
-import Modal from "../../../UiComponents/Modal";
+// import Modal from "../../../UiComponents/Modal";
 import { FaInfoCircle } from 'react-icons/fa';
-import FabricDirectInwardItems from './FabricDirectInwardItems';
-import AccessoryDirectInwardItems from './AccessoryDirectInwardItems';
-import FabricInwardItems from './FabricInwardItems';
-import AccessoryInwardItems from './AccessoryInwardItems';
-import YarnInwardItems from './YarnInwardItems';
-import YarnDirectInwardItems from './YarnDirectInwardItems';
+// import AccessoryDirectInwardItems from './AccessoryDirectInwardItems';
 import Swal from 'sweetalert2';
 
 export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection }) {
@@ -237,7 +232,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         Fill Inward Items
                     </button>
                 </div>
-                <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
+                {/* <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
                     max-h-[250px] w-full overflow-auto'>
 
                     {
@@ -261,7 +256,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                     {
                         (poInwardOrDirectInward === "PurchaseReturn" || poInwardOrDirectInward === "GeneralReturn") &&
            
-                        <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
+                        <AccessoryInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
                             storeId={storeId} handleView={handleView}
                             transType={transType} directInwardReturnItems={directInwardReturnItems}
                             setDirectInwardReturnItems={setDirectInwardReturnItems}
@@ -270,7 +265,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         />
                  
                     }
-                </fieldset>
+                </fieldset> */}
             </div>
         </>
 

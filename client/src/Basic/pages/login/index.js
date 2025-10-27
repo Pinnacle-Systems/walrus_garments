@@ -332,7 +332,7 @@ const Login = () => {
               </button>
             </motion.div>
           </form>
-
+{/* 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -346,7 +346,7 @@ const Login = () => {
             <a href="#" className="font-medium text-rose-500 hover:text-rose-600 transition-colors">
               Create account
             </a>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
 
         {/* Floating Product Cards */}

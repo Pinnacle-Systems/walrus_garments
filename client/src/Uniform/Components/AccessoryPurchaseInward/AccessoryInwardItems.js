@@ -65,7 +65,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
         setInwardItems((prev) => {
             let newArray = Array.from({ length: 1 - prev.length }, (i) => {
                 return {
-                    yarnId: "",
+                    accessoryId: "",
                     qty: "0.00",
                     tax: "0",
                     colorId: "",

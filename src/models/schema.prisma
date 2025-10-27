@@ -160,6 +160,7 @@ model Branch {
   PoRaisedAccessoryPo                    AccessoryPo[]                @relation(name: "poRaisedBranch")
   AccesssoryPurchaseCancel               AccesssoryPurchaseCancel[]
   AccessoryInward                        AccessoryInward[]
+  AccessoryReturn                        AccessoryReturn[]
 }
 
 model UserOnBranch {
@@ -286,6 +287,8 @@ model User {
   AccesssoryPurchaseCancelUpdateBy    AccesssoryPurchaseCancel[]   @relation(name: "updatedBy")
   AccessoryInwardCreatedBy            AccessoryInward[]            @relation(name: "createdBy")
   AccessoryInwardUpdateBy             AccessoryInward[]            @relation(name: "updatedBy")
+  AccessoryReturnCreatedBy            AccessoryReturn[]            @relation(name: "createdBy")
+  AccessoryReturnUpdateBy             AccessoryReturn[]            @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -588,6 +591,7 @@ model Party {
   AccessoryPoDelivery      AccessoryPo[]              @relation(name: "deliveryTo")
   AccesssoryPurchaseCancel AccesssoryPurchaseCancel[]
   AccessoryInward          AccessoryInward[]
+  AccessoryReturn          AccessoryReturn[]
 }
 
 model PartyBranch {
@@ -874,6 +878,7 @@ model AccessoryGroup {
   AccessoryPoItems       AccessoryPoItems[]
   AccessoryCancelItems   AccessoryCancelItems[]
   AccessoryInwardItems   AccessoryInwardItems[]
+  AccessoryReturnItems   AccessoryReturnItems[]
 }
 
 model AccessoryItem {
@@ -895,6 +900,7 @@ model AccessoryItem {
   AccessoryPoItems       AccessoryPoItems[]
   AccessoryCancelItems   AccessoryCancelItems[]
   AccessoryInwardItems   AccessoryInwardItems[]
+  AccessoryReturnItems   AccessoryReturnItems[]
 }
 
 model Accessory {
@@ -923,6 +929,7 @@ model Accessory {
   AccessoryPoItems              AccessoryPoItems[]
   AccessoryCancelItems          AccessoryCancelItems[]
   AccessoryInwardItems          AccessoryInwardItems[]
+  AccessoryReturnItems          AccessoryReturnItems[]
 }
 
 enum AccessoryCategory {
@@ -1006,6 +1013,7 @@ model Color {
   AccessoryPoItems         AccessoryPoItems[]
   AccessoryCancelItems     AccessoryCancelItems[]
   AccessoryInwardItems     AccessoryInwardItems[]
+  AccessoryReturnItems     AccessoryReturnItems[]
 }
 
 model UnitOfMeasurement {
@@ -1041,6 +1049,7 @@ model UnitOfMeasurement {
   AccessoryPoItems                          AccessoryPoItems[]
   AccessoryCancelItems                      AccessoryCancelItems[]
   AccessoryInwardItems                      AccessoryInwardItems[]
+  AccessoryReturnItems                      AccessoryReturnItems[]
 }
 
 enum DeliveryType {
@@ -1148,6 +1157,7 @@ model PoItems {
   DirectReturnItems          DirectReturnItems[]
   directItems                DirectItems[]
   CancelItems                CancelItems[]
+  AccessoryReturnItems       AccessoryReturnItems[]
 }
 
 model AccessoryPo {
@@ -1431,24 +1441,25 @@ model AccessoryInwardItems {
   designId         Int?
   sizeId           Int?
 
-  weightPerBag       Float?
-  noOfBags           Int?
-  noOfRolls          Int?
-  qty                Float?
-  lotNo              String?
-  lotNoCommonIndex   Int?
-  Stock              Stock[]
-  AccessoryPoItems   AccessoryPoItems?   @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  poItemsId          Int?
-  alreadyInwardedQty Float?
-  alreadyReturnedQty Float?
-  balanceQty         Float?
-  cancelQty          Float?
-  poNo               String?
-  poQty              Float?
-  BillEntryItems     BillEntryItems[]
-  DirectReturnItems  DirectReturnItems[]
-  inwardLotDetails   InwardLotDetails[]
+  weightPerBag         Float?
+  noOfBags             Int?
+  noOfRolls            Int?
+  qty                  Float?
+  lotNo                String?
+  lotNoCommonIndex     Int?
+  Stock                Stock[]
+  AccessoryPoItems     AccessoryPoItems?      @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId            Int?
+  alreadyInwardedQty   Float?
+  alreadyReturnedQty   Float?
+  balanceQty           Float?
+  cancelQty            Float?
+  poNo                 String?
+  poQty                Float?
+  BillEntryItems       BillEntryItems[]
+  DirectReturnItems    DirectReturnItems[]
+  inwardLotDetails     InwardLotDetails[]
+  AccessoryReturnItems AccessoryReturnItems[]
 }
 
 model PayTerm {
@@ -1463,6 +1474,7 @@ model PayTerm {
   BillEntry              BillEntry[]
   DirectReturnOrPoReturn DirectReturnOrPoReturn[]
   AccessoryInward        AccessoryInward[]
+  AccessoryReturn        AccessoryReturn[]
 }
 
 enum DiscountTypes {
@@ -1497,6 +1509,7 @@ model TaxTemplate {
   AccessoryInward        AccessoryInward[]
   Po                     Po[]
   AccessoryPo            AccessoryPo[]
+  AccessoryReturn        AccessoryReturn[]
 }
 
 model TaxTemplateDetails {
@@ -1546,6 +1559,7 @@ model Design {
   CancelItems                   CancelItems[]
   AccessoryCancelItems          AccessoryCancelItems[]
   AccessoryInwardItems          AccessoryInwardItems[]
+  AccessoryReturnItems          AccessoryReturnItems[]
 }
 
 model LoopLength {
@@ -1653,6 +1667,7 @@ model Size {
   AccessoryCancelItems                      AccessoryCancelItems[]
   AccessoryPoItems                          AccessoryPoItems[]
   AccessoryInwardItems                      AccessoryInwardItems[]
+  AccessoryReturnItems                      AccessoryReturnItems[]
 }
 
 model SocksMaterial {
@@ -1796,6 +1811,7 @@ model Location {
   OnlineSalesReturn          OnlineSalesReturn[]
   DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
   AccessoryInward            AccessoryInward[]
+  AccessoryReturn            AccessoryReturn[]
 }
 
 enum ProcessIO {
@@ -3980,13 +3996,90 @@ model DirectReturnItems {
   accessoryInwardItemsId   Int?
 }
 
+model AccessoryReturn {
+  id                     Int                    @id @default(autoincrement())
+  poInwardOrDirectInward String?
+  dcNo                   String?
+  dcDate                 DateTime?              @db.Date
+  Store                  Location?              @relation(fields: [storeId], references: [id])
+  poType                 String?
+  supplier               Party?                 @relation(fields: [supplierId], references: [id])
+  supplierId             Int?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  createdBy              User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  Branch                 Branch?                @relation(fields: [branchId], references: [id])
+  branchId               Int?
+  active                 Boolean                @default(true)
+  storeId                Int?
+  docId                  String
+  PayTerm                PayTerm?               @relation(fields: [payTermId], references: [id])
+  payTermId              Int?
+  TaxTemplate            TaxTemplate?           @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId          Int?
+  discountType           String?
+  discountValue          Float?                 @default(0)
+  vehicleNo              String?
+  specialInstructions    String?                @db.LongText
+  remarks                String?                @db.LongText
+  AccessoryReturnItems   AccessoryReturnItems[]
+}
+
+model AccessoryReturnItems {
+  id              Int             @id @default(autoincrement())
+  AccessoryReturn AccessoryReturn @relation(fields: [accessoryReturnId], references: [id], onDelete: Cascade)
+
+  Accessory        Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId      Int?
+  AccessoryGroup   AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId Int?
+  AccessoryItem    AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId  Int?
+  Color            Color?             @relation(fields: [colorId], references: [id])
+  colorId          Int?
+  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId            Int?
+  Design           Design?            @relation(fields: [designId], references: [id])
+  price            Float
+  discountType     String?
+  discountValue    Float              @default(0)
+  taxPercent       Float              @default(0)
+  Size             Size?              @relation(fields: [sizeId], references: [id])
+  designId         Int?
+  gsmId            Int?
+  sizeId           Int?
+
+  accessoryReturnId Int
+  weightPerBag      Float?
+  noOfBags          Int?
+  noOfRolls         Int?
+  qty               Float?
+  PoItem            PoItems? @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId         Int?
+
+  alreadyInwardedQty     Float?
+  alreadyReturnedQty     Float?
+  balanceQty             Float?
+  cancelQty              Float?
+  poNo                   String?
+  poQty                  Float?
+  returnLotDetails       ReturnLotDetails[]
+  AccessoryInwardItems   AccessoryInwardItems? @relation(fields: [accessoryInwardItemsId], references: [id])
+  accessoryInwardItemsId Int?
+}
+
 model ReturnLotDetails {
-  id                  Int               @id @default(autoincrement())
-  DirectReturnItems   DirectReturnItems @relation(fields: [directReturnItemsId], references: [id], onDelete: Cascade)
-  directReturnItemsId Int
-  lotNo               String?
-  qty                 Float?
-  noOfRolls           Int?
+  id                     Int                   @id @default(autoincrement())
+  DirectReturnItems      DirectReturnItems     @relation(fields: [directReturnItemsId], references: [id], onDelete: Cascade)
+  directReturnItemsId    Int
+  lotNo                  String?
+  qty                    Float?
+  noOfRolls              Int?
+  AccessoryReturnItems   AccessoryReturnItems? @relation(fields: [accessoryReturnItemsId], references: [id])
+  accessoryReturnItemsId Int?
 }
 
 model PurchaseCancel {

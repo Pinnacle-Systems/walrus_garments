@@ -89,7 +89,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
-    documentTitle: "Purchase Order",
+    documentTitle: "Yarn Purchase Order",
     pageStyle: `
       @page { size: A4; margin: 10mm; }
       body { font-family: 'Roboto', sans-serif; }
@@ -444,21 +444,22 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
       </NewModal> */}
       <div className="hidden">
+        {/* <PDFViewer style={tw("w-full h-full")}> */}
 
-        <PrintFormatGreyYarnPurchaseOrder
-          remarks={remarks}
-          discountType={discountType}
-          poType={poType}
-          discountValue={discountValue}
-          ref={componentRef}
-          poNumber={docId} poDate={date} dueDate={dueDate} payTermId={payTermId}
-          poItems={poItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
-          supplierDetails={supplierDetails ? supplierDetails?.data : null}
-          singleData={singleData ? singleData.data : null}
-          deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-          yarnList={yarnList} uomList={uomList} colorList={colorList}
-        />
-
+          <PrintFormatGreyYarnPurchaseOrder
+            remarks={remarks}
+            discountType={discountType}
+            poType={poType}
+            discountValue={discountValue}
+            ref={componentRef}
+            poNumber={docId} poDate={date} dueDate={dueDate} payTermId={payTermId}
+            poItems={poItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
+            supplierDetails={supplierDetails ? supplierDetails?.data : null}
+            singleData={singleData ? singleData.data : null}
+            deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+            yarnList={yarnList} uomList={uomList} colorList={colorList}
+          />
+        {/* </PDFViewer> */}
       </div>
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">

@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
+import { AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 
@@ -130,9 +130,11 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY PURCHASE ORDER": <AccessoryPurchaseOrder />,
     "ACCESSORY PURCHASE CANCEL": <AccessoryPurchasecancel />,
     "ACCESSORY PURCHASE INWARD": <AccessoryPurchaseInward />,
-    "TERMS & CONDTIONS MASTER" : <TermsandCondition/> ,
-    "HSN MASTER" : <HsnMaster/> ,
-    "PURCHASE BILL ENTRY" :  <PurchaseBillEntry />
+    "TERMS & CONDTIONS MASTER": <TermsandCondition />,
+    "HSN MASTER": <HsnMaster />,
+    "PURCHASE BILL ENTRY": <PurchaseBillEntry />,
+    "ACCESSORY PURCHASE RETURN": <AccessoryPurchaseReturn />,
+
 
 
 

@@ -32,19 +32,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  // const [docId, setDocId] = useState("")
-  // const [date, setDate] = useState("")
-  // const [readOnly, setReadOnly] = useState('')
-  // const [transType, setTransType] = useState("GreyYarn");
-  // const [dcNo, setDcNo] = useState("")
-  // const [dcDate, setDcDate] = useState('')
-  // const [supplierId, setSupplierId] = useState('')
-  // const [payTermId, setPayTermId] = useState("");
-  // const [locationId, setLocationId] = useState('');
-  // const [storeId, setStoreId] = useState("")
-  // const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
-  // const [inwardItemSelection, setInwardItemSelection] = useState(false)
-  // const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
 
 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
@@ -136,6 +123,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     setStoreId(data?.storeId ? data.storeId : "")
     setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
+    setPartyId(data?.supplierId ? data?.supplierId : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
@@ -473,18 +461,21 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 setValue={setTransType}
                 required={true}
                 readOnly={true}
+                disabled={id}
               />
 
               <DropdownInput name="Location"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                 value={locationId}
                 setValue={(value) => { setLocationId(value); setStoreId("") }}
-                required={true}
+                required={true} disabled={id}
+
               // readOnly={ readOnly}
               />
               <DropdownInput name="Store"
                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
-                value={storeId} setValue={setStoreId} required={true}
+                value={storeId} setValue={setStoreId} required={true} disabled={id}
+
               // readOnly={id || readOnly}
               />
               {/* < div className="mt-5">
@@ -521,9 +512,11 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   // ref={inputPartyRef}
                   // nextRef={styleRef}
                   show={"isSupplier"}
+                                  disabled={id}
+
                 />
               </div>
-              <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+              <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required  />
               <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
 
             </div>

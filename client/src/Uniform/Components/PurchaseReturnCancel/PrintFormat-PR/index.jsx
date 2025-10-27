@@ -1,316 +1,842 @@
-import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
-import moment from 'moment';
-// import numWords from 'num-words';
-import PurchaseReturn from './Purchasereturn';
+// import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
+// import moment from 'moment';
+// // import numWords from 'num-words';
+// import PurchaseReturn from './Purchasereturn';
 
-export default function PrintFormat({ singleData}) {
-  console.log(singleData,"singleData")
-  const findAmount = (qty, price, tax, discountType, disAmount) => {
-    
-    let taxAmount = 0;
-    let grossAmount = parseFloat((parseFloat(qty) * parseFloat(price)) || 0).toFixed(2);
-    let dicountAmount = 0;
+// export default function PrintFormat({ singleData}) {
+//   console.log(singleData,"singleData")
+//   const findAmount = (qty, price, tax, discountType, disAmount) => {
 
-    // if (tax !== "") {
-    //   let percentage = parseFloat(tax) / 100
+//     let taxAmount = 0;
+//     let grossAmount = parseFloat((parseFloat(qty) * parseFloat(price)) || 0).toFixed(2);
+//     let dicountAmount = 0;
 
-    //   taxAmount = parseFloat(parseFloat(grossAmount) * percentage).toFixed(2)
-    // }
+//     // if (tax !== "") {
+//     //   let percentage = parseFloat(tax) / 100
 
-    // if (discountType == "Flat") {
-    //   dicountAmount = parseFloat(disAmount).toFixed(2)
-    // }
-    // else if (discountType == "Percentage") {
-    //   let percentage = parseFloat(disAmount) / 100
-    //   dicountAmount = parseFloat(parseFloat(grossAmount) * percentage).toFixed(2)
-    // }
+//     //   taxAmount = parseFloat(parseFloat(grossAmount) * percentage).toFixed(2)
+//     // }
 
-    return parseFloat(grossAmount || 0) 
+//     // if (discountType == "Flat") {
+//     //   dicountAmount = parseFloat(disAmount).toFixed(2)
+//     // }
+//     // else if (discountType == "Percentage") {
+//     //   let percentage = parseFloat(disAmount) / 100
+//     //   dicountAmount = parseFloat(parseFloat(grossAmount) * percentage).toFixed(2)
+//     // }
 
-  }
+//     return parseFloat(grossAmount || 0) 
 
-  function getTotals(field) {
-    const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
-      return accumulator + parseFloat(current[field] ? current[field] : 0)
-    }, 0)
-    return parseFloat(total)
-  }
+//   }
 
-  function getGross(field1, field2) {
-    const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
-      return accumulator + parseFloat(current[field1] || current[field2] ? current[field1] * current[field2] : 0)
-    }, 0)
-    return parseFloat(total)
-  }
+//   function getTotals(field) {
+//     const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
+//       return accumulator + parseFloat(current[field] ? current[field] : 0)
+//     }, 0)
+//     return parseFloat(total)
+//   }
 
-
-
-  function getTotalAmount(qty, price, tax, discountType, disAmount) {
-    const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
-      return accumulator + parseFloat(current[qty] || current[price] ? findAmount(current[qty], current[price], current[tax], current[discountType], current[disAmount]) : 0)
-    }, 0)
-    return parseFloat(total)
-  }
+//   function getGross(field1, field2) {
+//     const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
+//       return accumulator + parseFloat(current[field1] || current[field2] ? current[field1] * current[field2] : 0)
+//     }, 0)
+//     return parseFloat(total)
+//   }
 
 
-  const styles = StyleSheet.create({
-    page: { padding: 5, },
-    infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, },
-    bold: {
-      fontWeight: 'bold',
-      fontSize: 14,
-    },
-    valueText: {
-      fontSize: 7 ,
-      color: '#555',
-      paddingLeft: 5,
-    textTransform: "captialize",
-  
-    },
-    labelpo: {
-      fontSize: 7,
-      textAlign: 'right',
-      paddingRight: 5,
-        fontWeight:"bold",
-    },
-    labelpo1: {
-      fontSize: 7,
-      textAlign: 'right',
-      paddingRight: 8
-    },
-    fromInfoContainer: {
-      width: '33%',
-      padding: 6,
-      borderRadius: 8,
-    },
-    rightContainer: {
-      flexDirection: 'column',
-      backgroundColor: '#f9f9f9',
-      borderRadius: 8,
-      padding: 6,
-      shadowColor: '#E5E7EB',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      width: '33%',
-    },
-    labelContainer: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#333',
-    },
-    photoContainer: {
-      width: '15%',
-      height: 80,
-      marginRight: 10,
-      borderRadius: 4,
-      border: '1 solid #e5e7eb',
-      padding: 2,
-      backgroundColor: '#f3f4f6',
-    },
-    infoCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#fff',
-      borderRadius: 6,
-      padding: 8,
-      marginHorizontal: 4,
-      marginVertical: 4,
-      shadowColor: '#E5E7EB',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-    },
-    bold: {
-      fontWeight: 'bold',
-      color: '#333',
-      marginRight: 4,
-    },
-  
-    valueContainer: {
-      width: '60%',
-      color: '#555',
-    },
-  
-    container: {
-      width: '100%',
-      padding: 5,
-    },
-    headerContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingBottom: 5,
-      marginBottom: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#016B65',
-    },
-    title: {
-      textAlign: 'center',
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#B81981',
-      letterSpacing: 0.5,
-      marginVertical: 5,
-    },
-    withBorder: {
-      borderRightWidth: 1,
-      borderRightColor: '#E5E7EB',
-    },
-    logo: {
-      width: 60,
-      height: 60,
-    },
-  
-    billInfoContainer: {
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-    },
-    infoWrapper: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 5,
-    },
-  
-    toInfoContainer: {
-      width: '33%',
-    },
-    infoText: {
-      fontSize: 7,
-      marginVertical: 2,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    infoText1: {
-      fontSize: 7,
-      marginVertical: 2,
-      flexDirection: 'row',
-      alignItems: 'center',
-      color: '#016B65',
-    },
-    infoText2: {
-      fontSize: 7,
-      marginVertical: 2,
-      flexDirection: 'row',
-      alignItems: 'center',
-  
-    },
-    totalRow: { flexDirection: 'row', backgroundColor: '#bfdbfe', padding: 5, fontWeight: 'bold' },
-    icon: {
-      marginRight: 6,
-      width: 12,
-      height: 12,
-    },
-    bold: {
-      fontWeight: 'bold',
-    },
-    divider: {
-      borderBottomWidth: 1,
-      borderBottomColor: '#016B65',
-      marginVertical: 4,
-    },
-  
-    amountInWordsContainer: {
-      backgroundColor: "#f0f8ff", // Light blue background
-      padding: 10,
-      marginTop: 10,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: "#ccc",
-      alignItems: "center",
-    },
-    amountInWordsLabel: {
-      fontSize: 8,
-      fontWeight: "bold",
-      color: "#333",
-      marginBottom: 5,
-    },
-    amountInWordsText: {
-      fontSize: 8,
-      fontWeight: "600",
-      color: "#007bff", 
-      textAlign: "center",
-    },
-  
-    footer: {
-      marginTop: 20,
-      borderTopWidth: 1,
-      borderTopColor: '#016B65',
-      paddingTop: 10,
-      alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 7,
-      color: '#555',
-      marginVertical: 2,
-    },
-     table: {
-      display: "table",
-      width: "100%",
-      borderStyle: "solid",
-      borderWidth: 1,
-      borderColor: "#D1D5DB",
-      marginTop: 10,
-    },
-    tableHeader: {
-      flexDirection: "row",
-      backgroundColor: "#F3F4F6",
-      borderBottomWidth: 1,
-      borderBottomColor: "#D1D5DB",
-      fontWeight: "bold",
-      textAlign: "center",
-  
-    },
-    headerCell: {
-      flex: 1,
-      padding: 6,
-      fontSize: 7,
-      textAlign: "center",
-      fontWeight: "bold",
-      borderRightWidth: 1,
-      borderRightColor: "#D1D5DB",
-  
-    },
-    tableRow: {
-      flexDirection: "row",
-      borderBottomWidth: 1,
-      borderBottomColor: "#D1D5DB",
-      textAlign: "center",
-  
-    },
-    tableRowOdd: {
-      backgroundColor: "#F9FAFB",
-    },
-    tableCell: {
-      flex: 1,
-      padding: 6,
-      fontSize: 7,
-      borderRightWidth: 1,
-      borderRightColor: "#D1D5DB",
-      textTransform: "captialize"
-  
-    },
-    totalRow: {
-      flexDirection: "row",
-      backgroundColor: "#E5E7EB",
-      fontWeight: "bold",
-    },
-    totalCell: {
-      flex: 1,
-      padding: 6,
-      fontSize: 7,
-      textAlign: "center",
-      fontWeight: "bold",
-      borderRightWidth: 1,
-      borderRightColor: "#D1D5DB",
-    },
-  
-  });
+
+//   function getTotalAmount(qty, price, tax, discountType, disAmount) {
+//     const total = singleData?.directReturnItems?.reduce((accumulator, current) => {
+//       return accumulator + parseFloat(current[qty] || current[price] ? findAmount(current[qty], current[price], current[tax], current[discountType], current[disAmount]) : 0)
+//     }, 0)
+//     return parseFloat(total)
+//   }
+
+
+//   const styles = StyleSheet.create({
+//     page: { padding: 5, },
+//     infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, },
+//     bold: {
+//       fontWeight: 'bold',
+//       fontSize: 14,
+//     },
+//     valueText: {
+//       fontSize: 7 ,
+//       color: '#555',
+//       paddingLeft: 5,
+//     textTransform: "captialize",
+
+//     },
+//     labelpo: {
+//       fontSize: 7,
+//       textAlign: 'right',
+//       paddingRight: 5,
+//         fontWeight:"bold",
+//     },
+//     labelpo1: {
+//       fontSize: 7,
+//       textAlign: 'right',
+//       paddingRight: 8
+//     },
+//     fromInfoContainer: {
+//       width: '33%',
+//       padding: 6,
+//       borderRadius: 8,
+//     },
+//     rightContainer: {
+//       flexDirection: 'column',
+//       backgroundColor: '#f9f9f9',
+//       borderRadius: 8,
+//       padding: 6,
+//       shadowColor: '#E5E7EB',
+//       shadowOffset: { width: 0, height: 2 },
+//       shadowOpacity: 0.1,
+//       shadowRadius: 4,
+//       width: '33%',
+//     },
+//     labelContainer: {
+//       fontSize: 10,
+//       fontWeight: 'bold',
+//       color: '#333',
+//     },
+//     photoContainer: {
+//       width: '15%',
+//       height: 80,
+//       marginRight: 10,
+//       borderRadius: 4,
+//       border: '1 solid #e5e7eb',
+//       padding: 2,
+//       backgroundColor: '#f3f4f6',
+//     },
+//     infoCard: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       backgroundColor: '#fff',
+//       borderRadius: 6,
+//       padding: 8,
+//       marginHorizontal: 4,
+//       marginVertical: 4,
+//       shadowColor: '#E5E7EB',
+//       shadowOffset: { width: 0, height: 1 },
+//       shadowOpacity: 0.1,
+//       shadowRadius: 2,
+//     },
+//     bold: {
+//       fontWeight: 'bold',
+//       color: '#333',
+//       marginRight: 4,
+//     },
+
+//     valueContainer: {
+//       width: '60%',
+//       color: '#555',
+//     },
+
+//     container: {
+//       width: '100%',
+//       padding: 5,
+//     },
+//     headerContainer: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//       alignItems: 'center',
+//       paddingBottom: 5,
+//       marginBottom: 10,
+//       borderBottomWidth: 1,
+//       borderBottomColor: '#016B65',
+//     },
+//     title: {
+//       textAlign: 'center',
+//       fontSize: 20,
+//       fontWeight: 'bold',
+//       color: '#B81981',
+//       letterSpacing: 0.5,
+//       marginVertical: 5,
+//     },
+//     withBorder: {
+//       borderRightWidth: 1,
+//       borderRightColor: '#E5E7EB',
+//     },
+//     logo: {
+//       width: 60,
+//       height: 60,
+//     },
+
+//     billInfoContainer: {
+//       flexDirection: 'column',
+//       alignItems: 'flex-end',
+//     },
+//     infoWrapper: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//       marginBottom: 5,
+//     },
+
+//     toInfoContainer: {
+//       width: '33%',
+//     },
+//     infoText: {
+//       fontSize: 7,
+//       marginVertical: 2,
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//     },
+//     infoText1: {
+//       fontSize: 7,
+//       marginVertical: 2,
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       color: '#016B65',
+//     },
+//     infoText2: {
+//       fontSize: 7,
+//       marginVertical: 2,
+//       flexDirection: 'row',
+//       alignItems: 'center',
+
+//     },
+//     totalRow: { flexDirection: 'row', backgroundColor: '#bfdbfe', padding: 5, fontWeight: 'bold' },
+//     icon: {
+//       marginRight: 6,
+//       width: 12,
+//       height: 12,
+//     },
+//     bold: {
+//       fontWeight: 'bold',
+//     },
+//     divider: {
+//       borderBottomWidth: 1,
+//       borderBottomColor: '#016B65',
+//       marginVertical: 4,
+//     },
+
+//     amountInWordsContainer: {
+//       backgroundColor: "#f0f8ff", // Light blue background
+//       padding: 10,
+//       marginTop: 10,
+//       borderRadius: 8,
+//       borderWidth: 1,
+//       borderColor: "#ccc",
+//       alignItems: "center",
+//     },
+//     amountInWordsLabel: {
+//       fontSize: 8,
+//       fontWeight: "bold",
+//       color: "#333",
+//       marginBottom: 5,
+//     },
+//     amountInWordsText: {
+//       fontSize: 8,
+//       fontWeight: "600",
+//       color: "#007bff", 
+//       textAlign: "center",
+//     },
+
+//     footer: {
+//       marginTop: 20,
+//       borderTopWidth: 1,
+//       borderTopColor: '#016B65',
+//       paddingTop: 10,
+//       alignItems: 'center',
+//     },
+//     footerText: {
+//       fontSize: 7,
+//       color: '#555',
+//       marginVertical: 2,
+//     },
+//      table: {
+//       display: "table",
+//       width: "100%",
+//       borderStyle: "solid",
+//       borderWidth: 1,
+//       borderColor: "#D1D5DB",
+//       marginTop: 10,
+//     },
+//     tableHeader: {
+//       flexDirection: "row",
+//       backgroundColor: "#F3F4F6",
+//       borderBottomWidth: 1,
+//       borderBottomColor: "#D1D5DB",
+//       fontWeight: "bold",
+//       textAlign: "center",
+
+//     },
+//     headerCell: {
+//       flex: 1,
+//       padding: 6,
+//       fontSize: 7,
+//       textAlign: "center",
+//       fontWeight: "bold",
+//       borderRightWidth: 1,
+//       borderRightColor: "#D1D5DB",
+
+//     },
+//     tableRow: {
+//       flexDirection: "row",
+//       borderBottomWidth: 1,
+//       borderBottomColor: "#D1D5DB",
+//       textAlign: "center",
+
+//     },
+//     tableRowOdd: {
+//       backgroundColor: "#F9FAFB",
+//     },
+//     tableCell: {
+//       flex: 1,
+//       padding: 6,
+//       fontSize: 7,
+//       borderRightWidth: 1,
+//       borderRightColor: "#D1D5DB",
+//       textTransform: "captialize"
+
+//     },
+//     totalRow: {
+//       flexDirection: "row",
+//       backgroundColor: "#E5E7EB",
+//       fontWeight: "bold",
+//     },
+//     totalCell: {
+//       flex: 1,
+//       padding: 6,
+//       fontSize: 7,
+//       textAlign: "center",
+//       fontWeight: "bold",
+//       borderRightWidth: 1,
+//       borderRightColor: "#D1D5DB",
+//     },
+
+//   });
+//   return (
+//     <Document>
+
+//         <PurchaseReturn styles={styles}  singleData={singleData} findAmount={findAmount} getTotals={getTotals} getGross={getGross} getTotalAmount={getTotalAmount} />
+//     </Document>
+//   );
+// }
+
+import {
+  Document,
+  Page,
+  View,
+  Text,
+  Image,
+  Font,
+  StyleSheet,
+} from "@react-pdf/renderer";
+import Sangeethatex from "../../../../../src/assets/Sangeethatex.png";
+import tw from "../../../../Utils/tailwind-react-pdf";
+import numberToText from "number-to-text";
+import { findFromList, getCommonParams, getDateFromDateTimeToDisplay } from "../../../../Utils/helper";
+import { useGetBranchByIdQuery } from "../../../../redux/services/BranchMasterService";
+import { useGetPartyByIdQuery } from "../../../../redux/services/PartyMasterService";
+import { useGetPaytermMasterQuery } from "../../../../redux/services/PayTermMasterServices";
+import { useGetTermsAndConditionsQuery } from "../../../../redux/services/TermsAndConditionsService";
+import useTaxDetailsHook from "../../../../CustomHooks/TaxHookDetails";
+import TaxDetails from "./TaxDetails";
+
+// Font registration
+Font.register({
+  family: "Roboto",
+  src: "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;1,400;1,600&display=swap",
+});
+
+const styles = StyleSheet.create({
+  // page: {
+  //   fontFamily: "Helvetica",
+  //   fontSize: 8,
+  //   padding: 10,
+  //   border: "1 solid #000",
+  // },
+  borderBox: { border: "1 solid black", margin: 0, padding: 8, },
+  page: {
+    // fontFamily: "Helvetica",
+    fontSize: 8,
+    padding: 0,
+    border: "1 solid #000",
+  },
+  header: {
+    alignItems: "center",
+    textAlign: "center",
+    marginBottom: 4,
+    borderBottom: "1 solid #000",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+
+  },
+  logo: {
+    // width: 60,
+    height: 40,
+    marginRight: 6,
+  },
+  companyText: {
+    fontSize: 8,
+    textAlign: "left",
+  },
+  greenTitle: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "green",
+    fontWeight: "bold",
+    marginVertical: 4,
+    // textDecoration: "underline",
+    marginBottom: 6,
+  },
+  infoRow: {
+    flexDirection: "row",
+    border: "1 solid #000",
+    justifyContent: "space-between",
+    padding: 4,
+  },
+  infoLeft: { flex: 1 },
+  infoRight: {
+    width: 80,
+    height: 80,
+    border: "1 solid #000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sectionTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "green",
+    backgroundColor: "#e6ffe6",
+    borderBottom: "1 solid #000",
+    padding: 2,
+  },
+  boxRow: {
+    flexDirection: "row",
+    border: "1 solid #000",
+    marginTop: 4,
+  },
+  boxCol: {
+    flex: 1,
+    borderRight: "1 solid #000",
+  },
+  boxContent: {
+    padding: 4,
+    fontSize: 8,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#d1fae5",
+    borderTop: "1 solid #000",
+    borderBottom: "1 solid #000",
+    marginTop: 6,
+  },
+  th: {
+    flex: 1,
+    fontSize: 8,
+    fontWeight: "bold",
+    textAlign: "center",
+    borderRight: "1 solid #000",
+    padding: 3,
+  },
+  td: {
+    flex: 1,
+    fontSize: 8,
+    textAlign: "center",
+    borderRight: "1 solid #000",
+    borderBottom: "1 solid #000",
+    padding: 3,
+  },
+  totalRow: {
+    flexDirection: "row",
+    borderTop: "1 solid #000",
+  },
+  totalLabel: {
+    flex: 8,
+    textAlign: "center",
+    fontSize: 8,
+    fontWeight: "bold",
+    padding: 3,
+  },
+  totalValue: {
+    flex: 1.2,
+    textAlign: "right",
+    fontSize: 8,
+    padding: 3,
+  },
+  taxBox: {
+    width: 180,
+    border: "1 solid #000",
+    alignSelf: "flex-end",
+    marginTop: 4,
+  },
+  taxHeader: {
+    backgroundColor: "#d1fae5",
+    borderBottom: "1 solid #000",
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 8,
+    padding: 3,
+  },
+  taxRow: {
+    flexDirection: "row",
+    borderTop: "1 solid #000",
+  },
+  taxLabel: { flex: 1, padding: 3, fontSize: 8 },
+  taxValue: {
+    flex: 1,
+    textAlign: "right",
+    padding: 3,
+    fontSize: 8,
+  },
+  remarksSection: {
+    marginTop: 6,
+  },
+  footer: {
+    marginTop: 10,
+  },
+  signatureRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  signature: {
+    flex: 1,
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 8,
+  },
+  pageNumber: {
+    position: "absolute",
+    bottom: 10,
+    right: 30,
+    fontSize: 7,
+    color: "#555",
+  },
+  poDetails: {
+    marginTop: 10,
+    width: "50%", // adjust as needed
+  },
+
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+
+  label: {
+    fontSize: 8,
+    fontWeight: "bold",
+  },
+
+  value: {
+    fontSize: 8,
+    textAlign: "right",
+    flexShrink: 1, // helps long text wrap properly
+  },
+});
+const YarnPurchaseOrderReturnPrintFormat = ({
+  poNumber,
+  poDate,
+  deliveryToId,
+  dueDate,
+  payTermId,
+  deliveryType,
+  supplierDetails,
+  poItems,
+  yarnList,
+  colorList,
+  uomList,
+  taxTemplateId,
+  discountType,
+  discountValue,
+  remarks,
+  poType,
+  branchData,
+  termsAndCondition,
+  taxDetails,
+  deliveryTo,
+  taxKey,
+  taxGroupWise
+}) => {
+
+
+
+  console.log(supplierDetails, "supplierDetails", taxKey)
+
+
+
+
+
+
+
+
+
+
   return (
     <Document>
+      <Page size="A4" style={styles.borderBox}>
+        {/* Header */}
+        <View style={styles.page}>
 
-        <PurchaseReturn styles={styles}  singleData={singleData} findAmount={findAmount} getTotals={getTotals} getGross={getGross} getTotalAmount={getTotalAmount} />
-    </Document>
+          <View style={styles.header}>
+            <Text style={{ fontSize: 12, color: "green", fontWeight: "bold", marginBottom: 4 }}>
+              {branchData.branchName}
+            </Text>
+            <View style={styles.logoRow}>
+              <Image src={Sangeethatex} style={styles.logo} />
+              <View>
+                <Text style={styles.companyText}>{branchData.address}</Text>
+                <Text style={styles.companyText}>Mobile: {branchData.mobile}</Text>
+                <Text style={styles.companyText}>PAN No: {branchData.panNo}</Text>
+                <Text style={styles.companyText}>GST No: {branchData.gstNo}</Text>
+              </View>
+            </View>
+          </View>
+          <View >
+            <Text style={styles.greenTitle}>YARN PURCHASE RETURN</Text>
+            <Text style={{ marginBottom: 4, borderBottom: "1 solid #000", }}></Text>
+
+          </View>
+          <View style={{
+            justifyContent: "space-between", flexDirection: "row", marginTop: 4, paddingHorizontal: 4
+          }}  >
+            <View style={styles.poDetails}>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>PO No :</Text>
+                <Text style={styles.value}>{poNumber}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>PO Date :</Text>
+                <Text style={styles.value}>{getDateFromDateTimeToDisplay(poDate)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Due Date :</Text>
+                <Text style={styles.value}>{getDateFromDateTimeToDisplay(dueDate)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Payment Terms :</Text>
+                <Text style={styles.value}>{"-"}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRight}>
+              <Text style={{ fontSize: 6 }}>QR: {poNumber}</Text>
+            </View>
+          </View>
+
+          {/* Vendor & Delivery */}
+          <View style={styles.boxRow}>
+            <View style={styles.boxCol}>
+              <Text style={styles.sectionTitle}>SUPPLIER DETAILS :</Text>
+              <View style={styles.boxContent}>
+                <Text style={{ fontWeight: "bold" }}>{supplierDetails?.name}</Text>
+                <Text>{supplierDetails?.address}</Text>
+                <Text>Mobile No: {supplierDetails?.mobile}</Text>
+                <Text>PAN No: {supplierDetails?.panNo}</Text>
+                <Text>GST No: {supplierDetails?.gstNo}</Text>
+                <Text>Email: {supplierDetails?.email}</Text>
+              </View>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>DELIVERY TO :</Text>
+              <View style={styles.boxContent}>
+                <Text style={{ fontWeight: "bold" }}>{branchData.branchName}</Text>
+                <Text>{branchData.address}</Text>
+                <Text>Mobile No: {branchData.mobile}</Text>
+                <Text>GST No: {branchData.gstNo}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.tableHeader}>
+            <Text style={[styles.th, { flex: 0.7 }]}>S.No</Text>
+            <Text style={[styles.th, { flex: 3 }]}>Item</Text>
+            <Text style={[styles.th, { flex: 2 }]}>Color</Text>
+            <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
+            <Text style={[styles.th, { flex: 1 }]}>No. of Bags</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
+            <Text style={[styles.th, { flex: 1.2 }]}>Amount</Text>
+          </View>
+
+          {poItems.map((val, index) => (
+            <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
+              <Text style={[styles.td, { flex: 0.7 }]}>{index + 1}</Text>
+              <Text style={[styles.td, { flex: 3 }]}>
+                {findFromList(val.yarnId, yarnList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 2 }]}>
+                {findFromList(val.colorId, colorList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 1 }]}>
+                {findFromList(val.uomId, uomList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.noOfBags).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.qty).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1 }]}>
+                {parseFloat(val.price).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.taxPercent).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1.2, textAlign: "right" }]}>
+                {parseFloat(val.qty * val.price).toFixed(3)}
+              </Text>
+            </View>
+          ))}
+
+
+          <View
+            style={{
+              flexDirection: "row",
+              // borderTop: "1 solid #9ca3af",
+              borderBottom: "1 solid #9ca3af",
+            }}
+          >
+            <Text
+              style={{
+                flex: 8,
+                textAlign: "center",
+                fontSize: 8,
+                fontWeight: "bold",
+                padding: 3,
+              }}
+            >
+              TOTAL
+            </Text>
+            <Text
+              style={{
+                flex: 1.2,
+                textAlign: "right",
+                fontSize: 8,
+                padding: 3,
+                borderLeft: "1 solid #9ca3af",
+              }}
+            >
+              {parseFloat(taxDetails.taxableAmount).toFixed(2)}
+            </Text>
+          </View>
+
+
+          <View
+            style={{
+              alignSelf: "flex-end",
+              border: "1 solid #9ca3af",
+              // marginTop: 4,
+              width: 100,
+            }}
+          >
+            <View style={{ backgroundColor: "#d1fae5" }}>
+              <Text style={{ fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 5 }}>
+                TAX DETAILS
+              </Text>
+            </View>
+            <TaxDetails taxGroupWise={taxGroupWise} poItems={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType}  discountValue= {discountValue} />
+            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af" }}>
+              <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>CGST @{parseFloat(taxKey) / 2}% </Text>
+              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+                {parseFloat(taxDetails.cgstAmount).toFixed(3)}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af" }}>
+              <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>SGST @{parseFloat(taxKey) / 2}%</Text>
+              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+                {parseFloat(taxDetails.sgstAmount).toFixed(3)}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#d1fae5" }}>
+              <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>Net Amount</Text>
+              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+                {parseFloat(taxDetails.netAmount).toFixed(3)}
+              </Text>
+            </View>
+          </View>
+
+
+          <View style={{ marginTop: 6 }}>
+            <Text style={{ fontSize: 8, fontWeight: "bold" }}>
+              Amount in Words:
+            </Text>
+            <Text style={{ fontSize: 8 }}>
+              Rs.{" "}
+              {/* {numberToText.convertToText(taxDetails?.netAmount, {
+                language: "en-in",
+                separator: "",
+              })}{" "} */}
+              Only
+            </Text>
+
+            <Text style={{ fontSize: 8, fontWeight: "bold", marginTop: 4 }}>
+              Remarks:
+            </Text>
+            <Text style={{ fontSize: 8 }}>{remarks}</Text>
+
+            <Text style={{ fontSize: 8, fontWeight: "bold", marginTop: 4 }}>
+              Terms and Conditions:
+            </Text>
+            {termsAndCondition?.data
+              ?.filter((v) => v.isPurchaseOrder)
+              ?.map((v) => (
+                <Text key={v.id} style={{ fontSize: 7 }}>
+                  {v.description}
+                </Text>
+              ))}
+          </View>
+
+          {/* Footer */}
+          <View style={{ marginTop: 10 }}>
+            <Text
+              style={{ fontSize: 8, textAlign: "right", fontWeight: "bold" }}
+            >
+              For {branchData.branchName}
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 20,
+              }}
+            >
+              {["Prepared By", "Verified By", "Received By", "Approved By"].map(
+                (role) => (
+                  <Text
+                    key={role}
+                    style={{
+                      fontSize: 8,
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      flex: 1,
+                    }}
+                  >
+                    {role}
+                  </Text>
+                )
+              )}
+            </View>
+          </View>
+
+          <View
+            fixed
+            style={{
+              position: "absolute",
+              bottom: 10,
+              right: 30,
+              fontSize: 7,
+              color: "#555",
+            }}
+          >
+            <Text
+              render={({ pageNumber, totalPages }) =>
+                `Page ${pageNumber} / ${totalPages}`
+              }
+            />
+          </View>
+
+        </View>
+      </Page>
+    </Document >
   );
-}
+};
 
+export default YarnPurchaseOrderReturnPrintFormat;

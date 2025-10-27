@@ -7,13 +7,7 @@ import { toast } from "react-toastify";
 import { DropdownInput, DateInput, TextInput, ReusableSearchableInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
-import YarnPoItems from "./YarnPoItems";
-import FabricPoItems from "./FabricPoItems";
-import AccessoryPoItems from "./AccessoryPoItems"
-import Consolidation from "../Consolidation";
 import PoItemsSelection from "./PoItemsSelection";
-import AccessoryInwardItems from "./AccessoryInwardItems";
-import FabricInwardItems from "./FabricInwardItems";
 import moment from "moment";
 // import PoSummary from "./PoSummary";
 import Modal from "../../../UiComponents/Modal";
@@ -28,57 +22,37 @@ import {
 }
     from "../../../redux/uniformService/DirectCancelOrReturnServices";
 import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { directOrPo, directOrPoreturn, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
-import InwardItemsSelection from "./InwardItemsSelection";
+import { directOrPo, directOrPoreturn, MaterialType, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
+// import InwardItemsSelection from "./InwardItemsSelection";
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { ReusableInput } from "../Order/CommonInput";
-import ReturnItems from "./ReturnItems";
+// import ReturnItems from "./ReturnItems";
 import Swal from "sweetalert2";
-import PrintFormatGreyYarnPurchaseReturn from "./NewPrintFormat/index.js"
+// import PrintFormatGreyYarnPurchaseReturn from "./NewPrintFormat/index.js"
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { useReactToPrint } from "react-to-print";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
-import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
+// import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService.js";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
+import ReturnItems from "./ReturnItems.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
-
-
-    const componentRef = useRef();
-
-    // const handlePrint = useReactToPrint({
-    //     content: () =>  componentRef.current,
-    //     documentTitle: "Yarn Purchase Return",
-    //     pageStyle: `
-    //       @page { size: A4; margin: 10mm; }
-    //       body { font-family: 'Roboto', sans-serif; }
-    //     `
-    // });
-
-    const handlePrint = useReactToPrint({
-        content: () => setPrintModalOpen(true),
-        documentTitle: "Yarn Purchase Return",
-        pageStyle: `
-          @page { size: A4; margin: 10mm; }
-          body { font-family: 'Roboto', sans-serif; }
-        `
-    });
 
     const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("New")
     const [date, setDate] = useState();
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState("");
-    const [transType, setTransType] = useState("DyedYarn");
+    const [transType, setTransType] = useState("Accessory");
     const [supplierId, setSupplierId] = useState("");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
@@ -96,16 +70,30 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [term, setTerm] = useState("");
     const [notes, setNotes] = useState("");
     const [approvedBy, setApprovedBy] = useState("")
-
+    const [suppliers, setSuppliers] = useState([
+        "Supplier One",
+        "Supplier Two",
+        "Supplier Three",
+    ]);
     const [taxTemplateId, setTaxTemplateId] = useState("1");
 
+    console.log(storeId, "storeId")
     const [printModalOpen, setPrintModalOpen] = useState(false);
 
 
 
-    // const branchIdFromApi = useRef(branchId);
+    const componentRef = useRef();
 
-    console.log(printModalOpen, "printModalOpen")
+    const handlePrint = useReactToPrint({
+        content: () => componentRef.current,
+        documentTitle: "Yarn Purchase Return",
+        pageStyle: `
+          @page { size: A4; margin: 10mm; }
+          body { font-family: 'Roboto', sans-serif; }
+        `
+    });
+
+    // const branchIdFromApi = useRef(branchId);
     const params = {
         branchId, companyId
     };
@@ -124,7 +112,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
 
-
+    
 
     const { data: yarnList } =
         useGetYarnMasterQuery({ params: { companyId } });
@@ -165,7 +153,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         } else {
             setReadOnly(false);
         }
-        setTransType(data?.poType ? data.poType : "DyedYarn");
+        setTransType(data?.poType ? data.poType : "Accessory");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
         // setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
@@ -390,16 +378,21 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         return parseInt(qty)
     }
 
+    const handleAddSupplier = (newName) => {
+        if (!suppliers.includes(newName)) {
+            setSuppliers([...suppliers, newName]);
+        }
+    };
 
 
 
     const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
     const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
-
-    const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
-
+ 
+ const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
+ 
     const [deliveryType, setDeliveryType] = useState("")
-    const [deliveryToId, setDeliveryToId] = useState("")
+  const [deliveryToId, setDeliveryToId] = useState("")
 
 
     const { data: deliveryToBranch } = useGetBranchByIdQuery(deliveryToId, { skip: deliveryType === "ToParty" })
@@ -411,7 +404,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     return (
         <>
             <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
-                {
+                {/* {
                     (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn") ?
                         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
                             supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward}
@@ -425,7 +418,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
                             setInwardItems={setDirectInwardReturnItems} />
-                }
+                } */}
 
             </Modal>
             {/* <Modal
@@ -455,36 +448,27 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     />
                 </PDFViewer>
             </Modal> */}
+            {/* <div className="hidden">
 
+                <PrintFormatGreyYarnPurchaseReturn
+                    remarks={remarks}
+                    discountType={discountType}
+                    poType={directOrPoreturn}
+                    discountValue={discountValue}
+                    ref={componentRef}
+                    poNumber={docId} poDate={date} payTermId={payTermId}
+                    poItems={directInwardReturnItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
+                    supplierDetails={supplierDetails ? supplierDetails?.data : null}
+                    singleData={singleData ? singleData.data : null}
+                    deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+                    yarnList={yarnList} uomList={uomList} colorList={colorList}
+                />
 
-             <Modal
-                isOpen={printModalOpen}
-                onClose={() => setPrintModalOpen(false)}
-                widthClass={"w-[90%] h-[90%]"}
-            >
-                    <PrintFormatGreyYarnPurchaseReturn
-                        remarks={remarks}
-                        discountType={discountType}
-                        poType={directOrPoreturn}
-                        discountValue={discountValue}
-                        ref={componentRef}
-                        poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={directInwardReturnItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
-                        supplierDetails={supplierDetails ? supplierDetails?.data : null}
-                        singleData={singleData ? singleData.data : null}
-                        deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={yarnList} uomList={uomList} colorList={colorList}
-                    />
-            </Modal>
-            <div>
-
-
-
-            </div>
+            </div> */}
 
             <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchse Return</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Accessory Purchse Return</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -517,11 +501,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
                                 <DropdownInput name="Po Type"
 
-                                    options={YarnMaterial}
+                                    options={MaterialType}
                                     value={transType}
                                     setValue={setTransType}
                                     required={true}
-                                    readOnly={readOnly} />
+                                    readOnly={true} />
 
                             </div>
                         </div>
@@ -610,7 +594,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <div className="space-y-1.5">
                                 <div className="flex justify-between py-1 text-sm">
                                     <span className="text-slate-600">Total Qty</span>
-                                    <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
+                                    <span className="font-medium">{parseInt(getTotalQty())} </span>
                                 </div>
 
                                 <div className="flex justify-between py-1 text-sm">
@@ -697,7 +681,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                                 onClick={() => {
                                     setPrintModalOpen(true)
-                                    // handlePrint()
                                 }}
                             >
                                 <FiPrinter className="w-4 h-4 mr-2" />

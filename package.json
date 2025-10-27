@@ -10,7 +10,7 @@
     "start": "node --max-old-space-size=8192 server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "server": "NODE_OPTIONS = --max-old-space-size=8192",
-    "dev": "nodemon server.js",
+    "dev": "node --max-old-space-size=4096 ./node_modules/.bin/nodemon server.js",
     "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

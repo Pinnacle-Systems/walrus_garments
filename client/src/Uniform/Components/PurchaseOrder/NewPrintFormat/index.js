@@ -238,7 +238,7 @@ const Form = forwardRef(({
                 </div>
               </div>
             </div>
-            <div className='text-center p-1 text-md flex items-center justify-center font-bold text-green-700 w-full border-t border-gray-500'> PURCHASE ORDER</div>
+            <div className='text-center p-1 text-md flex items-center justify-center font-bold text-green-700 w-full border-t border-gray-500'>YARN PURCHASE ORDER</div>
             <div className='flex justify-between text-sm border  border-gray-600' >
               <div className='grid grid-cols-2 w-full py-2'>
                 <div className='flex ml-1'><span className="font-bold">PO No :</span> {poNumber}</div>
@@ -262,7 +262,7 @@ const Form = forwardRef(({
                     <th className="table-data  ">No. Of Bags</th>
                     <th className="table-data  "> Qty</th>
                     <th className="table-data  ">Rate</th>
-                    <th className="table-data  w-16">Tax</th>
+                    <th className="table-data  w-16">Tax(%)</th>
                     <th className="table-data  w-16">Amount</th>
                   </tr>
                 </thead>
@@ -280,11 +280,11 @@ const Form = forwardRef(({
                       <td className='table-data text-center px-1  '>
                         {findFromList(value.uomId,uomList?.data,"name" )}
                       </td>
-                      <td className='table-data text-center px-1 '>{value.noOfBags}</td>
+                      <td className='table-data text-right px-1 '>{parseFloat(value.noOfBags).toFixed(3)}</td>
                       <td className='table-data text-right px-1 '>{parseFloat(value.qty).toFixed(3)}</td>
-                      <td className='table-data text-right px-1 '>{parseFloat(value.price).toFixed(2)}</td>
-                      <td className='table-data text-center px-1 '>{value.taxPercent}%</td>
-                      <td className='table-data text-right px-1  '>{parseFloat(parseFloat(value.qty) * parseFloat(value.price)).toFixed(2)}</td>
+                      <td className='table-data text-right px-1 '>{parseFloat(value.price).toFixed(3)}</td>
+                      <td className='table-data text-right px-1 '>{parseFloat(value.taxPercent).toFixed(3)}</td>
+                      <td className='table-data text-right px-1  '>{parseFloat(parseFloat(value.qty) * parseFloat(value.price)).toFixed(3)}</td>
                     </tr>
                   ))}
                   <tr className='border  border-gray-500'>
@@ -304,15 +304,15 @@ const Form = forwardRef(({
                       ROUNDOFF
                     </td>
                     <td className='table-data text-right p-1'>
-                      {parseFloat(taxDetails?.roundOffAmount).toFixed(2)}
+                      {parseFloat(taxDetails?.roundOffAmount).toFixed(3)}
                     </td>
                   </tr>
                   <tr className='border border-gray-500 text-xs'>
                     <td className='table-data p-1 bg-green-200 text-xs'>
                       NET AMOUNT
                     </td>
-                    <td className='table-data p-1 text-xs'>
-                      {parseFloat(taxDetails?.netAmount).toFixed(2)}
+                    <td className='table-data p-1 text-xs text-right' >
+                      {parseFloat(taxDetails?.netAmount).toFixed(3)}
                     </td>
                   </tr>
                 </tbody>
