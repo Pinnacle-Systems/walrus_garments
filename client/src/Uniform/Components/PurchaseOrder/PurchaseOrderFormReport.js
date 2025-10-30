@@ -377,12 +377,12 @@ const PurchaseOrderFormReport = ({
   return (
     <div
       //   id="registrationFormReport"
-      className="flex flex-col w-full h-[93Vh] overflow-auto"
+      className="flex flex-col w-full h-[78Vh] overflow-auto"
     >
 
       <>
         <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[90vh]">
+          <div className="h-[68vh]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
