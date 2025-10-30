@@ -291,36 +291,35 @@ export default function Form() {
   console.log(childRecord?.current, "childrecord");
 
 
-    const handleDelete = async (id) => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                let deldata = await removeData(id).unwrap();
-                if (deldata?.statusCode == 1) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Child record Exists",
-                        text: deldata.data?.message || "Data cannot be deleted!",
-                    });
-                    return;
-                }
-                setId("");
-                Swal.fire({
-                    title: "Deleted Successfully",
-                    icon: "success",
-                    timer: 1000,
-                });
-            } catch (error) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Submission error",
-                    text: error.data?.message || "Something went wrong!",
-                });
-            }
+  const handleDelete = async (id) => {
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
+          return;
         }
-    };
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+      }
+    }
+  };
   const onNew = () => {
     setId("");
     setReadOnly(false);
