@@ -30,13 +30,16 @@ import { useGetTermsandCondtionsQuery } from "../../../redux/services/Term&Condi
 import PoSummary from "./PoSummary";
 import GeneralYarnPoItems from "./GeneralYarnPoItems";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetBranchByIdQuery, useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetYarnCountsQuery, useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import PrintFormatGreyYarnPurchaseOrder from "./NewPrintFormat/index.js"
 import { useReactToPrint } from "@etsoo/reactprint";
 import NewModal from "../../../UiComponents/NewModal/index.js";
+import YarnPurchaseOrderPrintFormat from "./PrintFormat-PO";
+import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
+import { groupBy } from "lodash";
 
 
 const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
@@ -50,7 +53,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const [taxTemplateId, setTaxTemplateId] = useState("");
   const [payTermId, setPayTermId] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [poType, setPoType] = useState("");
+  const [poType, setPoType] = useState("General Purchase");
   const [poMaterial, setPoMaterial] = useState("DyedYarn")
   const [supplierId, setSupplierId] = useState("");
   const [term, setTerm] = useState("")
@@ -166,6 +169,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
     useGetTaxTemplateQuery({ params: { ...params } });
 
+    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
 
 
@@ -175,7 +179,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     // setReadOnly(true)
 
 
-    setPoType(data?.poType ? data?.poType : "");
+    setPoType(data?.poType ? data?.poType : "General Purchase");
     setDate(data?.createdAt
       ? moment.utc(data.createdAt).format("YYYY-MM-DD")
       : moment.utc(new Date()).format("YYYY-MM-DD")
@@ -384,13 +388,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }
   let supplierListBasedOnSupply = filterSupplier()
 
+    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems : poItems, taxTypeId: taxTemplateId, discountType, discountValue })
+    const taxGroupWise = groupBy(poItems, "taxPercent");
 
 
 
   // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading || isTaxfetching) return <Loader />
 
 
-  // if (isTaxLoading || isTaxfetching) return <Loader />
 
 
   return (
@@ -399,8 +404,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
       <Modal
         isOpen={tableDataView && poType !== "General Purchase"}
-        onClose={() => { setTableDataView(false); setPoType(""); setPoItems([]); setSupplierId("") }}
-        widthClass="  h-[85%] w-[92%]"
+        onClose={() => { setTableDataView(false); setPoItems([]); setSupplierId("") }}
+        widthClass="  h-[82%] w-[92%]"
       >
         <OrderDetailsSelection
           onClose={() => setTableDataView(false)}
@@ -422,29 +427,38 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           setDiscountValue={setDiscountValue}
           poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} />
       </Modal>
-      {/* <NewModal
-        isOpen={printModalOpen}
-        onClose={() => setPrintModalOpen(false)}
-        widthClass={"w-[90%] h-[90%]"}
-        onPrint={handlePrint}
-
-      >
-        <PrintFormatGreyYarnPurchaseOrder
-          remarks={remarks}
-          discountType={discountType}
-          poType={poType}
-          discountValue={discountValue}
-          ref={componentRef}
-          poNumber={docId} poDate={date} dueDate={dueDate} payTermId={payTermId}
-          poItems={poItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
-          supplierDetails={supplierDetails ? supplierDetails?.data : null}
-          singleData={singleData ? singleData.data : null}
-          deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-        />
-
-      </NewModal> */}
-      <div className="hidden">
-        {/* <PDFViewer style={tw("w-full h-full")}> */}
+   <Modal
+                isOpen={printModalOpen}
+                onClose={() => setPrintModalOpen(false)}
+                widthClass={"w-[90%] h-[90%]"}
+            >
+                <PDFViewer style={tw("w-full h-full")}>
+                    <YarnPurchaseOrderPrintFormat
+                    isTaxHookDetailsLoading={isTaxHookDetailsLoading}
+                        branchData={branchdata?.data}
+                        data={id ? singleData?.data : "Null"}
+                        singleData={id ? singleData?.data : "Null"}
+                        date={id ? singleData?.data?.selectedDate : date}
+                        docId={docId ? docId : ""}
+                        remarks={remarks}
+                        discountType={discountType}
+                        poType={poType}
+                        discountValue={discountValue}
+                        ref={componentRef}
+                        poNumber={docId} poDate={date} payTermId={payTermId}
+                        poItems={poItems?.filter(item => item?.yarnId)}
+                        supplierDetails={supplierDetails ? supplierDetails?.data : null}
+                        // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+                        yarnList={yarnList} uomList={uomList} colorList={colorList}
+                          taxDetails={taxDetails}
+                        deliveryTo={deliveryToId} 
+                        taxGroupWise={taxGroupWise}
+                        // termsAndCondition={termsAndCondition} payTermList={payTermList}
+                        
+                    />
+                </PDFViewer>
+            </Modal>
+      {/* <div className="hidden">
 
           <PrintFormatGreyYarnPurchaseOrder
             remarks={remarks}
@@ -459,8 +473,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
             yarnList={yarnList} uomList={uomList} colorList={colorList}
           />
-        {/* </PDFViewer> */}
-      </div>
+      </div> */}
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
@@ -535,16 +548,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 readOnly={readOnly}
                 disabled={orderId || id}
               />
-              {/* {poType === "ORDER" &&
-                <DropdownWithSearch
-                  label="Order No"
-                  options={orderData?.data}
-                  labelField={"docId"}
-                  value={orderId}
-                  required={true}
-                  setValue={(value) => { setOrderId(value); setTableDataView(true) }}
-                />
-              } */}
+             
               <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
 
 
@@ -570,7 +574,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   component="PartyMaster"
                   placeholder="Search Supplier Id..."
                   optionList={supplierList?.data}
-                  setSearchTerm={(value) => { setSupplierId(value); }}
+                  setSearchTerm={(value) => { setSupplierId(value) }}
                   searchTerm={supplierId}
                   show={"isSupplier"}
                   required={true}
@@ -659,12 +663,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         </div>
         <fieldset className=''>
           {
-            // PurchaseType === "Order Purchase" ?
-
-            //   <OrderPurchase poItems={poItems} setPoItems={setPoItems} setRequirementId={setRequirementId} requirementId={requirementId} id={id}
-            //   />
-            //   :
-
+          
             poType == "Order Purchase"
               ?
               <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
@@ -679,15 +678,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 poMaterial={poMaterial} hsnData={hsnData} setTableDataView={setTableDataView} supplierId={supplierId}
               />
 
-            // (
-            //   poMaterial?.toLowerCase().includes("DyedYarn".toLowerCase())
-            //     ?
-            //     <YarnPoItems greyFilter={poType.toLowerCase().includes("Dyed")} id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
-            //       poMaterial={poMaterial}
-            //     />
-            //     :
-            //     <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} />
-            // )
+     
           }
 
         </fieldset>
@@ -698,24 +689,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
             <div className="flex flex-col gap-2">
               <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
-              {/* <select
-                disabled={readOnly}
-                className="text-left w-full rounded py-1 border-2 border-gray-200 text-[13px]"
-                onChange={e => {
-                  const selected = termsData?.data?.find(t => t.id === parseInt(e.target.value))
-                  setTerm(selected?.termsAndCondition || '')
-                }}
-              value={term}
-              >
-                <option hidden value="">
-                  Select Terms & Conditions
-                </option>
-                {(id ? termsData?.data : termsData?.data?.filter(item => item.active))?.map(blend => (
-                  <option value={blend.id} key={blend.id}>
-                    {blend?.termsAndCondition?.substring(0, 50)}...
-                  </option>
-                ))}
-              </select> */}
+        
               <select
                 value={term}
                 onChange={e => {
@@ -810,7 +784,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             </button> */}
             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               onClick={() => {
-                handlePrint()
+                // handlePrint()
+                setPrintModalOpen(true)
               }}
             >
               <FiPrinter className="w-4 h-4 mr-2" />

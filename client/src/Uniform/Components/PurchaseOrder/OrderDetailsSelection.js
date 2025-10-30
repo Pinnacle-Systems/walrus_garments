@@ -12,7 +12,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 }) {
 
 
-    console.log(poMaterial === "GreyYarn", "pomaterial")
+    console.log(tempPoItems, "tempPoItems")
 
     function handleDone() {
         onClose()
@@ -84,7 +84,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                 <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                     <div className="flex items-center gap-2">
                         <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                            {id ? (!readOnly ? "Edit Yarn Details" : "Yarn Details ") : "Add New Yarn"}
+                            Purchase Items
                         </h2>
 
                     </div>
@@ -98,7 +98,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                                         border border-green-600 flex items-center gap-1 text-xs"
                                 >
-                                    Ok
+                                    Done
                                 </button>
                             )}
                         </div>
@@ -106,13 +106,13 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                 </div>
                 <div className="flex-1 overflow-y-auto rounded-md ">
 
-                    <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full max-h-[500px]">
+                    <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full max-h-[480px]">
 
                         <div className="flex flex-row w-full">
                             <div className="flex flex-col w-full">
                                 <div className="mt-4 mb-5 w-full">
 
-                                    <div className=" w-[90vw] overflow-auto ">
+                                    <div className=" w-[88vw] overflow-auto ">
 
                                         <table className="border-collapse w-full">
                                             <thead className="bg-gray-200 text-gray-800">
@@ -124,13 +124,13 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                     </th>
                                                     <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-20">Order No</th>
-                                                    <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-64">Style No</th>
-                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-80">Yarn</th>
+                                                    <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-52">Style No</th>
+                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-72">Yarn</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-xs text-gray-800  w-24">Color</th>
                                                     {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th> */}
-                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Required Qty </th>
+                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-9">Required Qty </th>
                                                     {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Purchased Qty</th> */}
-                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty </th>
+                                                    <th className="px-4 py-1.5 border border-gray-300 text-xs  w-10">Balance  Qty </th>
 
 
 
@@ -241,7 +241,8 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                             text-[12px] py-1
                                                             `}
                                                             onClick={() => {
-                                                                if (item?.balanceQty !== 0) handleChange(item.id, item);
+                                                                
+                                                                if (item?.balanceQty !== 0 && item.yarnId) handleChange(item.id, item);
                                                             }}
                                                         >
                                                             {/* Checkbox */}
@@ -277,12 +278,12 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                                 {item?.Yarn?.name}
                                                             </td>
 
-                                                         
-                                                                <td className="border border-gray-300 text-[11px] py-1.5 px-2">
-                                                                    {item?.Color?.name}
-                                                                </td>
-                                                          
-                                                      
+
+                                                            <td className="border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                {item?.Color?.name}
+                                                            </td>
+
+
 
                                                             {/* <td className="border border-gray-300 text-[11px] py-1.5 px-2">
                                                                 {item?.yarnCounts?.name}
@@ -290,7 +291,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
 
                                                             {/* Required Qty */}
                                                             <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                                {item?.requiredQty ?  parseFloat(item?.requiredQty || 0).toFixed(3) : ""}
+                                                                {item?.requiredQty ? parseFloat(item?.requiredQty || 0).toFixed(3) : ""}
                                                             </td>
 
                                                             {/* Already PO Qty */}
@@ -313,17 +314,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                         </table>
                                     </div>
                                 </div>
-                                {/* <div className='flex justify-end gap-4 mt-3'>
-                                {poItems?.length > 0 && (
-                                    <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
-                                        Done
-                                    </button>
 
-                                )}
-                                <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
-                                    Cancel
-                                </button>
-                            </div> */}
                             </div>
                         </div>
                     </div>

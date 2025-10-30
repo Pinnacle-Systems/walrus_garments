@@ -1094,6 +1094,7 @@ model Po {
   TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
   taxTemplateId              Int?
   termsAndCondtion           String?                   @db.LongText
+  isDeleted                  Boolean?
   PoItems                    PoItems[]
   DirectItems                DirectItems[]
 }
@@ -1152,12 +1153,13 @@ model PoItems {
   taxPercent                 Float?
   Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
   hsnId                      Int?
-  PoInwardReturnItems        PoInwardReturnItems[]
-  BillEntryItems             BillEntryItems[]
-  DirectReturnItems          DirectReturnItems[]
-  directItems                DirectItems[]
-  CancelItems                CancelItems[]
-  AccessoryReturnItems       AccessoryReturnItems[]
+  isDeleted                  Boolean?
+
+  PoInwardReturnItems PoInwardReturnItems[]
+  BillEntryItems      BillEntryItems[]
+  DirectReturnItems   DirectReturnItems[]
+  directItems         DirectItems[]
+  CancelItems         CancelItems[]
 }
 
 model AccessoryPo {
@@ -1197,6 +1199,7 @@ model AccessoryPo {
   TaxTemplate                TaxTemplate?              @relation(fields: [taxTemplateId], references: [id], onDelete: Cascade)
   taxTemplateId              Int?
   termsAndCondtion           String?
+  isDeleted                  Boolean?
   AccessoryPoItems           AccessoryPoItems[]
 }
 
@@ -1235,8 +1238,10 @@ model AccessoryPoItems {
   taxPercent                 Float?
   Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
   hsnId                      Int?
+  isDeleted                  Boolean?
   AccessoryCancelItems       AccessoryCancelItems[]
   AccessoryInwardItems       AccessoryInwardItems[]
+  AccessoryReturnItems       AccessoryReturnItems[]
 }
 
 model PInwardOrReturn {
@@ -1315,7 +1320,9 @@ model DirectInwardOrReturn {
   remarks                String?           @db.LongText
   poInwardOrDirectInward String?
   draftSave              Boolean?          @default(false)
-  DirectItems            DirectItems[]
+  isDeleted              Boolean?
+
+  DirectItems DirectItems[]
 }
 
 model DirectItems {
@@ -1373,50 +1380,54 @@ model DirectItems {
   poQty                  Float?
   Po                     Po?                   @relation(fields: [poId], references: [id])
   poId                   Int?
-  BillEntryItems         BillEntryItems[]
-  DirectReturnItems      DirectReturnItems[]
-  inwardLotDetails       InwardLotDetails[]
+  isDeleted              Boolean?
+
+  BillEntryItems    BillEntryItems[]
+  DirectReturnItems DirectReturnItems[]
+  inwardLotDetails  InwardLotDetails[]
 }
 
 model AccessoryInward {
-  id                     Int                    @id @default(autoincrement())
+  id                     Int               @id @default(autoincrement())
   inwardOrReturn         P_InwardOrReturn?
   dcNo                   String?
-  dcDate                 DateTime?              @db.Date
-  Order                  Order?                 @relation(fields: [orderId], references: [id])
+  dcDate                 DateTime?         @db.Date
+  Order                  Order?            @relation(fields: [orderId], references: [id])
   orderId                Int?
-  Store                  Location?              @relation(fields: [storeId], references: [id])
+  Store                  Location?         @relation(fields: [storeId], references: [id])
   poType                 PoTypes?
-  supplier               Party?                 @relation(fields: [supplierId], references: [id])
+  supplier               Party?            @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime?              @default(now())
-  updatedAt              DateTime?              @updatedAt
-  createdBy              User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime?         @default(now())
+  updatedAt              DateTime?         @updatedAt
+  createdBy              User?             @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?             @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?                @relation(fields: [branchId], references: [id])
+  Branch                 Branch?           @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean                @default(true)
+  active                 Boolean           @default(true)
   storeId                Int?
   docId                  String?
-  PayTerm                PayTerm?               @relation(fields: [payTermId], references: [id])
+  PayTerm                PayTerm?          @relation(fields: [payTermId], references: [id])
   payTermId              Int?
-  TaxTemplate            TaxTemplate?           @relation(fields: [taxTemplateId], references: [id])
+  TaxTemplate            TaxTemplate?      @relation(fields: [taxTemplateId], references: [id])
   taxTemplateId          Int?
   discountType           DiscountTypes?
-  discountValue          Float?                 @default(0)
+  discountValue          Float?            @default(0)
   vehicleNo              String?
-  specialInstructions    String?                @db.LongText
-  remarks                String?                @db.LongText
+  specialInstructions    String?           @db.LongText
+  remarks                String?           @db.LongText
   poInwardOrDirectInward String?
-  draftSave              Boolean?               @default(false)
-  AccessoryInwardItems   AccessoryInwardItems[]
+  draftSave              Boolean?          @default(false)
+  isDeleted              Boolean?
+
+  AccessoryInwardItems AccessoryInwardItems[]
 }
 
 model AccessoryInwardItems {
   id                Int              @id @default(autoincrement())
-  AccessoryInward   AccessoryInward? @relation(fields: [AccessoryInwardId], references: [id])
+  AccessoryInward   AccessoryInward? @relation(fields: [AccessoryInwardId], references: [id],onDelete: Cascade)
   AccessoryInwardId Int?
 
   Fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: Cascade)
@@ -1441,21 +1452,23 @@ model AccessoryInwardItems {
   designId         Int?
   sizeId           Int?
 
-  weightPerBag         Float?
-  noOfBags             Int?
-  noOfRolls            Int?
-  qty                  Float?
-  lotNo                String?
-  lotNoCommonIndex     Int?
-  Stock                Stock[]
-  AccessoryPoItems     AccessoryPoItems?      @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  poItemsId            Int?
-  alreadyInwardedQty   Float?
-  alreadyReturnedQty   Float?
-  balanceQty           Float?
-  cancelQty            Float?
-  poNo                 String?
-  poQty                Float?
+  weightPerBag       Float?
+  noOfBags           Int?
+  noOfRolls          Int?
+  qty                Float?
+  lotNo              String?
+  lotNoCommonIndex   Int?
+  Stock              Stock[]
+  AccessoryPoItems   AccessoryPoItems? @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId          Int?
+  alreadyInwardedQty Float?
+  alreadyReturnedQty Float?
+  balanceQty         Float?
+  cancelQty          Float?
+  poNo               String?
+  poQty              Float?
+  isDeleted          Boolean?
+
   BillEntryItems       BillEntryItems[]
   DirectReturnItems    DirectReturnItems[]
   inwardLotDetails     InwardLotDetails[]
@@ -3910,35 +3923,37 @@ model ToOrderTransferTtems {
 }
 
 model DirectReturnOrPoReturn {
-  id                     Int                 @id @default(autoincrement())
+  id                     Int          @id @default(autoincrement())
   poInwardOrDirectInward String?
   dcNo                   String?
-  dcDate                 DateTime?           @db.Date
-  Store                  Location?           @relation(fields: [storeId], references: [id])
+  dcDate                 DateTime?    @db.Date
+  Store                  Location?    @relation(fields: [storeId], references: [id])
   poType                 String?
-  supplier               Party?              @relation(fields: [supplierId], references: [id])
+  supplier               Party?       @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
-  createdBy              User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  createdBy              User?        @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?        @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?             @relation(fields: [branchId], references: [id])
+  Branch                 Branch?      @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean             @default(true)
+  active                 Boolean      @default(true)
   storeId                Int?
   docId                  String
-  PayTerm                PayTerm?            @relation(fields: [payTermId], references: [id])
+  PayTerm                PayTerm?     @relation(fields: [payTermId], references: [id])
   payTermId              Int?
-  TaxTemplate            TaxTemplate?        @relation(fields: [taxTemplateId], references: [id])
+  TaxTemplate            TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
   taxTemplateId          Int?
   discountType           String?
-  discountValue          Float?              @default(0)
+  discountValue          Float?       @default(0)
   vehicleNo              String?
-  specialInstructions    String?             @db.LongText
-  remarks                String?             @db.LongText
-  directReturnItems      DirectReturnItems[]
+  specialInstructions    String?      @db.LongText
+  remarks                String?      @db.LongText
+  isDeleted              Boolean?
+
+  directReturnItems DirectReturnItems[]
 }
 
 model DirectReturnItems {
@@ -3994,38 +4009,41 @@ model DirectReturnItems {
   returnLotDetails         ReturnLotDetails[]
   AccessoryInwardItems     AccessoryInwardItems?  @relation(fields: [accessoryInwardItemsId], references: [id])
   accessoryInwardItemsId   Int?
+  isDeleted                Boolean?
 }
 
 model AccessoryReturn {
-  id                     Int                    @id @default(autoincrement())
+  id                     Int          @id @default(autoincrement())
   poInwardOrDirectInward String?
   dcNo                   String?
-  dcDate                 DateTime?              @db.Date
-  Store                  Location?              @relation(fields: [storeId], references: [id])
+  dcDate                 DateTime?    @db.Date
+  Store                  Location?    @relation(fields: [storeId], references: [id])
   poType                 String?
-  supplier               Party?                 @relation(fields: [supplierId], references: [id])
+  supplier               Party?       @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  createdBy              User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  createdBy              User?        @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?        @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?                @relation(fields: [branchId], references: [id])
+  Branch                 Branch?      @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean                @default(true)
+  active                 Boolean      @default(true)
   storeId                Int?
   docId                  String
-  PayTerm                PayTerm?               @relation(fields: [payTermId], references: [id])
+  PayTerm                PayTerm?     @relation(fields: [payTermId], references: [id])
   payTermId              Int?
-  TaxTemplate            TaxTemplate?           @relation(fields: [taxTemplateId], references: [id])
+  TaxTemplate            TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
   taxTemplateId          Int?
   discountType           String?
-  discountValue          Float?                 @default(0)
+  discountValue          Float?       @default(0)
   vehicleNo              String?
-  specialInstructions    String?                @db.LongText
-  remarks                String?                @db.LongText
-  AccessoryReturnItems   AccessoryReturnItems[]
+  specialInstructions    String?      @db.LongText
+  remarks                String?      @db.LongText
+  isDeleted              Boolean?
+
+  AccessoryReturnItems AccessoryReturnItems[]
 }
 
 model AccessoryReturnItems {
@@ -4052,13 +4070,13 @@ model AccessoryReturnItems {
   gsmId            Int?
   sizeId           Int?
 
-  accessoryReturnId Int
-  weightPerBag      Float?
-  noOfBags          Int?
-  noOfRolls         Int?
-  qty               Float?
-  PoItem            PoItems? @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  poItemsId         Int?
+  accessoryReturnId  Int
+  weightPerBag       Float?
+  noOfBags           Int?
+  noOfRolls          Int?
+  qty                Float?
+  AccessoryPoItems   AccessoryPoItems? @relation(fields: [accessoryPoItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  accessoryPoItemsId Int?
 
   alreadyInwardedQty     Float?
   alreadyReturnedQty     Float?
@@ -4069,6 +4087,7 @@ model AccessoryReturnItems {
   returnLotDetails       ReturnLotDetails[]
   AccessoryInwardItems   AccessoryInwardItems? @relation(fields: [accessoryInwardItemsId], references: [id])
   accessoryInwardItemsId Int?
+  isDeleted              Boolean?
 }
 
 model ReturnLotDetails {
@@ -4083,24 +4102,26 @@ model ReturnLotDetails {
 }
 
 model PurchaseCancel {
-  id                     Int           @id @default(autoincrement())
+  id                     Int       @id @default(autoincrement())
   poInwardOrDirectInward String?
   poType                 String?
-  supplier               Party?        @relation(fields: [supplierId], references: [id])
+  supplier               Party?    @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime?     @default(now())
-  updatedAt              DateTime?     @updatedAt
-  createdBy              User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime? @default(now())
+  updatedAt              DateTime? @updatedAt
+  createdBy              User?     @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?     @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?       @relation(fields: [branchId], references: [id])
+  Branch                 Branch?   @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean?      @default(true)
+  active                 Boolean?  @default(true)
   docId                  String?
-  remarks                String?       @db.LongText
+  remarks                String?   @db.LongText
   po                     String?
-  cancelItems            CancelItems[]
+  isDeleted              Boolean?
+
+  cancelItems CancelItems[]
 }
 
 model CancelItems {
@@ -4142,27 +4163,30 @@ model CancelItems {
   poNo             String?
   poQty            Float?
   cancelType       String?
+  isDeleted        Boolean?
 }
 
 model AccesssoryPurchaseCancel {
-  id                     Int                    @id @default(autoincrement())
+  id                     Int       @id @default(autoincrement())
   poInwardOrDirectInward String?
   poType                 String?
-  supplier               Party?                 @relation(fields: [supplierId], references: [id])
+  supplier               Party?    @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime?              @default(now())
-  updatedAt              DateTime?              @updatedAt
-  createdBy              User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime? @default(now())
+  updatedAt              DateTime? @updatedAt
+  createdBy              User?     @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?     @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?                @relation(fields: [branchId], references: [id])
+  Branch                 Branch?   @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean?               @default(true)
+  active                 Boolean?  @default(true)
   docId                  String?
-  remarks                String?                @db.LongText
+  remarks                String?   @db.LongText
   po                     String?
-  AccessoryCancelItems   AccessoryCancelItems[]
+  isDeleted              Boolean?
+
+  AccessoryCancelItems AccessoryCancelItems[]
 }
 
 model AccessoryCancelItems {
@@ -4194,6 +4218,7 @@ model AccessoryCancelItems {
   poNo                       String?
   poQty                      Float?
   cancelType                 String?
+  isDeleted                  Boolean?
 }
 
 model InwardLotDetails {

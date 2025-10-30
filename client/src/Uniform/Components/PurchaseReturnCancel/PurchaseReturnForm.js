@@ -48,30 +48,26 @@ import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService.js";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
+import PrintPreviewModal from "../../../UiComponents/NewModal/index.js";
+import NewModal from "../../../UiComponents/NewModal/index.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
 
 
+
     const componentRef = useRef();
 
-    // const handlePrint = useReactToPrint({
-    //     content: () =>  componentRef.current,
-    //     documentTitle: "Yarn Purchase Return",
-    //     pageStyle: `
-    //       @page { size: A4; margin: 10mm; }
-    //       body { font-family: 'Roboto', sans-serif; }
-    //     `
-    // });
-
     const handlePrint = useReactToPrint({
-        content: () => setPrintModalOpen(true),
-        documentTitle: "Yarn Purchase Return",
+        content: () => componentRef.current,
+        documentTitle: "Yarn Purchase Order",
         pageStyle: `
-          @page { size: A4; margin: 10mm; }
-          body { font-family: 'Roboto', sans-serif; }
-        `
+      @page { size: A4; margin: 10mm; }
+      body { font-family: 'Roboto', sans-serif; }
+    `
     });
+
+
 
     const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("New")
@@ -97,7 +93,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [notes, setNotes] = useState("");
     const [approvedBy, setApprovedBy] = useState("")
 
-    const [taxTemplateId, setTaxTemplateId] = useState("1");
+    const [taxTemplateId, setTaxTemplateId] = useState("4");
 
     const [printModalOpen, setPrintModalOpen] = useState(false);
 
@@ -167,17 +163,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
         setTransType(data?.poType ? data.poType : "DyedYarn");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
-        // setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+        setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
-        if (data?.docId) {
-            setDocId(data?.docId)
-        }
-        if (data?.date) setDate(data?.date);
+
+        setDocId(data?.docId ? data?.docId : "New")
+        // if (data?.date) setDate(data?.date);
         setPayTermId(data?.payTermId ? data?.payTermId : "");
         setSupplierId(data?.supplierId ? data?.supplierId : "");
         setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
         setDcNo(data?.dcNo ? data.dcNo : "")
-        setLocationId(data?.locationId ? data.Store.locationId : "")
+        setLocationId(data?.branchId ? data.branchId : "")
         setStoreId(data?.storeId ? data.storeId : "")
         setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
         setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
@@ -394,7 +389,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
     const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
-    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
+    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems :directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
     const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
 
@@ -407,6 +402,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
+    if (isTaxHookDetailsLoading) return <Loader />
 
     return (
         <>
@@ -428,7 +424,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 }
 
             </Modal>
-            {/* <Modal
+            <Modal
                 isOpen={printModalOpen}
                 onClose={() => setPrintModalOpen(false)}
                 widthClass={"w-[90%] h-[90%]"}
@@ -446,36 +442,39 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         discountValue={discountValue}
                         ref={componentRef}
                         poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={directInwardReturnItems?.filter(item => item.yarnId)}
+                        poItems={directInwardReturnItems?.filter(item => item?.yarnId)}
                         supplierDetails={supplierDetails ? supplierDetails?.data : null}
                         // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
                         yarnList={yarnList} uomList={uomList} colorList={colorList}
                         payTermList={payTermList} termsAndCondition={termsAndCondition} taxDetails={taxDetails}
-                        deliveryTo={deliveryTo}  taxGroupWise={taxGroupWise}
+                        deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
                     />
                 </PDFViewer>
-            </Modal> */}
+            </Modal>
 
 
-             <Modal
+            {/* <NewModal
                 isOpen={printModalOpen}
                 onClose={() => setPrintModalOpen(false)}
-                widthClass={"w-[90%] h-[90%]"}
-            >
-                    <PrintFormatGreyYarnPurchaseReturn
-                        remarks={remarks}
-                        discountType={discountType}
-                        poType={directOrPoreturn}
-                        discountValue={discountValue}
-                        ref={componentRef}
-                        poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={directInwardReturnItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
-                        supplierDetails={supplierDetails ? supplierDetails?.data : null}
-                        singleData={singleData ? singleData.data : null}
-                        deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={yarnList} uomList={uomList} colorList={colorList}
-                    />
-            </Modal>
+                widthClass={"w-[60%] h-[90%]"}
+                
+            > */}
+            <div className="hidden">
+
+                <PrintFormatGreyYarnPurchaseReturn
+                    remarks={remarks}
+                    discountType={discountType}
+                    poType={directOrPoreturn}
+                    discountValue={discountValue}
+                    ref={componentRef}
+                    poNumber={docId} poDate={date} payTermId={payTermId}
+                    poItems={directInwardReturnItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
+                    supplierDetails={supplierDetails ? supplierDetails?.data : null}
+                    singleData={singleData ? singleData.data : null}
+                    deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
+                    yarnList={yarnList} uomList={uomList} colorList={colorList}
+                />
+            </div>
             <div>
 
 

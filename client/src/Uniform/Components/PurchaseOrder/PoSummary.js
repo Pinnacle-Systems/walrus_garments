@@ -24,17 +24,9 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                     </tr>
                 </thead>
                 <tbody>
+              
                     <tr>
-                        <td className="border border-gray-500">Remarks</td>
-                        <td className="border border-gray-500" colSpan={2}
-                        >
-                            <input type="text" name='value' disabled={readOnly} className='h-7 w-full' value={remarks}
-                                onChange={(e) => { setRemarks(e.target.value) }}
-                            />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td className="border border-gray-500">Gross Amount</td>
+                        <td className="border border-gray-500 py-1.5">Gross Amount</td>
                         <td className="border border-gray-500 text-right" colSpan={2}
                         >
                             {parseFloat(taxDetails.grossAmount).toFixed(3)}

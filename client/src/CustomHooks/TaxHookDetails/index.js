@@ -5,6 +5,9 @@ import { substract as s } from '../../Utils/helper';
 
 
 const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, discountType: overAllDiscountType, discountValue: overAllDiscountValue }) => {
+  
+      console.log(poItems,"poItems")
+
     const substract = s;
     const [formulas, setFormulas] = useState([])
 
@@ -75,6 +78,7 @@ const useTaxDetailsHook = ({ poItems, taxTypeId, isSupplierOutside = false, disc
 
         return total
     }
+
 
     if (!formulas || isFetching || isLoading) {
         return { isLoading: isTemplateTermFetching || isTemplateTermLoading || isLoading || isFetching }

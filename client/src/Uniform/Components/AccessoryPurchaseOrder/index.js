@@ -59,6 +59,7 @@ export default function Form() {
   const [showExtraCharge, setShowExtraCharge] = useState(false)
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [tableDataView, setTableDataView] = useState(false)
+  const [term,setTerm] = useState("")
 
   const [requirementId, setRequirementId] = useState("");
 
@@ -229,7 +230,6 @@ export default function Form() {
         <PurchaseOrderForm
           onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly}
           docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} poItems={poItems} setPoItems={setPoItems} onNew={onNew} supplierList={supplierList} branchList={branchList} taxTypeList={taxTypeList} requirementPlanningItemsData={requirementPlanningItemsData} isRequirementLoading={isRequirementLoading} isRequirementFetching={isRequirementFetching} RequirementRefetch={RequirementRefetch}
-
           date={date} setDate={setDate}
           taxTemplateId={taxTemplateId} setTaxTemplateId={setTaxTemplateId}
           payTermId={payTermId} setPayTermId={setPayTermId}
@@ -248,6 +248,8 @@ export default function Form() {
           printModalOpen={printModalOpen} setPrintModalOpen={setPrintModalOpen}
           tableDataView={tableDataView} setTableDataView={setTableDataView}
           requirementId={requirementId} setRequirementId={setRequirementId}
+            term={term} setTerm={setTerm}
+
         />
 
       ) : (

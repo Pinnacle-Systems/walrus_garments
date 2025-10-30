@@ -11,21 +11,26 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
 
 
 
-    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId ,poInwardOrDirectInward }, { skip: !item?.poItemsId })
+    // const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId ,poInwardOrDirectInward }, { skip: !item?.poItemsId })
 
 
-    useEffect(() => {
-        if (purchaseInwardId) return
-        if (isLoading || isFetching) return
-        const poItem = data?.data
-
-        if (data?.data) {
-            handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+    // console.log(data, "poItemData")
 
 
-        }
-    }, [isFetching, isLoading, data, purchaseInwardId])
-    if (isLoading || isFetching) return <Loader />
+    // useEffect(() => {
+    //     if (purchaseInwardId) return
+    //     if (isLoading || isFetching) return
+    //     const poItem = data?.data
+
+    //     if (data?.data) {
+    //         handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+
+
+    //     }
+    // }, [isFetching, isLoading, data])
+
+
+    // if (isLoading || isFetching) return <Loader />
 
 
 
@@ -79,7 +84,8 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     className="text-right rounded   w-full py-1 table-data-input"
                     autoFocus={index === 0}
                     value={item?.qty}
-                    disabled={readOnly}
+                    disabled={readOnly || !item?.accessoryId}
+                    onFocus={(e) => e.target.select()}
                     onChange={(event) => {
                         if (event.target.value < 0) return
                         if (!event.target.value) {

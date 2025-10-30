@@ -98,7 +98,7 @@ export const purchaseType = [
 export const directOrPoreturn = [
     { show: "General Return", value: "GeneralReturn" },
     { show: "Purchase Return", value: "PurchaseReturn" },
-    { show: "Direct Return", value: "DirectReturn" },
+    // { show: "Direct Return", value: "DirectReturn" },
 
 
 ]

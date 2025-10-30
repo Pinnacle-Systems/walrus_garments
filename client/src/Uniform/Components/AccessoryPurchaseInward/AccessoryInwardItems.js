@@ -8,12 +8,11 @@ import { useEffect } from 'react';
 import AccessoryPoItem from './AccessoryPoItem';
 import Swal from 'sweetalert2';
 
-const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, id, supplierId ,
-    contextMenu ,handleCloseContextMenu ,handleRightClick ,   colorList, uomList, accessoryList, sizeList ,poInwardOrDirectInward
+const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, id, supplierId,
+    contextMenu, handleCloseContextMenu, handleRightClick, colorList, uomList, accessoryList, sizeList, poInwardOrDirectInward
 
- }) => {
+}) => {
 
-    console.log(inwardItems, "inwardItems")
 
 
 
@@ -80,24 +79,18 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
             return [...prev, ...newArray];
         });
     }, [setInwardItems, inwardItems]);
-    const addNewRow = () => {
 
-        const newRow = {
-            yarnId: "",
-            qty: "",
-            tax: "0",
-            colorId: "",
-            uomId: "",
-            price: "",
-            discountTypes: "",
-            discountValue: "0.00",
-        };
-        setInwardItems([...inwardItems, newRow]);
-    };
     const deleteRow = (id) => {
         setInwardItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
+    };
+
+    const handleDeleteAllRows = () => {
+        setInwardItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
     };
     return (
         <>
@@ -201,7 +194,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-72 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Accessory Name
                                 </th>
@@ -305,10 +298,11 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className='overflow-y-auto  h-full w-full'>
+                        <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems, "inwardItems")
+                        }
                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow}
                                 readOnly={readOnly} key={item.poItemsId} index={index} handleRightClick={handleRightClick}
-                                poInwardOrDirectInward={poInwardOrDirectInward}
+                                poInwardOrDirectInward={poInwardOrDirectInward} 
                                 handleInputChange={handleInputChange}
                             />)}
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
@@ -353,7 +347,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
                                 onClick={() => {
-                                    // handleDeleteAllRows();
+                                    handleDeleteAllRows();
                                     handleCloseContextMenu();
                                 }}
                             >

@@ -91,9 +91,9 @@ const GeneralAccessoryPoItems = ({
 
   useEffect(() => {
     if (id) return;
-    if (poItems.length >= 1) return;
+    if (poItems.length >= 3) return;
     setPoItems((prev) => {
-      let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+      let newArray = Array.from({ length: 3 - prev.length }, (i) => {
         return {
           accessoryItemId: "",
           accessoryGroupId: "",
@@ -298,27 +298,28 @@ const GeneralAccessoryPoItems = ({
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold text-slate-700">List Of Items</h2>
           <button className="font-bold text-slate-700 bord"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                setTableDataView(true)
+            // onKeyDown={(e) => {
+            //   if (e.key === "Enter") {
+            //     e.preventDefault();
+            //     setTableDataView(true)
 
-              }
-            }}
-            onClick={() => {
-              if (!supplierId) {
-                Swal.fire({
-                  icon: 'success',
-                  title: ` Choose Supplier`,
-                  showConfirmButton: false,
-                  timer: 2000
-                });
-              }
-              else {
+            //   }
+            // }}
+            // onClick={() => {
+            //   if (!supplierId) {
+            //     Swal.fire({
+            //       icon: 'success',
+            //       title: ` Choose Supplier`,
+            //       showConfirmButton: false,
+            //       timer: 2000
+            //     });
+            //   }
+            //   else {
 
-                setTableDataView(true)
-              }
-            }}
+            //     setTableDataView(true)
+            //   }
+            // }}
+            disabled
           >
             Fill Po Items
           </button>
@@ -356,7 +357,7 @@ const GeneralAccessoryPoItems = ({
 
                 className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
               >
-                Colors
+                Color
               </th>
               <th
 
@@ -476,7 +477,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                    disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                     onBlur={(e) => {
 
@@ -497,7 +498,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                    disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                   disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
                     onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                     onBlur={(e) => {
 
@@ -518,7 +519,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                    disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                    disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
                     onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                     onBlur={(e) => {
 
@@ -547,7 +548,7 @@ const GeneralAccessoryPoItems = ({
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full table-data-input"
                     value={(!row.qty) ? 0 : row.qty}
-                    disabled={readOnly}
+                    disabled={readOnly || !row.accessoryId}
                     onChange={(e) =>
                       handleInputChange(parseFloat(e.target.value), index, "qty")
                     }
@@ -571,7 +572,7 @@ const GeneralAccessoryPoItems = ({
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full table-data-input"
                     value={(!row.price) ? 0 : row.price}
-                    disabled={readOnly}
+                   disabled={readOnly || !row.accessoryId}
                     onChange={(e) =>
                       handleInputChange(e.target.value, index, "price")
                     }
@@ -621,7 +622,7 @@ const GeneralAccessoryPoItems = ({
                 </td>
                 <td className="w-16 px-1 py-1 border border-gray-300 text-center">
                   <input
-                    readOnly
+                    disabled={readOnly}
                     className="w-full bg-transparent  text-right pr-2"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {

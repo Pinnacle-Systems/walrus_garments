@@ -283,7 +283,12 @@ export async function getPoItems(req) {
 
         data = data?.filter(i => i.AccessoryPo.supplierId == supplierId && i.AccessoryPo.poMaterial == poType && i.AccessoryPo.poType === po)
 
+
         data = await getAllDataPoItems(data, poType, poInwardOrDirectInward)
+
+
+        console.log(data, "getAllDataPoItems")
+
 
         if (isPurchaseInwardFilter) {
 
@@ -297,9 +302,36 @@ export async function getPoItems(req) {
             data = data.filter(item => parseFloat(balanceCancelQtyCalculation(item?.qty, item?.alreadyCancelData?._sum?.qty, item?.alreadyInwardedData?._sum?.qty, item?.alreadyReturnedData?._sum?.qty)) > 0)
 
 
+
+
         }
         if (isPurchaseReturnFilter) {
-            data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+            // data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
+          
+                data = data.filter(item => {
+                    const poQty = item?.qty || 0;
+                    const inwardQty = item?.alreadyInwardedData?._sum?.qty || 0;
+                    const returnQty = item?.alreadyReturnedData?._sum?.qty || 0;
+                    const cancelQty = item?.alreadyCancelData?._sum?.qty || 0;
+                    
+                    const balance = parseFloat(
+                        substract(inwardQty , returnQty)
+                    );
+
+                    // log for debugging
+                    console.log({
+                        itemId: item?.id,
+                        poQty,
+                        inwardQty,
+                        returnQty,
+                      
+                    });
+
+                    // keep only if positive balance
+                    return balance > 0;
+                });
+            
+
         }
     } else {
 
@@ -442,9 +474,9 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     const alreadyInwardedData = await prisma?.AccessoryInwardItems?.aggregate({
         where: {
             poItemsId: parseInt(id),
-            AccessoryInward: {
-                poInwardOrDirectInward: `${poInwardOrDirectInward}`
-            },
+            // AccessoryInward: {
+            //     poInwardOrDirectInward: `${poInwardOrDirectInward}`
+            // },
             // directInwardOrReturnId: {
             //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
             // }
@@ -457,12 +489,12 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    const alreadyReturnedData = await prisma?.AccessoryInwardItems?.aggregate({
+    const alreadyReturnedData = await prisma?.AccessoryReturnItems?.aggregate({
         where: {
-            poItemsId: parseInt(id),
-            AccessoryInward: {
-                poInwardOrDirectInward: `${poInwardOrDirectInward}`
-            },
+            accessoryPoItemsId: parseInt(id),
+            // AccessoryReturn: {
+            //     poInwardOrDirectInward: `${poInwardOrDirectInward}`
+            // },
             // directReturnOrPoReturnId: {
             //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
             // }
@@ -479,12 +511,12 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     const alreadyCancelData = await prisma.AccessoryCancelItems.aggregate({
         where: {
             poItemsId: parseInt(id),
-            AccesssoryPurchaseCancel: {
-                poInwardOrDirectInward: `${poInwardOrDirectInward}`
-            },
-            accesssoryPurchaseCancelId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // AccesssoryPurchaseCancel: {
+            //     poInwardOrDirectInward: `${poInwardOrDirectInward}`
+            // },
+            // accesssoryPurchaseCancelId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -493,36 +525,42 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     });
 
 
-    async function getLotWiseDatas(inwardData) {
+    // async function getLotWiseDatas(inwardData) {
 
 
-        return {
-            lotNo: inwardData?.lotNo,
-            inwardNoOfRolls: inwardData?.noOfRolls,
-            inwardQty: inwardData?.qty,
-            qty: 0,
-            noOfRolls: 0,
-            alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotRolls,
-            alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty,
-            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId))?.stockQty || 0),
+    //     return {
+    //         lotNo: inwardData?.lotNo,
+    //         inwardNoOfRolls: inwardData?.noOfRolls,
+    //         inwardQty: inwardData?.qty,
+    //         qty: 0,
+    //         noOfRolls: 0,
+    //         // alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotRolls,
+    //         alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty,
+    //         stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId))?.stockQty || 0),
 
-            allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty || 0))
-        }
+    //         allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty || 0))
+    //     }
 
-    }
-
-
+    // }
 
 
+
+
+
+    console.log(alreadyInwardedData, "alreadyInwardedData")
+    console.log(alreadyReturnedData, "alreadyReturnedData")
+    console.log(alreadyCancelData, "alreadyCancelData")
 
 
     let poQty = parseFloat(data?.qty || 0).toFixed(3)
     let cancelQty = alreadyCancelData?._sum.qty ? parseFloat(alreadyCancelData?._sum.qty).toFixed(3) : "0.000";
     let alreadyInwardedQty = alreadyInwardedData?._sum?.qty ? parseFloat(alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
     let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
+    let alreadyCancelQty = alreadyCancelData?._sum?.qty ? parseFloat(alreadyCancelData._sum.qty).toFixed(3) : "0.000";
+
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
-    let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty , 0))
+    let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty))
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
 
@@ -530,8 +568,8 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
 
 
-    let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
-    let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
+    // let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
+    // let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
 
 
 
@@ -605,14 +643,15 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             balanceQty,
             cancelQty,
             poQty,
-            stockQty,
-            stockRolls,
+            // stockQty,
+            // stockRolls,
             allowedReturnRolls,
             allowedReturnQty,
             alreadyInwardedQty,
             alreadyReturnedQty,
             alreadyReturnedData,
             alreadyCancelData,
+            alreadyCancelQty
             // stockData,
             // alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(val => parseFloat(val?.stockQty) !== 0),
 

@@ -141,7 +141,7 @@ export default function Form() {
         setPayTermId("");
         setLocationId('');
         setStoreId("")
-        setPoInwardOrDirectInward("General Inward")
+        setPoInwardOrDirectInward("GeneralInward")
         setDirectInwardReturnItems([]);
     }
     return (

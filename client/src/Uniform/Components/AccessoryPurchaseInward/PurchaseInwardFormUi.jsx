@@ -7,7 +7,7 @@ import { useAddAccessoryPurchaseInwardMutation, useGetAccessoryPurchaseInwardByI
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import Modal from "../../../UiComponents/Modal";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInput, DateInputNew, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { directOrPo, poTypes } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { toast } from "react-toastify";
@@ -54,13 +54,21 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const childRecord = useRef(0);
   const { branchId, companyId, userId, finYearId } = getCommonParams()
 
-  const branchIdFromApi = useRef(branchId);
+  // const branchIdFromApi = useRef(branchId);
 
   const params = {
     branchId, companyId
   };
 
+  const inwardTyperef = useRef(null);
+  const dcdate = useRef(null)
 
+
+  useEffect(() => {
+    if (inwardTyperef.current) {
+      inwardTyperef.current.focus();
+    }
+  }, []);
 
 
   //   const { data: taxTypeList } =
@@ -107,7 +115,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       setReadOnly(false);
     }
     setTransType(data?.poType ? data.poType : "Accessory");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "General Inward")
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "GeneralInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDirectInwardReturnItems(data?.AccessoryInwardItems ? data.AccessoryInwardItems : []);
     if (data?.docId) {
@@ -125,9 +133,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setPartyId(data?.supplierId ? data?.supplierId : "")
     setRemarks(data?.remarks ? data?.remarks : "")
-    if (data?.branchId) {
-      branchIdFromApi.current = data?.branchId
-    }
+    // if (data?.branchId) {
+    //   branchIdFromApi.current = data?.branchId
+    // }
   }, [id]);
 
   useEffect(() => {
@@ -296,11 +304,11 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  useEffect(() => {
-    if (id) return
-    setDirectInwardReturnItems([]);
-    setSupplierId("")
-  }, [transType])
+  // useEffect(() => {
+  //   if (id) return
+  //   setDirectInwardReturnItems([]);
+  //   setSupplierId("")
+  // }, [transType])
 
 
   const storeOptions = locationData ?
@@ -452,9 +460,17 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             </h2>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput name="Inward Type"
+                ref={inwardTyperef}
+
                 beforeChange={() => { setDirectInwardReturnItems([]) }}
                 options={directOrPo}
-                value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+                value={poInwardOrDirectInward}
+                setValue={setPoInwardOrDirectInward}
+                required={true} readOnly={readOnly}
+                disabled={id}
+
+
+              />
               <DropdownInput name="Po Type"
                 options={poTypes}
                 value={transType}
@@ -512,12 +528,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   // ref={inputPartyRef}
                   // nextRef={styleRef}
                   show={"isSupplier"}
-                                  disabled={id}
+                  disabled={id}
 
                 />
               </div>
-              <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required  />
-              <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+              <TextInput name={"Dc No"} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+              <DateInputNew name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} ref={dcdate} 
+                type={"date"}
+              />
 
             </div>
 
@@ -545,7 +563,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             <AccessoryInwardItems
               inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
               colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
-              poInwardOrDirectInward={poInwardOrDirectInward}
+              poInwardOrDirectInward={poInwardOrDirectInward} 
 
             />
           }
@@ -599,8 +617,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
             <div className="space-y-1.5">
               <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">Total Qty</span>
-                <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
+                <span className="text-slate-600">Total Qty (Kg)</span>
+                <span className="font-medium">{parseInt(getTotalQty())}</span>
               </div>
 
 
@@ -621,82 +639,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             </div>
           </div>
 
-          {showExtraCharge && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-semibold">Add Extra Charge</h3>
-                  <button onClick={() => setShowExtraCharge(false)} className="text-slate-400 hover:text-slate-600">
-                    <HiX className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g. Delivery fee"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                    <input
-                      type="number"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <button className="w-full bg-indigo-600 text-white py-1.5 px-3 rounded text-sm hover:bg-indigo-700 transition">
-                    Apply Charge
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+    
 
-          {showDiscount && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-semibold">Add Discount</h3>
-                  <button onClick={() => setShowDiscount(false)} className="text-slate-400 hover:text-slate-600">
-                    <HiX className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g. Summer promotion"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
-                      <select className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <option>Percentage</option>
-                        <option>Fixed Amount</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">Value</label>
-                      <input
-                        type="number"
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                  <button className="w-full bg-green-600 text-white py-1.5 px-3 rounded text-sm hover:bg-green-700 transition">
-                    Apply Discount
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
@@ -723,14 +667,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit
             </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
+            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
               <FaWhatsapp className="w-4 h-4 mr-2" />
               WhatsApp
-            </button>
-            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
+            </button> */}
+            {/* <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

@@ -44,7 +44,8 @@ import {
   FiberContentMasterApi,
   requirementPlanningFormApi,
   AccessoryPoApi,
-  billEntryApi
+  billEntryApi,
+  AccessoryPurchaseReturnApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -167,14 +168,15 @@ const commonReducers = {
   MaterialMaster: MaterialMasterApi.reducer,
   RaiseIndent: RaiseIndentApi.reducer,
   MaterialIssue: MaterialIssueApi.reducer,
-  StockTransfer : StockTransferApi.reducer,
-  ExcessToleranceMaster : ExcessToleranceMasterApi.reducer,
-  accessoryPo : AccessoryPoApi.reducer,
-  AccessoryPurchaseCancel : AccessoryPurchaseCancelApi.reducer ,
-  AccessoryPurchaseInward : AccessoryPurchaseInwardApi.reducer ,
-  TermsandCondtions : TermsandCondtionsApi.reducer,
-  hsnMaster : HsnMasterApi.reducer,
-  billEntry : billEntryApi.reducer ,
+  StockTransfer: StockTransferApi.reducer,
+  ExcessToleranceMaster: ExcessToleranceMasterApi.reducer,
+  accessoryPo: AccessoryPoApi.reducer,
+  AccessoryPurchaseCancel: AccessoryPurchaseCancelApi.reducer,
+  AccessoryPurchaseInward: AccessoryPurchaseInwardApi.reducer,
+  TermsandCondtions: TermsandCondtionsApi.reducer,
+  hsnMaster: HsnMasterApi.reducer,
+  billEntry: billEntryApi.reducer,
+  AccessoryPurchaseReturn: AccessoryPurchaseReturnApi.reducer
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -270,7 +272,7 @@ partyContactMasterApi.middleware,
 requirementPlanningFormApi.middleware,
 MaterialMasterApi.middleware,
 RaiseIndentApi.middleware,
-MaterialIssueApi.middleware ,
+MaterialIssueApi.middleware,
 StockTransferApi.middleware,
 ExcessToleranceMasterApi.middleware,
 AccessoryPoApi.middleware,
@@ -278,7 +280,8 @@ AccessoryPurchaseCancelApi.middleware,
 AccessoryPurchaseInwardApi.middleware,
 TermsandCondtionsApi.middleware,
 HsnMasterApi.middleware,
-billEntryApi.middleware
+billEntryApi.middleware,
+AccessoryPurchaseReturnApi.middleware
 ];
 
 

@@ -21,6 +21,7 @@ import PurchaseReturnForm from "./PurchaseReturnForm";
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa";
 import PurchaseCancelFormReport from "./PurchaseReturnFormReport";
+import Swal from "sweetalert2";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -43,36 +44,6 @@ export default function Form() {
   const [removeData] = useDeleteDirectCancelOrReturnMutation();
 
 
- const columns = [
-    {
-      header: 'S.No',
-      accessor: (item, index) => parseInt(index) + 1,
-      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
-    },
-
-    {
-      header: 'Inward No',
-      accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'TransType',
-      accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'Return Date',
-      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
-    },
-    // {
-    //   header: 'Supplier',
-    //   accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
-    //   className: 'text-gray-800 uppercase w-[500px]'
-    // },
-
-
-  ];
 
 
 
@@ -95,15 +66,29 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id)
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          Swal.fire({
+            icon: "error",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
+          });
+          return;
+        }
         setId("");
-        onNew();
-        toast.success("Deleted Successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
       } catch (error) {
-        toast.error("Something went wrong");
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
       }
     }
-
   };
   const onNew = () => {
     setId("");
@@ -122,7 +107,7 @@ export default function Form() {
 
       ) : (
         <div className="p-2 bg-[#F1F1F0] ">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Return</h1>
           <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
             <div className="flex items-center gap-2">
               <select

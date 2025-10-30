@@ -52,7 +52,7 @@ export async function getStockProperty(itemType, item, property, storeId, branch
       noOfRolls: item?.noOfRolls ? parseInt(item.noOfRolls) : undefined,
       qty: item?.qty ? parseFloat(item.qty) : undefined,
       price: item?.price ? parseFloat(item.price) : undefined,
-      storeId: storeId ?   parseInt(storeId)  :  undefined,
+      storeId: storeId ? parseInt(storeId) : undefined,
       lotNo: item?.lotNo ? item.lotNo : undefined,
       processId: item?.processId ? parseInt(item.processId) : undefined,
     }
@@ -356,15 +356,34 @@ export const updateManyStockWithId = async (tx, poType, inwardOrReturn, items) =
   return Promise.all(promises);
 }
 export const getDateFromDateTimeYear = (dateTime) => moment.utc(dateTime).format("YYYY-MM-DD")
+// export const balanceQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => {
+//     console.log(poQty, cancelQty, inwardQty, returnQty,"poQty, cancelQty, inwardQty, returnQty")
+//   return Math.abs(substract(substract(poQty ? parseFloat(poQty) : 0, ((cancelQty ? parseFloat(cancelQty) : 0) + (inwardQty ? parseFloat(inwardQty) : 0))), substract(inwardQty ? parseFloat(inwardQty) : 0, returnQty ? parseFloat(returnQty) : 0)))
+// }
 export const balanceQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => {
-    console.log(poQty, cancelQty, inwardQty, returnQty,"poQty, cancelQty, inwardQty, returnQty")
-  return Math.abs(substract(substract(poQty ? parseFloat(poQty) : 0, ((cancelQty ? parseFloat(cancelQty) : 0) + (inwardQty ? parseFloat(inwardQty) : 0))), substract(inwardQty ? parseFloat(inwardQty) : 0, returnQty ? parseFloat(returnQty) : 0)))
-}
+  const po = parseFloat(poQty) || 0;
+  const cancel = parseFloat(cancelQty) || 0;
+  const inward = parseFloat(inwardQty) || 0;
+  const ret = parseFloat(returnQty) || 0;
 
+  const balance = po - (cancel + inward - ret);
+  return balance < 0 ? 0 : balance; // prevent negative
+};
+
+
+// export const balanceCancelQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => {
+
+//   return Math.abs(substract(substract(poQty ? parseFloat(poQty) : 0, (cancelQty ? parseFloat(cancelQty) : 0)), substract(inwardQty ? parseFloat(inwardQty) : 0, returnQty ? parseFloat(returnQty) : 0)))
+// }
 export const balanceCancelQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => {
+  const po = parseFloat(poQty) || 0;
+  const cancel = parseFloat(cancelQty) || 0;
+  const inward = parseFloat(inwardQty) || 0;
+  const ret = parseFloat(returnQty) || 0;
 
-  return Math.abs(substract(substract(poQty ? parseFloat(poQty) : 0, (cancelQty ? parseFloat(cancelQty) : 0)), substract(inwardQty ? parseFloat(inwardQty) : 0, returnQty ? parseFloat(returnQty) : 0)))
-}
+  const balance = po - (inward - ret) - cancel;
+  return balance < 0 ? 0 : balance; // prevent negative values
+};
 
 
 export function substract(num1, num2) {
@@ -541,26 +560,26 @@ export async function stockDataUpdatePanelWise(cuttingReceiptId, storeId, branch
 
 
 
-export async function classListData(data){
+export async function classListData(data) {
   let classData = data;
   const order = { "PLAYSCHOOL": 0, "PRE-KG": 1, "LKG": 2, "UKG": 3 };
 
   classData.sort((a, b) => {
-      const extractParts = (className) => {
-          let match = className.match(/^([A-Za-z]+)-?(\d*)([A-Za-z]*)$/);
-          if (!match) return [Infinity, "", ""]; 
-  
-          let [_, prefix, num, suffix] = match;
-          num = num ? parseInt(num, 10) : (order[prefix] !== undefined ? order[prefix] : Infinity);
-          
-          return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
-      };
-  
-      let [orderA, numA, suffixA] = extractParts(a.name);
-      let [orderB, numB, suffixB] = extractParts(b.name);
-  
-      if (orderA !== orderB) return orderA - orderB;
-      if (numA !== numB) return numA - numB;
-      return suffixA.localeCompare(suffixB);
-    });
+    const extractParts = (className) => {
+      let match = className.match(/^([A-Za-z]+)-?(\d*)([A-Za-z]*)$/);
+      if (!match) return [Infinity, "", ""];
+
+      let [_, prefix, num, suffix] = match;
+      num = num ? parseInt(num, 10) : (order[prefix] !== undefined ? order[prefix] : Infinity);
+
+      return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
+    };
+
+    let [orderA, numA, suffixA] = extractParts(a.name);
+    let [orderB, numB, suffixB] = extractParts(b.name);
+
+    if (orderA !== orderB) return orderA - orderB;
+    if (numA !== numB) return numA - numB;
+    return suffixA.localeCompare(suffixB);
+  });
 }

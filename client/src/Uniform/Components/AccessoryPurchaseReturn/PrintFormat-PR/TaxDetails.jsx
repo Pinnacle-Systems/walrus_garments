@@ -5,10 +5,6 @@ import { groupBy } from 'lodash'
 
 const TaxDetails = ({ items, taxTemplateId, taxGroupWise, taxDetails }) => {
 
-  console.log(taxDetails,"taxDetailstaxDetails")
-    console.log(taxGroupWise,"taxGroupWise")
-
-
   return (
     <>
       {Object.keys(taxGroupWise).map(taxKey => {

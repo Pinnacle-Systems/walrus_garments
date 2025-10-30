@@ -113,14 +113,14 @@ const AccessoryPurchaseReturnApi = createApi({
 });
 
 export const {
-  useGetDirectInwardOrReturnQuery,
-  useGetDirectInwardOrReturnByIdQuery,
+  useGetAccessoryPurchaseReturnQuery,
+  useGetAccessoryPurchaseReturnByIdQuery,
   useGetPoItemsandDirectInwardItemsQuery,
   useGetDirectItemsQuery,
   useGetDirectItemByIdQuery,
-  useAddDirectInwardOrReturnMutation,
-  useUpdateDirectInwardOrReturnMutation,
-  useDeleteDirectInwardOrReturnMutation,
+  useAddAccessoryPurchaseReturnMutation,
+  useUpdateAccessoryPurchaseReturnMutation,
+  useDeleteAccessoryPurchaseReturnMutation,
 } = AccessoryPurchaseReturnApi;
 
 export default AccessoryPurchaseReturnApi;

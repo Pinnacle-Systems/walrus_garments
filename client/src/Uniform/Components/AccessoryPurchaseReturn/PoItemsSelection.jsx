@@ -3,23 +3,22 @@ import { Loader } from '../../../Basic/components';
 import secureLocalStorage from "react-secure-storage";
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import { findFromList } from '../../../Utils/helper';
+import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
 // import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 // import YarnPoItemSelection from './YarnPoItemSelection';
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection ,poInwardOrDirectInward ,readOnly }) => {
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.poItemsId));
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, poInwardOrDirectInward, readOnly , directOrPoreturn }) => {
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.map(i => i?.accessoryPoItemsId));
     // const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
 
-    console.log(localInwardItems,"localInwardItems")
+    console.log(localInwardItems, "localInwardItems")
     // console.log(inwardItems,"inwardItems")
 
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
 
-    const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
-        useGetPartyQuery({ params: { companyId, active: true } });
 
     // if (supplierFetching || supplierLoading) return <Loader />
 
@@ -65,23 +64,23 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     function handleDone() {
         setInwardItems(prevInwardItems => {
 
-            let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item?.poItemsId))
+            let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item?.accessoryPoItemsId))
             let newInwardItems = localInwardItems?.filter(item => {
-                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.accessoryPoItemsId) === parseInt(item)) === -1
             })
-            console.log(...oldInwardItems,"...oldInwardItems")
-            console.log( ...newInwardItems," ...newInwardItems");
-            
-            return [...oldInwardItems, ...newInwardItems?.map(i => { return { poItemsId: i } })]
+            console.log(...oldInwardItems, "...oldInwardItems")
+            console.log(...newInwardItems, " ...newInwardItems");
+
+            return [...oldInwardItems, ...newInwardItems?.map(i => { return { accessoryPoItemsId: i } })]
         });
         setInwardItemSelection(false);
     }
-     
 
 
 
 
-     
+
+
 
 
 
@@ -105,29 +104,23 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                     </div>
                 </div> */}
                 <div className='h-[500px] overflow-auto'>
-                    {/* {
-                        <>
+                
 
-                            {transtype.toLowerCase().includes("yarn") ?
 
-                                <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}  poInwardOrDirectInward={poInwardOrDirectInward}  handleDone={handleDone} readOnly={readOnly} />
-                                :
-                                <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward}  handleDone={handleDone} readOnly={readOnly} />
-                            }
-                        </>
-                    } */}
+                        <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward} handleDone={handleDone} readOnly={readOnly} />
+
 
 
                 </div>
             </div>
-            {/* <div className='flex justify-end gap-4 '>
+            <div className='flex justify-end gap-4 '>
                 <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                     Done
                 </button>
                 <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                     Cancel
                 </button>
-            </div> */}
+            </div>
         </>
     )
 }

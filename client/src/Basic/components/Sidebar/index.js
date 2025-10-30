@@ -344,10 +344,24 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
   const reports = allowedPages.filter((page) => page.type === "Reports")
   const reportGroups = [...new Set(reports.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
+  console.log(transactionsGroup, "transactionsGroup")
 
 
+  const order = [
+    "ORDER",
+    "YARN",
+    "ACCESSORY ",
+    "PRODUCTION",
+    "PROCESS",
+    "STOCK TRANSFER",
+    "OPENING STOCK",
+    "SAMPLE",
+  ];
 
-    console.log(transactionsGroup,"transactionsGroup")
+  const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))
+    .filter(Boolean);
+
+  console.log(sorted,"sorted");
 
   const headers = [
 
@@ -360,7 +374,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     {
       heading: 'Transactions',
       logo: <PanelLeftClose size={24} />,
-      groups: transactionsGroup,
+      groups: sorted,
       pages: transactions
     },
     {

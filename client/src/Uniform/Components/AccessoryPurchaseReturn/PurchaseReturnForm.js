@@ -43,9 +43,14 @@ import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndC
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
 import ReturnItems from "./ReturnItems.js";
+import { useAddAccessoryPurchaseReturnMutation, useDeleteAccessoryPurchaseReturnMutation, useGetAccessoryPurchaseReturnByIdQuery, useUpdateAccessoryPurchaseReturnMutation } from "../../../redux/uniformService/AccessoryPoReturnServices.js";
+import AccessoryPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 
 
-const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
+const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
+    colorList, uomList, accessoryList, sizeList
+
+}) => {
 
     const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("New")
@@ -75,7 +80,23 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         "Supplier Two",
         "Supplier Three",
     ]);
-    const [taxTemplateId, setTaxTemplateId] = useState("1");
+    const [contextMenu, setContextMenu] = useState(false)
+    const handleRightClick = (event, rowIndex, type) => {
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
+
+    const [taxTemplateId, setTaxTemplateId] = useState("4");
 
     console.log(storeId, "storeId")
     const [printModalOpen, setPrintModalOpen] = useState(false);
@@ -98,6 +119,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         branchId, companyId
     };
 
+    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
+
     const { data: supplierList } =
         useGetPartyQuery({ params: { ...params } });
 
@@ -105,46 +128,25 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const { data: supplierDetails } =
         useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-    const { data: payTermList } =
-        useGetPaytermMasterQuery({ params: { ...params } });
 
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
-
-
-    
-
-    const { data: yarnList } =
-        useGetYarnMasterQuery({ params: { companyId } });
-
-    const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
-        useGetColorMasterQuery({ params: { companyId } });
-
-    const { data: uomList } =
-        useGetUnitOfMeasurementMasterQuery({ params: { companyId } });
 
 
 
 
-    // const getNextDocId = useCallback(() => {
-    //     if (isLoading || isFetching) return
-    //     if (id) return
-    //     if (allData?.nextDocId) {
-    //         setDocId(allData.nextDocId)
-    //     }
-    // }, [allData, isLoading, isFetching, id])
 
-    // useEffect(getNextDocId, [getNextDocId])
+
+
+
 
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetDirectCancelOrReturnByIdQuery(id, { skip: !id });
+    } = useGetAccessoryPurchaseReturnByIdQuery(id, { skip: !id });
 
-    const [addData] = useAddDirectCancelOrReturnMutation();
-    const [updateData] = useUpdateDirectCancelOrReturnMutation();
-    const [removeData] = useDeleteDirectCancelOrReturnMutation();
+    const [addData] = useAddAccessoryPurchaseReturnMutation();
+    const [updateData] = useUpdateAccessoryPurchaseReturnMutation();
 
     const syncFormWithDb = useCallback((data) => {
         const today = new Date()
@@ -155,8 +157,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
         setTransType(data?.poType ? data.poType : "Accessory");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
-        // setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-        setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
+        setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+        setDirectInwardReturnItems(data?.AccessoryReturnItems ? data.AccessoryReturnItems : []);
         if (data?.docId) {
             setDocId(data?.docId)
         }
@@ -165,7 +167,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setSupplierId(data?.supplierId ? data?.supplierId : "");
         setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
         setDcNo(data?.dcNo ? data.dcNo : "")
-        setLocationId(data?.locationId ? data.Store.locationId : "")
+        setLocationId(data?.branchId ? data?.branchId : "")
         setStoreId(data?.storeId ? data.storeId : "")
         setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
         setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
@@ -186,11 +188,12 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const data = {
         poType: transType,
         poInwardOrDirectInward,
+        date,
         supplierId, dcDate,
         payTermId,
         branchId, id, userId,
         storeId,
-        directReturnItems: directInwardReturnItems?.filter(po => po?.yarnId),
+        directReturnItems: directInwardReturnItems?.filter(po => po?.accessoryId),
         discountType,
         discountValue,
         dcNo,
@@ -269,27 +272,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
     }
 
-    const deleteData = async () => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                await removeData(id)
-                setId("");
-                onNew();
-                Swal.fire({
-                    icon: 'success',
-                    title: `Deleted Successfully`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
 
-            } catch (error) {
-                toast.error("something went wrong");
-            }
-        }
-    };
 
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -309,10 +292,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     };
 
 
-    useEffect(() => {
-        if (id) return
-        setDirectInwardReturnItems([])
-    }, [transType, id])
+    // useEffect(() => {
+    //     if (id) return
+    //     setDirectInwardReturnItems([])
+    // }, [transType, id])
 
 
 
@@ -350,7 +333,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setSupplierId("")
     }, [transType])
 
-    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
     const storeOptions = locationData ?
         locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
@@ -369,9 +351,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    async function onDeleteItem(itemId) {
-        await removeData(itemId).unwrap();
-    }
+
 
     function getTotalQty() {
         let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
@@ -385,14 +365,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     };
 
 
+    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
     const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
-    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
- 
- const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
- 
+    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems : directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
+
+    const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
+
     const [deliveryType, setDeliveryType] = useState("")
-  const [deliveryToId, setDeliveryToId] = useState("")
+    const [deliveryToId, setDeliveryToId] = useState("")
 
 
     const { data: deliveryToBranch } = useGetBranchByIdQuery(deliveryToId, { skip: deliveryType === "ToParty" })
@@ -400,11 +381,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
+    console.log(taxGroupWise,"taxGroupWise")
+
+    if (isTaxHookDetailsLoading)  return <Loader/>
 
     return (
         <>
             <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
-                {/* {
+                {
                     (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn") ?
                         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
                             supplierId={supplierId} poInwardOrDirectInward={poInwardOrDirectInward}
@@ -413,21 +397,22 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         // storeId={storeId} 
                         />
                         :
-                        <InwardItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-                            supplierId={supplierId}
-                            storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
-                            inwardItems={directInwardReturnItems}
-                            setInwardItems={setDirectInwardReturnItems} />
-                } */}
+                        // <InwardItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
+                        //     supplierId={supplierId}
+                        //     storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
+                        //     inwardItems={directInwardReturnItems}
+                        //     setInwardItems={setDirectInwardReturnItems} />
+                        <></>
+                }
 
             </Modal>
-            {/* <Modal
+            <Modal
                 isOpen={printModalOpen}
                 onClose={() => setPrintModalOpen(false)}
                 widthClass={"w-[90%] h-[90%]"}
             >
                 <PDFViewer style={tw("w-full h-full")}>
-                    <YarnPurchaseOrderReturnPrintFormat
+                    <AccessoryPurchaseOrderReturnPrintFormat
                         branchData={branchdata?.data}
                         data={id ? singleData?.data : "Null"}
                         singleData={id ? singleData?.data : "Null"}
@@ -439,15 +424,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         discountValue={discountValue}
                         ref={componentRef}
                         poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={directInwardReturnItems?.filter(item => item.yarnId)}
+                        poItems={directInwardReturnItems?.filter(item => item.accessoryId)}
                         supplierDetails={supplierDetails ? supplierDetails?.data : null}
-                        // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={yarnList} uomList={uomList} colorList={colorList}
-                        payTermList={payTermList} termsAndCondition={termsAndCondition} taxDetails={taxDetails}
-                        deliveryTo={deliveryTo}  taxGroupWise={taxGroupWise}
+                        taxDetails={taxDetails} taxTemplateId={taxTemplateId} deliveryType={deliveryType}
+                        deliveryToId={deliveryToId} deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
+                        termsAndCondition={termsAndCondition}
+                        colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} term={term}
                     />
                 </PDFViewer>
-            </Modal> */}
+            </Modal>
             {/* <div className="hidden">
 
                 <PrintFormatGreyYarnPurchaseReturn
@@ -491,7 +476,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc. Id." value={docId} required={true} readOnly
                                 />
-                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
+                                <DateInput name="Doc Date" value={date} type={"date"} required={true} disabled={true} />
 
 
 
@@ -529,7 +514,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                         show={"isSupplier"}
                                         required={true}
                                         disabled={id}
-                                    />                                </div>
+                                    />
+                                </div>
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
@@ -557,33 +543,35 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
-                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection} />
+                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
+                        handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} handleRightClick={handleRightClick} readOnly={readOnly}
+                    />
 
 
                     <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
                             <textarea
-                                readOnly={readOnly}
+                                // readOnly={readOnly}
                                 value={term}
                                 onChange={(e) => {
                                     setTerm(e.target.value)
                                 }}
                                 className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
+                                // placeholder="Additional notes..."
 
                             />
                         </div>
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
+                            <h2 className="font-medium text-slate-700 mb-2 text-base">Remarks</h2>
                             <textarea
-                                readOnly={readOnly}
-                                value={notes}
+                                // readOnly={readOnly}
+                                value={remarks}
                                 onChange={(e) => {
-                                    setNotes(e.target.value)
+                                    setRemarks(e.target.value)
                                 }}
                                 className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
+                                // placeholder="Additional notes..."
                             />
                         </div>
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
@@ -593,57 +581,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                             <div className="space-y-1.5">
                                 <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Total Qty</span>
-                                    <span className="font-medium">{parseInt(getTotalQty())} </span>
+                                    <span className="text-slate-600">Total Qty (kg)</span>
+                                    <span className="font-medium">{parseInt(getTotalQty())}  </span>
                                 </div>
 
-                                <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Approved By</span>
-                                    <input
-                                        type="text"
-                                        className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                                        placeholder="Order By"
-                                        readOnly
-                                        value={approvedBy}
-                                        onChange={(e) => setApprovedBy(e.target.value)}
-                                    />
-                                </div>
+                             
                             </div>
                         </div>
 
-                        {showExtraCharge && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h3 className="text-base font-semibold">Add Extra Charge</h3>
-                                        <button onClick={() => setShowExtraCharge(false)} className="text-slate-400 hover:text-slate-600">
-                                            <HiX className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="e.g. Delivery fee"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                                            <input
-                                                type="number"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                        <button className="w-full bg-indigo-600 text-white py-1.5 px-3 rounded text-sm hover:bg-indigo-700 transition">
-                                            Apply Charge
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                     
 
 
                     </div>

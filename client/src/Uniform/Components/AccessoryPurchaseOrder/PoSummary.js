@@ -24,7 +24,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    {/* <tr>
                         <td className="border border-gray-500">Remarks</td>
                         <td className="border border-gray-500" colSpan={2}
                         >
@@ -32,9 +32,9 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                                 onChange={(e) => { setRemarks(e.target.value) }}
                             />
                         </td>
-                    </tr>
+                    </tr> */}
                     <tr>
-                        <td className="border border-gray-500">Gross Amount</td>
+                        <td className="border border-gray-500 py-1">Gross Amount</td>
                         <td className="border border-gray-500 text-right" colSpan={2}
                         >
                             {parseFloat(taxDetails.grossAmount).toFixed(3)}

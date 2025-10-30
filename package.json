@@ -7,10 +7,10 @@
   "scripts": {
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
-    "start": "node --max-old-space-size=8192 server.js",
+    "start": "node --max-old-space-size=4096 server.js",
+    "dev": "nodemon --exec 'node --max-old-space-size=4096' server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "server": "NODE_OPTIONS = --max-old-space-size=8192",
-    "dev": "node --max-old-space-size=4096 ./node_modules/.bin/nodemon server.js",
     "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

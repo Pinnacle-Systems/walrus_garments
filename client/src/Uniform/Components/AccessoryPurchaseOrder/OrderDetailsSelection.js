@@ -94,8 +94,8 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
              <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                 <div className="flex items-center gap-2">
                     <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                        {id ? (!readOnly ? "Edit Yarn Details" : "Yarn Details ") : "Add New Yarn"}
-                    </h2>
+                            Purchase Items
+                        </h2>
 
                 </div>
                 <div className="flex gap-2">

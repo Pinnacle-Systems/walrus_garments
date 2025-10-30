@@ -1,340 +1,1056 @@
+
+// import {
+//   Document,
+//   Page,
+//   View,
+//   Text,
+//   Image,
+//   Font,
+//   StyleSheet,
+// } from "@react-pdf/renderer";
+// import Sangeethatex from "../../../../../src/assets/Sangeethatex.png";
+// import tw from "../../../../Utils/tailwind-react-pdf";
+// import numberToText from "number-to-text";
+// import { findFromList, getCommonParams, getDateFromDateTimeToDisplay } from "../../../../Utils/helper";
+// import { useGetBranchByIdQuery } from "../../../../redux/services/BranchMasterService";
+// import { useGetPartyByIdQuery } from "../../../../redux/services/PartyMasterService";
+// import { useGetPaytermMasterQuery } from "../../../../redux/services/PayTermMasterServices";
+// import { useGetTermsAndConditionsQuery } from "../../../../redux/services/TermsAndConditionsService";
+// import useTaxDetailsHook from "../../../../CustomHooks/TaxHookDetails";
+// import TaxDetails from "./TaxDetails";
+
+// // Font registration
+// Font.register({
+//   family: "Roboto",
+//   src: "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;1,400;1,600&display=swap",
+// });
+
+// const styles = StyleSheet.create({
+//   // page: {
+//   //   fontFamily: "Helvetica",
+//   //   fontSize: 8,
+//   //   padding: 10,
+//   //   border: "1 solid #000",
+//   // },
+//   borderBox: { border: "1 solid black", margin: 0, padding: 8, },
+//   page: {
+//     // fontFamily: "Helvetica",
+//     fontSize: 8,
+//     padding: 0,
+//     border: "1 solid #000",
+//   },
+//   header: {
+//     alignItems: "center",
+//     textAlign: "center",
+//     marginBottom: 4,
+//     borderBottom: "1 solid #000",
+//   },
+//   logoRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginBottom: 4,
+
+//   },
+//   logo: {
+//     // width: 60,
+//     height: 40,
+//     marginRight: 6,
+//   },
+//   companyText: {
+//     fontSize: 8,
+//     textAlign: "left",
+//   },
+//   greenTitle: {
+//     textAlign: "center",
+//     fontSize: 11,
+//     color: "green",
+//     fontWeight: "bold",
+//     marginVertical: 4,
+//     // textDecoration: "underline",
+//     marginBottom: 6,
+//   },
+//   infoRow: {
+//     flexDirection: "row",
+//     border: "1 solid #000",
+//     justifyContent: "space-between",
+//     padding: 4,
+//   },
+//   infoLeft: { flex: 1 },
+//   infoRight: {
+//     width: 80,
+//     height: 80,
+//     border: "1 solid #000",
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   sectionTitle: {
+//     fontSize: 8,
+//     fontWeight: "bold",
+//     color: "green",
+//     backgroundColor: "#e6ffe6",
+//     borderBottom: "1 solid #000",
+//     padding: 2,
+//   },
+//   boxRow: {
+//     flexDirection: "row",
+//     border: "1 solid #000",
+//     marginTop: 4,
+//   },
+//   boxCol: {
+//     flex: 1,
+//     borderRight: "1 solid #000",
+//   },
+//   boxContent: {
+//     padding: 4,
+//     fontSize: 8,
+//   },
+//   tableHeader: {
+//     flexDirection: "row",
+//     backgroundColor: "#d1fae5",
+//     borderTop: "1 solid #000",
+//     borderBottom: "1 solid #000",
+//     marginTop: 6,
+//   },
+//   th: {
+//     flex: 1,
+//     fontSize: 8,
+//     fontWeight: "bold",
+//     textAlign: "center",
+//     borderRight: "1 solid #000",
+//     padding: 3,
+//   },
+//   td: {
+//     flex: 1,
+//     fontSize: 8,
+//     textAlign: "center",
+//     borderRight: "1 solid #000",
+//     borderBottom: "1 solid #000",
+//     padding: 3,
+//   },
+//   totalRow: {
+//     flexDirection: "row",
+//     borderTop: "1 solid #000",
+//   },
+//   totalLabel: {
+//     flex: 8,
+//     textAlign: "center",
+//     fontSize: 8,
+//     fontWeight: "bold",
+//     padding: 3,
+//   },
+//   totalValue: {
+//     flex: 1.2,
+//     textAlign: "right",
+//     fontSize: 8,
+//     padding: 3,
+//   },
+//   taxBox: {
+//     width: 180,
+//     border: "1 solid #000",
+//     alignSelf: "flex-end",
+//     marginTop: 4,
+//   },
+//   taxHeader: {
+//     backgroundColor: "#d1fae5",
+//     borderBottom: "1 solid #000",
+//     textAlign: "center",
+//     fontWeight: "bold",
+//     fontSize: 8,
+//     padding: 3,
+//   },
+//   taxRow: {
+//     flexDirection: "row",
+//     borderTop: "1 solid #000",
+//   },
+//   taxLabel: { flex: 1, padding: 3, fontSize: 8 },
+//   taxValue: {
+//     flex: 1,
+//     textAlign: "right",
+//     padding: 3,
+//     fontSize: 8,
+//   },
+//   remarksSection: {
+//     marginTop: 6,
+//   },
+//   footer: {
+//     marginTop: 10,
+//   },
+//   signatureRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     marginTop: 20,
+//   },
+//   signature: {
+//     flex: 1,
+//     textAlign: "center",
+//     fontWeight: "bold",
+//     fontSize: 8,
+//   },
+//   pageNumber: {
+//     position: "absolute",
+//     bottom: 10,
+//     right: 30,
+//     fontSize: 7,
+//     color: "#555",
+//   },
+//   poDetails: {
+//     marginTop: 10,
+//     width: "50%", // adjust as needed
+//   },
+
+//   detailRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     marginBottom: 4,
+//   },
+
+//   label: {
+//     fontSize: 8,
+//     fontWeight: "bold",
+//   },
+
+//   value: {
+//     fontSize: 8,
+//     textAlign: "right",
+//     flexShrink: 1, // helps long text wrap properly
+//   },
+// });
+// const YarnPurchaseOrderReturnPrintFormat = ({
+  // poNumber,
+  // poDate,
+  // deliveryToId,
+  // dueDate,
+  // payTermId,
+  // deliveryType,
+  // supplierDetails,
+  // poItems,
+  // yarnList,
+  // colorList,
+  // uomList,
+  // taxTemplateId,
+  // discountType,
+  // discountValue,
+  // remarks,
+  // poType,
+  // branchData,
+  // termsAndCondition,
+  // taxDetails,
+  // deliveryTo,
+  // taxKey,
+  // taxGroupWise
+// }) => {
+
+
+
+//   console.log(supplierDetails, "supplierDetails", taxKey)
+
+
+
+
+
+
+
+
+
+
+//   return (
+//     <Document>
+//       <Page size="A4" style={styles.borderBox}>
+//         {/* Header */}
+//         <View style={styles.page}>
+
+//           <View style={styles.header}>
+//             <Text style={{ fontSize: 12, color: "green", fontWeight: "bold", marginBottom: 4 }}>
+//               {branchData.branchName}
+//             </Text>
+//             <View style={styles.logoRow}>
+//               <Image src={Sangeethatex} style={styles.logo} />
+//               <View>
+//                 <Text style={styles.companyText}>{branchData.address}</Text>
+//                 <Text style={styles.companyText}>Mobile: {branchData.mobile}</Text>
+//                 <Text style={styles.companyText}>PAN No: {branchData.panNo}</Text>
+//                 <Text style={styles.companyText}>GST No: {branchData.gstNo}</Text>
+//               </View>
+//             </View>
+//           </View>
+//           <View >
+//             <Text style={styles.greenTitle}>YARN PURCHASE RETURN</Text>
+//             <Text style={{ marginBottom: 4, borderBottom: "1 solid #000", }}></Text>
+
+//           </View>
+//           <View style={{
+//             justifyContent: "space-between", flexDirection: "row", marginTop: 4, paddingHorizontal: 4
+//           }}  >
+//             <View style={styles.poDetails}>
+//               <View style={styles.detailRow}>
+//                 <Text style={styles.label}>PO No :</Text>
+//                 <Text style={styles.value}>{poNumber}</Text>
+//               </View>
+//               <View style={styles.detailRow}>
+//                 <Text style={styles.label}>PO Date :</Text>
+//                 <Text style={styles.value}>{getDateFromDateTimeToDisplay(poDate)}</Text>
+//               </View>
+//               <View style={styles.detailRow}>
+//                 <Text style={styles.label}>Due Date :</Text>
+//                 <Text style={styles.value}>{getDateFromDateTimeToDisplay(dueDate)}</Text>
+//               </View>
+//               <View style={styles.detailRow}>
+//                 <Text style={styles.label}>Payment Terms :</Text>
+//                 <Text style={styles.value}>{"-"}</Text>
+//               </View>
+//             </View>
+
+//             <View style={styles.infoRight}>
+//               <Text style={{ fontSize: 6 }}>QR: {poNumber}</Text>
+//             </View>
+//           </View>
+
+//           {/* Vendor & Delivery */}
+//           <View style={styles.boxRow}>
+//             <View style={styles.boxCol}>
+//               <Text style={styles.sectionTitle}>SUPPLIER DETAILS :</Text>
+//               <View style={styles.boxContent}>
+//                 <Text style={{ fontWeight: "bold" }}>{supplierDetails?.name}</Text>
+//                 <Text>{supplierDetails?.address}</Text>
+//                 <Text>Mobile No: {supplierDetails?.mobile}</Text>
+//                 <Text>PAN No: {supplierDetails?.panNo}</Text>
+//                 <Text>GST No: {supplierDetails?.gstNo}</Text>
+//                 <Text>Email: {supplierDetails?.email}</Text>
+//               </View>
+//             </View>
+//             <View style={{ flex: 1 }}>
+//               <Text style={styles.sectionTitle}>DELIVERY TO :</Text>
+//               <View style={styles.boxContent}>
+//                 <Text style={{ fontWeight: "bold" }}>{branchData.branchName}</Text>
+//                 <Text>{branchData.address}</Text>
+//                 <Text>Mobile No: {branchData.mobile}</Text>
+//                 <Text>GST No: {branchData.gstNo}</Text>
+//               </View>
+//             </View>
+//           </View>
+
+// <View style={styles.tableHeader}>
+//   <Text style={[styles.th, { flex: 0.7 }]}>S.No</Text>
+//   <Text style={[styles.th, { flex: 3 }]}>Item</Text>
+//   <Text style={[styles.th, { flex: 2 }]}>Color</Text>
+//   <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
+//   <Text style={[styles.th, { flex: 1 }]}>No. of Bags</Text>
+//   <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
+//   <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
+//   <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
+//   <Text style={[styles.th, { flex: 1.2 }]}>Amount</Text>
+// </View>
+
+// {poItems.map((val, index) => (
+//   <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
+//     <Text style={[styles.td, { flex: 0.7 }]}>{index + 1}</Text>
+//     <Text style={[styles.td, { flex: 3 }]}>
+//       {findFromList(val.yarnId, yarnList?.data, "name")}
+//     </Text>
+//     <Text style={[styles.td, { flex: 2 }]}>
+//       {findFromList(val.colorId, colorList?.data, "name")}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1 }]}>
+//       {findFromList(val.uomId, uomList?.data, "name")}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+//       {parseFloat(val.noOfBags).toFixed(3)}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+//       {parseFloat(val.qty).toFixed(3)}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1 }]}>
+//       {parseFloat(val.price).toFixed(3)}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+//       {parseFloat(val.taxPercent).toFixed(3)}
+//     </Text>
+//     <Text style={[styles.td, { flex: 1.2, textAlign: "right" }]}>
+//       {parseFloat(val.qty * val.price).toFixed(3)}
+//     </Text>
+//   </View>
+// ))}
+
+
+//           <View
+//             style={{
+//               flexDirection: "row",
+//               // borderTop: "1 solid #9ca3af",
+//               borderBottom: "1 solid #9ca3af",
+//             }}
+//           >
+//             <Text
+//               style={{
+//                 flex: 8,
+//                 textAlign: "center",
+//                 fontSize: 8,
+//                 fontWeight: "bold",
+//                 padding: 3,
+//               }}
+//             >
+//               TOTAL
+//             </Text>
+//             <Text
+//               style={{
+//                 flex: 1.2,
+//                 textAlign: "right",
+//                 fontSize: 8,
+//                 padding: 3,
+//                 borderLeft: "1 solid #9ca3af",
+//               }}
+//             >
+//               {parseFloat(taxDetails.taxableAmount).toFixed(2)}
+//             </Text>
+//           </View>
+
+
+//           <View
+//             style={{
+//               alignSelf: "flex-end",
+//               border: "1 solid #9ca3af",
+//               // marginTop: 4,
+//               width: 100,
+//             }}
+//           >
+//             <View style={{ backgroundColor: "#d1fae5" }}>
+//               <Text style={{ fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 5 }}>
+//                 TAX DETAILS
+//               </Text>
+//             </View>
+//             <TaxDetails taxGroupWise={taxGroupWise} poItems={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType}  discountValue= {discountValue} />
+//             <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af" }}>
+//               <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>CGST @{parseFloat(taxKey) / 2}% </Text>
+//               <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+//                 {parseFloat(taxDetails.cgstAmount).toFixed(3)}
+//               </Text>
+//             </View>
+//             <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af" }}>
+//               <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>SGST @{parseFloat(taxKey) / 2}%</Text>
+//               <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+//                 {parseFloat(taxDetails.sgstAmount).toFixed(3)}
+//               </Text>
+//             </View>
+//             <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#d1fae5" }}>
+//               <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>Net Amount</Text>
+//               <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+//                 {parseFloat(taxDetails.netAmount).toFixed(3)}
+//               </Text>
+//             </View>
+//           </View>
+
+
+//           <View style={{ marginTop: 6 }}>
+//             <Text style={{ fontSize: 8, fontWeight: "bold" }}>
+//               Amount in Words:
+//             </Text>
+//             <Text style={{ fontSize: 8 }}>
+//               Rs.{" "}
+//               {/* {numberToText.convertToText(taxDetails?.netAmount, {
+//                 language: "en-in",
+//                 separator: "",
+//               })}{" "} */}
+//               Only
+//             </Text>
+
+//             <Text style={{ fontSize: 8, fontWeight: "bold", marginTop: 4 }}>
+//               Remarks:
+//             </Text>
+//             <Text style={{ fontSize: 8 }}>{remarks}</Text>
+
+//             <Text style={{ fontSize: 8, fontWeight: "bold", marginTop: 4 }}>
+//               Terms and Conditions:
+//             </Text>
+//             {termsAndCondition?.data
+//               ?.filter((v) => v.isPurchaseOrder)
+//               ?.map((v) => (
+//                 <Text key={v.id} style={{ fontSize: 7 }}>
+//                   {v.description}
+//                 </Text>
+//               ))}
+//           </View>
+
+//           {/* Footer */}
+//           <View style={{ marginTop: 10 }}>
+//             <Text
+//               style={{ fontSize: 8, textAlign: "right", fontWeight: "bold" }}
+//             >
+//               For {branchData.branchName}
+//             </Text>
+//             <View
+//               style={{
+//                 flexDirection: "row",
+//                 justifyContent: "space-between",
+//                 marginTop: 20,
+//               }}
+//             >
+//               {["Prepared By", "Verified By", "Received By", "Approved By"].map(
+//                 (role) => (
+//                   <Text
+//                     key={role}
+//                     style={{
+//                       fontSize: 8,
+//                       textAlign: "center",
+//                       fontWeight: "bold",
+//                       flex: 1,
+//                     }}
+//                   >
+//                     {role}
+//                   </Text>
+//                 )
+//               )}
+//             </View>
+//           </View>
+
+//           <View
+//             fixed
+//             style={{
+//               position: "absolute",
+//               bottom: 10,
+//               right: 30,
+//               fontSize: 7,
+//               color: "#555",
+//             }}
+//           >
+//             <Text
+//               render={({ pageNumber, totalPages }) =>
+//                 `Page ${pageNumber} / ${totalPages}`
+//               }
+//             />
+//           </View>
+
+//         </View>
+//       </Page>
+//     </Document >
+//   );
+// };
+
+// export default YarnPurchaseOrderReturnPrintFormat;
+
 import {
   Document,
   Page,
   View,
   Text,
-  StyleSheet,
   Image,
   Font,
+  StyleSheet,
 } from "@react-pdf/renderer";
 import Sangeethatex from "../../../../../src/assets/Sangeethatex.png";
 import tw from "../../../../Utils/tailwind-react-pdf";
-import { findFromList, substract } from "../../../../Utils/helper";
+import numberToText from "number-to-text";
+import { findFromList, getCommonParams, getDateFromDateTimeToDisplay } from "../../../../Utils/helper";
+import { useGetBranchByIdQuery } from "../../../../redux/services/BranchMasterService";
+import { useGetPartyByIdQuery } from "../../../../redux/services/PartyMasterService";
+import { useGetPaytermMasterQuery } from "../../../../redux/services/PayTermMasterServices";
+import { useGetTermsAndConditionsQuery } from "../../../../redux/services/TermsAndConditionsService";
+import useTaxDetailsHook from "../../../../CustomHooks/TaxHookDetails";
+import TaxDetails from "./TaxDetails";
+import { Loader } from "../../../../Basic/components";
 
+// Font registration
+Font.register({
+  family: "Roboto",
+  src: "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;1,400;1,600&display=swap",
+});
 
+const styles = StyleSheet.create({
+  // page: {
+  //   fontFamily: "Helvetica",
+  //   fontSize: 8,
+  //   padding: 10,
+  //   border: "1 solid #000",
+  // },
+  borderBox: { border: "1 solid black", margin: 0, padding: 8, },
+  page: {
+    // fontFamily: "Helvetica",
+    fontSize: 8,
+    padding: 0,
+    border: "1 solid #000",
+  },
+  header: {
+    alignItems: "center",
+    textAlign: "center",
+    marginBottom: 4,
+    borderBottom: "1 solid #000",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
 
+  },
+  logo: {
+    // width: 60,
+    height: 40,
+    marginRight: 6,
+  },
+  companyText: {
+    fontSize: 8,
+    textAlign: "left",
+  },
+  greenTitle: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "green",
+    fontWeight: "bold",
+    marginVertical: 4,
+    // textDecoration: "underline",
+    marginBottom: 6,
+  },
+  infoRow: {
+    flexDirection: "row",
+    border: "1 solid #000",
+    justifyContent: "space-between",
+    padding: 4,
+  },
+  infoLeft: { flex: 1 },
+  infoRight: {
+    width: 80,
+    height: 80,
+    border: "1 solid #000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sectionTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "green",
+    // backgroundColor: "#e6ffe6",
+    borderBottom: "1 solid #000",
+    padding: 6,
+  },
+  boxRow: {
+    flexDirection: "row",
+    border: "1 solid #000",
+    marginTop: 4,
+  },
+  boxCol: {
+    flex: 1,
+    borderRight: "1 solid #000",
+  },
+  boxContent: {
+    padding: 4,
+    fontSize: 8,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    // backgroundColor: "#d1fae5",
+    borderTop: "1 solid #000",
+    borderBottom: "1 solid #000",
+    marginTop: 6,
+  },
+  th: {
+    flex: 1,
+    fontSize: 8,
+    fontWeight: "bold",
+    textAlign: "center",
+    borderRight: "1 solid #000",
+    padding: 3,
+  },
+  td: {
+    flex: 1,
+    fontSize: 8,
+    textAlign: "center",
+    borderRight: "1 solid #000",
+    borderBottom: "1 solid #000",
+    padding: 3,
+  },
+  totalRow: {
+    flexDirection: "row",
+    borderTop: "1 solid #000",
+  },
+  totalLabel: {
+    flex: 8,
+    textAlign: "center",
+    fontSize: 8,
+    fontWeight: "bold",
+    padding: 3,
+  },
+  totalValue: {
+    flex: 1.2,
+    textAlign: "right",
+    fontSize: 8,
+    padding: 3,
+  },
+  taxBox: {
+    width: 180,
+    border: "1 solid #000",
+    alignSelf: "flex-end",
+    marginTop: 4,
+  },
+  taxHeader: {
+    backgroundColor: "#d1fae5",
+    borderBottom: "1 solid #000",
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 8,
+    padding: 3,
+  },
+  taxRow: {
+    flexDirection: "row",
+    borderTop: "1 solid #000",
+  },
+  taxLabel: { flex: 1, padding: 3, fontSize: 8 },
+  taxValue: {
+    flex: 1,
+    textAlign: "right",
+    padding: 3,
+    fontSize: 8,
+  },
+  remarksSection: {
+    marginTop: 6,
+  },
+  footer: {
+    marginTop: 10,
+  },
+  signatureRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  signature: {
+    flex: 1,
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 8,
+  },
+  pageNumber: {
+    position: "absolute",
+    bottom: 10,
+    right: 30,
+    fontSize: 7,
+    color: "#555",
+  },
+  poDetails: {
+    marginTop: 10,
+    width: "50%", // adjust as needed
+  },
 
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
 
-const PrintFormat = ({
-  lineItems,
-  productList,
-  uomList,
-  docId,
-  date,
-  party,
-  ewayBillNo,
-  transportTax,
-  transportCost,
-  shippingAddress,
+  label: {
+    fontSize: 8,
+    fontWeight: "bold",
+  },
+
+  value: {
+    fontSize: 8,
+    textAlign: "right",
+    flexShrink: 1, // helps long text wrap properly
+  },
+});
+const YarnPurchaseOrderPrintFormat = ({
+  isTaxHookDetailsLoading,
+  poNumber,
+  poDate,
+  deliveryToId,
+  dueDate,
+  payTermId,
+  deliveryType,
+  supplierDetails,
+  poItems,
+  taxTemplateId,
+  discountType,
+  discountValue,
+  remarks,
+  poType,
+  branchData,
+  termsAndCondition,
+  taxDetails,
+  deliveryTo,
+  taxKey,
+  taxGroupWise,
+  colorList, uomList, yarnList, sizeList, term
+
 }) => {
 
-  Font.register({
-    family: "Roboto",
-    src: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.woff2",
-  });
 
-  const getProductName = (item) => {
-    if (item?.Product?.name) return item.Product.name;
-    const found = productList?.find(
-      (p) => parseInt(p.id) === parseInt(item.productId)
-    );
-    return found?.name || "";
-  };
-  const getUomName = (item, uomList) => {
-    // If it's saved data (API returned Uom.name)
-    if (item?.Uom?.name) return item.Uom.name;
-    // If unsaved, find from uomList
-    return findFromList(item.uomId, uomList, "name");
-  };
-  const calculateGst = (index) => {
-    return lineItems[index]["taxPercent"]?.replace("%", "");
-  };
 
-  const calGst = (id) => {
-    let taxPercent = lineItems?.find(
-      (val) => parseInt(val.id) === parseInt(id)
-    )?.taxPercent;
+  console.log(taxDetails, "taxDetails", poItems)
 
-    return taxPercent ? taxPercent.replace("%", "") : 0;
-  };
-  const grandTotal = lineItems?.reduce((acc, item, index) => {
-    const taxableAmount =
-      !item.qty || !item.price
-        ? 0
-        : parseFloat(item.qty) * parseFloat(item.price);
 
-    const gstAmount = taxableAmount * (calculateGst(index) / 100);
-    const totalAmount =
-      taxableAmount - parseFloat(item?.discount || 0) + gstAmount;
 
-    return acc + totalAmount;
-  }, 0);
-  const styles = StyleSheet.create({
-    table: {
-      // borderStyle: "solid",
-      // borderWidth: 1,
-      // borderColor: "#D1D5DB",
-      marginTop: 20,
-      flexDirection: "column",
-    },
-    tableHeader: {
-      flexDirection: "row",
-      backgroundColor: "#303030",
-      borderLeftWidth: 1,
-      borderLeftColor: "#D1D5DB",
-      // paddingTop: 10,
-      // paddingBottom: 5,
-    },
+  function findAccessoryName(accessoryId, accessoryArray, field) {
 
-    headerCell: {
-      flex: 1,
-      padding: 3,
-      fontSize: 9,
-      color: "white",
-      textAlign: "center",
-      fontWeight: "bold",
-      borderRightWidth: 1,
-      borderRightColor: "#D1D5DB",
-    },
+    let accessoryObj = accessoryArray?.find(item => parseInt(item.id) == accessoryId)
 
-    // table
+    if (field == "accessoryItem") {
+      return accessoryObj?.accessoryItem?.name
+    }
+    else if ("accessoryGroup") {
+      return accessoryObj?.accessoryItem?.AccessoryGroup?.name
+    }
 
-    tableRow: {
-      flexDirection: "row",
-      alignItems: "stretch",
-    },
-    tableCell: {
-      flex: 1,
-      borderRightWidth: 1,
-      borderRightColor: "#D1D5DB",
-      borderLeftWidth: 1,
-      borderLeftColor: "#D1D5DB",
-      borderBottomWidth: 1,
-      borderBottomColor: "#D1D5DB",
-      padding: 3,
-      fontSize: 9,
-      flexWrap: "wrap",
-    },
-  });
+  }
 
-  const headers = [
-    { label: "S.No", flex: 0.5, align: "center" },
-    // { label: "Product Name", flex: 2, align: "center" },
-    { label: "Description", flex: 2.5, align: "center" },
-    { label: "HSN", flex: 1, align: "center" },
-    { label: "UOM", flex: 1, align: "center" },
-    { label: "Qty", flex: 1, align: "center" },
-    { label: "Price", flex: 1, align: "center" },
-    { label: "Taxable Amount", flex: 1.5, align: "center" },
-    { label: "CGST", flex: 1.2, align: "center" },
-    { label: "SGST", flex: 1.2, align: "center" },
-    { label: "Discount", flex: 1, align: "center" },
-    { label: "Amount", flex: 1.5, align: "center" },
-  ];
-  // Calculate totals before rendering
 
-  // let grandTotalInWords = numberToWords.toWords(Math.round(grandTotal));
 
-  // grandTotalInWords =
-  //   grandTotalInWords.charAt(0).toUpperCase() + grandTotalInWords.slice(1);
+  if (isTaxHookDetailsLoading) return <Loader />
 
 
 
   return (
-    <>
-      <Document>
-        <Page
-          size="A4"
-          style={{
-            fontFamily: "",
-            ...tw("relative pb-[50px] px-8 mt-6"),
-          }}
-          wrap
-        >
-          <Image
-            // source={headerBg}
-            style={{
-              marginLeft: 20,
-              width: "100%",
-              height: 134,
-              position: "absolute",
-              top: 20,
-              left: 2,
-              zIndex: 100,
-            }}
-          />
-          <View
-            style={tw(
-              "flex flex-row justify-between  items-center relative z-100"
-            )}
-          >
-            <View style={tw("flex-1 mt-7 ml-3 ")}>
-              <Image
-                source={Sangeethatex}
-                style={{ width: 70, height: 50, marginLeft: 15, marginTop: 4 }}
-              />
-              <Text
-                style={[
-                  tw("mt-2 font-bold tracking-wide"),
-                  {
-                    fontSize: 8,
-                    color: "white",
-                    textShadowColor: "#00000050",
-                    textShadowOffset: { width: 1, height: 1 },
-                    textShadowRadius: 2,
-                  },
-                ]}
-              >
-                SANGEETHA TEX
-              </Text>
-              <Text
-                style={[
-                  tw("    tracking-wide"),
-                  {
-                    fontSize: 10,
-                    color: "white",
-                  },
-                ]}
-              >
+    <Document>
+      <Page size="A4" style={styles.borderBox}>
+        {/* Header */}
+        <View style={styles.page}>
 
-              </Text>
+          <View style={styles.header}>
+            <Text style={{ fontSize: 12, color: "green", fontWeight: "bold", marginBottom: 4, marginTop: 10 }}>
+              {branchData.branchName}
+            </Text>
+            <View style={styles.logoRow}>
+              <Image src={Sangeethatex} style={styles.logo} />
+              <View>
+                <Text style={styles.companyText}>{branchData.address}</Text>
+                <Text style={styles.companyText}>Mobile: {branchData.mobile}</Text>
+                <Text style={styles.companyText}>PAN No: {branchData.panNo}</Text>
+                <Text style={styles.companyText}>GST No: {branchData.gstNo}</Text>
+              </View>
+            </View>
+          </View>
+          <View >
+            <Text style={styles.greenTitle}>YARN  PURCHASE ORDER </Text>
+            <Text style={{ marginBottom: 4, borderBottom: "1 solid #000", }}></Text>
+
+          </View>
+          <View style={{
+            justifyContent: "space-between", flexDirection: "row", marginTop: 4, paddingHorizontal: 4
+          }}  >
+            <View style={styles.poDetails}>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>PO No :</Text>
+                <Text style={styles.value}>{poNumber}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>PO Date :</Text>
+                <Text style={styles.value}>{getDateFromDateTimeToDisplay(poDate)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Due Date :</Text>
+                <Text style={styles.value}>{getDateFromDateTimeToDisplay(dueDate)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Payment Terms :</Text>
+                <Text style={styles.value}>{"-"}</Text>
+              </View>
             </View>
 
-            <View style={tw("flex-2 items-center")}>
-              <Text
-                style={{ fontSize: 14, fontWeight: "bold", color: "white" }}
-              >
-                PURCHASE ORDER
-              </Text>
-            </View>
-            <View style={tw("flex-1 items-end mr-3")}>
-              <Text style={{ fontSize: 14, color: "white" }}>{docId}</Text>
+            <View style={styles.infoRight}>
+              <Text style={{ fontSize: 6 }}>QR: {poNumber}</Text>
             </View>
           </View>
 
-          {/* content below the top image  */}
-          <View>
-            <View style={tw("w-full")}>
-              <View
-                style={tw("flex flex-row justify-between p-1 mt-3 mb-3 mt-10")}
-              >
-                <View style={tw("w-2/4 gap-y-0.5")}>
-                  <Text
-                    style={[
-                      tw("text-gray-900 tracking-wide"),
-                      {
-                        fontSize: 16,
-                        fontWeight: "bold",
-                        textTransform: "uppercase",
-                        letterSpacing: 1.2,
-                      },
-                    ]}
-                  >
-                    Sangeethe TexTile
-                  </Text>
-
-                  <Text style={{ fontSize: 10, marginBottom: 5 }}>
-                    36192, 2/99 Sangitha Textiles Palla Thottam Kaliyapuram Annur Tk,{"\n"} TN (33)
-                    Coimbatore, Kamanaikenpalayam Annur Road, Annur-641653
-                  </Text>
-                  <Text style={{ fontSize: 10, marginBottom: 5 }}>
-                    +9042762263
-                  </Text>
-                  <Text style={{ fontSize: 10, marginBottom: 5 }}>
-                    sangithatextile@ssgroups.in
-                  </Text>
-                  <View style={tw("flex flex-row gap-x-2")}>
-                    <Text
-                      style={[
-                        tw("font-bold"),
-                        {
-                          fontSize: 10,
-                          fontWeight: 900,
-                          fontFamily: "Times-Bold",
-                        },
-                      ]}
-                    >
-                      GSTIN :
-                    </Text>
-                    <Text style={{ fontSize: 10, marginBottom: 3 }}>
-                      33BIIPS8122C1ZF
-                    </Text>
-                  </View>
-                  <View style={tw("flex flex-row gap-x-2")}>
-                    <Text
-                      style={[
-                        tw("font-bold"),
-                        {
-                          fontSize: 10,
-                          fontWeight: 900,
-                          fontFamily: "Times-Bold",
-                        },
-                      ]}
-                    >
-                      Website:
-                    </Text>
-                    <Text style={{ fontSize: 10, marginBottom: 3 }}>
-                      www.sagaaclothing.com , www.sockscart.in
-                    </Text>
-                  </View>
-                  <View style={tw("flex flex-row gap-x-2")}>
-                    <Text
-                      style={[
-                        tw("font-bold"),
-                        {
-                          fontSize: 10,
-                          fontWeight: 900,
-                          fontFamily: "Times-Bold",
-                        },
-                      ]}
-                    >
-                      Contact Name:
-                    </Text>
-                    <Text style={{ fontSize: 10, marginBottom: 3 }}>
-                      Sangeetha Tex
-                    </Text>
-                  </View>
-                </View>
-                <View style={tw("flex flex-row justify-end w-1/2 mt-4")}>
-                  <View style={tw("w-1/2 gap-y-2")}>
-                    <Text style={{ fontSize: 10 }}>Po No:</Text>
-                    <Text style={{ fontSize: 10 }}>Po Date:</Text>
-                    {/* <Text style={{ fontSize: 10 }}>E-Way Bill No:</Text> */}
-                  </View>
-                  <View style={tw("w-1/3  gap-y-2")}>
-                    <Text style={{ fontSize: 10 }}> {docId}</Text>
-                    <Text style={{ fontSize: 10 }}> {date}</Text>
-                    {/* <Text style={{ fontSize: 10 }}>{ewayBillNo}</Text> */}
-                  </View>
-                </View>
+          {/* Vendor & Delivery */}
+          <View style={styles.boxRow}>
+            <View style={styles.boxCol}>
+              <Text style={styles.sectionTitle}>SUPPLIER DETAILS :</Text>
+              <View style={styles.boxContent}>
+                <Text style={{ fontWeight: "bold", marginBottom: 4, paddingHorizontal: 4, }}>{supplierDetails?.name}</Text>
+                <Text>{supplierDetails?.address}</Text>
+                <Text>Mobile No: {supplierDetails?.mobile}</Text>
+                <Text>PAN No: {supplierDetails?.panNo}</Text>
+                <Text>GST No: {supplierDetails?.gstNo}</Text>
+                <Text>Email: {supplierDetails?.email}</Text>
+              </View>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>DELIVERY TO :</Text>
+              <View style={styles.boxContent}>
+                <Text style={{ fontWeight: "bold", paddingHorizontal: 4, marginBottom: 4 }}>{branchData.branchName}</Text>
+                <Text>{branchData.address}</Text>
+                <Text>Mobile No: {branchData.mobile}</Text>
+                <Text>GST No: {branchData.gstNo}</Text>
               </View>
             </View>
           </View>
 
+          <View style={styles.tableHeader}>
+            <Text style={[styles.th, { flex: 0.7 }]}>S.No</Text>
+            <Text style={[styles.th, { flex: 3 }]}>Item</Text>
+            <Text style={[styles.th, { flex: 2 }]}>Color</Text>
+            <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
+            {/* <Text style={[styles.th, { flex: 1 }]}>No. of Bags</Text> */}
+            <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
+            <Text style={[styles.th, { flex: 1.2 }]}>Amount</Text>
+          </View>
+
+
+          {poItems.map((val, index) => (
+            <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
+              <Text style={[styles.td, { flex: 0.7 }]}>{index + 1}</Text>
+              <Text style={[styles.td, { flex: 3 }]}>
+                {findFromList(val.yarnId, yarnList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 2 }]}>
+                {findFromList(val.colorId, colorList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 1 }]}>
+                {findFromList(val.uomId, uomList?.data, "name")}
+              </Text>
+              {/* <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.noOfBags).toFixed(3)}
+              </Text> */}
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.qty).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1 }]}>
+                {parseFloat(val.price).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {parseFloat(val.taxPercent).toFixed(3)}
+              </Text>
+              <Text style={[styles.td, { flex: 1.2, textAlign: "right" }]}>
+                {parseFloat(val.qty * val.price).toFixed(3)}
+              </Text>
+            </View>
+          ))}
 
 
 
+          <View
+            style={{
+              flexDirection: "row",
+              // borderTop: "1 solid #9ca3af",
+              borderBottom: "1 solid #9ca3af",
+            }}
+          >
+            <Text
+              style={{
+                flex: 15,
+                textAlign: "center",
+                fontSize: 8,
+                fontWeight: "bold",
+                padding: 3,
+              }}
+            >
+              TOTAL
+            </Text>
+            <Text
+              style={{
+                flex: 2,
+                textAlign: "right",
+                fontSize: 8,
+                padding: 3,
+                borderLeft: "1 solid #9ca3af",
+              }}
+            >
+              {parseFloat(taxDetails.taxableAmount).toFixed(2)}
+            </Text>
+          </View>
 
 
-          {/* Totals Section */}
+          <View
+            style={{
+              alignSelf: "flex-end",
+              border: "1 solid #9ca3af",
+              // marginTop: 4,
+              width: 100,
+            }}
+          >
+            <View style={{}}>
+              <Text style={{ fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 2 }}>
+                TAX DETAILS
+              </Text>
+            </View>
+            <TaxDetails taxGroupWise={taxGroupWise} items={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} />
 
 
-          {/* <Page2 /> */}
 
-          <View fixed style={tw("pr-2 pb-2 mt-[50px] absolute bottom-3  ")}>
-            <View style={tw("text-right text-sm w-full ml-10 pb-1 pt-1")}>
-              <Text
-                render={({ pageNumber, totalPages }) =>
-                  `Page No :  ${pageNumber} / ${totalPages}`
-                }
-                fixed
-              />
+            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#d1fae5" }}>
+              <Text style={{ flex: 1, fontSize: 8, padding: 3 }}>Net Amount</Text>
+              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+                {parseFloat(taxDetails.netAmount).toFixed(3)}
+              </Text>
             </View>
           </View>
-        </Page>
-      </Document>
-    </>
+
+
+          <View style={{ marginTop: 6, borderLeft: "1 solid #9ca3af", borderTop: "1 solid #9ca3af", borderRight: "1 solid #9ca3af", borderBottom: "1 solid #9ca3af" }}>
+            {/* Amount in Words */}
+            <View style={{ borderBottom: "1 solid #9ca3af", padding: 5 }}>
+              <Text style={{ fontSize: 10, fontWeight: "bold" }}>Amount in Words:  Rs.{" "}
+                {numberToText.convertToText(taxDetails?.netAmount, {
+                  language: "en-in",
+                  separator: "",
+                })}{" "}
+                Only</Text>
+
+            </View>
+
+            {/* Remarks */}
+            <View style={{ borderBottom: "1 solid #9ca3af", padding: 5 }}>
+              <Text style={{ fontSize: 8, fontWeight: "bold" }}>Remarks: {remarks}</Text>
+              {/* <Text style={{ fontSize: 8 }}></Text> */}
+            </View>
+
+            {/* Terms and Conditions */}
+            <View style={{ padding: 5 }}>
+              <Text style={{ fontSize: 8, fontWeight: "bold" }}>
+                Terms and Conditions: {term}
+              </Text>
+              {/* {termsAndCondition?.data
+                ?.filter((v) => v.isPurchaseOrder)
+                ?.map((v) => (
+                  <Text key={v.id} style={{ fontSize: 7 }}>
+                    {v.description}
+                  </Text>
+                ))} */}
+            </View>
+          </View>
+
+
+
+
+
+
+          <View style={{ marginTop: 10 }}>
+            <Text
+              style={{ fontSize: 8, textAlign: "right", fontWeight: "bold" }}
+            >
+              For {branchData.branchName}
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 20,
+              }}
+            >
+              {["Prepared By", "Verified By", "Received By", "Approved By"].map(
+                (role) => (
+                  <Text
+                    key={role}
+                    style={{
+                      fontSize: 8,
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      flex: 1,
+                    }}
+                  >
+                    {role}
+                  </Text>
+                )
+              )}
+            </View>
+          </View>
+
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} / ${totalPages}`
+            }
+          />
+        </View>
+      </Page>
+    </Document >
   );
 };
 
-export default PrintFormat;
+export default YarnPurchaseOrderPrintFormat;
+

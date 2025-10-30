@@ -5,11 +5,13 @@ import { DELETE } from '../../../icons'
 import { findFromList, getAllowableReturnQty, isBetweenRange, substract } from '../../../Utils/helper'
 import { HiPencil, HiTrash } from 'react-icons/hi'
 import { toast } from 'react-toastify'
+import { useGetAccessoryPoItemByIdQuery } from '../../../redux/uniformService/AccessoryPoServices'
+import Swal from 'sweetalert2'
 
-const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId }) => {
+const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId, handleRightClick, poInwardOrDirectInward }) => {
 
 
-    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item.poItemsId, purchaseInwardId, storeId: storeId, poType: "Accessory" }, { skip: !item.poItemsId })
+    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item.accessoryPoItemsId, purchaseInwardId, storeId: storeId, poType: "Accessory", poInwardOrDirectInward }, { skip: !item.accessoryPoItemsId })
 
     console.log(index, "index")
 
@@ -38,6 +40,9 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
         }
     }, [isFetching, isLoading, data, purchaseInwardId])
 
+    const balanceQty = parseFloat(item?.alreadyInwardedQty || 0) - parseFloat(item?.alreadyReturnedQty || 0);
+
+
     // if (isLoading || isFetching) return <Loader />
 
     return (
@@ -52,34 +57,46 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-            <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.poQty || 0}</td>
-            <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.allowedReturnQty || 0}</td>
-        
+            <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
+            <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(balanceQty|| 0).toFixed(3)}</td>
+
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     type="number"
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "returnQty") } }}
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 w-full px-1 table-data-input"
-                    value={(!item.returnQty) ? 0 : item.returnQty}
+                    value={(!item.qty) ? 0 : item.qty}
                     disabled={readOnly}
                     onChange={(event) => {
                         if (!event.target.value) {
                             handleInputChange(0, index, "returnQty");
                             return
                         }
-                        if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
-                            handleInputChange(event.target.value.replace(/^0+/, ''), index, "returnQty")
+
+                        const inputValue = event.target.value.replace(/^0+/, ''); // remove leading zeros
+                        const enteredQty = parseFloat(inputValue || 0);
+                        const balanceQty = parseFloat(item?.alreadyInwardedQty || 0) - parseFloat(item?.alreadyReturnedQty || 0);
+
+                        if (enteredQty > balanceQty) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Return Qty cannot be more than Balance Qty',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            handleInputChange(balanceQty.toString(), index, "qty"); // reset to max allowed
                         } else {
-                            toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
+                            handleInputChange(inputValue, index, "qty");
                         }
+
                     }}
                     onBlur={(e) => {
                         if (!e.target.value) {
-                            handleInputChange(0.000, index, "returnQty");
+                            handleInputChange(0.000, index, "qty");
                             return
                         }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "returnQty")
+                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
                     }
 
                     }
@@ -87,41 +104,21 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
                 <div className='text-center'>
                 </div>
             </td>
-            <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{parseFloat(item?.price).toFixed(2)}</td>
-            <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{!item.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item.qty : "0.000")).toFixed(2)}</td>
-            {!readOnly &&
-                <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <div className="flex space-x-2  justify-center">
+            <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(item?.price).toFixed(3)}</td>
+            <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{!item.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item.qty : "0.000")).toFixed(3)}</td>
+            <td className="py-0.5 border border-gray-300 text-[11px]">
+                <input
+                    readOnly
+                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                    onContextMenu={(e) => {
+                        if (!readOnly) {
+                            handleRightClick(e, index, "shiftTimeHrs");
+                        }
+                    }}
 
-                        <button
-                            // onClick={() => handleView(index)}
-                            // onMouseEnter={() => setTooltipVisible(true)}
-                            // onMouseLeave={() => setTooltipVisible(false)}
-                            className="text-blue-800 flex items-center  bg-blue-50 rounded"
-                        >
-                            👁 <span className="text-xs"></span>
-                        </button>
-                        <span className="tooltip-text">View</span>
-                        <button
-                            // onClick={() => handleEdit(index)}
-                            className="text-green-600 hover:text-green-800 bg-green-50 py-1 rounded text-xs flex items-center"
-                        >
-                            <HiPencil className="w-4 h-4" />
+                />
 
-                        </button>
-                        <span className="tooltip-text">Edit</span>
-                        <button
-                            onClick={() => deleteRow(index)}
-                            className="text-red-600 hover:text-red-800 bg-red-50  py-1 rounded text-xs flex items-center"
-                        >
-                            <HiTrash className="w-4 h-4" />
-
-                        </button>
-                        <span className="tooltip-text">Delete</span>
-
-                    </div>
-                </td>
-            }
+            </td>
         </tr>
     )
 }

@@ -19,38 +19,32 @@ import { CLOSE_ICON, DELETE, VIEW } from '../../../icons';
 import { FaInfoCircle } from 'react-icons/fa';
 // import AccessoryDirectInwardItems from './AccessoryDirectInwardItems';
 import Swal from 'sweetalert2';
+import AccessoryInwardItems from './AccessoryInwardItems';
+import AccessoryDirectInwardItems from './DirectInwardItems';
 
-export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection }) {
+export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection, contextMenu, handleCloseContextMenu,
+
+    handleRightClick
+}) {
+
+
+
+
+
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [tableDataView, setTableDataView] = useState(false)
     const [currentItem, setCurrentItem] = useState();
     const [currentIndex, setCurrentIndex] = useState("");
     const [gridEditableIndex, setGridEditableIndex] = useState(null);
-    const [contextMenu, setContextMenu] = useState(false)
 
     const params = {
         branchId, userId, finYearId
     };
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
-
-    const { data: socksMaterialData } =
-        useGetSocksMaterialQuery({ params: { ...params } });
 
 
-    const { data: socksTypeData } =
-        useGetSocksTypeQuery({ params: { ...params } });
-
-    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-    const { data: machineList } = useGetMachineQuery({ params: { ...params } });
 
 
-    const {
-        data: colorlist,
-        isLoading: isColorListLoading,
-        isFetching: isColorListFetching,
-    } = useGetColorMasterQuery({ params });
+
 
     function openPreview(filePath) {
         window.open(filePath instanceof File ? URL.createObjectURL(filePath) : getImageUrlPath(filePath))
@@ -73,7 +67,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         console.log(poItem, "poItem")
         if (poItem) {
 
-            newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
+            newBlend[index]["poNo"] = poItem?.AccessoryPo?.docId
             newBlend[index]["yarnId"] = poItem?.yarnId
             newBlend[index]["colorId"] = poItem?.colorId
             newBlend[index]["gaugeId"] = poItem?.gaugeId
@@ -98,6 +92,8 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
             newBlend[index]["stockRolls"] = parseInt(poItem?.stockRolls)
             newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
+            newBlend[index]["accessoryPoItemsId"] = poItem?.id
+
         }
         if (field === "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
@@ -186,19 +182,6 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         setCurrentIndex(index)
         setTableDataView(true)
     }
-    const handleRightClick = (event, rowIndex, type) => {
-        event.preventDefault();
-        setContextMenu({
-            mouseX: event.clientX,
-            mouseY: event.clientY,
-            rowId: rowIndex,
-            type,
-        });
-    };
-
-    const handleCloseContextMenu = () => {
-        setContextMenu(null);
-    };
 
 
     return (
@@ -232,40 +215,34 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         Fill Inward Items
                     </button>
                 </div>
-                {/* <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
+                <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex 
                     max-h-[250px] w-full overflow-auto'>
 
                     {
 
                         poInwardOrDirectInward == "DirectReturn" &&
 
-                        // (
-                        //     transType.toLowerCase().includes("yarn")
-                        //         ?
-                        <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
+                   
+                        <AccessoryDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                             handleInputChangeLotNo={handleInputChangeLotNo}
                             storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
                             directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        //         :
-                        //         <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
-                        //             transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-                        //             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        // )
+            
 
                     }
                     {
                         (poInwardOrDirectInward === "PurchaseReturn" || poInwardOrDirectInward === "GeneralReturn") &&
-           
+
                         <AccessoryInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
                             storeId={storeId} handleView={handleView}
                             transType={transType} directInwardReturnItems={directInwardReturnItems}
                             setDirectInwardReturnItems={setDirectInwardReturnItems}
-                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()} handleDeleteRow={deleteRow} handleDeleteAllRows={handleDeleteAllRows}
+                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()} handleDeleteRow={deleteRow} handleDeleteAllRows={handleDeleteAllRows} poInwardOrDirectInward={poInwardOrDirectInward}
                             handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
                         />
-                 
+
                     }
-                </fieldset> */}
+                </fieldset>
             </div>
         </>
 

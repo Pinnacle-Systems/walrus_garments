@@ -11,10 +11,10 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 const YarnPoItem = ({ yarnList, uomList,
     colorList, gaugeList, designList, deleteRow,
     loopLengthList, setInwardItems, storeId,
-    diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo ,
+    diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
     handleRightClick
 
-}) =>{
+}) => {
 
 
 
@@ -81,7 +81,7 @@ const YarnPoItem = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
 
 
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.stockQty} </td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.stockQty).toFixed(3)} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty).toFixed(3) || 0}</td>
 
 
@@ -123,7 +123,10 @@ const YarnPoItem = ({ yarnList, uomList,
                     </div>
                 </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
-                    {parseFloat(item.price).toFixed(2)}
+                    {parseFloat(item.price).toFixed(3)}
+                </td>
+                <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
+                    {parseFloat(item.taxPercent).toFixed(3)}
                 </td>
 
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
@@ -131,7 +134,7 @@ const YarnPoItem = ({ yarnList, uomList,
                         type="number"
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 px-1 w-16 table-data-input"
-                        value={(item.price * item.qty).toFixed(2)}
+                        value={(item.price * item.qty).toFixed(3)}
                         disabled={true}
                     />
                 </td>

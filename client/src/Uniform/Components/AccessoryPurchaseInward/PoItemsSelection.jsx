@@ -102,13 +102,18 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
             })
             console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {
-                return {
 
+
+                return {
+                    accessoryId : poItem?.accessoryId,
+                    accessoryItemId : poItem?.accessoryItemId,
+                    accessoryGroupId : poItem?.accessoryGroupId,
+                    colorId : poItem?.colorId,    
+                    sizeId : poItem?.sizeId,
                     poItemsId: poItem?.id,
                     orderId: poItem?.AccessoryPo?.orderId,
                     poNo: poItem?.AccessoryPo?.docId,
                     fabricId: poItem?.fabricId,
-                    colorId: poItem?.colorId,
                     gaugeId: poItem?.gaugeId,
                     gsmId: poItem?.gsmId,
                     fDiaId: poItem?.fDiaId,

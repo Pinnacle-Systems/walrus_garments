@@ -176,7 +176,31 @@ const GeneralYarnPoItems = ({
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
+                    <button className="font-bold text-slate-700 bord"
+                        // onKeyDown={(e) => {
+                        //     if (e.key === "Enter") {
+                        //         e.preventDefault();
+                        //         setTableDataView(true)
 
+                        //     }
+                        // }}
+                        // onClick={() => {
+                        //     if (!supplierId) {
+                        //         Swal.fire({
+                        //             icon: 'success',
+                        //             title: ` Choose Supplier`,
+                        //             showConfirmButton: false,
+                        //             timer: 2000
+                        //         });
+                        //     }
+                        //     else {
+
+                        //         setTableDataView(true)
+                        //     }
+                        // }}
+                    >
+                        Fill Po Items
+                    </button>
 
                 </div>
                 <div className={` relative w-full overflow-y-auto py-1`}>
@@ -387,7 +411,7 @@ const GeneralYarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
-                              
+
                                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"

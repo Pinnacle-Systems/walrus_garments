@@ -7,14 +7,14 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 import { useGetAccessoryPoItemByIdQuery } from '../../../redux/uniformService/AccessoryPoServices'
 import { cancelTypes } from '../../../Utils/DropdownData'
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, qty, deleteRow, handleRightClick }) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, poItemId, index, handleInputChange, readOnly, purchaseInwardId, deleteRow, handleRightClick  ,poInwardOrDirectInward}) => {
 
 
 
-    // const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: poItemId, purchaseInwardId }, { skip: !poItemId })
+    const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: poItemId, purchaseInwardId  ,poInwardOrDirectInward}, { skip: !poItemId })
 
 
-
+console.log({item},"itemitem")
 
     function findAccessoryName(accessoryId, accessoryArray, field) {
 
@@ -30,39 +30,39 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
 
     }
 
-    // useEffect(() => {
-    //     if (purchaseInwardId) return
-    //     if (isLoading || isFetching) return
-    //     const poItem = data?.data
+    useEffect(() => {
+        if (purchaseInwardId) return
+        if (isLoading || isFetching) return
+        const poItem = data?.data
 
-    //     if (data?.data) {
-    //         handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+        if (data?.data) {
+            handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
 
 
-    //     }
-    // }, [isFetching, isLoading, data, purchaseInwardId])
+        }
+    }, [isFetching, isLoading, data, purchaseInwardId])
 
     // if (isLoading || isFetching) return <Loader />
 
     return (
         <tr key={poItemId}>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
-            <td className='py-0.5  px-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
-            <td className='py-0.5 px-0.5  border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
+            <td className='py-0.5  px-1 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
 
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
 
             {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyCancelQty ? item?.alreadyCancelQty : item?.cancelQty ? item?.cancelQty : 0).toFixed(3)}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyInwardedQty || 0).toFixed(3)}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.alreadyReturnedQty || 0).toFixed(3)}</td> */}
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.balanceQty || 0).toFixed(3)}</td>
+            <td className='py-0.5 px-1  border border-gray-300 text-[11px] text-right'>{parseFloat(item?.balanceQty || 0).toFixed(3)}</td>
 
-            <td className='py-0.5 px-0.5 border border-gray-300 text-[11px]'>
+            <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -103,11 +103,11 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                 >
 
                     <option hidden>   </option>
-                    <option value="" className='font-medium text-[13px]'>Select</option>
+                    <option value="" className='font-medium text-[13px] text-xs'>Select</option>
                    
                     {cancelTypes?.map((option, index) => (
-                        <option key={index} value={option.value} className='font-medium text-[13px]'>
-                            {option.show}
+                        <option key={index} value={option.value} className='font-medium text-[13px] text-xs'>
+                           <span className=' text-xs'> {option.show}</span> 
                         </option>
                     ))}
                 </select>

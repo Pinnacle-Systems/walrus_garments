@@ -16,6 +16,13 @@ import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../..
 import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa";
 import PurchaseReturnForm from "./PurchaseReturnForm";
+import PurchaseReturnFormReport from "./PurchaseReturnFormReport";
+import { useDeleteAccessoryPurchaseReturnMutation } from "../../../redux/uniformService/AccessoryPoReturnServices";
+import Swal from "sweetalert2";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 
 
 
@@ -33,38 +40,22 @@ export default function Form() {
     branchId, userId, finYearId
   };
   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
-  const { data: allData, isLoading, isFetching } = useGetDirectCancelOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
+  // const { data: allData, isLoading, isFetching } = useGetDirectCancelOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
 
 
-  const [removeData] = useDeleteDirectCancelOrReturnMutation();
-
-
- const columns = [
-    {
-      header: 'S.No',
-      accessor: (item, index) => parseInt(index) + 1,
-      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
-    },
-
-    {
-      header: 'Inward No',
-      accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'TransType',
-      accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'Return Date',
-      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
-    },
+  const [removeData] = useDeleteAccessoryPurchaseReturnMutation();
 
 
 
-  ];
+  const { data: colorList } =
+    useGetColorMasterQuery({ params: { ...params } });
+  const { data: accessoryList } =
+    useGetAccessoryMasterQuery({ params });
+
+  const { data: sizeList } =
+    useGetSizeMasterQuery({ params });
+  const { data: uomList } =
+    useGetUomQuery({ params });
 
 
 
@@ -87,10 +78,19 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id)
+        const deleteData = await removeData(id)
         setId("");
         onNew();
-        toast.success("Deleted Successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          draggable: true,
+          timer: 1000,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
       } catch (error) {
         toast.error("Something went wrong");
       }
@@ -108,8 +108,9 @@ export default function Form() {
   return (
     <>
       {showManufacturer ? (
-        <PurchaseReturnForm isLoading={isLoading} isFetching={isFetching} poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} allData={allData} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-          onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
+        <PurchaseReturnForm poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
+          onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} 
+          colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
         />
 
       ) : (
@@ -152,12 +153,11 @@ export default function Form() {
               onDelete={handleDelete}
               itemsPerPage={10}
             /> */}
-            {/* <PurchaseCancelFormReport
-              data={allData?.data || []}
+            <PurchaseReturnFormReport
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
-            /> */}
+            />
           </div>
         </div>
       )}

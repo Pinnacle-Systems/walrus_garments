@@ -91,7 +91,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
             newBlend[index]["loopLengthId"] = poItem?.loopLengthId
             newBlend[index]["poId"] = poItem?.poId
             newBlend[index]["price"] = poItem?.price
-            newBlend[index]["taxPercent"] = poItem?.tax
+            newBlend[index]["taxPercent"] = poItem?.taxPercent
             newBlend[index]["uomId"] = poItem?.uomId
             newBlend[index]["poQty"] = poItem?.qty
             newBlend[index]["alreadyInwardedQty"] = poItem?.alreadyInwardedQty ? parseFloat(poItem.alreadyInwardedQty).toFixed(3) : "0.000";

@@ -587,13 +587,21 @@ export const DropdownInput = forwardRef(({
   country,
   openOnFocus = false,   // new prop
 }, ref) => {
+
+  
   const handleOnChange = (e) => {
     setValue(e.target.value);
   };
 
   const isDisabled = readOnly || disabled;
 
-  console.log(options, "options")
+  useEffect(() => {
+    if (ref?.current && openOnFocus) {
+      ref.current.focus();  
+      
+    }
+  }, [openOnFocus]);
+
 
   return (
     <div className={`mb-2 ${width}`}>
@@ -883,7 +891,6 @@ export const DateInput = ({
             transition-all duration-200
             text-gray-700
             ${readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
-            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
             ${inputClass}
           `}
         />

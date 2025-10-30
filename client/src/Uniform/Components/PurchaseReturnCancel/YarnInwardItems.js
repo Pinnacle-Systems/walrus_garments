@@ -61,7 +61,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
             newBlend[index]["loopLengthId"] = poItem?.loopLengthId
             newBlend[index]["poId"] = poItem?.poId
             newBlend[index]["price"] = poItem?.price
-            newBlend[index]["taxPercent"] = poItem?.tax
+            newBlend[index]["taxPercent"] = poItem?.taxPercent
             newBlend[index]["uomId"] = poItem?.uomId
             newBlend[index]["poQty"] = poItem?.qty
             newBlend[index]["cancelQty"] = poItem?.alreadyCancelData?._sum?.qty ? parseFloat(poItem.alreadyCancelData?._sum?.qty).toFixed(3) : "0.000";
@@ -158,18 +158,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 >
                                     Allowed Return Qty
                                 </th>
-                                {/* <th
-    
-                                            className={`w-12 px-3 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                            No. of Bags
-                                            </th>
-                                            <th
-            
-                                                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                               Weight Per Bag
-                                            </th> */}
+                      
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -183,7 +172,12 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 >
                                     Price
                                 </th>
+                                     <th
 
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Tax
+                                </th>
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}

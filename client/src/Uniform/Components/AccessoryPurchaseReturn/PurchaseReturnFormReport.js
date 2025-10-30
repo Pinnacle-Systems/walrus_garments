@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { useEffect, useState } from "react";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService"
@@ -12,13 +13,14 @@ import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '
 import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
-import { useGetAccessoryPurchaseInwardQuery } from '../../../redux/uniformService/AccessoryInwardServices';
+import { useGetDirectCancelOrReturnQuery } from '../../../redux/uniformService/DirectCancelOrReturnServices';
+import { useGetAccessoryPurchaseReturnQuery } from '../../../redux/uniformService/AccessoryPoReturnServices';
 
 
 
 
 
-const AccessoryInwardFormReport = ({
+const PurchaseReturnFormReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -26,11 +28,11 @@ const AccessoryInwardFormReport = ({
   onDelete,
   rowActions = true,
 }) => {
-  
-  
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
+
+
   const [dataPerPage, setDataPerPage] = useState("1");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
@@ -72,11 +74,15 @@ const AccessoryInwardFormReport = ({
   const params = {
     branchId,
     companyId,
+    // finYearId,
   };
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetAccessoryPurchaseInwardQuery({
+
+
+
+  const { data: allData, isFetching, isLoading } = useGetAccessoryPurchaseReturnQuery({
     params: {
       branchId,
       ...searchFields,
@@ -85,6 +91,7 @@ const AccessoryInwardFormReport = ({
       pageNumber: currentPageNumber,
     }
   });
+
 
 
 
@@ -209,21 +216,52 @@ const AccessoryInwardFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po No</div>
-
+                    <div>Doc No</div>
+                    {/* <input
+                                            type="text"
+                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={serachDocNo}
+                                            onChange={(e) => {
+                                                setSerachDocNo(e.target.value);
+                                            }}
+                                        /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po Date</div>
-                
+                    <div>Doc Date</div>
+                    {/* <input
+                                            type="text"
+                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchDate}
+                                            onChange={(e) => {
+                                                setSearchDate(e.target.value);
+                                            }}
+                                        /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>poType</div>
-          
+                    {/* <input
+                                            type="text"
+                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchDate}
+                                            onChange={(e) => {
+                                                setSearchDate(e.target.value);
+                                            }}
+                                        /> */}
                   </th>
-
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
-    
+                    {/* <input
+                                            type="text"
+                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchClientName}
+                                            onChange={(e) => {
+                                                setSearchClientName(e.target.value);
+                                            }}
+                                        /> */}
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -259,21 +297,18 @@ const AccessoryInwardFormReport = ({
                     />
                   </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
-   
-                  </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={searchClientName}
+                      value={searchMaterial}
                       onChange={(e) => {
-                        setSearchClientName(e.target.value);
+                        setSearchMaterial(e.target.value);
                       }}
                     />
                   </th>
-                  <th className="w-9  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                    {/* <input
+                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                    <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
@@ -281,10 +316,12 @@ const AccessoryInwardFormReport = ({
                       onChange={(e) => {
                         setSupplier(e.target.value);
                       }}
-                    /> */}
+                    />
                   </th>
 
-               
+                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+
+                  </th>
 
                 </tr>
               </thead>
@@ -322,9 +359,6 @@ const AccessoryInwardFormReport = ({
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
                       <td className="py-1.5 text-center  ">{dataObj.poType} </td>
-                      {/* <td className="py-1.5 text-center">
-                        {(dataObj.poInwardOrDirectInward || "").toUpperCase()}
-                      </td> */}
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (
@@ -385,4 +419,4 @@ const AccessoryInwardFormReport = ({
   );
 };
 
-export default AccessoryInwardFormReport;
+export default PurchaseReturnFormReport;

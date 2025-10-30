@@ -338,7 +338,6 @@ async function getOne(id) {
 export async function getRequirementItems(req) {
 
     const { poMaterial } = req.query
-    console.log(req, "Hit")
 
 
     const childRecord = 0;

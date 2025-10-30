@@ -2,7 +2,7 @@ import moment from "moment";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { useAddPoMutation, useGetPoByIdQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useGetRequirementPlanningFormItemsQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -31,6 +31,10 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import GeneralAccessoryPoItems from "./GeneralAccessoryPoItems";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import PoSummary from "./PoSummary";
+import AccessoryPurchaseOrderPrintFormat from "./PrintFormat-PR";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
+import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails";
+import { groupBy } from "lodash";
 
 
 
@@ -55,7 +59,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   showExtraCharge, setShowExtraCharge,
   printModalOpen, setPrintModalOpen,
   tableDataView, setTableDataView,
-  requirementId, setRequirementId
+  requirementId, setRequirementId,
+  term, setTerm
 
 }) => {
 
@@ -101,6 +106,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
+  const { data: supplierDetails } =
+    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+
+
   const { data: hsnData } =
     useGetHsnMasterQuery({ params });
 
@@ -141,7 +150,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     setReadOnly(true)
 
 
-    setPoType(data?.poType ? data?.poType : "Order Purchase");
+    setPoType(data?.poType ? data?.poType : "");
     setDate(data?.createdAt
       ? moment.utc(data.createdAt).format("YYYY-MM-DD")
       : moment.utc(new Date()).format("YYYY-MM-DD")
@@ -218,19 +227,15 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new" || nextProcess == "close") {
-            syncFormWithDb(undefined);
-            // RequirementRefetch()
-          }
-          else {
-            setId(returnData?.data?.id);
-            // RequirementRefetch()
+          if (nextProcess === "new") {
+            onNew()
+            syncFormWithDb(undefined)
+            setReadOnly(false);
 
           }
-
-
-
-
+          if (nextProcess === "close") {
+            onClose()
+          }
         } else {
           toast.error(returnData?.message);
         }
@@ -241,6 +246,11 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
       console.log("handle");
     }
   };
+
+
+
+
+
 
   console.log(data, "dataaaa")
 
@@ -329,17 +339,30 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   };
 
 
+  const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
+
+
+
+  const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: poItems, taxTypeId: taxTemplateId, discountType, discountValue })
+
+  const taxGroupWise = groupBy(poItems, "taxPercent");
+
+
+
+  const { data: deliveryToBranch } = useGetBranchByIdQuery(deliveryToId, { skip: deliveryType === "ToParty" })
+  const { data: deliveryToSupplier } = useGetPartyByIdQuery(deliveryToId, { skip: deliveryType === "ToSelf" })
+
+  let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
+
+  console.log(taxDetails, "taxDetails")
   const dateRef = useRef(null);
-  // const inputPartyRef = useRef(null);
-  // const styleRef = useRef(null);
 
-  // useEffect(() => {
-  //   if (dateRef.current) {
-  //     dateRef.current.focus();
-  //   }
-  // }, []);
 
-  // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading) return <Loader />
+  useEffect(() => {
+    if (dateRef.current) {
+      dateRef.current.focus();
+    }
+  }, []);
 
 
   return (
@@ -376,12 +399,25 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         widthClass={"w-[90%] h-[90%]"}
       >
         <PDFViewer style={tw("w-full h-full")}>
-          <PrintFormat
+          <AccessoryPurchaseOrderPrintFormat
+            isTaxHookDetailsLoading={isTaxHookDetailsLoading}
+            branchData={branchdata?.data}
             data={id ? singleData?.data : "Null"}
             singleData={id ? singleData?.data : "Null"}
             date={id ? singleData?.data?.selectedDate : date}
             docId={docId ? docId : ""}
-
+            remarks={remarks}
+            discountType={discountType}
+            poType={poType}
+            discountValue={discountValue}
+            poNumber={docId} poDate={date} payTermId={payTermId}
+            poItems={poItems?.filter(item => item.accessoryId)}
+            supplierDetails={supplierDetails ? supplierDetails?.data : null}
+            taxDetails={taxDetails} taxTemplateId={taxTemplateId} deliveryType={deliveryType}
+            deliveryToId={deliveryToId} deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
+            // termsAndCondition={termsAndCondition} 
+            colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
+            term={term}
           />
         </PDFViewer>
       </Modal>
@@ -607,14 +643,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
         </fieldset>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
             <textarea
               readOnly={readOnly}
-              //    value={term}
+              value={term}
               onChange={(e) => {
-                //    setTerm(e.target.value)
+                setTerm(e.target.value)
               }}
               className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
@@ -627,61 +663,81 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
+            <h2 className="font-bold text-slate-700 mb-2 text-base">Remarks</h2>
             <textarea
               readOnly={readOnly}
-              //    value={notes}
+              value={remarks}
               onChange={(e) => {
-                //    setNotes(e.target.value)
+                setRemarks(e.target.value)
               }}
+              placeholder="Remarks..."
+
               className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
             />
           </div>
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+            <h2 className="font-bold text-slate-800 mb-2 text-base">
+              Po Summary
+            </h2>
 
+            <button className="text-sm bg-sky-500 hover:text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
+              onClick={() => {
+                if (!taxTemplateId) {
+                  // toast.info("Please Select Tax Template !", { position: "top-center" })
+                  Swal.fire({
+                    title: "Please Select Tax Template !",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                      Swal.showLoading();
+                    }
+                  });
+                  return
+                }
+                setSummary(true)
+              }}>
+              View Po Summary
+            </button>
+          </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
 
 
             <div className="space-y-1.5">
-              {/* <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-800 font-bold">Total </span>
-                <span className="font-bold">{parseInt(getTotalQty())}</span>
-              </div> */}
 
 
 
 
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                <h2 className="font-bold text-slate-800 mb-2 text-base">
-                  Po Summary
-                </h2>
 
-                <button className="text-sm bg-sky-500 hover:text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
-                  onClick={() => {
-                    if (!taxTemplateId) {
-                      // toast.info("Please Select Tax Template !", { position: "top-center" })
-                      Swal.fire({
-                        title: "Please Select Tax Template !",
-                        icon: "success",
-                        draggable: true,
-                        timer: 1000,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                          Swal.showLoading();
-                        }
-                      });
-                      return
-                    }
-                    setSummary(true)
-                  }}>
-                  View Po Summary
-                </button>
+              <div className=" p-2 bg-white rounded-md shadow-sm">
+
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Total Qty (Kg)</span>
+                  <span className="font-medium">{parseInt(getTotalQty())}</span>
+                </div>
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Taxable Amount</span>
+                  <span className="font-medium">Rs.{taxDetails?.grossAmount}</span>
+                </div>
+                {/* <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Tax Amount</span>
+                  <span className="font-medium">Rs.{taxDetails?.grossAmount}</span>
+                </div> */}
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Net Amount</span>
+                  <span className="font-medium">Rs.{taxDetails?.netAmount}</span>
+                </div>
+
+
               </div>
-
-
             </div>
+
+
           </div>
+
+
 
 
 

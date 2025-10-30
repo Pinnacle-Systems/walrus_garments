@@ -189,7 +189,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   };
 
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -208,7 +208,14 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
           timer: 2000
         });
         setId("")
-        syncFormWithDb(undefined)
+        if (nextProcess === "new") {
+          onNew()
+          syncFormWithDb(undefined)
+
+        }
+        if (nextProcess === "close") {
+          onClose()
+        }
       }
       dispatch({
         type: `po/invalidateTags`,
@@ -220,7 +227,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   };
 
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
 
     if (!validateData(data)) {
       // Swal.fire({
@@ -236,9 +243,9 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }
     if (id) {
       console.log(id, "id", data, "dataaa")
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   }
 
@@ -303,15 +310,44 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     setContextMenu(null);
   };
 
-  const dateRef = useRef(null);
-  const inputPartyRef = useRef(null);
-  const styleRef = useRef(null);
+  const supplierRef = useRef(null);
+
 
   useEffect(() => {
-    if (dateRef.current) {
-      dateRef.current.focus();
+    if (supplierRef.current) {
+      supplierRef.current.focus();
     }
   }, []);
+
+
+  function getTotalQty() {
+    let qty = inwardItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+    return parseInt(qty)
+  }
+
+  useEffect(() => {
+    // if(id) return
+    if (inwardItems?.length >= 1) return;
+    setInwardItems((prev) => {
+      let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+        return {
+          accessoryId: "",
+          qty: "0.00",
+          tax: "0",
+          colorId: "",
+          uomId: "",
+          price: "0.00",
+          discountValue: "0.00",
+          noOfBags: 0.00,
+          discountType: "",
+          weightPerBag: 0.00,
+          poItemsId: ""
+        };
+      });
+      return [...prev, ...newArray];
+    });
+  }, [setInwardItems, inwardItems]);
+
   return (
     <>
 
@@ -352,7 +388,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
                 <ReusableInput label="Doc Id" value={docId} required={true} readOnly={readOnly} />
 
               </div>
-              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
+              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} disabled />
 
             </div>
           </div>
@@ -378,7 +414,10 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
               <div className="">
 
-                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} disabled={id} />
+                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} disabled={id}
+                  ref={supplierRef}
+
+                />
               </div>
 
               <DropdownInput name="Po Type"
@@ -399,13 +438,13 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
         </div>
         <fieldset className=''>
 
-          <AccessoryCancelItems params={params} purchaseInwardId={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection} supplierId={supplierId}
-            contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu} handleRightClick={handleRightClick}
+          <AccessoryCancelItems params={params} id={id} removeItem={removeItem} transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection} supplierId={supplierId}
+            contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu} handleRightClick={handleRightClick} poInwardOrDirectInward={po}
           />
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+          {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
             <textarea
               readOnly={readOnly}
@@ -418,12 +457,12 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
             />
 
-          </div>
+          </div> */}
 
 
 
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+          {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
             <textarea
               readOnly={readOnly}
@@ -434,39 +473,39 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
               className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
-          </div>
+          </div> */}
 
 
           {/* Pricing Summary (Grand Total) Section */}
+          <div className="col-span-2">
+
+          </div>
+
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-            <h2 className="font-bold text-slate-800 mb-2 text-base">
-              Qty Summary
-            </h2>
+
 
             <div className="space-y-1.5">
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-800 font-bold">Total Qty</span>
-                {/* <span className="font-bold">{parseInt(getTotalQty())}   No's</span> */}
+
+
+
+
+
+              <div className=" p-2 bg-white rounded-md shadow-sm">
+
+                <div className="flex justify-between py-1 text-sm">
+                  <span className="text-slate-600">Total Qty (Kg)</span>
+                  <span className="font-medium">{parseInt(getTotalQty())}</span>
+                </div>
+
+
+
+
               </div>
-
-
-
-              <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600 font-bold">Order By</span>
-                <input
-                  type="text"
-                  className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                  placeholder="Order By"
-                  readOnly
-                //    value={orderBy}
-                //    onChange={(e) => setOrderBy(e.target.value)}
-                />
-              </div>
-
-
-
             </div>
+
+
           </div>
+
 
 
         </div>
@@ -482,10 +521,10 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
             </button>
-            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            {/* <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Draft Save
-            </button>
+            </button> */}
           </div>
 
           {/* Right Buttons */}

@@ -43,7 +43,6 @@ export async function getPoItemsandDirectReturnItems(req, res, next) {
 }
 
 async function getOne(req, res, next) {
-    console.log(req,":reqqq")
     try {
         res.json(await _getOne(req.params.id));
         console.log(res.statusCode);

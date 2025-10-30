@@ -76,13 +76,13 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
   const navigate = useNavigate();
 
 
-  console.log(groups,"groups")
-const priority = {
-  "SAMPLE": 1,
-  "ORDER": 2,
-  "PURCHASE": 3,
-  "OPENING STOCK": 4
-};
+  console.log(groups, "groups")
+  const priority = {
+    "SAMPLE": 1,
+    "ORDER": 2,
+    "PURCHASE": 3,
+    "OPENING STOCK": 4
+  };
   groups.sort((a, b) => priority[a.name] - priority[b.name]);
 
   const [search, setSearch] = useState("");

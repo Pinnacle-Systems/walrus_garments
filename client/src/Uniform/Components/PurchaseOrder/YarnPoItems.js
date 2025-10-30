@@ -370,12 +370,7 @@ const YarnPoItems = ({
                                     Color<span className="text-red-500">*</span>
                                 </th>
 
-                                {/* <th
 
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Counts<span className="text-red-500">*</span>
-                                </th> */}
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -527,10 +522,7 @@ const YarnPoItems = ({
                                     <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
                                         {(row.requiredQty || 0.000)?.toFixed(3)}
                                     </td>
-                                    {/* <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {(row.alreadyPoqty || 0.000)?.toFixed(3)}
 
-                                    </td> */}
 
 
                                     <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
@@ -676,10 +668,21 @@ const YarnPoItems = ({
                                                     setCurrentSelectedIndex(index);
                                                 }
                                             }}
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType && !row?.yarnId}
                                             onClick={() => {
-                                                if (!taxTypeId) return toast.info("Please select Tax Type", { position: "top-center" });
-                                                setCurrentSelectedIndex(index)
+                                                if (!taxTypeId) return Swal.fire({
+                                                    icon: "error",
+                                                    text: "Select TaxType",
+                                                });
+                                                else if (!row?.yarnId) {
+                                                    Swal.fire({
+                                                        icon: "error",
+                                                        text: "Cannot View The Tax Details",
+                                                    });
+                                                }else {
+
+                                                    setCurrentSelectedIndex(index)
+                                                }
                                             }}
 
                                         >

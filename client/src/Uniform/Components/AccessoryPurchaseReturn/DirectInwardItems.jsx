@@ -6,7 +6,7 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
 
-const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId ,contextMenu ,handleCloseContextMenu ,handleRightClick ,poInwardOrDirectInward }) => {
+const AccessoryDirectInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId ,contextMenu ,handleCloseContextMenu ,handleRightClick ,poInwardOrDirectInward }) => {
 
 
 
@@ -89,7 +89,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
 
                                 className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                             >
-                                Accessory Item
+                                Accessory Items
                             </th>
                             <th
 
@@ -101,7 +101,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
 
                                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                             >
-                                Color
+                                Colors
                             </th>
                             <th
 
@@ -115,7 +115,12 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             >
                                 Uom
                             </th>
-                   
+                            {/* <th
+            
+                                                className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                Lot Det.
+                                            </th> */}
 
                             <th
 
@@ -156,8 +161,8 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                     Actions
                                 </th>
                         </tr>
-                    </thead>{console.log(directInwardReturnItems, "directInwardReturnItemsBefore")}
-                    <tbody className='overflow-y-auto  h-full w-full'>
+                    </thead>
+                    {/* <tbody className='overflow-y-auto  h-full w-full'>
                         {directInwardReturnItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList}
                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} storeId={storeId}
                             readOnly={readOnly} key={item.accessoryPoItemsId} index={index} handleInputChange={handleInputChange}
@@ -173,7 +178,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                 }
                             </tr>)
                         }
-                    </tbody>
+                    </tbody> */}
                 </table>
             </div>
             {contextMenu && (
@@ -217,4 +222,4 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
         </>
     )
 }
-export default AccessoryInwardItems
+export default AccessoryDirectInwardItems

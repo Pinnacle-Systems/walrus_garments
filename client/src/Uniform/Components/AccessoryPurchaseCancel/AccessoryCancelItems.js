@@ -9,8 +9,7 @@ import AccessoryPoItem from "./AccessoryPoItem";
 import Swal from "sweetalert2";
 
 
-const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, supplierId, contextMenu, handleCloseContextMenu
-    , handleRightClick
+const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, id, params, supplierId, contextMenu, handleCloseContextMenu, poInwardOrDirectInward, handleRightClick
 }) => {
 
 
@@ -29,16 +28,18 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
+            console.log(newBlend, "newBlend",index)
+
             newBlend[index][field] = value
             if (poItem) {
-                newBlend[index]["poNo"] = poItem?.Po?.docId
+                newBlend[index]["poNo"] = poItem?.AccessoryPo?.docId
                 newBlend[index]["accessoryGroupId"] = poItem?.accessoryGroupId
                 newBlend[index]["accessoryItemId"] = poItem?.accessoryItemId
                 newBlend[index]["colorId"] = poItem?.colorId
                 newBlend[index]["sizeId"] = poItem?.sizeId
                 newBlend[index]["discountAmount"] = poItem?.discountAmount
                 newBlend[index]["discountType"] = poItem?.discountType
-                newBlend[index]["poId"] = poItem?.poId
+                newBlend[index]["poId"] = poItem?.accessoryPoId
                 newBlend[index]["poItemsId"] = poItem?.id
 
                 newBlend[index]["price"] = poItem?.price
@@ -78,48 +79,16 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
     };
 
 
-    const addNewRow = () => {
-        const newRow = {
-            yarnId: "",
-            qty: "",
-            tax: "0",
-            colorId: "",
-            uomId: "",
-            price: "",
-            discountTypes: "",
-            discountValue: "0.00",
-            noOfBags: "0.00"
-        };
-        setInwardItems([...inwardItems, newRow]);
-    };
 
-    useEffect(() => {
-        // if(id) return
-        if (inwardItems?.length >= 1) return;
-        setInwardItems((prev) => {
-            let newArray = Array.from({ length: 1 - prev.length }, (i) => {
-                return {
-                    yarnId: "",
-                    qty: "0.00",
-                    tax: "0",
-                    colorId: "",
-                    uomId: "",
-                    price: "0.00",
-                    discountValue: "0.00",
-                    noOfBags: 0.00,
-                    discountType: "",
-                    weightPerBag: 0.00,
-                    poItemsId: ""
-                };
-            });
-            return [...prev, ...newArray];
-        });
-    }, [setInwardItems, inwardItems]);
+
 
     const deleteRow = (id) => {
         setInwardItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
+    };
+    const handleDeleteAllRows = () => {
+        setInwardItems([]);
     };
     return (
         <>
@@ -162,7 +131,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                         <thead className="bg-gray-200 text-gray-900 overflow-x-auto ">
                             <tr>
                                 <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-3 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     S.No
                                 </th>
@@ -173,7 +142,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 </th>
                                 <th
 
-                                    className={`w-72 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-96 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Accessory Name
                                 </th>
@@ -215,23 +184,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 >
                                     Po qty
                                 </th>
-                                {/* <th
 
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Already Cancel Qty
-                                </th>   <th
-
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Already Inward  Qty
-
-                                </th>   <th
-
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Already Return  Qty
-                                </th>  */}
 
                                 <th
 
@@ -267,16 +220,16 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 </th>
                                 <th
 
-                                    className={`w-9 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-5 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    {/* Actions */}
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
                         <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems, "inwardItems")}
                             {inwardItems.map((item, index) => <AccessoryPoItem sizeList={sizeList} accessoryList={accessoryList}
                                 uomList={uomList}
-                                colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick} />)}
+                                colorList={colorList} item={item} purchaseInwardId={id} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward} />)}
                             {Array.from({ length: 1 - inwardItems.length }).map(i =>
                                 <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 16 }).map(i =>
@@ -320,7 +273,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
                                 onClick={() => {
-                                    // handleDeleteAllRows();
+                                    handleDeleteAllRows();
                                     handleCloseContextMenu();
                                 }}
                             >
