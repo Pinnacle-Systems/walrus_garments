@@ -257,12 +257,12 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }, 0)
   }
 
-  const dateRef = useRef(null);
+  const materialRef = useRef(null);
 
 
   useEffect(() => {
-    if (dateRef.current && !id) {
-      dateRef.current.focus();
+    if (materialRef.current && !id) {
+      materialRef.current.focus();
     }
   }, []);
 

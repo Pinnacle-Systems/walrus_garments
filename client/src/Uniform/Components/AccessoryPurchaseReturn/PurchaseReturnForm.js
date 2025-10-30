@@ -35,7 +35,6 @@ import Swal from "sweetalert2";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
-import { useReactToPrint } from "react-to-print";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
 // import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
@@ -105,15 +104,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const componentRef = useRef();
 
-    const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-        documentTitle: "Yarn Purchase Return",
-        pageStyle: `
-          @page { size: A4; margin: 10mm; }
-          body { font-family: 'Roboto', sans-serif; }
-        `
-    });
-
+ 
     // const branchIdFromApi = useRef(branchId);
     const params = {
         branchId, companyId
@@ -433,23 +424,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     />
                 </PDFViewer>
             </Modal>
-            {/* <div className="hidden">
-
-                <PrintFormatGreyYarnPurchaseReturn
-                    remarks={remarks}
-                    discountType={discountType}
-                    poType={directOrPoreturn}
-                    discountValue={discountValue}
-                    ref={componentRef}
-                    poNumber={docId} poDate={date} payTermId={payTermId}
-                    poItems={directInwardReturnItems.filter(item => item.yarnId || item.accessoryId || item.fabricId)}
-                    supplierDetails={supplierDetails ? supplierDetails?.data : null}
-                    singleData={singleData ? singleData.data : null}
-                    deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                    yarnList={yarnList} uomList={uomList} colorList={colorList}
-                />
-
-            </div> */}
+            
 
             <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
