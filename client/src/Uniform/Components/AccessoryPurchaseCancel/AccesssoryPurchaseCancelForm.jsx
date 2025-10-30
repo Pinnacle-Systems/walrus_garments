@@ -476,7 +476,6 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
           </div> */}
 
 
-          {/* Pricing Summary (Grand Total) Section */}
           <div className="col-span-2">
 
           </div>

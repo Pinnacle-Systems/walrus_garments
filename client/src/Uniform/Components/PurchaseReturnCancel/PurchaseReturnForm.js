@@ -41,7 +41,6 @@ import PrintFormatGreyYarnPurchaseReturn from "./NewPrintFormat/index.js"
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
-import { useReactToPrint } from "react-to-print";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
 import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
@@ -58,14 +57,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const componentRef = useRef();
 
-    const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
-        documentTitle: "Yarn Purchase Order",
-        pageStyle: `
-      @page { size: A4; margin: 10mm; }
-      body { font-family: 'Roboto', sans-serif; }
-    `
-    });
 
 
 

@@ -257,6 +257,15 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }, 0)
   }
 
+  const dateRef = useRef(null);
+
+
+  useEffect(() => {
+    if (dateRef.current && !id) {
+      dateRef.current.focus();
+    }
+  }, []);
+
   return (
     <>
 
@@ -375,7 +384,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
         </div>
         <fieldset className=''>
-      
+
           <YarnCancelItems purchaseInwardId={id} removeItem={removeItem}
             transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems} setInwardItemSelection={setInwardItemSelection}
             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} id={id} supplierId={supplierId}
