@@ -68,7 +68,7 @@
     "xlsx-js-style": "^1.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node --max-old-space-size=12288 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

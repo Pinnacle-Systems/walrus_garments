@@ -167,10 +167,10 @@ export default function Form() {
     // }
 
     if (count || content || yarnType) {
-      setYarnName(`${count} / ${content}${yarnBlend ? ` (${yarnBlend})` : ""} / ${yarnType}`);
+      setAliasName(`${count} / ${content}${yarnBlend ? ` (${yarnBlend})` : ""} / ${yarnType}`);
       setName(`${count} / ${content}${yarnBlend ? ` (${yarnBlend})` : ""} / ${yarnType}`)
     } else {
-      setYarnName(""); // optional, if you want to clear when any value is missing
+      setAliasName(""); // optional, if you want to clear when any value is missing
     }
   }, [
     countsData,
@@ -210,7 +210,17 @@ export default function Form() {
       }
       setId("")
       onNew()
-      toast.success(text + "Successfully");
+      // toast.success(text + "Successfully");
+      Swal.fire({
+        title: text + "Successfully",
+        icon: "success",
+        draggable: true,
+        timer: 1000,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
       setForm(false)
       if (exit) {
       }
@@ -259,6 +269,28 @@ export default function Form() {
     //   return
     // }
 
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+    } else {
+      foundItem = allData?.data?.some(item => item.name === name);
+
+    }
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Yarn Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
+
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
@@ -490,7 +522,7 @@ export default function Form() {
                           <fieldset className=' rounded mt-2 mb-5'>
                             <div className='grid grid-cols-2 gap-4'>
                               <DropdownInput name="Counts" options={dropDownListObject(id ? countsData?.data : countsData?.data?.filter(item => item.active), "name", "id")} value={countsId} setValue={(value) => { setCountsId(value); }} readOnly={readOnly} required={true} disabled={(childRecord.current > 0)} />
-                          
+
                               <DropdownWithSearch
                                 options={contentList?.data}
                                 value={contentId}
@@ -506,13 +538,13 @@ export default function Form() {
                             <div className='mt-3'>
 
                               <LongTextInput name="Yarn Name" className={'focus:outline-none  md:col-span-2 h-6 w-[500px] border border-gray-500 rounded'} type="text"
-                                value={yarnName}
+                                value={name}
                                 disabled={(childRecord.current > 0)} />
 
                             </div>
 
                             <div className='mt-3'>
-                              <TextInput name="Yarn Alias Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                              <TextInput name="Yarn Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                             </div>
 
 
@@ -529,15 +561,15 @@ export default function Form() {
                                     required={true}
                                   />
                                 </div>
-                              <div>
-                                <TextInput name="Tax" type="text" value={findFromList(hsn,hsnData?.data,"tax")} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                <div>
+                                  <TextInput name="Tax" type="text" value={findFromList(hsn, hsnData?.data, "tax")} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                              </div>
+                                </div>
                               </div>
 
                             </div>
 
-                           
+
 
                             <div className="mt-5">
                               <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />

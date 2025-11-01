@@ -1,9 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import {
-    get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
-    getDirectItems as _getDirectItems, getPoItemsandAccessoryInwardItems as _getPoItemsandAccessoryInwardItems, getDirectItemById as _getDirectItemById
-} from '../services/accessoryPurchaseInward.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/accessoryBillEntry.service.js';
 
 async function get(req, res, next) {
     try {
@@ -14,36 +11,9 @@ async function get(req, res, next) {
     }
 }
 
-export async function getDirectItems(req, res, next) {
-    try {
-        res.json(await _getDirectItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
-export async function getDirectItemById(req, res, next) {
-    try {
-        res.json(await _getDirectItemById(req.params.id, req.params.purchaseInwardReturnId, req.params.stockId, req.params.storeId, req.params.billEntryId));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
-export async function getPoItemsandAccessoryInwardItems(req, res, next) {
-    try {
-        res.json(await _getPoItemsandAccessoryInwardItems(req));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
-    }
-}
-
 async function getOne(req, res, next) {
     try {
-        res.json(await _getOne(req.params.id));
+        res.json(await _getOne(req.params.id, req.params.payOutId, req.params.advanceAdjustmentId));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);

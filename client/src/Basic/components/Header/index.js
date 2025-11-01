@@ -35,7 +35,9 @@ const Header = ({ profile, setProfile }) => {
                     {/* profile details */}
                     {profile && <Profile
                         dp={dp}
-                        setProfile={setProfile} />}
+                        setProfile={setProfile} 
+                        
+                        />}
 
                 </div>
             </div>

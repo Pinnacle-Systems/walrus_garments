@@ -108,3 +108,5 @@ export const EXCESSTOLERANCEAPI   = "excessTolerance"
 export const TERMS_CONDITIONS_API   = "termsconditions"
 export const HSN_API   = "hsn"
 export const BILL_ENTRY_API = "billEntry"
+export const ACCESSORY_BILL_ENTRY_API = "accessoryBillEntry"
+

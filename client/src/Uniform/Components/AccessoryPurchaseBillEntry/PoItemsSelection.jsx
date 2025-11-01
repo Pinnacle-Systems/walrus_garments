@@ -1,10 +1,12 @@
 import { useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { findFromList } from "../../../Utils/helper";
-import YarnPoItemSelection from "./YarnPoItemSelection";
+import AccessoryPoItemSelection from "./AccessoryPoItemSelection";
 
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, supplierList, handleRightClick }) => {
+
+
 
     console.log(inwardItems, "inwardItemsBefore")
 
@@ -13,6 +15,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
     console.log(localInwardItems, "localInwardItemsInitail")
+
 
 
     function addItem(id, isPoItem) {
@@ -58,11 +61,15 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         setInwardItems(prevInwardItems => {
             console.log(prevInwardItems, "prevInwardItems")
             console.log(localInwardItems, "localInwardItems")
+
             let oldInwardItems = prevInwardItems.filter(item => isItemAdded(item.isPoItem ? item.poItemsId : item.directItemsId, item?.isPoItem ? true : false))
-            let newInwardItems = localInwardItems?.filter(item => {
+            let newInwardItems = localInwardItems.filter(item => {
                 return prevInwardItems.findIndex(prevItem => (parseInt(prevItem.isPoItem ? prevItem.poItemsId : prevItem.directItemsId) === parseInt(item.id) && (prevItem.isPoItem === (item?.isPoItem ? true : false)))) === -1
             })
-            return [...oldInwardItems, ...newInwardItems.map(i => { return { poItemsId: i?.isPoItem ? i.id : "", directItemsId: i?.isPoItem ? "" : i.id, isPoItem: i.isPoItem, discountType: "Percentage", discountValue: "0", qty: "0.000", } })]
+            console.log(...oldInwardItems, ...newInwardItems, "...oldInwardItems, ...newInwardItems")
+
+
+            return [...oldInwardItems, ...newInwardItems.map(i => { return { accessoryPoItemsId: i?.isPoItem ? i.id : "", accessoryInwardItemsId: i?.isPoItem ? "" : i.id, isPoItem: i.isPoItem, discountType: "Percentage", discountValue: "0", qty: "0.000", } })]
         });
         setInwardItemSelection(false);
     }
@@ -85,10 +92,10 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                         <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList.data, "aliasName")} disabled={true} />
                     </div>
                 </div> */}
-                <div className='overflow-auto h-[400px]'>
+                <div className='overflow-auto '>
 
 
-                    <YarnPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleRightClick={handleRightClick}
+                    <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleRightClick={handleRightClick}
                         handleDone={handleDone} handleCancel={handleCancel}
                     />
 

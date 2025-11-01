@@ -49,4 +49,5 @@ export { default as AccessoryPurchasecancel } from "./AccessoryPurchaseCancel";
 export { default as AccessoryPurchaseInward } from "./AccessoryPurchaseInward";
 export { default as PurchaseBillEntry } from "./PurchaseBillEntry";
 export { default as AccessoryPurchaseReturn } from "./AccessoryPurchaseReturn";
+export { default as AccessoryPurchaseBillEntry } from "./AccessoryPurchaseBillEntry";
 

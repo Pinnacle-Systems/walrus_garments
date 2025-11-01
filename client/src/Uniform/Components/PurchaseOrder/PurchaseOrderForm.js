@@ -169,7 +169,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
     useGetTaxTemplateQuery({ params: { ...params } });
 
-    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
+  const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
 
 
@@ -388,9 +388,24 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }
   let supplierListBasedOnSupply = filterSupplier()
 
-    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems : poItems, taxTypeId: taxTemplateId, discountType, discountValue })
-    const taxGroupWise = groupBy(poItems, "taxPercent");
+  const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: poItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
+    console.log(taxDetails, "useTaxDetailsHook")
+
+  const taxGroupWise = groupBy(poItems, "taxPercent");
+
+  const filtered = Object.fromEntries(
+    Object.entries(taxGroupWise)
+      .filter(([key]) => key && key !== 'undefined')
+      .map(([key, arr]) => [key, arr.filter(item => item && item.yarnId)])
+      .filter(([_, arr]) => arr.length > 0)
+  );
+  console.log(filtered, "filtered")
+
+  const { data: deliveryToBranch } = useGetBranchByIdQuery(deliveryToId, { skip: deliveryType === "ToParty" })
+  const { data: deliveryToSupplier } = useGetPartyByIdQuery(deliveryToId, { skip: deliveryType === "ToSelf" })
+
+  let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
 
   // if (isRequirementLoading || isRequirementFetching || isSingleFetching || isSingleLoading || isTaxLoading || isTaxfetching) return <Loader />
@@ -427,37 +442,42 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           setDiscountValue={setDiscountValue}
           poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} />
       </Modal>
-   <Modal
-                isOpen={printModalOpen}
-                onClose={() => setPrintModalOpen(false)}
-                widthClass={"w-[90%] h-[90%]"}
-            >
-                <PDFViewer style={tw("w-full h-full")}>
-                    <YarnPurchaseOrderPrintFormat
-                    isTaxHookDetailsLoading={isTaxHookDetailsLoading}
-                        branchData={branchdata?.data}
-                        data={id ? singleData?.data : "Null"}
-                        singleData={id ? singleData?.data : "Null"}
-                        date={id ? singleData?.data?.selectedDate : date}
-                        docId={docId ? docId : ""}
-                        remarks={remarks}
-                        discountType={discountType}
-                        poType={poType}
-                        discountValue={discountValue}
-                        ref={componentRef}
-                        poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={poItems?.filter(item => item?.yarnId)}
-                        supplierDetails={supplierDetails ? supplierDetails?.data : null}
-                        // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={yarnList} uomList={uomList} colorList={colorList}
-                          taxDetails={taxDetails}
-                        deliveryTo={deliveryToId} 
-                        taxGroupWise={taxGroupWise}
-                        // termsAndCondition={termsAndCondition} payTermList={payTermList}
-                        
-                    />
-                </PDFViewer>
-            </Modal>
+      <Modal
+        isOpen={printModalOpen}
+        onClose={() => setPrintModalOpen(false)}
+        widthClass={"w-[90%] h-[90%]"}
+      >
+        <PDFViewer style={tw("w-full h-full")}>
+          <YarnPurchaseOrderPrintFormat
+            isTaxHookDetailsLoading={isTaxHookDetailsLoading}
+            
+            branchData={branchdata?.data}
+            data={id ? singleData?.data : "Null"}
+            singleData={id ? singleData?.data : "Null"}
+            date={id ? singleData?.data?.createdAt : date}
+            docId={docId ? docId : ""}
+            remarks={remarks}
+            discountType={discountType}
+            poType={poType}
+            discountValue={discountValue}
+            ref={componentRef}
+            poNumber={docId} poDate={date} payTermId={payTermId}
+            poItems={poItems?.filter(item => item?.yarnId)}
+            supplierDetails={supplierDetails ? supplierDetails?.data : null}
+            deliveryType={deliveryType}
+            deliveryToId={deliveryToId}
+            taxTemplateId={taxTemplateId}
+            yarnList={yarnList} uomList={uomList} colorList={colorList}
+            taxDetails={taxDetails}
+            deliveryTo={deliveryTo}
+            taxGroupWise={filtered}
+            termsData={termsData}
+            term={term}
+          // termsAndCondition={termsAndCondition} payTermList={payTermList}
+
+          />
+        </PDFViewer>
+      </Modal>
       {/* <div className="hidden">
 
           <PrintFormatGreyYarnPurchaseOrder
@@ -477,7 +497,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
       <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Order</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Order</h1>
           <button
             onClick={() => {
               onNew()
@@ -548,7 +568,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 readOnly={readOnly}
                 disabled={orderId || id}
               />
-             
+
               <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
 
 
@@ -663,7 +683,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         </div>
         <fieldset className=''>
           {
-          
+
             poType == "Order Purchase"
               ?
               <YarnPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly}
@@ -678,24 +698,25 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 poMaterial={poMaterial} hsnData={hsnData} setTableDataView={setTableDataView} supplierId={supplierId}
               />
 
-     
+
           }
 
         </fieldset>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
 
             <div className="flex flex-col gap-2">
               <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
-        
+
               <select
                 value={term}
                 onChange={e => {
                   setTerm(e.target.value)
                 }}
-                className="text-left w-full rounded py-1 border-2 border-gray-200 text-[13px]"
+                readOnly={readOnly}
+                className="text-left h-15  w-full rounded py-1 border-2 border-gray-200 text-[13px]"
 
               >
                 <option >
@@ -715,10 +736,23 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <textarea
               disabled={readOnly}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               value={findFromList(term, termsData?.data, "termsAndCondition")}
               onChange={e => setTerm(e.target.value)}
               placeholder="Select or type Terms & Conditions..."
+            />
+          </div>
+
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+            <h2 className="font-medium text-slate-700 mb-2 text-base">Remarks</h2>
+            <textarea
+              readOnly={readOnly}
+              value={remarks}
+              onChange={(e) => {
+                setRemarks(e.target.value)
+              }}
+              className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              placeholder="Additional notes..."
             />
           </div>
 

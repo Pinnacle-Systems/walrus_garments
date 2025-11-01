@@ -11,7 +11,7 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 }) => {
     const handleInputChange = (value, index, field, balanceQty, poItem) => {
 
-        console.log(value,index,"indexindex")
+        console.log(value, index, "indexindex")
 
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
@@ -27,19 +27,39 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
                 newBlend[index]["poNo"] = poItem?.Po?.docId
                 newBlend[index]["price"] = poItem?.price
 
-            } 
+            }
             if (field === "qty") {
                 if (parseFloat(balanceQty) < parseFloat(value)) {
                     Swal.fire({
-                        icon: 'success',
-                        title: "Cancel Qty Cannot be More than Balance Qty",
-                        showConfirmButton: false,
-                        timer: 2000
+                        icon: "warning",
+                        title: "Cancel Qty is greater than Balance Qty!",
+                        text: "Are you sure you want to continue?",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes",
+                        cancelButtonText: "No",
+                        confirmButtonColor: "#2563eb", // Tailwind blue-600
+                        cancelButtonColor: "#ef4444",  // Tailwind red-500
+                        didOpen: () => {
+                            // 👇 Force visible white text (fix Tailwind/Bootstrap override issue)
+                            const confirmBtn = Swal.getConfirmButton();
+                            const cancelBtn = Swal.getCancelButton();
+                            confirmBtn.style.color = "#fff";
+                            cancelBtn.style.color = "#fff";
+                            confirmBtn.style.fontWeight = "600";
+                            cancelBtn.style.fontWeight = "600";
+                        },
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            console.log('User confirmed action');
+                        } else {
+                            console.log('User cancelled');
+                        }
                     });
+
                     return inwardItems
                 }
-            }  
-                      // if (field !== "qty" && newBlend[index]["noOfBags"] && newBlend[index]["weightPerBag"]) {
+            }
+            // if (field !== "qty" && newBlend[index]["noOfBags"] && newBlend[index]["weightPerBag"]) {
             //     let tempInwardQty = (parseFloat(newBlend[index]["noOfBags"]) * parseFloat(newBlend[index]["weightPerBag"])).toFixed(3)
             //     if (parseFloat(balanceQty) < parseFloat(tempInwardQty)) {
             //         toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
@@ -59,7 +79,7 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
         });
     };
 
-      console.log(inwardItems, "inwardItems")
+    console.log(inwardItems, "inwardItems")
 
     useEffect(() => {
         if (id) return
@@ -100,10 +120,11 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
         });
     };
     const handleDeleteAllRows = () => {
-        setInwardItems((prevRows) => {
-            if (prevRows.length <= 1) return prevRows;
-            return [prevRows[0]];
-        });
+        // setInwardItems((prevRows) => {
+        //     if (prevRows.length <= 1) return prevRows;
+        //     return [prevRows[0]];
+        // });
+        setInwardItems([])
     };
 
     const handleRightClick = (event, rowIndex, type) => {

@@ -14,7 +14,7 @@ import { BELL_ICON } from "../../../icons";
 import { useGetPageGroupQuery } from "../../../redux/services/PageGroupMasterServices";
 import MultiLevelDropDown from "../../../UiComponents/MultiSelectDropDown";
 
-import Anugraha from "../../../assets/apple-touch-icon.png"
+import Sangeetha from "../../../assets/Sangeethatex.png"
 import { Dropdown } from "react-multi-select-component";
 import PageSearch from "./PageSearch";
 import Modal from "../../../UiComponents/Modal";
@@ -38,7 +38,6 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
 
   const [allowedPages, setAllowedPages] = useState([]);
   const [formReport, setFormReport] = useState(false)
-
 
 
   const { data: pageGroup, isLoading, isFetching } = useGetPageGroupQuery({ searchParams: "" })
@@ -160,10 +159,10 @@ try {
       <nav className="nav-bar-bg flex md:items-center flex-wrap w-full">
         <div className="logo-heading flex flex-shrink-0 mr-6 break-words">
           <div className="flex bg-white rounded px-1 m-1 text-black items-end text-xl">
-            <img src={Anugraha} className="h-8 w-8" />
+            <img src={Sangeetha} className="h-8 w-8" />
             <span className="flex font-semibold break-words">{APP_NAME} </span>
           </div>
-        </div>
+        </div>{console.log(allowedPages,"'allowedPages")}
         <div className="block lg:hidden justify-items-start">
           <button
             onClick={toggleNavMenu}

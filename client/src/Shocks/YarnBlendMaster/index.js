@@ -96,6 +96,24 @@ export default function Form() {
             });
             return;
         }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Yarn Blend Name already exists.",
+                icon: "warning",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
@@ -156,6 +174,7 @@ export default function Form() {
         setId(id);
         setForm(true);
     }
+    
 
     const ACTIVE = (
         <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
@@ -175,7 +194,7 @@ export default function Form() {
         },
 
         {
-            header: "Yarn BLEND Name",
+            header: "Yarn Blend Name",
             accessor: (item) => item?.name,
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-center uppercase w-96",
@@ -214,7 +233,7 @@ export default function Form() {
                         }}
                         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
-                        + Add New Yarn Type
+                        + Add New Yarn Blend
                     </button>
                 </div>
             </div>

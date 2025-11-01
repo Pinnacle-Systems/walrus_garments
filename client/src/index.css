@@ -384,3 +384,14 @@ label {
   visibility: visible;
   opacity: 1;
 }
+
+.swal2-styled.swal2-confirm,
+.swal2-styled.swal2-cancel {
+  color: gray !important;
+  font-weight: 600 !important;
+}
+
+.swal2-styled.swal2-confirm:hover,
+.swal2-styled.swal2-cancel:hover {
+  filter: brightness(1.1);
+}

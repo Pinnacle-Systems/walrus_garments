@@ -291,6 +291,7 @@ export async function getPoItems(req) {
         // if (poInwardOrDirectInward != "PurchaseReturn" && poInwardOrDirectInward != "GeneralReturn") {
         // }
 
+        console.log(data, "databefore filter")
 
 
         data = data?.filter(i => i.Po.supplierId == supplierId && i.Po.poMaterial == poType && i.Po.poType === po)

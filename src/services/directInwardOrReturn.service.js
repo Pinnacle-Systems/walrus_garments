@@ -200,8 +200,8 @@ export async function getDirectItems(req) {
                 DirectReturnItems: true,
                 Yarn: {
                     select: {
-                        aliasName: true ,
-                        name : true
+                        aliasName: true,
+                        name: true
                     }
                 },
                 Color: {
@@ -229,7 +229,7 @@ export async function getDirectItems(req) {
                         name: true
                     }
                 },
-           
+
                 Accessory: {
                     select: {
                         aliasName: true,
@@ -329,8 +329,8 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
             },
             Yarn: {
                 select: {
-                    aliasName: true ,
-                    name : true
+                    aliasName: true,
+                    name: true
                 }
             },
             Color: {
@@ -838,9 +838,9 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
             // DirectInwardOrReturn: {
             //     poInwardOrDirectInward: "PurchaseInward"
             // },
-            directInwardOrReturnId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // directInwardOrReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -856,9 +856,9 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
             // DirectReturnOrPoReturn: {
             //     poInwardOrDirectInward: "PurchaseReturn"
             // },
-            directReturnOrPoReturnId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // directReturnOrPoReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -875,9 +875,9 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
             // PurchaseCancel: {
             //     poInwardOrDirectInward: "PurchaseCancel"
             // },
-            purchaseCancelId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // purchaseCancelId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -922,6 +922,8 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
     });
 
     console.log(alreadyBillEntryData, "alreadyBillEntryData")
+    console.log(alreadyCancelData, "alreadyCancelData")
+
 
 
     let poQty = parseFloat(data?.qty || 0).toFixed(3)
@@ -1062,34 +1064,35 @@ export async function getPoItemsandDirectInwardItems(req) {
         directItems = manualFilterSearchDataDirectItems(searchPoDate, searchDueDate, searchPoType, directItems)
 
         poItems = await prisma.poItems.findMany({
-            where: {
-                Po:
-                {
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    docId: Boolean(searchDocId) ?
-                        {
-                            contains: searchDocId
-                        }
-                        : undefined,
-                    supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    transType: poType,
-                    supplier: {
-                        aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-                    }
-                },
-            },
+            // where: {
+            //     Po:
+            //     {
+            //         branchId: branchId ? parseInt(branchId) : undefined,
+            //         docId: Boolean(searchDocId) ?
+            //             {
+            //                 contains: searchDocId
+            //             }
+            //             : undefined,
+            //         supplierId: supplierId ? parseInt(supplierId) : undefined,
+            //         transType: poType,
+            //         supplier: {
+            //             aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+            //         }
+            //     },
+            // },
             include: {
                 Po: true,
             }
         });
         poItems = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, poItems)
-
-
-
+        
+        
+        
+        console.log("poItems", poItems)
         if (isYarnFilter) {
             poItems = poItems?.filter(item => item?.Po?.poMaterial == poType && item?.Po?.supplierId == supplierId)
         }
-        console.log("poItemsBefore", poItems)
+        console.log("AfterFilterpoItems", poItems)
 
 
         poItems = await getAllDataPoItems(poItems)

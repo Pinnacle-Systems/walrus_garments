@@ -22,6 +22,7 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
   const toggleNavMenu = () => {
     sethideNavBar(!hideNavBar);
   };
+    console.log(items, "allowedPages")
 
   return (
     <div className="relative text-left">

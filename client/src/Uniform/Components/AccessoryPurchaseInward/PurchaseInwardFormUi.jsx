@@ -418,7 +418,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     <>
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[85%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-          supplierId={partyId}
+          supplierId={supplierId}
           inwardItems={directInwardReturnItems}
           setInwardItems={setDirectInwardReturnItems} poInwardOrDirectInward={poInwardOrDirectInward} />
       </Modal>
@@ -523,8 +523,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   placeholder="Search Supplier Id..."
                   optionList={supplierList?.data}
                   // onDeleteItem={onDeleteItem}
-                  setSearchTerm={setPartyId}
-                  searchTerm={partyId}
+                  setSearchTerm={setSupplierId}
+                  searchTerm={supplierId}
                   // ref={inputPartyRef}
                   // nextRef={styleRef}
                   show={"isSupplier"}
@@ -561,7 +561,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
             <AccessoryInwardItems
-              inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+              inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={supplierId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
               colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
               poInwardOrDirectInward={poInwardOrDirectInward} 
 

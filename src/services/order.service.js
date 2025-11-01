@@ -1040,11 +1040,11 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                                     name: true
                                 }
                             },
-                            Counts: {
-                                select: {
-                                    name: true
-                                }
-                            },
+                            // Counts: {
+                            //     select: {
+                            //         name: true
+                            //     }
+                            // },
                             OrderDetails: {
                                 select: {
                                     style: {

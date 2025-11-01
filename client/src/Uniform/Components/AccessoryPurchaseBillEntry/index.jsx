@@ -37,7 +37,7 @@ export default function Form() {
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState("");
   const [date, setDate] = useState(getDateFromDateTime(today));
-  const [poType, setPoType] = useState("DyedYarn");
+  const [poType, setPoType] = useState("Accessory");
   const [supplierId, setSupplierId] = useState("");
   const [docId, setDocId] = useState("New");
 
@@ -180,7 +180,7 @@ export default function Form() {
               </select>
 
             </div> */}
-            <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Bill Entry</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Accessory Purchase Bill Entry</h1>
 
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"

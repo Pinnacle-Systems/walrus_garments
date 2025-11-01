@@ -11,15 +11,12 @@ import {
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
-import { useGetDirectCancelOrReturnQuery } from '../../../redux/uniformService/DirectCancelOrReturnServices';
-import { useGetPurchaseCancelQuery } from '../../../redux/uniformService/PurchaseCancelServices';
+import { useGetBillEntryQuery } from '../../../redux/uniformService/BillEntryServices';
 
 
 
 
-
-const PurchaseCancelFormReport = ({
+const PurchaseBillEntryFormReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -27,10 +24,13 @@ const PurchaseCancelFormReport = ({
   onDelete,
   rowActions = true,
 }) => {
+  const branchId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "currentBranchId"
+  );
 
 
   const [dataPerPage, setDataPerPage] = useState("1");
-  const [serachDocNo, setSerachDocNo] = useState("");
+  const [searchDocId, setSearchDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -46,7 +46,7 @@ const PurchaseCancelFormReport = ({
     setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
   const searchFields = {
-    serachDocNo,
+     searchDocId,
     searchClientName,
     searchDate,
     supplier,
@@ -57,22 +57,32 @@ const PurchaseCancelFormReport = ({
   useEffect(() => {
     setCurrentPageNumber(1);
   }, [
-    serachDocNo,
+    searchDocId,
     searchClientName,
     searchDate,
     supplier,
     searchMaterial,
   ]);
 
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId"
+  );
+  const params = {
+    branchId,
+    companyId,
+  };
 
 
-  const { branchId, companyId, finYearId, userId } = getCommonParams()
 
-
-
-  const { data: allData, isLoading, isFetching } = useGetPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
-
-  console.log(allData, "entire");
+  const { data: allData, isFetching, isLoading } = useGetBillEntryQuery({
+    params: {
+      branchId,
+      ...searchFields,
+      pagination: true,
+      dataPerPage,
+      pageNumber: currentPageNumber,
+    }
+  });
 
 
 
@@ -88,6 +98,7 @@ const PurchaseCancelFormReport = ({
 
 
 
+  console.log(allData, "entire");
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
@@ -182,12 +193,12 @@ const PurchaseCancelFormReport = ({
   return (
     <div
       //   id="registrationFormReport"
-      className="flex flex-col w-full h-[78Vh] overflow-auto"
+      className="flex flex-col w-full h-[93%] overflow-auto"
     >
 
       <>
-        <div className="h-[100vh]  rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
+        <div className="h-[100%] rounded-lg bg-[#F1F1F0] shadow-sm">
+          <div className="h-[90%]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -196,7 +207,7 @@ const PurchaseCancelFormReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po No</div>
+                    <div>Doc No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -208,7 +219,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Po Date</div>
+                    <div>Doc Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -220,7 +231,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>poType</div>
+                    <div>Material</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -259,9 +270,9 @@ const PurchaseCancelFormReport = ({
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={serachDocNo}
+                      value={searchDocId}
                       onChange={(e) => {
-                        setSerachDocNo(e.target.value);
+                        setSearchDocNo(e.target.value);
                       }}
                     />
                   </th>
@@ -338,9 +349,9 @@ const PurchaseCancelFormReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
+                      <td className="py-1.5 text-center uppercase ">{dataObj.poType} </td>
 
-                      <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
+                      <td className="py-1.5 text-left"> {dataObj?.supplier?.aliasName}</td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -388,7 +399,7 @@ const PurchaseCancelFormReport = ({
             </table>
 
           </div>
-          <div className="h-h-[10vh]">
+          <div className="h-[10%]">
             <Pagination />
           </div>
 
@@ -399,4 +410,4 @@ const PurchaseCancelFormReport = ({
   );
 };
 
-export default PurchaseCancelFormReport;
+export default PurchaseBillEntryFormReport;

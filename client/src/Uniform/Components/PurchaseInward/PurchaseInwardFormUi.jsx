@@ -23,7 +23,7 @@ import YarnInwardPoItems from "./YarnInwardItem";
 import AccessoryInwardItems from "./AccessoryInwardItems";
 import Swal from "sweetalert2";
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew ,branchList , locationData , supplierList
+  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, locationData, supplierList
 }) => {
 
 
@@ -101,6 +101,14 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
+  const inwardTyperef = useRef(null);
+
+
+  useEffect(() => {
+    if (inwardTyperef.current && !id) {
+      inwardTyperef.current.focus();
+    }
+  }, []);
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
@@ -118,7 +126,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     }
     if (data?.date) setDate(data?.date);
     // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-    setPartyId(data?.supplierId ? data?.supplierId  : "" )
+    setPartyId(data?.supplierId ? data?.supplierId : "")
     setPayTermId(data?.payTermId ? data?.payTermId : "");
     setSupplierId(data?.supplierId ? data?.supplierId : "");
     setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
@@ -172,7 +180,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     }
   };
 
-  
+
   // async function onDeleteItem(itemId) {
   //   await removeData(itemId).unwrap();
   // }
@@ -418,7 +426,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Inward </h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -456,7 +464,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               <DropdownInput name="Inward Type"
                 beforeChange={() => { setDirectInwardReturnItems([]) }}
                 options={directOrPo}
-                value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+                value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly}
+                ref={inwardTyperef}
+              />
 
               <DropdownInput name="Po Type"
                 options={YarnMaterial}
@@ -503,7 +513,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
               <div className="col-span-2">
 
-                <ReusableSearchableInput
+                {/* <ReusableSearchableInput
                   label="Supplier Id"
                   component="PartyMaster"
                   placeholder="Search Supplier Id..."
@@ -514,6 +524,17 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   // ref={inputPartyRef}
                   // nextRef={styleRef}
                   show={"isSupplier"}
+                /> */}
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setPartyId(value) }}
+                  searchTerm={partyId}
+                  show={"isSupplier"}
+                  required={true}
+                  disabled={id}
                 />
               </div>
               <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
@@ -526,11 +547,11 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
         <fieldset>
           {
 
-            (poInwardOrDirectInward == "DirectInward" ) &&
+            (poInwardOrDirectInward == "DirectInward") &&
 
             <YarnPoItems
               poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-              handleCloseContextMenu={handleCloseContextMenu} 
+              handleCloseContextMenu={handleCloseContextMenu}
             />
 
           }
@@ -539,10 +560,10 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           {
 
 
-          (  poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward")  &&
+            (poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward") &&
 
 
-            <YarnInwardPoItems inwardItems={directInwardReturnItems}  setInwardItems={setDirectInwardReturnItems}
+            <YarnInwardPoItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems}
               removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params} supplierId={partyId}
               readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection}
 

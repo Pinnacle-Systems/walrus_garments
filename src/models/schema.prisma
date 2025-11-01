@@ -161,6 +161,7 @@ model Branch {
   AccesssoryPurchaseCancel               AccesssoryPurchaseCancel[]
   AccessoryInward                        AccessoryInward[]
   AccessoryReturn                        AccessoryReturn[]
+  AccessoryBillEntry                     AccessoryBillEntry[]
 }
 
 model UserOnBranch {
@@ -289,6 +290,8 @@ model User {
   AccessoryInwardUpdateBy             AccessoryInward[]            @relation(name: "updatedBy")
   AccessoryReturnCreatedBy            AccessoryReturn[]            @relation(name: "createdBy")
   AccessoryReturnUpdateBy             AccessoryReturn[]            @relation(name: "updatedBy")
+  AccessoryBillEntryCreatedBy         AccessoryBillEntry[]         @relation(name: "createdBy")
+  AccessoryBillEntryUpdateBy          AccessoryBillEntry[]         @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -592,6 +595,7 @@ model Party {
   AccesssoryPurchaseCancel AccesssoryPurchaseCancel[]
   AccessoryInward          AccessoryInward[]
   AccessoryReturn          AccessoryReturn[]
+  AccessoryBillEntry       AccessoryBillEntry[]
 }
 
 model PartyBranch {
@@ -904,15 +908,14 @@ model AccessoryItem {
 }
 
 model Accessory {
-  id                Int               @id @default(autoincrement())
-  aliasName         String
-  accessoryCategory AccessoryCategory
-  accessoryItem     AccessoryItem     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId   Int
-  Hsn               Hsn?              @relation(fields: [hsnId], references: [id])
-  hsnId             Int?
-  taxPercent        Float?
-
+  id                            Int                             @id @default(autoincrement())
+  aliasName                     String
+  accessoryCategory             AccessoryCategory
+  accessoryItem                 AccessoryItem                   @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId               Int
+  Hsn                           Hsn?                            @relation(fields: [hsnId], references: [id])
+  hsnId                         Int?
+  taxPercent                    Float?
   Company                       Company                         @relation(fields: [companyId], references: [id])
   companyId                     Int
   active                        Boolean                         @default(true)
@@ -1242,6 +1245,7 @@ model AccessoryPoItems {
   AccessoryCancelItems       AccessoryCancelItems[]
   AccessoryInwardItems       AccessoryInwardItems[]
   AccessoryReturnItems       AccessoryReturnItems[]
+  AccessoryBillEntryItems    AccessoryBillEntryItems[]
 }
 
 model PInwardOrReturn {
@@ -1427,7 +1431,7 @@ model AccessoryInward {
 
 model AccessoryInwardItems {
   id                Int              @id @default(autoincrement())
-  AccessoryInward   AccessoryInward? @relation(fields: [AccessoryInwardId], references: [id],onDelete: Cascade)
+  AccessoryInward   AccessoryInward? @relation(fields: [AccessoryInwardId], references: [id], onDelete: Cascade)
   AccessoryInwardId Int?
 
   Fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: Cascade)
@@ -1469,10 +1473,11 @@ model AccessoryInwardItems {
   poQty              Float?
   isDeleted          Boolean?
 
-  BillEntryItems       BillEntryItems[]
-  DirectReturnItems    DirectReturnItems[]
-  inwardLotDetails     InwardLotDetails[]
-  AccessoryReturnItems AccessoryReturnItems[]
+  BillEntryItems          BillEntryItems[]
+  DirectReturnItems       DirectReturnItems[]
+  inwardLotDetails        InwardLotDetails[]
+  AccessoryReturnItems    AccessoryReturnItems[]
+  AccessoryBillEntryItems AccessoryBillEntryItems[]
 }
 
 model PayTerm {
@@ -1488,6 +1493,7 @@ model PayTerm {
   DirectReturnOrPoReturn DirectReturnOrPoReturn[]
   AccessoryInward        AccessoryInward[]
   AccessoryReturn        AccessoryReturn[]
+  AccessoryBillEntry     AccessoryBillEntry[]
 }
 
 enum DiscountTypes {
@@ -1523,6 +1529,7 @@ model TaxTemplate {
   Po                     Po[]
   AccessoryPo            AccessoryPo[]
   AccessoryReturn        AccessoryReturn[]
+  AccessoryBillEntry     AccessoryBillEntry[]
 }
 
 model TaxTemplateDetails {
@@ -1825,6 +1832,7 @@ model Location {
   DirectReturnOrPoReturn     DirectReturnOrPoReturn[]
   AccessoryInward            AccessoryInward[]
   AccessoryReturn            AccessoryReturn[]
+  AccessoryBillEntry         AccessoryBillEntry[]
 }
 
 enum ProcessIO {
@@ -1878,6 +1886,7 @@ model Process {
   RequirementYarnDetails                    RequirementYarnDetails[]
   RequirementPlanningProcessList            RequirementPlanningProcessList[]
   RequirementYarnProcessList                RequirementYarnProcessList[]
+  AccessoryBillEntry                        AccessoryBillEntry[]
 }
 
 model PartyOnProcess {
@@ -2006,6 +2015,7 @@ model ProcessDeliveryProgramDetails {
   ProcessInwardDetails                ProcessInwardProgramDetails[]
   ProcessDeliveryReturnProgramDetails ProcessDeliveryReturnProgramDetails[]
   BillEntryItems                      BillEntryItems[]
+  AccessoryBillEntryItems             AccessoryBillEntryItems[]
 }
 
 model RawMaterials {
@@ -2437,6 +2447,58 @@ model BillEntryItems {
   notes                           String?
   AccessoryInwardItems            AccessoryInwardItems?          @relation(fields: [accessoryInwardItemsId], references: [id])
   accessoryInwardItemsId          Int?
+}
+
+model AccessoryBillEntry {
+  id                      Int                       @id @default(autoincrement())
+  Store                   Location?                 @relation(fields: [storeId], references: [id])
+  Process                 Process?                  @relation(fields: [processId], references: [id])
+  processId               Int?
+  poType                  String?
+  supplier                Party                     @relation(fields: [supplierId], references: [id])
+  supplierId              Int
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  createdBy               User                      @relation("createdBy", fields: [createdById], references: [id])
+  createdById             Int
+  updatedBy               User?                     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById             Int?
+  Branch                  Branch                    @relation(fields: [branchId], references: [id])
+  branchId                Int
+  active                  Boolean                   @default(true)
+  storeId                 Int?
+  docId                   String
+  PayTerm                 PayTerm?                  @relation(fields: [payTermId], references: [id])
+  payTermId               Int?
+  TaxTemplate             TaxTemplate?              @relation(fields: [taxTemplateId], references: [id])
+  taxTemplateId           Int?
+  partyBillNo             String?
+  netBillValue            Int?
+  discountType            String?
+  discountValue           Float?                    @default(0)
+  partyBillDate           DateTime?                 @db.Date
+  isProcessBillEntry      Boolean                   @default(false)
+  isDirect                Boolean?                  @default(true)
+  AccessoryBillEntryItems AccessoryBillEntryItems[]
+}
+
+model AccessoryBillEntryItems {
+  id                              Int                            @id @default(autoincrement())
+  isPoItem                        Boolean                        @default(false)
+  AccessoryBillEntry              AccessoryBillEntry             @relation(fields: [accessoryBillEntryId], references: [id], onDelete: Cascade)
+  accessoryBillEntryId            Int
+  AccessoryPoItems                AccessoryPoItems?              @relation(fields: [accessoryPoItemsId], references: [id])
+  accessoryPoItemsId              Int?
+  AccessoryInwardItems            AccessoryInwardItems?          @relation(fields: [accessoryInwardItemsId], references: [id])
+  accessoryInwardItemsId          Int?
+  ProcessDeliveryProgramDetails   ProcessDeliveryProgramDetails? @relation(fields: [processDeliveryProgramDetailsId], references: [id])
+  processDeliveryProgramDetailsId Int?
+  qty                             Float
+  discountType                    String?
+  discountValue                   Float?                         @default(0)
+  price                           Float?                         @default(0)
+  taxPercent                      Float?
+  notes                           String?
 }
 
 enum PaymentType {

@@ -12,16 +12,17 @@ import Modal from "../../../UiComponents/Modal";
 import { toast } from "react-toastify";
 import PurchaseInwardFormReport from "./PurchaseInwardFormReport";
 import { DateInputNew, DisabledInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { poTypes, YarnMaterial } from "../../../Utils/DropdownData";
+import { MaterialType, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
-import YarnInwardItems from "./YarnInwardItems";
+import YarnInwardItems from "./AccessoryInwardItems";
 import PoItemsSelection from "./PoItemsSelection";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import Swal from "sweetalert2";
+import { useAddaccessoryBillEntryMutation, useDeleteaccessoryBillEntryMutation, useUpdateaccessoryBillEntryMutation } from "../../../redux/uniformService/AccessoryBillEntryServices";
 
 const MODEL = "Bill Entry";
 
@@ -67,7 +68,6 @@ export const PurchaseBillEntry = ({
 
 
 
-    const { data: allData, isLoading, isFetching } = useGetBillEntryQuery({ params: { branchId, finYearId } });
 
     const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: inwardItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
@@ -87,9 +87,9 @@ export const PurchaseBillEntry = ({
         return false
     }
 
-    const [addData] = useAddBillEntryMutation();
-    const [updateData] = useUpdateBillEntryMutation();
-    const [removeData] = useDeleteBillEntryMutation();
+    const [addData] = useAddaccessoryBillEntryMutation();
+    const [updateData] = useUpdateaccessoryBillEntryMutation();
+    const [removeData] = useDeleteaccessoryBillEntryMutation();
 
 
     const syncFormWithDb = useCallback((data) => {
@@ -101,7 +101,7 @@ export const PurchaseBillEntry = ({
         if (data?.docId) {
             setDocId(data?.docId)
         }
-        setPoType(data?.poType ? data.poType : "DyedYarn");
+        setPoType(data?.poType ? data.poType : "Accessory");
         setDiscountType(data?.discountType ? data?.discountType : "")
         setDiscountValue(data?.discountValue ? data?.discountValue : "0")
         setInwardItems(data?.BillEntryItems ? structuredClone(data.BillEntryItems) : [])
@@ -273,7 +273,6 @@ export const PurchaseBillEntry = ({
         });
     }
 
-    const { data: branchList } = useGetPartyBranchByIdQuery({ params: { companyId } });
 
     const allSuppliers = supplierList ? supplierList.data : []
 
@@ -318,7 +317,7 @@ export const PurchaseBillEntry = ({
             </Modal>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Bill Entry </h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Accessory Purchase Bill Entry </h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -373,11 +372,11 @@ export const PurchaseBillEntry = ({
                             <DropdownInput
                                 className={"w-[110px]"}
                                 name="Po Type"
-                                options={YarnMaterial}
+                                options={MaterialType}
                                 value={poType}
                                 setValue={setPoType}
                                 required={true}
-                                readOnly={id || readOnly}
+                                readOnly={true}
                             />
 
 
@@ -406,7 +405,7 @@ export const PurchaseBillEntry = ({
 
                 </div>
                 <fieldset>
-                    {
+                    
                         <YarnInwardItems billEntryId={id} handleDeleteRow={removeItem}
                             transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
                             readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
@@ -415,7 +414,7 @@ export const PurchaseBillEntry = ({
 
                         />
 
-                    }
+                    
                 </fieldset>
 
                 <div className="grid grid-cols-3 gap-3">

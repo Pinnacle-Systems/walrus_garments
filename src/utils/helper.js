@@ -403,6 +403,7 @@ export const inwardQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => 
 }
 
 export const billItemsFiltration = (inwardQty, returnQty) => {
+  console.log({inwardQty,returnQty},"billItemsFiltration")
   return substract(inwardQty, returnQty) > 0
 }
 

@@ -11,7 +11,7 @@ import {
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DropdownInput, DisabledInput } from "../../../Inputs";
+import { DropdownInput, DisabledInput, ReusableSearchableInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 import { PoTypes, poTypes, YarnMaterial } from '../../../Utils/DropdownData';
 import { useDispatch } from "react-redux";
@@ -53,17 +53,19 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
 
 
+  const materialRef = useRef(null);
 
+
+  useEffect(() => {
+    if (materialRef.current && !id) {
+      materialRef.current.focus();
+    }
+  }, []);
 
 
 
   const { branchId, companyId, finYearId, userId } = getCommonParams()
 
-
-  const branchIdFromApi = useRef(branchId);
-  const params = {
-    branchId, companyId
-  };
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { companyId, active: true } });
@@ -257,14 +259,11 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }, 0)
   }
 
-  const materialRef = useRef(null);
+  function getTotalQty() {
+    let qty = inwardItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+    return parseInt(qty)
+  }
 
-
-  useEffect(() => {
-    if (materialRef.current && !id) {
-      materialRef.current.focus();
-    }
-  }, []);
 
   return (
     <>
@@ -324,8 +323,8 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
               <div className="col-span-1">
                 <ReusableInput label="Doc Id" value={docId} required={true} readOnly={readOnly} />
-
               </div>
+
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
 
             </div>
@@ -339,38 +338,48 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
               <DropdownInput
                 className={"w-[110px]"}
                 name="Material"
-                beforeChange={() => { setSupplierId(""); setInwardItems([]); }}
+                beforeChange={() => { }}
+                disabled={supplierId}
                 options={YarnMaterial}
-
                 value={poType}
                 setValue={(value) => { setPoType(value); }}
                 required={true}
                 readOnly={readOnly}
+                ref={materialRef}
+
               />
 
               <div className="">
 
-                <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} />
+                {/* <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")}
+                  value={supplierId} setValue={setSupplierId} required={true}
+                  readOnly={readOnly}
+                  disabled={readOnly || po}
+
+                /> */}
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setSupplierId(value) }}
+                  searchTerm={supplierId}
+                  show={"isSupplier"}
+                  required={true}
+                  disabled={id}
+                />
               </div>
-              {/* <div className="item-center gap-5">
-                <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                  onClick={() => {
-                    if (!supplierId || !poType) {
-                      toast.info("Please Select Inward/Return , Po type and Suppplier", { position: "top-center" })
-                      return
-                    }
-                    setInwardItemSelection(true)
-                  }}
-                >Select Items</button>
-              </div> */}
+
               <DropdownInput name="Po Type"
                 options={PoTypes}
                 value={po}
-                setValue={setPo}
-
+                setValue={(value) => {
+                  setPo(value)
+                  setInwardItems([])
+                }}
                 required={true}
                 readOnly={readOnly}
-                disabled={readOnly}
+
               />
 
 
@@ -436,8 +445,8 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
             <div className="space-y-1.5">
               <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-800 font-bold">Total Qty</span>
-                {/* <span className="font-bold">{parseInt(getTotalQty())}   No's</span> */}
+                <span className="text-slate-800 font-bold">Total  Qty</span>
+                <span className="font-bold">{parseInt(getTotalQty())} </span>
               </div>
 
 

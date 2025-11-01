@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 import {
-  employees, states, countries, cities,emailRoutes,
+  employees, states, countries, cities, emailRoutes,
   departments, companies, branches, users, pages, roles, subscriptions, finYear,
   employeeCategories, pageGroup,
   party,
@@ -30,8 +30,8 @@ import {
   counts,
   Machine, socksMaterial,
   currency, socksType, measurement, fibercontent,
-  yarnNeedle,certificate,
-  
+  yarnNeedle, certificate,
+
   partyBranch,
   partyBranchContact,
   partyContact,
@@ -45,11 +45,12 @@ import {
   accessoryPo,
   accesssoryPurchaseCancel,
   accessoryPurchaseInward,
-  
+
   terms$conditions,
   hsn,
   billEntry,
   accessoryReturn,
+  accessoryBillEntry,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -119,12 +120,12 @@ app.use("/salesBill", salesBill);
 app.use("/purchaseReturn", purchaseReturn)
 app.use("/salesReturn", salesReturn)
 app.use('/uom', uom),
-app.use('/quotes', quotes),
-app.use('/lead', lead)
+  app.use('/quotes', quotes),
+  app.use('/lead', lead)
 app.use('/project', project),
-app.use('/invoice', invoice),
-app.use('/projectPayment', projectPayment),
-app.use("/orderImport", orderImport);
+  app.use('/invoice', invoice),
+  app.use('/projectPayment', projectPayment),
+  app.use("/orderImport", orderImport);
 app.use("/sample", sample);
 app.use("/color", color);
 app.use("/fabric", fabric);
@@ -180,21 +181,23 @@ app.use("/measurement", measurement);
 app.use("/fiberContent", fibercontent);
 app.use("/fiberContent", fibercontent);
 app.use("/yarnNeedle", yarnNeedle);
-app.use("/partyBranch",partyBranch)
-app.use("/branchType",branchType)
-app.use("/partyBranchContact",partyBranchContact)
-app.use("/partyContact",partyContact)
+app.use("/partyBranch", partyBranch)
+app.use("/branchType", branchType)
+app.use("/partyBranchContact", partyBranchContact)
+app.use("/partyContact", partyContact)
 app.use("/requirementPlanningForm", requirementPlanningForm);
-app.use("/material",Material)
-app.use("/raiseIndenet",raiseIndent)
-app.use("/materialIssue",materialIssue)
-app.use("/stockTransfer",stockTransfer)
-app.use("/excessTolerance",excessTolerance)
-app.use("/accessoryPo",accessoryPo)
-app.use("/accesssoryPurchaseCancel",accesssoryPurchaseCancel)
-app.use("/accessoryPurchaseInward",accessoryPurchaseInward)
-app.use("/termsconditions",terms$conditions)
+app.use("/material", Material)
+app.use("/raiseIndenet", raiseIndent)
+app.use("/materialIssue", materialIssue)
+app.use("/stockTransfer", stockTransfer)
+app.use("/excessTolerance", excessTolerance)
+app.use("/accessoryPo", accessoryPo)
+app.use("/accesssoryPurchaseCancel", accesssoryPurchaseCancel)
+app.use("/accessoryPurchaseInward", accessoryPurchaseInward)
+app.use("/termsconditions", terms$conditions)
 app.use("/billEntry", billEntry);
+app.use("/accessoryBillEntry", accessoryBillEntry);
+
 app.use("/accessoryPurchaseReturn", accessoryReturn);
 
 

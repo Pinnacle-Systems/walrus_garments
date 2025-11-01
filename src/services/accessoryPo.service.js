@@ -307,30 +307,30 @@ export async function getPoItems(req) {
         }
         if (isPurchaseReturnFilter) {
             // data = data.filter(item => substract(item.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData._sum.qty : 0, item.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData?._sum?.qty : 0) > 0)
-          
-                data = data.filter(item => {
-                    const poQty = item?.qty || 0;
-                    const inwardQty = item?.alreadyInwardedData?._sum?.qty || 0;
-                    const returnQty = item?.alreadyReturnedData?._sum?.qty || 0;
-                    const cancelQty = item?.alreadyCancelData?._sum?.qty || 0;
-                    
-                    const balance = parseFloat(
-                        substract(inwardQty , returnQty)
-                    );
 
-                    // log for debugging
-                    console.log({
-                        itemId: item?.id,
-                        poQty,
-                        inwardQty,
-                        returnQty,
-                      
-                    });
+            data = data.filter(item => {
+                const poQty = item?.qty || 0;
+                const inwardQty = item?.alreadyInwardedData?._sum?.qty || 0;
+                const returnQty = item?.alreadyReturnedData?._sum?.qty || 0;
+                const cancelQty = item?.alreadyCancelData?._sum?.qty || 0;
 
-                    // keep only if positive balance
-                    return balance > 0;
+                const balance = parseFloat(
+                    substract(inwardQty, returnQty)
+                );
+
+                // log for debugging
+                console.log({
+                    itemId: item?.id,
+                    poQty,
+                    inwardQty,
+                    returnQty,
+
                 });
-            
+
+                // keep only if positive balance
+                return balance > 0;
+            });
+
 
         }
     } else {
@@ -348,7 +348,8 @@ export async function getPoItems(req) {
 
 export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
-    console.log(data, "data")
+
+        console.log(data,"dataEntrygetAllDataPoItems")
 
     let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
@@ -362,9 +363,9 @@ export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
-    console.log(purchaseInwardReturnId)
 
 
+    console.log(id, "getPoItemById")
 
     let data = await prisma.AccessoryPoItems.findUnique({
         where: {
@@ -404,47 +405,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
                     name: true
                 }
             },
-            // Yarn: {
-            //     select: {
-            //         name: true,
-            //     }
-            // },
-            // Fabric: {
-            //     select: {
-            //         aliasName: true,
-            //         // name: true,
-            //     }
-            // },
-            // Gauge: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
-            // LoopLength: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
-            // Design: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
-            // Gsm: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
-            // KDia: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
-            // FDia: {
-            //     select: {
-            //         name: true
-            //     }
-            // },
+
             Accessory: {
                 select: {
                     aliasName: true,
@@ -524,6 +485,17 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
         }
     });
 
+    const alreadyBillData = await prisma.AccessoryBillEntryItems.aggregate({
+        where: {
+            accessoryPoItemsId: parseInt(id),
+            billEntryId: {
+                lt: JSON.parse(billEntryId) ? parseInt(billEntryId) : undefined
+            }
+        },
+        _sum: {
+            qty: true,
+        }
+    });
 
     // async function getLotWiseDatas(inwardData) {
 
@@ -547,16 +519,28 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
 
 
-    console.log(alreadyInwardedData, "alreadyInwardedData")
-    console.log(alreadyReturnedData, "alreadyReturnedData")
-    console.log(alreadyCancelData, "alreadyCancelData")
+
 
 
     let poQty = parseFloat(data?.qty || 0).toFixed(3)
+
+    console.log(alreadyInwardedData, "alreadyInwardedData")
+    console.log(alreadyReturnedData, "alreadyReturnedData")
+    console.log(alreadyCancelData, "alreadyCancelData")
+    console.log(alreadyBillData,"alreadyBillData")
+
+    console.log({alreadyInwardedData ,
+        alreadyReturnedData
+    })
+
     let cancelQty = alreadyCancelData?._sum.qty ? parseFloat(alreadyCancelData?._sum.qty).toFixed(3) : "0.000";
+    let alreadyBillQty = alreadyBillData?._sum?.qty ? parseFloat(alreadyBillData?._sum?.qty).toFixed(3) : "0.000";
     let alreadyInwardedQty = alreadyInwardedData?._sum?.qty ? parseFloat(alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
     let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
     let alreadyCancelQty = alreadyCancelData?._sum?.qty ? parseFloat(alreadyCancelData._sum.qty).toFixed(3) : "0.000";
+
+
+    console.log({ poQty, cancelQty, alreadyInwardedQty, alreadyReturnedQty }, "balanceQty")
 
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";

@@ -58,10 +58,10 @@ const AccessoryPurchaseInwardApi = createApi({
       },
       providesTags: ["AccessoryPurchaseInward"],
     }),
-    getPoItemsandDirectInwardItems: builder.query({
+    getPoItemsandAccessoryInwardItems: builder.query({
       query: ({ params }) => {
         return {
-          url: `${ACCESSORT_PURCHASE_INWARD_API}/getPoItemsandDirectInwardItems`,
+          url: `${ACCESSORT_PURCHASE_INWARD_API}/getPoItemsandAccessoryInwardItems`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -115,7 +115,7 @@ const AccessoryPurchaseInwardApi = createApi({
 export const {
   useGetAccessoryPurchaseInwardQuery,
   useGetAccessoryPurchaseInwardByIdQuery,
-  useGetPoItemsandDirectInwardItemsQuery,
+  useGetPoItemsandAccessoryInwardItemsQuery,
   useGetDirectItemsQuery,
   useGetDirectItemByIdQuery,
   useAddAccessoryPurchaseInwardMutation,

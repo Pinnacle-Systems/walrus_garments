@@ -223,6 +223,11 @@ export const TextInput = ({
             ? setValue(e.target.value)
             : handleOnChange(e, setValue)
         }
+        // onKeyDown={(e) => {
+        //   if (e.key === " ") {
+        //     e.preventDefault();
+        //   }
+        // }}
         onBlur={onBlur}
         placeholder={name}
         readOnly={readOnly}
@@ -588,7 +593,7 @@ export const DropdownInput = forwardRef(({
   openOnFocus = false,   // new prop
 }, ref) => {
 
-  
+
   const handleOnChange = (e) => {
     setValue(e.target.value);
   };
@@ -597,8 +602,8 @@ export const DropdownInput = forwardRef(({
 
   useEffect(() => {
     if (ref?.current && openOnFocus) {
-      ref.current.focus();  
-      
+      ref.current.focus();
+
     }
   }, [openOnFocus]);
 
@@ -1491,115 +1496,108 @@ export const ReusableTable = ({
       </div>
     );
   };
-  const inputRef = useRef(null);
-  const [activeSearchCol, setActiveSearchCol] = useState([]);
 
-  // useEffect(() => {
-  //   if (
-  //     activeSearchCol !== null &&
-  //     inputRef?.current[activeSearchCol] &&
-  //     inputRef?.current[activeSearchCol] !== null
-  //   ) {
-  //     inputRef?.current[activeSearchCol]?.focus();
-  //   }
-  // }, [activeSearchCol]);
 
 
   return (
     <>
-      <div className="bg-[#F1F1F0] shadow-sm h-[80%]">
-        <table className="">
-          <thead className="bg-gray-200 text-gray-800 ">
+      <div className="bg-[#F1F1F0] shadow-sm h-[71vh]">
+        <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
+          <div className="h-[68vh]">
+            <table className="">
+              <thead className="bg-gray-200 text-gray-800 ">
 
 
-            <tr>
-              {columns?.map((column, index) => (
-                <th
-                  key={index}
-                  className={`${column.className ? column.className : ""
-                    } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50" : ""
-                    }`}
-                >
-                  <span>{column.header}</span>
-                </th>
-              ))}
-              <td className="border border-white/50 font-medium text-[13px]"></td>
-            </tr>
-
-
-
-
-
-          </thead>
-          <tbody>
-            {currentItems?.length === 0 ? (
-              <tr>
-                <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
-                  {emptyStateMessage}
-                </td>
-              </tr>
-            ) : (
-              currentItems?.map((item, index) => (
-
-                <tr
-                  key={item.id}
-                  className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                    }`}
-                >
-
-                  {columns?.map((column, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7`}
+                <tr>
+                  {columns?.map((column, index) => (
+                    <th
+                      key={index}
+                      className={`${column.className ? column.className : ""
+                        } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50" : ""
+                        }`}
                     >
-                      {column.accessor(item, index)}
-                    </td>
+                      <span>{column.header}</span>
+                    </th>
                   ))}
-                  {rowActions && (
-                    <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                      <div className="flex">
-                        {onView && (
-                          <button
-                            className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                            onClick={() => onView(item.id)}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        )}
-                        {onEdit && (
-                          <button
-                            className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                            onClick={() => onEdit(item.id)}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
-                        )}
-                        {onDelete && (
-                          <button
-                            className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                            onClick={() => onDelete(item.id)}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {/* <span className="text-xs">delete</span> */}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
+                  <td className="border border-white/50 font-medium text-[13px]"></td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+
+
+
+
+
+              </thead>
+              <tbody>
+                {currentItems?.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+                      {emptyStateMessage}
+                    </td>
+                  </tr>
+                ) : (
+                  currentItems?.map((item, index) => (
+
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
+                    >
+
+                      {columns?.map((column, colIndex) => (
+                        <td
+                          key={colIndex}
+                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7`}
+                        >
+                          {column.accessor(item, index)}
+                        </td>
+                      ))}
+                      {rowActions && (
+                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                          <div className="flex">
+                            {onView && (
+                              <button
+                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                onClick={() => onView(item.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                onClick={() => onEdit(item.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </button>
+                            )}
+                            {onDelete && (
+                              <button
+                                className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
+                                onClick={() => onDelete(item.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {/* <span className="text-xs">delete</span> */}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div className="">
+      <div className="h-[10vh]">
         <Pagination />
       </div>
 
@@ -1638,14 +1636,14 @@ export const ReusableTable = ({
 //     data: partyList,
 //     isLoading: isPartyLoading,
 //     isFetching: isPartyFetching,
-//   } = useGetPartyQuery({ params: { companyId, userId } });
+//   } = useGetPartyQuery({params: {companyId, userId} });
 //   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 //   const [tooltipVisible, setTooltipVisible] = useState(false);
 //   const [editingItem, setEditingItem] = useState("");
 //   const containerRef = useRef(null);
 //   const modal = useModal();
 //   const [openModel, setOpenModel] = useState(false)
-//   const { openAddModal } = modal || {};
+//   const {openAddModal} = modal || { };
 //   const [search, setSearch] = useState("");
 //   const [filteredPages, setFilteredPages] = useState([]);
 

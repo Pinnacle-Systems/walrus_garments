@@ -7,7 +7,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function getNextDocId(branchId, isProcessBillEntry, shortCode, startTime, endTime) {
-    let lastObject = await prisma.billEntry.findFirst({
+    let lastObject = await prisma.AccessoryBillEntry.findFirst({
         where: {
             branchId: parseInt(branchId),
             isProcessBillEntry: isProcessBillEntry && JSON.parse(isProcessBillEntry),
@@ -61,7 +61,7 @@ async function get(req) {
   
   
     if (pagination) {
-        data = await prisma.billEntry.findMany({
+        data = await prisma.AccessoryBillEntry.findMany({
             where: {
                 AND: (finYearDate) ? [
                     {
@@ -116,7 +116,7 @@ async function get(req) {
         totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {
-        data = await prisma.billEntry.findMany({
+        data = await prisma.AccessoryBillEntry.findMany({
             where: {
                 AND: (finYearDate) ? [
                     {
@@ -153,12 +153,12 @@ async function get(req) {
 
 async function getOne(id, payOutId, advanceAdjustMentId) {
     const childRecord = 0;
-    const data = await prisma.billEntry.findUnique({
+    const data = await prisma.AccessoryBillEntry.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            BillEntryItems: true,
+            AccessoryBillEntryItems: true,
             Store: {
                 select: {
                     locationId: true
@@ -171,7 +171,7 @@ async function getOne(id, payOutId, advanceAdjustMentId) {
             },
         },
     })
-    if (!data) return NoRecordFound("billEntry");
+    if (!data) return NoRecordFound("AccessoryBillEntryItems");
     let alreadyPaidAmount = await getAlreadyPaidAmount(id, payOutId, advanceAdjustMentId)
     return { statusCode: 0, data: { ...data, ...{ childRecord }, alreadyPaidAmount } };
 }
@@ -179,7 +179,7 @@ async function getOne(id, payOutId, advanceAdjustMentId) {
 async function getSearch(req) {
     const { companyId, active } = req.query
     const { searchKey } = req.params
-    const data = await prisma.billEntry.findMany({
+    const data = await prisma.AccessoryBillEntry.findMany({
         where: {
             country: {
                 companyId: companyId ? parseInt(companyId) : undefined,
@@ -208,7 +208,7 @@ async function create(body) {
     let docId = await getNextDocId(branchId, isProcessBillEntry, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
     // const isValid = await billEntyItemsValidation(billEntryItems, null, isProcessBillEntry)
     // if (!isValid) return { statusCode: 1, message: "Data Validation Failed" }
-    const data = await prisma.billEntry.create({
+    const data = await prisma.AccessoryBillEntry.create({
         data: {
             poType,
             processId: processId ? parseInt(processId) : undefined,
@@ -223,16 +223,16 @@ async function create(body) {
             discountType, discountValue: discountValue ? parseFloat(discountValue) : "",
             createdById: parseInt(userId),
             isProcessBillEntry: isProcessBillEntry ? JSON.parse(isProcessBillEntry) : undefined,
-            BillEntryItems: {
+            AccessoryBillEntryItems: {
                 createMany: {
                     data: billEntryItems.map(item => {
                         let newItem = {}
                         if (item.isPoItem) {
-                            newItem["poItemsId"] = parseInt(item["poItemsId"]);
+                            newItem["accessoryPoItemsId"] = parseInt(item["accessoryPoItemsId"]);
                         } else if (isProcessBillEntry) {
                             newItem["processDeliveryProgramDetailsId"] = parseInt(item["processDeliveryProgramDetailsId"])
                         } else {
-                            newItem["directItemsId"] = item["directItemsId"]  ?   parseInt(item["directItemsId"])  : "  "
+                            newItem["accessoryInwardItemsId"] = item["accessoryInwardItemsId"]  ?   parseInt(item["accessoryInwardItemsId"])  : "  "
                         }
                         newItem["price"] = item["price"] ?  parseFloat(item["price"]) : ""
                         newItem["discountType"] = item["discountType"] ? item["discountType"] : ""
@@ -245,17 +245,17 @@ async function create(body) {
                     })
                 }
             },
-            Ledger: {
-                create: {
-                    EntryType: isProcessBillEntry ? "Process_Bill" : "Purchase_Bill",
-                    LedgerType: "Supplier",
-                    creditOrDebit: "Credit",
-                    partyId: parseInt(supplierId),
-                    amount: parseFloat(netBillValue),   
-                    partyBillNo,
-                    partyBillDate: partyBillDate ? new Date(partyBillDate) : undefined,
-                }
-            }
+            // Ledger: {
+            //     create: {
+            //         EntryType: isProcessBillEntry ? "Process_Bill" : "Purchase_Bill",
+            //         LedgerType: "Supplier",
+            //         creditOrDebit: "Credit",
+            //         partyId: parseInt(supplierId),
+            //         amount: parseFloat(netBillValue),
+            //         partyBillNo,
+            //         partyBillDate: partyBillDate ? new Date(partyBillDate) : undefined,
+            //     }
+            // }
         }
     });
     return { statusCode: 0, data };
