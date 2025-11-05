@@ -211,10 +211,10 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                     orderReftch()
 
                 }
-               else  if (nextProcess == "close") {
+                else if (nextProcess == "close") {
                     onClose()
                 }
-                
+
 
                 // setId(returnData?.data?.id);
                 // singleOrderReftch()
@@ -256,8 +256,14 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             });
             return
         }
-        const foundItem = allData?.data?.some(item => item.jobNumber === jobNumber);
-        if (!id && foundItem) {
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === jobNumber);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === jobNumber);
+
+        }
+        if (foundItem) {
             Swal.fire({
                 text: "The Job Number already exists. Please use a different Job Number.",
                 icon: "warning",
@@ -265,9 +271,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 showConfirmButton: false,
             });
             return false;
-
         }
-
         const totalPercentage = orderYarnDetails?.reduce(
             (sum, yarn) => sum + (parseFloat(yarn.percentage) || 0),
             0

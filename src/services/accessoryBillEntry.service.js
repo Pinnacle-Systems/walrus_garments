@@ -79,9 +79,9 @@ async function get(req) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
                 isProcessBillEntry: isProcessBillEntry ? JSON.parse(isProcessBillEntry) : undefined,
-                printingJobWorkId: null,
-                finishedGoodsSalesId: null,
-                rawMaterialsSalesId: null,
+                // printingJobWorkId: null,
+                // finishedGoodsSalesId: null,
+                // rawMaterialsSalesId: null,
                 poType : searchMaterial ? searchMaterial  :  undefined ,
                 docId: Boolean(searchDocId) ?
                     {

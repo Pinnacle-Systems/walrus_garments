@@ -5,7 +5,7 @@ import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
-export default function AccountDetailsDropDown({ items = [], setLogout}) {
+export default function AccountDetailsDropDown({ items = [], setLogout }) {
 
   const dispatch = useDispatch()
 
@@ -22,7 +22,7 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
   const toggleNavMenu = () => {
     sethideNavBar(!hideNavBar);
   };
-    console.log(items, "allowedPages")
+  console.log(items, "allowedPages")
 
   return (
     // <div className="relative text-left">
@@ -59,31 +59,37 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
     //         <pre>{item.name}</pre>
     //       </button>
     //     ))}
-    //     <button
-    //       className="nav-dropdown-bg z-99 p-2 text-start w-full"
-    //       onClick={() => setLogout(true)}
-    //     >
-    //       LOGOUT
-    //     </button>
+    // <button
+    //   className="nav-dropdown-bg z-99 p-2 text-start w-full"
+    //   onClick={() => setLogout(true)}
+    // >
+    //   LOGOUT
+    // </button>
     //   </div>
     // </div>
     <>
-         {items.map((item, index) => (
-          <button
-            key={index}
-            type="link"
-            className="nav-dropdown-bg z-99 p-2 text-start block w-full"
-            onClick={(e) => {
-              dispatch(push({id:item.id, name: item.name}))
-              secureLocalStorage.setItem(
-                sessionStorage.getItem("sessionId") + "currentPage",
-                item.id
-              );
-            }}
-          >
-            <pre>{item.name}</pre>
-          </button>
-        ))}
+      {items.map((item, index) => (
+        <button
+          key={index}
+          type="link"
+          className="nav-dropdown-bg z-99 p-2 text-start block w-full"
+          onClick={(e) => {
+            dispatch(push({ id: item.id, name: item.name }))
+            secureLocalStorage.setItem(
+              sessionStorage.getItem("sessionId") + "currentPage",
+              item.id
+            );
+          }}
+        >
+          <pre>{item.name}</pre>
+        </button>
+      ))}
+      <button
+        className="nav-dropdown-bg z-99 p-2 text-start w-full"
+        onClick={() => setLogout(true)}
+      >
+        LOGOUT
+      </button>
     </>
   );
 }

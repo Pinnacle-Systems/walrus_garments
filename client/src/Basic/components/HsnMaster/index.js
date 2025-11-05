@@ -64,7 +64,7 @@ export default function Form() {
     }
 
     const validateData = (data) => {
-        if (data.name) {
+        if (data.name &&  data.tax) {
             return true;
         }
         return false;
@@ -76,14 +76,9 @@ export default function Form() {
             setId("")
             syncFormWithDb(undefined)
             Swal.fire({
-                title: "Please fill all required fields...!",
+                title: `${text}  Successfullty`  ,
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+           
             });
         } catch (error) {
             console.log("handle");
@@ -95,12 +90,7 @@ export default function Form() {
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+
             });
             return;
         }
@@ -125,12 +115,7 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                 
                 });
             } catch (error) {
                 toast.error("something went wrong");
@@ -212,55 +197,7 @@ export default function Form() {
     };
 
     return (
-        // <div
-        //     onKeyDown={handleKeyDown}
-        //     className="md:items-start md:justify-items-center grid h-full bg-theme"
-        // >
-        //     <div className="flex flex-col frame w-full h-full">
-        //         <FormHeader
-        //             onNew={onNew}
-        //             onClose={() => {
-        //                 setForm(false);
-        //                 setSearchValue("");
-        //             }}
-        //             model={MODEL}
-        //             saveData={saveData}
-        //             setReadOnly={setReadOnly}
-        //             deleteData={deleteData}
-
-        //         />
-        //         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-        //             <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-        //                 <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
-        //                     <div className='mr-1 md:ml-2'>
-        //                         <fieldset className='frame my-1'>
-        //                             <legend className='sub-heading'>Hsn Info</legend>
-        //                             <div className='grid grid-cols-1 my-2'>
-        //                                 <TextInput name="HSN Code" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-        //                                 <TextInput name="Tax Percentage" type="text" value={tax} setValue={setTax} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
-        //                                 <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-        //                             </div>
-        //                         </fieldset>
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //             <div className="frame hidden md:block overflow-x-hidden">
-        //                 <FormReport
-        //                     searchValue={searchValue}
-        //                     setSearchValue={setSearchValue}
-        //                     setId={setId}
-        //                     tableHeaders={tableHeaders}
-        //                     tableDataNames={tableDataNames}
-        //                     data={allData?.data}
-        //                     loading={
-        //                         isLoading || isFetching
-        //                     }
-        //                 />
-        //             </div>
-        //         </div>
-        //     </div>
-        // </div>
+ 
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Hsn Master</h5>

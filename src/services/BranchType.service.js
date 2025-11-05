@@ -20,13 +20,7 @@ async function getOne(id) {
         where: {
             id: parseInt(id)
         },
-        include: {
-            Employee: {
-                select: {
-                    id: true
-                }
-            }
-        }
+       
     })
     if (!data) return NoRecordFound("Branch");
     return { statusCode: 0, data };
@@ -57,13 +51,15 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, contactEmail, contactName, contactMobile, companyId, address } = await body
+    const { name, code, contactEmail, contactName, contactMobile, companyId, active } = await body
     const data = await prisma.branchType.create({
         data: {
-            branchName: name, branchCode: code, contactEmail, contactName, contactMobile: parseInt(contactMobile), address,
-            company: {
-                connect: { id: parseInt(companyId) }
-            }
+             name,active,
+            //   branchCode: code,
+            //    contactEmail, contactName, contactMobile: parseInt(contactMobile), address,
+            // company: {
+            //     connect: { id: parseInt(companyId) }
+            // }
         },
     });
     return { statusCode: 0, data };
@@ -77,15 +73,13 @@ async function update(id, body) {
             id: parseInt(id)
         }
     })
-    if (!dataFound) return NoRecordFound("Branch");
-    const data = await prisma.branch.update({
+    if (!dataFound) return NoRecordFound("branchType");
+    const data = await prisma.branchType.update({
         where: {
             id: parseInt(id),
         },
         data: {
-            branchName: name, branchCode: code, contactEmail, contactName,
-            contactMobile: contactEmail ? parseInt(contactMobile) : undefined, active,
-            idPrefix, idSequence, tempPrefix, tempSequence, prefixCategory, address
+            name , active
         },
     })
     return { statusCode: 0, data };

@@ -14,7 +14,7 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, MultiSelectDropdown } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, MultiSelectDropdown, TextInputNew } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject, multiSelectOption, multiSelectOptionSelectedApiData } from '../../../Utils/contructObject';
 
@@ -200,10 +200,10 @@ export default function Form() {
                             <fieldset className='frame my-1'>
                                 <legend className='sub-heading'>User Info</legend>
                                 <form className='grid grid-cols-1 my-2' autoComplete="chrome-off">
-                                    <TextInput name="Username" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                                    <TextInputNew name="Username" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
                                     {!id
                                         ?
-                                        <TextInput name="Password" type="password" value={password} setValue={setPassword} required={true} readOnly={readOnly} />
+                                        <TextInputNew name="Password" type="password" value={password} setValue={setPassword} required={true} readOnly={readOnly} />
                                         :
                                         ""
                                     }

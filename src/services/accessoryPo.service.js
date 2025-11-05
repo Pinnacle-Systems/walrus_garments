@@ -349,7 +349,7 @@ export async function getPoItems(req) {
 export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 
-        console.log(data,"dataEntrygetAllDataPoItems")
+    console.log(data, "dataEntrygetAllDataPoItems")
 
     let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
@@ -488,7 +488,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     const alreadyBillData = await prisma.AccessoryBillEntryItems.aggregate({
         where: {
             accessoryPoItemsId: parseInt(id),
-            billEntryId: {
+            accessoryBillEntryId: {
                 lt: JSON.parse(billEntryId) ? parseInt(billEntryId) : undefined
             }
         },
@@ -524,14 +524,12 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
     let poQty = parseFloat(data?.qty || 0).toFixed(3)
 
-    console.log(alreadyInwardedData, "alreadyInwardedData")
-    console.log(alreadyReturnedData, "alreadyReturnedData")
-    console.log(alreadyCancelData, "alreadyCancelData")
-    console.log(alreadyBillData,"alreadyBillData")
+    // console.log(alreadyInwardedData, "alreadyInwardedData")
+    // console.log(alreadyReturnedData, "alreadyReturnedData")
+    // console.log(alreadyCancelData, "alreadyCancelData")
+    // console.log(alreadyBillData,"alreadyBillData")
 
-    console.log({alreadyInwardedData ,
-        alreadyReturnedData
-    })
+
 
     let cancelQty = alreadyCancelData?._sum.qty ? parseFloat(alreadyCancelData?._sum.qty).toFixed(3) : "0.000";
     let alreadyBillQty = alreadyBillData?._sum?.qty ? parseFloat(alreadyBillData?._sum?.qty).toFixed(3) : "0.000";
@@ -540,7 +538,6 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let alreadyCancelQty = alreadyCancelData?._sum?.qty ? parseFloat(alreadyCancelData._sum.qty).toFixed(3) : "0.000";
 
 
-    console.log({ poQty, cancelQty, alreadyInwardedQty, alreadyReturnedQty }, "balanceQty")
 
     let alreadyInwardedRolls = alreadyInwardedData?._sum?.noOfRolls ? parseInt(alreadyInwardedData._sum.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum.noOfRolls) : "0";
@@ -549,7 +546,13 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
 
 
-
+    console.log({
+        poQty,
+        alreadyInwardedQty,
+        alreadyReturnedQty,
+        alreadyCancelQty,
+        alreadyBillQty
+    })
 
 
     // let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
@@ -635,7 +638,10 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             alreadyReturnedQty,
             alreadyReturnedData,
             alreadyCancelData,
-            alreadyCancelQty
+            alreadyCancelQty,
+            alreadyBillQty,
+            alreadyBillData
+
             // stockData,
             // alreadyInwardLotWiseData: alreadyInwardLotWiseData?.filter(val => parseFloat(val?.stockQty) !== 0),
 

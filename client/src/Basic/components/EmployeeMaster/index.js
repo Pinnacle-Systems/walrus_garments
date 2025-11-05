@@ -21,6 +21,7 @@ import {
   DateInput,
   DisabledInput,
   ToggleButton,
+  ReusableTable,
 } from "../../../Inputs";
 
 import {
@@ -49,12 +50,14 @@ import {
   LayoutGrid,
   Mail,
   Plus,
+  Power,
   Search,
   Table,
   X,
 } from "lucide-react";
 import Mastertable from "../MasterTable/Mastertable";
 import imageDefault from "../../../assets/default-dp.png";
+import Swal from "sweetalert2";
 const MODEL = "Employee Master";
 export default function Form() {
   const [view, setView] = useState("table");
@@ -122,7 +125,7 @@ export default function Form() {
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   );
-   const finYearId =  secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
+  const finYearId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
 
   const {
     data: cityList,
@@ -131,7 +134,7 @@ export default function Form() {
   } = useGetCityQuery({ params });
 
   const { data: employeeCategoryList } = useGetEmployeeCategoryQuery({
-    params: companyId,finYearId
+    params: companyId, finYearId
   });
 
   const { data: departmentList } = useGetDepartmentQuery({ params });
@@ -164,7 +167,7 @@ export default function Form() {
   }, [allData, isLoading, isFetching, id]);
 
   useEffect(getRegNo, id[(getRegNo, id)]);
-  console.log(readOnly,"readOnly")
+  console.log(readOnly, "readOnly")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -301,6 +304,7 @@ export default function Form() {
     canRejoin,
     rejoinReason,
     regNo,
+   employeeCategory ,department 
   };
 
 
@@ -323,8 +327,11 @@ export default function Form() {
         returnData = await callback(formData).unwrap();
       }
       setId(returnData.data.id);
-      toast.success(text + "Successfully");
-      setSearchValue("");
+      Swal.fire({
+        title: text + "Successfully",
+        icon: "success",
+
+      }); setSearchValue("");
       setStep(1);
       dispatch({
         type: `EmployeeCategoryMaster/invalidateTags`,
@@ -342,28 +349,39 @@ export default function Form() {
       console.log("handle");
     }
   };
-  
+
+  console.log(data,"dataaaaaaaaaaa")
+
   const validateData = (data) => {
-    if (data.name && data.dob  && data.gender  && data.employeeCategory && data.department  &&  data.joiningDate  &&  data.mobile && data.localAddress) {
+    if (data.name && data.gender &&  data.dob   &&  data.employeeCategory && data.department &&  data.joiningDate && data.fatherName  &&  data.panNo  &&   data.mobile   &&  data.localAddress  &&  data.permCity   && data.permPincode) {
       return true;
     }
     return false;
   }
 
   const saveData = () => {
-    //  if (!validateData(data)) {
-    //       toast.error("Please fill all required fields...!", { position: "top-center" })
-    //       return
-    //     }
-    if (!JSON.parse(active)) {
-      setLeavingForm(true);
-    } else {
+    if (!validateData(data)) {
+      // toast.error("Please fill all required fields...!", { position: "top-center" })
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+
+      });
+      return
+    }
+    
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
+    // if (!JSON.parse(active)) {
+    //   setLeavingForm(true);
+    // } else {
       if (id) {
         handleSubmitCustom(updateData, data, "Updated");
       } else {
         handleSubmitCustom(addData, data, "Added");
       }
-    }
+    // }
   };
   const deleteData = async (id) => {
     if (id) {
@@ -386,8 +404,11 @@ export default function Form() {
           type: `cityMaster/invalidateTags`,
           payload: ["City/State Name"],
         });
-        toast.success("Deleted Successfully");
-        setForm(false);
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+
+        }); setForm(false);
         setSearchValue("");
         setStep(1);
       } catch (error) {
@@ -423,26 +444,7 @@ export default function Form() {
     setId(id);
     setForm(true);
   }
-  const tableHeaders = [
-    "S.NO",
-    "Employee Id",
-    "Employee name",
-    "Employee Category",
-    "Gender",
-    "Contact",
-    "Email",
-    "Employee status",
-  ];
-  const tableDataNames = [
-    "index+1",
-    "dataObj.regNo",
-    "dataObj.name",
-    "dataObj?.EmployeeCategory?.name",
-    "dataObj?.gender",
-    "dataObj?.mobile",
-    "dataObj?.email",
-    "dataObj.active ? ACTIVE : INACTIVE",
-  ];
+
   const submitLeavingForm = () => {
     console.log("sdfsdfsdfsdf");
     if (id) {
@@ -482,19 +484,72 @@ export default function Form() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const handleNext = () => {
-    if (validateStep()) {
-      setStep(step + 1);
-    }
+
+  const handleView = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(true);
+    console.log("view");
   };
-  const handlePrevious = () => {
-    setStep(step - 1);
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+    console.log("Edit");
   };
-  const handleTabClick = (tabNumber) => {
-    if (tabNumber < step || validateStep()) {
-      setStep(tabNumber);
-    }
-  };
+
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+
+    {
+      header: "Employee Id",
+      accessor: (item) => item?.regNo,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-24",
+    },
+
+    {
+      header: "Employee Name",
+      accessor: (item) => item?.name,
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-72",
+    },
+    {
+      header: "Employee Category",
+      accessor: (item) => item?.EmployeeCategory?.name,
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-36",
+    },
+    {
+      header: "Gender",
+      accessor: (item) => item?.gender,
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-22",
+    },
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-16",
+    },
+
+  ];
   console.log(data, "data")
   return (
     <div onKeyDown={handleKeyDown} className="p-1 ">
@@ -518,8 +573,8 @@ export default function Form() {
             <button
               onClick={() => setView("table")}
               className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table"
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "text-gray-600 hover:bg-gray-100"
+                ? "bg-indigo-100 text-indigo-600"
+                : "text-gray-600 hover:bg-gray-100"
                 }`}
             >
               <Table size={16} />
@@ -528,8 +583,8 @@ export default function Form() {
             <button
               onClick={() => setView("card")}
               className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card"
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "text-gray-600 hover:bg-gray-100"
+                ? "bg-indigo-100 text-indigo-600"
+                : "text-gray-600 hover:bg-gray-100"
                 }`}
             >
               <LayoutGrid size={16} />
@@ -542,17 +597,27 @@ export default function Form() {
       <div className="bg-[f1f1f0] rounded-xl shadow overflow-hidden">
         <div className="pt-2">
           {view === "table" ? (
-            <Mastertable
-              header={`Employees list`}
-              searchValue={searchValue}
-              setSearchValue={setSearchValue}
-              onDataClick={onDataClick}
-              tableHeaders={tableHeaders}
-              tableDataNames={tableDataNames}
-              data={allData?.data}
-              setReadOnly={setReadOnly}
-              deleteData={deleteData}
-            />
+            // <Mastertable
+            //   header={`Employees list`}
+            //   searchValue={searchValue}
+            //   setSearchValue={setSearchValue}
+            //   onDataClick={onDataClick}
+            //   tableHeaders={tableHeaders}
+            //   tableDataNames={tableDataNames}
+            //   data={allData?.data}
+            //   setReadOnly={setReadOnly}
+            //   deleteData={deleteData}
+            // />
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+              <ReusableTable
+                columns={columns}
+                data={allData?.data}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={deleteData}
+                itemsPerPage={10}
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {allData?.data?.map((employee, index) => (
@@ -571,8 +636,8 @@ export default function Form() {
                         src={employee?.imageBase64 || imageDefault}
                         alt="Profile"
                         className={`w-12 h-12 object-cover rounded-full border-2 ${employee?.active
-                            ? "border-green-500"
-                            : "border-red-500"
+                          ? "border-green-500"
+                          : "border-red-500"
                           }`}
                       />
                       <div className="ml-3">
@@ -631,8 +696,8 @@ export default function Form() {
           }}
         >
           <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-              <div className="flex items-center gap-2">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-2">
+              <div className="flex items-center gap-2 ">
                 <h2 className="text-lg font-semibold text-gray-800">
                   {id ? (!readOnly ? "Edit Employee" : "Employee Master") : "Add New Employee"}
                 </h2>
@@ -720,7 +785,7 @@ export default function Form() {
                             options={bloodList}
                             value={bloodGroup}
                             setValue={setBloodGroup}
-                            required
+                            
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                           />
@@ -860,7 +925,7 @@ export default function Form() {
                           options={maritalStatusList}
                           value={maritalStatus}
                           setValue={setMaritalStatus}
-                          required
+                          
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -884,7 +949,7 @@ export default function Form() {
                           name="Degree"
                           value={degree}
                           setValue={setDegree}
-                          required
+                          
                           readOnly={readOnly}
                         />
                         {errors.degree && <span className="text-red-500 text-xs ml-1">{errors.degree}</span>}
@@ -895,7 +960,7 @@ export default function Form() {
                           name="Specialization"
                           value={specialization}
                           setValue={setSpecialization}
-                          required
+                          
                           readOnly={readOnly}
                         />
                         {errors.specialization && <span className="text-red-500 text-xs ml-1">{errors.specialization}</span>}
@@ -986,6 +1051,7 @@ export default function Form() {
                           setValue={setPermPincode}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
+                          required
                         />
                         <DropdownInput
                           name="City/State"
@@ -998,6 +1064,7 @@ export default function Form() {
                           setValue={setPermCity}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
+                          required
                         />
                       </div>
                     </div>

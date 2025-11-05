@@ -152,10 +152,7 @@ const Profile = ({ dp, items }) => {
             <div>
                 <div className="flex text-[12px] items-center mt-3 pt-3 border-t mx-2" style={{ borderTopWidth: '0.5px', borderColor: '#dce1e9' }}>
 
-                    {/* <span onClick={() => setLogout(true)} className="flex items-center cursor-pointer">
-                        <LogOut className="mr-2" size={20} />
-                        Sign Out
-                    </span> */}
+                   
                 </div>
             </div>
         </div>

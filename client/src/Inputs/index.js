@@ -223,11 +223,11 @@ export const TextInput = ({
             ? setValue(e.target.value)
             : handleOnChange(e, setValue)
         }
-        // onKeyDown={(e) => {
-        //   if (e.key === " ") {
-        //     e.preventDefault();
-        //   }
-        // }}
+        onKeyDown={(e) => {
+          if (e.key === " ") {
+            e.preventDefault();
+          }
+        }}
         onBlur={onBlur}
         placeholder={name}
         readOnly={readOnly}
@@ -1513,7 +1513,7 @@ export const ReusableTable = ({
                     <th
                       key={index}
                       className={`${column.className ? column.className : ""
-                        } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50" : ""
+                        } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50 text-center    " : ""
                         }`}
                     >
                       <span>{column.header}</span>
@@ -1546,7 +1546,7 @@ export const ReusableTable = ({
                       {columns?.map((column, colIndex) => (
                         <td
                           key={colIndex}
-                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7`}
+                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
                         >
                           {column.accessor(item, index)}
                         </td>
@@ -2143,9 +2143,9 @@ export const ReusableSearchableInput = forwardRef(
                         setIsDropdownOpen(false);
                         if (nextRef?.current) {
                           e.preventDefault();
-
                           nextRef?.current?.focus();
                         }
+
                       }
                     }}
                   >
@@ -2180,7 +2180,6 @@ export const ReusableSearchableInput = forwardRef(
                     openAddModal();
                   }}
                 >
-                  {/* Create option */}
                 </button>
               )}
             </div>
@@ -2192,3 +2191,54 @@ export const ReusableSearchableInput = forwardRef(
 );
 
 
+export const TextInputNew = ({
+  name,
+  label,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+  max ,
+  handleChange
+}) => {
+  console.log(max, "max")
+  return (
+    <div className={`mb-2 ${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
+        </label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>  
+
+            handleChange ?   handleOnChange(e,setValue)  :   setValue(e.target.value)
+        }
+
+        onBlur={onBlur}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        max={max ? String(max) : undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm
+         
+          ${className}`
+        }
+      />
+      {/* ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"} */}
+    </div>
+  );
+};

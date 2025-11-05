@@ -12,6 +12,7 @@ const TaxDetails = ({ items, taxTemplateId, taxGroupWise, taxDetails }) => {
   return (
     <>
       {Object.keys(taxGroupWise).map(taxKey => {
+  console.log(taxKey, "taxKey")
 
 
 

@@ -12,12 +12,15 @@ import { useGetCountriesQuery } from "../../../redux/services/CountryMasterServi
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, ToggleButton, Modal } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, ToggleButton, ReusableTable } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import { useDispatch } from "react-redux";
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from '../MastersForm/MastersForm';
+import { Check, Power } from "lucide-react";
+import Modal from "../../../UiComponents/Modal";
+import Swal from "sweetalert2";
 
 
 const MODEL = "State Master";
@@ -107,7 +110,12 @@ export default function Form() {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
-      toast.success(text + "Successfully");
+      // toast.success(text + "Successfully");
+      Swal.fire({
+        title: text + "Successfully",
+        icon: "success",
+      });
+
       dispatch({
         type: `countryMaster/invalidateTags`,
         payload: ['Countries'],
@@ -120,13 +128,38 @@ export default function Form() {
   };
 
   const saveData = () => {
-    if(readOnly) return toast.info("Turn On Edit Mode !..")
+    if (readOnly) return toast.info("Turn On Edit Mode !..")
     if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", {
-        position: "top-center",
+      // toast.error("Please fill all required fields...!", {
+      //   position: "top-center",
+      // });
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+
       });
       return;
     }
+
+
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+    } else {
+      foundItem = allData?.data?.some(item => item.name === name);
+
+    }
+    if (foundItem) {
+      Swal.fire({
+        text: "The State Name already exists.",
+        icon: "warning",
+        showConfirmButton: false,
+      });
+      return false;
+    }
+
+
+
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
@@ -138,7 +171,7 @@ export default function Form() {
   };
 
   const deleteData = async () => {
-        if(readOnly) return toast.info("Turn On Edit Mode !..")
+    if (readOnly) return toast.info("Turn On Edit Mode !..")
 
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
@@ -151,7 +184,12 @@ export default function Form() {
           type: `countryMaster/invalidateTags`,
           payload: ['Countries'],
         });
-        toast.success("Deleted Successfully");
+        // toast.success("Deleted Successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+
+        });
         setForm(false)
       } catch (error) {
         toast.error("something went wrong");
@@ -177,130 +215,219 @@ export default function Form() {
     setId(id);
     setForm(true);
   }
-  const tableHeaders = [
-    "S.NO", "Code", "Name", "Country", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " "
-  ]
-  const tableDataNames = [
-    "index+1", "dataObj.code", "dataObj.name", "dataObj.country.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " "]
 
+  const handleView = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(true);
+    console.log("view");
+  };
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+    console.log("Edit");
+  };
+
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+    {
+      header: "State Name",
+      accessor: (item) => item?.name,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-64",
+    },
+    {
+      header: "Country Name",
+      accessor: (item) => item?.country?.name,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-64",
+    },
+
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-16",
+    },
+
+  ];
 
   return (
-    <div onKeyDown={handleKeyDown}>
-      <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-        <h5 className='my-1'>State Master</h5>
-        <div className='flex items-center'>
-          <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
+
+    <div onKeyDown={handleKeyDown} className="p-1">
+      <div className="w-full flex bg-white p-1 justify-between  items-center">
+        <h5 className="text-2xl font-bold text-gray-800">State  Master</h5>
+        <div className="flex items-center">
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
+            }}
+            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+          >
+            + Add New State
+          </button>
         </div>
       </div>
 
-
-
-      <div className='w-full flex items-start'>
-
-        <Mastertable
-          header={'State list'}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          onDataClick={onDataClick}
-          // setOpenTable={setOpenTable}
-          tableHeaders={tableHeaders}
-          tableDataNames={tableDataNames}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <ReusableTable
+          columns={columns}
           data={allData?.data}
-          loading={
-            isLoading || isFetching
-          }
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={deleteData}
+          itemsPerPage={10}
         />
-
-        <div>
-          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
-            <MastersForm
-              onNew={onNew}
-              onClose={() => {
-                setForm(false);
-                setSearchValue("");
-                setId(false);
-              }}
-              model={MODEL}
-              childRecord={childRecord.current}
-              saveData={saveData}
-              setReadOnly={setReadOnly}
-              deleteData={deleteData}
-              readOnly={readOnly}
-              emptyErrors={() => setErrors({})}
-            >
-
-              <fieldset className=' rounded mt-2'>
-
-
-                <div className="flex">
-                  <div className="mb-3 w-[200px]">
-                    <TextInput
-                      name="State Name"
-                      type="text"
-                      value={name}
-                      setValue={setName}
-                      required={true}
-                      readOnly={readOnly}
-
-                      disabled={(childRecord.current > 0)}
-                    />
-                  </div>
-                  <div className="mb-3 ms-3">
-                    <TextInput
-                      name="Code"
-                      type="text"
-                      value={code}
-                      setValue={setCode}
-                      required={true}
-                      readOnly={readOnly}
-                      disabled={(childRecord.current > 0)}
-
-                    />
-                  </div>
-                </div>
-
-                <div className='flex'>
-                  <div className="mb-3 w-[200px]">
-
-                    <TextInput
-                      name="GST No"
-                      type="text"
-                      value={gstNo}
-                      setValue={setGstNo}
-                      readOnly={readOnly}
-                      disabled={(childRecord.current > 0)}
-                      width={'w-[200px]'}
-
-                    />
-                  </div>
-                  <div className='w-[200px] mb-3 ms-3'>
-                    <DropdownInput
-                      name="Country"
-                      options={dropDownListObject(id ? countriesList?.data : countriesList?.data?.filter(item => item?.active), "name", "id")}
-                      value={country}
-                      setValue={setCountry}
-                      required={true}
-                      readOnly={readOnly}
-                      className={`w-[150px]`}
-                    />
-                  </div>
-                </div>
-
-
-
-                <div>
-                  <ToggleButton name="Status" value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                </div>
-
-              </fieldset>
-            </MastersForm>
-          </Modal>}
-        </div>
       </div>
 
+      <div>
+        {form === true && (
+          <Modal
+            isOpen={form}
+            form={form}
+            widthClass={"w-[40%] h-[60%]"}
+            onClose={() => {
+              setForm(false);
+              setErrors({});
+            }}
+          >
+            <div className="h-full flex flex-col bg-[f1f1f0] ">
+              <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                    {id
+                      ? !readOnly
+                        ? "Edit State  Master"
+                        : "State  Master"
+                      : "Add New State "}
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <div>
+                    {readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(false);
+                          setSearchValue("");
+                          setId(false);
+                        }}
+                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={saveData}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                    border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {id ? "Update" : "Save"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto p-3 ">
+                <div className="grid grid-cols-1  gap-3  h-full ">
+                  <div className="lg:col-span-2 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                      <div className="space-y-4 ">
+                        <div className="grid grid-cols-2  gap-3  h-full">
+
+
+                          <fieldset className=' rounded mt-2'>
+                            <div className=' mb-3'>
+                              <DropdownInput
+                                name="Country"
+                                options={dropDownListObject(id ? countriesList?.data : countriesList?.data?.filter(item => item?.active), "name", "id")}
+                                value={country}
+                                setValue={setCountry}
+                                required={true}
+                                readOnly={readOnly}
+                                className={`w-[150px]`}
+                              />
+                            </div>
+
+                            <div className="mb-3 ">
+                              <TextInput
+                                name="State Name"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+
+                                disabled={(childRecord.current > 0)}
+                              />
+                            </div>
+                            <div className="mb-3 ">
+                              <TextInput
+                                name="Code"
+                                type="text"
+                                value={code}
+                                setValue={setCode}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={(childRecord.current > 0)}
+
+                              />
+                            </div>
+
+                            <div className="mb-3 ">
+
+                              <TextInput
+                                name="GST No"
+                                type="text"
+                                value={gstNo}
+                                setValue={setGstNo}
+                                readOnly={readOnly}
+                                disabled={(childRecord.current > 0)}
+
+                              />
+                            </div>
 
 
 
-    </div>
+
+                            <div>
+                              <ToggleButton name="Status" value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                            </div>
+
+                          </fieldset>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div >
+    </div >
   )
 }

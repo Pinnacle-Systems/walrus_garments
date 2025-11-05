@@ -83,7 +83,7 @@ export default function Form() {
         setAccessoryCategory(data?.accessoryCategory ? data?.accessoryCategory : "");
         setAccessoryItemId(data?.accessoryItemId ? data?.accessoryItemId : "");
         setHsn(data?.hsn ? data?.hsn : "");
-        setAccessoryGroupId(data?.accessoryItem.accessoryGroupId ? data?.accessoryItem.accessoryGroupId : "");
+        setAccessoryGroupId(data?.accessoryGroupId ? data?.accessoryGroupId : "");
         setActive(id ? (data?.active ? data.active : false) : true);
     }, [id]);
 

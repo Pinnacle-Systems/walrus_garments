@@ -45,7 +45,9 @@ import {
   requirementPlanningFormApi,
   AccessoryPoApi,
   billEntryApi,
-  AccessoryPurchaseReturnApi
+  AccessoryPurchaseReturnApi,
+  accessoryBillEntryApi,
+  AccessoryCategoryMasterApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -176,7 +178,9 @@ const commonReducers = {
   TermsandCondtions: TermsandCondtionsApi.reducer,
   hsnMaster: HsnMasterApi.reducer,
   billEntry: billEntryApi.reducer,
-  AccessoryPurchaseReturn: AccessoryPurchaseReturnApi.reducer
+  AccessoryPurchaseReturn: AccessoryPurchaseReturnApi.reducer,
+  accessoryBillEntry: accessoryBillEntryApi.reducer,
+  accessoryCategoryMaster: AccessoryCategoryMasterApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -238,6 +242,7 @@ PaytermMasterApi.middleware,
 TaxTermMasterApi.middleware,
 TaxTemplateApi.middleware,
 
+
 TermsAndConditionsMasterApi.middleware,
 YarnTypeMasterApi.middleware,
 YarnMasterApi.middleware,
@@ -281,7 +286,9 @@ AccessoryPurchaseInwardApi.middleware,
 TermsandCondtionsApi.middleware,
 HsnMasterApi.middleware,
 billEntryApi.middleware,
-AccessoryPurchaseReturnApi.middleware
+AccessoryPurchaseReturnApi.middleware,
+accessoryBillEntryApi.middleware,
+AccessoryCategoryMasterApi.middleware
 ];
 
 

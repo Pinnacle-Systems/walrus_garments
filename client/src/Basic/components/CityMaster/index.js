@@ -12,7 +12,7 @@ import { useGetStateQuery } from "../../../redux/services/StateMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, DisabledInput,  ToggleButton } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, DisabledInput, ToggleButton, ReusableTable } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import Loader from "../Loader";
@@ -24,6 +24,8 @@ import { useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import Modal from "../../../UiComponents/Modal";
+import { Check, Power } from "lucide-react";
+import Swal from "sweetalert2";
 const MODEL = "City Master";
 
 export default function Form() {
@@ -112,7 +114,11 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            toast.success(text + "Successfully");
+            // toast.success(text + "Successfully");
+            Swal.fire({
+                title: text + "Successfully",
+                icon: "success",
+            });
             onNew()
             setId('')
             if (exit) {
@@ -136,13 +142,30 @@ export default function Form() {
 
 
     const saveData = () => {
-        if(readOnly) return toast.info("Turn On Edit Mode !..")
+        if (readOnly) return toast.info("Turn On Edit Mode !..")
 
         if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
+
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
             });
             return;
+        }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+        if (foundItem) {
+            Swal.fire({
+                text: "The City Name already exists.",
+                icon: "warning",
+                showConfirmButton: false,
+            });
+            return false;
         }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");
@@ -152,7 +175,7 @@ export default function Form() {
         }
     };
     const saveExitData = () => {
-        if(readOnly) return toast.info("Turn On Edit Mode !..")
+        if (readOnly) return toast.info("Turn On Edit Mode !..")
 
         if (!validateData(data)) {
             toast.error("Please fill all required fields...!", {
@@ -169,7 +192,7 @@ export default function Form() {
     };
 
     const deleteData = async () => {
-        if(readOnly) return toast.info("Turn On Edit Mode !..")
+        if (readOnly) return toast.info("Turn On Edit Mode !..")
 
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
@@ -187,7 +210,12 @@ export default function Form() {
                     type: `StateMaster/invalidateTags`,
                     payload: ['State'],
                 });
-                toast.success("Deleted Successfully");
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                });
+
                 setForm(false)
             } catch (error) {
                 toast.error("something went wrong");
@@ -205,122 +233,310 @@ export default function Form() {
 
 
 
-    function onDataClick(id) {
-        setId(id);
-        setForm(true);
-    }
-    const tableHeaders = ["S.NO", "City Name", "Code", "State", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-    const tableDataNames = ["index+1", "dataObj.code", "dataObj.name", "dataObj.state.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+
     function countryFromState() {
         return state ? stateList.data.find(item => item.id === parseInt(state)).country?.name : ""
     }
 
+    const handleView = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(true);
+        console.log("view");
+    };
+    const handleEdit = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(false);
+        console.log("Edit");
+    };
+
+    const ACTIVE = (
+        <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+            <Power size={10} />
+        </div>
+    );
+    const INACTIVE = (
+        <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+            <Power size={10} />
+        </div>
+    );
+    const columns = [
+        {
+            header: "S.No",
+            accessor: (item, index) => index + 1,
+            className: "font-medium text-gray-900 w-12  text-center",
+        },
+        {
+            header: "City Name",
+            accessor: (item) => item?.name,
+            //   cellClass: () => "font-medium  text-gray-900",
+            className: "font-medium text-gray-900 text-center uppercase w-64",
+        },
+        {
+            header: "State Name",
+            accessor: (item) => item?.state?.name,
+            //   cellClass: () => "font-medium  text-gray-900",
+            className: "font-medium text-gray-900 text-center uppercase w-64",
+        },
+        {
+            header: "Country Name",
+            accessor: (item) => item?.state?.country?.name,
+            //   cellClass: () => "font-medium  text-gray-900",
+            className: "font-medium text-gray-900 text-center uppercase w-64",
+        },
+
+        {
+            header: "Status",
+            accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+            //   cellClass: () => "font-medium text-gray-900",
+            className: "font-medium text-gray-900 text-center uppercase w-16",
+        },
+
+    ];
+
     return (
-        <>
-            <div
-                onKeyDown={handleKeyDown}
+        // <>
+        //     <div
+        //         onKeyDown={handleKeyDown}
 
-            >
-                <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-                    <h5 className='my-1'>City Master</h5>
-                    <div className='flex items-center'>
-                        <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
-                    </div>
+        //     >
+        //         <div className='w-full flex justify-between mb-2 items-center px-0.5'>
+        //             <h5 className='my-1'>City Master</h5>
+        //             <div className='flex items-center'>
+        //                 <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
+        //             </div>
+        //         </div>
+        //         <div className='w-full flex items-start'>
+        //             <Mastertable
+        //                 header={'City list'}
+        //                 searchValue={searchValue}
+        //                 setSearchValue={setSearchValue}
+        //                 onDataClick={onDataClick}
+        //                 // setOpenTable={setOpenTable}
+        //                 tableHeaders={tableHeaders}
+        //                 tableDataNames={tableDataNames}
+        //                 data={allData?.data}
+        //                 loading={
+        //                     isLoading || isFetching
+        //                 } />
+        //             <div>
+
+
+
+
+
+
+
+
+        //                 {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => {
+        //                     setForm(false); if (openPartyModal === true) {
+        //                         console.log("isCalled")
+        //                         dispatch(push({ name: lastTapName }));
+        //                     }; dispatch(setOpenPartyModal(false)); setErrors({});
+        //                 }}>
+        //                     <MastersForm
+        //                         onNew={onNew}
+        //                         onClose={() => {
+        //                             setForm(false);
+        //                             setSearchValue("");
+        //                             if (openPartyModal === true) {
+        //                                 dispatch(push({ name: lastTapName }));
+        //                             }
+        //                             setId(false);
+        //                         }}
+        //                         model={MODEL}
+        //                         childRecord={childRecord.current}
+        //                         saveData={saveData}
+        //                         saveExitData={saveExitData}
+        //                         setReadOnly={setReadOnly}
+        //                         deleteData={deleteData}
+        //                         readOnly={readOnly}
+        //                         emptyErrors={() => setErrors({})}
+        //                     >
+
+        // <fieldset className=' rounded mt-2'>
+
+        //     <div className=''>
+        //         <div className="flex flex-wrap w-full ">
+        //             <div className="mb-3 w-[48%]">
+        //                 <TextInput name="City Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+        //             </div>
+        //             <div className="mb-3 w-[20%] ml-6">
+        //                 <TextInput name="Code" width={"w-[70px]"} type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+        //             </div>
+        //         </div>
+        //         <div className="flex flex-wrap w-full justify-between">
+        //             <div className="mb-3 w-[48%]">
+        //                 <DropdownInput name="State"
+        //                     options={
+        //                         Array.isArray(stateList?.data)
+        //                             ? dropDownListObject(
+        //                                 id ? stateList?.data : stateList?.data?.filter(item => item?.active),
+        //                                 "name",
+        //                                 "id"
+        //                             )
+        //                             : []
+        //                     }
+        //                     value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+        //             </div>
+        //             <div className="mb-3 w-[48%]">
+        //                 <DisabledInput name="Country" width={"w-[150px]"} type="text" value={countryFromState()} disabled={(childRecord.current > 0)} />
+        //             </div>
+        //         </div>
+
+        //         <div >
+        //             <div className="mb-3">
+        //                 <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+        //             </div>
+        //             {/* <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} /> */}
+        //         </div>
+        //     </div>
+        // </fieldset>
+        //                     </MastersForm>
+        //                 </Modal>}
+
+        //             </div>
+        //         </div>
+
+
+        //     </div>
+        // </>
+        <div onKeyDown={handleKeyDown} className="p-1">
+            <div className="w-full flex bg-white p-1 justify-between  items-center">
+                <h5 className="text-2xl font-bold text-gray-800">City Master</h5>
+                <div className="flex items-center">
+                    <button
+                        onClick={() => {
+                            setForm(true);
+                            onNew();
+                        }}
+                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                    >
+                        + Add New City
+                    </button>
                 </div>
-                <div className='w-full flex items-start'>
-                    <Mastertable
-                        header={'City list'}
-                        searchValue={searchValue}
-                        setSearchValue={setSearchValue}
-                        onDataClick={onDataClick}
-                        // setOpenTable={setOpenTable}
-                        tableHeaders={tableHeaders}
-                        tableDataNames={tableDataNames}
-                        data={allData?.data}
-                        loading={
-                            isLoading || isFetching
-                        } />
-                    <div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+                <ReusableTable
+                    columns={columns}
+                    data={allData?.data}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={deleteData}
+                    itemsPerPage={10}
+                />
+            </div>
+
+            <div>
+                {form === true && (
+                    <Modal
+                        isOpen={form}
+                        form={form}
+                        widthClass={"w-[40%] h-[65%]"}
+                        onClose={() => {
+                            setForm(false);
+                            setErrors({});
+                        }}
+                    >
+                        <div className="h-full flex flex-col bg-[f1f1f0] ">
+                            <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                                        {id
+                                            ? !readOnly
+                                                ? "Edit City Master"
+                                                : "City Master"
+                                            : "Add New City "}
+                                    </h2>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div>
+                                        {readOnly && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setForm(false);
+                                                    setSearchValue("");
+                                                    setId(false);
+                                                }}
+                                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {!readOnly && (
+                                            <button
+                                                type="button"
+                                                onClick={saveData}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                            border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {id ? "Update" : "Save"}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-auto p-3 ">
+                                <div className="grid grid-cols-1  gap-3  h-full ">
+                                    <div className="lg:col-span-2 space-y-3">
+                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                                            <div className="space-y-4 ">
+                                                <div className="grid grid-cols-2  gap-3  h-full">
+                                                    <fieldset className=' rounded mt-2'>
 
 
 
+                                                        <div className="mb-3">
+                                                            <TextInput name="City Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        </div>
+                                                        <div className="mb-3">
+                                                            <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        </div>
+
+                                                        <div className="mb-3 ">
+                                                            <DropdownInput name="State"
+                                                                options={
+                                                                    Array.isArray(stateList?.data)
+                                                                        ? dropDownListObject(
+                                                                            id ? stateList?.data : stateList?.data?.filter(item => item?.active),
+                                                                            "name",
+                                                                            "id"
+                                                                        )
+                                                                        : []
+                                                                }
+                                                                value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        </div>
+                                                        <div className="mb-3">
+                                                            <TextInput name="Country" type="text" value={countryFromState()} disabled={true} />
+                                                        </div>
+
+                                                        <div className="mb-3">
+                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                        </div>
 
 
 
-
-
-                        {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => {
-                            setForm(false); if (openPartyModal === true) {
-                                console.log("isCalled")
-                                dispatch(push({ name: lastTapName }));
-                            }; dispatch(setOpenPartyModal(false)); setErrors({});
-                        }}>
-                            <MastersForm
-                                onNew={onNew}
-                                onClose={() => {
-                                    setForm(false);
-                                    setSearchValue("");
-                                    if (openPartyModal === true) {
-                                        dispatch(push({ name: lastTapName }));
-                                    }
-                                    setId(false);
-                                }}
-                                model={MODEL}
-                                childRecord={childRecord.current}
-                                saveData={saveData}
-                                saveExitData={saveExitData}
-                                setReadOnly={setReadOnly}
-                                deleteData={deleteData}
-                                readOnly={readOnly}
-                                emptyErrors={() => setErrors({})}
-                            >
-
-                                <fieldset className=' rounded mt-2'>
-
-                                    <div className=''>
-                                        <div className="flex flex-wrap w-full ">
-                                            <div className="mb-3 w-[48%]">
-                                                <TextInput name="City Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                    </fieldset>
+                                                </div>
                                             </div>
-                                            <div className="mb-3 w-[20%] ml-6">
-                                                <TextInput name="Code" width={"w-[70px]"} type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-wrap w-full justify-between">
-                                            <div className="mb-3 w-[48%]">
-                                                <DropdownInput name="State"
-                                                    options={
-                                                        Array.isArray(stateList?.data)
-                                                            ? dropDownListObject(
-                                                                id ? stateList?.data : stateList?.data?.filter(item => item?.active),
-                                                                "name",
-                                                                "id"
-                                                            )
-                                                            : []
-                                                    }
-                                                    value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                            </div>
-                                            <div className="mb-3 w-[48%]">
-                                                <DisabledInput name="Country" width={"w-[150px]"} type="text" value={countryFromState()} disabled={(childRecord.current > 0)} />
-                                            </div>
-                                        </div>
-
-                                        <div >
-                                            <div className="mb-3">
-                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                            </div>
-                                            {/* <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} /> */}
                                         </div>
                                     </div>
-                                </fieldset>
-                            </MastersForm>
-                        </Modal>}
-
-                    </div>
-                </div>
-
-
-            </div>
-        </>
+                                </div>
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+            </div >
+        </div >
     );
 }
+
+
+

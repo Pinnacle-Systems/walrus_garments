@@ -22,7 +22,7 @@ export default function Form() {
     const [name, setName] = useState("");
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({})
-    const [termsAndCondition ,setTermsAndCondition ] =  useState("")
+    const [termsAndCondition, setTermsAndCondition] = useState("")
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
 
@@ -59,7 +59,7 @@ export default function Form() {
                 // setReadOnly(true);
                 setName(data?.name || "");
                 setActive(id ? (data?.active ?? false) : true);
-                setTermsAndCondition(data?.termsAndCondition  ?  data?.termsAndCondition  : '' )
+                setTermsAndCondition(data?.termsAndCondition ? data?.termsAndCondition : '')
             }
         },
         [id]
@@ -88,12 +88,7 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+            
             });
             setForm(false);
 
@@ -104,8 +99,13 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
+            // toast.error("Please fill all required fields...!", {
+            //     position: "top-center",
+            // });
+            Swal.fire({
+                title:  "Please fill all required fields...!",
+                icon: "success",
+
             });
             return;
         }
@@ -135,12 +135,7 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
                 setForm(false)
             } catch (error) {
@@ -190,9 +185,9 @@ export default function Form() {
 
         {
             header: "Terms & conditions",
-            accessor: (item) => item?.termsAndCondition ,
+            accessor: (item) => item?.termsAndCondition,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-72",
+            className: "font-medium text-gray-900 text-left uppercase w-[600px]",
         },
 
         {

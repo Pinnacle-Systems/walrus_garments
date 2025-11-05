@@ -83,12 +83,12 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             });
         } catch (error) {
             console.log("handle");
@@ -97,18 +97,18 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            // toast.info("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
+            toast.info("Please fill all required fields...!", {
+                position: "top-center",
+            });
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             });
             return;
         }
@@ -133,12 +133,12 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    // draggable: true,
+                    // timer: 1000,
+                    // showConfirmButton: false,
+                    // didOpen: () => {
+                    //     Swal.showLoading();
+                    // }
                 });
             } catch (error) {
                 toast.error("something went wrong");

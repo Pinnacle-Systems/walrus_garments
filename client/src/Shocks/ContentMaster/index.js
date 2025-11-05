@@ -83,12 +83,7 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+      
             });
         } catch (error) {
             console.log("handle");
@@ -97,8 +92,13 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
+            // toast.error("Please fill all required fields...!", {
+            //     position: "top-center",
+            // });
+            Swal.fire({
+                title:  "Please fill all required fields...!",
+                icon: "success",
+
             });
             return;
         }
@@ -128,12 +128,7 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
                 setForm(false)
             } catch (error) {
@@ -181,7 +176,7 @@ export default function Form() {
             header: "Content ",
             accessor: (item) => item?.name,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-72",
+            className: "font-medium text-gray-900 text-left uppercase w-72",
         },
 
         {
@@ -212,7 +207,7 @@ export default function Form() {
     return (
         <div onKeyDown={handleKeyDown}>
             <div className="w-full flex bg-white p-1 justify-between  items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Counts Master</h5>
+                <h5 className="text-2xl font-bold text-gray-800">Content Master</h5>
                 <div className="flex items-center">
                     <button
                         onClick={() => {
@@ -221,7 +216,7 @@ export default function Form() {
                         }}
                         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
-                        + Add New Counts
+                        + Add New Content
                     </button>
                 </div>
             </div>

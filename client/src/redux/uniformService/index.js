@@ -40,4 +40,7 @@ export { default as FiberContentMasterApi } from "./FiberContentMasterServices"
 export { default as requirementPlanningFormApi } from "./RequirementPlanningFormServices"
 export { default as billEntryApi } from "./BillEntryServices"
 export { default as AccessoryPurchaseReturnApi } from "./AccessoryPoReturnServices"
+export { default as accessoryBillEntryApi } from "./AccessoryBillEntryServices"
+export { default as AccessoryCategoryMasterApi } from "./AccessoryCategoryMasterServices"
+
 

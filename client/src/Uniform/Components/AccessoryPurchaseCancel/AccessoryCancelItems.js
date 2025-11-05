@@ -146,7 +146,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 >
                                     Accessory Name
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -157,7 +157,7 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                     className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Accessory Group
-                                </th>
+                                </th> */}
 
 
                                 <th

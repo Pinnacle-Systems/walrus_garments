@@ -669,7 +669,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
 export async function getPoItemsandAccessoryInwardItems(req) {
     const { branchId, active, pageNumber, dataPerPage, poType,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, supplierId  ,isAccessoryFilter} = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, supplierId, isAccessoryFilter } = req.query
     let accessoryPoItems;
     let accessoryInwardItems;
     let data;
@@ -719,7 +719,7 @@ export async function getPoItemsandAccessoryInwardItems(req) {
 
         accessoryPoItems = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, accessoryPoItems)
 
-        console.log(accessoryPoItems,"accessoryPoItems")
+        console.log(accessoryPoItems, "accessoryPoItems")
 
         if (isAccessoryFilter) {
             accessoryPoItems = accessoryPoItems?.filter(item => item?.AccessoryPo?.poMaterial == poType && item?.AccessoryPo?.supplierId == supplierId)
@@ -733,11 +733,17 @@ export async function getPoItemsandAccessoryInwardItems(req) {
         accessoryPoItems = accessoryPoItems.filter(item =>
             billItemsFiltration(
                 item?.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData?._sum?.qty : 0,
-                item?.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData._sum?.qty : 0))
+                item?.alreadyReturnedData?._sum?.qty ? item.alreadyReturnedData._sum?.qty : 0)
+        )
         accessoryPoItems = accessoryPoItems.map(item => { return { ...item, isPoItem: true } })
 
 
+        accessoryPoItems = accessoryPoItems?.filter(item => billItemsFiltration(
+            item?.alreadyInwardedData?._sum?.qty ? item.alreadyInwardedData?._sum?.qty : 0,
+            item?.alreadyBillData?._sum?.qty ? item.alreadyBillData._sum?.qty : 0))
+
         console.log(accessoryPoItems, "accessoryPoItems")
+
 
         data = [...accessoryPoItems]
 

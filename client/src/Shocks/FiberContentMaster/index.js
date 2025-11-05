@@ -6,7 +6,7 @@ import { useGetYarnBlendMasterQuery } from '../../redux/uniformService/YarnBlend
 import { useGetYarnTypeMasterQuery } from '../../redux/uniformService/YarnTypeMasterServices';
 import { useAddYarnMasterMutation, useDeleteYarnMasterMutation, useGetYarnMasterByIdQuery, useGetYarnMasterQuery, useUpdateYarnMasterMutation } from '../../redux/uniformService/YarnMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
-import {  TextInput, ToggleButton } from '../../Inputs';
+import { ReusableTable, TextInput, ToggleButton } from '../../Inputs';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { dropDownListObject } from '../../Utils/contructObject';
@@ -15,11 +15,10 @@ import { useGetCountsMasterQuery } from '../../redux/uniformService/CountsMaster
 import { useGetFabricMasterQuery } from '../../redux/uniformService/FabricMasterService';
 import { useAddFiberContentMasterMutation, useDeleteFiberContentMasterMutation, useGetFiberContentMasterByIdQuery, useGetFiberContentMasterQuery, useUpdateFiberContentMasterMutation } from '../../redux/uniformService/FiberContentMasterServices';
 import YarnBlendDetails from './YarnBlendDetails';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 
-const MODEL = 'Fiber Content Master'
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -40,9 +39,7 @@ export default function Form() {
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
   )
-  const userId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userId"
-  )
+
   const params = {
     companyId
   };
@@ -111,16 +108,11 @@ export default function Form() {
       }
       setId(returnData.data.id)
       // toast.success(text + "Successfully");
-              Swal.fire({
-                    title: text + "  " + "Successfully",
-                    icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false, 
-                    didOpen: () => {
-                        Swal.showLoading(); 
-                    }
-                });
+      Swal.fire({
+        title: text + "  " + "Successfully",
+        icon: "success",
+
+      });
     } catch (error) {
       console.log("handle");
     }
@@ -129,15 +121,18 @@ export default function Form() {
 
   const saveData = () => {
 
-    // if (!validatePercentage()) {
-    //   toast.error("Yarn Blend equal to 100...!", { position: "top-center" })
-    //   return
-    // }
     if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", { position: "top-center" })
+      // toast.error("Please fill all required fields...!", { position: "top-center" })
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+
+      });
       return
     }
-
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
     if (id) {
       handleSubmitCustom(updateData, data, "Updated");
     } else {
@@ -145,7 +140,7 @@ export default function Form() {
     }
   }
 
-  const deleteData = async () => {
+  const deleteData = async (id) => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
@@ -156,15 +151,10 @@ export default function Form() {
         onNew();
         // toast.success("Deleted Successfully");
         Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
-                    icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false, 
-                    didOpen: () => {
-                        Swal.showLoading(); 
-                    }
-                });
+          title: "Deleted" + "  " + "Successfully",
+          icon: "success",
+
+        });
         setForm(false)
       } catch (error) {
         toast.error("something went wrong");
@@ -203,248 +193,203 @@ export default function Form() {
       fiberBlend?.filter(blend => blend.fabricId && blend.percentage).map(blend => `${parseInt(blend.percentage)}%${findName(fabricList?.data, blend.fabricId)}`).join(' ') : "";
     if (!fiberBlendDet) return ""
 
-    return `${aliasName}/ ${fiberBlendDet} `
+    return `${fabricName}/ ${fiberBlendDet} `
   }
+
 
   // useEffect(() => {
   //   if (id) return
-  //   setFabricName(calculateFabricName())
-  // }, [calculateFabricName()])
+  //   setAliasName(calculateFabricName())
+  // }, [fiberBlend, aliasName])
 
-  console.log(allData, "alldataa")
 
-  useEffect(() => {
-    if (id) return
-    setFabricName(calculateFabricName())
-  }, [fiberBlend, aliasName])
-
-  function onDataClick(id) {
+  const handleView = (id) => {
     setId(id);
     setForm(true);
-  }
-  const tableHeaders = ["S.NO", "Alias Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-  const tableDataNames = ["index+1", 'dataObj.aliasName', 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+    setReadOnly(true);
+    console.log("view");
+  };
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+    console.log("Edit");
+  };
+
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+
+    {
+      header: "Style",
+      accessor: (item) => item?.fabricName,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-left uppercase w-96",
+    },
+
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-16",
+    },
+
+  ];
+
   return (
-    <div onKeyDown={handleKeyDown} className="p-4 space-y-4 w-full">
-      <div className="flex justify-between items-center border-b">
-        <h2 className="text-xl font-semibold text-gray-800">Fiber Content Master</h2>
-         <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => {
-                              setForm(true);
-                              onNew();
-                            }}
-                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                          >
-                            <Plus size={16} />
-                            Add Fiber Content 
-                          </button>
-                  
-                      </div>
+
+    <div onKeyDown={handleKeyDown} className="p-1">
+      <div className="w-full flex bg-white p-1 justify-between  items-center">
+        <h5 className="text-2xl font-bold text-gray-800">Fiber Content Master</h5>
+        <div className="flex items-center">
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
+            }}
+            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+          >
+            + Add New Fiber Content
+          </button>
+        </div>
       </div>
 
-      <div className="w-full">
-        <Mastertable
-          header="Fabric List"
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          setReadOnly={setReadOnly}
-          deleteData={deleteData}
-          onDataClick={onDataClick}
-          tableHeaders={tableHeaders}
-          tableDataNames={tableDataNames}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <ReusableTable
+          columns={columns}
           data={allData?.data}
-          loading={isLoading || isFetching}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={deleteData}
+          itemsPerPage={10}
         />
       </div>
 
-      {/* {form && (
-        <Modal
-          isOpen={form}
-          form={form}
-          widthClass="w-[90%] md:w-[70%] lg:w-[50%] h-[85%]"
-          onClose={() => {
-            setForm(false);
-            setErrors({});
-          }}
-        >
-          <MastersForm
-            onNew={onNew}
+      <div>
+        {form === true && (
+          <Modal
+            isOpen={form}
+            form={form}
+            widthClass={"w-[36%] h-[50%]"}
             onClose={() => {
               setForm(false);
-              setSearchValue('');
-              setId(false);
+              // setErrors({});
             }}
-            model={MODEL}
-            saveData={saveData}
-            setReadOnly={setReadOnly}
-            deleteData={deleteData}
-            readOnly={readOnly}
-            emptyErrors={() => setErrors({})}
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 w-full">
+            <div className="h-full flex flex-col bg-[f1f1f0] ">
+              <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                    {id
+                      ? !readOnly
+                        ? "Edit Fiber Content Master"
+                        : "Fiber Content Master"
+                      : "Add New Fiber Content  "}
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <div>
+                    {readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(false);
+                          setSearchValue("");
+                          setId(false);
+                        }}
+                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={saveData}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {id ? "Update" : "Save"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto p-3 ">
+                <div className="grid grid-cols-1  gap-3  h-full ">
+                  <div className="lg:col-span-2 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                      <div className="space-y-4 ">
+                        <div className="grid grid-cols-2  gap-3  h-full">
+                          <fieldset className="">
+
+
+
+                            <TextInput
+                              name="Name"
+                              className="w-full"
+                              type="text"
+                              value={fabricName}
+                              setValue={setFabricName}
+                              readOnly={readOnly}
+
+                              disabled={childRecord.current > 0}
+                            />
+
+
+
+                            <TextInput
+                              name="Alias Name"
+                              className="w-full"
+                              type="text"
+                              value={aliasName}
+                              setValue={setAliasName}
+                              readOnly={readOnly}
+                              required
+                              disabled={childRecord.current > 0}
+                            />
 
 
 
 
-              <fieldset className="border grid grid-cols-2 gap-x-10 w-full  rounded shadow-sm px-2 lg:col-span-2">
-                <legend className="text-sm font-medium text-gray-700">Fabric Details</legend>
-
-
-
-                <TextInput
-                  name="Alias Name"
-                  className="w-full"
-                  type="text"
-                  value={aliasName}
-                  setValue={setAliasName}
-                  readOnly={readOnly}
-                  required
-                  disabled={childRecord.current > 0}
-                />
-
-
-
-
-
-                <ToggleButton
-                  name="Status"
-                  options={statusDropdown}
-                  value={active}
-                  setActive={setActive}
-                  required
-                  readOnly={readOnly}
-                />
-
-
-                <TextInput
-                  readOnly
-                  name="Fabric Name"
-                  className="w-full"
-                  type="text"
-                  value={fabricName}
-                  disabled={childRecord.current > 0}
-                />
-
-              </fieldset>
-
-
-
-
-
-              <div className="lg:col-span-2 border rounded  shadow-sm">
-                <h3 className="text-sm font-medium text-gray-700 mb-4"> Blend Table</h3>
-                <YarnBlendDetails
-                  id={id}
-                  params={params}
-                  fiberBlend={fiberBlend}
-                  setFiberBlend={setFiberBlend}
-                  readOnly={readOnly}
-                />
+                            <ToggleButton
+                              name="Status"
+                              options={statusDropdown}
+                              value={active}
+                              setActive={setActive}
+                              required
+                              readOnly={readOnly}
+                            />
+                          </fieldset>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-          </MastersForm>
-        </Modal>
-      )} */}
-      {form && (
-               <Modal
-                    isOpen={form}
-                    form={form}
-                    widthClass={"w-[45%] max-w-6xl h-[50vh]"}
-                    onClose={() => {
-                    setForm(false);
-                    setErrors({});
-                    }}
-                >
-                                <div className="h-full flex flex-col bg-[f1f1f0]">
-                                <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-                                    <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                        {id ? (!readOnly ? "Edit Fiber Content " : "Fiber Content  Master ") : "Add New Fiber Content"}
-                                    </h2>
-                                    
-                                    </div>
-                                    <div className="flex gap-2">
-                                    <div>
-                                        {readOnly && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                            setForm(false);
-                                            setSearchValue("");
-                                            setId(false);
-                                            }}
-                                            className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                                        >
-                                            Cancel
-                                        </button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {!readOnly && (
-                                        <button
-                                            type="button"
-                                            onClick={saveData}
-                                            className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                        border border-green-600 flex items-center gap-1 text-xs"
-                                        >
-                                            <Check size={14} />
-                                            {id ? "Update" : "Save"}
-                                        </button>
-                                        )}
-                                    </div>
-                                    </div>
-                                </div>
-
-  <div className="flex-1 overflow-auto p-3">
-      <div className="grid grid-cols-3  gap-3  h-full">
-            <fieldset className="border grid grid-cols-2 gap-x-10 w-full  rounded shadow-sm px-2 lg:col-span-2">
-
-
-      <div className=''>
-                                        
-                <TextInput
-                  name="Alias Name"
-                  className="w-full"
-                  type="text"
-                  value={aliasName}
-                  setValue={setAliasName}
-                  readOnly={readOnly}
-                  required
-                  disabled={childRecord.current > 0}
-                />
-
-                  
-
-                  <TextInput
-                    name="Fabric Name"
-                    className="w-full"
-                    type="text"
-                    value={fabricName}
-                    setValue={setFabricName}
-                    readOnly={readOnly}
-
-                    disabled={childRecord.current > 0}
-                  />
-
-                    <ToggleButton
-                      name="Status"
-                      options={statusDropdown}
-                      value={active}
-                      setActive={setActive}
-                      required
-                      readOnly={readOnly}
-                    />
-</div>  
-                </fieldset>
-                                    </div>
-                                </div>
-                          </div>
-                            </Modal>
-         )}
-    </div>
-
+          </Modal>
+        )}
+      </div >
+    </div >
   )
 }
 
@@ -455,11 +400,11 @@ export default function Form() {
 
 
 
-                                        
-                           
 
 
-                                    
+
+
+
 
 
 

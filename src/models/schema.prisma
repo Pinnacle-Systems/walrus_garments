@@ -883,14 +883,15 @@ model AccessoryGroup {
   AccessoryCancelItems   AccessoryCancelItems[]
   AccessoryInwardItems   AccessoryInwardItems[]
   AccessoryReturnItems   AccessoryReturnItems[]
+  Accessory              Accessory[]
 }
 
 model AccessoryItem {
   id                     Int                      @id @default(autoincrement())
   name                   String
-  AccessoryGroup         AccessoryGroup           @relation(fields: [accessoryGroupId], references: [id])
+  AccessoryGroup         AccessoryGroup?          @relation(fields: [accessoryGroupId], references: [id])
   active                 Boolean                  @default(true)
-  accessoryGroupId       Int
+  accessoryGroupId       Int?
   Company                Company?                 @relation(fields: [companyId], references: [id])
   companyId              Int?
   Accessory              Accessory[]
@@ -910,15 +911,18 @@ model AccessoryItem {
 model Accessory {
   id                            Int                             @id @default(autoincrement())
   aliasName                     String
-  accessoryCategory             AccessoryCategory
-  accessoryItem                 AccessoryItem                   @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId               Int
+  accessoryItem                 AccessoryItem?                  @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId               Int?
+  AccessoryCategory             AccessoryCategory?              @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId           Int?
+  AccessoryGroup                AccessoryGroup?                 @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId              Int?
   Hsn                           Hsn?                            @relation(fields: [hsnId], references: [id])
   hsnId                         Int?
   taxPercent                    Float?
-  Company                       Company                         @relation(fields: [companyId], references: [id])
-  companyId                     Int
-  active                        Boolean                         @default(true)
+  Company                       Company?                        @relation(fields: [companyId], references: [id])
+  companyId                     Int?
+  active                        Boolean?                        @default(true)
   PoItems                       PoItems[]
   Stock                         Stock[]
   DirectItems                   DirectItems[]
@@ -935,9 +939,11 @@ model Accessory {
   AccessoryReturnItems          AccessoryReturnItems[]
 }
 
-enum AccessoryCategory {
-  STITCHING
-  PACKING
+model AccessoryCategory {
+  id        Int         @id @default(autoincrement())
+  name      String
+  active    Boolean     @default(false)
+  Accessory Accessory[]
 }
 
 enum PoTypes {

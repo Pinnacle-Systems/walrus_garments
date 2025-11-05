@@ -297,7 +297,7 @@ const PurchaseReturnFormReport = ({
                     />
                   </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <input
+                    {/* <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
@@ -305,7 +305,7 @@ const PurchaseReturnFormReport = ({
                       onChange={(e) => {
                         setSearchMaterial(e.target.value);
                       }}
-                    />
+                    /> */}
                   </th>
                   <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input

@@ -219,35 +219,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   console.log(data, "data")
 
 
-  // const handleSubmitCustom = async (callback, data, text) => {
-  //   try {
-  //     let returnData;
-  //     if (text === "Updated") {
-  //       returnData = await callback(data).unwrap();
-  //     } else {
-  //       returnData = await callback(data).unwrap();
-  //     }
-  //     if (returnData.statusCode === 1) {
-  //       toast.error(returnData.message);
-  //     } else {
-  //       // toast.success(text + "Successfully");
-  //       Swal.fire({
-  //         title: text + "Successfully",
-  //         icon: "success",
-  //         draggable: true,
-  //         timer: 1000,
-  //         showConfirmButton: false,
-  //         didOpen: () => {
-  //           Swal.showLoading();
-  //         }
-  //       });
-  //       setId("")
-  //       syncFormWithDb(undefined)
-  //     }
-  //   } catch (error) {
-  //     console.log("handle");
-  //   }
-  // };
 
 
 
@@ -271,9 +242,12 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new" || nextProcess == "close") {
+          if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
+          }
+          if (nextProcess === "close") {
+            onClose()
           }
           else {
             setId(returnData?.data?.id);
@@ -418,7 +392,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     <>
       <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[85%] py-10"}>
         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
-          supplierId={supplierId}
+          supplierId={partyId}
           inwardItems={directInwardReturnItems}
           setInwardItems={setDirectInwardReturnItems} poInwardOrDirectInward={poInwardOrDirectInward} />
       </Modal>
@@ -492,20 +466,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
                 value={storeId} setValue={setStoreId} required={true} disabled={id}
 
-              // readOnly={id || readOnly}
               />
-              {/* < div className="mt-5">
-                <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                  onClick={() => {
-                    if (!partyId) {
-                      toast.info("Please Select Suppplier", { position: "top-center" })
-                      return
-                    }
-                    setInwardItemSelection(true)
-                  }}
-                >Select Items
-                </button>
-              </div> */}
+
             </div>
 
           </div>
@@ -522,18 +484,16 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                   component="PartyMaster"
                   placeholder="Search Supplier Id..."
                   optionList={supplierList?.data}
-                  // onDeleteItem={onDeleteItem}
-                  setSearchTerm={setSupplierId}
-                  searchTerm={supplierId}
-                  // ref={inputPartyRef}
-                  // nextRef={styleRef}
+                  setSearchTerm={setPartyId}
+                  searchTerm={partyId}
+
                   show={"isSupplier"}
                   disabled={id}
 
                 />
               </div>
               <TextInput name={"Dc No"} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
-              <DateInputNew name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} ref={dcdate} 
+              <DateInputNew name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} ref={dcdate}
                 type={"date"}
               />
 
@@ -561,9 +521,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
             <AccessoryInwardItems
-              inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={supplierId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+              inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems} readOnly={readOnly} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
               colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
-              poInwardOrDirectInward={poInwardOrDirectInward} 
+              poInwardOrDirectInward={poInwardOrDirectInward}
 
             />
           }
@@ -639,7 +599,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             </div>
           </div>
 
-    
+
 
         </div>
 

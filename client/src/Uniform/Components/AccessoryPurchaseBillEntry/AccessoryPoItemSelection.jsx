@@ -73,7 +73,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                     <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                         <div className="flex items-center gap-2">
                             <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                Purchase Order Items
+                                Accessory Inward Items
                             </h2>
 
                         </div>
@@ -177,89 +177,30 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                             }}
                                                         />
                                                     </th>
-                                                    {/* <th className="border-2  top-0 stick-bg">
-                                                        <label>Po Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchPoQty}
-                                                            onChange={(e) => {
-                                                                setSearchPoQty(e.target.value);
-                                                            }}
-                                                        />
-                                                    </th> */}
+                                                   
                                                     <th className="border-2  ">
                                                         <label>Already Inward Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchGrnQty}
-                                                            onChange={(e) => {
-                                                                setSearchGrnQty(e.target.value);
-                                                            }}
-                                                        />
+                                            
                                                     </th>
                                                     <th className="border-2  top-0 stick-bg ">
                                                         <label>Rtn.Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchRtnQty}
-                                                            onChange={(e) => {
-                                                                setSearchRtnQty(e.target.value);
-                                                            }}
-                                                        />
+                                                 
                                                     </th>
                                                     <th className="border-2  top-0 stick-bg">
                                                         <label>Can.Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchCanQty}
-                                                            onChange={(e) => {
-                                                                setSearchCanQty(e.target.value);
-                                                            }}
-                                                        />
+                                                     
                                                     </th>
                                                     <th className="border-2  top-0 stick-bg ">
                                                         <label>Po.Rate</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchPoRate}
-                                                            onChange={(e) => {
-                                                                setSearchPoRate(e.target.value);
-                                                            }}
-                                                        />
+                                                
                                                     </th>
                                                     <th className="border-2  top-0 stick-bg">
                                                         <label>Bill.Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchBillQty}
-                                                            onChange={(e) => {
-                                                                setSearchBillQty(e.target.value);
-                                                            }}
-                                                        />
+                                                  
                                                     </th>
                                                     <th className="border-2  top-0 stick-bg grid">
                                                         <label>Bal.Qty</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  border-gray-400 rounded-lg w-full"
-                                                            placeholder="Search"
-                                                            value={searchBalQty}
-                                                            onChange={(e) => {
-                                                                setSearchBalQty(e.target.value);
-                                                            }}
-                                                        />
+                                                 
                                                     </th>
                                                 </tr>
                                             </thead>

@@ -51,6 +51,7 @@ import {
   billEntry,
   accessoryReturn,
   accessoryBillEntry,
+  accessoryCategory,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -197,8 +198,9 @@ app.use("/accessoryPurchaseInward", accessoryPurchaseInward)
 app.use("/termsconditions", terms$conditions)
 app.use("/billEntry", billEntry);
 app.use("/accessoryBillEntry", accessoryBillEntry);
-
 app.use("/accessoryPurchaseReturn", accessoryReturn);
+app.use("/accessoryCategory", accessoryCategory);
+
 
 
 

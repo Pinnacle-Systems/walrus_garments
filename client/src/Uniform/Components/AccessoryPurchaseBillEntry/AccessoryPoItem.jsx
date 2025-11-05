@@ -16,44 +16,46 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
     const poItem = data?.data
     console.log(poItem, "poItem", billEntryId)
 
+    console.log(item,"item")
+
 
     useEffect(() => {
         if (!data?.data) return
         handleInputChange(data.data.price, index, "price", 0, true, poItem);
         handleInputChange(data.data.taxPercent, index, "taxPercent", 0, true);
-        // handleInputChange(data.data.qty, index, "qty", 0, true);
+
     }, [data, isLoading, isFetching])
 
 
     if (isLoading || isFetching) return <Loader />
 
-    console.log(poItem,'poItem')
+    console.log(poItem, 'poItempoItem')
 
-    if (!poItem) {
-        return (
-            <tr className="border border-blue-gray-200 cursor-pointer h-8">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <td
-                        key={i}
-                        className="py-0.5 border border-gray-300 text-[11px] text-center text-gray-400"
-                    >
-                        -
-                    </td>
-                ))}
-            </tr>
-        );
+
+
+    let poQty;
+    let cancelQty
+    let alreadyInwardedQty
+    let alreadyReturnedQty
+    let alreadyBilledQty
+    let balanceQty
+    let billAmount
+    let discountAmount
+    let amount
+
+
+    if(poItem){
+
+        poQty = parseFloat(poItem?.qty).toFixed(3)
+        cancelQty = poItem?.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
+        alreadyInwardedQty = poItem?.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
+        alreadyReturnedQty = poItem.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
+        alreadyBilledQty = poItem?.alreadyBillData?._sum?.qty ? parseFloat(poItem.alreadyBillData._sum.qty).toFixed(3) : "0.000";
+        balanceQty = substract(substract(alreadyInwardedQty, alreadyReturnedQty), alreadyBilledQty).toFixed(3)
+        billAmount = (parseFloat(poItem?.price) * parseFloat(item.qty)).toFixed(2)
+        discountAmount = (item.discountType === "Percentage") ? (billAmount) / 100 * parseInt(item.discountValue) : item.discountValue
+        amount = substract(billAmount, discountAmount).toFixed(2)
     }
-
-
-    let poQty = parseFloat(poItem.qty).toFixed(3)
-    let cancelQty = poItem.alreadyCancelData?._sum.qty ? poItem.alreadyCancelData._sum.qty : "0.000";
-    let alreadyInwardedQty = poItem.alreadyInwardedData?._sum?.qty ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3) : "0.000";
-    let alreadyReturnedQty = poItem.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
-    let alreadyBilledQty = poItem.alreadyBillData?._sum?.qty ? parseFloat(poItem.alreadyBillData._sum.qty).toFixed(3) : "0.000";
-    let balanceQty = substract(substract(alreadyInwardedQty, alreadyReturnedQty), alreadyBilledQty).toFixed(3)
-    let billAmount = (parseFloat(poItem.price) * parseFloat(item.qty)).toFixed(2)
-    let discountAmount = (item.discountType === "Percentage") ? (billAmount) / 100 * parseInt(item.discountValue) : item.discountValue
-    let amount = substract(billAmount, discountAmount).toFixed(2)
 
 
     function calculateNetAmount(item) {
@@ -63,10 +65,8 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
         const discountValue = parseFloat(item.discountValue) || 0;
         const discountType = item.discountType || "Percentage";
 
-        // 1️⃣ Gross
         const gross = price * qty;
 
-        // 2️⃣ Discount
         let discount = 0;
         if (discountType === "Percentage") {
             discount = gross * (discountValue / 100);
@@ -74,13 +74,10 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
             discount = discountValue;
         }
 
-        // 3️⃣ Taxable
         const taxable = gross - discount;
 
-        // 4️⃣ Tax
         const taxAmount = taxable * (taxPercent / 100);
 
-        // 5️⃣ Net (apply round-off only here)
         const netAmount = Math.round((taxable + taxAmount) * 100) / 100;
 
         return {
@@ -93,7 +90,6 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
     }
 
 
-    console.log(calculateNetAmount(item), "Iteeeeeeem")
 
     return (
 
@@ -114,22 +110,22 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
                 {poItem?.Uom?.name}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(poQty).toFixed(3)}
+                {parseFloat(poQty || "0.000").toFixed(3)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(cancelQty).toFixed(3)}
+                {parseFloat(cancelQty || "0.000").toFixed(3)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(alreadyInwardedQty).toFixed(3)}
+                {parseFloat(alreadyInwardedQty || "0.000").toFixed(3)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(alreadyReturnedQty).toFixed(4)}
+                {parseFloat(alreadyReturnedQty || "0.000").toFixed(4)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(alreadyBilledQty).toFixed(3)}
+                {parseFloat(alreadyBilledQty || "0.000").toFixed(3)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(balanceQty).toFixed(3)}
+                {parseFloat(balanceQty || "0.000").toFixed(3)}
             </td>
 
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
@@ -138,20 +134,18 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
                         if (e.altKey) { e.preventDefault() }
                     }}
-                    min={"0"}
+                    // min={"0"}
                     type="number"
                     className="text-right rounded   w-full py-1"
-                    autoFocus={index === 0}
+                    // autoFocus={index === 0}
                     value={item.qty}
-                    disabled={readOnly}
+                    // disabled={readOnly}
                     onFocus={(e) => e.target.select()}
                     onChange={(event) => {
                         if (event.target.value < 0) return
                         console.log(event.target.value, balanceQty, "balance")
                         if (parseFloat(event.target.value) > parseFloat(balanceQty)) {
-                            // toast.info("Bill Qty  Cannot be more than Balance Qty", { position: "top-center" });
                             Swal.fire({
-                                // title: "Total percentage exceeds 100%",
                                 title: "Bill Qty  Cannot be more than Balance Qty",
                                 icon: "error",
                                 timer: 1500,
@@ -160,13 +154,13 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
                             return
                         } else {
                             handleInputChange(event.target.value, index, "qty");
-
                         }
 
-                        if (!event.target.value) {
-                            handleInputChange(0, index, "qty");
-                            return
-                        }
+                        // if (!event.target.value) {
+                        //     handleInputChange(0, index, "qty");
+                        //     return
+                        // }
+
                     }}
 
                     onBlur={(e) => {
@@ -183,10 +177,10 @@ const YarnPoItem = ({ item, index, handleInputChange, readOnly, removeItem, bill
                 />
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {parseFloat(poItem.price).toFixed(3)}
+                {parseFloat(poItem?.price || "0.000").toFixed(3)}
             </td>
             <td className="py-0.5 border border-gray-300 text-[11px] text-right">
-                {(parseFloat(billAmount)).toFixed(3)}
+                {(parseFloat(billAmount || "0.000")).toFixed(3)}
             </td>
 
 

@@ -65,7 +65,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId } = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId ,serachDocNo ,searchDate ,supplier} = req.query
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -90,13 +90,13 @@ async function get(req) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
                 poInwardOrDirectInward,
-                docId: Boolean(searchDocId) ?
+                docId: (serachDocNo) ?
                     {
-                        contains: searchDocId
+                        contains: serachDocNo
                     }
                     : undefined,
                 supplier: {
-                    aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                    aliasName: supplier ? { contains: supplier } : undefined
                 }
             },
             orderBy: {
@@ -111,7 +111,7 @@ async function get(req) {
                 }
             }
         });
-        data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
+        data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
         totalCount = data.length
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {

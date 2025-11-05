@@ -100,7 +100,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "YARN MASTER": <YarnMaster />,
     "COUNTS MASTER": <CountsMaster />,
     "ACCESSORY GROUP MASTER": <AccessoryGroupMaster />,
-    "ACCESSORY ITEM MASTER": <AccessoryItemMaster />,
+    "ACCESSORY CATEGORY MASTER": <AccessoryItemMaster />,
     "ACCESSORY MASTER": <AccessoryMaster />,
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,

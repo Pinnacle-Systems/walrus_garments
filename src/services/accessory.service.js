@@ -61,18 +61,22 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId , taxPercent } = await body
+    const { aliasName, accessoryGroupId, hsn, accessoryCategoryId, active, companyId, taxPercent } = await body
     const data = await prisma.accessory.create({
         data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsnId : hsn ? parseInt(hsn) : undefined, accessoryCategory,
-            active, companyId: parseInt(companyId)
+            aliasName,
+            hsnId: hsn ? parseInt(hsn) : undefined,
+            accessoryCategoryId: accessoryCategoryId ? parseInt(accessoryCategoryId) : undefined,
+            taxPercent: taxPercent ? parseFloat(taxPercent) : undefined,
+            active, companyId: parseInt(companyId),
+            accessoryGroupId: accessoryGroupId ? parseInt(accessoryGroupId) : undefined,
         },
     });
     return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId  , taxPercent} = await body
+    const { aliasName, accessoryGroupId, hsn, accessoryCategoryId, active, companyId, taxPercent } = await body
     const dataFound = await prisma.accessory.findUnique({
         where: {
             id: parseInt(id)
@@ -84,8 +88,13 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            aliasName, accessoryItemId: parseInt(accessoryItemId), hsnId : hsn ? parseInt(hsn) : undefined, accessoryCategory,
-            active, companyId: parseInt(companyId) 
+            aliasName,
+            hsnId: hsn ? parseInt(hsn) : undefined,
+            accessoryCategoryId: accessoryCategoryId ? parseInt(accessoryCategoryId) : undefined,
+            taxPercent: taxPercent ? parseFloat(taxPercent) : undefined,
+            active, companyId: parseInt(companyId),
+            accessoryGroupId: accessoryGroupId ? parseInt(accessoryGroupId) : undefined,
+
         },
     })
     return { statusCode: 0, data };

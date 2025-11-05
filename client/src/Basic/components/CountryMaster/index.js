@@ -104,12 +104,7 @@ export default function Form() {
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+
       });
       setForm(false);
     } catch (error) {
@@ -128,11 +123,27 @@ export default function Form() {
       //   position: "top-center",
       // });
       Swal.fire({
+        title: 'Please fill all required fields...!',
         icon: 'error',
-        title: 'Submission error',
-        text: 'Please fill all required fields...!',
       });
       return;
+    }
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+    } else {
+      foundItem = allData?.data?.some(item => item.name === name);
+
+    }
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Country Name already exists.",
+        icon: "warning",
+        showConfirmButton: false,
+      });
+      return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
@@ -164,7 +175,6 @@ export default function Form() {
         Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
-          timer: 1000,
 
         });
         setForm(false);
@@ -235,12 +245,8 @@ export default function Form() {
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-center uppercase w-16",
     },
-    {
-      header: "",
-      accessor: (item) => "",
-      //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 uppercase w-[65%]",
-    },
+
+
   ];
   function onDataClick(id) {
     setId(id);

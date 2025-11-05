@@ -49,8 +49,8 @@ console.log({item},"itemitem")
             <td className='py-0.5 px-1 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
             <td className='py-0.5  px-1 border border-gray-300 text-[11px]'>{item?.poNo}</td>
             <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            {/* <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+            <td className='py-0.5 px-1  border border-gray-300 text-[11px]'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td> */}
             <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
             <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
             <td className='py-0.5 px-1 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>

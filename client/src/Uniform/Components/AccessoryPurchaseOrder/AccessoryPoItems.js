@@ -341,7 +341,7 @@ const AccessoryPoItems = ({
 
                 className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
               >
-                Colors
+                Color
               </th>
               <th
 
@@ -488,7 +488,7 @@ const AccessoryPoItems = ({
                     }
                     }
                   >
-                    {/* <option hidden>   </option> */}
+                    <option hidden>   </option>
                     {(id ? colorList?.data : colorList?.data?.filter(item => item.active))?.map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}

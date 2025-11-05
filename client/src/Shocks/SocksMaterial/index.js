@@ -11,7 +11,7 @@ import {
 import FormReport from "../../Basic/components/FormReportTemplate";
 
 import { toast } from "react-toastify";
-import { TextInput, CheckBox,  ToggleButton } from "../../Inputs";
+import { TextInput, CheckBox, ToggleButton, ReusableTable } from "../../Inputs";
 import ReportTemplate from "../../Basic/components/ReportTemplate";
 import FormHeader from "../../Basic/components/FormHeader";
 import MastersForm from "../../Basic/components/MastersForm/MastersForm";
@@ -20,7 +20,7 @@ import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { statusDropdown } from "../../Utils/DropdownData";
 import setOpenPartyModal from "../../redux/features/opentabs";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Power } from "lucide-react";
 import Modal from "../../UiComponents/Modal";
 import Swal from "sweetalert2";
 
@@ -91,16 +91,16 @@ export default function Form() {
             setId(returnData?.data?.id)
             syncFormWithDb(undefined)
             // toast.success(text + "Successfully");
-             Swal.fire({
-                                    title: text + "  " + "Successfully",
-                                    icon: "success",
-                                    draggable: true,
-                                    timer: 1000,
-                                    showConfirmButton: false, 
-                                    didOpen: () => {
-                                        Swal.showLoading(); 
-                                    }
-                                });
+            Swal.fire({
+                title: text + "  " + "Successfully",
+                icon: "success",
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
+            });
         } catch (error) {
             console.log("handle");
         }
@@ -124,11 +124,14 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
+
             });
             return;
         }
+           
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
@@ -139,7 +142,7 @@ export default function Form() {
         }
     };
 
-    const deleteData = async (id ) => {
+    const deleteData = async (id) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
@@ -147,17 +150,11 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
-                // toast.success("Deleted Successfully");
-                   Swal.fire({
-                                    title: "Deleted" + "  " + "Successfully",
-                                    icon: "success",
-                                    draggable: true,
-                                    timer: 1000,
-                                    showConfirmButton: false, 
-                                    didOpen: () => {
-                                        Swal.showLoading(); 
-                                    }
-                                });
+                Swal.fire({
+                    title: "Deleted" + "  " + "Successfully",
+                    icon: "success",
+
+                });
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -185,10 +182,51 @@ export default function Form() {
         setForm(true);
     }
 
-    const tableHeaders = [
-        "Name", "Status"
-    ]
-    const tableDataNames = ["dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE']
+    const handleView = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(true);
+        console.log("view");
+    };
+    const handleEdit = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(false);
+        console.log("Edit");
+    };
+
+    const ACTIVE = (
+        <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+            <Power size={10} />
+        </div>
+    );
+    const INACTIVE = (
+        <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+            <Power size={10} />
+        </div>
+    );
+    const columns = [
+        {
+            header: "S.No",
+            accessor: (item, index) => index + 1,
+            className: "font-medium text-gray-900 w-12  text-center",
+        },
+
+        {
+            header: "Socks Material",
+            accessor: (item) => item?.name,
+            //   cellClass: () => "font-medium  text-gray-900",
+            className: "font-medium text-gray-900 text-left uppercase w-96",
+        },
+
+        {
+            header: "Status",
+            accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+            //   cellClass: () => "font-medium text-gray-900",
+            className: "font-medium text-gray-900 text-center uppercase w-16",
+        },
+
+    ];
 
     // if (!form)
     //     return (
@@ -210,25 +248,25 @@ export default function Form() {
 
     return (
         <>
-            <div
+            {/* <div
                 onKeyDown={handleKeyDown}
 
             >
                 <div className='w-full flex justify-between mb-2 items-center px-0.5'>
                     <h5 className='my-1'>Socks Material</h5>
                     <div className="flex items-center gap-4">
-                          <button
+                        <button
                             onClick={() => {
-                              setForm(true);
-                              onNew();
+                                setForm(true);
+                                onNew();
                             }}
                             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                          >
+                        >
                             <Plus size={16} />
                             Add New ShocksMaterial
-                          </button>
-                  
-                        </div>
+                        </button>
+
+                    </div>
                 </div>
                 <div className='w-full flex items-start'>
                     <Mastertable
@@ -254,223 +292,242 @@ export default function Form() {
 
 
 
-                        {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[40%]"} onClose={() => {
-                            setForm(false); if (openPartyModal === true) {
 
-                                dispatch(push({ name: lastTapName }));
-                            }; dispatch(setOpenPartyModal(false)); setErrors({});
-                        }}>
-                            <MastersForm
-                                onNew={onNew}
+                        {form && (
+                            <Modal
+                                isOpen={form}
+                                form={form}
+                                widthClass={"w-[30%] max-w-6xl h-[50vh]"}
                                 onClose={() => {
                                     setForm(false);
-                                    setSearchValue("");
-                                    if (openPartyModal === true) {
-                                        dispatch(push({ name: lastTapName }));
-                                    }
-                                    setId(false);
+                                    setErrors({});
                                 }}
-                                model={MODEL}
-                                childRecord={childRecord.current}
-                                saveData={saveData}
-                                saveExitData={saveExitData}
-                                setReadOnly={setReadOnly}
-                                deleteData={deleteData}
-                                readOnly={readOnly}
-                                emptyErrors={() => setErrors({})}
                             >
-
-                                <fieldset className=' rounded mt-2'>
-
-                                    <div className=''>
-                                        <div className="flex flex-wrap w-full ">
-                                            <div className="mb-3 w-[48%]">
-                                                <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
-                                            </div>
+                                <div className="h-full flex flex-col bg-[f1f1f0]">
+                                    <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+                                        <div className="flex items-center gap-2">
+                                            <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                                {id ? (!readOnly ? "Edit ShocksMaterial " : "ShocksMaterial Master") : "Add New ShocksMaterial "}
+                                            </h2>
 
                                         </div>
-
-                                        <div >
-                                            <div className="mb-3">
-                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                        <div className="flex gap-2">
+                                            <div>
+                                                {readOnly && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setForm(false);
+                                                            setSearchValue("");
+                                                            setId(false);
+                                                        }}
+                                                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
                                             </div>
-
-                                        </div>
-                                    </div>
-                                </fieldset>
-                            </MastersForm>
-                        </Modal>} */}
-                         {form && (
-        <Modal
-          isOpen={form}
-          form={form}
-          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-          onClose={() => {
-            setForm(false);
-            setErrors({});
-          }}
-        >
-          <div className="h-full flex flex-col bg-[f1f1f0]">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                  {id ? (!readOnly ? "Edit ShocksMaterial " : "ShocksMaterial Master") : "Add New ShocksMaterial "}
-                </h2>
-              
-              </div>
-              <div className="flex gap-2">
-                <div>
-                  {readOnly && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForm(false);
-                        setSearchValue("");
-                        setId(false);
-                      }}
-                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  {!readOnly && (
-                    <button
-                      type="button"
-                      onClick={saveData}
-                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                            <div className="flex gap-2">
+                                                {!readOnly && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={saveData}
+                                                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
-                    >
-                      <Check size={14} />
-                      {id ? "Update" : "Save"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-auto p-3">
-              <div className="grid grid-cols-1  gap-3  h-full">
-                <div className="lg:col-span- space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                   
-                    <fieldset className=' rounded mt-2'>
-                       
-                                    <div className=''>
-                                        <div className="flex flex-wrap w-full ">
-                                            <div className="mb-3 w-[48%]">
-                                                <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
+                                                    >
+                                                        <Check size={14} />
+                                                        {id ? "Update" : "Save"}
+                                                    </button>
+                                                )}
                                             </div>
-
                                         </div>
+                                    </div>
 
-                                        <div >
-                                            <div className="mb-3">
-                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                    <div className="flex-1 overflow-auto p-3">
+                                        <div className="grid grid-cols-1  gap-3  h-full">
+                                            <div className="lg:col-span- space-y-3">
+                                                <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+
+                                                    <fieldset className=' rounded mt-2'>
+
+                                                        <div className=''>
+                                                            <div className="flex flex-wrap w-full ">
+                                                                <div className="mb-3 w-[48%]">
+                                                                    <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                                                                </div>
+
+                                                            </div>
+
+                                                            <div >
+                                                                <div className="mb-3">
+                                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </fieldset>
+
+                                                </div>
+
+
                                             </div>
+
+
+
+
+
+
+
+
+
 
                                         </div>
                                     </div>
-                    </fieldset>
-
-                  </div>
-
-                
-                </div>
 
 
-                      
+                                </div>
 
 
-                     
 
-                     
-
-
-              </div>
-            </div>
-
-
-          </div>
-
-      
-       
-        </Modal>
-      )}
+                            </Modal>
+                        )}
                     </div>
                 </div>
 
 
-            </div>
+            </div> */}
+            <div onKeyDown={handleKeyDown} className="p-1">
+                <div className="w-full flex bg-white p-1 justify-between  items-center">
+                    <h5 className="text-2xl font-bold text-gray-800">Shocks Material Master</h5>
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => {
+                                setForm(true);
+                                onNew();
+                            }}
+                            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                        >
+                            + Add New Shocks Material
+                        </button>
+                    </div>
+                </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* <div>
-                <div className="flex flex-col frame w-full h-full">
-                    <FormHeader
-                        onNew={onNew}
-                        onClose={() => {
-                            setForm(false);
-                            setSearchValue("");
-                        }}
-                        model={MODEL}
-                        saveData={saveData}
-                        setReadOnly={setReadOnly}
-                        deleteData={deleteData}
-
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+                    <ReusableTable
+                        columns={columns}
+                        data={allData?.data}
+                        onView={handleView}
+                        onEdit={handleEdit}
+                        onDelete={deleteData}
+                        itemsPerPage={10}
                     />
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-                        <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-                            <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
-                                <div className='mr-1 md:ml-2'>
-                                    <fieldset className='frame my-1'>
-                                        <legend className='sub-heading'>ShocksMaterial Info</legend>
-                                        <div className='grid grid-cols-1 my-2'>
-                                            <TextInput name="ShocksMaterial" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                          
-                                            <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
+                </div>
+
+                <div>
+                    {form === true && (
+                        <Modal
+                            isOpen={form}
+                            form={form}
+                            widthClass={"w-[36%] h-[50%]"}
+                            onClose={() => {
+                                setForm(false);
+                                // setErrors({});
+                            }}
+                        >
+                            <div className="h-full flex flex-col bg-[f1f1f0] ">
+                                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                                            {id
+                                                ? !readOnly
+                                                    ? "Edit Shocks Material "
+                                                    : "Shocks Material Master"
+                                                : "Add New Shocks Material"}
+                                        </h2>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div>
+                                            {readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setForm(false);
+                                                        setSearchValue("");
+                                                        setId(false);
+                                                    }}
+                                                    className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            )}
                                         </div>
-                                    </fieldset>
+                                        <div className="flex gap-2">
+                                            {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={saveData}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                                                >
+                                                    <Check size={14} />
+                                                    {id ? "Update" : "Save"}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-auto p-3 ">
+                                    <div className="grid grid-cols-1  gap-3  h-full ">
+                                        <div className="lg:col-span-2 space-y-3">
+                                            <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                                                <div className="space-y-4 ">
+                                                    <div className="grid grid-cols-2  gap-3  h-full">
+                                                        <fieldset className=' rounded mt-2'>
+
+                                                            <div className="mb-3">
+                                                                <TextInput name="Shocks Material" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+
+                                                            </div>
+
+
+                                                            <div className="mb-3">
+                                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                            </div>
+
+                                                        </fieldset>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="frame hidden md:block overflow-x-hidden">
-                            <FormReport
-                                searchValue={searchValue}
-                                setSearchValue={setSearchValue}
-                                setId={setId}
-                                tableHeaders={tableHeaders}
-                                tableDataNames={tableDataNames}
-                                data={allData?.data}
-                                loading={
-                                    isLoading || isFetching
-                                }
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div> */}
+                        </Modal>
+                    )}
+                </div >
+            </div >
         </>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

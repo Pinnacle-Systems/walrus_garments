@@ -97,12 +97,12 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             }); dispatch({
                 type: `TaxTermMaster/invalidateTags`,
                 payload: ['Taxe Name'],
@@ -118,16 +118,18 @@ export default function Form() {
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             });
             return;
         }
-
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return;
+        }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");
         } else {
@@ -152,12 +154,12 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    // draggable: true,
+                    // timer: 1000,
+                    // showConfirmButton: false,
+                    // didOpen: () => {
+                    //     Swal.showLoading();
+                    // }
                 });
             } catch (error) {
                 toast.error("something went wrong");
@@ -165,7 +167,7 @@ export default function Form() {
         }
     };
 
-    console.log(readOnly,"readOnly")
+    console.log(readOnly, "readOnly")
 
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -376,7 +378,7 @@ export default function Form() {
                                                     <div className='grid grid-cols-4 my-2 p-2'>
                                                         <TextInput name="Template Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                     </div>
-                                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </fieldset>
                                                 <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-5 w-full flex h-[330px] overflow-auto border border-gray-200'>
                                                     <legend className='sub-heading'>Tax Template Details</legend>

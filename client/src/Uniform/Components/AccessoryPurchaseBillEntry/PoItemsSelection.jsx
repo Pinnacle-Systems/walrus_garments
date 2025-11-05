@@ -6,15 +6,13 @@ import AccessoryPoItemSelection from "./AccessoryPoItemSelection";
 
 const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, supplierList, handleRightClick }) => {
 
+            const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(prevItem => { return { id: prevItem.isPoItem ? prevItem.poItemsId : prevItem.directItemsId, isPoItem: prevItem.isPoItem } }));
 
 
-    console.log(inwardItems, "inwardItemsBefore")
 
 
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.map(prevItem => { return { id: prevItem.isPoItem ? prevItem.poItemsId : prevItem.directItemsId, isPoItem: prevItem.isPoItem } }));
 
 
-    console.log(localInwardItems, "localInwardItemsInitail")
 
 
 

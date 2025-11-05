@@ -55,7 +55,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                 <div className="flex items-center gap-2">
                     <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                        Purchase Order Items
+                        Accessory Po Items
                     </h2>
 
                 </div>
@@ -135,7 +135,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                         onFocus={(e) => { e.target.select() }}
 
                                                     />
-                                                    </th>
+                                                </th>
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-96">
                                                     <label>Accessory</label>
                                                     <input
@@ -151,7 +151,8 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                     /></th>
 
 
-                                                <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-96">    <label>Accessory Item</label>
+                                                {/* <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-96"> 
+                                                       <label>Accessory Item</label>
                                                     <input
                                                         type="text"
                                                         className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
@@ -162,11 +163,12 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                         // }}
                                                         onFocus={(e) => { e.target.select() }}
 
-                                                    /></th>
+                                                    />
+                                                    </th> */}
 
 
 
-
+                                                {/* 
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-60">
                                                     <label>Accessory Group</label>
                                                     <input
@@ -177,8 +179,9 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                     // onChange={(e) => {
                                                     //     setDueDate(e.target.value);
                                                     // }}
-                                                    /></th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th> */}
+                                                    />
+                                                    
+                                                    </th> */}
                                                 {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Uom</th> */}
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-64">
                                                     <label>Color</label>
@@ -193,7 +196,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                     /></th>
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
                                                     <label>Size</label>
-                                                    <input
+                                                    {/* <input
                                                         type="text"
                                                         className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
                                                         placeholder="Search"
@@ -201,10 +204,12 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                     // onChange={(e) => {
                                                     //     setDueDate(e.target.value);
                                                     // }}
-                                                    /></th>
+                                                    /> */}
+
+                                                </th>
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
                                                     <label>Uom</label>
-                                                    <input
+                                                    {/* <input
                                                         type="text"
                                                         className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
                                                         placeholder="Search"
@@ -212,8 +217,11 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                     // onChange={(e) => {
                                                     //     setDueDate(e.target.value);
                                                     // }}
-                                                    /></th>
+                                                    /> */}
 
+                                                </th>
+
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Price </th>
 
 
 
@@ -259,13 +267,14 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                             {item?.Accessory?.aliasName}
                                                         </td>
 
-                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {/* <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                             {item?.Accessory?.accessoryItem?.name}
-                                                        </td>
+                                                        </td> */}
 
-                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {/* <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                             {item?.Accessory?.accessoryItem?.AccessoryGroup?.name}
-                                                        </td>
+                                                        </td> */}
+
                                                         <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
                                                             {item?.Color?.name}
                                                         </td>
@@ -275,7 +284,9 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                         <td className=" border border-gray-300 text-[11px]  py-1.5 px-2">
                                                             {item?.Uom?.name}
                                                         </td>
-
+                                                        <td className=" border border-gray-300 text-[11px] text-right  py-1.5 px-2">
+                                                            {parseFloat(item?.price).toFixed(3)}
+                                                        </td>
 
                                                     </tr>
                                                 ))

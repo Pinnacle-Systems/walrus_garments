@@ -8,9 +8,8 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.accessoryItem.findMany({
+    const data = await prisma.AccessoryCategory.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
@@ -20,13 +19,11 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.accessoryItem.findUnique({
+    const data = await prisma.AccessoryCategory.findUnique({
         where: {
             id: parseInt(id)
         },
-        include: {
-            PartyOnAccessoryItems: true
-        }
+       
     })
     if (!data) return NoRecordFound("accessoryItem");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -35,7 +32,7 @@ async function getOne(id) {
 async function getSearch(req) {
     const { companyId, active } = req.query
     const { searchKey } = req.params
-    const data = await prisma.accessoryItem.findMany({
+    const data = await prisma.AccessoryCategory.findMany({
         where: {
             country: {
                 companyId: companyId ? parseInt(companyId) : undefined,
@@ -55,16 +52,10 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, accessoryGroupId, active, companyId, partySuppliesItem } = await body
-    const data = await prisma.accessoryItem.create({
+    const data = await prisma.AccessoryCategory.create({
         data: {
             name,
-            active, companyId: companyId  ?  parseInt(companyId) :  undefined,
-            accessoryGroupId : accessoryGroupId ? parseInt(accessoryGroupId) : 4,
-            // PartyOnAccessoryItems: partySuppliesItem ? {
-            //     createMany: {
-            //         data: partySuppliesItem.map(party => { return { partyId: party } })
-            //     }
-            // } : undefined
+            active,
         },
     });
     return { statusCode: 0, data };
@@ -72,32 +63,26 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, accessoryGroupId, active, companyId, partySuppliesItem } = await body
-    const dataFound = await prisma.accessoryItem.findUnique({
+    const dataFound = await prisma.AccessoryCategory.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("accessoryItem");
-    const data = await prisma.accessoryItem.update({
+    const data = await prisma.AccessoryCategory.update({
         where: {
             id: parseInt(id),
         },
         data: {
             name, 
-            active, companyId: parseInt(companyId),
-            // PartyOnAccessoryItems: partySuppliesItem ? {
-            //     deleteMany: {},
-            //     createMany: {
-            //         data: partySuppliesItem.map(party => { return { partyId: party } })
-            //     }
-            // } : []
+            active
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.accessoryItem.delete({
+    const data = await prisma.AccessoryCategory.delete({
         where: {
             id: parseInt(id)
         },

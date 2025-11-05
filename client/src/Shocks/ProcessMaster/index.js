@@ -90,12 +90,12 @@ export default function Form() {
                Swal.fire({
                 title: text + "Successfully",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             });
             setForm(false)
 
@@ -110,12 +110,12 @@ export default function Form() {
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
-                draggable: true,
-                timer: 1000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                // draggable: true,
+                // timer: 1000,
+                // showConfirmButton: false,
+                // didOpen: () => {
+                //     Swal.showLoading();
+                // }
             });
             return;
         }
@@ -144,23 +144,23 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    // draggable: true,
+                    // timer: 1000,
+                    // showConfirmButton: false,
+                    // didOpen: () => {
+                    //     Swal.showLoading();
+                    // }
                 }); setForm(false)
             } catch (error) {
                 Swal.fire({
                     title: "something went wrong",
                     icon: "error",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    // draggable: true,
+                    // timer: 1000,
+                    // showConfirmButton: false,
+                    // didOpen: () => {
+                    //     Swal.showLoading();
+                    // }
                 });
             }
         }
@@ -223,7 +223,7 @@ export default function Form() {
             header: "Process Name",
             accessor: (item) => item?.name,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-96",
+            className: "font-medium text-gray-900 text-left uppercase w-96",
         },
 
         {
@@ -250,7 +250,7 @@ export default function Form() {
     return (
         <div onKeyDown={handleKeyDown}>
             <div className="w-full flex bg-white p-1 justify-between  items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Yarn  Master</h5>
+                <h5 className="text-2xl font-bold text-gray-800">Process Master</h5>
                 <div className="flex items-center">
                     <button
                         onClick={() => {
@@ -259,7 +259,7 @@ export default function Form() {
                         }}
                         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
-                        + Add New Yarn
+                        + Add New Process
                     </button>
                 </div>
             </div>
@@ -335,13 +335,11 @@ export default function Form() {
                                                 <div className="grid grid-cols-2  gap-3  h-full">
 
                                                     <fieldset className=' rounded mt-2 mb-5'>
-                                                        <div className='grid grid-cols-1 '>
                                                             <TextInput name="Process name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             {/* <DropdownInput name="IO" options={ProcessIOOptions} value={io} setValue={setIo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} /> */}
                                                             <TextInput name="Hsn" type="text" value={hsn} setValue={setHsn}  readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             <TextInput name="Tax" type="text" value={tax} setValue={setTax}  readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
 
 
 

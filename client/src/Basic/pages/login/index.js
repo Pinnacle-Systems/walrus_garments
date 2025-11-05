@@ -332,21 +332,7 @@ const Login = () => {
               </button>
             </motion.div>
           </form>
-{/* 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-6 text-center text-sm text-stone-600"
-          >
-            <a href="#" className="font-medium text-teal-600 hover:text-teal-700 transition-colors">
-              Forgot password?
-            </a>
-            <span className="mx-2 text-stone-400">•</span>
-            <a href="#" className="font-medium text-rose-500 hover:text-rose-600 transition-colors">
-              Create account
-            </a>
-          </motion.div> */}
+
         </motion.div>
 
         {/* Floating Product Cards */}

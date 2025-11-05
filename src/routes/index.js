@@ -108,5 +108,7 @@ export { default as hsn } from "./hsn.route.js"
 export { default as billEntry } from "./billEntry.route.js"
 export { default as accessoryReturn } from "./accessoryPoReturn.route.js"
 export { default as accessoryBillEntry } from "./accessoryBillEntry.route.js"
+export { default as accessoryCategory } from "./accessoryCategory.route.js"
+
 
 

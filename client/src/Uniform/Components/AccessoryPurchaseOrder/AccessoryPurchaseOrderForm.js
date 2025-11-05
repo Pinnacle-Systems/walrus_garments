@@ -355,8 +355,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
   console.log(taxDetails, "taxDetails")
+  const supplierRef = useRef(null)
+  
   const dateRef = useRef(null);
-
 
   useEffect(() => {
     if (dateRef.current) {
@@ -518,7 +519,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             <div className="grid grid-cols-2 gap-2">
 
               <div className="col-span-2">
-
+                {/* 
                 <ReusableSearchableInput
                   label="Supplier Id"
                   component="PartyMaster"
@@ -528,11 +529,24 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                   // onDeleteItem={onDeleteItem}
                   // setSearchTerm={setSupplierId}
                   setSearchTerm={(value) => { setSupplierId(value) }}
-
                   searchTerm={supplierId}
                   show={"isSupplier"}
                   required={true}
                   disabled={id}
+                  ref={supplierRef}
+
+                /> */}
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setSupplierId(value) }}
+                  searchTerm={supplierId}
+                  show={"isSupplier"}
+                  required={true}
+                  disabled={id}
+                  ref={supplierRef}
                 />
               </div>
 
@@ -715,11 +729,11 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
                 <div className="flex justify-between py-1 text-sm">
                   <span className="text-slate-600">Total Qty (Kg)</span>
-                  <span className="font-medium">{parseInt(getTotalQty())}</span>
+                  <span className="font-medium">{parseFloat(getTotalQty()).toFixed(3)}</span>
                 </div>
                 <div className="flex justify-between py-1 text-sm">
                   <span className="text-slate-600">Taxable Amount</span>
-                  <span className="font-medium">Rs.{taxDetails?.grossAmount}</span>
+                  <span className="font-medium">Rs.{parseFloat(taxDetails?.grossAmount || 0).toFixed(3)} </span>
                 </div>
                 {/* <div className="flex justify-between py-1 text-sm">
                   <span className="text-slate-600">Tax Amount</span>
@@ -727,7 +741,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 </div> */}
                 <div className="flex justify-between py-1 text-sm">
                   <span className="text-slate-600">Net Amount</span>
-                  <span className="font-medium">Rs.{taxDetails?.netAmount}</span>
+                  <span className="font-medium">Rs.{parseFloat(taxDetails?.netAmount || 0 ).toFixed(3)}</span>
                 </div>
 
 

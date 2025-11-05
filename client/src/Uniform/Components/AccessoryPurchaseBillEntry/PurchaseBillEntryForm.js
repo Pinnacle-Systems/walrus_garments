@@ -207,7 +207,7 @@ export const PurchaseBillEntry = ({
             });
             return
             // toast.info("Net Bill Value Not Matching Net Amount...!", { position: "top-center" })
-            return
+
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return
@@ -264,15 +264,30 @@ export const PurchaseBillEntry = ({
 
 
 
-    function removeItem(id, isPoItem) {
-        console.log(id, "iddddddddd", isPoItem)
-        setInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems = newItems.filter(item => !((parseInt(item?.isPoItem ? item.poItemsId : item.directItemsId) === parseInt(id)) && (item.isPoItem === isPoItem)))
-            return newItems
-        });
-    }
+    // function removeItem(id, isPoItem) {
+    //     console.log(id, "iddddddddd", isPoItem)
+    //     setInwardItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
+    //         console.log(newItems, "newItems")
+    //         newItems = newItems?.filter(item => !((parseInt(item?.isPoItem ? item.poItemsId : item.directItemsId) === parseInt(id)) && (item.isPoItem === isPoItem)))
+    //         return newItems
+    //     });
+    // }
 
+       const removeItem = (id) => {
+        setInwardItems((yarnBlend) => {
+            if (yarnBlend.length <= 1) {
+                return yarnBlend;
+            }
+            return yarnBlend.filter((_, index) => index !== parseInt(id));
+        });
+    };
+    const handleDeleteAllRows = () => {
+        setInwardItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
+    };
 
     const allSuppliers = supplierList ? supplierList.data : []
 
@@ -306,6 +321,18 @@ export const PurchaseBillEntry = ({
     const handleCloseContextMenu = () => {
         setContextMenu(null);
     };
+
+
+    const supplierRef = useRef(null);
+    const partyBillNoRef = useRef(null)
+
+
+    useEffect(() => {
+        if (supplierRef.current && !id) {
+            supplierRef.current.focus();
+        }
+    }, []);
+
     return (
 
         <>
@@ -356,6 +383,17 @@ export const PurchaseBillEntry = ({
                         <div className="grid grid-cols-2 gap-1">
                             <div className="col-span-2">
 
+                                {/* <ReusableSearchableInput
+                                    label="Supplier Id"
+                                    component="PartyMaster"
+                                    placeholder="Search Supplier Id..."
+                                    optionList={supplierList?.data}
+                                    // onDeleteItem={onDeleteItem}
+                                    setSearchTerm={setSupplierId}
+                                    searchTerm={supplierId}
+                                    ref={supplierRef}
+                                    show={"isSupplier"}
+                                /> */}
                                 <ReusableSearchableInput
                                     label="Supplier Id"
                                     component="PartyMaster"
@@ -364,11 +402,12 @@ export const PurchaseBillEntry = ({
                                     // onDeleteItem={onDeleteItem}
                                     setSearchTerm={setSupplierId}
                                     searchTerm={supplierId}
-                                    // ref={inputPartyRef}
-                                    // nextRef={styleRef}
+                                    ref={supplierRef}
                                     show={"isSupplier"}
+                                    // nextRef={styleRef}
                                 />
                             </div>
+
                             <DropdownInput
                                 className={"w-[110px]"}
                                 name="Po Type"
@@ -379,42 +418,42 @@ export const PurchaseBillEntry = ({
                                 readOnly={true}
                             />
 
-
-
-
                         </div>
-
                     </div>
+
+
+
+
                     <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                         <h2 className="font-medium text-slate-700 mb-2">
                             Supplier Details
                         </h2>
                         <div className="grid grid-cols-2 gap-1">
 
-                            <TextInput name={"PartyBill No"} required value={partyBillNo} setValue={setPartyBillNo} readOnly={readOnly} />
+                            <TextInput name={"PartyBill No"} required value={partyBillNo} setValue={setPartyBillNo} readOnly={readOnly}  />
 
-                            <DateInputNew name={"PartyBill Date"} required value={partyBillDate} setValue={setPartyBillDate} type={"date"} readOnly={readOnly} />
-                          
+                            <DateInputNew name={"PartyBill Date"} required value={partyBillDate} setValue={setPartyBillDate} type={"date"} readOnly={readOnly} ref={partyBillNoRef} />
+
                             <TextInput name={"Net Bill Value"} value={netBillValue} setValue={setNetBillValue} readOnly={readOnly} required />
 
                             <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
-
                         </div>
-
                     </div>
+
+
 
                 </div>
                 <fieldset>
-                    
-                        <YarnInwardItems billEntryId={id} handleDeleteRow={removeItem}
-                            transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
-                            readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-                            setInwardItemSelection={setInwardItemSelection} supplierId={supplierId} handleRightClick={handleRightClick}
-                            handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} taxTemplateId={taxTemplateId} hsnData={hsnData}
 
-                        />
+                    <YarnInwardItems billEntryId={id} handleDeleteRow={removeItem}
+                        transType={poType} inwardItems={inwardItems} setInwardItems={setInwardItems}
+                        readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+                        setInwardItemSelection={setInwardItemSelection} supplierId={supplierId} handleRightClick={handleRightClick}
+                        handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} taxTemplateId={taxTemplateId} hsnData={hsnData}  handleDeleteAllRows={handleDeleteAllRows}
 
-                    
+                    />
+
+
                 </fieldset>
 
                 <div className="grid grid-cols-3 gap-3">

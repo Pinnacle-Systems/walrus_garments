@@ -444,39 +444,28 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">
-          {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-            <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
-            <textarea
-              readOnly={readOnly}
-              //    value={term}
-              onChange={(e) => {
-                //    setTerm(e.target.value)
-              }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
-
-            />
-
-          </div> */}
 
 
 
 
-          {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-bold text-slate-700 mb-2 text-base">Notes</h2>
-            <textarea
-              readOnly={readOnly}
-              //    value={notes}
-              onChange={(e) => {
-                //    setNotes(e.target.value)
-              }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
-            />
-          </div> */}
+
 
 
           <div className="col-span-2">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+            <h2 className="font-bold text-slate-700 mb-2 text-base">Remarks</h2>
+            <textarea
+              readOnly={readOnly}
+                 value={remarks}
+              onChange={(e) => {
+                   setRemarks(e.target.value)
+              }}
+              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              placeholder="Additional notes..."
+
+            />
+
+          </div>
 
           </div>
 

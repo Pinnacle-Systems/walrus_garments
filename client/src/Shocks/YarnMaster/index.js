@@ -214,12 +214,7 @@ export default function Form() {
       Swal.fire({
         title: text + "Successfully",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+
       });
       setForm(false)
       if (exit) {
@@ -297,20 +292,22 @@ export default function Form() {
       handleSubmitCustom(addData, data, "Added");
     }
   }
-  const saveExitData = () => {
-    if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", {
-        position: "top-center",
-      });
-      return;
-    }
-    if (id) {
-      handleSubmitCustom(updateData, data, "Updated", true);
-    } else {
-      console.log("hit");
-      handleSubmitCustom(addData, data, "Added", true);
-    }
-  };
+
+    const saveExitData = () => {
+      if (!validateData(data)) {
+        toast.error("Please fill all required fields...!", {
+          position: "top-center",
+        });
+        return;
+      }
+      if (id) {
+        handleSubmitCustom(updateData, data, "Updated", true);
+      } else {
+        console.log("hit");
+        handleSubmitCustom(addData, data, "Added", true);
+      }
+    };
+
   const deleteData = async (id) => {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
@@ -323,7 +320,6 @@ export default function Form() {
           return
         }
         setId("");
-        // toast.success("Deleted Successfully");
         Swal.fire({
           title: "Deleted" + "  " + "Successfully",
           icon: "success",
@@ -413,7 +409,7 @@ export default function Form() {
       header: "Yarn Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-96",
+      className: "font-medium text-gray-900 text-left uppercase w-96",
     },
 
     {
@@ -425,11 +421,7 @@ export default function Form() {
 
   ];
 
-  const options =
-    countsData?.data?.map((item) => ({
-      value: item.id, // actual value
-      label: item.name, // displayed name
-    })) || [];
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">

@@ -12,6 +12,7 @@ import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '
 import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetBillEntryQuery } from '../../../redux/uniformService/BillEntryServices';
+import { useGetaccessoryBillEntryQuery } from '../../../redux/uniformService/AccessoryBillEntryServices';
 
 
 
@@ -74,7 +75,7 @@ const PurchaseBillEntryFormReport = ({
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetBillEntryQuery({
+  const { data: allData, isFetching, isLoading } = useGetaccessoryBillEntryQuery({
     params: {
       branchId,
       ...searchFields,

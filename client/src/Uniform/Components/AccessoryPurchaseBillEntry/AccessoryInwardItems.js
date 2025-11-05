@@ -5,13 +5,31 @@ import YarnPoItem from './AccessoryPoItem';
 import TaxDetailsFullTemplate from '../TaxDetailsCompleteTemplate';
 import Modal from '../../../UiComponents/Modal';
 
-const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, supplierId, setInwardItemSelection, handleCloseContextMenu, contextMenu, handleDeleteRow, handleRightClick, taxTemplateId, isSupplierOutside, hsnData }) => {
+const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, supplierId, setInwardItemSelection, handleCloseContextMenu, contextMenu, handleDeleteRow , handleDeleteAllRows , handleRightClick, taxTemplateId, isSupplierOutside, hsnData }) => {
 
 
     const handleInputChange = (value, index, field) => {
+
+        console.log()
         setInwardItems(inwardItems => {
             if (!inwardItems[index]) return inwardItems
             const newBlend = structuredClone(inwardItems);
+            
+            console.log(newBlend,"newBlend")
+
+            // index = newBlend?.findIndex(v => v?.accessoryPoItemsId == "");
+            // console.log(index, "index")
+
+
+            // if (index !== -1) {
+            //     newBlend[index][field] = value;
+            // } else {
+            //     newBlend[index]      = value;
+            // }
+
+
+
+
             newBlend[index][field] = value;
             return newBlend
         });
@@ -22,20 +40,22 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, s
 
 
 
-    // useEffect(() => {
-    //     if (inwardItems?.length >= 3) return
-    //     setInwardItems(prev => {
-    //         let newArray = Array?.from({ length: 3 - prev?.length }, () => {
-    //             return {
-                        
+    useEffect(() => {
+        if (inwardItems?.length >= 1) return
+        setInwardItems(prev => {
+            let newArray = Array?.from({ length: 1 - prev?.length }, () => {
+                return {
 
+                    colorId: "",
+                    uomId: "",
+                    accessoryPoItemsId: ""
 
-    //             }
-    //         })
-    //         return [...prev, ...newArray]
-    //     }
-    //     )
-    // }, [setInwardItems, inwardItems])
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setInwardItems, inwardItems])
 
     return (
         <>
@@ -44,7 +64,7 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, s
                 />
             </Modal>
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[200px] overflow-auto">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
@@ -234,7 +254,7 @@ const YarnInwardItems = ({ inwardItems, setInwardItems, readOnly, billEntryId, s
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
                                 onClick={() => {
-                                    // handleDeleteAllRows();
+                                    handleDeleteAllRows();
                                     handleCloseContextMenu();
                                 }}
                             >

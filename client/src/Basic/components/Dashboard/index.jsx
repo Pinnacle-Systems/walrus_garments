@@ -140,31 +140,7 @@ const Dashboard = () => {
             },
         },
     };
-    // const options = {
-    //   responsive: true,
-    //   maintainAspectRatio: false,
-    //   plugins: {
-    //     legend: {
-    //       position: 'bottom' ,
-    //       labels: {
-    //         padding: 16,
-    //         font: {
-    //           size: 12,
-    //         },
-    //       },
-    //     },
-    //     tooltip: {
-    //       padding: 10,
-    //       bodyFont: {
-    //         size: 12,
-    //       },
-    //       titleFont: {
-    //         size: 14,
-    //       },
-    //     },
-    //   },
-    //   cutout: '65%',
-    // };
+
 
 
     const cardsData = [

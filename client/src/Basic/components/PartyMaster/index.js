@@ -914,23 +914,17 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
       header: 'Name',
       accessor: (item) => item.name,
       cellClass: () => 'font-medium text-gray-900',
-      className: 'text-gray-800 uppercase w-72'
+      className: 'text-gray-800 uppercase w-96'
 
     },
     {
       header: 'Address',
       accessor: (item) => item.address,
       cellClass: () => 'font-medium text-gray-900',
-      className: 'text-gray-800 uppercase w-72'
+      className: 'text-gray-800 uppercase w-96'
 
     },
-    {
-      header: '',
-      accessor: (item) => item.nonme,
-      cellClass: () => 'font-medium text-gray-900',
-      className: 'text-gray-800 uppercase w-[60%]'
 
-    },
 
   ];
 

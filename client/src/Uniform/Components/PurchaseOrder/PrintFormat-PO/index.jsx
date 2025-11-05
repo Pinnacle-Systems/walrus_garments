@@ -574,7 +574,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     textAlign: "center",
     marginBottom: 7,
-    borderBottom: "18 solid #1D3A76",
     justifyContent: "space-between",
     flexDirection: "row",
     padding: 7,
@@ -594,17 +593,20 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginBottom: 1,
     textAlign: "left",
+    marginRight : 4
   },
   greenTitle: {
     textAlign: "center",
     fontSize: 15,
-    color: "#1D3A76",
-    // backgroundColor : "#1D3A76",
+    color: "#FFFF",
+    backgroundColor: "#1D3A76",
+    paddingVertical: 4,
+    // borderBottom: "18 solid #1D3A76",
+
     fontWeight: "500",
     // marginVertical: 4,
     // textDecoration: "underline",
     // marginBottom: 6,
-    paddingRight: 4
   },
   infoRow: {
     flexDirection: "row",
@@ -783,7 +785,7 @@ const YarnPurchaseOrderPrintFormat = ({
 
   const filledPoItems = [
     ...poItems,
-    ...Array(Math.max(0, 5 - poItems.length)).fill({}), // empty rows
+    ...Array(Math.max(0, 10 - poItems.length)).fill({}), // empty rows
   ];
 
 
@@ -813,7 +815,6 @@ const YarnPurchaseOrderPrintFormat = ({
         <View style={styles.page}>
 
           <View style={styles.header}>
-            {/* <View style={styles.logoRow}> */}
             <View style={{ width: 125, flexWrap: 'wrap' }}>
               <Text style={styles.companyText}>{branchData.address}</Text>
 
@@ -849,11 +850,11 @@ const YarnPurchaseOrderPrintFormat = ({
             </View>
 
             <Image src={Sangeethatex} style={styles.logo} />
-
           </View>
+
           <View >
-            <Text style={styles.greenTitle}>YARN  PURCHASE ORDER </Text>
-            <View style={{ alignItems: "flex-end", marginBottom: 3, marginRight: 4 }}>
+            <Text style={styles.greenTitle }>YARN  PURCHASE ORDER</Text>
+            <View style={{ alignItems: "flex-end", marginTop : 5, marginBottom : 3 , marginRight: 7 }}>
               <View style={{}}>
                 <View style={{ flexDirection: "row", marginBottom: 3 }}>
                   <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO No</Text>
@@ -873,120 +874,121 @@ const YarnPurchaseOrderPrintFormat = ({
             </View>
 
 
-            {/* <View style={{ flexDirection: 'row', justifyContent: "flex-end", textAlign: "right", }}>
-                  <Text style={[styles.companyText, { width: 40 }]}>Payment Terms</Text>
-                  <Text style={styles.companyText}>: {"-"} </Text>
+
+
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 , marginBottom : 6 }}>
+            {/* SUPPLIER DETAILS */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>SUPPLIER DETAILS</Text>
+              <View style={styles.boxContent}>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    paddingHorizontal: 4,
+                    marginBottom: 4,
+                    color: "#0F766E",
+                  }}
+                >
+                  {supplierDetails?.name}
+                </Text>
+
+                <Text style={{textTransform : "uppercase" , marginBottom : 2}}>{supplierDetails?.address}</Text>
+
+                <View style={{ flexDirection: "row", marginTop: 2 }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.contactPersonNumber}</Text>
+                </View>
+
+                {/* <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.panNo}</Text>
                 </View> */}
 
-            {/* <Text style={{ marginBottom: 4, borderBottom: "18 solid #1D3A76", }}></Text> */}
+                <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.gstNo}</Text>
+                </View>
 
-          </View>
+                <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.email}</Text>
+                </View>
+              </View>
+            </View>
 
-          <View >
-            <Text style={styles.sectionTitle}>SUPPLIER DETAILS </Text>
-            <View style={styles.boxContent}>
-              <Text style={{ fontWeight: "bold", paddingHorizontal: 4, marginBottom: 4, color: "#0F766E" }} >{supplierDetails?.name}</Text>
-              <Text>{supplierDetails?.address}</Text>
-              {/* <Text>Mobile No: {supplierDetails?.contactPersonNumber}</Text>
-                    */}
-              <View style={{ flexDirection: "row", marginTop: 2 }}>
-                <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>Mobile No</Text>
-                <Text style={styles.companyText}>: {supplierDetails?.contactPersonNumber}</Text>
-              </View>
+            {/* DELIVERY TO */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>DELIVERY TO</Text>
+              <View style={styles.boxContent}>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    paddingHorizontal: 4,
+                    marginBottom: 4,
+                    color: "#0F766E",
+                  }}
+                >
+                  {deliveryType === "ToSelf" ? deliveryTo?.branchName : deliveryTo?.name}
+                </Text>
 
-              <View style={{ flexDirection: "row", }}>
-                <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>PAN No</Text>
-                <Text style={styles.companyText}>: {supplierDetails?.panNo}</Text>
+                {deliveryTo?.address && <Text style={{ paddingHorizontal: 4 , textTransform : "uppercase" , marginBottom : 2 }}>{deliveryTo.address}</Text>}
+
+                {deliveryTo?.contactMobile && (
+                  <View style={{ flexDirection: "row" }}>
+                    <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
+                    <Text style={styles.companyText}>: {deliveryTo?.contactMobile}</Text>
+                  </View>
+                )}
+
+                {deliveryType === "ToSelf" ? (
+                  <>
+                    {deliveryTo?.gstNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.contactEmail && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.contactEmail}</Text>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {deliveryTo?.panNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.panNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.gstNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.email && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.email}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
               </View>
-              <View style={{ flexDirection: "row", }}>
-                <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>GST No</Text>
-                <Text style={styles.companyText}>: {supplierDetails?.gstNo}</Text>
-              </View>
-              <View style={{ flexDirection: "row", }}>
-                <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>Email</Text>
-                <Text style={styles.companyText}>: {supplierDetails?.email}</Text>
-              </View>
-              {/* <Text>PAN No: {supplierDetails?.panNo}</Text>
-                    <Text>GST No: {supplierDetails?.gstNo}</Text>
-                    <Text>Email: {supplierDetails?.email}</Text> */}
             </View>
           </View>
 
-          <View>
-            <View style={{ marginTop: 2 }}>
-              <Text style={styles.sectionTitle}>DELIVERY TO </Text>
 
-              {deliveryType === "ToSelf" ? (
-                <View style={styles.boxContent}>
-                  <Text style={{ fontWeight: "bold", paddingHorizontal: 4, marginBottom: 4, color: "#0F766E" }}>
-                    {deliveryTo?.branchName}
-                  </Text>
-
-                  {deliveryTo?.address && (
-                    <Text style={{ paddingHorizontal: 4 }}>{deliveryTo.address}</Text>
-                  )}
-
-                  {deliveryTo?.contactMobile && (
-                    // <Text style={{ paddingHorizontal: 4 }}>Mobile No: {deliveryTo.contactMobile}</Text>
-                    <View style={{ flexDirection: "row", }}>
-                      <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>Mobile No</Text>
-                      <Text style={styles.companyText}>: {deliveryTo?.contactMobile}</Text>
-                    </View>
-                  )}
-
-                  {deliveryTo?.gstNo && (
-                    // <Text style={{ paddingHorizontal: 4 }}>GST No: {deliveryTo.gstNo}</Text>
-                    <View style={{ flexDirection: "row", }}>
-                      <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>GST No</Text>
-                      <Text style={[styles.companyText, {}]}>: {deliveryTo?.gstNo}</Text>
-                    </View>
-                  )}
-
-                  {deliveryTo?.contactEmail && (
-                    // <Text style={{ paddingHorizontal: 4 }}>Email: {deliveryTo.contactEmail}</Text>
-                    <View style={{ flexDirection: "row", }}>
-                      <Text style={[styles.companyText, { width: 45, textAlign: "left" }]}>Email</Text>
-                      <Text style={[styles.companyText, {}]}>: {deliveryTo?.contactEmail}</Text>
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <View style={styles.boxContent}>
-                  <Text style={{ fontWeight: "bold", paddingHorizontal: 4, marginBottom: 4, color: "#0F766E" }}>
-                    {deliveryTo?.name}
-                  </Text>
-
-                  {deliveryTo?.address && (
-                    <Text style={{ paddingHorizontal: 4 }}>{deliveryTo.address}</Text>
-                  )}
-
-                  {deliveryTo?.contactMobile && (
-                    <Text style={{ paddingHorizontal: 4 }}>Mobile No: {deliveryTo.contactMobile}</Text>
-                  )}
-
-                  {deliveryTo?.panNo && (
-                    <Text style={{ paddingHorizontal: 4 }}>PAN No: {deliveryTo.panNo}</Text>
-                  )}
-
-                  {deliveryTo?.gstNo && (
-                    <Text style={{ paddingHorizontal: 4 }}>GST No: {deliveryTo.gstNo}</Text>
-                  )}
-
-                  {deliveryTo?.email && (
-                    <Text style={{ paddingHorizontal: 4 }}>Email: {deliveryTo.email}</Text>
-                  )}
-                </View>
-              )}
-            </View>
-
-          </View>
 
           <View style={styles.tableHeader}>
             <Text style={[styles.th, { flex: 0.5 }]}>S.No</Text>
             <Text style={[styles.th, { flex: 5 }]}>Item</Text>
             <Text style={[styles.th, { flex: 2 }]}>Color</Text>
             <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
-            {/* <Text style={[styles.th, { flex: 1 }]}>No. of Bags</Text> */}
             <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
             <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
             <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
@@ -1042,7 +1044,7 @@ const YarnPurchaseOrderPrintFormat = ({
           >
             <Text
               style={{
-                flex: 15,
+                flex: 11.5,
                 textAlign: "center",
                 fontSize: 8,
                 fontWeight: "bold",
@@ -1094,16 +1096,7 @@ const YarnPurchaseOrderPrintFormat = ({
 
 
           <View >
-            {/* Amount in Words */}
-            {/* <View style={{ borderBottom: "1 solid #9ca3af", padding: 5, backgroundColor: "#1D3A76", color: "#FFFF" }}>
-                  <Text style={{ fontSize: 10, fontWeight: "bold" }}>Amount in Words:  Rs.{" "}
-                    {numberToText.convertToText(taxDetails?.netAmount, {
-                      language: "en-in",
-                      separator: "",
-                    })}{" "}
-                    Only</Text>
 
-                </View> */}
             <View
               style={{
                 marginTop: 6,
@@ -1118,6 +1111,7 @@ const YarnPurchaseOrderPrintFormat = ({
                   backgroundColor: "#1D3A76",
                   paddingVertical: 5,
                   paddingHorizontal: 6,
+                  marginBottom : 4
                 }}
               >
                 <Text
@@ -1242,22 +1236,22 @@ const YarnPurchaseOrderPrintFormat = ({
           </View>
 
 
-         
-       
+
+
 
 
 
         </View>
-         <View style={{
-            marginTop: 20, textAlign: "center",    fontSize: 8,
+        <View style={{
+          marginTop: 20, textAlign: "center", fontSize: 8,
 
-          }}>
-            <Text
-              render={({ pageNumber, totalPages }) =>
-                `Page ${pageNumber} / ${totalPages}`
-              }
-            />
-          </View>
+        }}>
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} / ${totalPages}`
+            }
+          />
+        </View>
 
 
 

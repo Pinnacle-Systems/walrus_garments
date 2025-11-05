@@ -4,7 +4,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DropdownInput, DateInput, TextInput, ReusableSearchableInput } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 import PoItemsSelection from "./PoItemsSelection";
@@ -104,7 +104,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const componentRef = useRef();
 
- 
+
     // const branchIdFromApi = useRef(branchId);
     const params = {
         branchId, companyId
@@ -219,7 +219,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text ,nextProcess) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -241,13 +241,27 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 setId("")
                 syncFormWithDb(undefined)
             }
+
+            if (returnData.statusCode === 0) {
+                if (nextProcess === "new") {
+                    onNew()
+                    syncFormWithDb(undefined)
+                    setReadOnly(false);
+
+                }
+                if (nextProcess === "close") {
+                    onClose()
+                }
+            } else {
+                toast.error(returnData?.message);
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
 
         // if (!validateData(data)) {
         //     toast.info("Please fill all required fields...!", { position: "top-center" })
@@ -257,9 +271,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             return
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated",nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added",nextProcess);
         }
     }
 
@@ -359,7 +373,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
     const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
-    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems : directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
+    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
     const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
 
@@ -372,9 +386,19 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
-    console.log(taxGroupWise,"taxGroupWise")
+    console.log(taxGroupWise, "taxGroupWise")
+    const dateRef = useRef(null);
 
-    if (isTaxHookDetailsLoading)  return <Loader/>
+    const ReturnRef = useRef(null);
+
+    useEffect(() => {
+        if (ReturnRef.current) {
+            ReturnRef.current.focus();
+        }
+    }, []);
+
+
+    if (isTaxHookDetailsLoading) return <Loader />
 
     return (
         <>
@@ -424,7 +448,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     />
                 </PDFViewer>
             </Modal>
-            
+
 
             <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
@@ -458,7 +482,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
-                                    value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+                                    value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} ref={ReturnRef} />
                                 <DropdownInput name="Po Type"
 
                                     options={MaterialType}
@@ -493,7 +517,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 </div>
                                 <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
-                                <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+                                <DateInputNew type={"date"} ref={dateRef} name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             </div>
 
                         </div>
@@ -533,7 +557,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     setTerm(e.target.value)
                                 }}
                                 className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                // placeholder="Additional notes..."
+                            // placeholder="Additional notes..."
 
                             />
                         </div>
@@ -546,7 +570,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     setRemarks(e.target.value)
                                 }}
                                 className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                // placeholder="Additional notes..."
+                            // placeholder="Additional notes..."
                             />
                         </div>
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
@@ -560,11 +584,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     <span className="font-medium">{parseInt(getTotalQty())}  </span>
                                 </div>
 
-                             
+
                             </div>
                         </div>
 
-                     
+
 
 
                     </div>

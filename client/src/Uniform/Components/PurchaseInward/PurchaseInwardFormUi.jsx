@@ -109,6 +109,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       inwardTyperef.current.focus();
     }
   }, []);
+
+  
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
