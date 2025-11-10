@@ -940,10 +940,14 @@ model Accessory {
 }
 
 model AccessoryCategory {
-  id        Int         @id @default(autoincrement())
-  name      String
-  active    Boolean     @default(false)
-  Accessory Accessory[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  active               Boolean                @default(false)
+  Accessory            Accessory[]
+  AccessoryPoItems     AccessoryPoItems[]
+  AccessoryInwardItems AccessoryInwardItems[]
+  AccessoryCancelItems AccessoryCancelItems[]
+  AccessoryReturnItems AccessoryReturnItems[]
 }
 
 enum PoTypes {
@@ -1221,6 +1225,8 @@ model AccessoryPoItems {
   accessoryId                Int?
   accessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
   accessoryGroupId           Int?
+  AccessoryCategory          AccessoryCategory?        @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId        Int?
   accessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
   accessoryItemId            Int?
   Color                      Color?                    @relation(fields: [colorId], references: [id])
@@ -1440,27 +1446,28 @@ model AccessoryInwardItems {
   AccessoryInward   AccessoryInward? @relation(fields: [AccessoryInwardId], references: [id], onDelete: Cascade)
   AccessoryInwardId Int?
 
-  Fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: Cascade)
-  fabricId Int?
-
-  Accessory        Accessory?         @relation(fields: [accessoryId], references: [id])
-  accessoryId      Int?
-  AccessoryGroup   AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId Int?
-  AccessoryItem    AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId  Int?
-  Color            Color?             @relation(fields: [colorId], references: [id])
-  colorId          Int?
-  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId            Int?
-  Design           Design?            @relation(fields: [designId], references: [id])
-  price            Float?
-  discountType     DiscountTypes?
-  discountValue    Float?             @default(0)
-  taxPercent       Float?             @default(0)
-  Size             Size?              @relation(fields: [sizeId], references: [id])
-  designId         Int?
-  sizeId           Int?
+  Fabric              Fabric?            @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+  fabricId            Int?
+  AccessoryCategory   AccessoryCategory? @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId Int?
+  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  AccessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  AccessoryItem       AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId     Int?
+  Color               Color?             @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Design              Design?            @relation(fields: [designId], references: [id])
+  price               Float?
+  discountType        DiscountTypes?
+  discountValue       Float?             @default(0)
+  taxPercent          Float?             @default(0)
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  designId            Int?
+  sizeId              Int?
 
   weightPerBag       Float?
   noOfBags           Int?
@@ -4118,25 +4125,27 @@ model AccessoryReturnItems {
   id              Int             @id @default(autoincrement())
   AccessoryReturn AccessoryReturn @relation(fields: [accessoryReturnId], references: [id], onDelete: Cascade)
 
-  Accessory        Accessory?         @relation(fields: [accessoryId], references: [id])
-  accessoryId      Int?
-  AccessoryGroup   AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId Int?
-  AccessoryItem    AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId  Int?
-  Color            Color?             @relation(fields: [colorId], references: [id])
-  colorId          Int?
-  Uom              UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId            Int?
-  Design           Design?            @relation(fields: [designId], references: [id])
-  price            Float
-  discountType     String?
-  discountValue    Float              @default(0)
-  taxPercent       Float              @default(0)
-  Size             Size?              @relation(fields: [sizeId], references: [id])
-  designId         Int?
-  gsmId            Int?
-  sizeId           Int?
+  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  AccessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  AccessoryItem       AccessoryItem?     @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId     Int?
+  AccessoryCategory   AccessoryCategory? @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId Int?
+  Color               Color?             @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Design              Design?            @relation(fields: [designId], references: [id])
+  price               Float
+  discountType        String?
+  discountValue       Float              @default(0)
+  taxPercent          Float              @default(0)
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  designId            Int?
+  gsmId               Int?
+  sizeId              Int?
 
   accessoryReturnId  Int
   weightPerBag       Float?
@@ -4266,6 +4275,8 @@ model AccessoryCancelItems {
   accessoryId                Int?
   AccessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
   accessoryGroupId           Int?
+  AccessoryCategory          AccessoryCategory?        @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId        Int?
   AccessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
   accessoryItemId            Int?
   Color                      Color?                    @relation(fields: [colorId], references: [id])

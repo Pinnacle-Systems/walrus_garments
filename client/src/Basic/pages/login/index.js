@@ -363,7 +363,7 @@ const Login = () => {
                   transition: { duration: 0.3 },
                 }}
               >
-                <div className="bg-white/95 backdrop-blur-md border border-stone-200 rounded-full rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className="bg-white/95 backdrop-blur-md border border-stone-200  rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className={`text-4xl mb-3 ${product.color}`}>{product.icon}</div>
                   <h3 className="text-lg font-bold mb-1 text-stone-800">{product.title}</h3>
                   <p className="text-stone-600 text-xs">{product.desc}</p>

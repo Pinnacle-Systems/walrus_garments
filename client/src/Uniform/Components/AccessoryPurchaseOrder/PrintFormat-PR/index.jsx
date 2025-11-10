@@ -275,15 +275,15 @@ const AccessoryPurchaseOrderPrintFormat = ({
 
           <View style={styles.header}>
             <Text style={{ fontSize: 12, color: "green", fontWeight: "bold", marginBottom: 4, marginTop: 10 }}>
-              {branchData.branchName}
+              {branchData?.branchName}
             </Text>
             <View style={styles.logoRow}>
               <Image src={Sangeethatex} style={styles.logo} />
               <View>
-                <Text style={styles.companyText}>{branchData.address}</Text>
-                <Text style={styles.companyText}>Mobile: {branchData.mobile}</Text>
-                <Text style={styles.companyText}>PAN No: {branchData.panNo}</Text>
-                <Text style={styles.companyText}>GST No: {branchData.gstNo}</Text>
+                <Text style={styles.companyText}>{branchData?.address}</Text>
+                <Text style={styles.companyText}>Mobile: {branchData?.mobile}</Text>
+                <Text style={styles.companyText}>PAN No: {branchData?.panNo}</Text>
+                <Text style={styles.companyText}>GST No: {branchData?.gstNo}</Text>
               </View>
             </View>
           </View>

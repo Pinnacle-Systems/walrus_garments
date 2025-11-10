@@ -96,7 +96,7 @@ const AccessoryPurchaseOrderFormReport = ({
 
 
 
-  console.log(allData, "entire");
+  console.log(allData?.data, "entire");
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
@@ -111,13 +111,91 @@ const AccessoryPurchaseOrderFormReport = ({
       setCurrentPage(newPage);
     }
   };
+  // const Pagination = () => {
+  //   // if (totalPages <= 1) return null;
+
+  //   return (
+  //     <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+  //       <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+  //         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+  //       </div>
+  //       <div className="flex gap-1">
+  //         <button
+  //           onClick={() => handlePageChange(currentPage - 1)}
+  //           disabled={currentPage === 1}
+  //           className={`px-3 py-1 rounded-md ${currentPage === 1
+  //             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+  //             : 'bg-white text-gray-600 hover:bg-gray-100'
+  //             }`}
+  //         >
+  //           <FaChevronLeft className="inline" />
+  //         </button>
+
+  //         {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+  //           let pageNum;
+  //           if (totalPages <= 5) {
+  //             pageNum = i + 1;
+  //           } else if (currentPage <= 3) {
+  //             pageNum = i + 1;
+  //           } else if (currentPage >= totalPages - 2) {
+  //             pageNum = totalPages - 4 + i;
+  //           } else {
+  //             pageNum = currentPage - 2 + i;
+  //           }
+
+  //           return (
+  //             <button
+  //               key={pageNum}
+  //               onClick={() => handlePageChange(pageNum)}
+  //               className={`px-3 py-1 rounded-md ${currentPage === pageNum
+  //                 ? 'bg-indigo-800 text-white'
+  //                 : 'bg-white text-gray-600 hover:bg-gray-100'
+  //                 }`}
+  //             >
+  //               {pageNum}
+  //             </button>
+  //           );
+  //         })}
+
+  //         {totalPages > 5 && currentPage < totalPages - 2 && (
+  //           <span className="px-3 py-1">...</span>
+  //         )}
+
+  //         {totalPages > 5 && currentPage < totalPages - 2 && (
+  //           <button
+  //             onClick={() => handlePageChange(totalPages)}
+  //             className={`px-3 py-1 rounded-md ${currentPage === totalPages
+  //               ? 'bg-indigo-800 text-white'
+  //               : 'bg-white text-gray-600 hover:bg-gray-100'
+  //               }`}
+  //           >
+  //             {totalPages}
+  //           </button>
+  //         )}
+
+  //         <button
+  //           onClick={() => handlePageChange(currentPage + 1)}
+  //           disabled={currentPage === totalPages}
+  //           className={`px-3 py-1 rounded-md ${currentPage === totalPages
+  //             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+  //             : 'bg-white text-gray-600 hover:bg-gray-100'
+  //             }`}
+  //         >
+  //           <FaChevronRight className="inline" />
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // };
   const Pagination = () => {
     // if (totalPages <= 1) return null;
 
+    console.log(totalPages,"totalPages")
+
     return (
-      <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+      <div className=" w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.data?.length} entries
         </div>
         <div className="flex gap-1">
           <button
@@ -191,12 +269,12 @@ const AccessoryPurchaseOrderFormReport = ({
   return (
     <div
       //   id="registrationFormReport"
-      className="flex flex-col w-full h-[93%] overflow-auto"
+      className="flex flex-col w-full h-[78Vh] overflow-auto"
     >
 
       <>
-        <div className="h-[100%] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[90%]">
+        <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
+          <div className="h-[68vh]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -206,51 +284,19 @@ const AccessoryPurchaseOrderFormReport = ({
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Po No</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+                 
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Po Date</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+              
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Material</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
-                  </th>
+
+                  </th> */}
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+               
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -285,7 +331,7 @@ const AccessoryPurchaseOrderFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -295,7 +341,7 @@ const AccessoryPurchaseOrderFormReport = ({
                         setSearchMaterial(e.target.value);
                       }}
                     />
-                  </th>
+                  </th> */}
                   <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
@@ -341,13 +387,13 @@ const AccessoryPurchaseOrderFormReport = ({
                         {index + 1}
                       </td>
 
-                      <td className="py-1.5 text-center">{dataObj.docId} </td>
+                      <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-center">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poMaterial} </td>
+                      {/* <td className="py-1.5 text-left  ">{dataObj.poMaterial} </td> */}
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (
@@ -397,7 +443,7 @@ const AccessoryPurchaseOrderFormReport = ({
             </table>
 
           </div>
-          <div className="h-[10%]">
+          <div className="h-[10vh]">
             <Pagination />
           </div>
 

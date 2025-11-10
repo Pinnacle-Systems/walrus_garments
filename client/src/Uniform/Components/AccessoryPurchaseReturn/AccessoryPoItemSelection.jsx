@@ -44,7 +44,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
     return (
         <div className="flex flex-col w-full h-[80%]">
             <div className="md:flex md:items-center md:justify-between page-heading p-1">
-                <div className="heading text-center md:mx-10"> Purchase Order Items </div>
+                <div className="heading text-center md:mx-10"> Purchase Inward Items </div>
                 <div className=" sub-heading justify-center md:justify-start items-center">
                     <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
                     <select value={dataPerPage}
@@ -108,7 +108,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                     // }}
                                     />
                                 </th>
-                                <th className="border-2  top-0 stick-bg">
+                                {/* <th className="border-2  top-0 stick-bg">
                                     <label>Accessory Item</label>
                                     <input
                                         type="text"
@@ -131,7 +131,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                     //     setDueDate(e.target.value);
                                     // }}
                                     />
-                                </th>
+                                </th> */}
                                 <th className="border-2  top-0 stick-bg">
                                     <label>Color</label>
                                     <input
@@ -194,8 +194,8 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                         <td className='py-1'> {dataObj?.AccessoryPo?.docId}</td>
                                         <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Accessory?.createdAt)} </td>
                                         <td className='py-1'> {dataObj?.Accessory?.aliasName}</td>
-                                        <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.name}</td>
-                                        <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.AccessoryGroup?.name}</td>
+                                        {/* <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.name}</td>
+                                        <td className='py-1'> {dataObj?.Accessory?.accessoryItem?.AccessoryGroup?.name}</td> */}
                                         <td className='py-1'> {dataObj?.Color?.name}</td>
                                         <td className='py-1'> {dataObj?.Size?.name}</td>
                                         <td className='py-1'> {dataObj?.Uom?.name}</td>

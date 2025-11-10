@@ -172,7 +172,7 @@ export default function Form() {
   const syncFormWithDb = useCallback(
     (data) => {
       if (!id) {
-        setReadOnly(false);
+        // setReadOnly(false);
         setPanNo("");
         setName("");
         setFatherName("");
@@ -210,7 +210,7 @@ export default function Form() {
         setRejoinReason("");
         return;
       }
-      setReadOnly(true);
+      // setReadOnly(true);
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
       setFatherName(data?.fatherName || "");
@@ -528,19 +528,19 @@ export default function Form() {
       header: "Employee Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-72",
+      className: "font-medium text-gray-900 text-left uppercase w-72",
     },
     {
       header: "Employee Category",
       accessor: (item) => item?.EmployeeCategory?.name,
       //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-36",
+      className: "font-medium text-gray-900 text-left uppercase w-48",
     },
     {
       header: "Gender",
       accessor: (item) => item?.gender,
       //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-22",
+      className: "font-medium text-gray-900 text-left uppercase w-24",
     },
     {
       header: "Status",

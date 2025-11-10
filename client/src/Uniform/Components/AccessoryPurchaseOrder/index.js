@@ -59,7 +59,7 @@ export default function Form() {
   const [showExtraCharge, setShowExtraCharge] = useState(false)
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [tableDataView, setTableDataView] = useState(false)
-  const [term,setTerm] = useState("")
+  const [term, setTerm] = useState("")
 
   const [requirementId, setRequirementId] = useState("");
 
@@ -124,22 +124,22 @@ export default function Form() {
     {
       header: 'Inward No',
       accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
+      className: 'font-medium uppercase text-gray-900 w-[40px] text-left  py-1'
     },
     {
       header: 'TransType',
       accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
+      className: 'text-gray-800 uppercase w-[40px]  text-left  py-1 '
     },
     {
       header: 'Inward Date',
       accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
+      className: 'text-gray-800 uppercase w-[100px]  text-left  py-1  '
     },
     {
       header: 'Supplier',
       accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
-      className: 'text-gray-800 uppercase w-[500px]'
+      className: 'text-gray-800 uppercase w-[500px] text-left '
     },
 
 
@@ -177,19 +177,34 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id)
+        const deletedata = await removeData(id)
         setId("");
         onNew();
-        Swal.fire({
-          title: "Deleted Successfully",
-          icon: "success",
-          draggable: true,
-          timer: 1000,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
+        if (deletedata?.data?.statusCode == 0) {
+
+          Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+            // draggable: true,
+            // timer: 1000,
+            // showConfirmButton: false,
+            // didOpen: () => {
+            //   Swal.showLoading();
+            // }
+          });
+        }
+        else {
+          Swal.fire({
+            title: deletedata.data?.message,
+            icon: "error",
+            // draggable: true,
+            // timer: 1000,
+            // showConfirmButton: false,
+            // didOpen: () => {
+            //   Swal.showLoading();
+            // }
+          });
+        }
       } catch (error) {
         toast.error("something went wrong");
       }
@@ -216,7 +231,7 @@ export default function Form() {
     setDeliveryType("")
     setDeliveryToId("")
     setShowExtraCharge(false)
-    setRequirementId("")  
+    setRequirementId("")
   }
 
   // if (isLoading || isFetching) return <Loader />
@@ -248,7 +263,7 @@ export default function Form() {
           printModalOpen={printModalOpen} setPrintModalOpen={setPrintModalOpen}
           tableDataView={tableDataView} setTableDataView={setTableDataView}
           requirementId={requirementId} setRequirementId={setRequirementId}
-            term={term} setTerm={setTerm}
+          term={term} setTerm={setTerm}
 
         />
 
@@ -264,7 +279,7 @@ export default function Form() {
               <FaPlus /> Create New
             </button>
           </div>
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm">
 
             <AccessoryPurchaseOrderFormReport
               columns={columns}

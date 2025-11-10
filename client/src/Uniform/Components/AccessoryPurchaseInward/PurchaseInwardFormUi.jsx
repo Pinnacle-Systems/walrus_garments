@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCommonParams, sumArray } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import moment from "moment";
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { useGetPartyBranchByIdQuery, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
@@ -26,7 +26,7 @@ import DirectInward from "./DirectInward";
 
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, supplierList, locationData,
-  colorList, uomList, accessoryList, sizeList, accessoryGroupList, accessoryItemList
+  colorList, uomList, accessoryList, sizeList, accessoryGroupList, accessoryItemList, storeOptions
 }) => {
 
 
@@ -109,11 +109,11 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
-    if (id) {
-      setReadOnly(true);
-    } else {
-      setReadOnly(false);
-    }
+    // if (id) {
+    //   setReadOnly(true);
+    // } else {
+    //   setReadOnly(false);
+    // }
     setTransType(data?.poType ? data.poType : "Accessory");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "GeneralInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
@@ -210,6 +210,16 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
   const validateData = (data) => {
 
+    let mandatoryFields = ["qty"];
+    if (transType === "GreyYarn" || transType === "DyedYarn") {
+      mandatoryFields = [...mandatoryFields, "yarnId"]
+    } else if (transType === "GreyFabric" || transType === "DyedFabric") {
+      mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
+    } else if (transType === "Accessory") {
+      mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
+    }
+
+
     if (data?.partyId && data?.locationId && data?.storeId && data?.poInwardOrDirectInward && data?.poType && data?.dcDate && data?.dcDate) {
       return true
     }
@@ -285,9 +295,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   // }, [transType])
 
 
-  const storeOptions = locationData ?
-    locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
-    [];
 
   function removeItem(id) {
     setDirectInwardReturnItems(directInwardItems => {
@@ -308,6 +315,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   console.log(directInwardReturnItems?.some(item => item.yarnId === "" || item.fabricId === "" || item.accessoryId === ""), "condition")
 
   const saveData = (nextProcess) => {
+
+    let mandatoryFields = ["qty"];
     if (!validateData(data)) {
       // toast.info("Please fill all required fields...!", { position: "top-center" })
 
@@ -315,29 +324,26 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+
       });
       return
     }
-    if (directInwardReturnItems?.some(item => item.yarnId === "" || item.fabric === "" || item.accessoryId === "")
+    if (
+      directInwardReturnItems?.filter(item => item.accessoryId !== "")?.length === 0
     ) {
       Swal.fire({
-        title: "Please select items...!",
+        title: "Please Fill at least one Accessory Po item!",
+        icon: "warning", 
+      });
+      return;
+    }
+
+    if (!isGridDatasValid(data?.directInwardReturnItems?.filter(i => i.accessoryId != ""), false, mandatoryFields)) {
+      Swal.fire({
+        title: "Enter The Inward Qty",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
       });
       return
-
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return

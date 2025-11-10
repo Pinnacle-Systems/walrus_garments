@@ -19,6 +19,29 @@ import { useDeleteAccessoryPurchaseInwardMutation } from "../../../redux/uniform
 
 export default function Form() {
 
+    const [selectedPeriod, setSelectedPeriod] = useState('this-month');
+    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
+    const [showManufacturer, setShowManufacturer] = useState(false);
+    const [id, setId] = useState("");
+    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("General Inward");
+
+
+    const [docId, setDocId] = useState("New")
+    const [date, setDate] = useState("")
+    const [readOnly, setReadOnly] = useState('')
+    const [transType, setTransType] = useState("Accessory");
+    const [dcNo, setDcNo] = useState("")
+    const [dcDate, setDcDate] = useState('')
+    const [supplierId, setSupplierId] = useState('')
+    const [payTermId, setPayTermId] = useState("");
+    const [locationId, setLocationId] = useState('');
+    const [storeId, setStoreId] = useState("")
+    const [inwardItemSelection, setInwardItemSelection] = useState(false)
+    const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
+    const [partyId, setPartyId] = useState('')
+
+
+
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
     const params = {
@@ -41,6 +64,9 @@ export default function Form() {
         params,
     });
 
+    const storeOptions = locationData ?
+        locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
+        [];
 
     const { data: colorList } =
         useGetColorMasterQuery({ params: { ...params } });
@@ -55,27 +81,6 @@ export default function Form() {
     const { data: sizeList } =
         useGetSizeMasterQuery({ params });
 
-
-    const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-    const [showManufacturer, setShowManufacturer] = useState(false);
-    const [id, setId] = useState("");
-    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("General Inward");
-
-
-    const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState("")
-    const [readOnly, setReadOnly] = useState('')
-    const [transType, setTransType] = useState("Accessory");
-    const [dcNo, setDcNo] = useState("")
-    const [dcDate, setDcDate] = useState('')
-    const [supplierId, setSupplierId] = useState('')
-    const [payTermId, setPayTermId] = useState("");
-    const [locationId, setLocationId] = useState('');
-    const [storeId, setStoreId] = useState("")
-    const [inwardItemSelection, setInwardItemSelection] = useState(false)
-    const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
-    const [partyId, setPartyId] = useState('')
 
 
 
@@ -102,24 +107,39 @@ export default function Form() {
 
     const handleDelete = async (id) => {
         if (id) {
+
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                await removeData(id)
+                const deletedata = await removeData(id)
                 setId("");
-                // onNew();
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted Successfully",
-                    icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                onNew();
+                if (deletedata?.data?.statusCode == 0) {
+
+                    Swal.fire({
+                        title: "Deleted Successfully",
+                        icon: "success",
+                        // draggable: true,
+                        // timer: 1000,
+                        // showConfirmButton: false,
+                        // didOpen: () => {
+                        //   Swal.showLoading();
+                        // }
+                    });
+                }
+                else {
+                    Swal.fire({
+                        title: deletedata.data?.message,
+                        icon: "error",
+                        // draggable: true,
+                        // timer: 1000,
+                        // showConfirmButton: false,
+                        // didOpen: () => {
+                        //   Swal.showLoading();
+                        // }
+                    });
+                }
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -157,8 +177,8 @@ export default function Form() {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
                     partyId={partyId} setPartyId={setPartyId} branchList={branchList} supplierList={supplierList} locationData={locationData}
-
                     colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList} accessoryGroupList={accessoryGroupList} accessoryItemList={accessoryItemList}
+                    storeOptions={storeOptions}
 
 
 

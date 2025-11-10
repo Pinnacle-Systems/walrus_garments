@@ -35,6 +35,7 @@ import AccessoryPurchaseOrderPrintFormat from "./PrintFormat-PR";
 import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails";
 import { groupBy } from "lodash";
+import { useGetAccessoryCategoryMasterQuery } from "../../../redux/uniformService/AccessoryCategoryMasterServices";
 
 
 
@@ -96,6 +97,10 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     params,
   });
 
+    const { data: accessoryCategoryList } = useGetAccessoryCategoryMasterQuery({
+    params,
+  });
+
   const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
 
   const { data: colorList } = useGetColorMasterQuery({ params });
@@ -147,7 +152,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const syncFormWithDb = useCallback((data) => {
 
-    setReadOnly(true)
+    // setReadOnly(true)
 
 
     setPoType(data?.poType ? data?.poType : "");
@@ -222,8 +227,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         Swal.fire({
           icon: 'success',
           title: `${text || 'Saved'} Successfully`,
-          showConfirmButton: false,
-          timer: 2000
+          // showConfirmButton: false,
+          // timer: 2000
         });
 
         if (returnData.statusCode === 0) {
@@ -298,8 +303,8 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         // title: "Total percentage exceeds 100%",
         title: "Please fill all required fields...!",
         icon: "error",
-        timer: 1500,
-        showConfirmButton: false,
+        // timer: 1500,
+        // showConfirmButton: false,
       }); return
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -360,7 +365,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const dateRef = useRef(null);
 
   useEffect(() => {
-    if (dateRef.current) {
+    if (dateRef.current && !id) {
       dateRef.current.focus();
     }
   }, []);
@@ -637,7 +642,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 accessoryItemList={accessoryItemList}
                 accessoryList={accessoryList}
                 colorList={colorList}
-                uomList={uomList}
+                uomList={uomList} accessoryCategoryList={accessoryCategoryList}
                 sizeList={sizeList} hsnData={hsnData} handleRightClick={handleRightClick} handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu}
 
               />

@@ -2,16 +2,155 @@
 import "./Header.css"
 import dp from "../../../assets/default-dp.png"
 import { Bell, Search } from "lucide-react"
-import { useState } from "react";
 import Profile from "./Profile";
 import logo from "../../../assets/pinnacle2.jpeg"
 // import { useState } from "react"
+import { LogOut } from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react'
+import Modal from '../../../UiComponents/Modal';
+import Logout from '../LogoutConfirm';
+import { useNavigate } from 'react-router-dom';
+import secureLocalStorage from 'react-secure-storage';
+import { useGetUserByIdQuery } from '../../../redux/services/UsersMasterService';
+import { toast } from 'react-toastify';
+import { useGetPageGroupQuery } from '../../../redux/services/PageGroupMasterServices';
+import { useGetProjectQuery } from '../../../redux/services/ProjectService';
+import axios from 'axios';
+import { PAGES_API, ROLES_API } from '../../../Api';
+import AccountDetailsDropDown from './AccountsDropDown';
+import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
+import { useDispatch } from "react-redux";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import { push } from "../../../redux/features/opentabs";
+
+const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const Header = ({ profile, setProfile }) => {
 
 
+
+    const [logout, setLogout] = useState(false);
+    const [hideNavBar, sethideNavBar] = useState(true);
+
+
+
+    const navBatItemsStyle = hideNavBar ? "hidden" : "";
+
+    const [allowedPages, setAllowedPages] = useState([]);
+
+
+
+
+
+    const dispatch = useDispatch()
+
+
+
+    const handleOutsideClick = () => {
+        sethideNavBar(true);
+    };
+
+    const ref = useOutsideClick(handleOutsideClick);
+
+    const toggleNavMenu = () => {
+        sethideNavBar(!hideNavBar);
+    };
+    const id = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userId")
+    const {
+        data: singleData,
+        isFetching: isSingleFetching,
+        isLoading: isSingleLoading,
+    } = useGetUserByIdQuery(id);
+
+
+    const retrieveAllowedPages = useCallback(() => {
+        const defaultAdminRaw = secureLocalStorage.getItem(
+            sessionStorage.getItem("sessionId") + "defaultAdmin"
+        );
+
+        let defaultAdmin = false;
+        try {
+            if (typeof defaultAdminRaw === "string") {
+                defaultAdmin = JSON.parse(defaultAdminRaw);
+            } else {
+                defaultAdmin = defaultAdminRaw;
+            }
+        } catch (e) {
+            console.error("Failed to parse defaultAdmin:", e);
+            defaultAdmin = false;
+        }
+        if (
+            defaultAdmin
+        ) {
+            axios({
+                method: "get",
+                url: BASE_URL + PAGES_API,
+                params: { active: true },
+            }).then(
+                (result) => {
+                    console.log("result", result.data.data);
+                    setAllowedPages(result.data.data);
+                },
+                (error) => {
+                    console.log(error);
+                    toast.error("Server Down", { autoClose: 5000 });
+                }
+            );
+        } else {
+            axios({
+                method: "get",
+                url:
+                    BASE_URL +
+                    ROLES_API +
+                    `/${secureLocalStorage.getItem(
+                        sessionStorage.getItem("sessionId") + "userRoleId"
+                    )}`,
+            }).then(
+                (result) => {
+                    if (result.status === 200) {
+                        if (result.data.statusCode === 0) {
+                            setAllowedPages(
+                                result.data.data.RoleOnPage.filter(
+                                    (page) => page.page.active && page.read
+                                ).map((page) => {
+                                    return {
+                                        name: page.page.name,
+                                        type: page.page.type,
+                                        link: page.page.link,
+                                        id: page.page.id,
+                                        pageGroupId: page.page.pageGroupId
+                                    };
+                                })
+                            );
+                        }
+                    } else {
+                        console.log(result);
+                    }
+                },
+                (error) => {
+                    console.log(error);
+                    toast.error("Server Down", { autoClose: 5000 });
+                }
+            );
+        }
+    }, []);
+    useEffect(retrieveAllowedPages, [retrieveAllowedPages]);
+
+
+
     return (
+
         <div className='py-1  w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
+            <Modal
+                isOpen={logout}
+                onClose={() => {
+                    setLogout(false);
+                }}
+                widthClass={""}
+            >
+                <Logout setLogout={setLogout} />
+            </Modal>
             <div className="w-32 ms-3">
                 <img className="rounded-lg"
                     src={logo}
@@ -27,18 +166,79 @@ const Header = ({ profile, setProfile }) => {
                 <div className="mr-3 bg-beige p-2 rounded-full ">
                     <Bell size={17} />
                 </div>
-                <div className="relative">
+                {/* <div className="relative">
                     <img className="rounded-full cursor-pointer" onClick={() => setProfile(!profile)} width={'25px'}
                         src={dp}
                         alt="image" />
 
-                    {/* profile details */}
                     {profile && <Profile
                         dp={dp}
-                        setProfile={setProfile} 
-                        
-                        />}
+                        setProfile={setProfile}
 
+                    />}
+            
+
+                </div> */}
+                <div className="relative text-left">
+                    <button
+                        ref={ref}
+                        onClick={toggleNavMenu}
+                        type="button"
+                        className="md:bg-transparent inline-flex  text-2xl justify-end"
+                        id="menu-button"
+                        aria-expanded="true"
+                        aria-haspopup="true"
+                    >
+                        {/* <FontAwesomeIcon icon={faUserCircle} />
+                         */}
+                        <img className="rounded-full cursor-pointer" width={'25px'}
+                            src={dp}
+                            alt="image" />
+                    </button>
+                    <div
+                        className={`-ml-40 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
+                    >
+                        {/* <div className="font-semibold">Profile</div> */}
+                        <div className="bg-beige flex p-2 items-center rounded-lg">
+                            <div className="mr-2 w-12">
+                                <img className="rounded-full" width={'30px'} height={'30px'} src={dp} alt="image" />
+                            </div>
+                            <div>
+                                <div className="text-sm text-black my-0 py-0">
+                                    {secureLocalStorage.getItem(
+                                        sessionStorage.getItem("sessionId") + "username"
+                                    )}
+                                </div>
+                                <div className="text-[11px] p-0 text-gray-400 -mt-1 ">{singleData?.data?.email}</div>
+                                {/* <button onClick={() => { navigate("/dashboard/accountsettings"); setProfile(false) }} className="button border border-black  rounded hover:bg-stone-900 hover:text-white mt-2">Edit Profile</button> */}
+                            </div>
+                        </div>
+                        <button className="nav-dropdown-bg z-99 p-2 w-full" onClick={() => { dispatch(push({ id: 1000000, name: "ACCOUNT SETTINGS" })) }}>
+                            <pre>ACCOUNT SETTINGS</pre>
+                        </button>
+                        {allowedPages.filter((page) => page.type === "AdminAccess")?.map((item, index) => (
+                            <button
+                                key={index}
+                                type="link"
+                                className="nav-dropdown-bg z-99 p-2 text-start block w-full"
+                                onClick={(e) => {
+                                    dispatch(push({ id: item.id, name: item.name }))
+                                    secureLocalStorage.setItem(
+                                        sessionStorage.getItem("sessionId") + "currentPage",
+                                        item.id
+                                    );
+                                }}
+                            >
+                                <pre>{item.name}</pre>
+                            </button>
+                        ))}
+
+                        <button className="nav-dropdown-bg z-50 p-2 w-full" onClick={() => setLogout(true)}>
+                            <pre>  Log Out</pre>
+
+                        </button>
+
+                    </div>
                 </div>
             </div>
 

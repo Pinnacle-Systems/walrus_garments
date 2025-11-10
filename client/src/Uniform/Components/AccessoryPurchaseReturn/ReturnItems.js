@@ -63,7 +63,6 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
-        newBlend[index][field] = value
         console.log(poItem, "poItem")
         if (poItem) {
 
@@ -93,6 +92,10 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
             newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
             newBlend[index]["accessoryPoItemsId"] = poItem?.id
+
+        }
+        else {
+            newBlend[index][field] = value
 
         }
         if (field === "qty") {
@@ -222,12 +225,12 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                         poInwardOrDirectInward == "DirectReturn" &&
 
-                   
+
                         <AccessoryDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                             handleInputChangeLotNo={handleInputChangeLotNo}
                             storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
                             directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-            
+
 
                     }
                     {

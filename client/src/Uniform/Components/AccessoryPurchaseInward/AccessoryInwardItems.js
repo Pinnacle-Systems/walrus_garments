@@ -49,7 +49,11 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
         }
         if (field === "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
-                toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                Swal.fire({
+                    title: "Inward Qty Cannot be more than balance Qty",
+                    icon: "success",
+                });
                 return
             }
         }
@@ -60,9 +64,9 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
 
     useEffect(() => {
         if (id) return
-        if (inwardItems?.length >= 1) return;
+        if (inwardItems?.length >= 3) return;
         setInwardItems((prev) => {
-            let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+            let newArray = Array.from({ length: 3 - prev.length }, (i) => {
                 return {
                     accessoryId: "",
                     qty: "0.00",
@@ -214,7 +218,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Colors
+                                    Color
                                 </th>
                                 <th
 
@@ -302,7 +306,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                         }
                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow}
                                 readOnly={readOnly} key={item.poItemsId} index={index} handleRightClick={handleRightClick}
-                                poInwardOrDirectInward={poInwardOrDirectInward} 
+                                poInwardOrDirectInward={poInwardOrDirectInward}
                                 handleInputChange={handleInputChange}
                             />)}
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>

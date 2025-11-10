@@ -11,20 +11,24 @@ import { useGetProjectQuery } from '../../../redux/services/ProjectService';
 import axios from 'axios';
 import { PAGES_API, ROLES_API } from '../../../Api';
 import AccountDetailsDropDown from './AccountsDropDown';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
+import { useDispatch } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
+
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 
-const Profile = ({ dp, items }) => {
+const Profile = ({ dp, items, setProfile }) => {
     const [logout, setLogout] = useState(false);
     const navigate = useNavigate();
-    const [hideNavBar, sethideNavBar] = useState(true);
 
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
     )
 
-    const navBatItemsStyle = hideNavBar ? "hidden" : "";
 
     const [allowedPages, setAllowedPages] = useState([]);
     const [formReport, setFormReport] = useState(false)
@@ -33,10 +37,21 @@ const Profile = ({ dp, items }) => {
 
 
 
+    const dispatch = useDispatch()
+
+    const [hideNavBar, sethideNavBar] = useState(true);
+
+    const navBatItemsStyle = hideNavBar ? "hidden" : "";
+
+    const handleOutsideClick = () => {
+        sethideNavBar(true);
+    };
+
+    const ref = useOutsideClick(handleOutsideClick);
+
     const toggleNavMenu = () => {
         sethideNavBar(!hideNavBar);
     };
-
     const id = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userId")
     const {
         data: singleData,
@@ -146,16 +161,17 @@ const Profile = ({ dp, items }) => {
                     {/* <button onClick={() => { navigate("/dashboard/accountsettings"); setProfile(false) }} className="button border border-black  rounded hover:bg-stone-900 hover:text-white mt-2">Edit Profile</button> */}
                 </div>
             </div>
-            <AccountDetailsDropDown setLogout={setLogout}
+            <AccountDetailsDropDown setLogout={setLogout} setProfile={setProfile}
                 items={allowedPages.filter((page) => page.type === "AdminAccess")}
             />
-            <div>
-                <div className="flex text-[12px] items-center mt-3 pt-3 border-t mx-2" style={{ borderTopWidth: '0.5px', borderColor: '#dce1e9' }}>
-
-                   
-                </div>
+            <div className="flex text-[12px] items-center mt-3 pt-3 border-t mx-2" style={{ borderTopWidth: '0.5px', borderColor: '#dce1e9' }}>
+                <span onClick={() => setLogout(true)} className="flex items-center cursor-pointer">
+                    <LogOut className="mr-2" size={20} />
+                    Log Out
+                </span>
             </div>
         </div>
+       
     )
 }
 

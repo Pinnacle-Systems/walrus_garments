@@ -58,7 +58,7 @@ export default function Form() {
 
   const syncFormWithDb = useCallback((data) => {
     if (!id) {
-      setReadOnly(false);
+      // setReadOnly(false);
       setName("");
       setCode("");
       setActive(id ? (data?.active ?? true) : false);
@@ -232,7 +232,7 @@ export default function Form() {
       header: "Department Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-64",
+      className: "font-medium text-gray-900 text-left uppercase w-64",
     },
 
 

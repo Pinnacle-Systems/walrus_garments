@@ -1160,7 +1160,7 @@ async function updateOrCreate(tx, item, AccessoryInwardId, poType, poInwardOrDir
                 AccessoryInwardId: parseInt(AccessoryInwardId),
                 accessoryId: parseInt(item["accessoryId"]),
                 accessoryGroupId: parseInt(item["accessoryGroupId"]),
-                accessoryItemId: parseInt(item["accessoryItemId"]),
+                accessoryItemId: item["accessoryItemId"]  ?  parseInt(item["accessoryItemId"]) :  undefined,
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,

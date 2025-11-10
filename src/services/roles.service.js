@@ -60,7 +60,7 @@ async function create(body) {
         data: {
             name,
             companyId: companyId ? parseInt(companyId) : null,
-            active: active,purchasePrice,purchaseDepartment,
+            active: active,
             RoleOnPage: {
                 createMany: {
                     data: pages.map((page) => { return { pageId: parseInt(page.id), create: page.create, read: page.read, edit: page.edit, delete: page.delete } }),

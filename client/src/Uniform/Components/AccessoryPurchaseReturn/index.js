@@ -84,12 +84,12 @@ export default function Form() {
         Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
-          draggable: true,
-          timer: 1000,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
+          // draggable: true,
+          // timer: 1000,
+          // showConfirmButton: false,
+          // didOpen: () => {
+          //   Swal.showLoading();
+          // }
         });
       } catch (error) {
         toast.error("Something went wrong");

@@ -104,8 +104,8 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     }}
                 />
             </td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(2)}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(2)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.price).toFixed(3)}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{!item?.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item?.qty : "0.000")).toFixed(3)}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">
                 <input
                     readOnly

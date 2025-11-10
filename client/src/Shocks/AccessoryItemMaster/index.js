@@ -76,13 +76,13 @@ export default function Form() {
     const syncFormWithDb = useCallback(
         (data) => {
             if (!id) {
-                setReadOnly(false);
+                // setReadOnly(false);
                 setName("");
                 setAccessoryGroupId("");
                 setActive(id ? (data?.active) : true);
                 setPartySuppliesItem([])
             } else {
-                setReadOnly(true);
+                // setReadOnly(true);
                 setName(data?.name || "");
                 setAccessoryGroupId(data?.accessoryGroupId || "");
                 setActive(id ? (data?.active) : true);

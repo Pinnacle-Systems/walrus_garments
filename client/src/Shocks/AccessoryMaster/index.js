@@ -88,7 +88,6 @@ export default function Form() {
             setTaxPercent("")
 
         } else {
-            setReadOnly(true);
             setAliasName(data?.aliasName || "");
             setAccessoryItemId(data?.accessoryItemId || "");
             setHsn(data?.hsnId ? data?.hsnId : "");
@@ -219,7 +218,9 @@ export default function Form() {
 
         }
 
-
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return;
+        }
         if (foundItem) {
             Swal.fire({
                 text: "The Yarn Blend Name already exists.",
@@ -279,7 +280,7 @@ export default function Form() {
 
     };
     const tax = (hsn, data) => {
-        console.log(hsn,"datadata")
+        console.log(hsn, "datadata")
         setTaxPercent(findFromList(hsn, data, "tax"));
     };
 
@@ -581,7 +582,7 @@ export default function Form() {
                                                             setValue={setAccessoryGroupId}
                                                             required={true}
                                                             readOnly={readOnly}
-                                                            disabled={(childRecord.current > 0)}
+                                                            disabled={(childRecord.current > 0) || readOnly}
                                                             labelField={"name"}
                                                         />
                                                         <DropdownWithSearch
@@ -591,7 +592,7 @@ export default function Form() {
                                                             setValue={setAccessoryCategoryId}
                                                             required={true}
                                                             readOnly={readOnly}
-                                                            disabled={(childRecord.current > 0)}
+                                                            disabled={(childRecord.current > 0) || readOnly}
                                                             labelField={"name"}
                                                         />
 
@@ -619,9 +620,9 @@ export default function Form() {
                                                             }}
                                                             labelField={"name"}
                                                             label={"Hsn"}
-                                                            required={true}
+                                                            required={true}  disabled={readOnly} 
                                                         />
-                                                        <TextInput name="Tax" type="text" value={taxPercent} readOnly={readOnly} setValue={setTaxPercent} />
+                                                        <TextInput name="Tax" type="text" value={taxPercent} readOnly={readOnly} setValue={setTaxPercent}  disabled={readOnly} />
                                                     </div>
 
                                                 </div>

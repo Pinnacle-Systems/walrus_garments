@@ -203,13 +203,13 @@ export default function Form() {
       header: "From",
       accessor: (item) => getDateFromDateTimeToDisplay(item?.from),
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-32",
+      className: "font-medium text-gray-900 text-left uppercase w-32",
     },
     {
       header: "To",
       accessor: (item) => getDateFromDateTimeToDisplay(item?.to),
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-32",
+      className: "font-medium text-gray-900 text-left uppercase w-32",
     },
 
     {

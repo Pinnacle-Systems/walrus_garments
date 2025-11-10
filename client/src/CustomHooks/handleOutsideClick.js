@@ -1,6 +1,9 @@
 import {useEffect, useRef} from "react";
 
 const useOutsideClick = (callback) => {
+
+            console.log("outside rewf :")
+
     const ref = useRef();
   
     useEffect(() => {

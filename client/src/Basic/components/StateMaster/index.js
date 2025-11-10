@@ -44,6 +44,8 @@ export default function Form() {
   const childRecord = useRef(0);
   const dispatch = useDispatch();
 
+  console.log(childRecord,"childRecord")
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -79,7 +81,7 @@ export default function Form() {
 
       return
     }
-    setReadOnly(true);
+    // setReadOnly(true);
     setActive(true)
     setName(data?.name || "");
     setCode(data?.code || "");
@@ -153,7 +155,6 @@ export default function Form() {
       Swal.fire({
         text: "The State Name already exists.",
         icon: "warning",
-        showConfirmButton: false,
       });
       return false;
     }
@@ -211,10 +212,7 @@ export default function Form() {
     setForm(true);
     setSearchValue("");
   };
-  function onDataClick(id) {
-    setId(id);
-    setForm(true);
-  }
+
 
   const handleView = (id) => {
     setId(id);
@@ -249,13 +247,13 @@ export default function Form() {
       header: "State Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-64",
+      className: "font-medium text-gray-900 text-left uppercase w-64",
     },
     {
       header: "Country Name",
       accessor: (item) => item?.country?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-64",
+      className: "font-medium text-gray-900 text-left uppercase w-64",
     },
 
     {

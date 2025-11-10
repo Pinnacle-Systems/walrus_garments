@@ -14,7 +14,7 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
   const navBatItemsStyle = hideNavBar ? "hidden" : "";
 
   const handleOutsideClick = () => {
-    sethideNavBar(true);
+    sethideNavBar(false);
   };
 
   const ref = useOutsideClick(handleOutsideClick);

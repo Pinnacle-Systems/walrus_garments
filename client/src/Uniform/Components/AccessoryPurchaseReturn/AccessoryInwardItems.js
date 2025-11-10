@@ -6,7 +6,7 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
 
-const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId ,contextMenu ,handleCloseContextMenu ,handleRightClick ,poInwardOrDirectInward }) => {
+const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId, contextMenu, handleCloseContextMenu, handleRightClick, poInwardOrDirectInward }) => {
 
 
 
@@ -85,7 +85,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             >
                                 Accessory Name
                             </th>
-                            <th
+                            {/* <th
 
                                 className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                             >
@@ -96,7 +96,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                 className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
                             >
                                 Accessory Group
-                            </th>
+                            </th> */}
                             <th
 
                                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -115,7 +115,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             >
                                 Uom
                             </th>
-                   
+
 
                             <th
 
@@ -129,8 +129,8 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             >
                                 BalanceQty
                             </th>
-                          
-            
+
+
                             <th
 
                                 className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -149,12 +149,12 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             >
                                 Gross
                             </th>
-                                <th
+                            <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Actions
-                                </th>
+                                className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                            >
+                                Actions
+                            </th>
                         </tr>
                     </thead>{console.log(directInwardReturnItems, "directInwardReturnItemsBefore")}
                     <tbody className='overflow-y-auto  h-full w-full'>
@@ -162,10 +162,10 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} storeId={storeId}
                             readOnly={readOnly} key={item.accessoryPoItemsId} index={index} handleInputChange={handleInputChange}
                             handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward}
-                        />)} 
+                        />)}
                         {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                {Array.from({ length: 13 }).map(i =>
+                                {Array.from({ length: 11 }).map(i =>
                                     <td className="table-data w-14  "></td>
                                 )}
                                 {!readOnly &&

@@ -168,6 +168,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         // }
     }, [id]);
 
+
+
     useEffect(() => {
         if (id) {
             syncFormWithDb(singleData?.data);
@@ -175,6 +177,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             syncFormWithDb(undefined);
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+    
 
     const data = {
         poType: transType,

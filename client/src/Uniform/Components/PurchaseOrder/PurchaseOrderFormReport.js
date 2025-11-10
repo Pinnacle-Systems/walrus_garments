@@ -553,12 +553,12 @@ const PurchaseOrderFormReport = ({
                       <td className="py-1.5 text-center">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-center">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poMaterial} </td>
+                      <td className="py-1.5 text-left  ">{dataObj.poMaterial} </td>
 
-                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
+                      <td className="py-1.5 text-left  ">{dataObj.poType} </td>
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (

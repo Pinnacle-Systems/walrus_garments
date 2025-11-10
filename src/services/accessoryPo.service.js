@@ -728,14 +728,15 @@ export function getPoItemObject(poMaterial, item) {
         newItem.accessoryId = parseInt(item.accessoryId);
         // newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
         newItem.accessoryGroupId = parseInt(item.accessoryGroupId)
-        newItem.accessoryItemId = parseInt(item.accessoryItemId)
+        newItem.accessoryCategoryId = parseInt(item.accessoryCategoryId) 
+        newItem.accessoryItemId =  item.accessoryItemId ? parseInt(item.accessoryItemId) : undefined
         newItem.hsnId = item.hsnId ? parseInt(item.hsnId) : null;
         newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
 
     }
 
     newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
-        newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
+    newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.qty = item.qty ? parseFloat(item.qty) : undefined;
     newItem.price = parseFloat(item.price);

@@ -328,7 +328,7 @@ const AccessoryPoItems = ({
 
                 className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
               >
-                Accessory Item
+                Accessory Category
               </th>
               <th
 
@@ -345,15 +345,33 @@ const AccessoryPoItems = ({
               </th>
               <th
 
-                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
               >
                 Size
               </th>
               <th
 
-                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
               >
                 UOM
+              </th>
+                     <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+               	Required Qty
+              </th>
+                     <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Already Purchased Qty
+              </th>
+                     <th
+
+                className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+              >
+                Balance Qty
               </th>
               <th
 
@@ -538,6 +556,76 @@ const AccessoryPoItems = ({
                     )}
                   </select>
                 </td>
+                       <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    onKeyDown={e => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                      if (e.key === "Delete") { handleInputChange("0.000", index, "requiredQty") }
+                    }}
+                    min={"0"}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    value={(!row.requiredQty) ? 0 : row.requiredQty}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      handleInputChange(parseFloat(e.target.value), index, "requiredQty")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "requiredQty");
+
+                    }
+                    }
+
+                  />
+
+                </td>       <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    onKeyDown={e => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                      if (e.key === "Delete") { handleInputChange("0.000", index, "alreadyPurchasedQty") }
+                    }}
+                    min={"0"}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    value={(!row.alreadyPurchasedQty) ? 0 : row.alreadyPurchasedQty}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      handleInputChange(parseFloat(e.target.value), index, "alreadyPurchasedQty")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "alreadyPurchasedQty");
+
+                    }
+                    }
+
+                  />
+
+                </td>       <td className='py-0.5 border border-gray-300 text-[11px]'>
+                  <input
+                    onKeyDown={e => {
+                      if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                      if (e.key === "Delete") { handleInputChange("0.000", index, "balanceQty") }
+                    }}
+                    min={"0"}
+                    type="number"
+                    onFocus={(e) => e.target.select()}
+                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    value={(!row.balanceQty) ? 0 : row.balanceQty}
+                    disabled={readOnly}
+                    onChange={(e) =>
+                      handleInputChange(parseFloat(e.target.value), index, "balanceQty")
+                    }
+                    onBlur={(e) => {
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "balanceQty");
+
+                    }
+                    }
+
+                  />
+
+                </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <input
                     onKeyDown={e => {
@@ -578,7 +666,7 @@ const AccessoryPoItems = ({
                       handleInputChange(e.target.value, index, "price")
                     }
                     onBlur={(e) => {
-                      handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+                      handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price");
                     }
                     }
                   />
@@ -589,7 +677,7 @@ const AccessoryPoItems = ({
                     type="number"
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full"
-                    value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
+                    value={(!row.qty || !row.price) ? 0.000 : (parseFloat(row.qty) * parseFloat(row.price))}
                     disabled={true}
                   />
                 </td>

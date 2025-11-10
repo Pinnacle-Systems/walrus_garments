@@ -52,8 +52,8 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
             <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.poNo}</td>
 
             <td className='w-32 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-            <td className='w-52 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-            <td className='w-40 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+            {/* <td className='w-52 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, acce    ssoryList?.data, "accessoryItem")}</td> */}
+            {/* <td className='w-40 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td> */}
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>

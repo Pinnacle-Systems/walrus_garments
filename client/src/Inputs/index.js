@@ -920,6 +920,7 @@ export const DateInputNew = forwardRef(({
   nextRef
 }, ref) => {
   const today = new Date().toISOString().split("T")[0];
+  const [pickerOpen, setPickerOpen] = useState(false);
 
 
 
@@ -931,10 +932,25 @@ export const DateInputNew = forwardRef(({
     }
   };
 
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     console.log("Enter pressed!");
+  //     ref?.current?.showPicker();
+  //   }
+  // };
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      console.log("Enter pressed!");
-      ref?.current?.showPicker();
+      e.preventDefault();
+
+      if (!pickerOpen) {
+        // First Enter → open the date picker
+        ref.current?.showPicker();
+        setPickerOpen(true);
+      } else {
+        // Second Enter → remove focus (close picker)
+        ref.current?.blur(); // removes focus
+        setPickerOpen(false);
+      }
     }
   };
   return (
@@ -962,6 +978,7 @@ export const DateInputNew = forwardRef(({
 
         onChange={(e) => {
           setValue(e.target.value)
+
           nextRef?.current?.focus()
         }}
         readOnly={readOnly}
@@ -2011,7 +2028,7 @@ export const ReusableSearchableInput = forwardRef(
       return () => {
         pageSearchComponent.removeEventListener("keydown", keyHandler);
       };
-    }, []);
+    }, [isDropdownOpen]);
 
 
     console.log(filteredPages, "filteredPages")
@@ -2204,7 +2221,7 @@ export const TextInputNew = ({
   tabIndex = null,
   onBlur = null,
   width = "full",
-  max ,
+  max,
   handleChange
 }) => {
   console.log(max, "max")
@@ -2218,9 +2235,9 @@ export const TextInputNew = ({
       <input
         type={type}
         value={value}
-        onChange={(e) =>  
+        onChange={(e) =>
 
-            handleChange ?   handleOnChange(e,setValue)  :   setValue(e.target.value)
+          handleChange ? handleOnChange(e, setValue) : setValue(e.target.value)
         }
 
         onBlur={onBlur}

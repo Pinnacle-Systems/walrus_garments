@@ -43,7 +43,8 @@ const GeneralAccessoryPoItems = ({
   hsnData,
   contextMenu,
   handleRightClick,
-  handleCloseContextMenu
+  handleCloseContextMenu ,
+  accessoryCategoryList
 }) => {
 
 
@@ -294,7 +295,7 @@ const GeneralAccessoryPoItems = ({
           isSupplierOutside={isSupplierOutside}
         />
       </Modal>
-      <div className={` relative w-full overflow-y-auto p-3 max-h-[250px] overflow-auto`}>
+      <div className={` relative w-full overflow-y-auto p-3 max-h-[190px] overflow-auto`}>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-bold text-slate-700">List Of Items</h2>
           <button className="font-bold text-slate-700 bord"
@@ -344,7 +345,7 @@ const GeneralAccessoryPoItems = ({
 
                 className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
               >
-                Accessory Item
+                Accessory Category
               </th>
               <th
 
@@ -433,19 +434,19 @@ const GeneralAccessoryPoItems = ({
                 </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
-                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
-                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryItemId")}
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryCategoryId") } }}
+                    disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryCategoryId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryCategoryId")}
                     onBlur={(e) => {
 
-                      handleInputChange(e.target.value, index, "accessoryItemId")
+                      handleInputChange(e.target.value, index, "accessoryCategoryId")
 
                     }
                     }
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || []).map((blend) =>
+                    {(id ? (accessoryCategoryList?.data || []) : accessoryCategoryList?.data?.filter(item => item.active) || []).map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -455,7 +456,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                    disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                     onBlur={(e) => {
 
@@ -466,7 +467,7 @@ const GeneralAccessoryPoItems = ({
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryList?.data || []) : accessoryList?.data?.filter(item => item.active && item?.accessoryItemId == row?.accessoryItemId) || [])?.map((blend) =>
+                    {(id ? (accessoryList?.data || []) : accessoryList?.data?.filter(item => item.active && item?.accessoryCategoryId == row?.accessoryCategoryId && item?.accessoryGroupId == row?.accessoryGroupId ) || [])?.map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.aliasName}
                       </option>
@@ -622,7 +623,8 @@ const GeneralAccessoryPoItems = ({
                 </td>
                 <td className="w-16 px-1 py-1 border border-gray-300 text-center">
                   <input
-                    disabled={readOnly}
+                    readOnly={true }
+                    disabled={!row.accessoryGroupId}
                     className="w-full bg-transparent  text-right pr-2"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
