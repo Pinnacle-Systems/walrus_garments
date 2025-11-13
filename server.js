@@ -38,7 +38,6 @@ import {
   branchType,
   requirementPlanningForm,
   Material,
-  raiseIndent,
   materialIssue,
   stockTransfer,
   excessTolerance,
@@ -52,6 +51,8 @@ import {
   accessoryReturn,
   accessoryBillEntry,
   accessoryCategory,
+  materialRequest,
+  stockReportControl,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -188,7 +189,7 @@ app.use("/partyBranchContact", partyBranchContact)
 app.use("/partyContact", partyContact)
 app.use("/requirementPlanningForm", requirementPlanningForm);
 app.use("/material", Material)
-app.use("/raiseIndenet", raiseIndent)
+app.use("/raiseIndenet", materialRequest)
 app.use("/materialIssue", materialIssue)
 app.use("/stockTransfer", stockTransfer)
 app.use("/excessTolerance", excessTolerance)
@@ -200,6 +201,7 @@ app.use("/billEntry", billEntry);
 app.use("/accessoryBillEntry", accessoryBillEntry);
 app.use("/accessoryPurchaseReturn", accessoryReturn);
 app.use("/accessoryCategory", accessoryCategory);
+app.use("/stockReportControl", stockReportControl);
 
 
 

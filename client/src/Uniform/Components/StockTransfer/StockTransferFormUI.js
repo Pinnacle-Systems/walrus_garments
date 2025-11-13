@@ -5,7 +5,7 @@ import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetStockValidationByIdQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetStockValidationByIdQuery } from "../../../redux/uniformService/OrderService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import FormItems from "./FormItems";
 import { useAddStockMutation, useDeleteStockMutation, useGetStockByIdQuery, useGetStockQuery, useUpdateStockMutation } from "../../../redux/services/StockService";
@@ -33,7 +33,6 @@ const StockTransferForm = ({
 
 
 
-    // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation }, { skip: !orderId });
 
 
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetStockValidationByIdQuery(toOrderId, { skip: !toOrderId });
@@ -47,21 +46,18 @@ const StockTransferForm = ({
 
 
     const {
-        data: stockData,
-        isFetching: stockFetching,
-        isLoading: stockLoading,
-    } = useGetStockByIdQuery(
-        {
-            params: {
-                transferType,
-                fromOrderId,
-                storeId: 1
+        data: stockData, isFetching: stockFetching, isLoading: stockLoading, } = useGetStockByIdQuery(
+            {
+                params: {
+                    transferType,
+                    fromOrderId,
+                    storeId: 1
+                },
             },
-        },
-        {
-            skip: !transferType && !fromOrderId, // skip only when nothing is selected
-        }
-    );
+            {
+                skip: !transferType && !fromOrderId,
+            }
+        );
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
     //   const [removeData] = useDeleteStockMutation();
@@ -93,165 +89,63 @@ const StockTransferForm = ({
             setToCustomerId(data?.toCustomerId ? data?.toCustomerId : "")
 
         } else {
-            // setOrderItems(
-            //         data?.RequirementPlanningForm(item => {
 
-            //         const allColors = item?.RequirementYarnDetails?.map(yarn => yarn?.Color?.name)?.filter(Boolean)?.join(" - ");
-
-            //         const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-
-            //             const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
-            //                 console.log(
-            //                     `Calculation => sum(${sum}) + size.weight(${size?.weight}) * yarn.percentage(${yarn?.percentage}) / 100`
-            //                 );
-
-            //                 return sum + (size?.weight * (yarn?.percentage / 100));
-            //             }, 0);
-
-            //             console.log(`✅ Yarn ${yarn?.Yarn.name || yarn?.id} final qty:`, qty);
-
-            //             return {
-            //                 ...yarn,
-            //                 qty: Number(qty.toFixed(3)),
-            //                 style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-            //                 orderDetailsId: item.orderDetailsId,
-            //             };
-            //         });
-
-            //         console.log(RaiseIndenetYarnItems, "RaiseIndenetYarnItems")
-
-            //         return {
-
-            //             RaiseIndenetYarnItems,
-            //         };
-            //     })
-            // );
 
 
             setToCustomerId(data?.partyId ? data?.partyId : "")
 
 
 
-            // setTempOrderItems(
-            //     data?.RequirementPlanningForm?.flatMap(item => {
-            //         const allColors = item?.RequirementYarnDetails
-            //             ?.map(yarn => yarn?.Color?.name)
-            //             ?.filter(Boolean)
-            //             ?.join(" - ");
 
-            //         return item?.RequirementYarnDetails?.map(yarn => {
-            //             // calculate required qty for this yarn
-            //             const qty = item?.requirementSizeDetails?.reduce((sum, size) => {
-            //                 const sizeQty =
-            //                     size?.qty || size?.quantity || size?.orderQty || size?.totalQty || 0;
-            //                 return (
-            //                     sum +
-            //                     (size?.weight || 0) *
-            //                     (yarn?.percentage / 100) *
-            //                     sizeQty
-            //                 );
-            //             }, 0);
-
-            //             const requiredQty = Number(qty.toFixed(3));
-
-            //             // find matching poSummary rows
-            //             const matches = data?.poSummary?.filter(
-            //                 po => po.yarnId === yarn.yarnId && po.colorId === yarn.colorId
-            //             ) ?? [];
-
-            //             let remaining = requiredQty;
-            //             let totalPoQty = 0;
-
-            //             for (const po of matches) {
-            //                 if (remaining <= 0) break;
-            //                 const consume = Math.min(remaining, po?.qty || 0);
-            //                 totalPoQty += consume;
-            //                 remaining -= consume;
-            //             }
-
-            //             return {
-            //                 ...yarn,
-            //                 requiredQty: requiredQty,   
-            //                 poQty: Number(totalPoQty.toFixed(3)), 
-            //                 style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-            //                 orderDetailsId: item.orderDetailsId,
-            //                 orderId: item.orderId,
-            //                 branchId : data?.branchId,
-            //             };
-            //         });
-            //     }) ?? []
-            // );
 
             setTempOrderItems(() => {
-                // 🔹 Create a working stock map so we can deduct as we go
-                const stockMap = {};
-                data?.Stock?.forEach(s => {
-                    const key = `${s.yarnId}-${s.colorId}`;
-                    stockMap[key] = (stockMap[key] || 0) + parseFloat(s?.qty || 0);
-                });
+                
+                const stockMap = data?.Stock?.reduce((acc, stockItem) => {
+                    const key = `${stockItem.yarnId}-${stockItem.colorId}`;
+                    if (!acc[key]) {
+                        acc[key] = parseFloat(stockItem?.qty || 0);
+                    } else {
+                        acc[key] += parseFloat(stockItem?.qty || 0);
+                    }
+                    return acc;
+                }, {}) || {};
+
+                console.log("🧶 Initial Stock Map:", stockMap);
 
                 return (
-                    data?.RequirementPlanningForm?.flatMap(item => {
-                        const allColors = item?.RequirementYarnDetails
-                            ?.map(yarn => yarn?.Color?.name)
+                    data?.RequirementPlanningForm?.flatMap(form => {
+                        const allColors = form?.RequirementPlanningItems
+                            ?.map(y => y?.Color?.name)
                             ?.filter(Boolean)
-                            ?.join(" - ");
+                            ?.join(" - ") || "";
 
-                        return item?.RequirementYarnDetails?.map(yarn => {
-                            // 1️⃣ required quantity
-                            const requiredQty = item?.requirementSizeDetails?.reduce((sum, size) => {
-                                const sizeQty = parseFloat(size?.qty || 0);
-                                const weight = parseFloat(size?.weight || 0);
-                                const percentage = parseFloat(yarn?.percentage || 0);
-                                return sum + weight * (percentage / 100) * sizeQty;
-                            }, 0);
+                        return form?.RequirementPlanningItems?.map(yarn => {
+                            const requiredQty = parseFloat(yarn?.requiredQty || 0);
 
-                            // 2️⃣ po qty
-                            const poQty = (data?.poSummary
-                                ?.filter(po => po.yarnId === yarn.yarnId && po.colorId === yarn.colorId)
-                                ?.reduce((sum, po) => sum + parseFloat(po?.qty || 0), 0)) || 0;
+                            const poQty = yarn?.PoItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)
 
-                            // 3️⃣ get stock from working map
+
                             const stockKey = `${yarn.yarnId}-${yarn.colorId}`;
-                            let availableStock = stockMap[stockKey] || 0;
+                            const availableStock = parseFloat(stockMap[stockKey] || 0);
 
-                            // 4️⃣ balance logic
-                            let balanceQty = parseFloat(requiredQty) - parseFloat(poQty);
-                            let usedStockQty = 0;
+                            const usedStockQty = Math.min(requiredQty, availableStock);
+                            const balanceQty = Math.max(requiredQty - usedStockQty, 0);
 
-                            if (balanceQty <= 0) {
-                                balanceQty = 0;
-                                usedStockQty = 0;
-                            } else {
-                                usedStockQty = Math.min(availableStock, balanceQty);
-                                balanceQty = balanceQty - usedStockQty;
+                            stockMap[stockKey] = availableStock - usedStockQty;
 
-                                // 🔹 Deduct used stock from stockMap so next item won’t reuse it
-                                stockMap[stockKey] = availableStock - usedStockQty;
-                            }
+                 
 
-                            // 🟢 Debug Log
-                            console.log(
-                                `👉 YarnId:${yarn.yarnId}, ColorId:${yarn.colorId}, Style:${item?.OrderDetails?.style?.name}`,
-                                {
-                                    requiredQty: requiredQty.toFixed(3),
-                                    poQty: poQty.toFixed(3),
-                                    availableStock: availableStock?.toFixed(3),
-                                    usedStockQty: usedStockQty.toFixed(3),
-                                    balanceQty: parseFloat(balanceQty),
-                                    stockRemaining: stockMap[stockKey] // 👈 after deduction
-                                }
-                            );
-
+                            // Return the final object
                             return {
                                 ...yarn,
+                                poQty :poQty,
                                 requiredQty: Number(requiredQty.toFixed(3)),
-                                poQty: Number(poQty.toFixed(3)),
-                                alreadyTransferStockQty: Number(usedStockQty.toFixed(3)),
+                                usedStockQty: Number(usedStockQty.toFixed(3)),
                                 balanceQty: Number(balanceQty.toFixed(3)),
-                                style: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-                                orderDetailsId: item.orderDetailsId,
-                                orderId: item.orderId,
+                                currentStockQty: Number(availableStock.toFixed(3)), // before consumption
+                                orderDetailsId: form.orderDetailsId,
+                                orderId: form.orderId,
+                                style: `${form?.OrderDetails?.style?.name} / ${allColors}`,
                             };
                         });
                     }) ?? []
@@ -301,6 +195,7 @@ const StockTransferForm = ({
         }
 
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
+
 
     useEffect(() => {
 
@@ -361,12 +256,7 @@ const StockTransferForm = ({
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
 
             } else {
@@ -374,13 +264,8 @@ const StockTransferForm = ({
                 Swal.fire({
                     title: returnData?.message,
                     icon: "error",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
                 });
+
             }
         } catch (error) {
             console.log("handle");
@@ -435,7 +320,7 @@ const StockTransferForm = ({
     }, []);
 
 
-    if (isSingleOrderLoading || isSingleOrderFetching || stockFetching || stockLoading ||  isSingleDataLoading ||  isSingleDataFetching) return <Loader />
+    if (isSingleOrderLoading || isSingleOrderFetching || stockFetching || stockLoading || isSingleDataLoading || isSingleDataFetching) return <Loader />
 
 
     return (
@@ -480,7 +365,7 @@ const StockTransferForm = ({
                                 <DropdownInput name="Stock Transfer Type"
                                     options={stockTransferType}
                                     value={transferType}
-                                    setValue={(value) => { setTransferType(value); OnNew()  }}
+                                    setValue={(value) => { setTransferType(value); OnNew() }}
                                     required={true}
                                     ref={inputRef1}
                                     openOnFocus={true}
@@ -503,7 +388,7 @@ const StockTransferForm = ({
                                                 value={"General"}
                                                 required={true}
                                                 readOnly={true}
-                                                className={`${transferType == "General" ? "bg-purple-500 text-white" : ""}`}
+                                            // className={`${transferType == "General" ? "bg-purple-500 text-white" : ""}`}
 
                                             />
                                         </div>
@@ -519,7 +404,7 @@ const StockTransferForm = ({
 
                                                     name={"From Order No"}
                                                     value={findFromList(singleData?.data?.fromOrderId, orderData?.data, "docId")}
-                                                    className={"bg-purple-400 text-white"}
+                                                // className={"bg-purple-400 text-white"}
 
                                                 />
                                                 :
@@ -532,8 +417,8 @@ const StockTransferForm = ({
                                                     // readOnly={id ? true : false}
                                                     labelField={"docId"}
                                                     label={"From Order No"}
-                                                    // className={"bg-gradient-to-r from-purple-500 via-purple-500"}
-                                                    className={"bg-purple-400 text-white"}
+                                                // className={"bg-gradient-to-r from-purple-500 via-purple-500"}
+                                                // className={"bg-purple-400 text-white"}
 
                                                 />
 
@@ -560,7 +445,7 @@ const StockTransferForm = ({
 
                                             name={"To Order No"}
                                             value={findFromList(singleData?.data?.toOrderId, orderData?.data, "docId")}
-                                            className={"bg-[#4ADE80]"}
+                                        // className={"bg-[#4ADE80]"}
 
                                         />
                                         :
@@ -574,8 +459,8 @@ const StockTransferForm = ({
                                             // readOnly={id ? true : false}
                                             labelField={"docId"}
                                             label={"To Order No"}
-                                            // className={"bg-gradient-to-r from-green-500 via-emerald-500 "}
-                                            className={"bg-[#4ADE80] text-white"}
+                                        // className={"bg-gradient-to-r from-green-500 via-emerald-500 "}
+                                        // className={"bg-[#4ADE80] text-white"}
 
 
                                         />
@@ -607,7 +492,7 @@ const StockTransferForm = ({
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                             colorList={colorList?.data} yarnList={yarnList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                            toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data} transferType={transferType} singleData={singleData}
+                            toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data} transferType={transferType} singleData={singleData} 
 
                         />
 
@@ -629,22 +514,12 @@ const StockTransferForm = ({
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
                                 Save & Close
                             </button>
-                            {/* <button
-                                // onClick={() => saveData("draft")} 
-                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Draft Save
-                            </button> */}
+
                         </div>
 
-                        {/* Right Buttons */}
                         <div className="flex gap-2 flex-wrap">
-                            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                                                       <FiShare2 className="w-4 h-4 mr-2" />
-                                                                       Email
-                                                                   </button> */}
+
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            // onClick={() => setReadOnly(false)}
                             >
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit

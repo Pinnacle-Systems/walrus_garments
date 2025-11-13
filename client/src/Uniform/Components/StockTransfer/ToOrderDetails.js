@@ -6,14 +6,12 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 
-export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems
+export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, toOrderId, setStockItems
 
 }) {
 
 
-    console.log(orderItems, "orderItems")
 
-    console.log(tempStockItems, "tempStockItems")
 
 
     function handleDone() {
@@ -191,7 +189,42 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
 
                 <div className="flex flex-row gap-40 ">
                     <div className="flex flex-col">
+                        <div className="border-b py-1.5 px-2 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                    {toOrderId}
+                                </h2>
+
+                            </div>
+                            <div className="flex gap-2">
+
+
+                                <div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleCancel}
+                                        className="px-3 py-1 hover:bg-red-600 hover:text-white rounded text-red-600 
+                                        border border-red-600 flex items-center gap-1 text-xs"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleDone}
+                                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                        border border-green-600 flex items-center gap-1 text-xs"
+                                    >
+                                        Done
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
                         <div className="justify-end items-center mt-4 mb-5">
+
                             <div className="max-h-[600px] overflow-y-auto ">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
@@ -204,11 +237,11 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
 
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
+                                            <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-96">Yarn</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Po Qty (Kgs)</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Already Transfer Qty (Kgs)</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
+                                            {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Already Transfer Qty (Kgs)</th> */}
 
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Balance  Qty</th>
 
@@ -221,8 +254,9 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                         {(tempOrderItems ?? []).map((yarnItem, index) => (
                                             <tr
                                                 key={index}
-                                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                                                    }`}
+                                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `
+                                            
+                                            }
                                                 onClick={() => {
                                                     if (yarnItem?.balanceQty !== 0) {
                                                         handleChange(yarnItem.id, yarnItem)
@@ -233,7 +267,8 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                 <td className='py-1 text-center'>
                                                     <input type="checkbox" name="" id=""
                                                         checked={isItemAdded(yarnItem.id, yarnItem)}
-                                                        disabled={yarnItem?.balanceQty === 0} />
+                                                    disabled={yarnItem?.balanceQty === 0} 
+                                                    />
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
@@ -251,11 +286,11 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                     {parseFloat(yarnItem?.requiredQty)?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                    {parseFloat(yarnItem?.poQty)?.toFixed(3)}
+                                                    {parseFloat(yarnItem?.usedStockQty)?.toFixed(3)}
                                                 </td>
-                                                <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {parseFloat(yarnItem?.alreadyTransferStockQty)?.toFixed(3)}
-                                                </td>
+                                                </td> */}
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {/* {(
                                                         (parseFloat(yarnItem?.requiredQty ?? 0)) -
@@ -271,14 +306,14 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                             </div>
 
                         </div>
-                        <div className='flex justify-end gap-4 mt-3'>
+                        {/* <div className='flex justify-end gap-4 mt-3'>
                             <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
                                 Done
                             </button>
                             <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
                                 Cancel
                             </button>
-                        </div>
+                        </div> */}
                     </div>
 
                 </div>

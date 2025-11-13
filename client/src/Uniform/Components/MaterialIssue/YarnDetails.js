@@ -9,17 +9,17 @@ const YarnDetails = ({ indentItems, setIssueItems, gridIndex }) => {
 
 
 
-  
-  
-  
+
+
+
   const handleInputChange = (value, index, field) => {
     const newBlend = structuredClone(indentItems?.RaiseIndenetYarnItems);
-    console.log(newBlend,"newBlend",value , index)
-        newBlend[index][field] = parseInt(value);
-   
-    
-        setIssueItems(newBlend);
-    };
+    console.log(newBlend, "newBlend", value, index)
+    newBlend[index][field] = parseInt(value);
+
+
+    setIssueItems(newBlend);
+  };
 
 
 
@@ -69,10 +69,10 @@ const YarnDetails = ({ indentItems, setIssueItems, gridIndex }) => {
                         type="number"
                         className="text-right rounded py-1 px-1 w-full table-data-input"
                         onFocus={(e) => e.target.select()}
-                        value={yarn?.issueQty}  
-                      onChange={(e) => {
-                        handleInputChange(e.target.value, index, "issueQty");
-                      }}
+                        value={yarn?.issueQty}
+                        onChange={(e) => {
+                          handleInputChange(e.target.value, index, "issueQty");
+                        }}
                       // onBlur={(e) => {
                       //   const val = e.target.value;
                       //   handleInputChange(val === "" ? 0 : parseFloat(val).toFixed(2), index, "qty");

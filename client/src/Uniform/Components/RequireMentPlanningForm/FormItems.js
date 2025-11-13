@@ -4,19 +4,24 @@ import Swal from "sweetalert2";
 import Modal from "../../../UiComponents/Modal";
 import SubGrid from "./SubGrid";
 import { Common } from "../../../Utils/DropdownData";
+import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, tempOrderDetailsId }) => {
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, tempOrderDetailsId,
+    setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
+    colorList, uomList, sizeList, orderId
+
+}) => {
 
     console.log(orderSizeDetails, "orderSizeDetails");
     console.log(tempOrderDetailsId, "tempOrderDetailsId")
     console.log(requirementItems, "requirementItems");
     console.log(requirementForm, "requirementForm")
     console.log(processList, "processList")
-    console.log(orderYarnDetails, "orderYarnDetails")
+    // console.log(orderYarnDetails, "orderYarnDetails")
 
     const [tableDataView, setTableDataView] = useState(false)
     const [processView, setProcessView] = useState(false)
-
+    const [type, setType] = useState("yarn");
     const [selectedIndex, setSelectedIndex] = useState("")
     const [selectedItem, setSelectedItem] = useState("")
 
@@ -45,12 +50,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     Swal.fire({
                         title: "Total percentage cannot exceed 100!",
                         icon: "error",
-                        draggable: true,
-                        timer: 1000,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
+
                     });
                 }
                 else {
@@ -127,6 +127,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                 newItems[index].yarnType = "GreyYarn";
                 newItems[index][field] = value;
+
 
             }
             else if (field === "lossPercentage" || field === "processId") {
@@ -292,7 +293,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             const base = parseFloat(item?.requireWeight || 0) * parseFloat(sizeQty || 0);
 
             const totalLossPercentage = (item?.RequirementYarnProcessList || []).reduce(
-                (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                (acc, process) => acc + (parseFloat(process?.lossPercentage) || 0),
                 0
             );
             const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
@@ -341,239 +342,274 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 />
             </Modal>
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-y-auto">
-                <div className="flex justify-between items-center mb-2 overflow-y-auto">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+                <div className="flex flex-row  justify-between gap-7 items-center mb-2 overflow-y-auto">
+                    <h2 className="font-bold text-gray-800">{type == "yarn" ? " Yarn Requirement Details" : " Accessory Requirement Details"}</h2>
 
+                    <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
+                        <button
+                            onClick={() => setType("yarn")}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "yarn"
+                                ? "bg-blue-600 text-white shadow"
+                                : "bg-transparent text-gray-700 hover:text-blue-600"
+                                }`}
+                        >
+                            Yarn
+                        </button>
 
-
-
+                        <button
+                            onClick={() => setType("accessory")}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "accessory"
+                                ? "bg-blue-600 text-white shadow"
+                                : "bg-transparent text-gray-700 hover:text-blue-600"
+                                }`}
+                        >
+                            Accessory
+                        </button>
+                    </div>
                 </div>
 
-                <div className="overflow-x-auto mt-8 w-full">
-                    <table className="min-w-[1200px] border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800">
 
-                            <tr>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
+                {type == "accessory" && (
 
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
-                                {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td> */}
-                                <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Waste %</td>
+                    <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
+                        accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
+                        requirementItems={requirementItems}
 
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-40">Size</td>
+                    />
+
+                )}
+
+
+                {type == "yarn" && (
 
 
 
 
+                    <div className="overflow-x-auto mt-8 w-full">
+                        <table className="min-w-[1200px] border-collapse table-fixed">
+                            <thead className="bg-gray-200 text-gray-800">
 
-
-                                {orderSizeDetails?.map((item, index) => {
-                                    return (
-                                        <td
-                                            key={index}
-                                            className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-20"
-                                        >
-                                            {item?.size?.name}
-                                        </td>
-                                    )
-                                })}
-
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
-
-
-                            </tr>
-
-                            <tr className="bg-white">
-                                <td colSpan={7} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
-
-                                    Order Requirement Details
-
-                                </td>
-                                <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                    Size Weight (grams)
-                                </td>
-                                {orderSizeDetails?.map((item, index) => (
-                                    <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                        {item?.weight.toFixed(3)}
-                                    </td>
-                                ))}
-                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
-
-                            </tr>
-                            <tr className="bg-white">
-
-                                <td className="border border-gray-300 px-2 py-1 text-left  text-xs w-16">
-                                    Order Qty (kgs)
-                                </td>
-                                {orderSizeDetails?.map((item, index) => (
-                                    <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                        {item?.qty?.toFixed(3)}
-                                    </td>
-                                ))}
-                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
-
-                            </tr>
-
-                        </thead>
-                        <tbody>
-
-                            {orderYarnDetails?.map((yarn, index) => (
                                 <tr>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Yarn?.name}</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color?.name}</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
+
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
+                                    {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td> */}
+                                    <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Waste %</td>
+
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-40">Size</td>
 
 
 
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                                        <select
-                                            onKeyDown={e => {
-                                                if (e.key === "Delete") {
-                                                    handleInputChange("", index, yarn?.yarnId, "isProcess");
-                                                }
-                                            }}
-                                            disabled={readOnly}
-                                            className="text-left w-full rounded h-full py-1"
-                                            value={yarn?.isProcess}   // 👈 default "No"
-                                            onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
-                                            onBlur={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
-                                        >
-                                            {Common?.map(size => (
-                                                <option value={size.value} key={size.id}>
-                                                    {size?.show}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </td>
-
-                                    <td className="py-0.5 border border-gray-300 text-[11px]  flex justify-center items-center">
-
-                                        <button
-                                            onClick={() => {
-                                                setProcessView(true)
-                                                setSelectedItem(yarn)
-                                                setSelectedIndex(index)
-                                            }}
-                                            disabled={readOnly || yarn?.isProcess === "No"}
-                                            className="text-blue-800 flex items-center  py-1.5 bg-blue-50 rounded"
-                                        >
-                                            👁 <span className="text-xs"></span>
-                                        </button>
-
-                                    </td>
 
 
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
-                                        <input
-                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            onFocus={e => e.target.select()}
-                                            value={yarn?.percentage}
-
-
-
-
-                                            disabled={readOnly}
-                                            onKeyDown={(e) => {
-                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                            }}
-                                            onChange={(e) => {
-                                                const val = parseFloat(e.target.value).toFixed(3);
-
-                                                handleInputChange(val, index, yarn?.yarnId, "percentage");
-
-
-                                            }}
-                                            onBlur={(e) => {
-                                                const formatted =
-                                                    e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
-                                                e.target.value = formatted;
-                                                handleInputChange(formatted, index, yarn?.yarnId, "percentage");
-                                            }}
-                                            placeHolder="0.000"
-                                        />
-                                    </td>
-                                    <td className="border border-gray-300 px-2 py-1 text-right text-[12px] ">
-                                        <input
-                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={(yarn?.wastagePercentage ?? 10?.toFixed(3))}
-                                            onFocus={e => e.target.select()}
-                                            onKeyDown={(e) => {
-                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                            }}
-
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-
-                                                handleInputChange(val, index, yarn?.yarnId, "wastagePercentage");
-                                            }}
-                                            placeHolder="0.00"
-
-                                            disabled={readOnly || !yarn?.percentage}
-                                            onBlur={(e) => {
-                                                const formatted =
-                                                    e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
-                                                e.target.value = formatted;
-                                                handleInputChange(formatted, index, yarn?.yarnId, "wastagePercentage");
-                                            }}
-
-
-
-
-                                        />
-                                    </td>
-                                    <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]">
-
-                                    </td>
-
-
-                                    {(orderSizeDetails || []).map((size) => (
-                                        <>
-                                            <td className="border border-gray-300 px-1 py-1  text-[12px] ">
-                                                <input
-                                                    type="number"
-
-                                                    min={"0"}
-                                                    onFocus={(e) => e.target.select()}
-                                                    className=" rounded text-[11.5px] w-full text-right bg-transparent"
-                                                    value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId) || "").toFixed(3)}
-                                                    disabled={true}
-
-                                                />
+                                    {orderSizeDetails?.map((item, index) => {
+                                        return (
+                                            <td
+                                                key={index}
+                                                className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-20"
+                                            >
+                                                {item?.size?.name}
                                             </td>
+                                        )
+                                    })}
 
-                                        </>
-
-                                    ))}
-
-
-
-
-                                    <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
-
-
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
 
 
                                 </tr>
-                            ))}
 
-                        </tbody>
-
-                    </table>
-                </div>
+                                <tr className="bg-white">
+                                    <td colSpan={7} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
 
 
 
+                                    </td>
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">
+                                        Size Weight (grams)
+                                    </td>
+                                    {orderSizeDetails?.map((item, index) => (
+                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                            {item?.weight.toFixed(3)}
+                                        </td>
+                                    ))}
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
+
+                                </tr>
+                                <tr className="bg-white">
+
+                                    <td className="border border-gray-300 px-2 py-1 text-left  text-xs w-16">
+                                        Order Qty (kgs)
+                                    </td>
+                                    {orderSizeDetails?.map((item, index) => (
+                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                            {item?.qty?.toFixed(3)}
+                                        </td>
+                                    ))}
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
+
+                                </tr>
+
+                            </thead>
+                            <tbody>
+
+                                {orderYarnDetails?.map((yarn, index) => (
+                                    <tr>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Yarn?.name}</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color?.name}</td>
+
+
+
+
+                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+                                            <select
+                                                onKeyDown={e => {
+                                                    if (e.key === "Delete") {
+                                                        handleInputChange("", index, yarn?.yarnId, "isProcess");
+                                                    }
+                                                }}
+                                                disabled={readOnly}
+                                                className="text-left w-full rounded h-full py-1"
+                                                value={yarn?.isProcess}   // 👈 default "No"
+                                                onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
+                                                onBlur={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
+                                            >
+                                                {Common?.map(size => (
+                                                    <option value={size.value} key={size.id}>
+                                                        {size?.show}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+
+                                        <td className="py-0.5 border border-gray-300 text-[11px]  flex justify-center items-center">
+
+                                            <button
+                                                onClick={() => {
+                                                    setProcessView(true)
+                                                    setSelectedItem(yarn)
+                                                    setSelectedIndex(index)
+                                                }}
+                                                disabled={readOnly || yarn?.isProcess === "No"}
+                                                className="text-blue-800 flex items-center  py-1.5 bg-blue-50 rounded"
+                                            >
+                                                👁 <span className="text-xs"></span>
+                                            </button>
+
+                                        </td>
+
+
+                                        <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                            <input
+                                                className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                onFocus={e => e.target.select()}
+                                                value={yarn?.percentage}
+
+
+
+
+                                                disabled={readOnly}
+                                                onKeyDown={(e) => {
+                                                    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                }}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value).toFixed(3);
+
+                                                    handleInputChange(val, index, yarn?.yarnId, "percentage");
+
+
+                                                }}
+                                                onBlur={(e) => {
+                                                    const formatted =
+                                                        e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                    e.target.value = formatted;
+                                                    handleInputChange(formatted, index, yarn?.yarnId, "percentage");
+                                                }}
+                                                placeHolder="0.000"
+                                            />
+                                        </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] ">
+                                            <input
+                                                className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={(yarn?.wastagePercentage ?? 10?.toFixed(3))}
+                                                onFocus={e => e.target.select()}
+                                                onKeyDown={(e) => {
+                                                    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                }}
+
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+
+                                                    handleInputChange(val, index, yarn?.yarnId, "wastagePercentage");
+                                                }}
+                                                placeHolder="0.00"
+
+                                                disabled={readOnly || !yarn?.percentage}
+                                                onBlur={(e) => {
+                                                    const formatted =
+                                                        e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                    e.target.value = formatted;
+                                                    handleInputChange(formatted, index, yarn?.yarnId, "wastagePercentage");
+                                                }}
+
+
+
+
+                                            />
+                                        </td>
+                                        <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]">
+
+                                        </td>
+
+
+                                        {(orderSizeDetails || []).map((size) => (
+                                            <>
+                                                <td className="border border-gray-300 px-1 py-1  text-[12px] ">
+                                                    <input
+                                                        type="number"
+
+                                                        min={"0"}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                        value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId) || "").toFixed(3)}
+                                                        disabled={true}
+
+                                                    />
+                                                </td>
+
+                                            </>
+
+                                        ))}
+
+
+
+
+                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
+
+
+
+
+                                    </tr>
+                                ))}
+
+                            </tbody>
+
+                        </table>
+                    </div>
+
+
+                )}
 
 
 

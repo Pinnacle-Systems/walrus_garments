@@ -3,7 +3,7 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, raiseIndentItems, readOnly, id,  isMaterialRequset,  setIsMaterialRequset, setSubGridForm, subGridForm,
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, raiseIndentItems, readOnly, id, isMaterialRequset, setIsMaterialRequset, setSubGridForm, subGridForm,
     requirementId, setRequirementId
 }) => {
 
@@ -31,48 +31,48 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
 
 
-    useEffect(() => {
-        orderYarnDetails?.forEach((yarn) => {
-            newFunction(yarn?.percentage, yarn?.yarnId);
-        });
-    }, [orderYarnDetails]);
+        // useEffect(() => {
+    //     orderYarnDetails?.forEach((yarn) => {
+    //         newFunction(yarn?.percentage, yarn?.yarnId);
+    //     });
+    // }, [orderYarnDetails]);
 
 
 
 
 
 
-    useEffect(() => {
-        if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
+    // useEffect(() => {
+    //     if (!orderSizeDetails?.length || !orderYarnDetails?.length) return;
 
-        if (id) return;
+    //     if (id) return;
 
-        const groupedMap = {};
+    //     const groupedMap = {};
 
-        orderSizeDetails.forEach(size => {
-            orderYarnDetails.forEach(yarn => {
-                const key = `${yarn.yarnId}-${yarn.colorId}`;
+    //     orderSizeDetails.forEach(size => {
+    //         orderYarnDetails.forEach(yarn => {
+    //             const key = `${yarn.yarnId}-${yarn.colorId}`;
 
-                const qty = Number(((parseFloat(size.weight) * yarn.percentage) / 100).toFixed(3));
+    //             const qty = Number(((parseFloat(size.weight) * yarn.percentage) / 100).toFixed(3));
 
-                if (!groupedMap[key]) {
-                    groupedMap[key] = {
-                        yarnId: yarn.yarnId,
-                        Yarn: { name: yarn?.Yarn?.name },
-                        percentage: yarn.percentage,
-                        colorId: yarn.colorId,
-                        qty: 0,
-                        uomId: size.uomId,
-                    };
-                }
+    //             if (!groupedMap[key]) {
+    //                 groupedMap[key] = {
+    //                     yarnId: yarn.yarnId,
+    //                     Yarn: { name: yarn?.Yarn?.name },
+    //                     percentage: yarn.percentage,
+    //                     colorId: yarn.colorId,
+    //                     qty: 0,
+    //                     uomId: size.uomId,
+    //                 };
+    //             }
 
-                // accumulate qty across sizes
-                groupedMap[key].qty += qty;
-            });
-        });
+    //             // accumulate qty across sizes
+    //             groupedMap[key].qty += qty;
+    //         });
+    //     });
 
-        setRaiseIndentItems(Object.values(groupedMap));
-    }, [orderSizeDetails, orderYarnDetails, id]);
+    //     setRaiseIndentItems(Object.values(groupedMap));
+    // }, [orderSizeDetails, orderYarnDetails, id]);
 
 
     function deleteRow(index) {
@@ -173,24 +173,29 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
 
                                                 </tr>
-
-
-
                                             </React.Fragment>
                                         );
+
+
+
 
 
                                     })}
                                     <tr>
                                         <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(
+                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
+                                            {/* {(
                                             raiseIndentItems?.reduce((sum, item) => {
                                                 return sum + (item?.RaiseIndenetYarnItems?.reduce(
-                                                    (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.qty) || 0),
+                                                    (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.totalYarnQty) || 0),
                                                     0
                                                 ) || 0);
                                             }, 0)
-                                        )?.toFixed(3) || "0.000"}
+                                        )?.toFixed(3) || "0.000"} */}
+                                            {raiseIndentItems?.reduce(
+                                                (sum, yarn) => sum + yarn.totalYarnQty,
+                                                0
+                                            )?.toFixed(3) || "0.000"}
                                         </td>
                                     </tr>
                                     {contextMenu && (
@@ -200,14 +205,13 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                                 top: `${contextMenu.mouseY - 50}px`,
                                                 left: `${contextMenu.mouseX + 20}px`,
 
-                                                // background: "gray",
                                                 boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                                 padding: "8px",
                                                 borderRadius: "4px",
                                                 zIndex: 1000,
                                             }}
                                             className="bg-gray-100"
-                                            onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                                            onMouseLeave={handleCloseContextMenu}
                                         >
                                             <div className="flex flex-col gap-1">
                                                 <button
@@ -219,15 +223,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                                 >
                                                     Delete{" "}
                                                 </button>
-                                                {/* <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        handleDeleteAllRows();
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete All
-                                                </button> */}
+
                                             </div>
                                         </div>
                                     )}
@@ -237,7 +233,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                             </table>
                         </div>
 
-                        <label className="flex items-center justify-start mt-5 space-x-2 cursor-pointer">
+                        {/* <label className="flex items-center justify-start mt-5 space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -245,7 +241,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                 checked={isMaterialRequset}
                             />
                             <span className="text-sm text-gray-700">Raise Indent to Store</span>
-                        </label>
+                        </label> */}
 
 
                     </div>
@@ -278,37 +274,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                         </table>
                     </div>
 
-                    {/* <div className="w-[30%] flex justify-end items-center mt-4">
 
-                        <table className="w-full border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-800">
-
-                                <tr>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty</td>
-
-                                </tr>
-
-                            </thead>
-                            <tbody>
-
-                                {orderYarnDetails?.map((yarn, index) => (
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs w-9">{index + 1}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
-
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                            {getRequireWeight(yarn?.yarnId).toFixed(3)} Kg
-                                        </td>
-
-                                    </tr>
-                                ))}
-
-                            </tbody>
-
-                        </table>
-                    </div> */}
 
                 </div>
             </div>

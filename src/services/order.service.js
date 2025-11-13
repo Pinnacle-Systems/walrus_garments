@@ -343,7 +343,7 @@ async function getOne(id) {
 }
 
 export async function getOneNew(id) {
-        console.log("hitttttt")
+    console.log("hitttttt")
 
     const childRecord = 0;
     let data = await prisma.order.findUnique({
@@ -360,7 +360,7 @@ export async function getOneNew(id) {
             },
             orderDetails: {
                 where: {
-                    isPlanning: false 
+                    isPlanning: false
                 },
                 select: {
                     fiberContentId: true,
@@ -809,7 +809,36 @@ export async function getStockvalidationById(id) {
                             }
                         }
                     },
+                    RequirementPlanningItems: {
+                        select: {
+                            id: true,
+                            requirementPlanningFormId: true,
+                            orderId: true,
+                            orderDetailsId: true,
+                            percentage: true,
+                            colorId: true,
+                            yarnId: true,
+                            count: true,
+                            poType: true,
+                            transType: true,
+                            partyId: true,
+                            requiredQty: true,
+                            yarnType: true,
+                            Yarn : {
+                                select : {
+                                    name : true
+                                }
+                            },
+                            Color : {
+                                select : {
+                                    name : true
+                                }
+                            },
+                            Po : true,
+                            PoItems : true
 
+                        }
+                    },
                     requirementSizeDetails: true,
                     RequirementYarnDetails: {
                         select: {
@@ -847,9 +876,9 @@ export async function getStockvalidationById(id) {
                 }
             },
             Stock: {
-                where: {
-                    inOrOut: "StockTransfer",
-                },
+                // where: {
+                //     inOrOut: "StockTransfer",
+                // },
                 select: {
                     id: true,
                     itemType: true,
@@ -906,6 +935,51 @@ export async function getStockvalidationById(id) {
                 }
 
             },
+            PoItems: {
+                select: {
+                    accessoryGroupId: true,
+                    accessoryId: true,
+                    accessoryItemId: true,
+                    colorId: true,
+                    id: true,
+                    poId: true,
+                    price: true,
+                    qty: true,
+                    uomId: true,
+                    yarnId: true,
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
+            RaiseIndent: {
+                select: {
+                    id: true,
+                    docId: true,
+                    branchId: true,
+                    partyId: true,
+                    orderId: true,
+                    isMaterialIssue: true,
+                    isMaterialRequset: true,
+                    RaiseIndentItems: {
+                        select: {
+                            RaiseIndenetYarnItems: true,
+                            id: true,
+                            raiseIndentId: true,
+                            requirementPlanningFormId: true,
+                            orderdetailsId: true
+                        }
+                    },
+
+                }
+            }
 
 
         }
@@ -946,7 +1020,7 @@ export async function getStockvalidationById(id) {
         statusCode: 0, data: {
             ...data,
             childRecord,
-            poSummary // ✅ added aggregated PO data
+            poSummary
         }
     };
 }
@@ -1067,16 +1141,108 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                     orderDetailsId: true,
                 }
             },
-            Po: {
+            Stock: {
+
                 select: {
                     id: true,
+                    itemType: true,
+                    inOrOut: true,
+                    yarnId: true,
+                    colorId: true,
+                    uomId: true,
+                    qty: true,
+                    price: true,
+                    storeId: true,
+                    branchId: true,
+                    active: true,
+                    orderId: true,
+                }
+            },
+            Po: {
+                select: {
+
+                    id: true,
+                    supplier: true,
+                    transType: true,
+                    dueDate: true,
                     supplierId: true,
                     docId: true,
                     orderId: true,
-                    PoItems: true
-                }
-            },
+                    PurchaseType: true,
+                    order: true,
 
+                    PoItems: {
+                        select: {
+                            accessoryGroupId: true,
+                            accessoryId: true,
+                            accessoryItemId: true,
+                            colorId: true,
+                            id: true,
+                            poId: true,
+                            price: true,
+                            qty: true,
+                            uomId: true,
+                            yarnId: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+
+                }
+
+            },
+            RaiseIndent: {
+                select: {
+                    id: true,
+                    docId: true,
+                    branchId: true,
+                    partyId: true,
+                    orderId: true,
+                    isMaterialIssue: true,
+                    isMaterialRequset: true,
+                    RaiseIndentItems: {
+                        select: {
+                            RaiseIndenetYarnItems: {
+                                select: {
+                                    id: true,
+                                    raiseIndentItemsId: true,
+                                    yarnId: true,
+                                    yarnNeedleId: true,
+                                    colorId: true,
+                                    qty: true,
+                                    issueQty: true,
+                                    percentage: true,
+                                    Yarn: {
+                                        select: {
+                                            aliasName: true,
+                                            name: true
+                                        }
+                                    },
+                                    Color: {
+                                        select: {
+                                            name: true
+                                        }
+                                    }
+
+                                }
+                            },
+                            id: true,
+                            raiseIndentId: true,
+                            requirementPlanningFormId: true,
+                            orderdetailsId: true
+                        }
+                    },
+
+                }
+            }
 
         }
 
@@ -1114,7 +1280,6 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
 
 
 async function create(req) {
-    console.log(req.body, "req")
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderDetails } = await req.body
@@ -1124,7 +1289,6 @@ async function create(req) {
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
 
-    console.log(orderDetails, "orderDetails");
 
     let data;
     await prisma.$transaction(async (tx) => {

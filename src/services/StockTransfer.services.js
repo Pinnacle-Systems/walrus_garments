@@ -119,7 +119,7 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, fromOrderNo,toOrderNo, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, fromOrderNo, toOrderNo, searchDelDate, searchDocDate, partyId,
 
     } = req.query
 
@@ -138,7 +138,7 @@ async function get(req) {
                 docId: fromOrderNo ? { contains: fromOrderNo } : undefined
 
             },
-             toOrsder: {
+            toOrsder: {
                 docId: toOrderNo ? { contains: toOrderNo } : undefined
 
             }
@@ -408,41 +408,24 @@ async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeI
 
 }
 
-// async function createStocktransferItems(tx, stockTransferId, stockItems, poType, poInwardOrDirectInward, storeId, branchId, orderItems) {
-
-//     let promises
+async function UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item) {
 
 
-//     promises = stockItems?.map(async (item, index) => {
-//         let data = await tx.StockTransferItems.create({
-//             data: {
-//                 stockTransferId: parseInt(stockTransferId),
-//                 yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-//                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-//                 transferQty: item["transferQty"] ? 0 - parseInt(item["transferQty"]) : undefined,
+    console.log(item.id,"item?.transferQty",item?.transferQty)
 
-//             }
-//         })
-//         await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
-//     })
+    await tx.requirementPlanningItems.update({
+        where: {
+            id: parseInt(item.id),
 
+        },
+        data: { 
+            tranferQty : item?.transferQty ?  item?.transferQty  : 0
+         
 
+        }
+    })
 
-
-//     promises = orderItems?.map(async (item, index) => {
-
-
-//         await createYarnStockAgainstOrder(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
-
-//     })
-
-
-
-
-
-
-//     return Promise.all(promises)
-// }
+}
 
 async function createStocktransferItems(
     tx,
@@ -514,14 +497,10 @@ async function createStocktransferItems(
                     },
                 });
 
-                await createYarnStockAgainstOrder(
-                    tx,
-                    poType,
-                    inOrOut,
-                    branchId,
-                    storeId,
-                    item
-                );
+                await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item);
+
+                await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+
             })
         );
     }

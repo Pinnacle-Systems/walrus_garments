@@ -103,7 +103,7 @@ const StyleMaster = () => {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-   
+
             });
             setForm(false)
         } catch (error) {
@@ -122,6 +122,23 @@ const StyleMaster = () => {
             });
             return;
         }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Style Name already exists.",
+                icon: "warning",
+                showConfirmButton: false,
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
@@ -139,33 +156,32 @@ const StyleMaster = () => {
             }
             try {
                 let deldata = await removeData(id).unwrap();
-                // if (deldata?.statusCode == 1) {
-                //     toast.error(deldata?.message)
-                //     return
-                // }
+                if (deldata?.statusCode == 1) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Submission error',
+                        text: deldata.data?.message || 'Something went wrong!',
+                    });
+                    return;
+                }
                 setId("");
-                // toast.success("Deleted Successfully");
                 Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                    title: "Deleted Successfully",
                     icon: "success",
-                    // draggable: true,
-                    // timer: 1000,
-                    // showConfirmButton: false,
-                    // didOpen: () => {
-                    //     Swal.showLoading();
-                    // }
-                });
 
-                setForm(false)
+                });
+                setForm(false);
             } catch (error) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Submission error',
                     text: error.data?.message || 'Something went wrong!',
                 });
+                setForm(false);
             }
         }
     };
+
 
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();

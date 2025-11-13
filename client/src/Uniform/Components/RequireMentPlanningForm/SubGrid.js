@@ -10,6 +10,32 @@ export default function SubGrid({ handleInputChange, orderYarnDetails, setOrderY
     readOnly,
 }) {
 
+    console.log(orderYarnDetails, "orderYarnDetails")
+
+    useEffect(() => {
+        const currentList = orderYarnDetails?.[selectedIndex]?.RequirementYarnProcessList || [];
+
+        if (currentList.length >= 3) return;
+
+        setOrderYarnDetails(prev => {
+            const newArray = Array.from({ length: 3 - currentList.length }, () => ({
+                processId: "",
+                lossPercentage: ""
+            }));
+
+            const updated = [...prev];
+
+            updated[selectedIndex] = {
+                ...updated[selectedIndex],
+                RequirementYarnProcessList: [
+                    ...(updated[selectedIndex]?.RequirementYarnProcessList || []),
+                    ...newArray
+                ]
+            };
+
+            return updated;
+        });
+    }, [orderYarnDetails, selectedIndex]);
 
 
 
@@ -81,6 +107,8 @@ export default function SubGrid({ handleInputChange, orderYarnDetails, setOrderY
         });
     };
 
+
+    console.log(orderYarnDetails, "orderYarnDetails")
 
 
     return (

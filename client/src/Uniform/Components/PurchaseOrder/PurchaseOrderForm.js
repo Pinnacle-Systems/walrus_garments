@@ -13,7 +13,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { FaWhatsapp } from "react-icons/fa6";
 import { useAddPoMutation, useDeletePoMutation, useGetPoByIdQuery, useUpdatePoMutation } from "../../../redux/uniformService/PoServices";
-import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderItemsQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsQuery, useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import Swal from "sweetalert2";
 import { PDFViewer } from "@react-pdf/renderer";
 import PrintFormat from "./PrintFormat-PO";

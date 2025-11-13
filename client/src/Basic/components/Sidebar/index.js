@@ -13,6 +13,7 @@ import SidebarComponent from './SidebarComponent';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
+import Swal from 'sweetalert2';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -283,7 +284,11 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
         },
         (error) => {
           console.log(error);
-          toast.error("Server Down", { autoClose: 5000 });
+          Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+          });
         }
       );
     } else {
@@ -319,7 +324,11 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
         },
         (error) => {
           console.log(error);
-          toast.error("Server Down", { autoClose: 5000 });
+          Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+          });
         }
       );
     }
@@ -361,7 +370,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))
     .filter(Boolean);
 
-  console.log(sorted,"sorted");
+  console.log(sorted, "sorted");
 
   const headers = [
 

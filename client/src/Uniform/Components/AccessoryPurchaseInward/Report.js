@@ -216,10 +216,10 @@ const AccessoryInwardFormReport = ({
                     <div>Po Date</div>
                 
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>poType</div>
           
-                  </th>
+                  </th> */}
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
@@ -258,9 +258,9 @@ const AccessoryInwardFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
    
-                  </th>
+                  </th> */}
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
@@ -321,7 +321,7 @@ const AccessoryInwardFormReport = ({
                       <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-left  ">{dataObj.poType} </td>
+                      {/* <td className="py-1.5 text-left  ">{dataObj.poType} </td> */}
                       {/* <td className="py-1.5 text-center">
                         {(dataObj.poInwardOrDirectInward || "").toUpperCase()}
                       </td> */}

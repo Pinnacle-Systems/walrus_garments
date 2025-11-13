@@ -5,7 +5,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
-import { useGetOrderByIdQuery } from "../../../redux/uniformService/OrderService";
+import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetStockValidationByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
@@ -23,7 +23,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, requirementId, setRequirementId, issueItems, setIssueItems,
 
-    isMaterialIssue, setIsMaterialIssue,  materialRequstId,   setMaterialRequstId
+    isMaterialIssue, setIsMaterialIssue, materialRequstId, setMaterialRequstId
 
 
 
@@ -31,17 +31,17 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
     const { branchId, userId, companyId, finYearId } = getCommonParams()
-    const params = {
-        branchId, userId, finYearId
-    };
+
+    const params = { branchId, userId, finYearId };
 
 
 
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
+    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation: false }, { skip: !orderId });
 
 
-    const { data: indentRaiseData } = useGetRaiseIndentQuery({ params });
+
+
 
     const { data: materialRequstData, isLoading: isSingleMaterialRequstLoading, isFetching: isSingleMaterialRequstFetching } = useGetRaiseIndentStockValidationByIdQuery(materialRequstId, { skip: !materialRequstId });
 
@@ -95,7 +95,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
                     };
                 })
-            ); 
+            );
             setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setMaterialRequstId(data?.id ? data?.id : "")
@@ -115,8 +115,6 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
     // }, [orderItemsDataFetching, orderItemsDataLoading, orderDetailsId, syncFormWithDb, orderItemsData]);
 
 
-    const { data: socksMaterialData } =
-        useGetSocksMaterialQuery({ params: { ...params } });
 
     useEffect(() => {
 
@@ -128,6 +126,67 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
 
+
+    useEffect(() => {
+        const processYarnData = async () => {
+            if (!singleOrderData?.data?.RaiseIndent?.[0]?.RaiseIndentItems) return;
+
+                setPartyId(singleOrderData?.data?.partyId)
+
+            const allYarns = singleOrderData?.data?.RaiseIndent[0]?.RaiseIndentItems?.flatMap(
+                (item) => item?.RaiseIndenetYarnItems || []
+            );
+
+
+            console.log(allYarns, "allYarns");
+
+            const Yarn = Object.values(
+                allYarns.reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+
+            const Stock = Object.values(
+                singleOrderData?.data?.Stock?.reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+
+
+            const fianl = Yarn?.map(req => {
+                const stock = Stock?.find(
+                    s => s.yarnId === req.yarnId && s.colorId === req.colorId
+                );
+
+                const availableQty = stock ? stock?.qty : 0;
+
+                return {
+                    ...req,
+                    availableQty,
+                    // balance: availableQty - req.qty, // +ve = extra, -ve = shortage
+                };
+            });
+
+            console.log(Stock, "Stock");
+            setIssueItems(fianl);
+        };
+
+        processYarnData();
+    }, [isSingleOrderLoading, isSingleOrderFetching, materialRequstId, singleOrderData]);
 
 
 
@@ -163,12 +222,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
 
             } else {
@@ -236,11 +290,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                             <div className="grid grid-cols-2 gap-1">
                                 <ReusableInput label="Doc.Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                {/* <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  /> */}
-                                {/* <TextInput
-                                    name="Job Number"
-                                    placeholder="Contact name"
-                                /> */}
+
 
                             </div>
                         </div>

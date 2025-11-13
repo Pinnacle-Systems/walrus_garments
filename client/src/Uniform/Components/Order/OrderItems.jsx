@@ -21,6 +21,7 @@ import { useGetCountsMasterQuery } from '../../../redux/uniformService/CountsMas
 import { useGetYarnTypeMasterQuery } from '../../../redux/uniformService/YarnTypeMasterServices';
 import Swal from 'sweetalert2';
 import SizeDetailsSubGrid from './SizeDetails';
+import { Plus } from 'lucide-react';
 
 const OrderItems = forwardRef(function OrderItems(
   { readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
@@ -242,9 +243,9 @@ const OrderItems = forwardRef(function OrderItems(
     //   // }
     //   return yarnBlend.filter((_, index) => index !== parseInt(id));
     // });
-    console.log(id, "ids");
+    console.log(id, "idddddddddddddddd");
     setOrderDetails((prevOrderDetails) =>
-      prevOrderDetails.filter((_, index) => index !== Number(id))
+      prevOrderDetails?.filter((_, index) => index != (id))
     );
 
 
@@ -365,7 +366,14 @@ const OrderItems = forwardRef(function OrderItems(
               {(orderDetails ? orderDetails : []).map((item, index) => {
                 return (
                   <React.Fragment key={index}>
-                    <tr className="border border-blue-gray-200">
+                    <tr className="border border-blue-gray-200"
+
+                      onContextMenu={(e) => {
+                        if (!readOnly) {
+                          handleRightClick(e, index, "notes");
+                        }
+                      }}
+                    >
                       <td className="w-12 border border-gray-300 text-[11px] text-center p-0.5">{index + 1}</td>
 
                       <td className=" border border-gray-300 text-[11px]">{console.log(styleRef?.current, "styleRef")}
@@ -515,27 +523,20 @@ const OrderItems = forwardRef(function OrderItems(
                           {VIEW}
                         </button>
                       </td>
-                      <td
-                        className="w-10 border border-gray-300"
-
-                      >
-                        <input
-
-                          onContextMenu={(e) => {
-                            if (!readOnly) {
-                              handleRightClick(e, index, "notes");
-                            }
-                          }}
-                          className='w-full '
+                      <td className="border border-gray-300 text-center">
+                        <button
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
                               addNewRow();
                             }
                           }}
-
-                        />
+                          className="flex items-center justify-center w-full py-1"
+                        >
+                          <Plus size={18} className="text-red-800" />
+                        </button>
                       </td>
+
                     </tr>
 
 

@@ -49,14 +49,14 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
 
         <tr key={item.poItemsId} className='border border-blue-gray-200 cursor-pointer'>
             <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
-            <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{item?.poNo}</td>
+            <td className='w-12 border border-gray-300 text-[11px]   text-left p-0.5'>{item?.poNo}</td>
 
-            <td className='w-32 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
+            <td className='w-32 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
             {/* <td className='w-52 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, acce    ssoryList?.data, "accessoryItem")}</td> */}
             {/* <td className='w-40 border border-gray-300 text-[11px]  text-center p-0.5'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td> */}
-            <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-            <td className='w-16 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+            <td className='w-16 border border-gray-300 text-[11px]   text-left p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+            <td className='w-16 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+            <td className='w-16 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
             <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(balanceQty|| 0).toFixed(3)}</td>
 

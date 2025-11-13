@@ -7,6 +7,8 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
 
 
 
+  console.log(indentItems,"indentItems")
+
 
 
 
@@ -46,7 +48,7 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
       <div className="flex justify-between items-center mb-2">
         <h2 className="font-bold text-gray-800">{indentItems?.OrderDetails?.style?.name}</h2>
       </div>
-      <tr>
+      {/* <tr>
         <td className="p-0">
           <div className="justify-center w-full">
             <table className="w-auto border border-gray-300">
@@ -87,8 +89,49 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
             </table>
           </div>
         </td>
-      </tr>
+      </tr> */}
+      <tr>
+        <td className="p-0">
+          <div className="justify-center w-full">
+            <table className="w-auto border border-gray-300">
+              <thead className="bg-gray-200 text-gray-800">
+                <tr>
+                  <th className="w-8 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">S.No</th>
+                  <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
+                  <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
+                  <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
+                </tr>
+              </thead>
+              <tbody>
+                {indentItems?.raiseIndenetYarnItems?.map((yarn, index) => (
+                  <tr key={index} className="border border-blue-gray-200 cursor-pointer">
+                    <td className="py-0.5 border border-gray-300 text-[11px] text-center">
+                      {index + 1}
+                    </td>
+                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                      {yarn?.Yarn?.name}
+                    </td>
+                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                      {yarn?.Color?.name}
+                    </td>
+                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                      {((yarn?.qty)?.toFixed(3))}
+                    </td>
 
+
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Qty</td>
+                  <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"> {
+                    (indentItems?.raiseIndenetYarnItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)).toFixed(3)
+                  }</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </td>
+      </tr>
 
     </>
   )

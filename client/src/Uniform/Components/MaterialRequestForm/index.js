@@ -45,6 +45,7 @@ const MaterialRequestForm = () => {
     const [isMaterialRequset, setIsMaterialRequset] = useState(false)
     const [isReport, setIsReport] = useState("All")
     const [subGridForm, setSubGridForm] = useState(false)
+    const [type, setType] = useState("yarn");
 
     const params = {
         branchId, userId, finYearId
@@ -112,7 +113,7 @@ const MaterialRequestForm = () => {
     };
 
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id, RaiseIndentItems) => {
         if (id) {
             if (childRecord.current > 0) {
                 Swal.fire({
@@ -128,7 +129,7 @@ const MaterialRequestForm = () => {
                 return;
             }
             try {
-                await removeData(id)
+                await removeData({ id, body: RaiseIndentItems })
                 setId("");
                 onNew();
                 Swal.fire({
@@ -181,9 +182,12 @@ const MaterialRequestForm = () => {
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Material Request Form</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-sm shadow-sm border border-gray-200">
-                        <div >
+
+                        <h1 className="text-2xl font-bold text-gray-800">Material Request Form</h1>
+
+                        {/* <div >
+
                             <div className="flex w-fit bg-gray-100 rounded-xl p-1 shadow-sm">
                                 {["All", "Material Request", "Material Issue"].map((option) => (
                                     <button
@@ -200,12 +204,33 @@ const MaterialRequestForm = () => {
                                 ))}
                             </div>
 
+                        </div> */}
+                        <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
+                            <button
+                                onClick={() => setType("yarn")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "yarn"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Request Raised
+                            </button>
+
+                            <button
+                                onClick={() => setType("accessory")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "accessory"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Material Not Received
+                            </button>
                         </div>
                         <div className="flex flex-row  gap-4  ">
 
 
                             <button
-                                className="py-2  hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4  rounded-md flex items-center gap-2 text-sm"
+                                className="py-1.5  hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4  rounded-md flex items-center gap-2 text-sm"
                                 onClick={() => { setForm(true); onNew() }}
                             >
                                 <FaPlus /> Create New
@@ -215,16 +240,7 @@ const MaterialRequestForm = () => {
 
                     {isReport === "Material Request" || isReport === "All" ? (
 
-                        // <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        //     <ReusableTable
-                        //         columns={columns}
-                        //         data={allData?.data || []}
-                        //         onView={handleView}
-                        //         onEdit={handleEdit}
-                        //         onDelete={handleDelete}
-                        //         itemsPerPage={10}
-                        //     />
-                        // </div>
+
                         <MaterialRequestFormReport
                             isReport={isReport}
                             onView={handleView}

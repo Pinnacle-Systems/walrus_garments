@@ -16,6 +16,7 @@ import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
+import Swal from 'sweetalert2';
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -90,7 +91,11 @@ const Profile = ({ dp, items, setProfile }) => {
                 },
                 (error) => {
                     console.log(error);
-                    toast.error("Server Down", { autoClose: 5000 });
+                    Swal.fire({
+                        title: "Server Down",
+                        icon: "error",
+
+                    });
                 }
             );
         } else {
@@ -126,7 +131,11 @@ const Profile = ({ dp, items, setProfile }) => {
                 },
                 (error) => {
                     console.log(error);
-                    toast.error("Server Down", { autoClose: 5000 });
+                    Swal.fire({
+                        title: "Server Down",
+                        icon: "error",
+
+                    });
                 }
             );
         }
@@ -171,7 +180,7 @@ const Profile = ({ dp, items, setProfile }) => {
                 </span>
             </div>
         </div>
-       
+
     )
 }
 

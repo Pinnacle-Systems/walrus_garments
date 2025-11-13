@@ -324,6 +324,7 @@ async function getOne(id) {
 
                 }
             },
+            AccessoryRequirementPlanning : true
         }
 
 
@@ -359,9 +360,9 @@ export async function getRequirementItems(req) {
             isProcess: true,
             lossPercentage: true,
             requiredQty: true,
-            orderId : true ,
-            orderDetailsId : true,
-            partyId : true,
+            orderId: true,
+            orderDetailsId: true,
+            partyId: true,
             Yarn: {
                 select: {
                     name: true,
@@ -501,7 +502,7 @@ export async function getRequirementItems(req) {
             console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
 
             // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
-            return (parseFloat(poQty) - parseFloat(cancelQty) ) < parseFloat(item?.requiredQty || 0);
+            return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(item?.requiredQty || 0);
 
         })
         ?.map(item => {
@@ -541,7 +542,7 @@ export async function getRequirementItems(req) {
                 allColors: `${combinedColors} - ${styleName}`,
                 alreadyPoqty: poQty,
                 alreadyCancelQty: cancelQty,
-                balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty )
+                balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty)
 
             };
         });
@@ -649,7 +650,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber, requirementItems } = req.body
+        phone, contactPersonName, address, validDate, orderId, orderSizeDetails, orderYarnDetails, styleId, jobNumber, requirementItems, accessoryItems } = req.body
 
 
 
@@ -680,18 +681,7 @@ async function create(req) {
                 orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
 
-                requirementSizeDetails: orderSizeDetails?.length > 0
-                    ? {
-                        createMany: {
-                            data: orderSizeDetails?.map((sub) => ({
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                            })),
-                        },
-                    }
-                    : undefined,
+
                 RequirementPlanningItems: requirementItems?.length > 0
                     ? {
                         create: requirementItems.map((sub) => ({
@@ -721,9 +711,38 @@ async function create(req) {
                     }
                     : undefined,
 
+                AccessoryRequirementPlanning: accessoryItems?.length > 0
+                    ? {
+                        createMany: {
+                            data: accessoryItems?.map((sub) => ({
+                                orderId: orderId ? parseInt(orderId) : undefined,
+                                accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
+                                accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
+                                accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
+                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                                colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
 
 
 
+                            })),
+                        },
+                    }
+                    : undefined,
+
+                requirementSizeDetails: orderSizeDetails?.length > 0
+                    ? {
+                        createMany: {
+                            data: orderSizeDetails?.map((sub) => ({
+                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+                            })),
+                        },
+                    }
+                    : undefined,
 
                 RequirementYarnDetails: orderYarnDetails?.length > 0
                     ? {
@@ -789,7 +808,7 @@ async function create(req) {
 
 
 const update = async (id, body) => {
-    const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
+    const { docId, draftSave, finYearId, userId, branchId, partyId, accessoryItems, contactPersonName, packingCoverType,
         address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, jobNumber, requirementItems,
     } = body;
 
@@ -823,6 +842,7 @@ const update = async (id, body) => {
                 RequirementPlanningItems: true,
                 requirementSizeDetails: true,
                 RequirementYarnDetails: true,
+                AccessoryRequirementPlanning : true
             },
             data: {
                 // docId: draftSave ? docIdNumber : dataFound?.docId,
@@ -946,6 +966,22 @@ const update = async (id, body) => {
                                 })),
                             }
                             : undefined,
+                    })),
+
+                },
+
+                AccessoryRequirementPlanning: {
+                    deleteMany: {},
+                    create: accessoryItems?.map((sub) => ({
+                        accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
+                        accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
+                        accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
+                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                        sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                        uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                        colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+
+
                     })),
 
                 },

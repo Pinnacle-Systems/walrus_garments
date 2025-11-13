@@ -62,7 +62,11 @@ const YarnInwardPoItems = ({
         const newBlend = structuredClone(inwardItems);
         if (field === "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
-                toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                Swal.fire({
+                    text: "Inward Qty Can not be more than balance Qty",
+                    icon: "warning",
+                });
                 return
             }
         }
@@ -220,9 +224,8 @@ const YarnInwardPoItems = ({
                                 if (!supplierId) {
                                     Swal.fire({
                                         icon: 'success',
-                                        title: ` Choose Supplier`,
-                                        showConfirmButton: false,
-                                        timer: 2000
+                                        title: `Choose Supplier`,
+                                 
                                     });
                                 }
                                 else {
@@ -343,7 +346,7 @@ const YarnInwardPoItems = ({
                             {(inwardItems || [])?.map((item, index) =>
                                 <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
                                     colorList={colorList} deleteRow={handleDeleteRow} designList={designList} gsmList={gsmList}
-                                    loopLengthList={loopLengthList}
+                                    loopLengthList={loopLengthList} id={id}
                                     diaList={diaList} poList={poList}
                                     removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
                                     removeItem={removeItem} key={item.poItemsId}

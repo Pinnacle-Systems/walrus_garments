@@ -1298,7 +1298,7 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 
 }
 
-async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directInwardOrReturnGridId) {
+async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directInwardOrReturnGridId ,partyId) {
     console.log(item, "item")
     await tx.stock.create({
         data: {
@@ -1314,12 +1314,13 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             qty: (item.qty) ? parseFloat(item.qty) : undefined,
             price: item.price ? parseFloat(item.price) : undefined,
             orderId: item.orderId ? item.orderId : undefined,
+            supplierId : partyId ? parseInt(partyId) : undefined
         }
     })
     console.log("Eror")
 }
 
-async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directItems, poType, poInwardOrDirectInward, storeId, branchId) {
+async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directItems, poType, poInwardOrDirectInward, storeId, branchId ,partyId) {
     console.log(poType == "GreyYarn" || poType == "DyedYarn", "condition")
     let promises
     if (poType == "GreyYarn" || poType == "DyedYarn") {
@@ -1353,7 +1354,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
             })
             console.log(data, "datadata")
             // return await createLotGridItems(tx, data?.id, item?.inwardLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-            await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id)
+            await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id,partyId)
 
         }
         )
@@ -1440,7 +1441,7 @@ async function create(body) {
         })
         // console.log(directInwardReturnItems,"directItems")
 
-        await createDirectInwardReturnItems(tx, data.id, directInwardReturnItems, poType, poInwardOrDirectInward, storeId, branchId)
+        await createDirectInwardReturnItems(tx, data.id, directInwardReturnItems, poType, poInwardOrDirectInward, storeId, branchId,partyId)
         // await dataIntegrityValidation(tx, processValid); 
     })
     return { statusCode: 0, data };

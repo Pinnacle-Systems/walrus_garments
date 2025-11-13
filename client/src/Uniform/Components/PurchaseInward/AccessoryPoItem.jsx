@@ -52,8 +52,8 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
     // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty)).toFixed(3)
     return (
         <tr key={item.poItemsId} className='table-row'>
-            <td className='w-12 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
-            <td className='w-12 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+            <td className='w-12 border border-gray-300 text-[11px]  text-center'>{index + 1}</td>
+            <td className='w-12 border border-gray-300 text-[11px] text-left'>{item?.poNo}</td>
             <td className='w-12 border border-gray-300 text-[11px]'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryItem")}</td>
             <td className='py-0.5 border border-gray-300 text-[11px]'>{findAccessoryName(item?.accessoryId, accessoryList?.data, "accessoryGroup")}</td>

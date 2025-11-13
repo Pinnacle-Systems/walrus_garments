@@ -96,7 +96,7 @@ export { default as partyContact } from "./partyContact.route.js"
 export { default as branchType } from "./BranchType.route.js"
 export { default as requirementPlanningForm } from "./requirementplanningForm.route.js"
 export { default as Material } from "./Material.route.js"
-export { default as raiseIndent } from "./materialRequst.route.js"
+export { default as materialRequest } from "./materialRequst.route.js"
 export { default as materialIssue } from "./materialIssue.route.js"
 export { default as stockTransfer } from "./StockTransfer.route.js"
 export { default as excessTolerance } from "./excessTolerance.route.js"
@@ -109,6 +109,7 @@ export { default as billEntry } from "./billEntry.route.js"
 export { default as accessoryReturn } from "./accessoryPoReturn.route.js"
 export { default as accessoryBillEntry } from "./accessoryBillEntry.route.js"
 export { default as accessoryCategory } from "./accessoryCategory.route.js"
+export { default as stockReportControl } from "./stockReportControl.route.js"
 
 
 

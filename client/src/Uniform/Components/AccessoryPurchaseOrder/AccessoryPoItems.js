@@ -37,8 +37,8 @@ const AccessoryPoItems = ({
   isSupplierOutside,
   taxTypeId,
   supplierId,
-  setTableDataView ,
-  handleCloseContextMenu
+  setTableDataView,
+  accessoryCategoryList
 }) => {
 
 
@@ -355,19 +355,19 @@ const AccessoryPoItems = ({
               >
                 UOM
               </th>
-                     <th
+              <th
 
                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
               >
-               	Required Qty
+                Required Qty
               </th>
-                     <th
+              <th
 
                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
               >
                 Already Purchased Qty
               </th>
-                     <th
+              <th
 
                 className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
               >
@@ -426,7 +426,7 @@ const AccessoryPoItems = ({
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data?.filter(item => item.active) || [])?.map((blend) =>
+                    {(id ? (accessoryGroupList?.data || []) : accessoryGroupList?.data.filter(item => item.active) || []).map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -435,19 +435,19 @@ const AccessoryPoItems = ({
                 </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
-                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
-                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryItemId")}
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryCategoryId") } }}
+                    disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryCategoryId}
+                    onChange={(e) => handleInputChange(e.target.value, index, "accessoryCategoryId")}
                     onBlur={(e) => {
 
-                      handleInputChange(e.target.value, index, "accessoryItemId")
+                      handleInputChange(e.target.value, index, "accessoryCategoryId")
 
                     }
                     }
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryItemList?.data || []) : accessoryItemList?.data?.filter(item => item.active && item?.accessoryGroupId == row?.accessoryGroupId) || [])?.map((blend) =>
+                    {(id ? (accessoryCategoryList?.data || []) : accessoryCategoryList?.data?.filter(item => item.active) || []).map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.name}
                       </option>
@@ -457,18 +457,18 @@ const AccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                    disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                     onBlur={(e) => {
 
-                      handleInputChange(e.target.value, index, "fabricaccessoryId")
+                      handleInputChange(e.target.value, index, "accessoryId")
 
                     }
                     }
                   >
                     <option hidden>
                     </option>
-                    {(id ? (accessoryList?.data || []) : accessoryList?.data?.filter(item => item.active && item?.accessoryItemId == row?.accessoryItemId) || [])?.map((blend) =>
+                    {(id ? (accessoryList?.data || []) : accessoryList?.data?.filter(item => item.active && item?.accessoryCategoryId == row?.accessoryCategoryId && item?.accessoryGroupId == row?.accessoryGroupId) || [])?.map((blend) =>
                       <option value={blend.id} key={blend.id}>
                         {blend.aliasName}
                       </option>
@@ -556,7 +556,7 @@ const AccessoryPoItems = ({
                     )}
                   </select>
                 </td>
-                       <td className='py-0.5 border border-gray-300 text-[11px]'>
+                <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <input
                     onKeyDown={e => {
                       if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -684,7 +684,7 @@ const AccessoryPoItems = ({
 
                 <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
                   <button
-                    disabled={readOnly  || !row?.accessoryId}
+                    disabled={readOnly || !row?.accessoryId}
 
                     className="text-center rounded py-1 w-20"
                     onKeyDown={(e) => {

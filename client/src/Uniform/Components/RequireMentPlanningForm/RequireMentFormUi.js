@@ -17,6 +17,13 @@ import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMaste
 import { Loader } from "../../../Basic/components";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 import moment from "moment";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetAccessoryItemMasterQuery } from "../../../redux/uniformService/AccessoryItemMasterServices";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetAccessoryCategoryMasterQuery } from "../../../redux/uniformService/AccessoryCategoryMasterServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 
 const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, setChildrecord, orderReftch,
 
@@ -24,11 +31,15 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, setDate, sampleDetails, requirementForm, setRequirementForm, jobNumber, setJobNumber,
 
-    setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId
+    setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId,
+
+    setAccessoryItems, accessoryItems
+
+
 }) => {
 
-
-    console.log(readOnly, "readOnly")
+    const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const params = { branchId, userId, finYearId };
     const [combo, setCombo] = useState([])
 
     const { data: singleData, isLoading: isSingleLoading, isFetching: isSingleFetching } = useGetRequirementPlanningFormByIdQuery(id, { skip: !id });
@@ -47,11 +58,23 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
 
 
+    const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
+        params,
+    });
 
 
+    const { data: accessoryCategoryList } = useGetAccessoryCategoryMasterQuery({
+        params,
+    });
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
-    const params = { branchId, userId, finYearId };
+    const { data: accessoryList } = useGetAccessoryMasterQuery({ params });
+
+
+    const { data: colorList } = useGetColorMasterQuery({ params });
+
+    const { data: uomList } = useGetUomQuery({ params });
+
+    const { data: sizeList } = useGetSizeMasterQuery({ params });
 
 
     const { data: supplierList, isLoading: isSupplierLoading, isFetching: isSupplierFetching } = useGetPartyQuery({ params: { ...params } });
@@ -78,6 +101,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             setDocId(data?.docId ? data?.docId : "")
             setOrderSizeDetails(data?.requirementSizeDetails ? data?.requirementSizeDetails : [])
             setOrderYarnDetails(data?.RequirementYarnDetails ? data?.RequirementYarnDetails : [])
+
             setRequirementItems(data?.RequirementPlanningItems ? data?.RequirementPlanningItems : [])
             setJobNumber(data?.jobNumber ? data?.jobNumber : "")
             setChildrecord(data?.childRecord ? data?.childRecord : 0)
@@ -86,6 +110,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             setPartyId(data?.partyId ? data?.partyId : "")
             setTempOrderId(data?.orderId ? data?.orderId : "");
             setTempOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "");
+            setAccessoryItems(data?.AccessoryRequirementPlanning ? data?.AccessoryRequirementPlanning : [])
 
             const combined = data?.RequirementYarnDetails
                 ?.map(item => `${data?.OrderDetails?.style?.name || ""} - ${item?.Color?.name || ""}`)
@@ -171,11 +196,12 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
 
     let data = {
-
         branchId, userId, companyId, docId,
         active, id, jobNumber,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementItems
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementItems,
+        accessoryItems: accessoryItems?.filter(i => i.accessoryId && i.qty)
     }
+
 
 
 
@@ -196,12 +222,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
                 orderReftch()
                 if (nextProcess == "new") {
@@ -237,7 +258,8 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
 
     const validateData = (data) => {
-        if (data?.orderId, data?.jobNumber && data.styleId) {
+        console.log(data, "data")
+        if (data?.orderId && data?.jobNumber && data.styleId) {
             return true;
         }
 
@@ -245,16 +267,16 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
         return false;
     };
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
-            // toast.info("Please fill all required fields...!", { position: "top-center" })
-            Swal.fire({
-                // title: "Total percentage exceeds 100%",
-                title: "Please fill all required fields...!",
-                icon: "error",
-                timer: 1500,
-                showConfirmButton: false,
-            });
-            return
+        if (!id) {
+            if (!validateData(data)) {
+                Swal.fire({
+                    title: "Please fill all required fields...!",
+                    icon: "error",
+
+                });
+                return
+            }
+
         }
         let foundItem;
         if (id) {
@@ -267,8 +289,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             Swal.fire({
                 text: "The Job Number already exists. Please use a different Job Number.",
                 icon: "warning",
-                timer: 1500,
-                showConfirmButton: false,
+
             });
             return false;
         }
@@ -282,8 +303,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 title: "Total percentage is less than 100%",
                 text: "Please adjust yarn percentages to make it 100%",
                 icon: "warning",
-                timer: 1500,
-                showConfirmButton: false,
+
             });
             return false;
         }
@@ -293,8 +313,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 title: "Total percentage exceeds 100%",
                 text: "Please adjust yarn percentages to make it exactly 100%",
                 icon: "error",
-                timer: 1500,
-                showConfirmButton: false,
+
             });
             return false;
         }
@@ -513,8 +532,9 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                             <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} setRequirementForm={setRequirementForm} requirementForm={requirementForm} readOnly={readOnly} setReadOnly={setReadOnly} id={id} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems}
                                 setRequirementItems={setRequirementItems} orderItemsData={orderItemsData?.data} processList={processList?.data}
                                 tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
-
-
+                                accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
+                                accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList}
+                                colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
 
                             />
 

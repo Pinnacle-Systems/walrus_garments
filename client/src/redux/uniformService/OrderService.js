@@ -97,7 +97,7 @@ const OrderApi = createApi({
         getOrderItemsByIdNew: builder.query({
             query: ({ id, stockValidation }) => {
                 return {
-                    url: `${ORDER_API}/getOrderItemsNew/${id}/${stockValidation ? stockValidation : null}`,
+                    url: `${ORDER_API}/getOrderItemsByIdNew/${id}/${stockValidation ? stockValidation : null}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",

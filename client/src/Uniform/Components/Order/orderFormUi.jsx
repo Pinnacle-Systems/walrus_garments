@@ -34,7 +34,7 @@ import { Loader } from "../../../Basic/components";
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, supplierList, setShowOrderForm,
 
     socksTypeData, sizeList, styleList, yarnNeedleList,
-    yarnList, countsList, fiberContent, yarnTypeList , colorlist , socksMaterialData
+    yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData
 
 }) => {
 
@@ -122,9 +122,14 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
     const validateData = (data) => {
 
-        if (orderDetails?.length > 0 && data.partyId && data?.validDate) {
+        let mandatoryFields = ["styleId", "fiberContentId","socksMaterialId","socksTypeId"];
+ 
+        if (data.partyId && data?.validDate) {
             return true
         }
+        // if(isGridDatasValid(data?.orderDetails, false, mandatoryFields)){
+        //     return true
+        // }
 
         return false
     }
@@ -243,12 +248,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
 
             } else {
@@ -263,6 +263,11 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const saveData = (nextProcess) => {
         if (!validateData(data)) {
             // toast.info("Please fill all required fields...!", { position: "top-center" })
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "warning",
+
+            });
             return
         }
         if (!window.confirm("Are you sure save the details ...?")) {
@@ -322,7 +327,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             Swal.fire({
                 title: "Deleted Successfully",
                 icon: "success",
-                timer: 1000,
 
             });
         }
@@ -330,7 +334,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             Swal.fire({
                 icon: 'error',
                 title: 'Submission error',
-                text: error.data?.message || 'Something went wrong!',
             });
         }
 

@@ -161,9 +161,9 @@ const Login = () => {
         (error) => {
           console.log(error);
           Swal.fire({
-            icon: 'error',
-            title: 'Submission error',
-            text: "Server Down"
+            title: "Server Down",
+            icon: "error",
+
           });
           setLoading(false);
         }

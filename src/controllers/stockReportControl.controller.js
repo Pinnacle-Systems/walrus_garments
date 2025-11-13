@@ -1,8 +1,7 @@
-import { Prisma } from '@prisma/client'
-import {
-    get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove,
-    getOrderItemsByIdNew as _getOrderItemsByIdNew, getStockvalidationById as _getStockvalidationById
-} from '../services/materialRequest.services.js';
+import pkg from '@prisma/client';
+const { Prisma } = pkg;
+
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/stockReportControl.service.js';
 
 async function get(req, res, next) {
     try {
@@ -16,28 +15,16 @@ async function get(req, res, next) {
 
 async function getOne(req, res, next) {
     try {
-        res.json(await _getOne(req.params.id, req.params.prevProcessId));
+        res.json(await _getOne(req.params.id));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
     }
 }
 
-
-
-
-export async function getStockvalidationById(req, res, next) {
+async function getSearch(req, res, next) {
     try {
-        res.json(await _getStockvalidationById(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
-        console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error`, err.message);
-    }
-}
-
-export async function getOrderItemsByIdNew(req, res, next) {
-    try {
-        res.json(await _getOrderItemsByIdNew(req.params.id, req.params.prevProcessId, req.params.packingCategory, req.params.packingType));
+        res.json(await _getSearch(req));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
@@ -46,7 +33,7 @@ export async function getOrderItemsByIdNew(req, res, next) {
 
 async function create(req, res, next) {
     try {
-        res.json(await _create(req));
+        res.json(await _create(req.body));
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
@@ -64,7 +51,7 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
     try {
-        res.json(await _update(req.params.id, req?.body?.body));
+        res.json(await _update(req.params.id, req.body));
         console.log(res.statusCode);
     } catch (error) {
         console.error(`Error`, (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message);
@@ -82,7 +69,7 @@ async function update(req, res, next) {
 
 async function remove(req, res, next) {
     try {
-        res.json(await _remove(req.params.id,req?.body?.body));
+        res.json(await _remove(req.params.id));
         console.log(res.statusCode);
     } catch (error) {
         if (error.code === 'P2025') {
@@ -101,6 +88,7 @@ async function remove(req, res, next) {
 export {
     get,
     getOne,
+    getSearch,
     create,
     update,
     remove

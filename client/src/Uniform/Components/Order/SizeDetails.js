@@ -6,6 +6,7 @@ import { ReusableInput } from './CommonInput'
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService'
 import secureLocalStorage from 'react-secure-storage'
 import { HiTrash } from 'react-icons/hi'
+import { Plus } from 'lucide-react'
 
 
 const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gridIndex, handleAdd, contextSubGridMenu, handleCloseSubGridContextMenu,
@@ -85,7 +86,13 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
               </thead>
               <tbody>
                 {item?.orderSizeDetails?.map((yarn, index) => (
-                  <tr key={index} className="border border-blue-gray-200 cursor-pointer">
+                  <tr key={index} className="border border-blue-gray-200 cursor-pointer"
+                    onContextMenu={(e) => {
+                      if (!readOnly) {
+                        handleRightSubGridClick(e, index, "notes");
+                      }
+                    }}
+                  >
                     <td className="py-0.5 border border-gray-300 text-[11px] text-center">
                       {index + 1}
                     </td>
@@ -164,7 +171,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         // }}
                         min="0"
                         onFocus={e => e.target.select()}
-                        className="text-left rounded w-full py-1 text-xs table-data-input"
+                        className="text-left rounded w-full py-1 text-xs "
                         value={yarn.sizeMeasurement}
                         disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                         onChange={e => handleInputChange(e.target.value, index, "sizeMeasurement")}
@@ -180,33 +187,29 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         }}
                         min="0"
                         onFocus={e => e.target.select()}
-                        className="text-right rounded w-full py-1 text-xs table-data-input"
+                        className="text-right rounded w-full py-1  text-[11px]"
                         value={yarn?.qty}
                         disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                         onChange={e => handleInputChange(e.target.value, index, "qty")}
-                        onBlur={e => handleInputChange(e.target.value, index, "qty")}
+                        onBlur={(e) => {
+                          handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                        }
+                        }
+
                       />
                     </td>
-                    <td
-                      className="w-10 border border-gray-300"
-
-                    >
-                      <input
-
-                        onContextMenu={(e) => {
-                          if (!readOnly) {
-                            handleRightSubGridClick(e, index, "notes");
-                          }
-                        }}
-                        className='w-full '
+                    <td className="border border-gray-300 text-center">
+                      <button
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            handleAdd(gridIndex);
+                            addNewRow();
                           }
                         }}
-
-                      />
+                        className="flex items-center justify-center w-full py-1"
+                      >
+                        <Plus size={18} className="text-red-800" />
+                      </button>
                     </td>
 
                   </tr>

@@ -3,7 +3,7 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 
-const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialIssue,  setIsMaterialIssue, setSubGridForm, subGridForm,
+const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIssue, setIsMaterialIssue, setSubGridForm, subGridForm,
     requirementId, setRequirementId
 }) => {
 
@@ -78,15 +78,19 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialI
 
                 </div>
                 <div className="flex flex-row gap-40">
-                    <div className="w-[40%] flex flex-col ">
+                    <div className="w-[50%] flex flex-col ">
                         <div className="justify-end items-center mt-4 mb-5">
                             <table className="w-full border-collapse table-fixed">
                                 <thead className="bg-gray-200 text-gray-800">
 
                                     <tr>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Style Name </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">Required Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-64">Yarn</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Color</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Stock Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Issue Qty (Kgs)</td>
+
 
 
                                     </tr>
@@ -99,24 +103,46 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialI
 
                                                 <tr
                                                     className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
-                                                    onClick={() => {
-                                                        setRequirementId(indent?.requirementPlanningFormId)
-                                                        setSubGridForm(true)
-                                                    }}
+                                                // onClick={() => {
+                                                //     setRequirementId(indent?.requirementPlanningFormId)
+                                                //     setSubGridForm(true)
+                                                // }}
                                                 >
                                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
 
                                                     <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.OrderDetails?.style?.name}
+                                                    >{indent?.Yarn?.name}
+                                                    </td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
+                                                    >{indent?.Color?.name}
+                                                    </td>
+                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
+                                                        {Number(indent?.availableQty || 0).toFixed(3)}
                                                     </td>
 
-                                                    <td className="border border-gray-300 px-2 py-1 text-right text-xs"
-
-                                                    >
-                                                        {Number(indent?.totalYarnQty || 0).toFixed(3)}
+                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
+                                                        {Number(indent?.qty || 0).toFixed(3)}
                                                     </td>
-                                               
+                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
+                                                        <input
+                                                            // onKeyDown={e => {
+                                                            //     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                            //     if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                                                            // }}
+                                                            min={"0"}
+                                                            type="number"
+                                                            onFocus={(e) => e.target.select()}
+                                                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                            // value={(!row.qty) ? 0 : row.qty}
+                                                            disabled={readOnly}
+                                                            // onChange={(e) =>
+                                                            //     handleInputChange(parseFloat(e.target.value), index, "qty")
+                                                            // }
+                                                            // onBlur={(e) => {
+                                                            //     handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                                            // }}
 
+                                                        />                                                    </td>
                                                 </tr>
 
 
@@ -127,15 +153,15 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialI
 
                                     })}
                                     <tr>
-                                        <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">       {(
-                                            issueItems?.reduce((sum, item) => {
-                                                return sum + (item?.RaiseIndenetYarnItems?.reduce(
-                                                    (yarnSum, yarn) => yarnSum + (parseFloat(yarn?.qty) || 0),
-                                                    0
-                                                ) || 0);
-                                            }, 0)
-                                        )?.toFixed(3) || "0.000"}
+                                        <td colSpan={4} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
+                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
+                                            {
+                                                (issueItems?.reduce((sum, item) => {
+                                                    return sum + (parseFloat(item?.qty) || 0);
+                                                }, 0))?.toFixed(3) || "0.000"
+                                            }
+
+
                                         </td>
                                     </tr>
                                     {contextMenu && (
@@ -197,7 +223,7 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialI
 
 
 
-                    <div className=" w-[50%]">
+                    {/* <div className=" w-[50%]">
                         <table className="w-full border-collapse table-fixed">
 
                             <tbody>
@@ -221,39 +247,8 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id,  isMaterialI
                             </tbody>
 
                         </table>
-                    </div>
-
-                    {/* <div className="w-[30%] flex justify-end items-center mt-4">
-
-                        <table className="w-full border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-800">
-
-                                <tr>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Yarn</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty</td>
-
-                                </tr>
-
-                            </thead>
-                            <tbody>
-
-                                {orderYarnDetails?.map((yarn, index) => (
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs w-9">{index + 1}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{yarn?.Yarn?.name}</td>
-
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">
-                                            {getRequireWeight(yarn?.yarnId).toFixed(3)} Kg
-                                        </td>
-
-                                    </tr>
-                                ))}
-
-                            </tbody>
-
-                        </table>
                     </div> */}
+
 
                 </div>
             </div>

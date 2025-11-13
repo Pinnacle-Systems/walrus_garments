@@ -205,12 +205,12 @@ const OrderFormReport = ({
     return (
         <div
             //   id="registrationFormReport"
-            className="flex flex-col w-full h-[93%] overflow-auto"
+            className="flex flex-col w-full  h-[78Vh] overflow-auto"
         >
 
             <>
-                <div className="h-[100%] rounded-lg bg-[#F1F1F0] shadow-sm">
-                    <div className="h-[90%]">
+                <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
+                    <div className="h-[68vh]">
                         <table className="">
                             <thead className="bg-gray-200 text-gray-800 ">
                                 <tr className="">
@@ -331,13 +331,13 @@ const OrderFormReport = ({
                                                 {index + 1}
                                             </td>
 
-                                            <td className="py-1.5 text-center">{dataObj.docId} </td>
+                                            <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                                            <td className="py-1.5 text-center">
+                                            <td className="py-1.5 text-left">
                                                 {dataObj?.docDate || ""}
                                             </td>
-                                            <td className="py-1.5 text-center"> {dataObj?.Party?.name}</td>
+                                            <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                                             {rowActions && (
                                                 <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                     <div className="flex">
@@ -385,7 +385,7 @@ const OrderFormReport = ({
                         </table>
 
                     </div>
-                    <div className="h-[10%]">
+                    <div className="h-[10vh]">
                         <Pagination />
                     </div>
 

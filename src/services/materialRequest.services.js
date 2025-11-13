@@ -43,9 +43,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRTF/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRF/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRTF/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRF/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -134,8 +134,8 @@ async function get(req) {
             //     }
             //     : {})
 
-            Party : {
-                name :  searchClientName  ?  { contains  :  searchClientName  }  :  undefined ,
+            Party: {
+                name: searchClientName ? { contains: searchClientName } : undefined,
             }
 
 
@@ -152,7 +152,7 @@ async function get(req) {
                     name: true
                 }
             },
-          
+
             RequirementPlanningForm: {
                 select: {
                     docId: true
@@ -176,7 +176,6 @@ async function get(req) {
     // if (pagination) {
     //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     // }
-    console.log(data, "data")
     if (isReport == "Material Request") {
         data = data?.filter(item => item.isMaterialRequset && !item.isMaterialIssue)
     }
@@ -251,7 +250,7 @@ async function getOne(id) {
 
 async function getStockValidationData(data) {
 
-    console.log(data, "data")
+    // console.log(data, "data")
 
 
 
@@ -360,8 +359,19 @@ export async function getStockvalidationById(id) {
                             percentage: true,
 
                         }
+                    },
+                    RaiseIndent : {
+                        select : {
+                            Order : {
+                                select : {
+                                    Stock : true
+                                }
+                            }
+                        }
                     }
-                }
+                }   
+                    
+
             }
 
 
@@ -454,7 +464,6 @@ async function create(req) {
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
         phone, contactPersonName, address, validDate, orderId, requirementId, orderDetailsId, isMaterialRequset, raiseIndentItems } = req.body
 
-console.log(raiseIndentItems,"raiseIndentItems")
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -462,13 +471,16 @@ console.log(raiseIndentItems,"raiseIndentItems")
 
     const formIds = raiseIndentItems?.map(item => item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : null).filter(Boolean);
 
+    console.log(formIds, "formIds")
+
+
     let data;
     await prisma.$transaction(async (tx) => {
 
         data = await tx.RaiseIndent.create({
             data: {
                 docId,
-                isMaterialRequset: Boolean(isMaterialRequset),
+                // isMaterialRequset: Boolean(isMaterialRequset),
                 contactPersonName: contactPersonName ?? "John",
                 Party: partyId ? { connect: { id: parseInt(partyId) } } : undefined,
                 Branch: branchId ? { connect: { id: parseInt(branchId) } } : undefined,
@@ -480,13 +492,13 @@ console.log(raiseIndentItems,"raiseIndentItems")
 
                 RaiseIndentItems: raiseIndentItems?.length > 0
                     ? {
-                        create: raiseIndentItems.map((item) => ({
+                        create: raiseIndentItems?.map((item) => ({
                             requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
-                            orderdetailsId: item?.orderdetailsId ? parseInt(item?.orderdetailsId) : undefined,
-                            RaiseIndenetYarnItems: item?.RaiseIndenetYarnItems?.length > 0
+                            orderdetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+                            RaiseIndenetYarnItems: item?.raiseIndenetYarnItems?.length > 0
                                 ? {
                                     createMany: {
-                                        data: item.RaiseIndenetYarnItems.map((sub) => ({
+                                        data: item.raiseIndenetYarnItems.map((sub) => ({
                                             yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
                                             colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
                                             count: sub?.count ? parseInt(sub.count) : undefined,
@@ -615,11 +627,35 @@ const update = async (id, body) => {
 
 
 
-async function remove(id) {
-    const data = await prisma.raiseIndent.delete({
+async function remove(id, raiseIndentItems) {
+
+    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : null).filter(Boolean);
+
+            console.log(formIds, "formIds",id)
+
+
+    let data;
+    await prisma.$transaction(async (tx) => {
+
+     data = await tx.raiseIndent.delete({
         where: {
             id: parseInt(id)
         },
+    })
+
+
+
+    for (const id of formIds) {
+        await tx.requirementPlanningForm.update({
+            where: {
+                id: parseInt(id),
+            },
+            data: {
+                isMaterialRequst: false,
+            },
+        });
+    }
+
     })
     return { statusCode: 0, data };
 }

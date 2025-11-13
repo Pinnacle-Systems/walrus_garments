@@ -8,7 +8,6 @@ import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '
 import Loader from "../Loader"
 import secureLocalStorage from "react-secure-storage";
 
-const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 export default function EmployeeReport({employees, loading, onClick, searchValue, setSearchValue, onNew}){
 

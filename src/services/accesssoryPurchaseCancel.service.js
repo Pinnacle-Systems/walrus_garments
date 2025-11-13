@@ -325,7 +325,7 @@ async function createCancelItems(tx, accesssoryPurchaseCancelId, cancelItems, po
                     accesssoryPurchaseCancelId: accesssoryPurchaseCancelId ? parseInt(accesssoryPurchaseCancelId) : "",
                     accessoryId: item["accessoryId"] ? parseInt(item["accessoryId"]) : "",
                     accessoryGroupId: item["accessoryGroupId"] ? parseInt(item["accessoryGroupId"]) : "",
-                    accessoryItemId: item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : "",
+                    // accessoryItemId: item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : "",
                     sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : "",
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : "",
                     uomId: item["uomId"] ? parseInt(item["uomId"]) : "",
@@ -406,7 +406,7 @@ export function getPoItemObject(item) {
     let newItem = {};
         newItem["accessoryId"] = item["accessoryId"] ? parseInt(item["accessoryId"]) : "",
         newItem["accessoryGroupId"] = item["accessoryGroupId"] ? parseInt(item["accessoryGroupId"]) : "",
-        newItem["accessoryItemId"] = item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : "",
+        // newItem["accessoryItemId"] = item["accessoryItemId"] ? parseInt(item["accessoryItemId"]) : "",
         newItem["sizeId"] = item["sizeId"] ? parseInt(item["sizeId"]) : "",
         newItem["colorId"] = item["colorId"] ? parseInt(item["colorId"]) : "",
         newItem["uomId"] = item["uomId"] ? parseInt(item["uomId"]) : "",

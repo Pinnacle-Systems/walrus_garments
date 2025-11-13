@@ -568,7 +568,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             <YarnInwardPoItems inwardItems={directInwardReturnItems} setInwardItems={setDirectInwardReturnItems}
               removeItem={removeItem} transType={transType} purchaseInwardId={id} params={params} supplierId={partyId}
               readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection}
-
+              id={id}
               handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
 
 

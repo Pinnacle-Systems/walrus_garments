@@ -10,7 +10,7 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 
 const PurchaseYarnPoItems = ({ yarnList, uomList,
     colorList, gaugeList, designList, poList,
-    index, handleInputChange, readOnly, deleteRow, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
+    index, handleInputChange, readOnly, id, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
     handleRightClick
 }) => {
 
@@ -78,10 +78,10 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
             <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>{console.log(item, "item")}
 
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{findFromList(item.poId, poList?.data, "docId")}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 text-[11px] px-1.5  text-left p-0.5'> { id ? item?.poNo : findFromList(item.poId, poList?.data, "docId")}</td>
+                <td className='py-0.5 border border-gray-300 px-1.5 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
+                <td className='py-0.5 border border-gray-300  px-1.5 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                <td className='py-0.5 border border-gray-300 px-1.5 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
 
 
 

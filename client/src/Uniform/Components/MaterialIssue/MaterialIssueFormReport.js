@@ -200,44 +200,17 @@ const MaterialIssueFormReport = ({
 
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                                         <div>Doc No</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+                                   
                                     </th>
                                     <th className="w-28 px-3  font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Doc Date</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+                              
                                     </th>
                                     <th className="w-28   px-3   font-medium text-[13px] text-gray-900  text-center ">
                                         <div>Order No</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+                                   
                                     </th>
-                                    {/* <th className="w-28    px-3  font-medium text-[13px]  text-gray-900  text-center ">
-                                        <div>Style No</div>
-
-                                    </th> */}
+                                 
                                     <th className="w-96   px-3  font-medium text-[13px]  text-gray-900  text-center  ">
                                         <div>Customer</div>
 
@@ -285,17 +258,7 @@ const MaterialIssueFormReport = ({
                                             }}
                                         />
                                     </th>
-                                    {/* <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
-                                        <input
-                                            type="text"
-                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                                            placeholder="Search"
-                                            value={searchStyleNo}
-                                            onChange={(e) => {
-                                                setSearchStyleNo(e.target.value);
-                                            }}
-                                        />
-                                    </th> */}
+                            
 
                                     <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -340,11 +303,11 @@ const MaterialIssueFormReport = ({
                                                 {index + 1}
                                             </td>
 
-                                            <td className="py-1.5 text-center">{dataObj.docId} </td>
+                                            <td className="py-1.5 text-left">{dataObj.docId} </td>
 
-                                                <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
+                                                <td className="py-1.5 text-left">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
-                                            <td className="py-1.5 text-center">{dataObj?.Order?.docId} </td>
+                                            <td className="py-1.5 text-left">{dataObj?.Order?.docId} </td>
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                                             {rowActions && (

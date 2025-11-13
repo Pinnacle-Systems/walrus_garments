@@ -1,6 +1,7 @@
 import axios from "axios";
 import secureLocalStorage from "react-secure-storage";
 import { toast } from 'react-toastify';
+import Swal from "sweetalert2";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 export const storeData = (methodName, urlName, data, model) => {
@@ -13,8 +14,8 @@ export const storeData = (methodName, urlName, data, model) => {
         if (result.status === 200 || result.status === 304) {
             if (result.data.statusCode === 0) {
                 window.location.reload();
-                localStorage.setItem(sessionStorage.getItem("sessionId") +"res", "success");
-                localStorage.setItem(sessionStorage.getItem("sessionId") +"success", `${model} Saved Successfully!!!`);
+                localStorage.setItem(sessionStorage.getItem("sessionId") + "res", "success");
+                localStorage.setItem(sessionStorage.getItem("sessionId") + "success", `${model} Saved Successfully!!!`);
             }
             else if (result.data.statusCode === 1) {
                 toast.warning(result.data.message, { autoClose: 5000 })
@@ -24,7 +25,11 @@ export const storeData = (methodName, urlName, data, model) => {
         }
     }, (error) => {
         console.log(error.status)
-        toast.error("Server Down", { autoClose: 5000 })
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -49,7 +54,11 @@ export const storeBranchData = (methodName, urlName, data, branchMasterRender, s
         }
     }, (error) => {
         console.log(error.status)
-        toast.error("Server Down", { autoClose: 5000 })
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -63,7 +72,7 @@ export const generateCompanyId = (urlName, data) => {
         if (result.status === 200 || result.status === 304) {
             if (result.data.statusCode === 0) {
                 console.log(result.data);
-                secureLocalStorage.setItem(sessionStorage.getItem("sessionId")+"postData", JSON.stringify(result.data.data));
+                secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "postData", JSON.stringify(result.data.data));
                 window.location.reload();
             }
             else if (result.data.statusCode === 1) {
@@ -74,7 +83,11 @@ export const generateCompanyId = (urlName, data) => {
         }
     }, (error) => {
         console.log(error.status)
-        toast.error("Server Down", { autoClose: 5000 })
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -93,7 +106,11 @@ export const removeBranchData = (id, API, model, setSelfRender, selfRender) => {
         }
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -105,15 +122,19 @@ export const removeData = (id, API, model) => {
         if (result.status === 200) {
             if (result.data.statusCode === 0) {
                 window.location.reload();
-                localStorage.setItem(sessionStorage.getItem("sessionId") +"res", "success");
-                localStorage.setItem(sessionStorage.getItem("sessionId") +"success", `${model} Deleted Successfully!!!`);
+                localStorage.setItem(sessionStorage.getItem("sessionId") + "res", "success");
+                localStorage.setItem(sessionStorage.getItem("sessionId") + "success", `${model} Deleted Successfully!!!`);
             } else if (result.data.statusCode === 1) {
                 toast.warning(result.data.message, { autoClose: 5000 });
             }
         }
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -124,15 +145,18 @@ export const getData = (API, setData, setIsLoading, params = {}, setDataLength) 
         params: params
     }).then((result) => {
         console.log("result", result.data.data);
-        if(setDataLength){
+        if (setDataLength) {
             setDataLength(result.data.data.length)
         }
         setData(result.data.data);
         setIsLoading(false)
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
-        setIsLoading(false);
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        }); setIsLoading(false);
     });
 }
 
@@ -150,8 +174,11 @@ export const getFilterData = (API, setData, setIsLoading, id) => {
         setIsLoading(false);
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
-        setIsLoading(false);
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        }); setIsLoading(false);
     });
 }
 
@@ -170,7 +197,11 @@ export const getDataById = (id, API, syncFormWithDb) => {
         }
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 
@@ -184,7 +215,11 @@ export const searchData = (searchParams, API, setDataRetrieved, params = {}) => 
         setDataRetrieved(result.data.data);
     }, (error) => {
         console.log(error);
-        toast.error("Server Down", { autoClose: 5000 });
+        Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+        });
     });
 }
 

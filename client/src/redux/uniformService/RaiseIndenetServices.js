@@ -90,10 +90,13 @@ const RaiseIndentApi = createApi({
       invalidatesTags: ["RaiseIndent"],
     }),
     deleteRaiseIndent: builder.mutation({
-      query: (id) => ({
-        url: `${RAISE_INDENET_API}/${id}`,
-        method: "DELETE",
-      }),
+      query: ({ id, ...body }) => {
+        return {
+          url: `${RAISE_INDENET_API}/${id}`,
+          method: "DELETE",
+          body,
+        };
+      },
       invalidatesTags: ["RaiseIndent"],
     }),
   }),

@@ -177,27 +177,27 @@ const GeneralYarnPoItems = ({
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <button className="font-bold text-slate-700 bord"
-                        // onKeyDown={(e) => {
-                        //     if (e.key === "Enter") {
-                        //         e.preventDefault();
-                        //         setTableDataView(true)
+                    // onKeyDown={(e) => {
+                    //     if (e.key === "Enter") {
+                    //         e.preventDefault();
+                    //         setTableDataView(true)
 
-                        //     }
-                        // }}
-                        // onClick={() => {
-                        //     if (!supplierId) {
-                        //         Swal.fire({
-                        //             icon: 'success',
-                        //             title: ` Choose Supplier`,
-                        //             showConfirmButton: false,
-                        //             timer: 2000
-                        //         });
-                        //     }
-                        //     else {
+                    //     }
+                    // }}
+                    // onClick={() => {
+                    //     if (!supplierId) {
+                    //         Swal.fire({
+                    //             icon: 'success',
+                    //             title: ` Choose Supplier`,
+                    //             showConfirmButton: false,
+                    //             timer: 2000
+                    //         });
+                    //     }
+                    //     else {
 
-                        //         setTableDataView(true)
-                        //     }
-                        // }}
+                    //         setTableDataView(true)
+                    //     }
+                    // }}
                     >
                         Fill Po Items
                     </button>
@@ -313,7 +313,13 @@ const GeneralYarnPoItems = ({
                         <tbody>
 
                             {(poItems ? poItems : [])?.map((row, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer " >
+                                <tr className="border border-blue-gray-200 cursor-pointer "
+                                    onContextMenu={(e) => {
+                                        if (!readOnly) {
+                                            handleRightClick(e, index, "shiftTimeHrs");
+                                        }
+                                    }}
+                                >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
 
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">

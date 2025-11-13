@@ -1,17 +1,21 @@
 import React, { useState } from 'react'
 import BranchIdSettings from './BranchIdSettings';
+import StockReport from './StockReport';
 
 const UserRoles = () => {
     const [activeNavBar, setActiveNavBar] = useState("Id Card Settings");
 
     const subMenus = [
         "Id Card Settings",
+        "Stock Report Settings"
     ]
 
     const getShowSubMenu = () => {
         switch (activeNavBar) {
             case "Id Card Settings":
                 return <BranchIdSettings />
+            case "Stock Report Settings":
+                return <StockReport />
             default:
                 return ""
         }
@@ -20,7 +24,7 @@ const UserRoles = () => {
     return (
         <div className='h-full flex flex-col'>
             <div className='md:flex md:items-center page-heading font-bold heading text-center py-2 justify-center'>
-               Control Panel
+                Control Panel
             </div>
             <div className='row-span-6 grid grid-cols-8 overflow-clip flex-1'>
                 <div className='border-2 bg-white'>
@@ -31,7 +35,7 @@ const UserRoles = () => {
                     </div>
                 </div>
                 <div className='col-span-7'>
-                {getShowSubMenu()}
+                    {getShowSubMenu()}
                 </div>
             </div>
         </div>

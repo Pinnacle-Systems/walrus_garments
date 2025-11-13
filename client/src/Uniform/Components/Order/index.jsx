@@ -169,15 +169,7 @@ const Order = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-                        {/* <ReusableTable
-                            columns={columns}
-                            data={orderData?.data || []}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            itemsPerPage={10}
-                        
-                        /> */}
+                  
                         <OrderFormReport
                             onView={handleView}
                             onEdit={handleEdit}

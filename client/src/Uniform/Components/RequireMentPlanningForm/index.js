@@ -31,6 +31,8 @@ const RequirementPlanningForm = () => {
     const [styleId, setstyleId] = useState("");
     const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
     const [dueDate, setDueDate] = useState();
+    const [accessoryItems, setAccessoryItems] = useState([]);
+
 
     const [sampleDetails, setSampleDetails] = useState([]);
     const [orderSizeDetails, setOrderSizeDetails] = useState([])
@@ -42,8 +44,8 @@ const RequirementPlanningForm = () => {
     const [yarnTotals, setYarnTotals] = useState([]);
 
 
-    const [tempOrderId,setTempOrderId]=useState("");
-    const [tempOrderDetailsId,setTempOrderDetailsId]=useState("");
+    const [tempOrderId, setTempOrderId] = useState("");
+    const [tempOrderDetailsId, setTempOrderDetailsId] = useState("");
 
 
     const [requirementItems, setRequirementItems] = useState([])
@@ -55,11 +57,11 @@ const RequirementPlanningForm = () => {
 
     // const { data: allData, isLoading, isFetching } = useGetRequirementPlanningFormQuery({ params: { branchId } });
     const { data: orderData, isLoading: orderDatalDataLoading, isFetching: orderDatalDataFetching, refetch: orderReftch } = useGetOrderQuery({ params });
-  
-    const searchFields = {
-    jobNumber
 
-  };
+    const searchFields = {
+        jobNumber
+
+    };
     const { data: allData, isFetching, isLoading } = useGetRequirementPlanningFormQuery({
         params: {
             branchId,
@@ -163,6 +165,7 @@ const RequirementPlanningForm = () => {
         setJobNumber("")
         setPartyId("")
         setRequirementItems([])
+        setAccessoryItems([])
 
     }
     if (isLoading || isFetching) return <Loader />
@@ -170,7 +173,7 @@ const RequirementPlanningForm = () => {
     return (
         <>
             {form ? (
-                <RequirmentForm 
+                <RequirmentForm
                     setDocId={setDocId} onNew={onNew} allData={allData} orderReftch={orderReftch} setDate={setDate}
 
                     onClose={() => { setForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} orderData={orderData} orderId={orderId} setOrderId={setOrderId} setChildrecord={setChildrecord}
@@ -182,7 +185,10 @@ const RequirementPlanningForm = () => {
                     dueDate={dueDate} setDueDate={setDueDate} jobNumber={jobNumber} setJobNumber={setJobNumber} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals} requirementItems={requirementItems} setRequirementItems={setRequirementItems}
 
                     tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
-                />
+                
+                    setAccessoryItems={setAccessoryItems}   accessoryItems={accessoryItems}
+
+                    />
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -206,7 +212,7 @@ const RequirementPlanningForm = () => {
                             </select>
                             
                             </div> */}
-                            <h1 className="text-2xl font-bold text-gray-800">Requirement Planning Form</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">Requirement Planning Form</h1>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
                             onClick={() => { setForm(true); onNew() }}

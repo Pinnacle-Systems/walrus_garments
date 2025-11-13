@@ -141,7 +141,6 @@ export default function Form() {
       Swal.fire({
         text: "The Country Name already exists.",
         icon: "warning",
-        showConfirmButton: false,
       });
       return false;
     }
@@ -243,8 +242,9 @@ export default function Form() {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-16",
+      className: "font-medium text-gray-900 text-center uppercase w-16",  
     },
+ 
 
 
   ];

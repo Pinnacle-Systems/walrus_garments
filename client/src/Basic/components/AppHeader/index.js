@@ -23,6 +23,7 @@ import NotificationReport from "./NotificationReport";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { useGetProjectQuery } from "../../../redux/services/ProjectService";
+import Swal from "sweetalert2";
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -59,20 +60,20 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
 
   const retrieveAllowedPages = useCallback(() => {
     const defaultAdminRaw = secureLocalStorage.getItem(
-  sessionStorage.getItem("sessionId") + "defaultAdmin"
-);
+      sessionStorage.getItem("sessionId") + "defaultAdmin"
+    );
 
-let defaultAdmin = false;
-try {
-  if (typeof defaultAdminRaw === "string") {
-    defaultAdmin = JSON.parse(defaultAdminRaw);
-  } else {
-    defaultAdmin = defaultAdminRaw;
-  }
-} catch (e) {
-  console.error("Failed to parse defaultAdmin:", e);
-  defaultAdmin = false;
-}
+    let defaultAdmin = false;
+    try {
+      if (typeof defaultAdminRaw === "string") {
+        defaultAdmin = JSON.parse(defaultAdminRaw);
+      } else {
+        defaultAdmin = defaultAdminRaw;
+      }
+    } catch (e) {
+      console.error("Failed to parse defaultAdmin:", e);
+      defaultAdmin = false;
+    }
     if (
       defaultAdmin
     ) {
@@ -87,7 +88,11 @@ try {
         },
         (error) => {
           console.log(error);
-          toast.error("Server Down", { autoClose: 5000 });
+          Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+          });
         }
       );
     } else {
@@ -123,7 +128,11 @@ try {
         },
         (error) => {
           console.log(error);
-          toast.error("Server Down", { autoClose: 5000 });
+          Swal.fire({
+            title: "Server Down",
+            icon: "error",
+
+          });
         }
       );
     }
@@ -162,7 +171,7 @@ try {
             <img src={Sangeetha} className="h-8 w-8" />
             <span className="flex font-semibold break-words">{APP_NAME} </span>
           </div>
-        </div>{console.log(allowedPages,"'allowedPages")}
+        </div>{console.log(allowedPages, "'allowedPages")}
         <div className="block lg:hidden justify-items-start">
           <button
             onClick={toggleNavMenu}

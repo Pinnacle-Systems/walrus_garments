@@ -282,11 +282,11 @@ const AccessoryPurchaseOrderFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-left w-32">
                     <div>Po No</div>
                  
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-left w-32">
                     <div>Po Date</div>
               
                   </th>
@@ -294,7 +294,7 @@ const AccessoryPurchaseOrderFormReport = ({
                     <div>Material</div>
 
                   </th> */}
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-left ">
                     <div>Supplier</div>
                
                   </th>

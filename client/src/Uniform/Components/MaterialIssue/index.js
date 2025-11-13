@@ -53,7 +53,6 @@ const MaterialIssue = () => {
     const { data: allData, isLoading, isFetching } = useGetMaterialIssueQuery({ params: { branchId } });
     const [removeData] = useDeleteMaterialIssueMutation();
 
-    const { data: indenetRaiseData } = useGetRaiseIndentQuery({ params: { branchId } });
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
 
@@ -185,7 +184,8 @@ const MaterialIssue = () => {
 
     const handleIendentRaiseView = (id) => {
 
-        setMaterialRequstId(id)
+        // setMaterialRequstId(id)
+        setOrderId(id)
         setForm(true)
         setReadOnly(true);
     };

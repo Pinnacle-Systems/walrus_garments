@@ -1524,20 +1524,23 @@ export const ReusableTable = ({
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
 
-
-                <tr>
-                  {columns?.map((column, index) => (
-                    <th
-                      key={index}
-                      className={`${column.className ? column.className : ""
-                        } py-2 px-1.5 font-medium text-[13px] ${column.header !== "" ? "border border-white/50 text-center    " : ""
-                        }`}
-                    >
-                      <span>{column.header}</span>
-                    </th>
-                  ))}
-                  <td className="border border-white/50 font-medium text-[13px]"></td>
-                </tr>
+  <tr>
+              {columns?.map((column, index) => (
+                <th
+                  key={index}
+                  className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${
+                    column.header !== "" ? "border-r border-white/50" : ""
+                  } `}
+                >
+                  {column.header}
+                </th>
+              ))}
+              {rowActions && (
+                <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
+                  ACTIONS
+                </th>
+              )}
+            </tr>
 
 
 

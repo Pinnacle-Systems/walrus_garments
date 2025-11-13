@@ -21,7 +21,7 @@ router.get('/:id/getOrderNew/:requirement/:packingCategory/:packingType', getOne
 
 router.get('/getOrderItems/:id/:prevProcessId/:packingCategory/:packingType', getOrderItemsById);
 
-router.get('/getOrderItemsNew/:id/:stockValidation', getOrderItemsByIdNew);
+router.get('/getOrderItemsByIdNew/:id/:stockValidation', getOrderItemsByIdNew);
 
 router.get('/stockValidation/:id', getStockvalidationById);
 

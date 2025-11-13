@@ -300,11 +300,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
       Swal.fire({
-        // title: "Total percentage exceeds 100%",
         title: "Please fill all required fields...!",
         icon: "error",
-        // timer: 1500,
-        // showConfirmButton: false,
+      
       }); return
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -651,7 +649,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             :
             <AccessoryPoItems id={id} transType={poType} taxTypeId={taxTemplateId} params={params} poItems={poItems} setPoItems={setPoItems} readOnly={readOnly} tableDataView={tableDataView} setTableDataView={setTableDataView} supplierId={supplierId}
               accessoryGroupList={accessoryGroupList}
-              accessoryItemList={accessoryItemList}
+              accessoryItemList={accessoryItemList} accessoryCategoryList={accessoryCategoryList}
               accessoryList={accessoryList}
               colorList={colorList}
               uomList={uomList}

@@ -8,6 +8,7 @@ import { HOME_PATH } from '../../../Route/urlPaths';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { PRODUCT_ADMIN_HOME_PATH } from '../../../Route/urlPaths';
+import Swal from 'sweetalert2';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL
 
@@ -47,7 +48,11 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                 }
             }, (error) => {
                 console.log(error);
-                toast.error("Server Down", { autoClose: 5000 });
+                Swal.fire({
+                    title: "Server Down",
+                    icon: "error",
+
+                });
             });
         }
 

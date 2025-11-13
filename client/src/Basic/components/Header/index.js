@@ -23,6 +23,7 @@ import { useDispatch } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { push } from "../../../redux/features/opentabs";
+import Swal from "sweetalert2";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -94,7 +95,13 @@ const Header = ({ profile, setProfile }) => {
                 },
                 (error) => {
                     console.log(error);
-                    toast.error("Server Down", { autoClose: 5000 });
+                    // toast.error("Server Down", { autoClose: 5000 });
+                    Swal.fire({
+                        title: "Server Down",
+                        icon: "error",
+
+                    });
+
                 }
             );
         } else {
@@ -130,7 +137,14 @@ const Header = ({ profile, setProfile }) => {
                 },
                 (error) => {
                     console.log(error);
-                    toast.error("Server Down", { autoClose: 5000 });
+                    // toast.error("Server Down", { autoClose: 5000 });
+                    Swal.fire({
+                        title: "Server Down",
+                        icon: "error",
+
+                    });
+
+
                 }
             );
         }
@@ -166,19 +180,7 @@ const Header = ({ profile, setProfile }) => {
                 <div className="mr-3 bg-beige p-2 rounded-full ">
                     <Bell size={17} />
                 </div>
-                {/* <div className="relative">
-                    <img className="rounded-full cursor-pointer" onClick={() => setProfile(!profile)} width={'25px'}
-                        src={dp}
-                        alt="image" />
 
-                    {profile && <Profile
-                        dp={dp}
-                        setProfile={setProfile}
-
-                    />}
-            
-
-                </div> */}
                 <div className="relative text-left">
                     <button
                         ref={ref}
@@ -189,16 +191,14 @@ const Header = ({ profile, setProfile }) => {
                         aria-expanded="true"
                         aria-haspopup="true"
                     >
-                        {/* <FontAwesomeIcon icon={faUserCircle} />
-                         */}
                         <img className="rounded-full cursor-pointer" width={'25px'}
                             src={dp}
                             alt="image" />
+
                     </button>
                     <div
                         className={`-ml-40 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
                     >
-                        {/* <div className="font-semibold">Profile</div> */}
                         <div className="bg-beige flex p-2 items-center rounded-lg">
                             <div className="mr-2 w-12">
                                 <img className="rounded-full" width={'30px'} height={'30px'} src={dp} alt="image" />
@@ -210,7 +210,6 @@ const Header = ({ profile, setProfile }) => {
                                     )}
                                 </div>
                                 <div className="text-[11px] p-0 text-gray-400 -mt-1 ">{singleData?.data?.email}</div>
-                                {/* <button onClick={() => { navigate("/dashboard/accountsettings"); setProfile(false) }} className="button border border-black  rounded hover:bg-stone-900 hover:text-white mt-2">Edit Profile</button> */}
                             </div>
                         </div>
                         <button className="nav-dropdown-bg z-99 p-2 w-full" onClick={() => { dispatch(push({ id: 1000000, name: "ACCOUNT SETTINGS" })) }}>
@@ -234,7 +233,7 @@ const Header = ({ profile, setProfile }) => {
                         ))}
 
                         <button className="nav-dropdown-bg z-50 p-2 w-full" onClick={() => setLogout(true)}>
-                            <pre>  Log Out</pre>
+                            <pre>LOG OUT</pre>
 
                         </button>
 

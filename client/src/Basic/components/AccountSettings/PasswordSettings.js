@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from 'react-toastify';
 import secureLocalStorage from "react-secure-storage";
 import { useUpdateUserMutation, useGetUserByIdQuery, useSendOtpMutation } from "../../../redux/services/UsersMasterService";
+import Swal from 'sweetalert2';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -77,7 +78,11 @@ const PasswordSettings = () => {
       }
     }, (error) => {
       console.log(error);
-      toast.error("Server Down", { autoClose: 5000 });
+      Swal.fire({
+        title: "Server Down",
+        icon: "error",
+
+      });
     });
   }
 
@@ -88,12 +93,12 @@ const PasswordSettings = () => {
 
   const [update, updateData] = useUpdateUserMutation()
 
-  const saveNewPassword = async() => {
+  const saveNewPassword = async () => {
     if (!passwordMatch) {
       toast.info("Passwords Should Be Same to proceed", { position: "top-center" })
       return
     }
-    await update({password, id});
+    await update({ password, id });
     setOtpPanel(false);
   }
 
