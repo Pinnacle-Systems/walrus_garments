@@ -23,8 +23,8 @@ import AccessoryInwardItems from './AccessoryInwardItems';
 import AccessoryDirectInwardItems from './DirectInwardItems';
 
 export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection, contextMenu, handleCloseContextMenu,
+    handleRightClick , colorList, uomList, accessoryList, sizeList
 
-    handleRightClick
 }) {
 
 
@@ -229,7 +229,9 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                         <AccessoryDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                             handleInputChangeLotNo={handleInputChangeLotNo}
                             storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
-                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
+                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+                            colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
+                        />
 
 
                     }
@@ -242,6 +244,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                             setDirectInwardReturnItems={setDirectInwardReturnItems}
                             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} handleDeleteRow={deleteRow} handleDeleteAllRows={handleDeleteAllRows} poInwardOrDirectInward={poInwardOrDirectInward}
                             handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+                            colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
                         />
 
                     }

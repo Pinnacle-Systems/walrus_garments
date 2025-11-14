@@ -236,12 +236,12 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                             </th>
 
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
+                                            {/* <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th> */}
                                             <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-96">Yarn</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
-                                            {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Already Transfer Qty (Kgs)</th> */}
+                                            {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Already Issue Qty (Kgs)</th> */}
 
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Balance  Qty</th>
 
@@ -255,8 +255,8 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                             <tr
                                                 key={index}
                                                 className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `
-                                            
-                                            }
+
+                                                }
                                                 onClick={() => {
                                                     if (yarnItem?.balanceQty !== 0) {
                                                         handleChange(yarnItem.id, yarnItem)
@@ -267,15 +267,13 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                 <td className='py-1 text-center'>
                                                     <input type="checkbox" name="" id=""
                                                         checked={isItemAdded(yarnItem.id, yarnItem)}
-                                                    disabled={yarnItem?.balanceQty === 0} 
+                                                        disabled={yarnItem?.balanceQty === 0}
                                                     />
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {yarnItem?.style}
-                                                </td>
+
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
                                                     {yarnItem?.Yarn?.name}
                                                 </td>
@@ -286,17 +284,17 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                     {parseFloat(yarnItem?.requiredQty)?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                    {parseFloat(yarnItem?.usedStockQty)?.toFixed(3)}
+                                                    {parseFloat(yarnItem?.currentStock)?.toFixed(3)}
                                                 </td>
                                                 {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                    {parseFloat(yarnItem?.alreadyTransferStockQty)?.toFixed(3)}
+                                                    {parseFloat(yarnItem?.alreadyIssueQty)?.toFixed(3)}
                                                 </td> */}
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                     {/* {(
                                                         (parseFloat(yarnItem?.requiredQty ?? 0)) -
                                                         (parseFloat(yarnItem?.poQty ?? 0) - parseFloat(yarnItem?.alreadyTransferStockQty ?? 0))
                                                     ).toFixed(3)}                            */}
-                                                    {Number(yarnItem?.balanceQty || 0).toFixed(3)}
+                                                    {parseFloat(yarnItem?.balanceQty || 0).toFixed(3)}
                                                 </td>
                                             </tr>
                                         ))}
@@ -306,14 +304,7 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                             </div>
 
                         </div>
-                        {/* <div className='flex justify-end gap-4 mt-3'>
-                            <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
-                                Done
-                            </button>
-                            <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
-                                Cancel
-                            </button>
-                        </div> */}
+
                     </div>
 
                 </div>

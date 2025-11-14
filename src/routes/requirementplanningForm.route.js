@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { multerUploadForGrid } from '../utils/multerUpload.js';
 const router = Router();
-import { get, getOne, create, update, remove, getOrderItemsById, getOrderItemsByIdNew  , getRequirementItems} from '../controllers/requirementplanningForm.controller.js';
+import { get, getOne, create, update, remove, getOrderItemsById, getOrderItemsByIdNew  , getRequirementItems , getAccessoryRequirementItems} from '../controllers/requirementplanningForm.controller.js';
 
 import multer from 'multer';
 
@@ -18,6 +18,7 @@ router.get('/', get);
 
 router.get('/getRequirementItems', getRequirementItems);
 
+router.get('/getAccessoryRequirementItems', getAccessoryRequirementItems);
 
 router.get('/:id', getOne);
 

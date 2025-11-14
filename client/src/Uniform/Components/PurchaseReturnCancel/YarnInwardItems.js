@@ -14,9 +14,12 @@ import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
 import YarnPoItem from './YarnPoItem';
 
 
-const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, id, deleteRow, handleEdit, contextMenu ,
-    handleDeleteRow , handleCloseContextMenu, handleDeleteAllRows ,handleRightClick 
- }) => {
+const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, id, deleteRow, handleEdit, contextMenu,
+    handleDeleteRow, handleCloseContextMenu, handleDeleteAllRows, handleRightClick,
+
+    supplierList, supplierDetails, payTermList, branchList,
+    branchdata, yarnList, colorList, uomList, setSupplierId
+}) => {
     // useEffect(() => {
     //     if (directInwardReturnItems?.length >= 1) return
     //     setDirectInwardReturnItems(prev => {
@@ -98,14 +101,11 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
 
     const { data: poList, isLoading: poListLoading, isFetching: poListFetching } = useGetPoQuery({ params: { branchId } });
 
-    const { data: yarnList } =
-        useGetYarnMasterQuery({ params: { companyId } });
 
-    const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
-        useGetColorMasterQuery({ params: { companyId } });
 
-    const { data: uomList } =
-        useGetUnitOfMeasurementMasterQuery({ params: { companyId } });
+
+
+
 
     // if (!yarnList || !colorList || !uomList || !poList) return <Loader />
     return (
@@ -158,7 +158,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 >
                                     Allowed Return Qty
                                 </th>
-                      
+
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -172,7 +172,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 >
                                     Price
                                 </th>
-                                     <th
+                                <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >

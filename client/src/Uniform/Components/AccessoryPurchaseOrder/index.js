@@ -12,7 +12,7 @@ import { useDeleteAccessoryPoMutation, useGetAccessoryPoQuery } from "../../../r
 import AccessoryPurchaseOrderFormReport from "./AccessoryPurchaseOrderFormReport";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
-import { useGetRequirementPlanningFormItemsQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
+import { useGetAccessoryPlanningFormItemsQuery, useGetRequirementPlanningFormItemsQuery } from "../../../redux/uniformService/RequirementPlanningFormServices";
 
 
 
@@ -86,7 +86,7 @@ export default function Form() {
   const { data: branchList } = useGetBranchQuery({ params: { ...params } });
 
 
-  const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
+  const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetAccessoryPlanningFormItemsQuery({ params });
 
 
   const [removeData] = useDeleteAccessoryPoMutation();

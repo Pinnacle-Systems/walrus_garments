@@ -373,7 +373,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                     <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                         accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
-                        requirementItems={requirementItems}
+                        requirementItems={requirementItems} orderSizeDetails={orderSizeDetails}
 
                     />
 

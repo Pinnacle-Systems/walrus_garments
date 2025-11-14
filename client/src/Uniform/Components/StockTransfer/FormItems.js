@@ -296,18 +296,17 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                     </div>
                 </div>
             </div>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[180px] ">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[200px] ">
 
 
                 <div className="flex flex-row gap-5">
                     <div className="flex justify-between items-center ">
                         <h2 className="font-medium text-slate-700">To Order Details
                             <span
-                                //  className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 bg-clip-text text-transparent font-semibold ml-4"
                                 className="ml-4 text-green-400 font-bold"
                             >
-
                                 {(toOrderId || id) ? findFromList(id ? singleData?.data?.toOrderId : toOrderId, orderData, "docId") : "To Order No"}
+
                             </span>
                         </h2>
                     </div>
@@ -327,12 +326,12 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 <div className="flex flex-row gap-40 ">
                     <div className="w-[80%] flex flex-col">
                         <div className="justify-end items-center ">
-                            <div className="max-h-[140px] overflow-y-auto ">
+                            <div className="max-h-[180px] overflow-y-auto ">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
+                                            {/* <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th> */}
                                             <th className="w-72 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
                                             <th className="w-40 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
@@ -352,9 +351,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                {/* <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
                                                     {yarnItem?.style}
-                                                </td>
+                                                </td> */}
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                                                     {yarnItem?.Yarn?.name}
                                                 </td>
@@ -365,10 +364,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                     {parseFloat(yarnItem?.requiredQty)?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
-                                                    {parseFloat(yarnItem?.currentStockQty)?.toFixed(3)}
+                                                    {parseFloat(yarnItem?.currentStock)?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
-                                                    {parseFloat(parseFloat(yarnItem?.requiredQty) - parseFloat(yarnItem?.currentStockQty))?.toFixed(3)}
+                                                    {parseFloat(parseFloat(yarnItem?.requiredQty) - parseFloat(yarnItem?.currentStock))?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     <input
@@ -377,7 +376,6 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         step="0.01"
                                                         min="0"
                                                         value={yarnItem?.transferQty || ""}
-                                                        // value={item?.quantity ? item.quantity.toFixed(3) : ""}
 
 
 

@@ -790,8 +790,8 @@ const AccessoryPurchaseOrderPrintFormat = ({
   taxDetails,
   deliveryTo,
   taxKey,
-  taxGroupWise,
-  colorList, uomList, accessoryList, sizeList, term
+  taxGroupWise, 
+  colorList, uomList, accessoryList, sizeList, accessoryGroupList , accessoryCategoryList , term
 
 }) => {
 
@@ -1000,8 +1000,8 @@ const AccessoryPurchaseOrderPrintFormat = ({
           <View style={styles.tableHeader}>
             <Text style={[styles.th, { flex: 0.7 }]}>S.No</Text>
             <Text style={[styles.th, { flex: 6 }]}>Accessory Name</Text>
-            <Text style={[styles.th, { flex: 4 }]}>Accessory Item</Text>
-            <Text style={[styles.th, { flex: 4 }]}>Accessory Group</Text>
+            {/* <Text style={[styles.th, { flex: 4 }]}>Accessory Item</Text>
+            <Text style={[styles.th, { flex: 4 }]}>Accessory Group</Text> */}
             <Text style={[styles.th, { flex: 3 }]}>Color</Text>
             <Text style={[styles.th, { flex: 1 }]}>Size</Text>
             <Text style={[styles.th, { flex: 1 }]}>Uom</Text>
@@ -1016,13 +1016,13 @@ const AccessoryPurchaseOrderPrintFormat = ({
           {filledPoItems?.map((val, index) => (
             <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
               <Text style={[styles.td, { flex: 0.7 }]}>{index + 1}</Text>
-              <Text style={[styles.td, { flex: 6 }]}>
-                {findFromList(val.accessoryId, accessoryList?.data, "aliasName")}
+              {/* <Text style={[styles.td, { flex: 6 }]}>
+                {findFromList(val.accessoryGroupId, accessoryGroupList?.data, "name")}
               </Text>
               <Text style={[styles.td, { flex: 4 }]}>
-                {findAccessoryName(val.accessoryId, accessoryList?.data, "accessoryItem")} </Text>
-              <Text style={[styles.td, { flex: 4 }]}>
-                {findAccessoryName(val.accessoryId, accessoryList?.data, "accessoryGroup")}
+                {findFromList(val.accessoryCategoryId, accessoryCategoryList?.data, "name")} </Text> */}
+              <Text style={[styles.td, { flex: 6 }]}>
+                {findFromList(val.accessoryId, accessoryList?.data, "aliasName")}
               </Text>
               <Text style={[styles.td, { flex: 3, textAlign: "right" }]}>
                 {findFromList(val.colorId, colorList?.data, "name")}
@@ -1083,7 +1083,7 @@ const AccessoryPurchaseOrderPrintFormat = ({
             </Text>
             <Text
               style={{
-                flex: 1.1,
+                flex: 2,
                 textAlign: "right",
                 fontSize: 8,
                 padding: 3,

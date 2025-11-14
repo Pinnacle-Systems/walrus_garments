@@ -248,16 +248,7 @@ const MaterialIssue = () => {
                     </div>
                     {isReport == "Material Issue" ?
                         <>
-                            {/* <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                <ReusableTable
-                                    columns={columnsInendentRaise}
-                                    data={indenetRaiseData?.data || []}
-
-                                    onView={handleIendentRaiseView}
-                                    onEdit={handleIendentRaiseEdit}
-                                    itemsPerPage={10}
-                                />
-                            </div> */}
+                        
                             <MaterialIssueFormReport
                                 onView={handleIendentRaiseView}
 
@@ -268,14 +259,7 @@ const MaterialIssue = () => {
                         :
                         <>
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                                {/* <ReusableTable
-                                    columns={columnsIssued}
-                                    data={allData?.data || []}
-                                    onView={handleIssuedView}
-                                    onEdit={handleIssuedEdit}
-                                    onDelete={handleIssuedDelete}
-                                    itemsPerPage={10}
-                                /> */}
+                            
                                 <MaterialRequestFormReport
                                     onView={handleIendentRaiseView}
 

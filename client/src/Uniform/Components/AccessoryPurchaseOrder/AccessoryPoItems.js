@@ -46,15 +46,37 @@ const AccessoryPoItems = ({
 
   const handleInputChange = (value, index, field) => {
     const newBlend = structuredClone(poItems);
+
+
     newBlend[index][field] = value;
+
     if (field === "accessoryId") {
       newBlend[index]["taxPercent"] = findYarnTax(value);
     }
+    // if (field == "qty") {
+    //   if (parseFloat(value) > parseFloat(allowedQty)) {
+    //     Swal.fire({
+    //       title: `Allowed Qty is ${allowedQty}`,
+    //       icon: "warning",
+    //       timer: 1500,
+    //       showConfirmButton: false,
+    //       didOpen: () => {
+    //         Swal.showLoading();
+    //       }
+    //     });
+    //   }
+    // }
+
     setPoItems(newBlend);
   };
+
+
+
   const activeTab = useSelector(
     (state) => state.openTabs.tabs.find((tab) => tab.active).name
   );
+
+
   useEffect(() => {
     if (id) return;
     if (poItems.length >= 1) return;
@@ -81,6 +103,9 @@ const AccessoryPoItems = ({
       return [...prev, ...newArray];
     });
   }, [setPoItems, poItems]);
+
+
+
 
   const addRow = () => {
     const newRow = {
@@ -475,25 +500,7 @@ const AccessoryPoItems = ({
                     )}
                   </select>
                 </td>
-                {/* <td className='table-data'>
-                                            <input
-                                                type="text-left px-1"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-center rounded w-36 py-1 table-data-input"
-                                                value={findAccessoryItemName(row.accessoryId)}
-                                                disabled={true}
-        
-                                            />
-                                        </td>
-                                        <td className='table-data'>
-                                            <input
-                                                type="text"
-                                                onFocus={(e) => e.target.select()}
-                                                className="text-center rounded w-36 py-1 table-data-input"
-                                                value={findAccessoryGroupName(row.accessoryId)}
-                                                disabled={true}
-                                            />
-                                        </td> */}
+
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -567,7 +574,7 @@ const AccessoryPoItems = ({
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full table-data-input"
                     value={(!row.requiredQty) ? 0 : row.requiredQty}
-                    disabled={readOnly}
+                    disabled={true}
                     onChange={(e) =>
                       handleInputChange(parseFloat(e.target.value), index, "requiredQty")
                     }
@@ -590,7 +597,7 @@ const AccessoryPoItems = ({
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full table-data-input"
                     value={(!row.alreadyPurchasedQty) ? 0 : row.alreadyPurchasedQty}
-                    disabled={readOnly}
+                    disabled={true}
                     onChange={(e) =>
                       handleInputChange(parseFloat(e.target.value), index, "alreadyPurchasedQty")
                     }
@@ -613,7 +620,7 @@ const AccessoryPoItems = ({
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 px-1 w-full table-data-input"
                     value={(!row.balanceQty) ? 0 : row.balanceQty}
-                    disabled={readOnly}
+                    disabled={true}
                     onChange={(e) =>
                       handleInputChange(parseFloat(e.target.value), index, "balanceQty")
                     }

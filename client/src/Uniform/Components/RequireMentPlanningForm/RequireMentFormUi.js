@@ -199,7 +199,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
         branchId, userId, companyId, docId,
         active, id, jobNumber,
         partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, styleId, requirementItems,
-        accessoryItems: accessoryItems?.filter(i => i.accessoryId && i.qty)
+        accessoryItems: accessoryItems?.filter(i => i.accessoryId && i.requiredQty)
     }
 
 
@@ -541,7 +541,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                         </fieldset>
 
 
-                        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+                        {/* <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                             <div className="flex gap-2 flex-wrap">
                                 <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                     <FiSave className="w-4 h-4 mr-2" />
@@ -574,7 +574,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                     Print
                                 </button>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             )}

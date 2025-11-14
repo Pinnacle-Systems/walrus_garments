@@ -97,7 +97,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     params,
   });
 
-    const { data: accessoryCategoryList } = useGetAccessoryCategoryMasterQuery({
+  const { data: accessoryCategoryList } = useGetAccessoryCategoryMasterQuery({
     params,
   });
 
@@ -127,9 +127,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   useEffect(() => {
 
-    setTempPoItems(requirementPlanningItemsData?.data?.filter(po => po.yarnType === poMaterial)?.map(item => ({
+    setTempPoItems(requirementPlanningItemsData?.data?.map(item => ({
       ...item,
-      RequirementPlanningItemsId: item?.id  // assuming qty is the field you want to base 10% on
+      RequirementPlanningItemsId: item?.id
     })))
 
   }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
@@ -261,15 +261,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const validateData = (data) => {
     let mandatoryFields = ["uomId", "price"];
-    if (poMaterial === "GreyYarn" || poMaterial === "DyedYarn") {
-      mandatoryFields = [...mandatoryFields, "yarnId"]
-    } else if (poMaterial === "GreyFabric" || poMaterial === "DyedFabric") {
-      mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-    } else if (poMaterial === "Accessory") {
-      mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-    }
-
-
+ 
 
 
     return data.poMaterial && data.supplierId && data?.dueDate
@@ -302,7 +294,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "error",
-      
+
       }); return
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -359,7 +351,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   console.log(taxDetails, "taxDetails")
   const supplierRef = useRef(null)
-  
+
   const dateRef = useRef(null);
 
   useEffect(() => {
@@ -395,6 +387,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           poItems={poItems}
           setPoType={setPoType}
           poMaterial={poMaterial}
+          accessoryList={accessoryList}
         />
       </Modal>
       <Modal
@@ -421,6 +414,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             deliveryToId={deliveryToId} deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
             // termsAndCondition={termsAndCondition} 
             colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
+            accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList}
             term={term}
           />
         </PDFViewer>
@@ -744,7 +738,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 </div> */}
                 <div className="flex justify-between py-1 text-sm">
                   <span className="text-slate-600">Net Amount</span>
-                  <span className="font-medium">Rs.{parseFloat(taxDetails?.netAmount || 0 ).toFixed(3)}</span>
+                  <span className="font-medium">Rs.{parseFloat(taxDetails?.netAmount || 0).toFixed(3)}</span>
                 </div>
 
 

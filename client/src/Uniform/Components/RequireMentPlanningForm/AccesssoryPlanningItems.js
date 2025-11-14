@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGroupList, id, accessoryCategoryList, accessoryList, accessoryItems, uomList, colorList, sizeList, requirementItems }) => {
+const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGroupList, id, accessoryCategoryList, accessoryList, accessoryItems, uomList, colorList, sizeList, requirementItems ,orderSizeDetails }) => {
 
 
     useEffect(() => {
@@ -21,8 +21,8 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
     console.log(accessoryItems, "accessoryItems")
 
 
-    const orderQty = requirementItems?.reduce?.((sum, item) => {
-        return sum + item.requiredQty
+    const orderQty = orderSizeDetails?.reduce?.((sum, item) => {
+        return sum + item.qty
     }, 0)
 
     console.log(orderQty, "orderQty")
@@ -267,13 +267,13 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                                             type="number"
                                             onFocus={(e) => e.target.select()}
                                             className="text-right rounded py-1 px-1 w-full table-data-input"
-                                            value={(!row.qty) ? 0 : row.qty}
+                                            value={(!row.requiredQty) ? 0 : row.requiredQty}
                                             disabled={readOnly || !row.accessoryId}
                                             onChange={(e) =>
-                                                handleInputChange(parseFloat(e.target.value), index, "qty")
+                                                handleInputChange(parseFloat(e.target.value), index, "requiredQty")
                                             }
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "requiredQty");
 
                                             }
                                             }

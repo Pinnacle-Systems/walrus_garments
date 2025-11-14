@@ -12,6 +12,9 @@ import Swal from 'sweetalert2';
 import PurchaseInwardFormReport from './PurchaseinwardFormReport';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
+import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
+import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
+import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 
 
 
@@ -54,6 +57,15 @@ const PurchaseInward = () => {
     const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
 
+    const { data: yarnList } =
+        useGetYarnMasterQuery({ params });
+
+    const { data: colorList } =
+        useGetColorMasterQuery({ params: { ...params } });
+
+
+    const { data: uomList } =
+        useGetUomQuery({ params });
 
 
 
@@ -116,7 +128,7 @@ const PurchaseInward = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList}
 
 
 
@@ -125,25 +137,7 @@ const PurchaseInward = () => {
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        {/* <div className="flex items-center gap-2">
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
-                            >
-                                <option value="this-month">This Month</option>
-                                <option value="last-month">Last Month</option>
-                            </select>
-                            <select
-                                value={selectedFinYear}
-                                onChange={(e) => setSelectedFinYear(e.target.value)}
-                                className="px-3 py-1.5 border rounded-md text-sm"
-                            >
-                                <option value="2023-2024">2023-2024</option>
-                                <option value="2022-2023">2022-2023</option>
-                            </select>
 
-                        </div> */}
                         <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Inward</h1>
 
                         <button
@@ -155,14 +149,7 @@ const PurchaseInward = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                        {/* <CommonTable
-                            columns={columns}
-                            data={allData?.data || []}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            itemsPerPage={10}
-                        /> */}
+
                         <PurchaseInwardFormReport
 
                             data={allData?.data || []}

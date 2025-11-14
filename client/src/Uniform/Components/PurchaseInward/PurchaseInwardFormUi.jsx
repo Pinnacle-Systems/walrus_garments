@@ -23,7 +23,9 @@ import YarnInwardPoItems from "./YarnInwardItem";
 import AccessoryInwardItems from "./AccessoryInwardItems";
 import Swal from "sweetalert2";
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, locationData, supplierList
+  dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, locationData, supplierList,
+    yarnList , colorList , uomList
+
 }) => {
 
 
@@ -110,7 +112,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     }
   }, []);
 
-  
+
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
@@ -553,7 +555,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
             <YarnPoItems
               poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-              handleCloseContextMenu={handleCloseContextMenu}
+              handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+
             />
 
           }
@@ -570,6 +573,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               readOnly={readOnly} isSupplierOutside={isSupplierOutside()} setInwardItemSelection={setInwardItemSelection}
               id={id}
               handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+              yarnList={yarnList} colorList={colorList} uomList={uomList}
+
 
 
             />

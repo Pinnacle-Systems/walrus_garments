@@ -11,15 +11,6 @@ const AccessoryDirectInwardItems = ({ directInwardReturnItems, setDirectInwardRe
 
 
 
-    const { data: colorList } =
-        useGetColorMasterQuery({ params: { ...params } });
-    const { data: accessoryList } =
-        useGetAccessoryMasterQuery({ params });
-
-    const { data: sizeList } =
-        useGetSizeMasterQuery({ params });
-    const { data: uomList } =
-        useGetUomQuery({ params });
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);

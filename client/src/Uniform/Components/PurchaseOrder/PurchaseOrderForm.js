@@ -90,14 +90,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    documentTitle: "Yarn Purchase Order",
-    pageStyle: `
-      @page { size: A4; margin: 10mm; }
-      body { font-family: 'Roboto', sans-serif; }
-    `
-  });
+
 
   const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
 
@@ -128,7 +121,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
   const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, } });
 
-  const { data: countsList } = useGetYarnCountsQuery({ params });
 
 
 
@@ -144,8 +136,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         hsnId: item?.Yarn?.hsnId
       }));
 
-    // calculate how many empty rows needed to make total = 10
-    const emptyCount = Math.max(15 - filtered.length, 0);
+      console.log(filtered,"filtered")
+
+      const emptyCount = Math.max(15 - filtered.length, 0);
 
     const emptyRows = Array.from({ length: emptyCount }, () => ({
       RequirementPlanningItemsId: null,
@@ -159,7 +152,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   }, [isRequirementFetching, isRequirementLoading, poMaterial, requirementPlanningItemsData]);
 
 
-  // const [fetchExcessToleranceItems, { data: excessToleranceItems, isLoading: isExcessLoading, isFetching: isExcessFetching }] = useLazyGetExcessToleranceItemsQuery();
 
 
 

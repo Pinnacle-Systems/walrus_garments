@@ -46,6 +46,19 @@ const RequirementPlanningFormApi = createApi({
       },
       providesTags: ["RequirementPlanningForm"],
     }),
+    getAccessoryPlanningFormItems: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${REQUIREMENT_FORM_API}/getAccessoryRequirementItems`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["RequirementPlanningForm"],
+    }),
     getRequirementPlanningFormItemById: builder.query({
       query: ({ id, purchaseInwardId, stockId, storeId, billEntryId, poType }) => {
         return {
@@ -114,6 +127,7 @@ export const {
   useGetRequirementPlanningFormQuery,
   useGetRequirementPlanningFormByIdQuery,
   useGetRequirementPlanningFormItemsQuery,
+  useGetAccessoryPlanningFormItemsQuery,
   useGetRequirementPlanningFormItemByIdQuery,
   useAddRequirementPlanningFormMutation,
   useUpdateRequirementPlanningFormMutation,

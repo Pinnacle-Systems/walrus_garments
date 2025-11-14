@@ -46,8 +46,8 @@ import { useAddAccessoryPurchaseReturnMutation, useDeleteAccessoryPurchaseReturn
 import AccessoryPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 
 
-const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
-    colorList, uomList, accessoryList, sizeList
+const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems, supplierId, setSupplierId,
+    colorList, uomList, accessoryList, sizeList, supplierList, supplierDetails, branchList, branchdata, locationData, termsAndCondition
 
 }) => {
 
@@ -57,7 +57,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState("");
     const [transType, setTransType] = useState("Accessory");
-    const [supplierId, setSupplierId] = useState("");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
     const [locationId, setLocationId] = useState('');
@@ -109,18 +108,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const params = {
         branchId, companyId
     };
-
-    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
-
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
-
-
-    const { data: supplierDetails } =
-        useGetPartyByIdQuery(supplierId, { skip: !supplierId });
-
-
-    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
 
 
@@ -178,7 +165,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    
+
 
     const data = {
         poType: transType,
@@ -223,7 +210,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     }
 
-    const handleSubmitCustom = async (callback, data, text ,nextProcess) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -275,9 +262,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             return
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated",nextProcess);
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added",nextProcess);
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -374,9 +361,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     };
 
 
-    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
-
-    const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
     const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
     const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
@@ -547,7 +531,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
-                        handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} handleRightClick={handleRightClick} readOnly={readOnly}
+                        handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} handleRightClick={handleRightClick} readOnly={readOnly} colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
                     />
 
 

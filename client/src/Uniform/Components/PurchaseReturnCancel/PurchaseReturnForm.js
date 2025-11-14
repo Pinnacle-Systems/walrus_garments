@@ -51,7 +51,11 @@ import PrintPreviewModal from "../../../UiComponents/NewModal/index.js";
 import NewModal from "../../../UiComponents/NewModal/index.js";
 
 
-const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems }) => {
+const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
+    supplierList, supplierDetails, payTermList, branchList,
+    branchdata, yarnList, colorList, uomList, supplierId, setSupplierId ,locationData ,termsAndCondition
+
+}) => {
 
 
 
@@ -66,7 +70,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState("");
     const [transType, setTransType] = useState("DyedYarn");
-    const [supplierId, setSupplierId] = useState("");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
     const [locationId, setLocationId] = useState('');
@@ -97,30 +100,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         branchId, companyId
     };
 
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
-
-
-    const { data: supplierDetails } =
-        useGetPartyByIdQuery(supplierId, { skip: !supplierId });
-
-    const { data: payTermList } =
-        useGetPaytermMasterQuery({ params: { ...params } });
-
-    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
-    const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
 
 
 
-    const { data: yarnList } =
-        useGetYarnMasterQuery({ params: { companyId } });
 
-    const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
-        useGetColorMasterQuery({ params: { companyId } });
-
-    const { data: uomList } =
-        useGetUnitOfMeasurementMasterQuery({ params: { companyId } });
 
 
 
@@ -348,7 +332,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setSupplierId("")
     }, [transType])
 
-    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
 
     const storeOptions = locationData ?
         locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
@@ -379,8 +362,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
-    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems :directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
+    const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: directInwardReturnItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
     const taxGroupWise = groupBy(directInwardReturnItems, "taxPercent");
 
@@ -563,7 +545,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
-                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection} />
+                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
+                        supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                        branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList}
+
+                    />
 
 
                     <div className="grid grid-cols-3 gap-3">

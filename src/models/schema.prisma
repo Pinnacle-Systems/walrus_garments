@@ -796,6 +796,7 @@ model Yarn {
   FromOrderTransferItems        FromOrderTransferItems[]
   ToOrderTransferTtems          ToOrderTransferTtems[]
   RequirementPlanningItems      RequirementPlanningItems[]
+  materialIssueItems            MaterialIssueItems[]
 }
 
 model yarnCounts {
@@ -1032,6 +1033,7 @@ model Color {
   AccessoryInwardItems          AccessoryInwardItems[]
   AccessoryReturnItems          AccessoryReturnItems[]
   accessoryRequirementPlannings AccessoryRequirementPlanning[]
+  materialIssueItems            MaterialIssueItems[]
 }
 
 model UnitOfMeasurement {
@@ -3390,7 +3392,8 @@ model Order {
   AccessoryInward               AccessoryInward[]
   PoItems                       PoItems[]
   AccessoryPoItems              AccessoryPoItems[]
-  accessoryRequirementPlannings AccessoryRequirementPlanning[]
+  AccessoryRequirementPlanning AccessoryRequirementPlanning[]
+  MaterialIssueItems            MaterialIssueItems[]
 }
 
 model OrderDetails {
@@ -3667,42 +3670,42 @@ model sampleYarnDetails {
 }
 
 model RequirementPlanningForm {
-  id                            Int                            @id @default(autoincrement())
-  docId                         String?
-  createdAt                     DateTime?                      @default(now())
-  updatedAt                     DateTime?                      @updatedAt
-  createdBy                     User?                          @relation("createdBy", fields: [createdById], references: [id])
-  createdById                   Int?
-  updatedBy                     User?                          @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById                   Int?
-  Branch                        Branch?                        @relation(fields: [branchId], references: [id])
-  branchId                      Int?
-  Party                         Party?                         @relation(fields: [partyId], references: [id])
-  partyId                       Int?
-  requirementDate               DateTime?
-  remarks                       String?                        @db.LongText
-  specialInstructions           String?
-  order                         Order?                         @relation(fields: [orderId], references: [id])
-  orderId                       Int?
-  OrderDetails                  OrderDetails?                  @relation(fields: [orderDetailsId], references: [id])
-  orderDetailsId                Int?
-  Style                         Style?                         @relation(fields: [styleId], references: [id])
-  styleId                       Int?
-  jobNumber                     String?
-  isMaterialRequst              Boolean?                       @default(false)
-  isMaterialIssue               Boolean?                       @default(false)
-  requirementSizeDetails        RequirementSizeDetails[]
-  RequirementYarnDetails        RequirementYarnDetails[]
-  Po                            Po[]
-  RaiseIndent                   RaiseIndent[]
-  MaterialIssue                 MaterialIssue[]
-  RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
-  RaiseIndentItems              RaiseIndentItems[]
-  MaterialIssueItems            MaterialIssueItems[]
-  MaterialIssueYarnItems        MaterialIssueYarnItems[]
-  ToOrderTransferTtems          ToOrderTransferTtems[]
-  RequirementPlanningItems      RequirementPlanningItems[]
-  AccessoryPo                   AccessoryPo[]
+  id                           Int                            @id @default(autoincrement())
+  docId                        String?
+  createdAt                    DateTime?                      @default(now())
+  updatedAt                    DateTime?                      @updatedAt
+  createdBy                    User?                          @relation("createdBy", fields: [createdById], references: [id])
+  createdById                  Int?
+  updatedBy                    User?                          @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById                  Int?
+  Branch                       Branch?                        @relation(fields: [branchId], references: [id])
+  branchId                     Int?
+  Party                        Party?                         @relation(fields: [partyId], references: [id])
+  partyId                      Int?
+  requirementDate              DateTime?
+  remarks                      String?                        @db.LongText
+  specialInstructions          String?
+  order                        Order?                         @relation(fields: [orderId], references: [id])
+  orderId                      Int?
+  OrderDetails                 OrderDetails?                  @relation(fields: [orderDetailsId], references: [id])
+  orderDetailsId               Int?
+  Style                        Style?                         @relation(fields: [styleId], references: [id])
+  styleId                      Int?
+  jobNumber                    String?
+  isMaterialRequst             Boolean?                       @default(false)
+  isMaterialIssue              Boolean?                       @default(false)
+  requirementSizeDetails       RequirementSizeDetails[]
+  RequirementYarnDetails       RequirementYarnDetails[]
+  Po                           Po[]
+  RaiseIndent                  RaiseIndent[]
+  MaterialIssue                MaterialIssue[]
+  RaiseIndenetYarnItems        RaiseIndenetYarnItems[]
+  RaiseIndentItems             RaiseIndentItems[]
+  MaterialIssueItems           MaterialIssueItems[]
+  MaterialIssueYarnItems       MaterialIssueYarnItems[]
+  ToOrderTransferTtems         ToOrderTransferTtems[]
+  RequirementPlanningItems     RequirementPlanningItems[]
+  AccessoryPo                  AccessoryPo[]
   AccessoryRequirementPlanning AccessoryRequirementPlanning[]
 }
 
@@ -3821,6 +3824,7 @@ model AccessoryRequirementPlanning {
   sizeId                  Int?
   poQty                   Float?
   qty                     Float?
+  requiredQty             Float?
   Uom                     UnitOfMeasurement?       @relation(fields: [uomId], references: [id])
   uomId                   Int?
   percentage              Float?
@@ -3956,6 +3960,15 @@ model MaterialIssueItems {
   requirementPlanningFormId Int?
   OrderDetails              OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
   orderdetailsId            Int?
+  Order                     Order?                   @relation(fields: [orderId], references: [id])
+  orderId                   Int?
+  Yarn                      Yarn?                    @relation(fields: [yarnId], references: [id])
+  yarnId                    Int?
+  Color                     Color?                   @relation(fields: [colorId], references: [id])
+  colorId                   Int?
+  qty                       Float?
+  requiredQty               Float?
+  issueQty                  Float?
   MaterialIssueYarnItems    MaterialIssueYarnItems[]
 }
 

@@ -324,7 +324,7 @@ async function getOne(id) {
 
                 }
             },
-            AccessoryRequirementPlanning : true
+            AccessoryRequirementPlanning: true
         }
 
 
@@ -558,7 +558,281 @@ export async function getRequirementItems(req) {
     return { statusCode: 0, data, childRecord };
 }
 
+export async function getAccessoryRequirementItems(req) {
 
+    const { poMaterial } = req.query
+
+
+    const childRecord = 0;
+    let data = await prisma.accessoryRequirementPlanning.findMany({
+
+        //     id: true,
+        //     requirementPlanningFormId: true,
+        //     colorId: true,
+        //     // yarncategoryId: true,
+        //     yarnId: true,
+        //     count: true,
+        //     // yarnKneedleId: true,
+        //     yarnType: true,
+        //     processId: true,
+        //     isProcess: true,
+        //     lossPercentage: true,
+        //     requiredQty: true,
+        //     orderId: true,
+        //     orderDetailsId: true,
+        //     partyId: true,
+        //     Yarn: {
+        //         select: {
+        //             name: true,
+        //             countsId: true,
+        //             hsnId: true,
+        //             Hsn: {
+        //                 select: {
+        //                     tax: true
+        //                 }
+        //             }
+
+        //         }
+        //     },
+        //     Color: {
+        //         select: {
+        //             name: true
+        //         }
+        //     },
+        //     yarnCounts: {
+        //         select: {
+        //             name: true
+        //         }
+        //     },
+        //     order: {
+        //         select: {
+        //             docId: true
+        //         }
+        //     },
+        //     PoItems: {
+        //         select: {
+        //             id: true,
+        //             fabricId: true,
+        //             yarnId: true,
+        //             accessoryId: true,
+        //             accessoryGroupId: true,
+        //             accessoryItemId: true,
+        //             colorId: true,
+        //             uomId: true,
+        //             noOfBags: true,
+        //             weightPerBag: true,
+        //             percentage: true,
+        //             requiredQty: true,
+        //             qty: true,
+        //             price: true,
+        //             discountType: true,
+        //             discountValue: true,
+        //             sizeId: true,
+        //             YarnType: true,
+        //             yarncategoryId: true,
+        //             weight: true,
+        //             designId: true,
+        //             gaugeId: true,
+        //             loopLengthId: true,
+        //             gsmId: true,
+        //             poId: true,
+        //             KDia: true,
+        //             kDiaId: true,
+        //             FDia: true,
+        //             fDiaId: true,
+        //             yarnCounts: true,
+        //             count: true,
+        //             isPurchaseCancel: true,
+        //             RequirementPlanningItemsId: true,
+        //             taxPercent: true,
+        //             hsnId: true,
+        //             CancelItems: true,
+
+        //         }
+        //     },
+        //     Po: true,
+        //     OrderDetails: {
+
+        //         select: {
+        //             style: {
+        //                 select: {
+        //                     name: true
+        //                 }
+        //             },
+        //             orderYarnDetails: {
+        //                 select: {
+        //                     id: true,
+        //                     yarncategoryId: true,
+        //                     yarnId: true,
+        //                     count: true,
+        //                     yarnKneedleId: true,
+        //                     orderdetailsId: true,
+        //                     colorId: true,
+        //                     Yarn: {
+        //                         select: {
+        //                             name: true,
+        //                             hsnId: true,
+
+        //                         }
+        //                     },
+        //                     Color: {
+        //                         select: {
+        //                             name: true
+        //                         }
+        //                     }
+        //                 }
+        //             },
+
+        //         }
+        //     }
+
+        // },
+        include: {
+            Accessory: {
+                select: {
+                    aliasName: true,
+
+                }
+            },
+            Color: {
+                select: {
+                    name: true
+                }
+            },
+            Size: {
+                select: {
+                    name: true
+                }
+            },
+            Uom: {
+                select: {
+                    name: true
+                }
+            },
+
+            RequirementPlanningForm: true,
+
+            order: {
+                select: {
+                    docId: true,
+                    orderDetails: {
+                        select: {
+                            style: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            orderYarnDetails: {
+                                select: {
+                                    id: true,
+                                    yarncategoryId: true,
+                                    yarnId: true,
+                                    count: true,
+                                    yarnKneedleId: true,
+                                    orderdetailsId: true,
+                                    colorId: true,
+                                    Yarn: {
+                                        select: {
+                                            name: true,
+                                            hsnId: true,
+
+                                        }
+                                    },
+                                    Color: {
+                                        select: {
+                                            name: true
+                                        }
+                                    }
+                                }
+                            },
+
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+
+    console.log(data, "data")
+
+
+    data = data
+        // ?.filter(item => {
+        //     const poQty = item?.PoItems?.reduce((t, p) => t + (p.qty || 0), 0) || 0;
+
+        //     let cancelQty = 0;
+        //     let shortCloseQty = 0;
+
+        //     // Loop through all PO items
+        //     item?.PoItems?.forEach(p => {
+        //         p?.CancelItems?.forEach(c => {
+        //             const qty = c?.qty || 0;
+        //             if (c?.cancelType == "CANCEL") {
+        //                 cancelQty += qty;
+        //             } else if (c?.cancelType == "SHORTCLOSE") {
+        //                 shortCloseQty += qty;
+        //             }
+        //         });
+        //     });
+
+        //     // console.log(cancelQty, "cancelQty", poQty)
+        //     // console.log(shortCloseQty, "shortCloseQty")
+        //     console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
+
+        //     // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
+        //     return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(item?.requiredQty || 0);
+
+        // })
+        ?.map(item => {
+            const orderDetails = item?.order?.orderDetails || [];
+
+
+            const yarns = orderDetails?.flatMap(i => i.orderYarnDetails)
+
+            console.log(yarns, "yarns")
+
+            const combinedColors = yarns?.map(yarn => yarn?.Color?.name)
+                .filter(Boolean)
+                .join("/");
+
+            const styleName = yarns?.style?.name
+
+            // const poQty = item?.PoItems?.reduce((total, poItem) => {
+            //     return total + (poItem.qty || 0);
+            // }, 0) || 0;
+
+
+            // let cancelQty = 0;
+            // let shortCloseQty = 0;
+
+            // item?.PoItems?.forEach(poItem => {
+            //     poItem?.CancelItems?.forEach(c => {
+            //         const qty = c?.qty || 0;
+            //         if (c?.cancelType === "CANCEL") {
+            //             cancelQty += qty;
+            //         } else if (c?.cancelType === "SHORTCLOSE") {
+            //             shortCloseQty += qty;
+            //         }
+            //     });
+            // });
+
+            // console.log(cancelQty, "cancelQty", poQty)
+            // console.log(shortCloseQty, "shortCloseQty")
+
+            return {
+                ...item,
+                // allColors: `${combinedColors} - ${styleName}`,
+                // alreadyPoqty: poQty,
+                // alreadyCancelQty: cancelQty,
+                // balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty)
+
+            };
+        });
+
+
+    return { statusCode: 0, data, childRecord };
+}
 
 export async function getOrderItemsById(id, prevProcessId, packingCategory, packingType) {
 
@@ -719,7 +993,7 @@ async function create(req) {
                                 accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
                                 accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
                                 accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
                                 sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                                 uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
                                 colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
@@ -842,7 +1116,7 @@ const update = async (id, body) => {
                 RequirementPlanningItems: true,
                 requirementSizeDetails: true,
                 RequirementYarnDetails: true,
-                AccessoryRequirementPlanning : true
+                AccessoryRequirementPlanning: true
             },
             data: {
                 // docId: draftSave ? docIdNumber : dataFound?.docId,
@@ -976,7 +1250,7 @@ const update = async (id, body) => {
                         accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
                         accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
                         accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
-                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                        requiredQty: sub?.requiredQty ? parseFloat(sub.requiredQty) : undefined,
                         sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                         uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
                         colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,

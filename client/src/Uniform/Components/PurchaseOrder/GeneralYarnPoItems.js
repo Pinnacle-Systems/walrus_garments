@@ -581,11 +581,7 @@ const GeneralYarnPoItems = ({
                                                     addNewRow();
                                                 }
                                             }}
-                                            onContextMenu={(e) => {
-                                                if (!readOnly) {
-                                                    handleRightClick(e, index, "shiftTimeHrs");
-                                                }
-                                            }}
+                                        
                                         />
                                     </td>
 

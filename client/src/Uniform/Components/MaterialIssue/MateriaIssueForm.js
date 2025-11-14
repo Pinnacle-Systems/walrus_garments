@@ -64,55 +64,50 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
-        else {
-            setIssueItems(
-                data?.RaiseIndentItems?.map(item => {
-                    const allColors = item?.RaiseIndenetYarnItems
-                        ?.map(yarn => yarn?.Color?.name)
-                        .filter(Boolean)
-                        .join(" - ");
-                    const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+        // else {
+        //     setIssueItems(
+        //         data?.RaiseIndentItems?.map(item => {
+        //             const allColors = item?.RaiseIndenetYarnItems
+        //                 ?.map(yarn => yarn?.Color?.name)
+        //                 .filter(Boolean)
+        //                 .join(" - ");
+        //             const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
 
 
-                        return {
-                            ...yarn,
+        //                 return {
+        //                     ...yarn,
 
-                        };
-                    });
-                    const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-                        (sum, yarn) => sum + yarn.qty,
-                        0
-                    );
-                    return {
-                        OrderDetails: {
-                            style: {
-                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                            }
-                        },
-                        requirementPlanningFormId: item.requirementPlanningFormId,
-                        orderdetailsId: item.orderdetailsId,
-                        RaiseIndenetYarnItems,
-                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                    };
-                })
-            );
-            setOrderId(data?.orderId ? data?.orderId : "")
-            setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
-            setMaterialRequstId(data?.id ? data?.id : "")
-            setPartyId(data?.partyId ? data?.partyId : "")
+        //                 };
+        //             });
+        //             const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+        //                 (sum, yarn) => sum + yarn.qty,
+        //                 0
+        //             );
+        //             return {
+        //                 OrderDetails: {
+        //                     style: {
+        //                         name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+        //                     }
+        //                 },
+        //                 requirementPlanningFormId: item.requirementPlanningFormId,
+        //                 orderdetailsId: item.orderdetailsId,
+        //                 RaiseIndenetYarnItems,
+        //                 totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+        //             };
+        //         })
+        //     );
+        //     setOrderId(data?.orderId ? data?.orderId : "")
+        //     setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
+        //     setMaterialRequstId(data?.id ? data?.id : "")
+        //     setPartyId(data?.partyId ? data?.partyId : "")
 
-        }
+        // }
 
     }, [orderDetailsId]);
 
 
 
-    // useEffect(() => {
-    //     if (orderDetailsId && orderItemsData?.data) {
-    //         syncFormWithDb(orderItemsData.data, orderDetailsId);
-    //     }
 
-    // }, [orderItemsDataFetching, orderItemsDataLoading, orderDetailsId, syncFormWithDb, orderItemsData]);
 
 
 
@@ -131,7 +126,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
         const processYarnData = async () => {
             if (!singleOrderData?.data?.RaiseIndent?.[0]?.RaiseIndentItems) return;
 
-                setPartyId(singleOrderData?.data?.partyId)
+            setPartyId(singleOrderData?.data?.partyId)
 
             const allYarns = singleOrderData?.data?.RaiseIndent[0]?.RaiseIndentItems?.flatMap(
                 (item) => item?.RaiseIndenetYarnItems || []
@@ -141,7 +136,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
             console.log(allYarns, "allYarns");
 
             const Yarn = Object.values(
-                allYarns.reduce((acc, item) => {
+                allYarns?.reduce((acc, item) => {
                     const key = `${item.yarnId}-${item.colorId}`;
 
                     if (!acc[key]) {
@@ -167,21 +162,44 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
             );
 
 
+            const MaterialIssue = Object.values(
+                singleOrderData?.data?.MaterialIssueItems?.reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.issueQty;
+                    }
+                    return acc;
+                }, {})
+            );
+
+
             const fianl = Yarn?.map(req => {
+
                 const stock = Stock?.find(
-                    s => s.yarnId === req.yarnId && s.colorId === req.colorId
+                    s => s.yarnId == req.yarnId && s.colorId == req.colorId
                 );
 
+                const Issued = MaterialIssue?.find(
+                    i => i.yarnId == req.yarnId && i.colorId == req.colorId
+                )
+
+
                 const availableQty = stock ? stock?.qty : 0;
+                const alreadyIssueQty = Issued ? Issued?.issueQty : 0;
 
                 return {
                     ...req,
                     availableQty,
+                    alreadyIssueQty,
                     // balance: availableQty - req.qty, // +ve = extra, -ve = shortage
                 };
             });
 
-            console.log(Stock, "Stock");
+            console.log(Stock, "Stockkkk");
+            console.log(MaterialIssue,"MaterialIssue")
             setIssueItems(fianl);
         };
 

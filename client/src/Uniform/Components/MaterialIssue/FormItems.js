@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
-const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIssue, setIsMaterialIssue, setSubGridForm, subGridForm,
+const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, setIssueItems, isMaterialIssue, setIsMaterialIssue, setSubGridForm, subGridForm,
     requirementId, setRequirementId
 }) => {
 
@@ -17,7 +18,14 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
 
 
 
+    function handleInputChange(value, index, field) {
 
+        setIssueItems(issueItems => {
+            const newBlend = structuredClone(issueItems);
+            newBlend[index][field] = parseFloat(value);
+            return newBlend
+        });
+    };
 
 
 
@@ -25,9 +33,8 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
 
 
     function deleteRow(index) {
-        console.log(index, "index")
-        if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setRaiseIndentItems(prev => prev.filter((_, i) => i !== index))
+        // if (readOnly) return toast.info("Turn on Edit Mode...!!!")
+        setIssueItems(prev => prev.filter((_, i) => i !== index))
     }
 
 
@@ -46,11 +53,6 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
         setContextMenu(null);
     };
 
-    function deleteRow(index) {
-        console.log(index, "index")
-        if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-        setRaiseIndentItems(prev => prev.filter((_, i) => i !== index))
-    }
 
     const tableRef = useRef(null);
 
@@ -78,7 +80,7 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
 
                 </div>
                 <div className="flex flex-row gap-40">
-                    <div className="w-[50%] flex flex-col ">
+                    <div className="w-[70%] flex flex-col ">
                         <div className="justify-end items-center mt-4 mb-5">
                             <table className="w-full border-collapse table-fixed">
                                 <thead className="bg-gray-200 text-gray-800">
@@ -87,9 +89,12 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</td>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-64">Yarn</td>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Color</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Stock Qty (Kgs)</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Required Qty (Kgs)</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Issue Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Stock Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Required Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Already Issue Qty (Kgs)</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Balance Issue Qty (Kgs)</td>
+
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Issue Qty (Kgs)</td>
 
 
 
@@ -103,10 +108,11 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
 
                                                 <tr
                                                     className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
-                                                // onClick={() => {
-                                                //     setRequirementId(indent?.requirementPlanningFormId)
-                                                //     setSubGridForm(true)
-                                                // }}
+                                                    onContextMenu={(e) => {
+                                                        // if (!readOnly) {
+                                                        handleRightClick(e, index, "shiftTimeHrs");
+                                                        // }
+                                                    }}
                                                 >
                                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
 
@@ -117,30 +123,49 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
                                                     >{indent?.Color?.name}
                                                     </td>
                                                     <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {Number(indent?.availableQty || 0).toFixed(3)}
+                                                        {parseFloat(indent?.availableQty || 0).toFixed(3)}
+                                                    </td>
+                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
+                                                        {parseFloat(indent?.qty || 0).toFixed(3)}
+                                                    </td>
+                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
+                                                        {parseFloat(indent?.alreadyIssueQty || 0).toFixed(3)}
                                                     </td>
 
                                                     <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {Number(indent?.qty || 0).toFixed(3)}
+                                                        {parseFloat(parseFloat(indent?.qty || 0) - parseFloat(indent?.alreadyIssueQty || 0)).toFixed(3)}
                                                     </td>
+
                                                     <td className="border border-gray-300 px-1 py-1 text-right text-xs">
                                                         <input
-                                                            // onKeyDown={e => {
-                                                            //     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                            //     if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
-                                                            // }}
+                                                            onKeyDown={e => {
+                                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                                if (e.key === "Delete") { handleInputChange("0.000", index, "issueQty") }
+                                                            }}
                                                             min={"0"}
                                                             type="number"
                                                             onFocus={(e) => e.target.select()}
                                                             className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                            // value={(!row.qty) ? 0 : row.qty}
-                                                            disabled={readOnly}
-                                                            // onChange={(e) =>
-                                                            //     handleInputChange(parseFloat(e.target.value), index, "qty")
-                                                            // }
-                                                            // onBlur={(e) => {
-                                                            //     handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
-                                                            // }}
+                                                            value={(!indent.issueQty) ? 0.000 : indent.issueQty}
+                                                            // disabled={readOnly}
+                                                            onChange={(e) => {
+
+                                                                if (parseFloat(e.target.value) > parseFloat(indent.qty)) {
+                                                                    Swal.fire({
+                                                                        title: "Issue Qty Cannot Be More Than Required Qty",
+                                                                        icon: "Warning",
+
+                                                                    });
+                                                                }
+                                                                else {
+                                                                    handleInputChange(parseFloat(e.target.value), index, "issueQty")
+
+                                                                }
+
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "issueQty");
+                                                            }}
 
                                                         />                                                    </td>
                                                 </tr>
@@ -158,6 +183,18 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
                                             {
                                                 (issueItems?.reduce((sum, item) => {
                                                     return sum + (parseFloat(item?.qty) || 0);
+                                                }, 0))?.toFixed(3) || "0.000"
+                                            }
+
+
+                                        </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"></td>
+                                        <td className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"></td>
+
+                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
+                                            {
+                                                (issueItems?.reduce((sum, item) => {
+                                                    return sum + (parseFloat(item?.issueQty) || 0);
                                                 }, 0))?.toFixed(3) || "0.000"
                                             }
 
@@ -207,7 +244,7 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
 
                             </table>
                         </div>
-
+                        {/* 
                         <label className="flex items-center justify-start mt-5 space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -216,7 +253,7 @@ const FormItems = ({ setRaiseIndentItems, issueItems, readOnly, id, isMaterialIs
                                 checked={isMaterialIssue}
                             />
                             <span className="text-sm text-gray-700">Material Issue to Production</span>
-                        </label>
+                        </label> */}
 
 
                     </div>

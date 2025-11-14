@@ -824,18 +824,18 @@ export async function getStockvalidationById(id) {
                             partyId: true,
                             requiredQty: true,
                             yarnType: true,
-                            Yarn : {
-                                select : {
-                                    name : true
+                            Yarn: {
+                                select: {
+                                    name: true
                                 }
                             },
-                            Color : {
-                                select : {
-                                    name : true
+                            Color: {
+                                select: {
+                                    name: true
                                 }
                             },
-                            Po : true,
-                            PoItems : true
+                            Po: true,
+                            PoItems: true
 
                         }
                     },
@@ -979,7 +979,9 @@ export async function getStockvalidationById(id) {
                     },
 
                 }
-            }
+            },
+            MaterialIssueItems: true
+
 
 
         }
@@ -1242,7 +1244,8 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                     },
 
                 }
-            }
+            },
+            MaterialIssueItems: true
 
         }
 

@@ -364,12 +364,13 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
-async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, orderId) {
 
     await tx.stock.create({
         data: {
             itemType: poType,
-            // inOrOut: poInwardOrDirectInward,
+            inOrOut: poInwardOrDirectInward,
+            orderId: orderId ? parseInt(orderId) : undefined,
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
             noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : undefined,
             gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
@@ -387,7 +388,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 }
 
-async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId) {
+async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId) {
 
     let promises
 
@@ -396,37 +397,45 @@ async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwar
         let data = await tx.MaterialIssueItems.create({
             data: {
                 materialIssueId: parseInt(MaterialIssueId),
+                orderId: orderId ? parseInt(orderId) : undefined,
                 requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
                 orderdetailsId: item?.orderdetailsId ? parseInt(item?.orderdetailsId) : undefined,
-                MaterialIssueYarnItems: item?.RaiseIndenetYarnItems ?.length > 0
-                    ? {
-                        createMany: {
-                            data: item.RaiseIndenetYarnItems.map((sub) => ({
-                                yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
-                                colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                                count: sub?.count ? parseInt(sub.count) : undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                percentage: sub?.percentage ? sub?.percentage : undefined,
-                            })),
-                        },
-                    }
-                    : undefined,
+                yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                qty: item?.qty ? parseFloat(item.qty) : undefined,
+                issueQty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
+
+                // MaterialIssueYarnItems: item?.RaiseIndenetYarnItems ?.length > 0
+                //     ? {
+                //         createMany: {
+                //             data: item.RaiseIndenetYarnItems.map((sub) => ({
+                // yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
+                // colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                //                 count: sub?.count ? parseInt(sub.count) : undefined,
+                //                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                //                 percentage: sub?.percentage ? sub?.percentage : undefined,
+                //             })),
+                //         },
+                //     }
+                //     : undefined,
             }
         })
 
 
 
 
-        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
-        await tx.RaiseIndent.update({
-            where: {
-                id: parseInt(indentRaiseId),
-            },
-            data: {
-                isMaterialIssue: true,
+        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, orderId)
 
-            },
-        });
+
+        // await tx.RaiseIndent.update({
+        //     where: {
+        //         id: parseInt(indentRaiseId),
+        //     },
+        //     data: {
+        //         isMaterialIssue: true,
+
+        //     },
+        // });
 
     }
     )
@@ -474,7 +483,7 @@ async function create(req) {
 
             },
         });
-        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId)
+        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId)
 
     })
 

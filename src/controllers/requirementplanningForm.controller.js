@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 
 import {
     get as _get, getOne as _getOne, create as _create, update as _update, remove as _remove, getOrderItemsById as _getOrderItemsById,
-    getOrderItemsByIdNew as _getOrderItemsByIdNew , getRequirementItems as _getRequirementItems
+    getOrderItemsByIdNew as _getOrderItemsByIdNew, getRequirementItems as _getRequirementItems, getAccessoryRequirementItems as _getAccessoryRequirementItems
 } from '../services/requirementPlanningForm.service.js';
 
 async function get(req, res, next) {
@@ -18,6 +18,15 @@ async function get(req, res, next) {
 export async function getRequirementItems(req, res, next) {
     try {
         res.json(await _getRequirementItems(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+export async function getAccessoryRequirementItems(req, res, next) {
+    try {
+        res.json(await _getAccessoryRequirementItems(req));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error `, err.message);

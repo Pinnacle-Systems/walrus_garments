@@ -25,32 +25,16 @@ const YarnInwardPoItems = ({
     setInwardItems,
     readOnly,
     params,
-    removeItem, purchaseInwardId, setInwardItemSelection, supplierId, handleRightClick, contextMenu, handleCloseContextMenu
+    removeItem, purchaseInwardId, setInwardItemSelection, supplierId, handleRightClick, contextMenu, handleCloseContextMenu,
+    yarnList, colorList, uomList
+
 }) => {
-    const { data: yarnList } =
-        useGetYarnMasterQuery({ params });
-
-    const { data: colorList } =
-        useGetColorMasterQuery({ params: { ...params } });
 
 
-    const { data: uomList } =
-        useGetUomQuery({ params });
 
-    const { data: gaugeList } =
-        useGetGaugeQuery({ params });
 
-    const { data: designList } =
-        useGetdesignQuery({ params });
 
-    const { data: gsmList } =
-        useGetgsmQuery({ params });
 
-    const { data: loopLengthList } =
-        useGetLoopLengthQuery({ params });
-
-    const { data: diaList } =
-        useGetDiaQuery({ params });
 
     const { data: poList } =
         useGetPoQuery({ params });
@@ -225,7 +209,7 @@ const YarnInwardPoItems = ({
                                     Swal.fire({
                                         icon: 'success',
                                         title: `Choose Supplier`,
-                                 
+
                                     });
                                 }
                                 else {
@@ -345,9 +329,9 @@ const YarnInwardPoItems = ({
                         <tbody className='overflow-y-auto  h-full w-full'>
                             {(inwardItems || [])?.map((item, index) =>
                                 <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
-                                    colorList={colorList} deleteRow={handleDeleteRow} designList={designList} gsmList={gsmList}
-                                    loopLengthList={loopLengthList} id={id}
-                                    diaList={diaList} poList={poList}
+                                    colorList={colorList} deleteRow={handleDeleteRow}
+                                    id={id}
+                                    poList={poList}
                                     removeLotNo={removeLotNo} addNewLotNo={addNewLotNo} handleInputChangeLotNo={handleInputChangeLotNo}
                                     removeItem={removeItem} key={item.poItemsId}
                                     item={item} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick}

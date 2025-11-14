@@ -25,7 +25,12 @@ import YarnInwardItems from './YarnInwardItems';
 import YarnDirectInwardItems from './YarnDirectInwardItems';
 import Swal from 'sweetalert2';
 
-export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection }) {
+export default function ReturnItems({ isSupplierOutside, removeItem, transType, poInwardOrDirectInward, storeId, setStoreId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
+
+    supplierList, supplierDetails, payTermList, branchList,
+    branchdata, yarnList, colorList, uomList, setSupplierId
+
+}) {
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [tableDataView, setTableDataView] = useState(false)
     const [currentItem, setCurrentItem] = useState();
@@ -36,26 +41,11 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
     const params = {
         branchId, userId, finYearId
     };
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
-
-    const { data: socksMaterialData } =
-        useGetSocksMaterialQuery({ params: { ...params } });
 
 
-    const { data: socksTypeData } =
-        useGetSocksTypeQuery({ params: { ...params } });
-
-    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-    const { data: Yarnlist } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-    const { data: machineList } = useGetMachineQuery({ params: { ...params } });
 
 
-    const {
-        data: colorlist,
-        isLoading: isColorListLoading,
-        isFetching: isColorListFetching,
-    } = useGetColorMasterQuery({ params });
+
 
     function openPreview(filePath) {
         window.open(filePath instanceof File ? URL.createObjectURL(filePath) : getImageUrlPath(filePath))
@@ -244,31 +234,31 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
 
                         poInwardOrDirectInward == "DirectReturn" &&
 
-                        // (
-                        //     transType.toLowerCase().includes("yarn")
-                        //         ?
+
                         <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                             handleInputChangeLotNo={handleInputChangeLotNo}
                             storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
-                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        //         :
-                        //         <AccessoryDirectInwardItems storeId={storeId} params={params} purchaseInwardId={id} removeItem={removeItem}
-                        //             transType={transType} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-                        //             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} />
-                        // )
+                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+                            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                            branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                        />
+
 
                     }
                     {
                         (poInwardOrDirectInward === "PurchaseReturn" || poInwardOrDirectInward === "GeneralReturn") &&
-           
+
                         <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
                             storeId={storeId} handleView={handleView}
                             transType={transType} directInwardReturnItems={directInwardReturnItems}
                             setDirectInwardReturnItems={setDirectInwardReturnItems}
                             readOnly={readOnly} isSupplierOutside={isSupplierOutside()} handleDeleteRow={deleteRow} handleDeleteAllRows={handleDeleteAllRows}
                             handleRightClick={handleRightClick} contextMenu={contextMenu} handleCloseContextMenu={handleCloseContextMenu}
+
+                            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                            branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList}
                         />
-                 
+
                     }
                 </fieldset>
             </div>

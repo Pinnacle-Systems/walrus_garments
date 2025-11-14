@@ -23,19 +23,22 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+import { useGetBranchByIdQuery, useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService";
 
 
 
 
 export default function Form() {
-  const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-  const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+
   const [showManufacturer, setShowManufacturer] = useState(false);
   const [id, setId] = useState("");
   const { branchId, userId, companyId, finYearId } = getCommonParams();
   const [readOnly, setReadOnly] = useState(false);
   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectReturn");
+  const [supplierId, setSupplierId] = useState("");
+
   const params = {
     branchId, userId, finYearId
   };
@@ -58,6 +61,23 @@ export default function Form() {
     useGetUomQuery({ params });
 
 
+
+  const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
+
+  const { data: supplierList } =
+    useGetPartyQuery({ params: { ...params } });
+
+
+  const { data: supplierDetails } =
+    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+
+
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+
+
+  const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
+
+  const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
 
   const handleView = (id) => {
 
@@ -108,9 +128,13 @@ export default function Form() {
   return (
     <>
       {showManufacturer ? (
-        <PurchaseReturnForm poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
+        <PurchaseReturnForm 
+         poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
           onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }}
           colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
+          supplierList={supplierList} supplierDetails={supplierDetails}  branchList={branchList}
+          branchdata={branchdata}  locationData={locationData}  supplierId ={supplierId} setSupplierId = {setSupplierId}
+        termsAndCondition={termsAndCondition} 
         />
 
       ) : (

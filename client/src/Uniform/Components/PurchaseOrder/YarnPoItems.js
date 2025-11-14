@@ -429,19 +429,25 @@ const YarnPoItems = ({
                                 >
                                     View Tax
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Actions
-                                </th>
+                                </th> */}
                             </tr>
                         </thead>
 
                         <tbody>
 
                             {(poItems ? poItems : [])?.map((row, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer " >
+                                <tr className="border border-blue-gray-200 cursor-pointer "
+                                    onContextMenu={(e) => {
+                                        if (!readOnly) {
+                                            handleRightClick(e, index, "shiftTimeHrs");
+                                        }
+                                    }}
+                                >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
@@ -679,7 +685,7 @@ const YarnPoItems = ({
                                                         icon: "error",
                                                         text: "Cannot View The Tax Details",
                                                     });
-                                                }else {
+                                                } else {
 
                                                     setCurrentSelectedIndex(index)
                                                 }
@@ -691,7 +697,7 @@ const YarnPoItems = ({
                                     </td>
 
 
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                    {/* <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
                                         <input
                                             readOnly
                                             className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
@@ -709,7 +715,7 @@ const YarnPoItems = ({
                                         />
 
 
-                                    </td>
+                                    </td> */}
 
 
                                 </tr>

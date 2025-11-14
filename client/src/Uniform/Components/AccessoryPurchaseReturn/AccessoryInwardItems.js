@@ -6,20 +6,11 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
 
-const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId, contextMenu, handleCloseContextMenu, handleRightClick, poInwardOrDirectInward }) => {
+const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId, contextMenu, handleCloseContextMenu, handleRightClick, poInwardOrDirectInward  ,  colorList, uomList, accessoryList, sizeList}) => {
 
 
 
 
-    const { data: colorList } =
-        useGetColorMasterQuery({ params: { ...params } });
-    const { data: accessoryList } =
-        useGetAccessoryMasterQuery({ params });
-
-    const { data: sizeList } =
-        useGetSizeMasterQuery({ params });
-    const { data: uomList } =
-        useGetUomQuery({ params });
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
