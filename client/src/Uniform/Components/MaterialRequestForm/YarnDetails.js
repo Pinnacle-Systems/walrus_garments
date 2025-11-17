@@ -121,12 +121,12 @@ const YarnDetails = ({ indentItems, setOrderDetails, gridIndex }) => {
 
                   </tr>
                 ))}
-                <tr>
+                {/* <tr>
                   <td colSpan={3} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Qty</td>
                   <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"> {
-                    (indentItems?.raiseIndenetYarnItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)).toFixed(3)
+                    (indentItems?.reduce((yarnSum, yarn) => yarnSum + yarn.qty, 0)).toFixed(3)
                   }</td>
-                </tr>
+                </tr> */}
               </tbody>
             </table>
           </div>

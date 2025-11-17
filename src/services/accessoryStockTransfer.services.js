@@ -29,9 +29,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         return "Draft Save"
     }
     else if (isUpdate == "drift") {
-        let lastObject = await prisma.MaterialIssue.findFirst({
+        let lastObject = await prisma.AccessoyStockTransfer.findFirst({
             where: {
-                branchId: parseInt(branchId),
+                // branchId: parseInt(branchId),
                 // docId: {
                 //     not: findIsNumber(docId)
                 // },
@@ -58,16 +58,16 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/AST/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/AST/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
     else {
-        let lastObject = await prisma.MaterialIssue.findFirst({
+        let lastObject = await prisma.AccessoyStockTransfer.findFirst({
             where: {
-                branchId: parseInt(branchId),
+                // branchId: parseInt(branchId),
                 AND: [
                     {
                         createdAt: {
@@ -87,10 +87,12 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
             }
         });
 
-        const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/1`
+        const branchObj = await getTableRecordWithId(branchId ? branchId : 1, "branch")
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/1`
+        console.log(lastObject, "lastObject")
+
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MIS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/${parseInt(lastObject?.docId?.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -117,52 +119,47 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, searchDocId, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, fromOrderNo, toOrderNo, searchDelDate, searchDocDate, partyId,
 
     } = req.query
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
-    let data = await xprisma.MaterialIssue.findMany({
-        where: {
-            branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(searchDocId) ?
-                {
-                    contains: searchDocId
-                }
-                : undefined,
-            partyId: partyId ? parseInt(partyId) : undefined,
-        },
-        include: {
-            Order: {
-                select: {
-                    docId: true
-                }
-            },
-            Party: {
-                select: {
-                    name: true
-                }
-            },
-            OrderDetails: {
-                select: {
-                    style: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
-            RequirementPlanningForm: {
-                select: {
-                    docId: true
-                }
-            },
-        },
-        orderBy: {
-            id: "desc",
-        },
+    let data = await xprisma.AccessoyStockTransfer.findMany({
+        // where: {
+        //     // branchId: branchId ? parseInt(branchId) : undefined,
+        //     docId: Boolean(serachDocNo) ?
+        //         {
+        //             contains: serachDocNo
+        //         }
+        //         : undefined,
+        //     fromOrder: {
+        //         docId: fromOrderNo ? { contains: fromOrderNo } : undefined
+
+        //     },
+        //     toOrsder: {
+        //         docId: toOrderNo ? { contains: toOrderNo } : undefined
+
+        //     }
+        //     // partyId: partyId ? parseInt(partyId) : undefined,
+        // },
+        // include: {
+        //     fromOrder: {
+        //         select: {
+        //             docId: true
+        //         }
+        //     },
+        //     toOrder: {
+        //         select: {
+        //             docId: true
+        //         }
+        //     }
+        // },
+
+        // orderBy: {
+        //     id: "desc",
+        // },
 
 
 
@@ -175,9 +172,9 @@ async function get(req) {
         data = data.filter(i => i.delDate.includes(searchDelDate))
     }
 
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
+    // if (pagination) {
+    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+    // }
 
 
     return { statusCode: 0, data, totalCount, nextDocId: newDocId };
@@ -187,16 +184,24 @@ async function get(req) {
 async function getOne(id) {
     const childRecord = await prisma.po.count({ where: { requirementId: parseInt(id) } });
 
-    let data = await prisma.materialIssue.findUnique({
+    let data = await prisma.AccessoyStockTransfer.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            MaterialIssueItems: {
+            FromOrderTransferItems: true,
+            ToOrderTransferTtems: {
                 select: {
                     id: true,
-                    materialIssueId: true,
+                    stockTransferId: true,
+                    RequirementPlanningId: true,
                     colorId: true,
+                    orderId: true,
+                    yarnId: true,
+                    style: true,
+                    transferQty: true,
+                    balanceQty: true,
+                    requiredQty: true,
                     Color: {
                         select: {
                             name: true
@@ -206,40 +211,9 @@ async function getOne(id) {
                         select: {
                             name: true
                         }
-                    },
-                    yarnId: true,
-                    issueQty: true,
-
-                }
-            },
-            Order: {
-                select: {
-                    Stock: {
-                        select: {
-                            yarnId: true,
-                            Yarn: {
-                                select: {
-                                    name: true
-                                }
-                            },
-                            colorId: true,
-                            Color: {
-                                select: {
-                                    name: true
-                                }
-                            },
-                            itemType: true,
-                            inOrOut: true,
-                            uomId: true,
-                            qty: true,
-                            price: true,
-                            storeId: true,
-                            branchId: true,
-                            orderId: true
-                        }
                     }
                 }
-            },
+            }
         }
 
     })
@@ -291,27 +265,27 @@ export async function getStockvalidationById(id) {
         where: {
             id: parseInt(id)
         },
-        // include: {
-        //     RaiseIndentItems: {
-        //         select: {
-        //             Yarn: {
-        //                 select: {
-        //                     name: true
-        //                 }
-        //             },
-        //             yarnId: true,
-        //             colorId: true,
-        //             id: true,
-        //             percentage: true,
-        //             qty: true,
-        //             raiseIndentId: true,
-        //             sizeId: true,
-        //             weight: true,
-        //         },
+        include: {
+            RaiseIndentItems: {
+                select: {
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    yarnId: true,
+                    colorId: true,
+                    id: true,
+                    percentage: true,
+                    qty: true,
+                    raiseIndentId: true,
+                    sizeId: true,
+                    weight: true,
+                },
 
 
-        //     }
-        // }
+            }
+        }
 
 
 
@@ -393,23 +367,20 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
-async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, orderId) {
+async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
 
     await tx.stock.create({
         data: {
-            itemType: poType,
-            inOrOut: poInwardOrDirectInward,
-            orderId: orderId ? parseInt(orderId) : undefined,
+            // itemType: inOrOut,
+            inOrOut: inOrOut,
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-            noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : undefined,
             gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-            kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-            fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            qty: item["issueQty"] ? 0 - parseFloat(item["issueQty"]) : 0,
+            qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
-
+            orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
 
 
         }
@@ -417,76 +388,133 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 }
 
-async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId) {
+async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item) {
 
-    let promises
+    await tx.stock.create({
+        data: {
+            // itemType: poType,
+            inOrOut: inOrOut,
+            yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+            qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+            price: item["price"] ? parseFloat(item["price"]) : 0,
+            orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
 
+        }
+    })
 
-    promises = issueItems.map(async (item, index) => {
-        let data = await tx.MaterialIssueItems.create({
-            data: {
-                materialIssueId: parseInt(MaterialIssueId),
-                orderId: orderId ? parseInt(orderId) : undefined,
-                requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
-                orderdetailsId: item?.orderdetailsId ? parseInt(item?.orderdetailsId) : undefined,
-                yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
-                colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                qty: item?.qty ? parseFloat(item.qty) : undefined,
-                issueQty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
-                requirementPlanningItemsId: item?.requirementPlanningItemsId ? item?.requirementPlanningItemsId : undefined,
-                raiseIndentId: materialRequstId ? parseInt(materialRequstId) : undefined,
-                styleColor : styleColor ? styleColor : undefined,
-                // MaterialIssueYarnItems: item?.RaiseIndenetYarnItems ?.length > 0
-                //     ? {
-                //         createMany: {
-                //             data: item.RaiseIndenetYarnItems.map((sub) => ({
-                // yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
-                // colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                //                 count: sub?.count ? parseInt(sub.count) : undefined,
-                //                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                //                 percentage: sub?.percentage ? sub?.percentage : undefined,
-                //             })),
-                //         },
-                //     }
-                //     : undefined,
-            }
-        })
-
-
-
-
-        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, orderId)
-
-
-        // await tx.RaiseIndent.update({
-        //     where: {
-        //         id: parseInt(indentRaiseId),
-        //     },
-        //     data: {
-        //         isMaterialIssue: true,
-
-        //     },
-        // });
-
-    }
-    )
-
-
-
-
-
-
-
-    return Promise.all(promises)
 }
+
+async function UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item) {
+
+
+    console.log(item.id,"item?.transferQty",item?.transferQty)
+
+    await tx.requirementPlanningItems.update({
+        where: {
+            id: parseInt(item.id),
+
+        },
+        data: { 
+            tranferQty : item?.transferQty ?  item?.transferQty  : 0
+         
+
+        }
+    })
+
+}
+
+async function createStocktransferItems(
+    tx,
+    stockTransferId,
+    stockItems,
+    poType,
+    inOrOut,
+    storeId,
+    branchId,
+    orderItems,
+) {
+    if (stockItems?.length) {
+        await Promise.all(
+            stockItems.map(async (item) => {
+                await tx.FromOrderTransferItems.create({
+                    data: {
+                        stockTransferId: parseInt(stockTransferId),
+                        yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                        transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
+                        stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
+                    },
+                });
+
+                await createYarnStock(
+
+                    tx,
+                    poType,
+                    inOrOut,
+                    branchId,
+                    storeId,
+                    item,
+                );
+            })
+        );
+    }
+
+    // if (orderItems?.length) {
+    //     await Promise.all(
+    //         orderItems.map(async (item) => {
+    //             await createYarnStockAgainstOrder(
+    //                 tx,
+    //                 poType,
+    //                 poInwardOrDirectInward,
+    //                 branchId,
+    //                 storeId,
+    //                 item
+    //             );
+    //         })
+    //     );
+    // }
+    if (orderItems?.length) {
+        await Promise.all(
+            orderItems?.map(async (item) => {
+                await tx.ToOrderTransferTtems.create({
+                    data: {
+                        stockTransferId: parseInt(stockTransferId),
+                        RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
+                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                        orderId: item?.orderId ? parseInt(item.orderId) : undefined,
+                        yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                        style: item?.style ? item?.style : undefined,
+                        transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+                        qty: item?.qty ? parseFloat(item?.qty) : undefined,
+                        balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
+                        requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+
+
+                    },
+                });
+
+                await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item);
+
+                await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+
+            })
+        );
+    }
+}
+
+
 
 async function create(req) {
 
-    const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, materialRequstId, storeId, orderId, indentRaiseId, orderDetailsId, isMaterialIssue, issueItems, poType } = req.body
+    const { userId, branchId, fromOrderId, toOrderId, finYearId, draftSave, transferType, fromCustomerId, toCustomerId,
+        storeId, orderItems, stockItems, poType } = req.body
 
 
-    let poInwardOrDirectInward = "MaterialIssue"
+    let inOrOut = "StockTransfer"
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -498,24 +526,19 @@ async function create(req) {
     let data;
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.MaterialIssue.create({
+        data = await tx.AccessoyStockTransfer.create({
             data: {
                 docId,
-                isMaterialIssue: Boolean(isMaterialIssue),
-                contactPersonName: contactPersonName ?? "John",
-                partyId: partyId ? parseInt(partyId) : undefined,
-                branchId: branchId ? parseInt(branchId) : undefined,
-                orderId: parseInt(orderId),
-                raiseIndentId: materialRequstId ? parseInt(materialRequstId) : undefined,
-                // orderDetailsId: parseInt(orderDetailsId),
-                // requirementId:  parseInt(requirementId) ,
-
-
+                fromOrderId: fromOrderId ? parseInt(fromOrderId) : undefined,
+                toOrderId: toOrderId ? parseInt(toOrderId) : undefined,
+                transferType: transferType ? transferType : undefined,
+                fromCustomerId: fromCustomerId ? parseInt(fromCustomerId) : undefined,
+                toCustomerId: toCustomerId ? parseInt(toCustomerId) : undefined,
 
 
             },
         });
-        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId)
+        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems)
 
     })
 
@@ -624,7 +647,7 @@ const update = async (id, body) => {
 
 
 async function remove(id) {
-    const data = await prisma.MaterialIssue.delete({
+    const data = await prisma.StockTransfer.delete({
         where: {
             id: parseInt(id)
         },

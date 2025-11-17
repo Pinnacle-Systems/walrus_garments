@@ -362,7 +362,7 @@ const StockTransferReport = ({
 
                                                 <td className="py-1.5 text-center"> {dataObj?.fromOrder?.docId || "General"}</td>
 
-                                                <td className="py-1.5 text-center"> {dataObj?.toOrsder?.docId}</td>
+                                                <td className="py-1.5 text-center"> {dataObj?.toOrder?.docId}</td>
                                                 {rowActions && (
                                                     <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                         <div className="flex">

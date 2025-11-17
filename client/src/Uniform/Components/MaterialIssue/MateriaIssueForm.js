@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { Colors, packingCover } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentStockValidationByIdQuery } from "../../../redux/uniformService/RaiseIndenetServices";
-import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
+import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useGetMaterialIssueByIdQuery, useGetMaterialIssueStockValidationByIdQuery, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
 import { Loader } from "../../../Basic/components";
 
 const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId,
@@ -23,7 +23,9 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, requirementId, setRequirementId, issueItems, setIssueItems,
 
-    isMaterialIssue, setIsMaterialIssue, materialRequstId, setMaterialRequstId
+    isMaterialIssue, setIsMaterialIssue, materialRequstId, setMaterialRequstId, alreadyIssuedItems, setAlreadyIssuedItems,
+
+    Stock, setStock
 
 
 
@@ -37,7 +39,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation: false }, { skip: !orderId });
+    // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderItemsByIdNewQuery({ id: orderId, stockValidation: false }, { skip: !orderId });
 
 
 
@@ -45,63 +47,124 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     const { data: materialRequstData, isLoading: isSingleMaterialRequstLoading, isFetching: isSingleMaterialRequstFetching } = useGetRaiseIndentStockValidationByIdQuery(materialRequstId, { skip: !materialRequstId });
 
+
+    const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching } = useGetMaterialIssueByIdQuery(id, { skip: !id });
+
+
+
+
     const [addData] = useAddMaterialIssueMutation();
     const [updateData] = useUpdateMaterialIssueMutation();
 
 
-    const { data: supplierList } =
-        useGetPartyQuery({ params: { ...params } });
+    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
+
+
+
+    console.log(Stock, "Stock")
 
     const syncFormWithDb = useCallback((data) => {
 
 
         if (id) {
-            setIssueItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
+            setIssueItems(data?.MaterialIssueItems ? data?.MaterialIssueItems : [])
+            const Stock = Object.values(
+                (data?.Order?.Stock || []).reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+            setStock(Stock);
+
+            setOrderId(data?.orderId ? data?.orderId : "")
+            setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
+            setPartyId(data?.partyId ? data?.partyId : "")
+
+        }
+        else {
+
+            // data?.RaiseIndentItems?.map(item => {
+            //     const allColors = item?.RaiseIndenetYarnItems
+            //         ?.map(yarn => yarn?.Color?.name)
+            //         .filter(Boolean)
+            //         .join(" - ");
+            //     const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+
+
+            //         return {
+            //             ...yarn,
+
+            //         };
+            //     });
+            //     const totalYarnQty = RaiseIndenetYarnItems?.reduce(
+            //         (sum, yarn) => sum + yarn.qty,
+            //         0
+            //     );
+            //     return {
+            //         OrderDetails: {
+            //             style: {
+            //                 name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+            //             }
+            //         },
+            //         requirementPlanningFormId: item.requirementPlanningFormId,
+            //         orderdetailsId: item.orderdetailsId,
+            //         RaiseIndenetYarnItems,
+            //         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+            //     };
+            // }) 
+            // setIssueItems( data?.RaiseIndentItems ? data?.RaiseIndentItems : []);
+            const mergedItems =
+                data?.RaiseIndentItems?.map(riItem => {
+                    // get all materialIssueItems that match yarn, color & planningItemId
+                    const matches = data?.materialIssueItems?.filter(miItem =>
+                        miItem.yarnId == riItem.yarnId &&
+                        miItem.colorId == riItem.colorId &&
+                        miItem.requirementPlanningItemsId == riItem.requirementPlanningItemsId   // or requirementPlanningItemsId
+                    ) || [];
+                    console.log(matches, "matches")
+
+
+                    // sum all issueQty values
+                    const totalIssueQty = matches?.reduce(
+                        (sum, item) => sum + (Number(item.issueQty) || 0),
+                        0
+                    );
+
+                    return {
+                        ...riItem,
+                        alreadyIssueQty: totalIssueQty,   // total of many records
+                    };
+                }) || [];
+
+            setIssueItems(mergedItems);
+            const Stock = Object.values(
+                (data?.Order?.Stock || []).reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+            setStock(Stock);
+
+            setAlreadyIssuedItems(data?.materialIssueItems ? data?.materialIssueItems : [])
             setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setMaterialRequstId(data?.id ? data?.id : "")
             setPartyId(data?.partyId ? data?.partyId : "")
 
         }
-        // else {
-        //     setIssueItems(
-        //         data?.RaiseIndentItems?.map(item => {
-        //             const allColors = item?.RaiseIndenetYarnItems
-        //                 ?.map(yarn => yarn?.Color?.name)
-        //                 .filter(Boolean)
-        //                 .join(" - ");
-        //             const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
-
-
-        //                 return {
-        //                     ...yarn,
-
-        //                 };
-        //             });
-        //             const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-        //                 (sum, yarn) => sum + yarn.qty,
-        //                 0
-        //             );
-        //             return {
-        //                 OrderDetails: {
-        //                     style: {
-        //                         name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-        //                     }
-        //                 },
-        //                 requirementPlanningFormId: item.requirementPlanningFormId,
-        //                 orderdetailsId: item.orderdetailsId,
-        //                 RaiseIndenetYarnItems,
-        //                 totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-        //             };
-        //         })
-        //     );
-        //     setOrderId(data?.orderId ? data?.orderId : "")
-        //     setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
-        //     setMaterialRequstId(data?.id ? data?.id : "")
-        //     setPartyId(data?.partyId ? data?.partyId : "")
-
-        // }
 
     }, [orderDetailsId]);
 
@@ -120,91 +183,87 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
     }, [isSingleMaterialRequstLoading, isSingleMaterialRequstFetching, materialRequstId, materialRequstData]);
 
 
-
-
     useEffect(() => {
-        const processYarnData = async () => {
-            if (!singleOrderData?.data?.RaiseIndent?.[0]?.RaiseIndentItems) return;
 
-            setPartyId(singleOrderData?.data?.partyId)
+        if (singleData?.data) {
+            syncFormWithDb(singleData?.data)
+        }
 
-            const allYarns = singleOrderData?.data?.RaiseIndent[0]?.RaiseIndentItems?.flatMap(
-                (item) => item?.RaiseIndenetYarnItems || []
-            );
+    }, [isSingleDataFetching, isSingleDataLoading, id, singleData]);
 
+    // useEffect(() => {
+    //     const processYarnData = async () => {
+    //         if (!singleOrderData?.data?.RaiseIndent?.[0]?.RaiseIndentItems) return;
 
-            console.log(allYarns, "allYarns");
+    //         setPartyId(singleOrderData?.data?.partyId)
 
-            const Yarn = Object.values(
-                allYarns?.reduce((acc, item) => {
-                    const key = `${item.yarnId}-${item.colorId}`;
-
-                    if (!acc[key]) {
-                        acc[key] = { ...item };
-                    } else {
-                        acc[key].qty += item.qty;
-                    }
-                    return acc;
-                }, {})
-            );
-
-            const Stock = Object.values(
-                singleOrderData?.data?.Stock?.reduce((acc, item) => {
-                    const key = `${item.yarnId}-${item.colorId}`;
-
-                    if (!acc[key]) {
-                        acc[key] = { ...item };
-                    } else {
-                        acc[key].qty += item.qty;
-                    }
-                    return acc;
-                }, {})
-            );
+    //         const allYarns = singleOrderData?.data?.RaiseIndent[0]?.RaiseIndentItems?.flatMap(
+    //             (item) => item?.RaiseIndenetYarnItems || []
+    //         );
 
 
-            const MaterialIssue = Object.values(
-                singleOrderData?.data?.MaterialIssueItems?.reduce((acc, item) => {
-                    const key = `${item.yarnId}-${item.colorId}`;
 
-                    if (!acc[key]) {
-                        acc[key] = { ...item };
-                    } else {
-                        acc[key].qty += item.issueQty;
-                    }
-                    return acc;
-                }, {})
-            );
+    //         console.log(allYarns, "allYarns");
 
+    //         const Yarn = Object.values(
+    //             allYarns?.reduce((acc, item) => {
+    //                 const key = `${item.yarnId}-${item.colorId}`;
 
-            const fianl = Yarn?.map(req => {
-
-                const stock = Stock?.find(
-                    s => s.yarnId == req.yarnId && s.colorId == req.colorId
-                );
-
-                const Issued = MaterialIssue?.find(
-                    i => i.yarnId == req.yarnId && i.colorId == req.colorId
-                )
+    //                 if (!acc[key]) {
+    //                     acc[key] = { ...item };
+    //                 } else {
+    //                     acc[key].qty += item.qty;
+    //                 }
+    //                 return acc;
+    //             }, {})
+    //         );
 
 
-                const availableQty = stock ? stock?.qty : 0;
-                const alreadyIssueQty = Issued ? Issued?.issueQty : 0;
 
-                return {
-                    ...req,
-                    availableQty,
-                    alreadyIssueQty,
-                    // balance: availableQty - req.qty, // +ve = extra, -ve = shortage
-                };
-            });
 
-            console.log(Stock, "Stockkkk");
-            console.log(MaterialIssue,"MaterialIssue")
-            setIssueItems(fianl);
-        };
+    //         const MaterialIssue = Object.values(
+    //            (singleOrderData?.data?.MaterialIssueItems || [])?.reduce((acc, item) => {
+    //                 const key = `${item.yarnId}-${item.colorId}`;
 
-        processYarnData();
-    }, [isSingleOrderLoading, isSingleOrderFetching, materialRequstId, singleOrderData]);
+    //                 if (!acc[key]) {
+    //                     acc[key] = { ...item };
+    //                 } else {
+    //                     acc[key].qty += item.issueQty;
+    //                 }
+    //                 return acc;
+    //             }, {})
+    //         );
+
+
+    //         const fianl = allYarns?.map(req => {
+
+    //             const stock = Stock?.find(
+    //                 s => s.yarnId == req.yarnId && s.colorId == req.colorId
+    //             );
+
+    //             const Issued = MaterialIssue?.find(
+    //                 i => i.yarnId == req.yarnId && i.colorId == req.colorId
+    //             )
+
+
+    //             const availableQty = stock ? stock?.qty : 0;
+    //             const alreadyIssueQty = Issued ? Issued?.issueQty : 0;
+
+    //             return {
+
+    //                 ...req,
+    //                 availableQty,
+    //                 alreadyIssueQty,
+    //                 // balance: availableQty - req.qty, // +ve = extra, -ve = shortage
+    //             };
+    //         });
+
+    //         console.log(MaterialIssue, "MaterialIssue")
+    //         setIssueItems(fianl);
+    //     };
+
+    //     processYarnData();
+    // }, [isSingleOrderLoading, isSingleOrderFetching, materialRequstId, singleOrderData]);
 
 
 
@@ -212,7 +271,8 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, issueItems, indentRaiseId: materialRequstId
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, indentRaiseId: materialRequstId,
+        issueItems: issueItems?.filter(i => i.issueQty), materialRequstId
     }
 
 
@@ -284,7 +344,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
         <>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Material Issue Form</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Material Issue</h1>
                     <button
                         onClick={() => {
                             onClose();
@@ -298,7 +358,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 </div>
 
                 <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -332,33 +392,17 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                                     disabled={true}
 
                                 />
-                                {/* <TextInput
-                                    name="Style No"
-                                    placeholder="Style No"
-                                    // value={orderDetailsId}
-                                    // value={findFromList(orderDetailsId, indentRaiseData.data, "docId")}
 
-                                    disabled={true}
-
-                                />  <TextInput
-                                    name="Raise Indent No"
-                                    placeholder="Raise Indent No"
-                                    // value={inendentRaiseId}
-                                    value={findFromList(setIndentRaiseId, indentRaiseData?.data, "docId")}
-
-                                    disabled={true}
-
-                                /> */}
 
                             </div>
 
                         </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2 ">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
+                            <div className="grid grid-cols-3 gap-x-3">
                                 <TextInput
                                     name="Customer"
                                     placeholder="Contact name"
@@ -386,6 +430,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                             </div>
                         </div>
+
                     </div>
 
 
@@ -393,7 +438,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                         <FormItems
                             setIssueItems={setIssueItems} issueItems={issueItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue}
-                            requirementId={requirementId} setRequirementId={setRequirementId}
+                            requirementId={requirementId} setRequirementId={setRequirementId} Stock={Stock}
                         />
 
                     </fieldset>

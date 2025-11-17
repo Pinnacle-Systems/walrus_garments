@@ -43,5 +43,6 @@ export { default as AccessoryPurchaseReturnApi } from "./AccessoryPoReturnServic
 export { default as accessoryBillEntryApi } from "./AccessoryBillEntryServices"
 export { default as AccessoryCategoryMasterApi } from "./AccessoryCategoryMasterServices"
 export { default as StockReportControlApi } from "./StockReportControl.Services"
+export { default as AccessoryStockTransferApi } from "./AcessoryStockTransferService"
 
 

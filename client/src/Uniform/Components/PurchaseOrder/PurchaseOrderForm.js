@@ -118,7 +118,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
   const { data: yarnList } = useGetYarnMasterQuery({ params });
+
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+
   const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, } });
 
 
@@ -136,9 +138,20 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         hsnId: item?.Yarn?.hsnId
       }));
 
-      console.log(filtered,"filtered")
+    console.log(filtered, "filteredfiltered")
 
-      const emptyCount = Math.max(15 - filtered.length, 0);
+    // const Group = Object.values(
+    //   filtered.reduce((acc, item) => {
+    //     const key = `${item.orderId}-${item.yarnId}-${item.colorId}-${item.uomId}`;
+    //     if (!acc[key]) acc[key] = { ...item };
+    //     else
+    //       acc[key].requiredQty =
+    //         (parseFloat(acc[key].requiredQty || 0) + parseFloat(item.requiredQty || 0));
+    //     return acc;
+    //   }, {})
+    // );
+
+    const emptyCount = Math.max(15 - filtered.length, 0);
 
     const emptyRows = Array.from({ length: emptyCount }, () => ({
       RequirementPlanningItemsId: null,
@@ -382,7 +395,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems: poItems, taxTypeId: taxTemplateId, discountType, discountValue })
 
-    console.log(taxDetails, "useTaxDetailsHook")
+  console.log(taxDetails, "useTaxDetailsHook")
 
   const taxGroupWise = groupBy(poItems, "taxPercent");
 
@@ -442,7 +455,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
         <PDFViewer style={tw("w-full h-full")}>
           <YarnPurchaseOrderPrintFormat
             isTaxHookDetailsLoading={isTaxHookDetailsLoading}
-            
+
             branchData={branchdata?.data}
             data={id ? singleData?.data : "Null"}
             singleData={id ? singleData?.data : "Null"}
@@ -561,7 +574,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 disabled={orderId || id}
               />
 
-              <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly}  />
+              <DropdownInput name="Tax Type" options={dropDownListObject(taxTypeList ? taxTypeList?.data : [], "name", "id")} value={taxTemplateId} setValue={setTaxTemplateId} required={true} readOnly={readOnly} />
 
 
 

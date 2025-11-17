@@ -110,6 +110,7 @@ export { default as accessoryReturn } from "./accessoryPoReturn.route.js"
 export { default as accessoryBillEntry } from "./accessoryBillEntry.route.js"
 export { default as accessoryCategory } from "./accessoryCategory.route.js"
 export { default as stockReportControl } from "./stockReportControl.route.js"
+export { default as accessoryStockTransfer } from "./accessoryStockTransfer.route.js"
 
 
 

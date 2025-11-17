@@ -823,6 +823,8 @@ export async function getStockvalidationById(id) {
                             transType: true,
                             partyId: true,
                             requiredQty: true,
+                            tranferQty : true,
+                            isMaterialRequst : true,
                             yarnType: true,
                             Yarn: {
                                 select: {
@@ -835,7 +837,18 @@ export async function getStockvalidationById(id) {
                                 }
                             },
                             Po: true,
-                            PoItems: true
+                            PoItems: true,
+                            OrderDetails: {
+                                select: {
+                                    style: {
+                                        select: {
+                                            name: true
+                                        }
+                                    }
+                                }
+                            },
+                            materialIssueItems: true
+
 
                         }
                     },
@@ -1048,6 +1061,15 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                                 select: {
                                     name: true
                                 }
+                            },
+                            orderYarnDetails: {
+                                select: {
+                                    Color: {
+                                        select: {
+                                            name: true
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -1055,9 +1077,9 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                         select: {
                             partyId: true,
 
+
                         }
                     },
-
                     requirementSizeDetails: true,
                     RequirementYarnDetails: {
                         select: {
@@ -1101,6 +1123,7 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                             requiredQty: true,
                             poType: true,
                             partyId: true,
+                            isMaterialRequst : true,
                             Party: {
                                 select: {
                                     name: true
@@ -1134,7 +1157,8 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                                 select: {
                                     docId: true,
                                 }
-                            }
+                            },
+                            materialIssueItems: true
                         }
                     },
 
@@ -1143,6 +1167,7 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                     orderDetailsId: true,
                 }
             },
+
             Stock: {
 
                 select: {

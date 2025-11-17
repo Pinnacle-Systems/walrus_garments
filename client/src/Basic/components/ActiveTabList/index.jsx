@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
+import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 
@@ -125,7 +125,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
     "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
-    "STOCK TRANSFER": <StockTransfer />,
+    "YARN STOCK TRANSFER": <StockTransfer />,
     "EXCESS TOLERANCE(%) ENTRY": <ExcessToleranceQty />,
     "ACCESSORY PURCHASE ORDER": <AccessoryPurchaseOrder />,
     "ACCESSORY PURCHASE CANCEL": <AccessoryPurchasecancel />,
@@ -134,7 +134,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "HSN MASTER": <HsnMaster />,
     "YARN PURCHASE BILL ENTRY": <PurchaseBillEntry />,
     "ACCESSORY PURCHASE RETURN": <AccessoryPurchaseReturn />,
-    "ACCESSORY PURCHASE BILL ENTRY" :  <AccessoryPurchaseBillEntry/>
+    "ACCESSORY PURCHASE BILL ENTRY": <AccessoryPurchaseBillEntry />,
+    "ACCESSORY STOCK TRANSFER": <AccessoryStockTransfer />,
 
 
 

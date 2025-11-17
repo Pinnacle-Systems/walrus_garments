@@ -22,8 +22,6 @@ import MaterialRequestFormReport from "./MaterialRequstFormReport";
 const MaterialRequestForm = () => {
 
 
-    const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
     const [form, setForm] = useState(false);
     const [id, setId] = useState("");
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -177,55 +175,16 @@ const MaterialRequestForm = () => {
 
                     dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setRequirementId={setRequirementId} isMaterialRequset={isMaterialRequset} setIsMaterialRequset={setIsMaterialRequset} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
 
-                    orderAllDataRefetch={orderAllDataRefetch}
+                    orderAllDataRefetch={orderAllDataRefetch} onNew={onNew}
                 />
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-sm shadow-sm border border-gray-200">
 
-                        <h1 className="text-2xl font-bold text-gray-800">Material Request Form</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">Material Request</h1>
 
-                        {/* <div >
-
-                            <div className="flex w-fit bg-gray-100 rounded-xl p-1 shadow-sm">
-                                {["All", "Material Request", "Material Issue"].map((option) => (
-                                    <button
-                                        key={option}
-                                        onClick={() => { onNew(); setIsReport(option) }}
-                                        className={`px-4 py-1 text-sm font-medium rounded-lg transition-all duration-200
-                                  ${isReport === option
-                                                ? "bg-blue-600 text-white shadow"
-                                                : "text-gray-600 hover:text-blue-600 hover:bg-white"
-                                            }`}
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-
-                        </div> */}
-                        <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
-                            <button
-                                onClick={() => setType("yarn")}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "yarn"
-                                    ? "bg-blue-600 text-white shadow"
-                                    : "bg-transparent text-gray-700 hover:text-blue-600"
-                                    }`}
-                            >
-                                Request Raised
-                            </button>
-
-                            <button
-                                onClick={() => setType("accessory")}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "accessory"
-                                    ? "bg-blue-600 text-white shadow"
-                                    : "bg-transparent text-gray-700 hover:text-blue-600"
-                                    }`}
-                            >
-                                Material Not Received
-                            </button>
-                        </div>
+ 
                         <div className="flex flex-row  gap-4  ">
 
 

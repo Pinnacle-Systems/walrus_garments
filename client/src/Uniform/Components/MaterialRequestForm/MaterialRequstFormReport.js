@@ -186,7 +186,7 @@ const MaterialRequestFormReport = ({
             //   id="registrationFormReport"
             className="flex flex-col w-full h-[78vh] overflow-auto"
         >
-       
+
             <>
                 <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
                     <div className="h-[68vh]">
@@ -324,7 +324,9 @@ const MaterialRequestFormReport = ({
                                             <td className="py-1.5 text-left">{dataObj?.Order?.docId} </td>
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
-                                            <td className="py-1.5 text-left"> {!dataObj?.isMaterialIssue ? "Material Not Receved" : "Material Received"}</td>
+                                            <td className="py-1.5 text-left">
+                                                {/* {!dataObj?.isMaterialIssue ? "Material Not Receved" : "Material Received"} */}
+                                            </td>
 
                                             {rowActions && (
                                                 <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">

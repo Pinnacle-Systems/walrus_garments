@@ -53,6 +53,7 @@ import {
   accessoryCategory,
   materialRequest,
   stockReportControl,
+  accessoryStockTransfer,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -202,6 +203,7 @@ app.use("/accessoryBillEntry", accessoryBillEntry);
 app.use("/accessoryPurchaseReturn", accessoryReturn);
 app.use("/accessoryCategory", accessoryCategory);
 app.use("/stockReportControl", stockReportControl);
+app.use("/accessoryStockTransfer", accessoryStockTransfer)
 
 
 

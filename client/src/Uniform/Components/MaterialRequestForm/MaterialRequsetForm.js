@@ -23,7 +23,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setRequirementId,
 
-    isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm
+    isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm ,onNew
 
 
 
@@ -38,7 +38,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
     const [updateData] = useUpdateRaiseIndentMutation();
 
 
-    const { data: requirementData, refetch } = useGetRequirementPlanningFormQuery({ params: { branchId, userId } });
+    // const { data: requirementData, refetch } = useGetRequirementPlanningFormQuery({ params: { branchId, userId } });
 
     // const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetOrderByIdQuery(orderId, { skip: !orderId });
 
@@ -62,39 +62,40 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
         if (id) {
 
-            setRaiseIndentItems(
-                data?.RaiseIndentItems?.map(item => {
-                    const allColors = item?.RaiseIndenetYarnItems
-                        ?.map(yarn => yarn?.Color?.name)
-                        .filter(Boolean)
-                        .join(" - ");
+            // setRaiseIndentItems(
+            //     data?.RaiseIndentItems?.map(item => {
+            //         const allColors = item?.RaiseIndenetYarnItems
+            //             ?.map(yarn => yarn?.Color?.name)
+            //             .filter(Boolean)
+            //             .join(" - ");
 
 
-                    const raiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
-                            return {
-                                ...yarn,
+            //         const raiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+            //             return {
+            //                 ...yarn,
 
-                            };
-                        });
+            //             };
+            //         });
 
 
-                    const totalYarnQty = raiseIndenetYarnItems?.reduce(
-                        (sum, yarn) => sum + yarn.qty,
-                        0
-                    );
-                    return {
-                        OrderDetails: {
-                            style: {
-                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                            }
-                        },
-                        requirementPlanningFormId: item.id,
-                        orderdetailsId: item.orderDetailsId,
-                        raiseIndenetYarnItems,
-                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                    };
-                })
-            );
+            //         const totalYarnQty = raiseIndenetYarnItems?.reduce(
+            //             (sum, yarn) => sum + yarn.qty,
+            //             0
+            //         );
+            //         return {
+            //             OrderDetails: {
+            //                 style: {
+            //                     name: `${item?.OrderDetails?.style?.name} / ${allColors}`
+            //                 }
+            //             },
+            //             requirementPlanningFormId: item.id,
+            //             orderdetailsId: item.orderDetailsId,
+            //             raiseIndenetYarnItems,
+            //             totalYarnQty: Number(totalYarnQty?.toFixed(3)),
+            //         };
+            //     })
+            // );
+            setRaiseIndentItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
             setDocId(data?.docId ? data?.docId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setRequirementId(data?.requirementId ? data?.requirementId : "")
@@ -143,39 +144,20 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             //         };
             //     })
             // );
-
-
             setRaiseIndentItems(
-                data?.RequirementPlanningForm?.map(item => {
-
-                    const allColors = item?.RequirementPlanningItems
+                data?.RequirementPlanningForm?.flatMap(item => {
+                    const allColors = item?.OrderDetails?.orderYarnDetails
                         ?.map(yarn => yarn?.Color?.name)
                         .filter(Boolean)
                         .join(" - ");
 
-                    const totalYarnQty = item?.RequirementPlanningItems?.reduce(
-                        (sum, yarn) => sum + yarn.requiredQty,
-                        0
-                    );
+                
 
-                    return {
-                        requirementPlanningItems: item?.RequirementPlanningItems,
-                        OrderDetails: {
-                            style: {
-                                name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-                            }
-                        },
-                        orderDetailsId: item.orderDetailsId,
-                        requirementPlanningFormId: item.id,
-                        totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-                        raiseIndenetYarnItems: item?.RequirementPlanningItems?.map(yarn => {
-                            return {
-                                ...yarn,
-                                qty: yarn?.requiredQty
-                            }
-                        }),
-
-                    };
+                    return item?.RequirementPlanningItems?.filter(i => i.isMaterialRequst != true)?.map(i => ({
+                        ...i,
+                        styleColor: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+                        requirementPlanningItemsId: i.id,
+                    })) || [];
                 })
             );
 
@@ -243,7 +225,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                 });
                 if (nextProcess == "new") {
                     syncFormWithDb(undefined);
-
+                    onNew()
                 }
                 else {
                     onClose()
@@ -251,7 +233,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                 // setId(returnData?.data?.id);
                 setShowOrderForm(false)
-                refetch()
+                // refetch()
 
 
 
@@ -296,7 +278,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
         <>
             <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-xl font-bold text-gray-800">Material Request Form</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Material Request </h1>
                     <button
                         onClick={() => {
                             onClose()
@@ -351,7 +333,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                                     :
 
                                     <DropdownWithSearch
-                                        options={orderData?.data?.filter(i  => i.isPlanning)}
+                                        options={orderData?.data?.filter(i => i.isPlanning)}
                                         value={orderId}
                                         setValue={setOrderId}
                                         disabled={readOnly}

@@ -111,5 +111,5 @@ export const BILL_ENTRY_API = "billEntry"
 export const ACCESSORY_BILL_ENTRY_API = "accessoryBillEntry"
 export const ACCESSORY_CATEGORY_API = "accessoryCategory"
 export const STOCK_REPORT_CONTROL = "stockReportControl"
-
+export const ACCESSORT_STOCK_TRANSFER_API = "accessoryStockTransfer"
 

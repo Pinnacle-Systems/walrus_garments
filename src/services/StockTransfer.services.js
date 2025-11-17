@@ -138,7 +138,7 @@ async function get(req) {
                 docId: fromOrderNo ? { contains: fromOrderNo } : undefined
 
             },
-            toOrsder: {
+            toOrder: {
                 docId: toOrderNo ? { contains: toOrderNo } : undefined
 
             }
@@ -150,7 +150,7 @@ async function get(req) {
                     docId: true
                 }
             },
-            toOrsder: {
+            toOrder: {
                 select: {
                     docId: true
                 }
@@ -381,6 +381,7 @@ async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
             orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
+            orderdetailsId: item["orderdetailsId"] ? parseInt(item["orderdetailsId"]) : undefined,
 
 
         }
@@ -402,6 +403,7 @@ async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeI
             orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
+            orderdetailsId: item["orderdetailsId"] ? parseInt(item["orderdetailsId"]) : undefined,
 
         }
     })
@@ -410,22 +412,26 @@ async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeI
 
 async function UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item) {
 
+    const existing = await tx.requirementPlanningItems.findUnique({
+        where: { id: parseInt(item.id) },
+        select: { tranferQty: true }
+    });
 
-    console.log(item.id,"item?.transferQty",item?.transferQty)
+    const oldQty = Number(existing?.tranferQty || 0);
+    const newQty = Number(item?.transferQty || 0);
+
+    const finalQty = oldQty + newQty;   
+
+    console.log("Old:", oldQty, "New:", newQty, "Final:", finalQty);
 
     await tx.requirementPlanningItems.update({
-        where: {
-            id: parseInt(item.id),
-
-        },
-        data: { 
-            tranferQty : item?.transferQty ?  item?.transferQty  : 0
-         
-
+        where: { id: parseInt(item.id) },
+        data: {
+            tranferQty: finalQty
         }
-    })
-
+    });
 }
+
 
 async function createStocktransferItems(
     tx,
@@ -439,7 +445,7 @@ async function createStocktransferItems(
 ) {
     if (stockItems?.length) {
         await Promise.all(
-            stockItems.map(async (item) => {
+            stockItems?.map(async (item) => {
                 await tx.FromOrderTransferItems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
@@ -463,20 +469,7 @@ async function createStocktransferItems(
         );
     }
 
-    // if (orderItems?.length) {
-    //     await Promise.all(
-    //         orderItems.map(async (item) => {
-    //             await createYarnStockAgainstOrder(
-    //                 tx,
-    //                 poType,
-    //                 poInwardOrDirectInward,
-    //                 branchId,
-    //                 storeId,
-    //                 item
-    //             );
-    //         })
-    //     );
-    // }
+
     if (orderItems?.length) {
         await Promise.all(
             orderItems?.map(async (item) => {

@@ -203,7 +203,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            addNewRow();
+                            handleAdd(gridIndex);
                           }
                         }}
                         className="flex items-center justify-center w-full py-1"

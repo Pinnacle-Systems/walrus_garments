@@ -9,7 +9,7 @@ import {
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, TextInputNew } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { pageType } from "../../../Utils/DropdownData"
 import {useGetPageGroupQuery} from "../../../redux/services/PageGroupMasterServices";
@@ -188,7 +188,7 @@ export default function Form() {
               <fieldset className="frame my-1">
                 <legend className="sub-heading">Page Info</legend>
                 <div className="grid grid-cols-1 my-2">
-                  <TextInput
+                  <TextInputNew
                     name="Page Name"
                     type="text"
                     value={name}
@@ -197,7 +197,7 @@ export default function Form() {
                     readOnly={readOnly}
                     disabled={(childRecord.current > 0)}
                   />
-                  <TextInput
+                  <TextInputNew
                     name="Link"
                     type="text"
                     value={link}

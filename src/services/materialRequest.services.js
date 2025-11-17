@@ -203,6 +203,21 @@ async function getOne(id) {
                     raiseIndentId: true,
                     requirementPlanningFormId: true,
                     orderdetailsId: true,
+                    yarnId: true,
+                    requiredQty: true,
+
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    styleColor: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    colorId: true,
                     OrderDetails: {
                         select: {
                             style: {
@@ -234,7 +249,8 @@ async function getOne(id) {
                             percentage: true,
 
                         }
-                    }
+                    },
+
                 }
             }
 
@@ -322,12 +338,56 @@ export async function getStockvalidationById(id) {
             id: parseInt(id)
         },
         include: {
+            Order: {
+                select: {
+                    Stock: {
+                        select: {
+                            yarnId: true,
+                            Yarn: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            colorId: true,
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            itemType: true,
+                            inOrOut: true,
+                            uomId: true,
+                            qty: true,
+                            price: true,
+                            storeId: true,
+                            branchId: true,
+                            orderId: true
+                        }
+                    }
+                }
+            },
             RaiseIndentItems: {
                 select: {
                     id: true,
                     raiseIndentId: true,
                     requirementPlanningFormId: true,
+                    requirementPlanningItemsId: true,
+                    // uomId
                     orderdetailsId: true,
+                    yarnId: true,
+                    Yarn: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    colorId: true,
+                    requiredQty: true,
+                    styleColor: true,
                     OrderDetails: {
                         select: {
                             style: {
@@ -360,20 +420,18 @@ export async function getStockvalidationById(id) {
 
                         }
                     },
-                    RaiseIndent : {
-                        select : {
-                            Order : {
-                                select : {
-                                    Stock : true
-                                }
-                            }
-                        }
-                    }
-                }   
-                    
 
-            }
+                }
 
+
+            },
+            MaterialIssue: {
+                select: {
+                    id: true,
+                    MaterialIssueItems: true
+                }
+            },
+            materialIssueItems: true
 
         }
 
@@ -469,7 +527,7 @@ async function create(req) {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
-    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : null).filter(Boolean);
+    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : null).filter(Boolean);
 
     console.log(formIds, "formIds")
 
@@ -495,19 +553,26 @@ async function create(req) {
                         create: raiseIndentItems?.map((item) => ({
                             requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
                             orderdetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
-                            RaiseIndenetYarnItems: item?.raiseIndenetYarnItems?.length > 0
-                                ? {
-                                    createMany: {
-                                        data: item.raiseIndenetYarnItems.map((sub) => ({
-                                            yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
-                                            colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                                            count: sub?.count ? parseInt(sub.count) : undefined,
-                                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                            percentage: sub?.percentage ? sub?.percentage : undefined,
-                                        })),
-                                    },
-                                }
-                                : undefined,
+                            yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                            styleColor: item?.styleColor ? item?.styleColor : undefined,
+                            requiredQty: item?.requiredQty ? parseInt(item?.requiredQty) : undefined,
+                            requirementPlanningItemsId: item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : undefined,
+
+                            // orderId : sub
+                            // RaiseIndenetYarnItems: item?.raiseIndenetYarnItems?.length > 0
+                            //     ? {
+                            //         createMany: {
+                            //             data: item.raiseIndenetYarnItems.map((sub) => ({
+                            //                 yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
+                            //                 colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                            //                 count: sub?.count ? parseInt(sub.count) : undefined,
+                            //                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                            //                 percentage: sub?.percentage ? sub?.percentage : undefined,
+                            //             })),
+                            //         },
+                            //     }
+                            //     : undefined,
 
 
                         })),
@@ -521,7 +586,7 @@ async function create(req) {
 
 
         for (const id of formIds) {
-            await tx.requirementPlanningForm.update({
+            await tx.requirementPlanningItems.update({
                 where: {
                     id: parseInt(id),
                 },
@@ -629,32 +694,34 @@ const update = async (id, body) => {
 
 async function remove(id, raiseIndentItems) {
 
-    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : null).filter(Boolean);
+    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : null).filter(Boolean);
 
-            console.log(formIds, "formIds",id)
+    console.log(formIds, "formIds", id)
 
 
     let data;
     await prisma.$transaction(async (tx) => {
 
-     data = await tx.raiseIndent.delete({
-        where: {
-            id: parseInt(id)
-        },
-    })
-
-
-
-    for (const id of formIds) {
-        await tx.requirementPlanningForm.update({
+        data = await tx.raiseIndent.delete({
             where: {
-                id: parseInt(id),
+                id: parseInt(id)
             },
-            data: {
-                isMaterialRequst: false,
-            },
-        });
-    }
+        })
+
+
+
+
+
+        for (const id of formIds) {
+            await tx.requirementPlanningItems.update({
+                where: {
+                    id: parseInt(id),
+                },
+                data: {
+                    isMaterialRequst: true,
+                },
+            });
+        }
 
     })
     return { statusCode: 0, data };

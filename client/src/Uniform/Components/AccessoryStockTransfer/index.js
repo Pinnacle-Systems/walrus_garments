@@ -1,14 +1,12 @@
-import { FaFileAlt, FaPlus } from "react-icons/fa";
-import { ReusableInput } from "../Order/CommonInput";
+import { FaPlus } from "react-icons/fa";
+
 import { useCallback, useEffect, useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
-import { DateInputNew, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import StockTransferForm from "./StockTransferFormUI";
-import StockTransferReport from "./stockTransferReport";
+import StockTransferForm from "./AccessoryStockTransferFormUI";
 import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
-import { useDeleteStockTransferMutation, useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
+import { useDeleteAccessoryStockTransferMutation, useGetAccessoryStockTransferQuery } from "../../../redux/uniformService/AcessoryStockTransferService";
 
 
 
@@ -41,30 +39,22 @@ const StockTransfer = () => {
     const [tempStockItems, setTempStockItems] = useState([])
 
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const { branchId, userId,  finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
-    const { data: allData, isFetching, isLoading } = useGetStockTransferQuery({
+    const { data: allData, isFetching, isLoading } = useGetAccessoryStockTransferQuery({
         params: {
             branchId,
 
         }
     });
 
-    const [removeData] = useDeleteStockTransferMutation()
+    const [removeData] = useDeleteAccessoryStockTransferMutation()
 
-    const getNextDocId = useCallback(() => {
-        //   if (id || isLoading || isFetching) return
-        if (allData?.nextDocId) {
-            setDocId(allData.nextDocId)
-        }
-    }, [allData, id])
-
-    useEffect(getNextDocId, [getNextDocId])
 
     const handleView = (id) => {
         setId(id)
@@ -144,7 +134,7 @@ const StockTransfer = () => {
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Yarn Stock Transfer</h1>
+                            <h1 className="text-2xl font-bold text-gray-800">Accessory Stock Transfer</h1>
 
                         </div>
                         <button
@@ -157,12 +147,12 @@ const StockTransfer = () => {
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
                   
-                        <StockTransferReport
+                        {/* <StockTransferReport
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             itemsPerPage={10}
-                        />
+                        /> */}
                     </div>
                 </div>
             )}

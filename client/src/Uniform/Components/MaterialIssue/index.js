@@ -39,12 +39,15 @@ const MaterialIssue = () => {
     const [orderSizeDetails, setOrderSizeDetails] = useState([])
     const [orderYarnDetails, setOrderYarnDetails] = useState([])
     const [issueItems, setIssueItems] = useState([])
+    const [alreadyIssuedItems, setAlreadyIssuedItems] = useState([])
+
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
     const [isMaterialIssue, setIsMaterialIssue] = useState(false)
     const [isReport, setIsReport] = useState("Material Issue")
     const [materialRequstId, setMaterialRequstId] = useState("")
     const [requirementId, setRequirementId] = useState("")
+    const [Stock,setStock] = useState([])
 
     const params = {
         branchId, userId, finYearId
@@ -184,14 +187,19 @@ const MaterialIssue = () => {
 
     const handleIendentRaiseView = (id) => {
 
-        // setMaterialRequstId(id)
-        setOrderId(id)
+        setMaterialRequstId(id)
+        // setOrderId(id)
         setForm(true)
         setReadOnly(true);
     };
 
- 
 
+
+    const handleMaterialIssueiew = (id) => {
+        setId(id)
+        setForm(true)
+        setReadOnly(true);
+    };
 
 
 
@@ -214,7 +222,7 @@ const MaterialIssue = () => {
                     orderSizeDetails={orderSizeDetails} setOrderSizeDetails={setOrderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails} orderDetailsId={orderDetailsId} setOrderDetailsId={setOrderDetailsId}
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} issueItems={issueItems} setIssueItems={setIssueItems}
                     dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setMaterialRequstId={setMaterialRequstId} materialRequstId={materialRequstId}
-                    requirementId={requirementId} setRequirementId={setRequirementId}
+                    requirementId={requirementId} setRequirementId={setRequirementId} alreadyIssuedItems={alreadyIssuedItems} setAlreadyIssuedItems={setAlreadyIssuedItems} Stock={Stock} setStock={setStock}
                 />
 
 
@@ -222,7 +230,7 @@ const MaterialIssue = () => {
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Material Issue Form</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Material Issue</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div >
                             <div className="flex w-fit bg-gray-100 rounded-xl p-1 shadow-sm">
@@ -248,9 +256,10 @@ const MaterialIssue = () => {
                     </div>
                     {isReport == "Material Issue" ?
                         <>
-                        
+
                             <MaterialIssueFormReport
-                                onView={handleIendentRaiseView}
+                                onView={handleMaterialIssueiew}
+
 
                             />
 
@@ -259,7 +268,7 @@ const MaterialIssue = () => {
                         :
                         <>
                             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            
+
                                 <MaterialRequestFormReport
                                     onView={handleIendentRaiseView}
 

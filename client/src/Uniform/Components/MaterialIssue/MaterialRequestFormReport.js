@@ -351,7 +351,7 @@ const MaterialRequestFormReport = ({
                                                 {onView && (
                                                         <button
                                                             className="text-blue-600 flex items-center justify-center px-1 bg-blue-50 rounded"
-                                                            onClick={() => onView(dataObj.orderId)}
+                                                            onClick={() => onView(dataObj.id)}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                                 className="h-4 w-4"

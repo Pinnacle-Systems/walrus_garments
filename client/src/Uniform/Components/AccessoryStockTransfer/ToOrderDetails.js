@@ -11,8 +11,6 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
 }) {
 
 
-    console.log(tempOrderItems, "tempOrderItems")
-
 
 
 
@@ -238,13 +236,11 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                             </th>
 
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
+                                            {/* <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th> */}
                                             <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-96">Yarn</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Issued Qty (Kgs)</th>
-
-                                            {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th> */}
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
                                             {/* <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Already Issue Qty (Kgs)</th> */}
 
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Balance  Qty</th>
@@ -258,21 +254,11 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                         {(tempOrderItems ?? []).map((yarnItem, index) => (
                                             <tr
                                                 key={index}
-                                                className={`
-                                                       
-                                                        border-b border-gray-200
-                                                        text-[12px]
-                                                        ${yarnItem?.remainingQty === 0
-                                                        ? "bg-gray-600 text-white"
-                                                        : index % 2 === 0
-                                                            ? "bg-white"
-                                                            : "bg-gray-100"
-                                                    }
-`}
+                                                className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `
 
-
+                                                }
                                                 onClick={() => {
-                                                    if (yarnItem?.remainingQty !== 0) {
+                                                    if (yarnItem?.balanceQty !== 0) {
                                                         handleChange(yarnItem.id, yarnItem)
                                                     }
                                                 }}
@@ -281,15 +267,13 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                 <td className='py-1 text-center'>
                                                     <input type="checkbox" name="" id=""
                                                         checked={isItemAdded(yarnItem.id, yarnItem)}
-                                                    // disabled={yarnItem?.balanceQty === 0}
+                                                        disabled={yarnItem?.balanceQty === 0}
                                                     />
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {yarnItem?.OrderDetails?.style?.name}
-                                                </td>
+
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
                                                     {yarnItem?.Yarn?.name}
                                                 </td>
@@ -300,26 +284,17 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                     {parseFloat(yarnItem?.requiredQty)?.toFixed(3)}
                                                 </td>
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                    {/* {(parseFloat(yarnItem?.tranferQty) + parseFloat(yarnItem?.issuedQty))?.toFixed(3)} */}
-                                                    {
-                                                        (
-                                                            parseFloat(yarnItem?.tranferQty || 0) +
-                                                            parseFloat(yarnItem?.issuedQty || 0)
-                                                        ).toFixed(3)
-
-                                                    }
+                                                    {parseFloat(yarnItem?.currentStock)?.toFixed(3)}
                                                 </td>
-
+                                                {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                    {parseFloat(yarnItem?.alreadyIssueQty)?.toFixed(3)}
+                                                </td> */}
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                    {
-                                                        parseFloat(parseFloat(yarnItem?.requiredQty || 0) -
-                                                            (
-                                                                parseFloat(yarnItem?.tranferQty || 0) +
-                                                                parseFloat(yarnItem?.issuedQty || 0)
-                                                            )).toFixed(3)
-
-                                                    }
-                                                    {/* {parseFloat(yarnItem?.remainingQty || 0).toFixed(3)} */}
+                                                    {/* {(
+                                                        (parseFloat(yarnItem?.requiredQty ?? 0)) -
+                                                        (parseFloat(yarnItem?.poQty ?? 0) - parseFloat(yarnItem?.alreadyTransferStockQty ?? 0))
+                                                    ).toFixed(3)}                            */}
+                                                    {parseFloat(yarnItem?.balanceQty || 0).toFixed(3)}
                                                 </td>
                                             </tr>
                                         ))}
