@@ -107,6 +107,8 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                     poItemsId: poItem?.id,
                     orderId: poItem?.orderId,
+                    orderDetailsId : poItem?.orderDetailsId,
+                    requirementPlanningItemsId : poItem?.requirementPlanningItemsId,
                     poNo: poItem?.Po?.docId,
                     fabricId: poItem?.fabricId,
                     colorId: poItem?.colorId,

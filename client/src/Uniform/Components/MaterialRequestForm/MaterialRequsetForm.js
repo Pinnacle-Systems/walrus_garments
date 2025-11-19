@@ -23,7 +23,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
     partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setRequirementId,
 
-    isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm ,onNew
+    isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm, onNew
 
 
 
@@ -101,49 +101,28 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             setRequirementId(data?.requirementId ? data?.requirementId : "")
             setIsMaterialRequset(data?.isMaterialRequset ? data?.isMaterialRequset : false)
             setPartyId(data?.partyId ? data?.partyId : "")
+            setRaiseIndentItems(
+                data?.RaiseIndentItems?.map(item => {
+                   const alreadyIssueQty =   item?.MaterialIssueItems?.reduce?.((sum, next) => (
+                        sum + next.issueQty
+                    ), 0)
+                    return {
+                        ...item,
+                        alreadyIssueQty,
+                    }
+                }
 
+                )
+            )
         }
+
         else {
 
             setPartyId(data?.partyId ? data?.partyId : "")
 
 
 
-            // setRaiseIndentItems(
-            //     data?.RequirementPlanningForm?.map(item => {
-            //         const allColors = item?.RequirementYarnDetails
-            //             ?.map(yarn => yarn?.Color?.name)
-            //             .filter(Boolean)
-            //             .join(" - ");
-            // const RaiseIndenetYarnItems = item?.RequirementYarnDetails?.map(yarn => {
-            //     const qty = item?.requirementSizeDetails?.reduce(
-            //         (sum, size) => sum + (size?.weight * (yarn?.percentage / 100)),
-            //         0
-            //     );
 
-            //     return {
-            //         ...yarn,
-            //         qty: Number(qty.toFixed(3)),
-            //         orderDetailsId: item.orderDetailsId,
-
-            //     };
-            // });
-            //         const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-            //             (sum, yarn) => sum + yarn.qty,
-            //             0
-            //         );
-            //         return {
-            //             OrderDetails: {
-            //                 style: {
-            //                     name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-            //                 }
-            //             },
-            //             requirementPlanningFormId: item.id,
-            //             RaiseIndenetYarnItems,
-            //             totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-            //         };
-            //     })
-            // );
             setRaiseIndentItems(
                 data?.RequirementPlanningForm?.flatMap(item => {
                     const allColors = item?.OrderDetails?.orderYarnDetails
@@ -151,7 +130,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                         .filter(Boolean)
                         .join(" - ");
 
-                
+
 
                     return item?.RequirementPlanningItems?.filter(i => i.isMaterialRequst != true)?.map(i => ({
                         ...i,

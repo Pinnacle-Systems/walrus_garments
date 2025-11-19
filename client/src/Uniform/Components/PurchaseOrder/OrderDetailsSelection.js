@@ -124,7 +124,7 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                     </th>
                                                     <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-20">Order No</th>
-                                                    {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-52">Style No</th> */}
+                                                    <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-52">Style No</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-xs  w-72">Yarn</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-xs text-gray-800  w-24">Color</th>
                                                     {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Counts</th> */}
@@ -266,9 +266,9 @@ export default function OrderDetailsSelection({ id, tempPoItems, setPoItems, poI
                                                                 {item?.order?.docId}
                                                             </td>
 
-                                                            {/* <td className="border border-gray-300 px-2 py-1 text-left text-xs">
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-xs">
                                                                 {item?.allColors}
-                                                            </td> */}
+                                                            </td>
 
                                                             {/* Yarn Name */}
                                                             <td className="border border-gray-300 text-[11px] py-1.5 px-2">

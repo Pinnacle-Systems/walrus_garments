@@ -434,7 +434,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     </td>
                                     {orderSizeDetails?.map((item, index) => (
                                         <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                            {item?.weight.toFixed(3)}
+                                            {item?.weight?.toFixed(3)}
                                         </td>
                                     ))}
                                     <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>

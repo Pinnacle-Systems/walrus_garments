@@ -237,6 +237,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                         <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
                                         <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
                                         <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
+                                        <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Issued Qty (Kgs) </th>
 
                                     </tr>
                                 </thead>
@@ -274,7 +275,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
                                                     <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
                                                         {((indent?.requiredQty)?.toFixed(3))}
                                                     </td>
-
+                                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                        {((indent?.alreadyIssueQty)?.toFixed(3))}
+                                                    </td>
                                                 </tr>
                                             </React.Fragment>
                                         );

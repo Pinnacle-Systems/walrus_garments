@@ -47,7 +47,8 @@ const MaterialIssue = () => {
     const [isReport, setIsReport] = useState("Material Issue")
     const [materialRequstId, setMaterialRequstId] = useState("")
     const [requirementId, setRequirementId] = useState("")
-    const [Stock,setStock] = useState([])
+    const [Stock, setStock] = useState([])
+    const [type, setType] = useState("All");
 
     const params = {
         branchId, userId, finYearId
@@ -223,6 +224,7 @@ const MaterialIssue = () => {
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} issueItems={issueItems} setIssueItems={setIssueItems}
                     dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setMaterialRequstId={setMaterialRequstId} materialRequstId={materialRequstId}
                     requirementId={requirementId} setRequirementId={setRequirementId} alreadyIssuedItems={alreadyIssuedItems} setAlreadyIssuedItems={setAlreadyIssuedItems} Stock={Stock} setStock={setStock}
+                    onNew={onNew}
                 />
 
 
@@ -230,9 +232,8 @@ const MaterialIssue = () => {
 
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <h1 className="text-2xl font-bold text-gray-800">Material Issue</h1>
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <div >
+                        {/* <div >
                             <div className="flex w-fit bg-gray-100 rounded-xl p-1 shadow-sm">
                                 {["All", "Material Request", "Material Issue"].map((option) => (
                                     <button
@@ -249,8 +250,33 @@ const MaterialIssue = () => {
                                 ))}
                             </div>
 
-                        </div>
+                        </div> */}
+                        <h1 className="text-2xl font-bold text-gray-800">Material Issue</h1>
 
+                        <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
+                            <button
+                                onClick={() => setIsReport("Material Request")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport === "Material Request"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Material Request
+                            </button>
+
+                            <button
+                                onClick={() => setIsReport("Material Issue")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport === "Material Issue"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Material Issue
+                            </button>
+                        </div>
+                        <div>
+
+                        </div>
 
 
                     </div>

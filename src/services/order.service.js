@@ -905,6 +905,7 @@ export async function getStockvalidationById(id) {
                     branchId: true,
                     active: true,
                     orderId: true,
+                    orderDetailsId : true,
                 }
             },
             Po: {
@@ -987,7 +988,8 @@ export async function getStockvalidationById(id) {
                             id: true,
                             raiseIndentId: true,
                             requirementPlanningFormId: true,
-                            orderdetailsId: true
+                            orderDetailsId: true ,
+                            requirementPlanningItemsId : true
                         }
                     },
 
@@ -1264,7 +1266,7 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                             id: true,
                             raiseIndentId: true,
                             requirementPlanningFormId: true,
-                            orderdetailsId: true
+                            orderDetailsId: true
                         }
                     },
 

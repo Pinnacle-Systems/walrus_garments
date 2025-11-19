@@ -88,8 +88,22 @@ const MaterialRequestFormReport = ({
         isLoading || isFetching
 
 
+    const filtered = allData?.data?.map(item => {
+        const requestQty = item?.RaiseIndentItems?.reduce(
+            (sum, next) => sum + (next?.requiredQty || 0),
+            0
+        );
 
-    console.log(allData, "entire");
+        const issueQty = item?.RaiseIndentItems
+            ?.flatMap(i => i?.MaterialIssueItems || [])
+            ?.reduce((sum, next) => sum + (next?.issueQty || 0), 0);
+
+        return {
+            ...item,
+            requestQty,
+            issueQty
+        };
+    });
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
@@ -241,6 +255,9 @@ const MaterialRequestFormReport = ({
                                         <div>Customer</div>
 
                                     </th>
+                                    <th className="w-52   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                        <div>Status</div>
+                                    </th>
                                     <th className="w-10   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
 
@@ -307,6 +324,9 @@ const MaterialRequestFormReport = ({
                                             }}
                                         />
                                     </th>
+                                    <th className="w-12  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+
+                                    </th>
                                     <th className="w-10  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
                                     </th>
@@ -322,7 +342,7 @@ const MaterialRequestFormReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(filtered ? filtered : []).map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 // if (e.key === "Enter") {
@@ -333,7 +353,7 @@ const MaterialRequestFormReport = ({
                                             key={dataObj.id}
                                             className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                                 }`}
-                                            // onClick={() => onClick(dataObj.id)}
+                                        // onClick={() => onClick(dataObj.id)}
                                         >
                                             <td className="text-center " >
                                                 {index + 1}
@@ -346,9 +366,32 @@ const MaterialRequestFormReport = ({
                                             <td className="py-1.5 text-center">{dataObj?.Order?.docId} </td>
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                                            <td className="py-1.5 text-left">
+                                                {(() => {
+                                                    if (dataObj?.issueQty == 0)
+                                                        return (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 font-medium">
+                                                                Material Not Issued
+                                                            </span>
+                                                        );
+
+                                                    if (dataObj?.issueQty >= dataObj?.requestQty)
+                                                        return (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">
+                                                                Material Issued
+                                                            </span>
+                                                        );
+
+                                                    return (
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium">
+                                                            Material Partially Issued
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </td>
                                             <td className="w-[30px] h-8 px-2 border-gray-200">
-                                                    <div className="flex items-center justify-center">
-                                                {onView && (
+                                                <div className="flex items-center justify-center">
+                                                    {onView && (
                                                         <button
                                                             className="text-blue-600 flex items-center justify-center px-1 bg-blue-50 rounded"
                                                             onClick={() => onView(dataObj.id)}
@@ -363,8 +406,8 @@ const MaterialRequestFormReport = ({
                                                                     clipRule="evenodd" />
                                                             </svg>
                                                         </button>
-                                                )}
-                                                    </div>
+                                                    )}
+                                                </div>
                                             </td>
 
 

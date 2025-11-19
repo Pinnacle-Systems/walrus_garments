@@ -43,7 +43,7 @@ const MaterialRequestForm = () => {
     const [isMaterialRequset, setIsMaterialRequset] = useState(false)
     const [isReport, setIsReport] = useState("All")
     const [subGridForm, setSubGridForm] = useState(false)
-    const [type, setType] = useState("yarn");
+    const [type, setType] = useState("All");
 
     const params = {
         branchId, userId, finYearId
@@ -183,8 +183,28 @@ const MaterialRequestForm = () => {
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-sm shadow-sm border border-gray-200">
 
                         <h1 className="text-2xl font-bold text-gray-800">Material Request</h1>
+                        <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
+                            <button
+                                onClick={() => setType("All")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "All"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                All
+                            </button>
 
- 
+                            <button
+                                onClick={() => setType("Partially")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "accessory"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Partially Received
+                            </button>
+                        </div>
+
                         <div className="flex flex-row  gap-4  ">
 
 
@@ -205,6 +225,7 @@ const MaterialRequestForm = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            type = {type}
                         />
 
                     )

@@ -351,6 +351,7 @@ export async function getRequirementItems(req) {
             id: true,
             requirementPlanningFormId: true,
             colorId: true,
+            
             // yarncategoryId: true,
             yarnId: true,
             count: true,
@@ -363,6 +364,7 @@ export async function getRequirementItems(req) {
             orderId: true,
             orderDetailsId: true,
             partyId: true,
+            tranferQty : true,
             Yarn: {
                 select: {
                     name: true,
@@ -425,7 +427,7 @@ export async function getRequirementItems(req) {
                     yarnCounts: true,
                     count: true,
                     isPurchaseCancel: true,
-                    RequirementPlanningItemsId: true,
+                    requirementPlanningItemsId: true,
                     taxPercent: true,
                     hsnId: true,
                     CancelItems: true,
@@ -497,12 +499,23 @@ export async function getRequirementItems(req) {
                 });
             });
 
-            // console.log(cancelQty, "cancelQty", poQty)
-            // console.log(shortCloseQty, "shortCloseQty")
-            console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
+          
+
+            const balanceQty = parseFloat(item?.requiredQty || 0) -  parseFloat(item?.tranferQty || 0)
+            let  requiredQty = item?.requiredQty 
+
+            {console.log({
+                poQty ,
+                // cancelQty ,
+                // shortCloseQty ,
+                requiredQty,
+            })}
+
+
+            
 
             // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
-            return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(item?.requiredQty || 0);
+            return (parseFloat(poQty) - parseFloat(cancelQty) ) < parseFloat(balanceQty || 0) ;
 
         })
         ?.map(item => {
@@ -534,15 +547,15 @@ export async function getRequirementItems(req) {
                 });
             });
 
-            console.log(cancelQty, "cancelQty", poQty)
-            console.log(shortCloseQty, "shortCloseQty")
+            // console.log(cancelQty, "cancelQty", poQty)
+            // console.log(shortCloseQty, "shortCloseQty")
 
             return {
                 ...item,
                 allColors: `${combinedColors} - ${styleName}`,
                 alreadyPoqty: poQty,
                 alreadyCancelQty: cancelQty,
-                balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty)
+                balanceQty: (parseFloat(item?.requiredQty || 0) -  parseFloat(item?.tranferQty || 0)) - (poQty - cancelQty) 
 
             };
         });
@@ -553,7 +566,7 @@ export async function getRequirementItems(req) {
     //     data = data?.filter(i => i?.yarnType === "DyedYarn")
 
     // }
-    console.log(data, "data")
+    // console.log(data, "data")
 
     return { statusCode: 0, data, childRecord };
 }

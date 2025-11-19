@@ -48,23 +48,18 @@ const StockTransfer = () => {
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
-    const { data: allData, isFetching, isLoading } = useGetStockTransferQuery({
-        params: {
-            branchId,
 
-        }
-    });
 
     const [removeData] = useDeleteStockTransferMutation()
 
-    const getNextDocId = useCallback(() => {
-        //   if (id || isLoading || isFetching) return
-        if (allData?.nextDocId) {
-            setDocId(allData.nextDocId)
-        }
-    }, [allData, id])
+    // const getNextDocId = useCallback(() => {
+    //     //   if (id || isLoading || isFetching) return
+    //     if (allData?.nextDocId) {
+    //         setDocId(allData.nextDocId)
+    //     }
+    // }, [allData, id])
 
-    useEffect(getNextDocId, [getNextDocId])
+    // useEffect(getNextDocId, [getNextDocId])
 
     const handleView = (id) => {
         setId(id)

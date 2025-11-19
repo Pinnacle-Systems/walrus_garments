@@ -28,6 +28,10 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
 
                 console.log(stockQty, "stockQty")
 
+                if (stockQty < 0) {
+                    return
+                }
+
                 if (parseFloat(stockQty) < parseFloat(value)) {
                     Swal.fire({
                         title: "Issue Qty Cannot Be More The Stock Qty",
@@ -85,6 +89,17 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    function calculateStockQty(indent) {
+        const stockQty = Stock?.find(i => i.yarnId == indent.yarnId && i.colorId == indent.colorId)
+        console.log({
+            stockQty
+        })
+        return stockQty
+
+    }
+
+
     return (
         <>
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[480px] overflow-y-auto">
@@ -139,7 +154,7 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
                     </div>
 
                 </div>
-                <div className="flex flex-row gap-10">
+                <div className="flex flex-row gap-10 h-[200px]">
                     <div className="w-[80%] flex flex-col ">
                         <div className="justify-end items-center mt-2 mb-5">
                             <table className="w-full border-collapse table-fixed">
@@ -214,7 +229,7 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
                                                             onFocus={(e) => e.target.select()}
                                                             className="text-right rounded py-1 px-1 w-full table-data-input"
                                                             value={(!indent.issueQty) ? 0.000 : indent.issueQty}
-                                                            // disabled={readOnly}
+                                                            disabled={!calculateStockQty(indent)?.qty > 0}
                                                             onChange={(e) => {
 
 
@@ -245,32 +260,7 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
 
 
 
-{/* 
 
-                                    <tr>
-                                        <td colSpan={4} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
-                                            {
-                                                (issueItems?.reduce((sum, item) => {
-                                                    return sum + (parseFloat(item?.qty) || 0);
-                                                }, 0))?.toFixed(3) || "0.000"
-                                            }
-
-
-                                        </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"></td>
-                                        <td className="border border-gray-300 px-2 py-1 text-right font-bold text-xs"></td>
-
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
-                                            {
-                                                (issueItems?.reduce((sum, item) => {
-                                                    return sum + (parseFloat(item?.issueQty) || 0);
-                                                }, 0))?.toFixed(3) || "0.000"
-                                            }
-
-
-                                        </td>
-                                    </tr> */}
                                     {contextMenu && (
                                         <div
                                             style={{

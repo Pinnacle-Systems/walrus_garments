@@ -84,16 +84,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 newBlend[index][field] = parseFloat(value);
             return newBlend
         });
-        // const orderIndex = orderItems?.findIndex(
-        //     item => item.yarnId === stock?.yarnId && item.colorId === stock?.colorId
-        // );
 
-
-        // setOrderItems(stock => {
-        //     const newBlend = structuredClone(stock);
-        //     newBlend[orderIndex][field] = parseFloat(value);
-        //     return newBlend
-        // });
 
 
 
@@ -103,49 +94,191 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
 
 
+    // function handleInputChangeToOrder(value, index, field, yarnItem) {
 
-    function handleInputChangeToOrder(value, index, field) {
-        // setOrderItems(prevReq => {
-        //     const updatedReqList = structuredClone(prevReq);
 
-        //     const item = updatedReqList[index];
 
-        //     const stockKey = `${item.yarnId}-${item.colorId}`;
-        //     const stockObj = stockItems.find(s => `${s.yarnId}-${s.colorId}` === stockKey);
 
-        //     const availableStock = stockObj ? stockObj?.balanceStockqty : 0;
-        //     const enteredValue = parseFloat(value) || 0;
+    //     const qtyToFill = parseFloat(value) || 0;
 
-        //     if (enteredValue > availableStock) {
-        //         // updatedReqList[index][field] = availableStock;
+    //     setStockItems(prev => {
+    //         const updated = structuredClone(prev);
 
-        //         Swal.fire({
-        //             title: "Successfully",
-        //             icon: "success",
+    //         const matchedIndexes = updated
+    //             .map((item, i) => ({
+    //                 ...item,
+    //                 index: i
+    //             }))
+    //             ?.filter(
+    //                 i =>
+    //                     i.yarnId === yarnItem?.yarnId &&
+    //                     i.colorId === yarnItem?.colorId
+    //             );
 
-        //         });
-        //     } else {
-        //         updatedReqList[index][field] = enteredValue;
-        //     }
 
-        //     // recalc stock
-        //     const { updatedReq, updatedStock } =
-        //         updateStockAfterIssue(updatedReqList, stockItems);
 
-        //     setStockItems(updatedStock);
+    //         // for (const row of matchedIndexes) {
+    //         //     // reset all old values first
+    //         //     updated[row.index].transferQty = 0;
+    //         // }
 
-        //     return updatedReq;
-        // });
+    //         let remaining = value;
 
-        setOrderItems(prevReq => {
-            const newBlend = structuredClone(prevReq);
-            if (field == "transferQty") {
 
-            }
-            newBlend[index][field] = parseFloat(value);
 
-            return newBlend
-        });
+    //         for (const row of matchedIndexes) {
+    //             if (remaining < 0) break;
+
+    //             const available = parseFloat(row.stockQty || 0);
+    //             const previous = (updated[row.index]);
+    //             // const totalRequested = parseFloat(previous) + parseFloat(remaining);
+    //         console.log(available, "previous", previous)
+
+    //             if (available >= remaining) {
+    //                 updated[row.index].transferQty = remaining;
+    //                 remaining = 0;
+    //             } else {
+    //                 updated[row.index].transferQty = available;
+    //                 remaining -= available;
+    //             }
+    //         }
+
+
+    //         return updated;
+    //     });
+
+    //     setOrderItems(prevOrder => {
+    //         const updated = structuredClone(prevOrder);
+    //         updated[index][field] = qtyToFill;
+    //         return updated;
+    //     });
+    // }
+
+
+    // function handleInputChangeToOrder(value, index, field, yarnItem) {
+    //     const newValue = parseFloat(value) || 0;
+
+    //     setOrderItems(prevOrder => {
+    //         const updatedOrders = structuredClone(prevOrder);
+    //         updatedOrders[index][field] = newValue;
+
+    //         const totalRequired = updatedOrders
+    //             .filter(i => i.yarnId === yarnItem.yarnId && i.colorId === yarnItem.colorId)
+    //             .reduce((sum, i) => sum + (parseFloat(i.transferQty) || 0), 0);
+
+    //         setStockItems(prev => {
+    //             const updatedStock = structuredClone(prev);
+
+    //             const matches = updatedStock
+    //                 .map((item, i) => ({ ...item, index: i }))
+    //                 .filter(i => i.yarnId === yarnItem.yarnId && i.colorId === yarnItem.colorId);
+
+    //             let remaining = totalRequired;
+
+    //             for (const row of matches) {
+    //                 updatedStock[row.index].transferQty = 0;
+    //             }
+
+    //             for (const row of matches) {
+    //                 if (remaining <= 0) break;
+
+    //                 const available = parseFloat(row.stockQty || 0);
+
+    //                 if (available >= remaining) {
+    //                     updatedStock[row.index].transferQty = remaining;
+    //                     remaining = 0;
+    //                 }
+    //                 else {
+    //                     updatedStock[row.index].transferQty = available;
+    //                     remaining -= available;
+    //                 }
+    //             }
+
+    //             return updatedStock;
+    //         });
+
+    //         return updatedOrders;
+    //     });
+    // }
+
+    function handleInputChangeToOrder(value, index, field, yarnItem) {
+        const newValue = parseFloat(value) || 0;
+
+        // ⭐ 1) CHECK TOTAL AVAILABLE STOCK
+        const totalAvailable = stockItems
+            .filter(s => s.yarnId === yarnItem.yarnId && s.colorId === yarnItem.colorId)
+            .reduce((sum, s) => sum + (parseFloat(s.stockQty) || 0), 0);
+
+        const currentlyUsed = stockItems
+            .filter(s => s.yarnId === yarnItem.yarnId && s.colorId === yarnItem.colorId)
+            .reduce((sum, s) => sum + (parseFloat(s.transferQty) || 0), 0);
+
+        console.log(totalAvailable, "totalAvailable")
+
+        // ⭐ 2) CHECK EXISTING transferQty (except this row)
+        const existingTransfer = orderItems
+            .filter((i, idx) =>
+                idx !== index &&
+                i.yarnId === yarnItem.yarnId &&
+                i.colorId === yarnItem.colorId
+            )
+            .reduce((sum, i) => sum + (parseFloat(i.transferQty) || 0), 0);
+
+        console.log(currentlyUsed, "currentlyUsed")
+        console.log(existingTransfer,"existingTransfer",newValue,"newValue",totalAvailable,"totalAvailable")
+
+        if (existingTransfer + newValue > totalAvailable) {
+            Swal.fire({
+                title: "Not enough stock!",
+                text: `Only ${parseFloat(totalAvailable) - parseFloat(currentlyUsed)} available in stock.`,
+                icon: "warning"
+            });
+            return; 
+        } else {
+            setOrderItems(prevOrder => {
+                const updatedOrders = structuredClone(prevOrder);
+                updatedOrders[index][field] = newValue;
+
+                const totalRequired = updatedOrders
+                    .filter(i => i.yarnId === yarnItem.yarnId && i.colorId === yarnItem.colorId)
+                    .reduce((sum, i) => sum + (parseFloat(i.transferQty) || 0), 0);
+
+                // ⭐ 5) UPDATE STOCK ITEMS
+                setStockItems(prev => {
+                    const updatedStock = structuredClone(prev);
+
+                    const matches = updatedStock
+                        .map((item, i) => ({ ...item, index: i }))
+                        .filter(i => i.yarnId === yarnItem.yarnId && i.colorId === yarnItem.colorId);
+
+                    let remaining = totalRequired;
+
+                    for (const row of matches) {
+                        updatedStock[row.index].transferQty = 0;
+                    }
+
+                    for (const row of matches) {
+                        if (remaining <= 0) break;
+
+                        const available = parseFloat(row.stockQty || 0);
+
+                        if (available >= remaining) {
+                            updatedStock[row.index].transferQty = remaining;
+                            remaining = 0;
+                        } else {
+                            updatedStock[row.index].transferQty = available;
+                            remaining -= available;
+                        }
+                    }
+
+                    return updatedStock;
+                });
+
+                return updatedOrders;
+            });
+        }
+
+
     }
 
 
@@ -192,6 +325,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                     tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} stockItems={stockItems} setStockItems={setStockItems}
                     onClose={() => setTableStockDataView(false)}
                     colorList={colorList} yarnList={yarnList}
+                    fromOrderId={fromOrderId}
 
                 />
             </Modal>
@@ -233,7 +367,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                             <th className="w-40 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Required Qty (Kgs)</th>
                                             {/* <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty</th> */}
-                                            {/* <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Balance Qty (Kgs)</th> */}
+                                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Balance Qty (Kgs)</th>
                                             <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Kgs)</th>
                                         </tr>
                                     </thead>
@@ -268,16 +402,17 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     {parseFloat(yarnItem?.currentStock)?.toFixed(3)}
                                                 </td> */}
-                                                {/* 
+                                                
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
-                                                    {Math.max(
+                                                    {/* {Math.max(
                                                         parseFloat(yarnItem?.requiredQty || 0) -
                                                         parseFloat(yarnItem?.currentStock || 0),
                                                         0
                                                     ).toFixed(3)
-                                                    }
+                                                    } */}
+                                                    {parseFloat(yarnItem?.remainingQty || 0).toFixed(3)}
                                                 </td>  
-                                                */}
+                                               
 
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     <input
@@ -285,7 +420,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
-                                                        value={yarnItem?.transferQty || ""}
+                                                        value={(yarnItem?.transferQty || 0)}
 
 
 
@@ -297,33 +432,27 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         onChange={(e) => {
                                                             const val = e.target.value;
 
-                                                            if (parseFloat(val) > parseFloat(yarnItem?.requiredQty)) {
+                                                            if (parseFloat(val) > parseFloat(yarnItem?.remainingQty)) {
 
                                                                 Swal.fire({
-                                                                    title: "Transfer Qty cannot Be More than Required Qty",
+                                                                    title: "Transfer Qty cannot Be More than Balance Qty",
                                                                     icon: "Warning",
 
                                                                 });
                                                             }
                                                             else {
-                                                                handleInputChangeToOrder(
-                                                                    val === "" ? "" : val,
-                                                                    index,
-                                                                    "transferQty",
-
-                                                                );
-
+                                                                handleInputChangeToOrder(val === "" ? 0 : val, index, "transferQty", yarnItem);
                                                             }
                                                         }}
-                                                        onBlur={(e) => {
-                                                            const formatted = e.target.value === "" ? "" : Number(e.target.value).toFixed(3);
-                                                            e.target.value = formatted;
-                                                            if (parseFloat(formatted) <= parseFloat(yarnItem?.requiredQty)) {
+                                                        // onBlur={(e) => {
+                                                        //     const formatted = e.target.value === "" ? "" : Number(e.target.value).toFixed(3);
+                                                        //     e.target.value = formatted;
+                                                        //     if (parseFloat(formatted) <= parseFloat(yarnItem?.requiredQty)) {
 
-                                                                handleInputChangeToOrder(formatted, index, "transferQty");
+                                                        //         handleInputChangeToOrder(formatted, index, "transferQty");
 
-                                                            }
-                                                        }}
+                                                        //     }
+                                                        // }}
                                                         placeHolder="0.000"
                                                     />
                                                 </td>
@@ -372,7 +501,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
                 <div className="flex flex-row gap-7">
                     <div className="flex justify-between items-center ">
-                        <h2 className="font-medium text-slate-700">From Order Details
+                        <h2 className="font-medium text-slate-700">From Order Details (From stock)
                             <span
                                 // className="ml-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold"
                                 className="ml-4 text-purple-400 font-bold"
@@ -406,6 +535,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+                                            {fromOrderId && (
+
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style</th>
+                                            )}
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
@@ -430,6 +563,11 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
+                                                {fromOrderId && (
+                                                    <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                        {stock?.OrderDetails?.style?.name}
+                                                    </td>
+                                                )}
                                                 <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
                                                     {findFromList(stock?.yarnId, yarnList, "name")}
                                                 </td>
@@ -438,7 +576,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
-                                                    {parseFloat(stock?.stockQty).toFixed(2)}
+                                                    {parseFloat(stock?.stockQty).toFixed(3)}
 
                                                 </td>
 
@@ -448,13 +586,13 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
-                                                        value={stock?.transferQty || ""}
+                                                        value={parseFloat(stock?.transferQty || 0).toFixed(3)}
                                                         // value={item?.quantity ? item.quantity.toFixed(3) : ""}
 
 
 
 
-                                                        disabled={readOnly}
+                                                        disabled={true}
                                                         onKeyDown={(e) => {
                                                             if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                                         }}

@@ -303,7 +303,7 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                     {/* {(parseFloat(yarnItem?.tranferQty) + parseFloat(yarnItem?.issuedQty))?.toFixed(3)} */}
                                                     {
                                                         (
-                                                            parseFloat(yarnItem?.tranferQty || 0) +
+                                                            // parseFloat(yarnItem?.tranferQty || 0) +
                                                             parseFloat(yarnItem?.issuedQty || 0)
                                                         ).toFixed(3)
 
@@ -314,7 +314,7 @@ export default function ToOrderDetails({ tempOrderItems, setOrderItems, orderIte
                                                     {
                                                         parseFloat(parseFloat(yarnItem?.requiredQty || 0) -
                                                             (
-                                                                parseFloat(yarnItem?.tranferQty || 0) +
+                                                                // parseFloat(yarnItem?.tranferQty || 0) +
                                                                 parseFloat(yarnItem?.issuedQty || 0)
                                                             )).toFixed(3)
 

@@ -18,6 +18,7 @@ const MaterialRequestFormReport = ({
     onDelete,
     rowActions = true,
     isReport,
+    type
 }) => {
 
 
@@ -75,6 +76,26 @@ const MaterialRequestFormReport = ({
         }
     });
 
+
+
+    const filtered = allData?.data?.map(item => {
+        const requestQty = item?.RaiseIndentItems?.reduce(
+            (sum, next) => sum + (next?.requiredQty || 0),
+            0
+        );
+
+        const issueQty = item?.RaiseIndentItems
+            ?.flatMap(i => i?.MaterialIssueItems || [])
+            ?.reduce((sum, next) => sum + (next?.issueQty || 0), 0);
+
+        return {
+            ...item,
+            requestQty,
+            issueQty
+        };
+    });
+
+    console.log(filtered, "allData");
 
 
 
@@ -300,7 +321,7 @@ const MaterialRequestFormReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(filtered ? filtered : []).filter( i  => type == "Partially"  ? i.issueQty != 0 && i?.issueQty >= i?.requestQty  : [] )?.map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -325,8 +346,29 @@ const MaterialRequestFormReport = ({
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                                             <td className="py-1.5 text-left">
-                                                {/* {!dataObj?.isMaterialIssue ? "Material Not Receved" : "Material Received"} */}
+                                                {(() => {
+                                                    if (dataObj?.issueQty == 0)
+                                                        return (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 font-medium">
+                                                                Material Not Received
+                                                            </span>
+                                                        );
+
+                                                    if (dataObj?.issueQty >= dataObj?.requestQty)
+                                                        return (
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-medium">
+                                                                Material Received
+                                                            </span>
+                                                        );
+
+                                                    return (
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium">
+                                                            Material Partially Received
+                                                        </span>
+                                                    );
+                                                })()}
                                             </td>
+
 
                                             {rowActions && (
                                                 <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">

@@ -452,45 +452,61 @@ async function getOne(id, req) {
     console.log(storeId, "storeId")
 
 
-    let data = await xprisma.stock.groupBy({
+    // let data = await xprisma.stock.groupBy({
+    //     where: {
+    // orderId: id ? parseInt(id) : undefined,
+    // colorId: colorId ? parseInt(colorId) : undefined,
+    // yarnId: yarnId ? parseInt(yarnId) : undefined,
+
+    //     },
+
+    //     by: [
+    //         // "storeId", 
+    //         "yarnId",
+    //         "colorId",
+    //         "orderId",
+    //         "orderDetailsId"
+
+    //     ],
+    //     _sum: {
+    //         qty: true,
+
+
+    //     },
+
+    // })
+
+
+    let data = await prisma.stock.findMany({
         where: {
             orderId: id ? parseInt(id) : undefined,
             colorId: colorId ? parseInt(colorId) : undefined,
             yarnId: yarnId ? parseInt(yarnId) : undefined,
-            // branchId: branchId ? parseInt(branchId) : undefined,
-            // storeId: storeId ? parseInt(storeId) : undefined,
-            // itemType,
-            // fabricId: fabricId ? parseInt(fabricId) : undefined,
-            // designId: designId ? parseInt(designId) : undefined,
-            // gaugeId: gaugeId ? parseInt(gaugeId) : undefined,
-            // loopLengthId: loopLengthId ? parseInt(loopLengthId) : undefined,
-            // gsmId: gsmId ? parseInt(gsmId) : undefined,
-            // kDiaId: kDiaId ? parseInt(kDiaId) : undefined,
-            // fDiaId: fDiaId ? parseInt(fDiaId) : undefined,
-            // accessoryId: accessoryId ? parseInt(accessoryId) : undefined,
-            // sizeId: sizeId ? parseInt(sizeId) : undefined,
-            // uomId: uomId ? parseInt(uomId) : undefined,
-            // lotNo,
         },
-        by: [
-            // "storeId", 
-            "yarnId",
-            "colorId",
-            "orderId"
-            // "itemType", "processId",
-            // "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-            // "accessoryId", "sizeId",
-            // "uomId",
-            // "lotNo"
-        ],
-        _sum: {
-            qty: true,
+        include: {
+            Order: {
+                select: {
+                    Party: {
+                        select: {
+                            name: true,
+                            id : true
+                        }
+                    },
+                   
+                },
+            },
+            OrderDetails : {
+                select : {
+                    style : {
+                        select : {
+                            name : true
+                        }                    }
+                }
+            }
+                
 
-            // gross: true,
-            // noOfRolls: true,
-            // noOfBags: true,
-        },
-        
+        }
+
     })
     console.log(data, "dataaaaagetOne")
 
@@ -502,6 +518,8 @@ async function getOne(id, req) {
         })
         return Promise.all(promises)
     })()
+
+
     if (!data) return NoRecordFound("stock");
     return { statusCode: 0, data };
 }

@@ -122,17 +122,7 @@ async function get(req) {
             Order: {
                 docId: searchOrderNo ? { contains: searchOrderNo } : undefined
             },
-            // ...(searchStyleNo
-            //     ? {
-            //         OrderDetails: {
-            //             is: {
-            //                 style: {
-            //                     name: { contains: searchStyleNo }
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     : {})
+
 
             Party: {
                 name: searchClientName ? { contains: searchClientName } : undefined,
@@ -141,7 +131,21 @@ async function get(req) {
 
         },
         include: {
-            RaiseIndentItems: true,
+            RaiseIndentItems: {
+                select: {
+                    id: true,
+                    raiseIndentId: true,
+                    colorId: true,
+                    yarnId: true,
+                    requirementPlanningFormId: true,
+                    requiredQty: true,
+                    requirementPlanningItemsId: true,
+                    styleColor: true,
+                    orderDetailsId: true,
+                    MaterialIssueItems: true
+
+                }
+            },
             Order: {
                 select: {
                     docId: true
@@ -176,12 +180,14 @@ async function get(req) {
     // if (pagination) {
     //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     // }
-    if (isReport == "Material Request") {
-        data = data?.filter(item => item.isMaterialRequset && !item.isMaterialIssue)
-    }
-    if (isReport == "All") {
-        data = data
-    }
+    // if (isReport == "Material Request") {
+    //     // data = data?.filter(item => item.isMaterialRequset )
+    // }
+    // if (isReport == "All") {
+    //     data = data
+    // }
+
+
 
 
 
@@ -202,9 +208,10 @@ async function getOne(id) {
                     id: true,
                     raiseIndentId: true,
                     requirementPlanningFormId: true,
-                    orderdetailsId: true,
+                    orderDetailsId: true,
                     yarnId: true,
                     requiredQty: true,
+                    MaterialIssueItems: true,
 
                     Yarn: {
                         select: {
@@ -252,7 +259,7 @@ async function getOne(id) {
                     },
 
                 }
-            }
+            },
 
 
         }
@@ -266,30 +273,7 @@ async function getOne(id) {
 
 async function getStockValidationData(data) {
 
-    // console.log(data, "data")
 
-
-
-    //     for (let i = 0; i < data?.RaiseIndentItems?.length; i++) {
-    //         let rendenetData = data?.RaiseIndentItems[i];
-
-
-
-    //         const query = `
-    //             SELECT SUM(qty) AS total
-    //             FROM stock
-    //             WHERE colorId = ${rendenetData?.colorId}
-    //             AND yarnId = ${rendenetData?.yarnId}
-    // `;
-
-
-    //         const total = await prisma.$queryRawUnsafe(query);
-
-    //         results.push({
-    //             ...rendenetData,
-    //             stockQty: total?.[0]?.total ?? 0
-    //         });
-    //     }
     let results = [];
 
     for (let i = 0; i < data?.RaiseIndentItems?.length; i++) {
@@ -361,7 +345,9 @@ export async function getStockvalidationById(id) {
                             price: true,
                             storeId: true,
                             branchId: true,
-                            orderId: true
+                            orderId: true,
+                            orderDetailsId: true,
+                            requirementPlanningItemsId: true,
                         }
                     }
                 }
@@ -373,7 +359,7 @@ export async function getStockvalidationById(id) {
                     requirementPlanningFormId: true,
                     requirementPlanningItemsId: true,
                     // uomId
-                    orderdetailsId: true,
+                    orderDetailsId: true,
                     yarnId: true,
                     Yarn: {
                         select: {
@@ -552,11 +538,11 @@ async function create(req) {
                     ? {
                         create: raiseIndentItems?.map((item) => ({
                             requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
-                            orderdetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
                             yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
                             colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                             styleColor: item?.styleColor ? item?.styleColor : undefined,
-                            requiredQty: item?.requiredQty ? parseInt(item?.requiredQty) : undefined,
+                            requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+                            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
                             requirementPlanningItemsId: item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : undefined,
 
                             // orderId : sub

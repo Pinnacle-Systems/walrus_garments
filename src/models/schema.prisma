@@ -1177,20 +1177,21 @@ model PoItems {
   yarnCounts                 yarnCounts?               @relation(fields: [count], references: [id])
   count                      Int?
   isPurchaseCancel           Boolean?                  @default(false)
-  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [RequirementPlanningItemsId], references: [id], onDelete: Cascade)
-  RequirementPlanningItemsId Int?
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
+  requirementPlanningItemsId Int?
   order                      Order?                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId                    Int?
   taxPercent                 Float?
   Hsn                        Hsn?                      @relation(fields: [hsnId], references: [id], onDelete: Cascade)
   hsnId                      Int?
   isDeleted                  Boolean?
-
-  PoInwardReturnItems PoInwardReturnItems[]
-  BillEntryItems      BillEntryItems[]
-  DirectReturnItems   DirectReturnItems[]
-  directItems         DirectItems[]
-  CancelItems         CancelItems[]
+  OrderDetails               OrderDetails?             @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId             Int?
+  PoInwardReturnItems        PoInwardReturnItems[]
+  BillEntryItems             BillEntryItems[]
+  DirectReturnItems          DirectReturnItems[]
+  directItems                DirectItems[]
+  CancelItems                CancelItems[]
 }
 
 model AccessoryPo {
@@ -1360,65 +1361,68 @@ model DirectInwardOrReturn {
 }
 
 model DirectItems {
-  id                     Int                   @id @default(autoincrement())
-  DirectInwardOrReturn   DirectInwardOrReturn? @relation(fields: [directInwardOrReturnId], references: [id], onDelete: Cascade)
-  Fabric                 Fabric?               @relation(fields: [fabricId], references: [id])
-  fabricId               Int?
-  Yarn                   Yarn?                 @relation(fields: [yarnId], references: [id])
-  yarnId                 Int?
-  Accessory              Accessory?            @relation(fields: [accessoryId], references: [id])
-  accessoryId            Int?
-  AccessoryGroup         AccessoryGroup?       @relation(fields: [accessoryGroupId], references: [id])
-  accessoryGroupId       Int?
-  AccessoryItem          AccessoryItem?        @relation(fields: [accessoryItemId], references: [id])
-  accessoryItemId        Int?
-  Color                  Color?                @relation(fields: [colorId], references: [id])
-  colorId                Int?
-  Uom                    UnitOfMeasurement?    @relation(fields: [uomId], references: [id])
-  uomId                  Int?
-  Design                 Design?               @relation(fields: [designId], references: [id])
-  Gauge                  Gauge?                @relation(fields: [gaugeId], references: [id])
-  LoopLength             LoopLength?           @relation(fields: [loopLengthId], references: [id])
-  Gsm                    Gsm?                  @relation(fields: [gsmId], references: [id])
-  price                  Float?
-  discountType           DiscountTypes?
-  discountValue          Float?                @default(0)
-  taxPercent             Float?                @default(0)
-  Size                   Size?                 @relation(fields: [sizeId], references: [id])
-  designId               Int?
-  gaugeId                Int?
-  loopLengthId           Int?
-  gsmId                  Int?
-  sizeId                 Int?
-  KDia                   Dia?                  @relation("kDiaDirectItem", fields: [kDiaId], references: [id])
-  kDiaId                 Int?
-  FDia                   Dia?                  @relation("fDiaDirectItem", fields: [fDiaId], references: [id])
-  fDiaId                 Int?
-  directInwardOrReturnId Int?
+  id                         Int                       @id @default(autoincrement())
+  DirectInwardOrReturn       DirectInwardOrReturn?     @relation(fields: [directInwardOrReturnId], references: [id], onDelete: Cascade)
+  Fabric                     Fabric?                   @relation(fields: [fabricId], references: [id])
+  fabricId                   Int?
+  Yarn                       Yarn?                     @relation(fields: [yarnId], references: [id])
+  yarnId                     Int?
+  Accessory                  Accessory?                @relation(fields: [accessoryId], references: [id])
+  accessoryId                Int?
+  AccessoryGroup             AccessoryGroup?           @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId           Int?
+  AccessoryItem              AccessoryItem?            @relation(fields: [accessoryItemId], references: [id])
+  accessoryItemId            Int?
+  Color                      Color?                    @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  Uom                        UnitOfMeasurement?        @relation(fields: [uomId], references: [id])
+  uomId                      Int?
+  Design                     Design?                   @relation(fields: [designId], references: [id])
+  Gauge                      Gauge?                    @relation(fields: [gaugeId], references: [id])
+  LoopLength                 LoopLength?               @relation(fields: [loopLengthId], references: [id])
+  Gsm                        Gsm?                      @relation(fields: [gsmId], references: [id])
+  price                      Float?
+  discountType               DiscountTypes?
+  discountValue              Float?                    @default(0)
+  taxPercent                 Float?                    @default(0)
+  Size                       Size?                     @relation(fields: [sizeId], references: [id])
+  designId                   Int?
+  gaugeId                    Int?
+  loopLengthId               Int?
+  gsmId                      Int?
+  sizeId                     Int?
+  KDia                       Dia?                      @relation("kDiaDirectItem", fields: [kDiaId], references: [id])
+  kDiaId                     Int?
+  FDia                       Dia?                      @relation("fDiaDirectItem", fields: [fDiaId], references: [id])
+  fDiaId                     Int?
+  directInwardOrReturnId     Int?
   // Stock                  Stock?                @relation(fields: [stockId], references: [id])
   // stockId                Int?                  @unique
-  weightPerBag           Float?
-  noOfBags               Int?
-  noOfRolls              Int?
-  qty                    Float?
-  lotNo                  String?
-  lotNoCommonIndex       Int?
-  Stock                  Stock[]
-  PoItem                 PoItems?              @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  poItemsId              Int?
-  alreadyInwardedQty     Float?
-  alreadyReturnedQty     Float?
-  balanceQty             Float?
-  cancelQty              Float?
-  poNo                   String?
-  poQty                  Float?
-  Po                     Po?                   @relation(fields: [poId], references: [id])
-  poId                   Int?
-  isDeleted              Boolean?
-
-  BillEntryItems    BillEntryItems[]
-  DirectReturnItems DirectReturnItems[]
-  inwardLotDetails  InwardLotDetails[]
+  weightPerBag               Float?
+  noOfBags                   Int?
+  noOfRolls                  Int?
+  qty                        Float?
+  lotNo                      String?
+  lotNoCommonIndex           Int?
+  Stock                      Stock[]
+  PoItem                     PoItems?                  @relation(fields: [poItemsId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  poItemsId                  Int?
+  alreadyInwardedQty         Float?
+  alreadyReturnedQty         Float?
+  balanceQty                 Float?
+  cancelQty                  Float?
+  poNo                       String?
+  poQty                      Float?
+  Po                         Po?                       @relation(fields: [poId], references: [id])
+  poId                       Int?
+  isDeleted                  Boolean?
+  OrderDetails               OrderDetails?             @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId             Int?
+  RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
+  requirementPlanningItemsId Int?
+  BillEntryItems             BillEntryItems[]
+  DirectReturnItems          DirectReturnItems[]
+  inwardLotDetails           InwardLotDetails[]
 }
 
 model AccessoryInward {
@@ -1828,8 +1832,10 @@ model Stock {
   transactionId                             Int?
   Party                                     Party?                                   @relation(fields: [supplierId], references: [id])
   supplierId                                Int?
-  OrderDetails                              OrderDetails?                            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
-  orderdetailsId                            Int?
+  OrderDetails                              OrderDetails?                            @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId                            Int?
+  RequirementPlanningItems                  RequirementPlanningItems?                @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
+  requirementPlanningItemsId                Int?
 }
 
 model Location {
@@ -3453,6 +3459,11 @@ model OrderDetails {
   Stock                         Stock[]
   FromOrderTransferItems        FromOrderTransferItems[]
   ToOrderTransferTtems          ToOrderTransferTtems[]
+  PoItems                       PoItems[]
+  DirectItems                   DirectItems[]
+  CancelItems                   CancelItems[]
+  DirectReturnOrPoReturns       DirectReturnOrPoReturn[]
+  DirectReturnItems             DirectReturnItems[]
 }
 
 model orderSizeDetails {
@@ -3763,6 +3774,8 @@ model RequirementPlanningItems {
   AccessoryPo                    AccessoryPo[]
   AccessoryPoItems               AccessoryPoItems[]
   materialIssueItems             MaterialIssueItems[]
+  DirectItems                    DirectItems[]
+  Stock                          Stock[]
 }
 
 model RequirementSizeDetails {
@@ -3916,9 +3929,10 @@ model RaiseIndentItems {
   requirementPlanningFormId  Int?
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
   requirementPlanningItemsId Int?
-  OrderDetails               OrderDetails?             @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
-  orderdetailsId             Int?
+  OrderDetails               OrderDetails?             @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId             Int?
   RaiseIndenetYarnItems      RaiseIndenetYarnItems[]
+  MaterialIssueItems         MaterialIssueItems[]
 }
 
 model RaiseIndenetYarnItems {
@@ -3984,30 +3998,31 @@ model MaterialIssue {
 }
 
 model MaterialIssueItems {
-  id                        Int                      @id @default(autoincrement())
-  MaterialIssue             MaterialIssue?           @relation(fields: [materialIssueId], references: [id], onDelete: Cascade)
-  materialIssueId           Int?
-  styleId                   Int?
-  style                     Style?                   @relation(fields: [styleId], references: [id])
-  requirementPlanningForm   RequirementPlanningForm? @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
-  requirementPlanningFormId Int?
-  OrderDetails              OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
-  orderdetailsId            Int?
-  Order                     Order?                   @relation(fields: [orderId], references: [id])
-  orderId                   Int?
-  Yarn                      Yarn?                    @relation(fields: [yarnId], references: [id])
-  yarnId                    Int?
-  Uom                       UnitOfMeasurement?       @relation(fields: [uomId], references: [id])
-  uomId                     Int?
-  Color                     Color?                   @relation(fields: [colorId], references: [id])
-  colorId                   Int?
-  qty                       Float?
-  requiredQty               Float?
-  issueQty                  Float?
-  RaiseIndent               RaiseIndent?             @relation(fields: [raiseIndentId], references: [id], onDelete: Cascade)
-  raiseIndentId             Int?
-  styleColor                String?
-
+  id                         Int                       @id @default(autoincrement())
+  MaterialIssue              MaterialIssue?            @relation(fields: [materialIssueId], references: [id], onDelete: Cascade)
+  materialIssueId            Int?
+  styleId                    Int?
+  style                      Style?                    @relation(fields: [styleId], references: [id])
+  requirementPlanningForm    RequirementPlanningForm?  @relation(fields: [requirementPlanningFormId], references: [id], onDelete: Cascade)
+  requirementPlanningFormId  Int?
+  OrderDetails               OrderDetails?             @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId             Int?
+  Order                      Order?                    @relation(fields: [orderId], references: [id])
+  orderId                    Int?
+  Yarn                       Yarn?                     @relation(fields: [yarnId], references: [id])
+  yarnId                     Int?
+  Uom                        UnitOfMeasurement?        @relation(fields: [uomId], references: [id])
+  uomId                      Int?
+  Color                      Color?                    @relation(fields: [colorId], references: [id])
+  colorId                    Int?
+  qty                        Float?
+  requiredQty                Float?
+  issueQty                   Float?
+  RaiseIndent                RaiseIndent?              @relation(fields: [raiseIndentId], references: [id], onDelete: Cascade)
+  raiseIndentId              Int?
+  styleColor                 String?
+  RaiseIndentItems           RaiseIndentItems?         @relation(fields: [raiseIndentItemsId], references: [id], onDelete: Cascade)
+  raiseIndentItemsId         Int?
   RequirementPlanningItems   RequirementPlanningItems? @relation(fields: [requirementPlanningItemsId], references: [id], onDelete: Cascade)
   requirementPlanningItemsId Int?
   MaterialIssueYarnItems     MaterialIssueYarnItems[]
@@ -4070,8 +4085,8 @@ model FromOrderTransferItems {
   colorId          Int?
   transferQty      Float?
   stockQty         Float?
-  OrderDetails     OrderDetails?   @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
-  orderdetailsId   Int?
+  OrderDetails     OrderDetails?   @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId   Int?
 }
 
 model ToOrderTransferTtems {
@@ -4090,8 +4105,8 @@ model ToOrderTransferTtems {
   transferQty             Float?
   balanceQty              Float?
   requiredQty             Float?
-  OrderDetails            OrderDetails?            @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
-  orderdetailsId          Int?
+  OrderDetails            OrderDetails?            @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId          Int?
 }
 
 model AccessoyStockTransfer {
@@ -4147,37 +4162,38 @@ model ToAccessoryTransferItems {
 }
 
 model DirectReturnOrPoReturn {
-  id                     Int          @id @default(autoincrement())
+  id                     Int                 @id @default(autoincrement())
   poInwardOrDirectInward String?
   dcNo                   String?
-  dcDate                 DateTime?    @db.Date
-  Store                  Location?    @relation(fields: [storeId], references: [id])
+  dcDate                 DateTime?           @db.Date
+  Store                  Location?           @relation(fields: [storeId], references: [id])
   poType                 String?
-  supplier               Party?       @relation(fields: [supplierId], references: [id])
+  supplier               Party?              @relation(fields: [supplierId], references: [id])
   supplierId             Int?
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  createdBy              User?        @relation("createdBy", fields: [createdById], references: [id])
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  createdBy              User?               @relation("createdBy", fields: [createdById], references: [id])
   createdById            Int?
-  updatedBy              User?        @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy              User?               @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById            Int?
-  Branch                 Branch?      @relation(fields: [branchId], references: [id])
+  Branch                 Branch?             @relation(fields: [branchId], references: [id])
   branchId               Int?
-  active                 Boolean      @default(true)
+  active                 Boolean             @default(true)
   storeId                Int?
   docId                  String
-  PayTerm                PayTerm?     @relation(fields: [payTermId], references: [id])
+  PayTerm                PayTerm?            @relation(fields: [payTermId], references: [id])
   payTermId              Int?
-  TaxTemplate            TaxTemplate? @relation(fields: [taxTemplateId], references: [id])
+  TaxTemplate            TaxTemplate?        @relation(fields: [taxTemplateId], references: [id])
   taxTemplateId          Int?
   discountType           String?
-  discountValue          Float?       @default(0)
+  discountValue          Float?              @default(0)
   vehicleNo              String?
-  specialInstructions    String?      @db.LongText
-  remarks                String?      @db.LongText
+  specialInstructions    String?             @db.LongText
+  remarks                String?             @db.LongText
   isDeleted              Boolean?
-
-  directReturnItems DirectReturnItems[]
+  OrderDetails           OrderDetails?       @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
+  orderdetailsId         Int?
+  directReturnItems      DirectReturnItems[]
 }
 
 model DirectReturnItems {
@@ -4234,6 +4250,8 @@ model DirectReturnItems {
   AccessoryInwardItems     AccessoryInwardItems?  @relation(fields: [accessoryInwardItemsId], references: [id])
   accessoryInwardItemsId   Int?
   isDeleted                Boolean?
+  OrderDetails             OrderDetails?          @relation(fields: [orderDetailsId], references: [id], onDelete: Cascade)
+  orderDetailsId           Int?
 }
 
 model AccessoryReturn {
@@ -4390,6 +4408,8 @@ model CancelItems {
   poQty            Float?
   cancelType       String?
   isDeleted        Boolean?
+  OrderDetails     OrderDetails?      @relation(fields: [cancelItems], references: [id], onDelete: Cascade)
+  cancelItems      Int?
 }
 
 model AccesssoryPurchaseCancel {

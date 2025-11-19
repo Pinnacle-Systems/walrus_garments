@@ -1208,7 +1208,7 @@ export const DropdownWithSearch = forwardRef(({
   }, [currentIndex, nextRef]);
 
   return (
-    <div id={`dropdown${currentIndex}`} className={` mb-2`}>
+    <div id={`dropdown${currentIndex}`} className={``}>
       {label && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={label} /> : `${label}`}
@@ -1216,7 +1216,7 @@ export const DropdownWithSearch = forwardRef(({
       )}
       <select
         ref={ref}
-        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+        className={`w-full px-2 py-1.5 text-xs border border-slate-300 rounded-md 
     focus:border-indigo-300 focus:outline-none transition-all duration-200
     hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} 
     ${className}`}

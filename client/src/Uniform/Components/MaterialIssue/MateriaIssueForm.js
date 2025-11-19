@@ -17,7 +17,7 @@ import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentSt
 import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useGetMaterialIssueByIdQuery, useGetMaterialIssueStockValidationByIdQuery, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
 import { Loader } from "../../../Basic/components";
 
-const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId,
+const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, onNew,
 
     orderSizeDetails, orderYarnDetails, orderDetailsId, setOrderDetailsId,
 
@@ -131,7 +131,6 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                     console.log(matches, "matches")
 
 
-                    // sum all issueQty values
                     const totalIssueQty = matches?.reduce(
                         (sum, item) => sum + (Number(item.issueQty) || 0),
                         0
@@ -139,7 +138,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                     return {
                         ...riItem,
-                        alreadyIssueQty: totalIssueQty,   // total of many records
+                        alreadyIssueQty: totalIssueQty,
                     };
                 }) || [];
 
@@ -349,6 +348,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                         onClick={() => {
                             onClose();
                             setMaterialRequstId("")
+                            onNew()
                         }}
                         className="text-indigo-600 hover:text-indigo-700"
                         title="Open Report"
@@ -434,7 +434,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                     </div>
 
 
-                    <fieldset className=''>
+                    <fieldset className='h-[55vh] overflow-y-auto'>
 
                         <FormItems
                             setIssueItems={setIssueItems} issueItems={issueItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue}

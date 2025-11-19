@@ -76,7 +76,22 @@ const MaterialIssueFormReport = ({
         }
     });
 
+    const filtered = allData?.data?.map(item => {
+        const requestQty = item?.RaiseIndentItems?.reduce(
+            (sum, next) => sum + (next?.requiredQty || 0),
+            0
+        );
 
+        const issueQty = item?.RaiseIndentItems
+            ?.flatMap(i => i?.MaterialIssueItems || [])
+            ?.reduce((sum, next) => sum + (next?.issueQty || 0), 0);
+
+        return {
+            ...item,
+            requestQty,
+            issueQty
+        };
+    });
 
 
     useEffect(() => {
@@ -200,17 +215,17 @@ const MaterialIssueFormReport = ({
 
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                                         <div>Doc No</div>
-                                   
+
                                     </th>
                                     <th className="w-28 px-3  font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Doc Date</div>
-                              
+
                                     </th>
                                     <th className="w-28   px-3   font-medium text-[13px] text-gray-900  text-center ">
                                         <div>Order No</div>
-                                   
+
                                     </th>
-                                 
+
                                     <th className="w-96   px-3  font-medium text-[13px]  text-gray-900  text-center  ">
                                         <div>Customer</div>
 
@@ -258,7 +273,7 @@ const MaterialIssueFormReport = ({
                                             }}
                                         />
                                     </th>
-                            
+
 
                                     <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -305,7 +320,7 @@ const MaterialIssueFormReport = ({
 
                                             <td className="py-1.5 text-left">{dataObj.docId} </td>
 
-                                                <td className="py-1.5 text-left">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
+                                            <td className="py-1.5 text-left">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
                                             <td className="py-1.5 text-left">{dataObj?.Order?.docId} </td>
 

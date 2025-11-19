@@ -6,7 +6,7 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 
-export default function FromOrderDetails({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
+export default function FromOrderDetails({ fromOrderId, setOrderItems, orderItems, onClose, tempStockItems, stockItems, setStockItems, yarnList, colorList
 
 }) {
 
@@ -194,6 +194,12 @@ export default function FromOrderDetails({ tempOrderItems, setOrderItems, orderI
                                     <thead className="bg-gray-200 text-gray-800">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+
+                                            {fromOrderId && (
+
+                                                <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Style</th>
+                                            )}
+
                                             <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Yarn</th>
                                             <th className="px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Stock Qty (Kgs)</th>
@@ -210,6 +216,12 @@ export default function FromOrderDetails({ tempOrderItems, setOrderItems, orderI
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
+                                                {fromOrderId && (
+                                                    <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                        {stock?.OrderDetails?.style?.name}
+                                                    </td>
+                                                )}
+
                                                 <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
                                                     {findFromList(stock?.yarnId, yarnList, "name")}
                                                 </td>
@@ -217,7 +229,7 @@ export default function FromOrderDetails({ tempOrderItems, setOrderItems, orderI
                                                     {findFromList(stock?.colorId, colorList, "name")}
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                                    {parseFloat(stock?._sum?.qty).toFixed(3)}
+                                                    {parseFloat(stock?.stockQty).toFixed(3)}
                                                 </td>
                                             </tr>
                                         ))}

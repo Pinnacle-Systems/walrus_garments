@@ -784,6 +784,7 @@ export function getPoItemObject(poMaterial, item) {
         newItem.gsmId = parseInt(item.gsmId);
         newItem.kDiaId = parseInt(item.kDiaId);
         newItem.fDiaId = parseInt(item.fDiaId);
+
     } else if (poMaterial === "Accessory") {
         newItem.accessoryId = parseInt(item.accessoryId);
         newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
@@ -791,9 +792,10 @@ export function getPoItemObject(poMaterial, item) {
         newItem.accessoryItemId = parseInt(item.accessoryItemId)
     }
 
-    newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
-        newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
-        newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
+    newItem.requirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
+    newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
+    newItem.orderDetailsId = item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+    newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.qty = parseFloat(item.qty);
     newItem.price = parseFloat(item.price);
@@ -801,10 +803,10 @@ export function getPoItemObject(poMaterial, item) {
     newItem.discountValue = parseFloat(item.discountValue ?? 0);
     newItem.tax = parseFloat(item.tax ?? 0);
     newItem.taxPercent = parseFloat(item.taxPercent ?? 0);
-
-
     return newItem;
 }
+
+
 
 
 

@@ -367,6 +367,27 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
+async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item) {
+
+    const existing = await tx.requirementPlanningItems.findUnique({
+        where: { id: parseInt(item.requirementPlanningItemsId) },
+        select: { tranferQty: true }
+    });
+
+    const oldQty = Number(existing?.tranferQty || 0);
+    const newQty = Number(-(item?.transferQty) || 0);
+
+    const finalQty = oldQty + newQty;
+
+
+    await tx.requirementPlanningItems.update({
+        where: { id: parseInt(item.requirementPlanningItemsId) },
+        data: {
+            tranferQty: finalQty
+        }
+    });
+}
+
 async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
 
     await tx.stock.create({
@@ -381,8 +402,8 @@ async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
             orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
-            orderdetailsId: item["orderdetailsId"] ? parseInt(item["orderdetailsId"]) : undefined,
-
+            orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+            requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
 
         }
     })
@@ -403,7 +424,8 @@ async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeI
             orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
-            orderdetailsId: item["orderdetailsId"] ? parseInt(item["orderdetailsId"]) : undefined,
+            orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+            requirementPlanningItemsId: item["id"] ? parseInt(item["id"]) : undefined,
 
         }
     })
@@ -420,7 +442,7 @@ async function UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, sto
     const oldQty = Number(existing?.tranferQty || 0);
     const newQty = Number(item?.transferQty || 0);
 
-    const finalQty = oldQty + newQty;   
+    const finalQty = oldQty + newQty;
 
     console.log("Old:", oldQty, "New:", newQty, "Final:", finalQty);
 
@@ -442,6 +464,7 @@ async function createStocktransferItems(
     storeId,
     branchId,
     orderItems,
+    fromOrderId
 ) {
     if (stockItems?.length) {
         await Promise.all(
@@ -453,18 +476,17 @@ async function createStocktransferItems(
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
                         stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
+                        orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+
                     },
                 });
 
-                await createYarnStock(
+                await createYarnStock(tx, poType, inOrOut, branchId, storeId, item,);
+                if(fromOrderId){
+                    await UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item);
+                }
 
-                    tx,
-                    poType,
-                    inOrOut,
-                    branchId,
-                    storeId,
-                    item,
-                );
+
             })
         );
     }
@@ -485,6 +507,7 @@ async function createStocktransferItems(
                         qty: item?.qty ? parseFloat(item?.qty) : undefined,
                         balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
                         requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+                        orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
 
 
                     },
@@ -531,7 +554,7 @@ async function create(req) {
 
             },
         });
-        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems)
+        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems , fromOrderId)
 
     })
 
