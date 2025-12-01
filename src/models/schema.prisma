@@ -4759,6 +4759,7 @@ model ExcessToleranceItems {
 model TermsAndConditionsNew {
   id                Int      @id @default(autoincrement())
   termsAndCondition String?  @db.LongText
+  name              String?
   active            Boolean? @default(false)
 }
 
