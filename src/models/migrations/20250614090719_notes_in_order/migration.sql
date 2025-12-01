@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE `order` ADD COLUMN `notes` LONGTEXT NULL,
-    ADD COLUMN `orderBy` VARCHAR(191) NULL,
-    ADD COLUMN `term` LONGTEXT NULL;

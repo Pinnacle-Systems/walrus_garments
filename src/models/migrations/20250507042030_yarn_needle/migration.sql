@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `yarnneedle` ADD COLUMN `active` BOOLEAN NULL DEFAULT true;
