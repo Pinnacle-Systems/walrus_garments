@@ -63,43 +63,41 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
                     type="number"
-                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "returnQty") } }}
+                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
                     onFocus={(e) => e.target.select()}
                     className="text-right rounded py-1 w-full px-1 table-data-input"
-                    value={(!item.qty) ? 0 : item.qty}
+                    value={item.qty}
                     disabled={readOnly}
                     onChange={(event) => {
                         if (!event.target.value) {
-                            handleInputChange(0, index, "returnQty");
+                            handleInputChange(0, index, "qty");
                             return
                         }
 
-                        const inputValue = event.target.value.replace(/^0+/, ''); // remove leading zeros
-                        const enteredQty = parseFloat(inputValue || 0);
+                        const enteredQty = parseFloat(event.target.value || 0);
                         const balanceQty = parseFloat(item?.alreadyInwardedQty || 0) - parseFloat(item?.alreadyReturnedQty || 0);
 
                         if (enteredQty > balanceQty) {
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Return Qty cannot be more than Balance Qty',
-                                showConfirmButton: false,
-                                timer: 2000
+                               
                             });
-                            handleInputChange(balanceQty.toString(), index, "qty"); // reset to max allowed
+                            // handleInputChange(balanceQty, index, "qty"); 
                         } else {
-                            handleInputChange(inputValue, index, "qty");
+                            handleInputChange(event.target.value, index, "qty");
                         }
 
                     }}
-                    onBlur={(e) => {
-                        if (!e.target.value) {
-                            handleInputChange(0.000, index, "qty");
-                            return
-                        }
-                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")
-                    }
+                    // onBlur={(e) => {
+                    //     if (!e.target.value) {
+                    //         handleInputChange(0.000, index, "qty");
+                    //         return
+                    //     }
+                    //     handleInputChange(e.target.value, index, "qty")
+                    // }
+                    // }
 
-                    }
                 />
                 <div className='text-center'>
                 </div>

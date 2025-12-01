@@ -75,10 +75,16 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                     index={index}
                     inwardLotDetails={item?.inwardLotDetails ? item?.inwardLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
-            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>{console.log(item, "item")}
+            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '
+                onContextMenu={(e) => {
+                    if (!readOnly) {
+                        handleRightClick(e, index, "shiftTimeHrs");
+                    }
+                }}
+            >
 
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 text-[11px] px-1.5  text-left p-0.5'> { id ? item?.poNo : findFromList(item.poId, poList?.data, "docId")}</td>
+                <td className='w-12 border border-gray-300 text-[11px] px-1.5  text-left p-0.5'> {id ? item?.poNo : findFromList(item.poId, poList?.data, "docId")}</td>
                 <td className='py-0.5 border border-gray-300 px-1.5 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300  px-1.5 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 px-1.5 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")} </td>
@@ -144,17 +150,13 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                     <input
                         readOnly
                         className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                        // onKeyDown={(e) => {
-                        //     if (e.key === "Enter") {
-                        //         e.preventDefault();
-                        //         addNewRow();
-                        //     }
-                        // }}
-                        onContextMenu={(e) => {
-                            if (!readOnly) {
-                                handleRightClick(e, index, "shiftTimeHrs");
-                            }
-                        }}
+                    // onKeyDown={(e) => {
+                    //     if (e.key === "Enter") {
+                    //         e.preventDefault();
+                    //         addNewRow();
+                    //     }
+                    // }}
+
                     />
                 </td>
 

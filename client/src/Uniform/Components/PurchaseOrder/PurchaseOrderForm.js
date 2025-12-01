@@ -42,8 +42,8 @@ import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
 
 
-const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew }) => {
-
+const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, setDocId, poItems, setPoItems, tempPoItems, setTempPoItems, onNew , taxTypeList , supplierList , supplierDetails  , yarnList , uomList , colorList , termsData , branchList , hsnData  }) => {
+ 
 
 
   const today = new Date()
@@ -94,8 +94,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   const { data: requirementPlanningItemsData, isLoading: isRequirementLoading, isFetching: isRequirementFetching, refetch: RequirementRefetch } = useGetRequirementPlanningFormItemsQuery({ params });
 
-  const { data: hsnData } =
-    useGetHsnMasterQuery({ params });
+
 
   const {
     data: singleData,
@@ -109,19 +108,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const [updateData] = useUpdatePoMutation();
 
 
-
-  const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
-  const { data: termsData } = useGetTermsandCondtionsQuery({ params: { ...params } });
-  const { data: branchList } = useGetBranchQuery({ params: { ...params } });
-
-  const { data: supplierDetails } =
-    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
-
-  const { data: yarnList } = useGetYarnMasterQuery({ params });
-
-  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-
-  const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, } });
 
 
 
@@ -170,9 +156,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
 
 
-
-  const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
-    useGetTaxTemplateQuery({ params: { ...params } });
 
   const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 

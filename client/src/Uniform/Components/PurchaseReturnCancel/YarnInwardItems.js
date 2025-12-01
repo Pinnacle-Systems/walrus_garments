@@ -52,6 +52,10 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
         newBlend[index][field] = value
         if (poItem) {
             newBlend[index]["poNo"] = poItem?.Po?.docId
+            newBlend[index]["orderId"] = poItem?.orderId
+            newBlend[index]["orderDetailsId"] = poItem?.orderDetailsId
+            newBlend[index]["requirementPlanningItemsId"] = poItem?.requirementPlanningItemsId
+
             newBlend[index]["yarnId"] = poItem?.yarnId
             newBlend[index]["colorId"] = poItem?.colorId
             newBlend[index]["gaugeId"] = poItem?.gaugeId

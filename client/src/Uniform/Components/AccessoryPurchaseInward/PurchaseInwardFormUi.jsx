@@ -115,7 +115,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     //   setReadOnly(false);
     // }
     setTransType(data?.poType ? data.poType : "Accessory");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "GeneralInward")
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDirectInwardReturnItems(data?.AccessoryInwardItems ? data.AccessoryInwardItems : []);
     if (data?.docId) {
@@ -154,7 +154,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     payTermId,
     branchId, id, userId,
     storeId,
-    directInwardReturnItems,
+    directInwardReturnItems : directInwardReturnItems?.filter(i => i.accessoryId),
     discountType,
     discountValue,
     dcNo,
@@ -166,7 +166,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     partyId
   }
 
-  console.log(data, "data")
+  console.log( directInwardReturnItems?.filter(i => i.accessoryId), "directInwardReturnItemsFilter")
 
 
 
@@ -424,7 +424,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc. Id" readOnly value={docId} />
+              <ReusableInput label="Accessory Purchase Inward Id" readOnly value={docId} />
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 

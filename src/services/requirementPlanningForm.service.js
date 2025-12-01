@@ -351,11 +351,8 @@ export async function getRequirementItems(req) {
             id: true,
             requirementPlanningFormId: true,
             colorId: true,
-            
-            // yarncategoryId: true,
             yarnId: true,
             count: true,
-            // yarnKneedleId: true,
             yarnType: true,
             processId: true,
             isProcess: true,
@@ -364,7 +361,7 @@ export async function getRequirementItems(req) {
             orderId: true,
             orderDetailsId: true,
             partyId: true,
-            tranferQty : true,
+            tranferQty: true,
             Yarn: {
                 select: {
                     name: true,
@@ -499,23 +496,25 @@ export async function getRequirementItems(req) {
                 });
             });
 
-          
-
-            const balanceQty = parseFloat(item?.requiredQty || 0) -  parseFloat(item?.tranferQty || 0)
-            let  requiredQty = item?.requiredQty 
-
-            {console.log({
-                poQty ,
-                // cancelQty ,
-                // shortCloseQty ,
-                requiredQty,
-            })}
 
 
-            
+            const balanceQty = parseFloat(item?.requiredQty || 0) - parseFloat(item?.tranferQty || 0)
+            let requiredQty = item?.requiredQty
+
+            {
+                console.log({
+                    poQty,
+                    // cancelQty ,
+                    // shortCloseQty ,
+                    requiredQty,
+                })
+            }
+
+
+
 
             // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
-            return (parseFloat(poQty) - parseFloat(cancelQty) ) < parseFloat(balanceQty || 0) ;
+            return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(balanceQty || 0);
 
         })
         ?.map(item => {
@@ -555,18 +554,11 @@ export async function getRequirementItems(req) {
                 allColors: `${combinedColors} - ${styleName}`,
                 alreadyPoqty: poQty,
                 alreadyCancelQty: cancelQty,
-                balanceQty: (parseFloat(item?.requiredQty || 0) -  parseFloat(item?.tranferQty || 0)) - (poQty - cancelQty) 
+                balanceQty: (parseFloat(item?.requiredQty || 0) - parseFloat(item?.tranferQty || 0)) - (poQty - cancelQty)
 
             };
         });
-    // if (poMaterial === "GreyYarn") {
-    //     data = data?.filter(i => i?.yarnType === "GreyYarn")
-    // }
-    // if (poMaterial === "DyedYarn") {
-    //     data = data?.filter(i => i?.yarnType === "DyedYarn")
 
-    // }
-    // console.log(data, "data")
 
     return { statusCode: 0, data, childRecord };
 }
@@ -579,128 +571,8 @@ export async function getAccessoryRequirementItems(req) {
     const childRecord = 0;
     let data = await prisma.accessoryRequirementPlanning.findMany({
 
-        //     id: true,
-        //     requirementPlanningFormId: true,
-        //     colorId: true,
-        //     // yarncategoryId: true,
-        //     yarnId: true,
-        //     count: true,
-        //     // yarnKneedleId: true,
-        //     yarnType: true,
-        //     processId: true,
-        //     isProcess: true,
-        //     lossPercentage: true,
-        //     requiredQty: true,
-        //     orderId: true,
-        //     orderDetailsId: true,
-        //     partyId: true,
-        //     Yarn: {
-        //         select: {
-        //             name: true,
-        //             countsId: true,
-        //             hsnId: true,
-        //             Hsn: {
-        //                 select: {
-        //                     tax: true
-        //                 }
-        //             }
-
-        //         }
-        //     },
-        //     Color: {
-        //         select: {
-        //             name: true
-        //         }
-        //     },
-        //     yarnCounts: {
-        //         select: {
-        //             name: true
-        //         }
-        //     },
-        //     order: {
-        //         select: {
-        //             docId: true
-        //         }
-        //     },
-        //     PoItems: {
-        //         select: {
-        //             id: true,
-        //             fabricId: true,
-        //             yarnId: true,
-        //             accessoryId: true,
-        //             accessoryGroupId: true,
-        //             accessoryItemId: true,
-        //             colorId: true,
-        //             uomId: true,
-        //             noOfBags: true,
-        //             weightPerBag: true,
-        //             percentage: true,
-        //             requiredQty: true,
-        //             qty: true,
-        //             price: true,
-        //             discountType: true,
-        //             discountValue: true,
-        //             sizeId: true,
-        //             YarnType: true,
-        //             yarncategoryId: true,
-        //             weight: true,
-        //             designId: true,
-        //             gaugeId: true,
-        //             loopLengthId: true,
-        //             gsmId: true,
-        //             poId: true,
-        //             KDia: true,
-        //             kDiaId: true,
-        //             FDia: true,
-        //             fDiaId: true,
-        //             yarnCounts: true,
-        //             count: true,
-        //             isPurchaseCancel: true,
-        //             RequirementPlanningItemsId: true,
-        //             taxPercent: true,
-        //             hsnId: true,
-        //             CancelItems: true,
-
-        //         }
-        //     },
-        //     Po: true,
-        //     OrderDetails: {
-
-        //         select: {
-        //             style: {
-        //                 select: {
-        //                     name: true
-        //                 }
-        //             },
-        //             orderYarnDetails: {
-        //                 select: {
-        //                     id: true,
-        //                     yarncategoryId: true,
-        //                     yarnId: true,
-        //                     count: true,
-        //                     yarnKneedleId: true,
-        //                     orderdetailsId: true,
-        //                     colorId: true,
-        //                     Yarn: {
-        //                         select: {
-        //                             name: true,
-        //                             hsnId: true,
-
-        //                         }
-        //                     },
-        //                     Color: {
-        //                         select: {
-        //                             name: true
-        //                         }
-        //                     }
-        //                 }
-        //             },
-
-        //         }
-        //     }
-
-        // },
         include: {
+            
             Accessory: {
                 select: {
                     aliasName: true,
@@ -724,7 +596,7 @@ export async function getAccessoryRequirementItems(req) {
             },
 
             RequirementPlanningForm: true,
-
+            AccessoryPoItems : true,
             order: {
                 select: {
                     docId: true,
@@ -771,32 +643,32 @@ export async function getAccessoryRequirementItems(req) {
 
 
     data = data
-        // ?.filter(item => {
-        //     const poQty = item?.PoItems?.reduce((t, p) => t + (p.qty || 0), 0) || 0;
+        ?.filter(item => {
+            const poQty = item?.AccessoryPoItems?.reduce((t, p) => t + (p.qty || 0), 0) || 0;
 
-        //     let cancelQty = 0;
-        //     let shortCloseQty = 0;
+            let cancelQty = 0;
+            let shortCloseQty = 0;
 
-        //     // Loop through all PO items
-        //     item?.PoItems?.forEach(p => {
-        //         p?.CancelItems?.forEach(c => {
-        //             const qty = c?.qty || 0;
-        //             if (c?.cancelType == "CANCEL") {
-        //                 cancelQty += qty;
-        //             } else if (c?.cancelType == "SHORTCLOSE") {
-        //                 shortCloseQty += qty;
-        //             }
-        //         });
-        //     });
+            // Loop through all PO items
+            item?.AccessoryPoItems?.forEach(p => {
+                p?.CancelItems?.forEach(c => {
+                    const qty = c?.qty || 0;
+                    if (c?.cancelType == "CANCEL") {
+                        cancelQty += qty;
+                    } else if (c?.cancelType == "SHORTCLOSE") {
+                        shortCloseQty += qty;
+                    }
+                });
+            });
 
-        //     // console.log(cancelQty, "cancelQty", poQty)
-        //     // console.log(shortCloseQty, "shortCloseQty")
-        //     console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
+            // console.log(cancelQty, "cancelQty", poQty)
+            // console.log(shortCloseQty, "shortCloseQty")
+            console.log(poQty - cancelQty + shortCloseQty, item?.requiredQty)
 
-        //     // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
-        //     return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(item?.requiredQty || 0);
+            // return (parseFloat(poQty) - parseFloat(cancelQty) + parseFloat(shortCloseQty)) < parseFloat(item?.requiredQty || 0);
+            return (parseFloat(poQty) - parseFloat(cancelQty)) < parseFloat(item?.requiredQty || 0);
 
-        // })
+        })
         ?.map(item => {
             const orderDetails = item?.order?.orderDetails || [];
 
@@ -811,34 +683,34 @@ export async function getAccessoryRequirementItems(req) {
 
             const styleName = yarns?.style?.name
 
-            // const poQty = item?.PoItems?.reduce((total, poItem) => {
-            //     return total + (poItem.qty || 0);
-            // }, 0) || 0;
+            const poQty = item?.AccessoryPoItems?.reduce((total, poItem) => {
+                return total + (poItem.qty || 0);
+            }, 0) || 0;
 
 
-            // let cancelQty = 0;
-            // let shortCloseQty = 0;
+            let cancelQty = 0;
+            let shortCloseQty = 0;
 
-            // item?.PoItems?.forEach(poItem => {
-            //     poItem?.CancelItems?.forEach(c => {
-            //         const qty = c?.qty || 0;
-            //         if (c?.cancelType === "CANCEL") {
-            //             cancelQty += qty;
-            //         } else if (c?.cancelType === "SHORTCLOSE") {
-            //             shortCloseQty += qty;
-            //         }
-            //     });
-            // });
+            item?.AccessoryPoItems?.forEach(poItem => {
+                poItem?.CancelItems?.forEach(c => {
+                    const qty = c?.qty || 0;
+                    if (c?.cancelType === "CANCEL") {
+                        cancelQty += qty;
+                    } else if (c?.cancelType === "SHORTCLOSE") {
+                        shortCloseQty += qty;
+                    }
+                });
+            });
 
-            // console.log(cancelQty, "cancelQty", poQty)
-            // console.log(shortCloseQty, "shortCloseQty")
+            console.log(cancelQty, "cancelQty", poQty)
+            console.log(shortCloseQty, "shortCloseQty")
 
             return {
                 ...item,
-                // allColors: `${combinedColors} - ${styleName}`,
-                // alreadyPoqty: poQty,
-                // alreadyCancelQty: cancelQty,
-                // balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty)
+                allColors: `${combinedColors} - ${styleName}`,
+                alreadyPoqty: poQty,
+                alreadyCancelQty: cancelQty,
+                balanceQty: (item?.requiredQty || 0) - (poQty - cancelQty)
 
             };
         });
@@ -1002,7 +874,8 @@ async function create(req) {
                     ? {
                         createMany: {
                             data: accessoryItems?.map((sub) => ({
-                                orderId: orderId ? parseInt(orderId) : undefined,
+                                orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
+                                orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
                                 accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
                                 accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
                                 accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
@@ -1143,59 +1016,6 @@ const update = async (id, body) => {
                 updatedById: parseInt(userId), notes, term, orderBy,
                 // orderDetailsId: parseInt(styleId),
                 jobNumber: jobNumber,
-                // RequirementYarnDetails: {
-
-                //     deleteMany: {
-                //         ...(incomingYarnIds?.length > 0 && {
-                //             id: { notIn: incomingYarnIds }
-                //         })
-                //     },
-                //     update: orderYarnDetails?.filter(item => item.id)?.map((yarn) => ({
-                //         where: { id: parseInt(yarn.id) },
-                //         data: {
-                //             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                //             percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                //             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                //             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                //             count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                //             // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                //             styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                //             isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
-                //             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
-                //             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                //             wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
-                //             yarnType: yarn?.yarnType ? yarn.yarnType : undefined,
-
-                //         },
-                //     })),
-
-                // },
-                // RequirementPlanningItems: {
-                //     deleteMany: {
-                //         ...(incomingRequirementItems?.length > 0 && {
-                //             id: { notIn: incomingRequirementItems }
-                //         })
-                //     },
-                //     update: requirementItems?.filter(item => item.id)?.map((yarn) => ({
-                //         where: { id: parseInt(yarn.id) },
-                //         data: {
-                //             colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                //             percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                //             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                //             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                //             count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                //             // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                //             styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                //             isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
-                //             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
-                //             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                //             wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
-                //             yarnType: yarn?.yarnType ? yarn.yarnType : undefined,
-
-                //         },
-                //     })),
-
-                // },
 
 
                 RequirementYarnDetails: {
@@ -1260,6 +1080,8 @@ const update = async (id, body) => {
                 AccessoryRequirementPlanning: {
                     deleteMany: {},
                     create: accessoryItems?.map((sub) => ({
+                        orderId: sub?.orderId ? parseInt(sub.orderId) : undefined,
+                        orderDetailsId: sub?.orderDetailsId ? parseInt(sub?.orderDetailsId) : undefined,
                         accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
                         accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
                         accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,

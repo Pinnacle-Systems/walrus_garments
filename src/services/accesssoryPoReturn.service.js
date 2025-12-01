@@ -65,7 +65,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId ,serachDocNo ,searchDate ,supplier} = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId, serachDocNo, searchDate, supplier } = req.query
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -148,6 +148,83 @@ async function get(req) {
     }
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     return { statusCode: 0, data, nextDocId: docId, totalCount };
+}
+
+
+async function getOne(id) {
+    console.log(id, "iddd")
+    const childRecord = 0;
+    const data = await prisma.AccessoryReturn.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            Store: {
+                select: {
+                    locationId: true,
+                    storeName: true,
+                }
+            },
+            Branch: {
+                select: {
+                    branchName: true
+                }
+            },
+            supplier: {
+                select: {
+                    name: true
+                }
+            },
+            PayTerm: true,
+            AccessoryReturnItems: {
+                select: {
+                    id: true,
+
+
+                    Accessory: true,
+                    accessoryId: true,
+                    accessoryGroupId: true,
+                    accessoryItemId: true,
+                    Color: true,
+                    colorId: true,
+                    Uom: true,
+                    uomId: true,
+                    Design: true,
+                    price: true,
+                    discountType: true,
+                    discountValue: true,
+                    taxPercent: true,
+                    Size: true,
+                    designId: true,
+                    sizeId: true,
+                    weightPerBag: true,
+                    noOfBags: true,
+                    noOfRolls: true,
+                    qty: true,
+                    accessoryPoItemsId: true,
+                    poNo: true,
+                    poQty: true,
+                    returnLotDetails: {
+                        select: {
+                            id: true,
+                            directReturnItemsId: true,
+                            lotNo: true,
+                            qty: true,
+                            noOfRolls: true,
+                            // Stock: true
+                        }
+                    },
+                }
+            }
+
+        },
+    })
+
+    console.log(data, 'data')
+    // data["DirectItems"] = await getDirectInwardReturnItemsLotBreakUp(data.id, data.poType)
+    data["AccessoryReturnItems"] = await getPurchaseReturnItemsAlreadyData(data.id, data.poInwardOrDirectInward, data?.poType, data?.AccessoryReturnItems, data?.storeId, data?.createdAt)
+    if (!data) return NoRecordFound("AccessoryReturnItems");
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 
@@ -470,81 +547,6 @@ export async function getPoItemsandDirectReturnItems(req) {
 
 
 
-async function getOne(id) {
-    console.log(id, "iddd")
-    const childRecord = 0;
-    const data = await prisma.AccessoryReturn.findUnique({
-        where: {
-            id: parseInt(id)
-        },
-        include: {
-            Store: {
-                select: {
-                    locationId: true,
-                    storeName: true,
-                }
-            },
-            Branch: {
-                select: {
-                    branchName: true
-                }
-            },
-            supplier: {
-                select: {
-                    name: true
-                }
-            },
-            PayTerm: true,
-            AccessoryReturnItems: {
-                select: {
-                    id: true,
-
-
-                    Accessory: true,
-                    accessoryId: true,
-                    accessoryGroupId: true,
-                    accessoryItemId: true,
-                    Color: true,
-                    colorId: true,
-                    Uom: true,
-                    uomId: true,
-                    Design: true,
-                    price: true,
-                    discountType: true,
-                    discountValue: true,
-                    taxPercent: true,
-                    Size: true,
-                    designId: true,
-                    sizeId: true,
-                    weightPerBag: true,
-                    noOfBags: true,
-                    noOfRolls: true,
-                    qty: true,
-                    accessoryPoItemsId: true,
-                    poNo: true,
-                    poQty: true,
-                    returnLotDetails: {
-                        select: {
-                            id: true,
-                            directReturnItemsId: true,
-                            lotNo: true,
-                            qty: true,
-                            noOfRolls: true,
-                            // Stock: true
-                        }
-                    },
-                }
-            }
-
-        },
-    })
-
-    console.log(data, 'data')
-    // data["DirectItems"] = await getDirectInwardReturnItemsLotBreakUp(data.id, data.poType)
-    data["AccessoryReturnItems"] = await getPurchaseReturnItemsAlreadyData(data.id, data.poInwardOrDirectInward, data?.poType, data?.AccessoryReturnItems, data?.storeId, data?.createdAt)
-    if (!data) return NoRecordFound("AccessoryReturnItems");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
-}
 
 async function getSearch(req) {
     const { companyId, active } = req.query
@@ -608,9 +610,9 @@ async function getSearch(req) {
 
 
 
-async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item) {
+async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, transactionId) {
 
-    await tx.stock.create({
+    await tx.accessoryStock.create({
         data: {
             itemType: poType,
             inOrOut: poInwardOrDirectInward,
@@ -622,38 +624,33 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
             colorId: item?.colorId ? parseInt(item.colorId) : undefined,
             uomId: item?.uomId ? parseInt(item.uomId) : undefined,
             storeId: parseInt(storeId),
-            qty: item.returnQty ? 0 - parseFloat(item.returnQty) : undefined,
-            price: parseFloat(item.price)
+            qty: item.qty ? 0 - parseFloat(item.qty) : undefined,
+            price: parseFloat(item.price),
+            transactionId: transactionId ? parseInt(transactionId) : undefined,
+            orderId: item.orderId ? parseInt(item.orderId) : undefined,
+            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+            accessoryRequirementPlanningId: item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : undefined,
+
         }
     })
 
 }
-async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directReturnOrPoReturnId) {
 
-    await tx.stock.create({
-        data: {
-            itemType: poType,
-            inOrOut: poInwardOrDirectInward,
-            transactionId: directReturnOrPoReturnId ? parseInt(directReturnOrPoReturnId) : undefined,
-            yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-            // weightPerBag: item["weightPerBag"] ? parseInt(item["weightPerBag"]) : undefined,
-            // discountType: item["discountType"] ? (item["discountType"]) : undefined,
-            noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : undefined,
-            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-            kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-            fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
-            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            qty: item["returnQty"] ? 0 - parseFloat(item["returnQty"]) : 0,
+async function UpdateAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, transactionId) {
 
-            // poNo: item["poNo"] ? item["poNo"] : undefined,
-            // noOfRolls: item["noOfRolls"] ? parseInt(item["noOfRolls"]) : 0,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            // poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-            // taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
-        }
+
+    const data = await prisma.accessoryStock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: poInwardOrDirectInward
+        },
+        data:
+        {
+            storeId: storeId ? parseInt(storeId) : undefined,
+            qty: item?.qty ? parseFloat(0 - item?.qty) : undefined,
+            price: item.price ? parseInt(item.price) : undefined,
+        },
     })
-
 }
 
 
@@ -665,13 +662,16 @@ async function createDirectInwardReturnItems(tx, accessoryReturnId, directReturn
 
 
     if ((poType == "Accessory") && (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn")) {
+
+
+
         promises = directReturnItems.map(async (item, index) => {
-
-
-
             let data = await tx.AccessoryReturnItems.create({
                 data: {
                     accessoryReturnId: parseInt(accessoryReturnId),
+                    orderId: item?.["orderId"] ? parseInt(item["orderId"]) : undefined,
+                    orderDetailsId: item?.["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+                    accessoryRequirementPlanningId: item?.["accessoryRequirementPlanningId"] ? parseInt(item?.["accessoryRequirementPlanningId"]) : undefined,
                     accessoryId: parseInt(item["accessoryId"]),
                     accessoryGroupId: parseInt(item["accessoryGroupId"]),
                     // accessoryItemId: parseInt(item["accessoryItemId"]),
@@ -688,69 +688,54 @@ async function createDirectInwardReturnItems(tx, accessoryReturnId, directReturn
                     alreadyReturnedQty: item['alreadyReturnedQty'] ? parseFloat(item['alreadyReturnedQty']) : 0,
                     balanceQty: item["balanceQty"] ? parseFloat(item["balanceQty"]) : 0,
                     cancelQty: item["cancelQty"] ? parseFloat(item["cancelQty"]) : 0,
-                    // Stock: {
-                    //     create: {
-                    //         itemType: poType,
-                    //         inOrOut: poInwardOrDirectInward,
-                    //         branchId: parseInt(branchId),
-                    //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
-                    //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
-                    //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
-                    //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                    //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-                    //         storeId: parseInt(storeId),
-                    //         qty: item.qty ? 0 - parseFloat(item.qty) : 0,
-                    //         price: parseFloat(item.price)
-                    //     }
-                    // }
+
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id)
         }
         )
 
     }
-    else {
-        promises = directReturnItems.map(async (item, index) => {
-            let data = await tx.AccessoryReturnItems.create({
-                data: {
-                    directReturnOrPoReturnId: parseInt(directReturnOrPoReturnId),
-                    accessoryId: parseInt(item["accessoryId"]),
-                    accessoryGroupId: parseInt(item["accessoryGroupId"]),
-                    // accessoryItemId: parseInt(item["accessoryItemId"]),
-                    sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                    uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                    colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                    qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-                    price: item["price"] ? parseFloat(item["price"]) : 0,
-                    taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
-                    poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                    poNo: item["poNo"] ? item["poNo"] : undefined,
-                    directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
-                    
-                    // Stock: {
-                    //     create: {
-                    //         itemType: poType,
-                    //         inOrOut: poInwardOrDirectInward,
-                    //         branchId: parseInt(branchId),
-                    //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
-                    //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
-                    //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
-                    //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                    //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-                    //         storeId: parseInt(storeId),
-                    //         qty: item.qty ? 0 - parseFloat(item.qty) : 0,
-                    //         price: parseFloat(item.price)
-                    //     }
-                    // }
-                }
-            })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
-        }
-        )
-    }
+    // else {
+    //     promises = directReturnItems.map(async (item, index) => {
+    //         let data = await tx.AccessoryReturnItems.create({
+    //             data: {
+    //                 accessoryReturnId: parseInt(accessoryReturnId),
+    //                 accessoryId: parseInt(item["accessoryId"]),
+    //                 accessoryGroupId: parseInt(item["accessoryGroupId"]),
+    //                 // accessoryItemId: parseInt(item["accessoryItemId"]),
+    //                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+    //                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+    //                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+    //                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
+    //                 price: item["price"] ? parseFloat(item["price"]) : 0,
+    //                 taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
+    //                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
+    //                 poNo: item["poNo"] ? item["poNo"] : undefined,
+    //                 directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
+
+    //                 // Stock: {
+    //                 //     create: {
+    //                 //         itemType: poType,
+    //                 //         inOrOut: poInwardOrDirectInward,
+    //                 //         branchId: parseInt(branchId),
+    //                 //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
+    //                 //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
+    //                 //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
+    //                 //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
+    //                 //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+    //                 //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+    //                 //         storeId: parseInt(storeId),
+    //                 //         qty: item.qty ? 0 - parseFloat(item.qty) : 0,
+    //                 //         price: parseFloat(item.price)
+    //                 //     }
+    //                 // }
+    //             }
+    //         })
+    //         await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+    //     }
+    //     )
+    // }
 
 
 
@@ -832,7 +817,7 @@ async function updateOrCreate(tx, item, accessoryReturnId, poType, poInwardOrDir
 
 
         if ((poType == "Accessory") && (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn")) {
-            return await tx.AccessoryReturnItems.update({
+            await tx.AccessoryReturnItems.update({
                 where: {
                     id: parseInt(item.id)
                 },
@@ -850,61 +835,36 @@ async function updateOrCreate(tx, item, accessoryReturnId, poType, poInwardOrDir
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     accessoryPoItemsId: item["accessoryPoItemsId"] ? parseInt(item["accessoryPoItemsId"]) : undefined,
-                    // Stock: {
-                    //     create: {
-                    //         itemType: poType,
-                    //         inOrOut: poInwardOrDirectInward,
-                    //         branchId: parseInt(branchId),
-                    //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
-                    //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
-                    //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
-                    //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                    //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-                    //         storeId: parseInt(storeId),
-                    //         qty: item.qty ? 0 - parseFloat(item.qty) : 0,
-                    //         price: parseFloat(item.price)
-                    //     }
-                    // }
+
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+
+
+            await UpdateAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item,item.id)
         }
         else {
-            return await tx.AccessoryReturnItems.create({
+            await tx.AccessoryReturnItems.create({
                 data: {
                     accessoryReturnId: parseInt(accessoryReturnId),
+                    orderId: item?.["orderId"] ? parseInt(item["orderId"]) : undefined,
+                    orderDetailsId: item?.["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+                    accessoryRequirementPlanningId: item?.["accessoryRequirementPlanningId"] ? parseInt(item?.["accessoryRequirementPlanningId"]) : undefined,
                     accessoryId: parseInt(item["accessoryId"]),
                     accessoryGroupId: parseInt(item["accessoryGroupId"]),
                     // accessoryItemId: parseInt(item["accessoryItemId"]),
                     sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                     uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                     colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                    qty: 0 - item["qty"] ? parseFloat(item["qty"]) : 0,
+                    qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     accessoryPoItemsId: item["accessoryPoItemsId"] ? parseInt(item["accessoryPoItemsId"]) : undefined,
-                    // Stock: {
-                    //     create: {
-                    //         itemType: poType,
-                    //         inOrOut: poInwardOrDirectInward,
-                    //         branchId: parseInt(branchId),
-                    //         sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    //         accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
-                    //         accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
-                    //         accessoryItemId: item?.accessoryItemId ? parseInt(item.accessoryItemId) : undefined,
-                    //         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                    //         uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-                    //         storeId: parseInt(storeId),
-                    //         qty: item.qty ? 0 - parseFloat(item.qty) : 0,
-                    //         price: parseFloat(item.price)
-                    //     }
-                    // }
+
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id)
         }
 
     } else {
@@ -943,7 +903,7 @@ async function updateOrCreate(tx, item, accessoryReturnId, poType, poInwardOrDir
                     // }
                 }
             })
-            await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+            await UpdateAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
         }
 
         else {

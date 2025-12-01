@@ -6,7 +6,7 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
 
-const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId, contextMenu, handleCloseContextMenu, handleRightClick, poInwardOrDirectInward  ,  colorList, uomList, accessoryList, sizeList}) => {
+const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId, contextMenu, handleCloseContextMenu, handleRightClick, poInwardOrDirectInward, colorList, uomList, accessoryList, sizeList }) => {
 
 
 
@@ -17,6 +17,10 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
         newBlend[index][field] = value;
 
         if (poItem) {
+            newBlend[index]["orderId"] = poItem?.orderId
+            newBlend[index]["orderDetailsId"] = poItem?.orderDetailsId
+            newBlend[index]["accessoryRequirementPlanningId"] = poItem?.accessoryRequirementPlanningId
+
             newBlend[index]["poNo"] = poItem?.AccessoryPo?.docId
             newBlend[index]["accessoryGroupId"] = poItem?.accessoryGroupId
             newBlend[index]["accessoryItemId"] = poItem?.accessoryItemId
@@ -41,7 +45,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
             newBlend[index]["allowedReturnRolls"] = poItem?.allowedReturnRolls
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
         }
-        if (field === "returnQty") {
+        if (field === "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
                 toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
                 return

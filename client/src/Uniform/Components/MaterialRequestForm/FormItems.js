@@ -3,45 +3,118 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, raiseIndentItems, readOnly, id, isMaterialRequset, setIsMaterialRequset, setSubGridForm, subGridForm,
-    requirementId, setRequirementId
+const FormItems = ({ setRaiseIndentItems, raiseIndentItems, readOnly, accessoryRaiseIndentItems, setAccessoryRaiseIndentItems, setIsMaterialRequset, setSubGridForm, isReport,
+    setIsReport, setRequirementId, materialTypeList
 }) => {
 
-    console.log(orderSizeDetails, "orderSizeDetails", id);
-    console.log(orderYarnDetails, "orderYarnDetails");
 
     console.log(raiseIndentItems, "raiseIndentItems");
+    console.log(accessoryRaiseIndentItems, "accessoryRaiseIndentItems")
+
+    useEffect(() => {
+        if (raiseIndentItems?.length >= 6) return
+        setAccessoryRaiseIndentItems(prev => {
+            let newArray = Array?.from({ length: 6 - prev?.length }, () => {
+                return {
+
+                    styleColor: ""
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setAccessoryRaiseIndentItems, raiseIndentItems])
+
+    useEffect(() => {
+        if (accessoryRaiseIndentItems?.length >= 6) return
+        setRaiseIndentItems(prev => {
+            console.log(prev, "prev")
+            let newArray = Array?.from({ length: 6 - prev?.length }, () => {
+                return {
+
+                    styleColor: ""
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [setRaiseIndentItems, accessoryRaiseIndentItems])
 
 
+    console.log(isReport, 'isReport', !isReport)
+
+    const [contextMenu, setContextMenu] = useState(null);
+    const [accessorycontextMenu, setAccessoryContextMenu] = useState(null);
 
 
+    // function deleteRow(index) {
+    //     if (readOnly) return toast.info("Turn on Edit Mode...!!!");
 
+    //     setRaiseIndentItems(prevRows => {
+    //         if (prevRows.length <= 1) return prevRows;
 
+    //         return prevRows.filter((_, i) => i !== index);
+    //     });
 
-
-
-
-
-
-
+    // }
 
     function deleteRow(index) {
         if (readOnly) return toast.info("Turn on Edit Mode...!!!");
 
         setRaiseIndentItems(prevRows => {
-            if (prevRows.length <= 1) return prevRows;
+            const emptyRow = {
+                itemId: "",
+                itemName: "",
+                color: "",
+                size: "",
+                qty: 0,
+                uom: "",
+                remarks: ""
+            };
 
-            return prevRows.filter((_, i) => i !== index);
+            return prevRows.map((row, i) =>
+                i === index ? { ...emptyRow } : row
+            );
+        });
+    }
+
+
+    function accessorydeleteRow(index) {
+        if (readOnly) return toast.info("Turn on Edit Mode...!!!");
+
+        setAccessoryRaiseIndentItems(prevRows => {
+            const emptyRow = {
+                itemId: "",
+                itemName: "",
+                color: "",
+                size: "",
+                qty: 0,
+                uom: "",
+                remarks: ""
+            };
+
+            return prevRows.map((row, i) =>
+                i === index ? { ...emptyRow } : row
+            );
         });
     }
 
 
 
-
-    const [contextMenu, setContextMenu] = useState(null);
     const handleRightClick = (event, rowIndex, type) => {
         event.preventDefault();
         setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+    const accessoryhandleRightClick = (event, rowIndex, type) => {
+        event.preventDefault();
+        setAccessoryContextMenu({
             mouseX: event.clientX,
             mouseY: event.clientY,
             rowId: rowIndex,
@@ -52,7 +125,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
     const handleCloseContextMenu = () => {
         setContextMenu(null);
     };
-
+    const handleCloseaccessoryContextMenu = () => {
+        setAccessoryContextMenu(null);
+    };
 
 
     const tableRef = useRef(null);
@@ -216,132 +291,325 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRaiseIndentItems, ra
 
                 </div>
             </div> */}
+
+
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[300px] overflow-y-auto">
 
+                {/* {materialTypeList?.length > 0 ?
+                    <div className="flex bg-gray-200 rounded-full    w-fit shadow-sm h-[30px]">
 
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="font-medium text-slate-700">Required Qty</h2>
+                        {materialTypeList?.some(i => i.value == "Yarn") && (
+
+                            <button
+                                onClick={() => setIsReport("Yarn")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport == "Yarn"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Yarn Required Details
+                            </button>
+                        )}
+                        {materialTypeList?.some(i => i.value == "Accessories") && (
+
+                            <button
+                                onClick={() => setIsReport("Accessories")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport == "Accessories"
+                                    ? "bg-blue-600 text-white shadow"
+                                    : "bg-transparent text-gray-700 hover:text-blue-600"
+                                    }`}
+                            >
+                                Trims & Accessories Required Details
+                            </button>
+                        )}
+
+
                     </div>
+                    :
+                    <div className="flex justify-between items-center  h-[30px]">
+                        {materialTypeList?.length <= 0 && (
+                            <>
+                                Request Items
+                            </>
+                        )}
+                    </div>
+                } */}
+                {materialTypeList?.length > 0 ? (
+                    <div className="flex gap-2  rounded-lg shadow-sm p-1 w-fit">
+                        {materialTypeList.some((i) => i.value === "Yarn") && (
+                            <button
+                                onClick={() => setIsReport("Yarn")}
+                                className={`
+          px-3 py-1.5 text-xs rounded-md transition-all duration-200  border border-gray-300
+          ${isReport === "Yarn"
+                                        ? "bg-blue-600 text-white shadow-sm"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+        `}
+                            >
+                                Yarn Required Details
+                            </button>
+                        )}
 
-                </div>
-                <div className="flex flex-row gap-40">
-                    <div className="w-[40%] flex flex-col ">
-                        <div className="justify-end items-center mt-4 mb-5">
-                            <table ref={tableRef} className="w-full border-collapse table-fixed">
-                                <thead className="bg-gray-200 text-gray-800">
-
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-9">S No</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name </td>
-                                        <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
-                                        <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
-                                        <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
-                                        <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Issued Qty (Kgs) </th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-                                    {(raiseIndentItems ? raiseIndentItems : []).map((indent, index) => {
-                                        return (
-                                            <React.Fragment key={index}>
-
-                                                <tr
-                                                    // className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
-                                                    onContextMenu={(e) => {
-                                                        if (!readOnly) {
-                                                            handleRightClick(e, index, "notes");
-                                                        }
-                                                    }}
-                                                    onClick={() => {
-                                                        setRequirementId(indent?.requirementPlanningFormId)
-                                                        setSubGridForm(true)
-                                                    }}
-                                                >
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.styleColor}
-                                                    </td>
+                        {materialTypeList.some((i) => i.value === "Accessories") && (
+                            <button
+                                onClick={() => setIsReport("Accessories")}
+                                className={`
+          px-3 py-1.5 text-xs rounded-md transition-all duration-200   border border-gray-300
+          ${isReport === "Accessories"
+                                        ? "bg-blue-600 text-white shadow-sm"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+        `}
+                            >
+                                Trims & Accessories Required Details
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex items-center h-[30px] text-md text-gray-500">
+                        Request Items
+                    </div>
+                )}
 
 
-                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        {indent?.Yarn?.name}
-                                                    </td>
-                                                    <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                                        {indent?.Color?.name}
-                                                    </td>
-                                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                        {((indent?.requiredQty)?.toFixed(3))}
-                                                    </td>
-                                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
-                                                        {((indent?.alreadyIssueQty)?.toFixed(3))}
-                                                    </td>
+                {
+                    (isReport == "Yarn" || !isReport) && (
+                        <>
+                            <div className="flex flex-row gap-40">
+                                <div className="w-[40%] flex flex-col ">
+                                    <div className="justify-end items-center mt-4 mb-5">
+                                        <table ref={tableRef} className="w-full border-collapse table-fixed">
+                                            <thead className="bg-gray-200 text-gray-800">
+
+                                                <tr>
+                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-9">S No</td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name </td>
+                                                    <th className="w-72 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Yarn</th>
+                                                    <th className="w-48 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
+                                                    <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty (Kgs) </th>
+                                                    <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Issued Qty (Kgs) </th>
+
                                                 </tr>
-                                            </React.Fragment>
-                                        );
+                                            </thead>
+                                            <tbody>
+
+                                                {(raiseIndentItems ? raiseIndentItems : []).map((indent, index) => {
+                                                    return (
+                                                        <React.Fragment key={index}>
+
+                                                            <tr
+                                                                // className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
+                                                                onContextMenu={(e) => {
+                                                                    if (!readOnly) {
+                                                                        handleRightClick(e, index, "notes");
+                                                                    }
+                                                                }}
+                                                                onClick={() => {
+                                                                    setRequirementId(indent?.requirementPlanningFormId)
+                                                                    setSubGridForm(true)
+                                                                }}
+                                                            >
+                                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
+
+                                                                <td className="border border-gray-300 px-2 py-1 text-left text-xs"
+                                                                >{indent?.styleColor}
+                                                                </td>
+
+
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Yarn?.name}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Color?.name}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                                    {((indent?.requiredQty)?.toFixed(3))}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                                    {((indent?.alreadyIssueQty)?.toFixed(3))}
+                                                                </td>
+                                                            </tr>
+                                                        </React.Fragment>
+                                                    );
 
 
 
 
 
-                                    })}
-                                    {/* <tr>
-                                        <td colSpan={2} className="border border-gray-300 px-2 py-1 text-center text-xs">Total Required Qty</td>
-                                        <td colSpan={1} className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">
+                                                })}
 
-                                            {raiseIndentItems?.reduce(
-                                                (sum, yarn) => sum + yarn.totalYarnQty,
-                                                0
-                                            )?.toFixed(3) || "0.000"}
-                                        </td>
-                                    </tr> */}
-                                    {contextMenu && (
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                top: `${contextMenu.mouseY - 50}px`,
-                                                left: `${contextMenu.mouseX + 20}px`,
+                                                {contextMenu && (
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: `${contextMenu.mouseY - 50}px`,
+                                                            left: `${contextMenu.mouseX + 1}px`,
 
-                                                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                                padding: "8px",
-                                                borderRadius: "4px",
-                                                zIndex: 1000,
-                                            }}
-                                            className="bg-gray-100"
-                                            onMouseLeave={handleCloseContextMenu}
-                                        >
-                                            <div className="flex flex-col gap-1">
-                                                <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        deleteRow(contextMenu.rowId);
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete{" "}
-                                                </button>
+                                                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                                            padding: "8px",
+                                                            borderRadius: "4px",
+                                                            zIndex: 1000,
+                                                        }}
+                                                        className="bg-gray-100"
+                                                        onMouseLeave={handleCloseContextMenu}
+                                                    >
+                                                        <div className="flex flex-col gap-1">
+                                                            <button
+                                                                className=" text-black text-[12px] text-left rounded px-1"
+                                                                onClick={() => {
+                                                                    deleteRow(contextMenu.rowId);
+                                                                    handleCloseContextMenu();
+                                                                }}
+                                                            >
+                                                                Delete{" "}
+                                                            </button>
 
-                                            </div>
-                                        </div>
-                                    )}
+                                                        </div>
+                                                    </div>
+                                                )}
 
-                                </tbody>
+                                            </tbody>
 
-                            </table>
-                        </div>
+                                        </table>
+                                    </div>
 
 
 
-                    </div>
+                                </div>
 
 
 
 
 
 
-                </div>
+                            </div>
+                        </>
+                    )
+                }
+
+                {
+                    isReport == "Accessories" && (
+                        <>
+                            <div className="flex flex-row gap-40">
+                                <div className="w-[40%] flex flex-col ">
+                                    <div className="justify-end items-center mt-4 mb-5">
+                                        <table ref={tableRef} className="w-full border-collapse table-fixed">
+                                            <thead className="bg-gray-200 text-gray-800">
+
+                                                <tr>
+                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-9">S No</td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name </td>
+                                                    <th className="w-96 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Accessory</th>
+                                                    <th className="w-32 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Color</th>
+                                                    <th className="w-24 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Size</th>
+                                                    <th className="w-24 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Uom</th>
+
+                                                    <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Required Qty  </th>
+                                                    <th className="w-32 px-4 py-1.5 border border-gray-300  font-medium text-xs">Issued Qty  </th>
+
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+
+                                                {(accessoryRaiseIndentItems ? accessoryRaiseIndentItems : []).map((indent, index) => {
+                                                    return (
+                                                        <React.Fragment key={index}>
+
+                                                            <tr
+                                                                // className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
+                                                                onContextMenu={(e) => {
+                                                                    if (!readOnly) {
+                                                                        accessoryhandleRightClick(e, index, "notes");
+                                                                    }
+                                                                }}
+                                                                onClick={() => {
+                                                                    setRequirementId(indent?.requirementPlanningFormId)
+                                                                    setSubGridForm(true)
+                                                                }}
+                                                            >
+                                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
+
+                                                                <td className="border border-gray-300 px-2 py-1 text-left text-xs"
+                                                                >{indent?.styleColor}
+                                                                </td>
+
+
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Accessory?.aliasName}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Color?.name}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Size?.name}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                    {indent?.Uom?.name}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                                    {((indent?.requiredQty)?.toFixed(3))}
+                                                                </td>
+                                                                <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2">
+                                                                    {((indent?.alreadyIssueQty)?.toFixed(3))}
+                                                                </td>
+                                                            </tr>
+                                                        </React.Fragment>
+                                                    );
+
+
+
+
+
+                                                })}
+
+                                                {accessorycontextMenu && (
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            top: `${accessorycontextMenu.mouseY - 50}px`,
+                                                            left: `${accessorycontextMenu.mouseX + 20}px`,
+
+                                                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                                            padding: "8px",
+                                                            borderRadius: "4px",
+                                                            zIndex: 1000,
+                                                        }}
+                                                        className="bg-gray-100"
+                                                        onMouseLeave={handleCloseaccessoryContextMenu}
+                                                    >
+                                                        <div className="flex flex-col gap-1">
+                                                            <button
+                                                                className=" text-black text-[12px] text-left rounded px-1"
+                                                                onClick={() => {
+                                                                    accessorydeleteRow(accessorycontextMenu.rowId);
+                                                                    handleCloseaccessoryContextMenu();
+                                                                }}
+                                                            >
+                                                                Delete{" "}
+                                                            </button>
+
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+
+
+
+                                </div>
+
+
+
+
+
+
+                            </div>
+                        </>
+                    )
+                }
+
             </div>
         </>
     )

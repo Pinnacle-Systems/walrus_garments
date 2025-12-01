@@ -27,7 +27,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
 
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetPoItemsQuery({
         params: {
-            branchId,  supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
+            branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
             isPurchaseInwardFilter: true, poInwardOrDirectInward
         }
     })
@@ -101,7 +101,23 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                                     />
                                                 </th>
                                                 <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
+
+                                                {poInwardOrDirectInward == "PurchaseInward" && (
+                                                    <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-36">
+
+                                                        <label>Order No</label>
+                                                        <input
+                                                            type="text"
+                                                            className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                                            placeholder="Search"
+                                                            value={poNo}
+                                                            onChange={(e) => {
+                                                                setPoNo(e.target.value);
+                                                            }}
+                                                        />
+
+                                                    </th>
+                                                )}
                                                 <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-36">
 
                                                     <label>Po.No</label>
@@ -174,8 +190,8 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                                     />
 
                                                 </th>
-                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">    
-                                                     <label>Price</label>
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
+                                                    <label>Price</label>
                                                     <input
                                                         type="text"
                                                         className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
@@ -185,7 +201,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                                             setDueDate(e.target.value);
                                                         }}
                                                     /> </th>
-                                           
+
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Po Qty</th>
                                                 <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Balance  Qty </th>
 
@@ -222,6 +238,11 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                                                         <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                             {index + 1}
                                                         </td>
+                                                        {poInwardOrDirectInward == "PurchaseInward" && (
+                                                            <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                                {item?.order?.docId}
+                                                            </td>
+                                                        )}
 
                                                         <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                             {item?.Po?.docId}

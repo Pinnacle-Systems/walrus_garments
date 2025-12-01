@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getYearShortCode, getYearShortCodeForFinYear } from "../utils/helper.js";
 import { getTableRecordWithId } from '../utils/helperQueries.js';
+import { Material } from '../routes/index.js';
 
 const prisma = new PrismaClient()
 
@@ -73,9 +74,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         });
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRTF/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRT/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRTF/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/MRT/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -146,6 +147,8 @@ async function get(req) {
 
                 }
             },
+            AccessoryRaiseIndentItems: true,
+            MaterialTypeList: true,
             Order: {
                 select: {
                     docId: true
@@ -208,6 +211,12 @@ async function getOne(id) {
                     id: true,
                     raiseIndentId: true,
                     requirementPlanningFormId: true,
+                    requirementPlanningItemsId: true,
+                    RequirementPlanningItems: {
+                        select: {
+                            requiredQty: true
+                        }
+                    },
                     orderDetailsId: true,
                     yarnId: true,
                     requiredQty: true,
@@ -238,6 +247,7 @@ async function getOne(id) {
                         select: {
                             id: true,
                             raiseIndentItemsId: true,
+                            requirementPlanningId: true,
                             yarnId: true,
                             Yarn: {
                                 select: {
@@ -260,6 +270,61 @@ async function getOne(id) {
 
                 }
             },
+            AccessoryRaiseIndentItems: {
+                select: {
+                    id: true,
+                    raiseIndentId: true,
+                    accessoryId: true,
+                    Accessory: {
+                        select: {
+                            aliasName: true
+                        }
+                    },
+                    accessoryCategoryId: true,
+                    AccessoryCategory: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    accessoryGroupId: true,
+                    accessoryGroup: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    styleColor: true,
+
+                    colorId: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    sizeId: true,
+                    Size: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    uomId: true,
+                    Uom: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    requiredQty: true,
+                    orderDetailsId: true,
+                    accessoryRequirementPlanningId: true,
+                    requirementPlanningFormId: true,
+                    AccessoryRequirementPlanning: {
+                        select: {
+                            requiredQty: true
+                        }
+                    }
+
+                }
+            },
+            MaterialTypeList: true,
 
 
         }
@@ -349,9 +414,65 @@ export async function getStockvalidationById(id) {
                             orderDetailsId: true,
                             requirementPlanningItemsId: true,
                         }
+                    },
+                    AccessoryStock: {
+                        select: {
+                            id: true,
+                            itemType: true,
+                            inOrOut: true,
+                            accessoryId: true,
+                            Accessory: {
+                                select: {
+                                    aliasName: true,
+                                }
+                            },
+                            accessoryGroupId: true,
+                            accessoryGroup: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            // accessoryCategoryId : true,
+                            // Acc
+                            // accessoryItem: {
+                            //     select: {
+                            //         name: true
+                            //     }
+                            // },
+                            accessoryItemId: true,
+                            colorId: true,
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            uomId: true,
+                            Uom: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            sizeId: true,
+                            Size: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            qty: true,
+                            price: true,
+                            storeId: true,
+                            branchId: true,
+                            active: true,
+                            orderId: true,
+                            orderDetailsId: true,
+                            accessoryRequirementPlanningId: true,
+                            category: true,
+                            transactionId: true,
+                        }
                     }
                 }
             },
+            MaterialTypeList: true,
             RaiseIndentItems: {
                 select: {
                     id: true,
@@ -411,6 +532,55 @@ export async function getStockvalidationById(id) {
 
 
             },
+            AccessoryRaiseIndentItems: {
+                select: {
+                    id: true,
+                    raiseIndentId: true,
+                    accessoryId: true,
+                    Accessory: {
+                        select: {
+                            aliasName: true,
+                        }
+                    },
+                    accessoryCategoryId: true,
+                    AccessoryCategory: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    accessoryGroup: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    accessoryGroupId: true,
+
+                    colorId: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    uomId: true,
+                    Uom: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    sizeId: true,
+                    Size: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    styleColor: true,
+                    requiredQty: true,
+                    accessoryRequirementPlanningId: true,
+                    orderDetailsId: true,
+
+                }
+            },
+            AccessoryMaterialIssueItems: true,
             MaterialIssue: {
                 select: {
                     id: true,
@@ -506,7 +676,7 @@ export async function getOrderItemsByIdNew(id, prevProcessId, packingCategory, p
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderId, requirementId, orderDetailsId, isMaterialRequset, raiseIndentItems } = req.body
+        phone, contactPersonName, address, validDate, orderId, requirementId, accessoryRaiseIndentItems, materialTypeList, raiseIndentItems } = req.body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -514,7 +684,7 @@ async function create(req) {
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
     const formIds = raiseIndentItems?.map(item => item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : null).filter(Boolean);
-
+    const accessoryFormIds = accessoryRaiseIndentItems?.map(item => item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : null).filter(Boolean);
     console.log(formIds, "formIds")
 
 
@@ -530,8 +700,7 @@ async function create(req) {
                 Branch: branchId ? { connect: { id: parseInt(branchId) } } : undefined,
                 createdBy: { connect: { id: parseInt(userId) } },
                 Order: { connect: { id: parseInt(orderId) } },
-                // OrderDetails: { connect: { id: parseInt(orderDetailsId) } },
-                // RequirementPlanningForm: { connect: { id: parseInt(requirementId) } },
+
 
 
                 RaiseIndentItems: raiseIndentItems?.length > 0
@@ -545,20 +714,37 @@ async function create(req) {
                             orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
                             requirementPlanningItemsId: item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : undefined,
 
-                            // orderId : sub
-                            // RaiseIndenetYarnItems: item?.raiseIndenetYarnItems?.length > 0
-                            //     ? {
-                            //         createMany: {
-                            //             data: item.raiseIndenetYarnItems.map((sub) => ({
-                            //                 yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
-                            //                 colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                            //                 count: sub?.count ? parseInt(sub.count) : undefined,
-                            //                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                            //                 percentage: sub?.percentage ? sub?.percentage : undefined,
-                            //             })),
-                            //         },
-                            //     }
-                            //     : undefined,
+                        })),
+                    }
+                    : undefined,
+                MaterialTypeList: materialTypeList?.length > 0
+                    ? {
+                        create: materialTypeList?.map((item) => ({
+
+                            name: item?.show ? item?.show : undefined,
+                            value: item?.value ? item?.value : undefined,
+                        })),
+                    }
+                    : undefined,
+
+                AccessoryRaiseIndentItems: accessoryRaiseIndentItems?.length > 0
+                    ? {
+                        create: accessoryRaiseIndentItems?.map((item) => ({
+                            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+                            requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
+                            accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
+                            accessoryCategoryId: item?.accessoryCategoryId ? parseInt(item.accessoryCategoryId) : undefined,
+                            accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
+
+                            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                            sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+                            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+
+                            styleColor: item?.styleColor ? item?.styleColor : undefined,
+                            requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+                            accessoryRequirementPlanningId: item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : undefined,
+
+
 
 
                         })),
@@ -566,13 +752,26 @@ async function create(req) {
                     : undefined,
 
 
+
             },
 
         });
 
 
+
+
         for (const id of formIds) {
             await tx.requirementPlanningItems.update({
+                where: {
+                    id: parseInt(id),
+                },
+                data: {
+                    isMaterialRequst: true,
+                },
+            });
+        }
+        for (const id of accessoryFormIds) {
+            await tx.AccessoryRequirementPlanning.update({
                 where: {
                     id: parseInt(id),
                 },
@@ -595,9 +794,7 @@ async function create(req) {
 
 const update = async (id, body) => {
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId, raiseIndentItems
-    } = body;
-    console.log(body, "body")
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, accessoryRaiseIndentItems, raiseIndentItems, materialTypeList } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -610,6 +807,11 @@ const update = async (id, body) => {
 
 
     const incomingIds = raiseIndentItems?.filter(i => i.id).map(i => parseInt(i.id));
+    const incomingAccesssoryIds = accessoryRaiseIndentItems?.filter(i => i.id).map(i => parseInt(i.id));
+    const incomingmaterialIssueTypeListIds = materialTypeList?.filter(i => i.id).map(i => parseInt(i.id));
+
+    console.log(incomingIds?.length, "incomingIds", raiseIndentItems)
+
 
     let data;
 
@@ -642,24 +844,62 @@ const update = async (id, body) => {
                         where: { id: parseInt(item.id) },
                         data: {
                             requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
-                            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderdetailsId) : undefined,
-
-                            RaiseIndenetYarnItems: {
-                                deleteMany: {},
-                                createMany: {
-                                    data: item?.RaiseIndenetYarnItems?.map((sub) => ({
-                                        yarnId: sub?.yarnId ? parseInt(sub.yarnId) : undefined,
-                                        colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                                        count: sub?.count ? parseInt(sub.count) : undefined,
-                                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                        percentage: sub?.percentage ? sub?.percentage : undefined,
-
-                                    })) || [],
-                                },
-                            },
+                            yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                            styleColor: item?.styleColor ? item?.styleColor : undefined,
+                            requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+                            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+                            requirementPlanningItemsId: item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : undefined,
 
 
+                        },
+                    })),
 
+
+                },
+
+                AccessoryRaiseIndentItems: {
+                    deleteMany: {
+                        ...(incomingAccesssoryIds.length > 0 && {
+                            id: { notIn: incomingAccesssoryIds }
+                        })
+                    },
+
+                    update: accessoryRaiseIndentItems?.filter(item => item.id).map((item) => ({
+                        where: { id: parseInt(item.id) },
+                        data: {
+                            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+                            accessoryRequirementPlanningId: item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : undefined,
+                            requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
+                            accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
+                            accessoryCategoryId: item?.accessoryCategoryId ? parseInt(item.accessoryCategoryId) : undefined,
+                            accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
+
+                            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                            sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+                            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+
+                            styleColor: item?.styleColor ? item?.styleColor : undefined,
+                            requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+
+
+                        },
+                    })),
+
+
+                },
+                MaterialTypeList: {
+                    deleteMany: {
+                        ...(incomingmaterialIssueTypeListIds.length > 0 && {
+                            id: { notIn: incomingmaterialIssueTypeListIds }
+                        })
+                    },
+
+                    update: incomingmaterialIssueTypeListIds?.filter(item => item.id).map((item) => ({
+                        where: { id: parseInt(item.id) },
+                        data: {
+                            name: item?.value ? item?.value : undefined,
+                            value: item?.value ? item?.value : undefined,
                         },
                     })),
 
@@ -672,17 +912,24 @@ const update = async (id, body) => {
 
     });
 
+
+
+
+
     return { statusCode: 0, data };
 };
 
 
 
 
-async function remove(id, raiseIndentItems) {
 
-    const formIds = raiseIndentItems?.map(item => item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : null).filter(Boolean);
 
-    console.log(formIds, "formIds", id)
+async function remove(id, body) {
+
+    const yarnIds = body?.RaiseIndenetYarnItems?.map(item => item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : null)
+    const accessoryIds = body?.RaiseIndenetAccessoryItems?.map(item => item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : null)
+    console.log(body, "formIds", id)
+
 
 
     let data;
@@ -698,13 +945,23 @@ async function remove(id, raiseIndentItems) {
 
 
 
-        for (const id of formIds) {
+        for (const id of yarnIds) {
             await tx.requirementPlanningItems.update({
                 where: {
                     id: parseInt(id),
                 },
                 data: {
-                    isMaterialRequst: true,
+                    isMaterialRequst: false,
+                },
+            });
+        }
+        for (const id of accessoryIds) {
+            await tx.AccessoryRequirementPlanning.update({
+                where: {
+                    id: parseInt(id),
+                },
+                data: {
+                    isMaterialRequst: false,
                 },
             });
         }

@@ -7,7 +7,7 @@ import { HiPencil, HiTrash } from "react-icons/hi"
 import { useGetAccessoryPoItemByIdQuery } from "../../../redux/uniformService/AccessoryPoServices"
 
 
-const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, handleRightClick, purchaseInwardId  ,poInwardOrDirectInward}) => {
+const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, handleRightClick, purchaseInwardId, poInwardOrDirectInward }) => {
 
 
 
@@ -58,7 +58,13 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
 
 
     return (
-        <tr key={item.poItemsId} className='table-row'>
+        <tr key={item.poItemsId} className='table-row'
+            onContextMenu={(e) => {
+                if (!readOnly) {
+                    handleRightClick(e, index, "shiftTimeHrs");
+                }
+            }}
+        >
             <td className='w-12 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
             <td className='w-12 border border-gray-300 text-[11px]'>{item?.poNo}</td>
             <td className='w-12 border border-gray-300 text-[11px]'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
@@ -71,7 +77,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.cancelQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyInwardedQty || 0}</td>
             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.alreadyReturnedQty || 0}</td>
-            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{item?.balanceQty || 0}</td>
+            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.balanceQty || 0).toFixed(3)}</td>
 
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
@@ -110,17 +116,8 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                 <input
                     readOnly
                     className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                    // onKeyDown={(e) => {
-                    //     if (e.key === "Enter") {
-                    //         e.preventDefault();
-                    //         addNewRow();
-                    //     }
-                    // }}
-                    onContextMenu={(e) => {
-                        if (!readOnly) {
-                            handleRightClick(e, index, "shiftTimeHrs");
-                        }
-                    }}
+
+
                 />
             </td>
 

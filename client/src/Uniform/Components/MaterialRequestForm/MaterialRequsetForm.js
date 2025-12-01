@@ -1,27 +1,29 @@
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownWithSearch, MultiSelectDropdown, MultiSelectDropdownNew, TextInput } from "../../../Inputs";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
 import FormItems from "./FormItems";
 import { useGetOrderByIdQuery, useGetOrderItemsByIdNewQuery, useGetOrderItemsByIdQuery } from "../../../redux/uniformService/OrderService";
 import { findFromList, getCommonParams } from "../../../Utils/helper";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
+
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import { Colors, packingCover } from "../../../Utils/DropdownData";
+import { Colors, packingCover, RequestMaterialType } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useAddRaiseIndentMutation, useDeleteRaiseIndentMutation, useGetRaiseIndentByIdQuery, useUpdateRaiseIndentMutation } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useDispatch } from "react-redux";
 import { Loader } from "../../../Basic/components";
+import { multiSelectOption } from "../../../Utils/contructObject";
 
 const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, orderAllDataRefetch,
 
     orderSizeDetails, setOrderSizeDetails, orderYarnDetails, setOrderYarnDetails, orderDetailsId, setOrderDetailsId, dueDate, setDuedate,
 
-    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId, setRequirementId,
+    partyId, setPartyId, docId, active, setShowOrderForm, date, sampleDetails, raiseIndentItems, setRaiseIndentItems, requirementId,
+
+    setRequirementId, setMaterialTypeList, materialTypeList, isReport, setIsReport, accessoryRaiseIndentItems, setAccessoryRaiseIndentItems,
 
     isMaterialRequset, setIsMaterialRequset, supplierList, setSubGridForm, subGridForm, onNew
 
@@ -96,14 +98,28 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
             //     })
             // );
             setRaiseIndentItems(data?.RaiseIndentItems ? data?.RaiseIndentItems : [])
+            setAccessoryRaiseIndentItems(data?.AccessoryRaiseIndentItems ? data?.AccessoryRaiseIndentItems : [])
             setDocId(data?.docId ? data?.docId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setRequirementId(data?.requirementId ? data?.requirementId : "")
             setIsMaterialRequset(data?.isMaterialRequset ? data?.isMaterialRequset : false)
+            setIsReport(data?.MaterialTypeList ? data?.MaterialTypeList[0]?.value : "")
             setPartyId(data?.partyId ? data?.partyId : "")
+            setMaterialTypeList(
+                data?.MaterialTypeList
+                    ? data?.MaterialTypeList?.map((item) => {
+                        return {
+                            value: item.value,
+                            label: item.value,
+                            id: item.id
+
+                        };
+                    })
+                    : []
+            );
             setRaiseIndentItems(
                 data?.RaiseIndentItems?.map(item => {
-                   const alreadyIssueQty =   item?.MaterialIssueItems?.reduce?.((sum, next) => (
+                    const alreadyIssueQty = item?.MaterialIssueItems?.reduce?.((sum, next) => (
                         sum + next.issueQty
                     ), 0)
                     return {
@@ -117,33 +133,115 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
         }
 
         else {
-
             setPartyId(data?.partyId ? data?.partyId : "")
+        }
+
+
+    }, [orderId, id,]);
+
+    console.log(materialTypeList, "materialTypeList")
 
 
 
 
-            setRaiseIndentItems(
-                data?.RequirementPlanningForm?.flatMap(item => {
+    const setRequestItems = (value) => {
+        console.log(value, "value")
+        console.log(!value?.some(i => i.value == "Yarn"), "value", !value?.some(i => i.value == "Accessories"))
+
+        if (id) {
+            if (value?.some(i => i.value == "Yarn")) {
+                setRaiseIndentItems(singleData?.data?.RaiseIndentItems || [])
+            }
+            if (value?.some(i => i.value == "Accessories")) {
+                setAccessoryRaiseIndentItems(singleData?.data?.AccessoryRaiseIndentItems || [])
+            }
+            if (!value?.some(i => i.value == "Yarn")) {
+                setRaiseIndentItems([])
+            }
+            if (!value?.some(i => i.value == "Accessories")) {
+                setAccessoryRaiseIndentItems([])
+            }
+        }
+        else {
+            if (value?.some(i => i.value == "Yarn")) {
+                const dataArray = singleOrderData?.data?.RequirementPlanningForm?.flatMap(item => {
                     const allColors = item?.OrderDetails?.orderYarnDetails
                         ?.map(yarn => yarn?.Color?.name)
                         .filter(Boolean)
                         .join(" - ");
 
+                    return item?.RequirementPlanningItems
+                        ?.filter(i => i.isMaterialRequst != true)
+                        ?.map(i => ({
+                            ...i,
+                            styleColor: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+                            requirementPlanningItemsId: i.id,
+                        })) || [];
+                }) || [];
+
+                let finalArray = [...dataArray];
+
+                if (finalArray.length < 6) {
+                    let padCount = 6 - finalArray.length;
+
+                    const padItems = Array.from({ length: padCount }, () => ({
+                        styleColor: "",
+                        requirementPlanningItemsId: null,
+                    }));
+
+                    finalArray = [...finalArray, ...padItems];
+                }
+
+                setRaiseIndentItems(finalArray);
+            }
+            if (value?.some(i => i.value == "Accessories")) {
+                let dataArray = singleOrderData?.data?.RequirementPlanningForm?.flatMap(item => {
+                    const allColors = item?.OrderDetails?.orderYarnDetails
+                        ?.map(yarn => yarn?.Color?.name)
+                        .filter(Boolean)
+                        .join(" - ");
+
+                    return item?.AccessoryRequirementPlanning
+                        ?.filter(i => i.isMaterialRequst != true)
+                        ?.map(i => ({
+                            ...i,
+                            styleColor: `${item?.OrderDetails?.style?.name} / ${allColors}`,
+                            accessoryRequirementPlanningId: i.id,
+                        })) || [];
+                }) || [];
+                console.log(...dataArray, "finalArray")
+
+                let finalArray = [...dataArray];
 
 
-                    return item?.RequirementPlanningItems?.filter(i => i.isMaterialRequst != true)?.map(i => ({
-                        ...i,
-                        styleColor: `${item?.OrderDetails?.style?.name} / ${allColors}`,
-                        requirementPlanningItemsId: i.id,
-                    })) || [];
-                })
-            );
+
+                if (finalArray.length < 6) {
+                    const padCount = 6 - finalArray.length;
+
+                    const padItems = Array.from({ length: padCount }, () => ({
+                        styleColor: "",
+                        requirementPlanningItemsId: null,
+                    }));
+
+                    finalArray = [...finalArray, ...padItems];
+                }
+
+                setAccessoryRaiseIndentItems(finalArray);
+
+
+            }
+            if (!value?.some(i => i.value == "Yarn")) {
+                setRaiseIndentItems([])
+            }
+            if (!value?.some(i => i.value == "Accessories")) {
+                setAccessoryRaiseIndentItems([])
+            }
 
         }
 
-    }, [orderId, id]);
 
+
+    }
 
 
 
@@ -182,7 +280,17 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
         branchId, userId, companyId, docId,
         active,
-        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, raiseIndentItems, isMaterialRequset, requirementId
+        partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialRequset, requirementId,
+        materialTypeList,
+        raiseIndentItems: raiseIndentItems?.filter(i => i.requirementPlanningItemsId),
+        accessoryRaiseIndentItems: accessoryRaiseIndentItems?.filter(i => i.accessoryRequirementPlanningId)
+    }
+
+    const validateData = (data) => {
+
+
+        return data?.orderId
+
     }
 
 
@@ -226,10 +334,45 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
     };
 
     const saveData = (nextProcess) => {
-        // if (!validateData(data)) {
-        //     toast.info("Please fill all required fields...!", { position: "top-center" })
-        //     return
-        // }
+        if (!id) {
+            if (!validateData(data)) {
+                // toast.info("Please fill all required fields...!", { position: "top-center" })
+                Swal.fire({
+                    title: "Please fill all required fields...!",
+                    icon: "warning",
+                });
+                return
+            }
+        }
+
+        if (materialTypeList?.length <= 0) {
+            Swal.fire({
+                title: "Request Material Type is required",
+                icon: "warning",
+            });
+            return
+
+        }
+        if (materialTypeList?.some(i => i.value == "Yarn")) {
+            if (raiseIndentItems?.filter(i => i.requirementPlanningItemsId)?.length <= 0) {
+                Swal.fire({
+                    title: "Please add at least one Yarn Request item.",
+                    icon: "warning",
+                });
+                return
+            }
+        }
+
+        if (materialTypeList?.some(i => i.value == "Accessories")) {
+            if (accessoryRaiseIndentItems?.filter(i => i.accessoryRequirementPlanningId)?.length <= 0) {
+                Swal.fire({
+                    title: "Please add at least one Accessory Request item.",
+                    icon: "warning",
+                });
+                return
+            }
+        }
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
@@ -271,15 +414,15 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                 </div>
 
                 <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-8 gap-2">
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Basic Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Doc.Id" readOnly value={docId} />
+                                <ReusableInput label="Material Request Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
                                 {/* <ReusableInput label="Delivery Date" value={dueDate}  setValue={setDuedate} type={"date"} required={true} readOnly={readOnly}  /> */}
                                 {/* <TextInput
@@ -296,32 +439,52 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-3">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Order Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
-
+                            <div className="grid grid-cols-3 gap-x-3">
 
                                 {id ?
                                     <TextInput
-
+                                        required={true}
                                         name={"Order No"}
                                         value={findFromList(singleData?.data?.orderId, orderData?.data, "docId")}
                                     />
                                     :
 
                                     <DropdownWithSearch
-                                        options={orderData?.data?.filter(i => i.isPlanning)}
+                                        options={orderData?.data}
                                         value={orderId}
-                                        setValue={setOrderId}
+                                        required={true}
+
+                                        setValue={(value) => {
+                                            setOrderId(value)
+                                            setRaiseIndentItems([])
+                                            setAccessoryRaiseIndentItems([])
+                                            setMaterialTypeList([])
+                                        }}
                                         disabled={readOnly}
                                         labelField={"docId"}
                                         label={"Order No"}
-                                    // ref
                                     />
 
                                 }
+                                <div className="col-span-2">
+                                    <MultiSelectDropdownNew
+                                        name="Request Material Type"
+                                        required={true}
+                                        disabled={readOnly || id ? !singleData?.data?.orderId : !orderId}
+                                        options={multiSelectOption(RequestMaterialType ? RequestMaterialType : [], "show", "value")}
+                                        selected={materialTypeList}
+                                        setSelected={(value) => {
+                                            setMaterialTypeList(value)
+                                            setIsReport(value[0]?.value)
+                                            setRequestItems(value)
+
+                                        }}
+                                    />
+                                </div>
 
 
 
@@ -329,7 +492,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                         </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 ">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-3 ">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
@@ -354,7 +517,6 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                                     value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
                                     // setValue={setPhone}
                                     disabled={true}
-                                // onChange={(e) => setPhone(e.target.value)}
 
                                 />
 
@@ -369,7 +531,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
 
                         <FormItems sampleDetails={sampleDetails} orderSizeDetails={orderSizeDetails} orderYarnDetails={orderYarnDetails} setOrderYarnDetails={setOrderYarnDetails}
                             setRaiseIndentItems={setRaiseIndentItems} raiseIndentItems={raiseIndentItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialRequset={isMaterialRequset} setIsMaterialRequset={setIsMaterialRequset}
-                            setRequirementId={setRequirementId} requirementId={requirementId} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
+                            setRequirementId={setRequirementId} requirementId={requirementId} setSubGridForm={setSubGridForm} subGridForm={subGridForm} materialTypeList={materialTypeList} isReport={isReport} setIsReport={setIsReport} accessoryRaiseIndentItems={accessoryRaiseIndentItems} setAccessoryRaiseIndentItems={setAccessoryRaiseIndentItems}
                         />
 
                     </fieldset>

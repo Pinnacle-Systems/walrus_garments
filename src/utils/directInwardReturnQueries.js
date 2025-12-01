@@ -315,14 +315,32 @@ async function getStockDataBySingleLot(directItem, poInwardOrDirectInward, retur
         const total = `
     SELECT sum(qty) as total FROM stock WHERE id < yarnId=${yarnId} and colorid=${colorId} 
     and uomid=${uomId} and storeId=${storeId}
-  and designid=${designId} and gaugeid=${gaugeId} and looplengthid=${loopLengthId} and gsmid=${gsmId} and kdiaid=${kDiaId} and
-   fdiaid=${fDiaId} 
-      `
+ `
         const beforeLotIdTotalStock = await prisma.$queryRawUnsafe(total);
 
 
         return parseFloat(beforeLotIdTotalStock[0]?.total)
     }
+
+}
+
+async function getStockQty(storeId, itemType, orderId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId, yarnId) {
+    let sql;
+
+    console.log("itemTypePOID", itemType == "Accessory", colorId, uomId, sizeId, storeId)
+    if (orderId) {
+
+        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+        where orderId = ${orderId} yarnId = ${yarnId} and colorId=${colorId} and uomId=${uomId} ;`
+    }
+    else {
+        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
+        where yarnId = ${yarnId} and colorId=${colorId} and uomId=${uomId} ;`
+    }
+    const stockData = await prisma.$queryRawUnsafe(sql);
+    return stockData[0]
+
+
 
 }
 
@@ -341,7 +359,14 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty);
         // let returnLotDetails = (await getStockData(directItem, poInwardOrDirectInward, directItem?.returnLotDetails, directItem?.fabricId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType,))
         console.log(directItem, "directItem")
-        let stockQty = parseFloat(await getStockDataBySingleLot(directItem, poInwardOrDirectInward, directItem?.returnLotDetails[0], directItem?.yarnId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType, directItem?.accessoryId, directItem?.accessoryGroupId, directItem?.accessoryItemId, createdAt, directItem?.sizeId))
+        let stockQty = parseFloat((await getStockQty(storeId, poType, directItem?.orderId, directItem?.colorId, directItem?.uomId, directItem?.designId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.gsmId, directItem?.sizeId, directItem?.fabricId, directItem?.kDiaId, directItem?.fDiaId, directItem?.yarnId))?.stockQty || 0)
+        if(directItem?.id){
+            stockQty = stockQty + parseFloat(directItem?.qty || 0)
+        }
+        else{
+            stockQty = stockQty
+        }
+
 
         let obj = {
             ...directItem,
@@ -782,10 +807,177 @@ and ProductionReceiptDetails.id < ${id}
 
 }
 
-async function getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+async function getAlreadyAcessoryInwardWithoutIdData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
 
 
-    console.log(poInwardOrDirectInward,"poInwardOrDirectInward", directItemsId,"directItemsId", poItemsId, "poItemsId", poType, "getAlreadyAcessoryInwardData")
+
+    const sql = `
+
+   select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from AccessoryInward left join AccessoryInwardItems
+ on AccessoryInward.id=AccessoryInwardItems.AccessoryInwardId
+ WHERE  AccessoryInward.poInwardOrDirectInward="${poInwardOrDirectInward}"  AND 
+   AccessoryInwardItems.ID < ${directItemsId} AND
+
+AccessoryInwardItems.poItemsId=${poItemsId}
+ AND AccessoryInward.poType="${poType}" `
+
+    const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
+
+    return alreadyInwardData[0]
+}
+
+async function getAlreadyAcessoryReturnData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+
+
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward", poItemsId, "poItemsId", poType, "poType")
+
+    const sql = `
+
+   select  sum(qty) as alreadyReturnedQty from AccessoryReturn left join AccessoryReturnItems
+ on AccessoryReturn.id=AccessoryReturnItems.accessoryReturnId
+
+ WHERE  AccessoryReturn.poInwardOrDirectInward="PurchaseReturn"  AND 
+ 
+ AccessoryReturnItems.accessoryPoItemsId="${poItemsId}" AND 
+
+ AccessoryReturn.poType="${poType}" `
+
+    const alreadyRetuenData = await prisma.$queryRawUnsafe(sql);
+
+    console.log(alreadyRetuenData, "alreadyRetuenData")
+
+    return alreadyRetuenData[0]
+}
+
+async function getAlreadyAcessoryCancelData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+
+
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward", poItemsId, "poItemsId", poType, "poType")
+
+    const sql = `
+
+   select  sum(qty) as alreadyCanceledQty from AccesssoryPurchaseCancel left join AccessoryCancelItems
+ on AccesssoryPurchaseCancel.id=AccessoryCancelItems.accesssoryPurchaseCancelId
+
+ WHERE  AccesssoryPurchaseCancel.poInwardOrDirectInward="PurchaseCancel"  AND 
+ 
+ AccessoryCancelItems.poItemsId="${poItemsId}" AND 
+
+ AccesssoryPurchaseCancel.poType="${poType}" `
+
+    const alreadyCancelData = await prisma.$queryRawUnsafe(sql);
+
+    console.log(alreadyCancelData, "alreadyCancelData")
+
+    return alreadyCancelData[0]
+}
+
+async function getAlreadyAcessoryInwardWithIdData(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+
+
+
+    const sql = `
+
+   select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from AccessoryInward left join AccessoryInwardItems
+ on AccessoryInward.id=AccessoryInwardItems.AccessoryInwardId
+ WHERE  AccessoryInward.poInwardOrDirectInward="${poInwardOrDirectInward}"  AND 
+
+AccessoryInwardItems.poItemsId=${poItemsId}
+ AND AccessoryInward.poType="${poType}" `
+
+    const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
+
+    return alreadyInwardData[0]
+}
+export async function getDirectInwardAccessoryReturnItemsAlreadyData(directInwardOrReturnId, poInwardOrDirectInward, poType, AccessoryInwardItems) {
+
+    let AccessoryInwardItemsData = [];
+
+    for (let i = 0; i < AccessoryInwardItems?.length; i++) {
+
+        let directItem = AccessoryInwardItems[i]
+
+        // let obj = {
+        //     ...directItem,
+
+        //     // alreadyInwardedRolls: (await getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedRolls,
+        //     alreadyInwardedQty: (await getAlreadyAcessoryInwardWithoutIdData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
+        //     alreadyInwardedWithThisIdQty: (await getAlreadyAcessoryInwardWithIdData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
+        //     alreadyReturnedQty: (await getAlreadyAcessoryReturnData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyReturnedQty,
+        //     balanceQty : parseFloat(directItem?.poqQty) +  parseFloat(alreadyReturnedQty) - parseFloat(alreadyInwardedQty)
+        // }
+
+
+        const alreadyInwardedQty =
+            (await getAlreadyAcessoryInwardWithoutIdData(
+                poInwardOrDirectInward,
+                directItem?.id,
+                directItem?.poItemsId,
+                poType
+            ))?.alreadyInwardedQty || 0;
+
+        const alreadyInwardedWithThisIdQty =
+            (await getAlreadyAcessoryInwardWithIdData(
+                poInwardOrDirectInward,
+                directItem?.id,
+                directItem?.poItemsId,
+                poType
+            ))?.alreadyInwardedQty || 0;
+
+        const alreadyReturnedQty =
+            (await getAlreadyAcessoryReturnData(
+                poInwardOrDirectInward,
+                directItem?.id,
+                directItem?.poItemsId,
+                poType
+            ))?.alreadyReturnedQty || 0;
+
+        const cancelQty =
+            (await getAlreadyAcessoryCancelData(
+                poInwardOrDirectInward,
+                directItem?.id,
+                directItem?.poItemsId,
+                poType
+            ))?.alreadyCanceledQty || 0;
+
+        const obj = {
+            ...directItem,
+            alreadyInwardedQty,
+            alreadyInwardedWithThisIdQty,
+            alreadyReturnedQty,
+            cancelQty,
+            // balanceQty:
+            //     parseFloat(directItem?.qty) +
+            //     (parseFloat(alreadyInwardedWithThisIdQty) -
+            //         parseFloat(alreadyReturnedQty)) - parseFloat(cancelQty)
+            balanceQty: (parseFloat(directItem?.poQty) - parseFloat(cancelQty)) - (parseFloat(alreadyInwardedWithThisIdQty) - parseFloat(alreadyReturnedQty) - parseFloat(directItem?.qty))
+
+        };
+
+        console.log({
+            directItem,
+            cancelQty,
+            alreadyInwardedQty,
+            alreadyReturnedQty,
+            alreadyInwardedWithThisIdQty,
+        }, "alreadyInwardedQty")
+
+        AccessoryInwardItemsData.push(obj)
+
+    }
+
+    return AccessoryInwardItemsData
+}
+
+
+
+
+
+
+async function getCurrectBalanceQty(poInwardOrDirectInward, directItemsId, poItemsId, poType) {
+
+
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward", directItemsId, "directItemsId", poItemsId, "poItemsId", poType, "getAlreadyAcessoryInwardData")
     const sql = `
    select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from AccessoryInward left join AccessoryInwardItems
  on AccessoryInward.id=AccessoryInwardItems.AccessoryInwardId
@@ -795,26 +987,5 @@ async function getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItemsI
     const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
 
     return alreadyInwardData[0]
-}
-
-export async function getDirectInwardAccessoryReturnItemsAlreadyData(directInwardOrReturnId, poInwardOrDirectInward, poType, AccessoryInwardItems) {
-    let AccessoryInwardItemsData = [];
-    for (let i = 0; i < AccessoryInwardItems?.length; i++) {
-
-        let directItem = AccessoryInwardItems[i]
-        let obj = {
-            ...directItem, alreadyInwardedQty: (await getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
-            alreadyInwardedRolls: (await getAlreadyAcessoryInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedRolls
-        }
-
-
-        AccessoryInwardItemsData.push(obj)
-
-    }
-
-
-    return AccessoryInwardItemsData
-
-
 }
 

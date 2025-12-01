@@ -74,7 +74,6 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
   const { branchId, userId, finYearId } = getCommonParams();
   const params = { branchId, userId, finYearId, poMaterial: poMaterial };
 
-  const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
   const [contextMenu, setContextMenu] = useState(null);
 
   const {
@@ -155,7 +154,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
     // setReadOnly(true)
 
 
-    setPoType(data?.poType ? data?.poType : "");
+    setPoType(data?.poType ? data?.poType : "Order Purchase");
     setDate(data?.createdAt
       ? moment.utc(data.createdAt).format("YYYY-MM-DD")
       : moment.utc(new Date()).format("YYYY-MM-DD")

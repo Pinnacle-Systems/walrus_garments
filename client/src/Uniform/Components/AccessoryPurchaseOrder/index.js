@@ -92,58 +92,28 @@ export default function Form() {
   const [removeData] = useDeleteAccessoryPoMutation();
 
 
-  const allSuppliers = supplierList ? supplierList?.data : []
-  console.log(allSuppliers, "allSuppliers")
-  function filterSupplier() {
-    let finalSupplier = []
-    if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
-      finalSupplier = allSuppliers.filter(s => s.isGy)
-    } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
-      finalSupplier = allSuppliers.filter(s => s.isDy)
-    } else {
-      finalSupplier = allSuppliers.filter(s => s.isAcc)
-    }
-    return finalSupplier
-  }
-  const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
-  console.log(clientDetail, "clientDetail")
+  // const allSuppliers = supplierList ? supplierList?.data : []
+  // console.log(allSuppliers, "allSuppliers")
+  // function filterSupplier() {
+  //   let finalSupplier = []
+  //   if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
+  //     finalSupplier = allSuppliers.filter(s => s.isGy)
+  //   } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
+  //     finalSupplier = allSuppliers.filter(s => s.isDy)
+  //   } else {
+  //     finalSupplier = allSuppliers.filter(s => s.isAcc)
+  //   }
+  //   return finalSupplier
+  // }
+  // const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
+  // console.log(clientDetail, "clientDetail")
 
-  let supplierListBasedOnSupply = filterSupplier()
-  transType.toLowerCase().includes("greyyarn".toLowerCase())
-  console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
-  console.log(supplierId, "supplierId")
-  const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+  // let supplierListBasedOnSupply = filterSupplier()
+  // transType.toLowerCase().includes("greyyarn".toLowerCase())
+  // console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
+  // console.log(supplierId, "supplierId")
+  // const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
 
-  const columns = [
-    {
-      header: 'S.No',
-      accessor: (item, index) => parseInt(index) + 1,
-      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
-    },
-
-    {
-      header: 'Inward No',
-      accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-[40px] text-left  py-1'
-    },
-    {
-      header: 'TransType',
-      accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-[40px]  text-left  py-1 '
-    },
-    {
-      header: 'Inward Date',
-      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-[100px]  text-left  py-1  '
-    },
-    {
-      header: 'Supplier',
-      accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
-      className: 'text-gray-800 uppercase w-[500px] text-left '
-    },
-
-
-  ];
 
 
 
@@ -219,7 +189,7 @@ export default function Form() {
     setDocId("New")
     setDueDate("")
     setPoMaterial("Accessory")
-    setPoType("General Purchase")
+    setPoType("Order Purchase")
     setSupplierId("")
     setDiscountType("")
     setDiscountValue(0)
@@ -227,7 +197,7 @@ export default function Form() {
     setRemarks("")
     setTaxTemplateId("")
     setPayTermId("")
-    setPurchaseType('General Purchase')
+    setPurchaseType('Order Purchase')
     setDeliveryType("")
     setDeliveryToId("")
     setShowExtraCharge(false)
@@ -282,7 +252,6 @@ export default function Form() {
           <div className="bg-white rounded-xl shadow-sm">
 
             <AccessoryPurchaseOrderFormReport
-              columns={columns}
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}

@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import moment from "moment";
 import { useDeleteAccessoryStockTransferMutation, useGetAccessoryStockTransferQuery } from "../../../redux/uniformService/AcessoryStockTransferService";
+import AccessoryStockTransferReport from "./stockTransferReport";
 
 
 
@@ -39,19 +40,13 @@ const StockTransfer = () => {
     const [tempStockItems, setTempStockItems] = useState([])
 
 
-    const { branchId, userId,  finYearId } = getCommonParams()
+    const { branchId, userId, finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
-    const { data: allData, isFetching, isLoading } = useGetAccessoryStockTransferQuery({
-        params: {
-            branchId,
-
-        }
-    });
 
     const [removeData] = useDeleteAccessoryStockTransferMutation()
 
@@ -120,12 +115,12 @@ const StockTransfer = () => {
         <>
             {form ? (
                 <StockTransferForm
-                    id={id} setId={setId}  setForm={setForm}
+                    id={id} setId={setId} setForm={setForm}
                     orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
                     toCustomerId={toCustomerId} setToCustomerId={setToCustomerId} setRequirementId={setRequirementId} requirementId={requirementId}
                     showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                     docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
+                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
                     date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
                     setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
                     onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId}
@@ -139,20 +134,20 @@ const StockTransfer = () => {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true); setTransferType("") ;OnNew() }}
+                            onClick={() => { setForm(true); setTransferType(""); OnNew() }}
                         >
                             <FaPlus /> Create New
                         </button>
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-                  
-                        {/* <StockTransferReport
+
+                        <AccessoryStockTransferReport
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             itemsPerPage={10}
-                        /> */}
+                        />
                     </div>
                 </div>
             )}

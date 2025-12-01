@@ -22,8 +22,6 @@ router.get('/stockValidation/:id', getStockvalidationById);
 
 router.get('/getOrderItemsNew/:id/:prevProcessId/:packingCategory/:packingType', getOrderItemsByIdNew);
 
-
-// router.put('/:id', update);
 router.put('/:id', multerUploadForGrid.array('images'), update);
 
 router.delete('/:id', remove);

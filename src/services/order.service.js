@@ -823,8 +823,8 @@ export async function getStockvalidationById(id) {
                             transType: true,
                             partyId: true,
                             requiredQty: true,
-                            tranferQty : true,
-                            isMaterialRequst : true,
+                            tranferQty: true,
+                            isMaterialRequst: true,
                             yarnType: true,
                             Yarn: {
                                 select: {
@@ -850,6 +850,73 @@ export async function getStockvalidationById(id) {
                             materialIssueItems: true
 
 
+                        }
+                    },
+                    AccessoryRequirementPlanning: {
+
+                        select: {
+                            id : true,
+                            requiredQty : true,
+                            AccessoryPoItems: true,
+                            Accessory: {
+                                select: {
+                                    aliasName: true,
+
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Size: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Uom: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            AccessoryMaterialIssueItems : true,
+                            RequirementPlanningForm: true,
+                            AccessoryPoItems: true,
+                            order: {
+                                select: {
+                                    docId: true,
+                                    orderDetails: {
+                                        select: {
+                                            style: {
+                                                select: {
+                                                    name: true
+                                                }
+                                            },
+                                        
+
+                                        }
+                                    }
+                                }
+
+                            },
+                            orderId : true ,
+                            orderDetailsId : true ,
+                            accessoryId : true ,
+                            colorId : true ,
+                            sizeId : true ,
+                            uomId : true ,
+                            accessoryCategoryId : true ,
+                            accessoryGroupId : true ,
+                            isMaterialRequst : true ,
+                            OrderDetails : {
+                                select : {
+                                    style : {
+                                        select : {
+                                            name : true
+                                        }
+                                    }
+                                }
+                            }
                         }
                     },
                     requirementSizeDetails: true,
@@ -905,7 +972,63 @@ export async function getStockvalidationById(id) {
                     branchId: true,
                     active: true,
                     orderId: true,
-                    orderDetailsId : true,
+                    orderDetailsId: true,
+                }
+            },
+
+            AccessoryStock: {
+                select: {
+                    id: true,
+                    itemType: true,
+                    inOrOut: true,
+                    accessoryId: true,
+                    Accessory: {
+                        select: {
+                            aliasName: true,
+                        }
+                    },
+                    accessoryGroupId: true,
+                    accessoryGroup: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    // accessoryCategoryId : true,
+                    // Acc
+                    // accessoryItem: {
+                    //     select: {
+                    //         name: true
+                    //     }
+                    // },
+                    accessoryItemId: true,
+                    colorId: true,
+                    Color: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    uomId: true,
+                    Uom: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    sizeId: true,
+                    Size: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    qty: true,
+                    price: true,
+                    storeId: true,
+                    branchId: true,
+                    active: true,
+                    orderId: true,
+                    orderDetailsId: true,
+                    accessoryRequirementPlanningId: true,
+                    category: true,
+                    transactionId: true,
                 }
             },
             Po: {
@@ -988,14 +1111,15 @@ export async function getStockvalidationById(id) {
                             id: true,
                             raiseIndentId: true,
                             requirementPlanningFormId: true,
-                            orderDetailsId: true ,
-                            requirementPlanningItemsId : true
+                            orderDetailsId: true,
+                            requirementPlanningItemsId: true
                         }
                     },
 
                 }
             },
-            MaterialIssueItems: true
+            MaterialIssueItems: true,
+            AccessoryMaterialIssueItems: true
 
 
 
@@ -1125,7 +1249,7 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                             requiredQty: true,
                             poType: true,
                             partyId: true,
-                            isMaterialRequst : true,
+                            isMaterialRequst: true,
                             Party: {
                                 select: {
                                     name: true
@@ -1163,7 +1287,54 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
                             materialIssueItems: true
                         }
                     },
+                    AccessoryRequirementPlanning: {
+                        select: {
+                            id: true,
+                            RequirementPlanningId: true,
+                            accessoryId: true,
+                            accessoryCategoryId: true,
+                            accessoryGroupId: true,
+                            requiredQty: true,
+                            colorId: true,
+                            sizeId: true,
+                            uomId: true,
+                            orderId: true,
+                            isMaterialRequst: true,
+                            orderDetailsId: true,
+                            poQty: true,
+                            Accessory: {
+                                select: {
+                                    aliasName: true
+                                }
+                            },
+                            AccessoryCategory: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            AccessoryGroup: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Size: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            Uom: {
+                                select: {
+                                    name: true
+                                }
+                            }
 
+                        }
+                    },
                     id: true,
                     docId: true,
                     orderDetailsId: true,
@@ -1395,6 +1566,7 @@ async function create(req) {
 
 
 const update = async (id, body) => {
+    
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate, notes, term, orderBy,
     } = body;
 
@@ -1402,7 +1574,6 @@ const update = async (id, body) => {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
-    console.log(orderDetails, "orderDetails")
     const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
     if (!dataFound) return { statusCode: 404, message: "No record found for order" };
 

@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { STOCK_API } from "../../Api";
+import { ACCESSORY_STOCK_API, STOCK_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -63,7 +63,7 @@ const stockApi = createApi({
       query: ({ params }) => {
         const { productId, fromOrderId, salePrice, ...rest } = params;
 
-        const id = productId || salePrice || fromOrderId; 
+        const id = productId || salePrice || fromOrderId;
         return {
           url: `${STOCK_API}/${id}`, // path param
           method: "GET",
@@ -104,6 +104,8 @@ const stockApi = createApi({
       }),
       invalidatesTags: ["Stock"],
     }),
+  
+
   }),
 });
 
@@ -113,7 +115,8 @@ export const {
   useAddStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,
-  useGetPcsStockQuery
+  useGetPcsStockQuery,
+
 } = stockApi;
 
 export default stockApi;

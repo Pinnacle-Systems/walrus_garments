@@ -2,7 +2,6 @@
 import validator from "validator";
 import React, { useEffect, useRef, useState, forwardRef } from "react";
 import { MultiSelect } from "react-multi-select-component";
-import Select from "react-dropdown-select";
 import { findFromList } from "../Utils/helper";
 import "./index.css";
 import { FormControl, MenuItem, TextField } from "@mui/material";
@@ -14,7 +13,7 @@ import { useGetPartyQuery } from "../redux/services/PartyMasterService";
 import { useModal } from "../Basic/pages/home/context/ModalContext";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
-
+import Select from "react-select";
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
   const inputSelectionStart = event.target.selectionStart;
@@ -97,44 +96,61 @@ export const MultiSelectDropdown = ({
   tabIndex = null,
   className = "",
   required,
+  disabled
 }) => {
   console.log(options, "options");
   console.log(selected, "selected");
-
   const customSelectStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      minHeight: '22px',
-      height: '22px',
-      fontSize: '12px',
-      borderRadius: '0.5rem', // rounded-lg
-      outline: 'none',
-      transition: 'all 150ms', // transition-all duration-150
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
-      padding: '0.25rem', // p-1
-      borderColor: state.isFocused ? '' : '#cbd5e1', // focus:border-blue-500
-      boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : undefined, // focus:ring-1 focus:ring-blue-500
-      '&:hover': {
-        borderColor: '#94a3b8'
-      }
+    control: (base) => ({
+      ...base,
+      minHeight: "16px",
+      height: "16px",
+      padding: "13px 4px",
+      fontSize: "12px",
+      borderRadius: "8px",
+      fontFamily: "'Segoe UI'",
     }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '22px',
-      padding: '0 8px'
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      marginTop: "-8px",
+      fontFamily: "'Segoe UI'",
     }),
-    input: (provided) => ({
-      ...provided,
-      margin: '0px',
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      fontFamily: "'Segoe UI'",
     }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '22px',
+    singleValue: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
     }),
-    option: (provided) => ({
-      ...provided,
-      fontSize: '14px',
-      padding: '8px 12px'
+    placeholder: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+    }),
+    menu: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+      maxHeight: 150,
+      overflowY: "auto",
+    }),
+    option: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+      fontSize: "12px",
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      display: "none",
+      height: "28px",
+      marginTop: "-12px",
+    }),
+    menuList: (base) => ({
+      ...base,
+      maxHeight: 150,
+      overflowY: "auto",
     }),
   };
 
@@ -142,56 +158,160 @@ export const MultiSelectDropdown = ({
     <div
       className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
     >
-      <span className="mb-2">
+      <span className="mb-3">
         {required ? <RequiredLabel name={label ? label : name} /> : name}
       </span>
-      <MultiSelect
-        options={options}
-        value={selected}
-        onChange={readOnly ? () => { } : setSelected}
-        labelledBy="Select"
-        hasSelectAll={false}
-        // styles={{
-        //   container: (base) => ({
-        //     ...base,
-        //     fontSize: "12px",
-        //     minHeight: "100px", // container height
-        //     width: "70px",       // container width
-        //   }),
-        //   control: (base) => ({
-        //     ...base,
-        //     padding: "2px",
-        //     borderRadius: "10px",
-        //     boxShadow: "none",
-        //     border: "1px solid #ccc",
-        //     minHeight: "100px", // control height
-        //     width: "70px",       // control width
-        //   }),
-        //   option: (base, state) => ({
-        //     ...base,
-        //     fontSize: "12px",
-        //     backgroundColor: state.isSelected ? "#e0e7ff" : "#fff",
-        //     padding: "4px 8px",
-        //   }),
-        //   chips: (base) => ({
-        //     ...base,
-        //     fontSize: "12px",
-        //     padding: "2px 4px",
-        //   }),
-        //   searchBox: (base) => ({
-        //     ...base,
-        //     fontSize: "12px",
-        //     padding: "2px",
-        //   }),
-        // }}
-        styles={customSelectStyles}
-      />
+      <div>
+        {/* <MultiSelect
+          options={options}
+          value={selected}
+          onChange={readOnly ? () => { } : setSelected}
+          labelledBy="Select"
+          hasSelectAll={false}
+          disabled={disabled}
+
+          styles={customSelectStyles}
+        /> */}
+        <MultiSelect
+          options={options}
+          value={selected}
+          onChange={readOnly ? () => { } : setSelected}
+          labelledBy="Select"
+          hasSelectAll={false}
+          disabled={disabled}
+          className="w-full"       // container width
+          overrideStrings={{
+            selectSomeItems: "Select",
+          }}
+          // ItemRenderer={ItemRenderer}
+          // valueRenderer={ValueRenderer}
+          // Custom styling using override
+          styles={{
+            multiselectContainer: {
+              width: "100%",
+            },
+            searchBox: {
+              border: "1px solid #d1d5db",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            },
+            optionListContainer: {
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              fontSize: "12px",
+            },
+            chips: {
+              backgroundColor: "#e5e7eb",
+              color: "#1f2937",
+              borderRadius: "6px",
+              fontSize: "10px",
+              padding: "2px 6px",
+            },
+          }}
+        />
+      </div>
+
 
 
 
     </div>
   );
 };
+
+
+export const MultiSelectDropdownNew = ({
+  name,
+  selected,
+  label,
+  setSelected,
+  options,
+  readOnly = false,
+  tabIndex = null,
+  className = "",
+  required,
+  disabled
+}) => {
+  console.log(options, "options");
+  console.log(selected, "selected");
+
+  // const customStyles = {
+  //   control: (base) => ({
+  //     ...base,
+  //     minHeight: "10px",
+  //     borderRadius: "8px",
+  //     fontSize: "12px",
+  //     paddingLeft: "4px",
+  //     borderColor: "#d1d5db",
+  //     boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  //   }),
+  // };
+
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",       
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",         
+      height: "28px",
+    }),
+
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
+
+    multiValue: (base) => ({
+      ...base,
+      padding: "0 4px",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
+
+  return (
+    <div
+      className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
+    >
+      <span className="mb-3">
+        {required ? <RequiredLabel name={label ? label : name} /> : name}
+      </span>
+      <div className="mt-1">
+
+
+
+        <Select
+          isMulti
+          options={options}
+          value={selected}
+          onChange={setSelected}
+          styles={customStyles}
+          className="w-full"
+          disabled={disabled}
+        />
+
+      </div>
+
+
+
+
+    </div>
+  );
+};
+
 export const TextInput = ({
   name,
   label,
@@ -1524,23 +1644,22 @@ export const ReusableTable = ({
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
 
-  <tr>
-              {columns?.map((column, index) => (
-                <th
-                  key={index}
-                  className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${
-                    column.header !== "" ? "border-r border-white/50" : ""
-                  } `}
-                >
-                  {column.header}
-                </th>
-              ))}
-              {rowActions && (
-                <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
-                  ACTIONS
-                </th>
-              )}
-            </tr>
+                <tr>
+                  {columns?.map((column, index) => (
+                    <th
+                      key={index}
+                      className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${column.header !== "" ? "border-r border-white/50" : ""
+                        } `}
+                    >
+                      {column.header}
+                    </th>
+                  ))}
+                  {rowActions && (
+                    <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
+                      ACTIONS
+                    </th>
+                  )}
+                </tr>
 
 
 

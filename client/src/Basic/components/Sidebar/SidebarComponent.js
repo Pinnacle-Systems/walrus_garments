@@ -90,6 +90,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
   const filteredData = pages.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
   );
+  console.log(filteredData, "filteredData")
 
   const iconMapping = {
     "COUNTRY MASTER":

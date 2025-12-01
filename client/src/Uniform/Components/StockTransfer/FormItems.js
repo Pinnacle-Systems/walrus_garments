@@ -225,15 +225,17 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             .reduce((sum, i) => sum + (parseFloat(i.transferQty) || 0), 0);
 
         console.log(currentlyUsed, "currentlyUsed")
-        console.log(existingTransfer,"existingTransfer",newValue,"newValue",totalAvailable,"totalAvailable")
+        console.log(existingTransfer, "existingTransfer", newValue, "newValue", totalAvailable, "totalAvailable")
 
-        if (existingTransfer + newValue > totalAvailable) {
+        if (existingTransfer + newValue > (totalAvailable)) {
             Swal.fire({
                 title: "Not enough stock!",
-                text: `Only ${parseFloat(totalAvailable) - parseFloat(currentlyUsed)} available in stock.`,
+                text: `Only ${(parseFloat(totalAvailable)).toFixed(3)} available in stock.`,
+
+                // text: `Only ${(parseFloat(totalAvailable) - parseFloat(currentlyUsed)).toFixed(3)} available in stock.`,
                 icon: "warning"
             });
-            return; 
+            return;
         } else {
             setOrderItems(prevOrder => {
                 const updatedOrders = structuredClone(prevOrder);
@@ -402,7 +404,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 {/* <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     {parseFloat(yarnItem?.currentStock)?.toFixed(3)}
                                                 </td> */}
-                                                
+
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     {/* {Math.max(
                                                         parseFloat(yarnItem?.requiredQty || 0) -
@@ -411,8 +413,8 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                     ).toFixed(3)
                                                     } */}
                                                     {parseFloat(yarnItem?.remainingQty || 0).toFixed(3)}
-                                                </td>  
-                                               
+                                                </td>
+
 
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1 px-2">
                                                     <input

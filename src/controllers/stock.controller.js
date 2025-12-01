@@ -2,7 +2,9 @@ import { Prisma } from '@prisma/client'
 
 import {
     get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
-    getPcsStock as _getPcsStock
+    getPcsStock as _getPcsStock,
+    _getAccessory,
+    _getOneAccessory
 } from '../services/stock.service.js';
 
 async function get(req, res, next) {
@@ -95,6 +97,27 @@ async function remove(req, res, next) {
     }
 }
 
+ async function getAccessory(req, res, next) {
+    console.log("rrrrrrrrrrrrr")
+    try {
+        res.json(await _getAccessory(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+
+ async function getOneAccessory(req, res, next) {
+
+    try {
+        res.json(await _getOneAccessory(req.params.id, req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
+
 
 export {
     get,
@@ -103,4 +126,6 @@ export {
     create,
     update,
     remove,
+    getAccessory,
+    getOneAccessory
 };

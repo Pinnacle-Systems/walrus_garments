@@ -257,7 +257,6 @@ export async function getPoItems(req) {
                         }
                         : undefined,
                     supplierId: supplierId ? parseInt(supplierId) : undefined,
-                    // transType: poType ? poType : undefined,
 
                 },
             },
@@ -270,7 +269,6 @@ export async function getPoItems(req) {
                 }
             }
         });
-        // console.log(data, "poType",poType)
 
         data = manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, data)
 
@@ -349,8 +347,7 @@ export async function getPoItems(req) {
 export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 
-    console.log(data, "dataEntrygetAllDataPoItems")
-
+    
     let promises = data?.map(async (item) => {
         let data = await getPoItemById(item.id, null, null, null, null, poType, poInwardOrDirectInward)
 
@@ -728,15 +725,17 @@ export function getPoItemObject(poMaterial, item) {
         newItem.accessoryId = parseInt(item.accessoryId);
         // newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
         newItem.accessoryGroupId = parseInt(item.accessoryGroupId)
-        newItem.accessoryCategoryId = parseInt(item.accessoryCategoryId) 
-        newItem.accessoryItemId =  item.accessoryItemId ? parseInt(item.accessoryItemId) : undefined
+        newItem.accessoryCategoryId = parseInt(item.accessoryCategoryId)
+        newItem.accessoryItemId = item.accessoryItemId ? parseInt(item.accessoryItemId) : undefined
         newItem.hsnId = item.hsnId ? parseInt(item.hsnId) : null;
         newItem.sizeId = item.sizeId ? parseInt(item.sizeId) : undefined;
 
     }
 
-    newItem.RequirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
-    newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
+    newItem.accessoryRequirementPlanningId = item?.id ? parseInt(item?.id) : undefined,
+        newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
+        newItem.orderDetailsId = item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+        newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.qty = item.qty ? parseFloat(item.qty) : undefined;
     newItem.price = parseFloat(item.price);

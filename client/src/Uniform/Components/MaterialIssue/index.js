@@ -44,112 +44,75 @@ const MaterialIssue = () => {
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
     const [isMaterialIssue, setIsMaterialIssue] = useState(false)
-    const [isReport, setIsReport] = useState("Material Issue")
+    const [isReport, setIsReport] = useState("")
+    const [issueReport, setIssueReport] = useState("Material Issue")
+
     const [materialRequstId, setMaterialRequstId] = useState("")
     const [requirementId, setRequirementId] = useState("")
     const [Stock, setStock] = useState([])
-    const [type, setType] = useState("All");
+    const [AccessoryStock, setAccessoryStock] = useState([])
+    const [materialIssueTypeList, setMaterialIssueTypeList] = useState([])
+    const [accessoryIssueItems, setAccessoryIssueItems] = useState([])
 
     const params = {
         branchId, userId, finYearId
     };
 
-    const { data: allData, isLoading, isFetching } = useGetMaterialIssueQuery({ params: { branchId } });
-    const [removeData] = useDeleteMaterialIssueMutation();
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
 
+    const [removeData] = useDeleteMaterialIssueMutation();
 
 
-    const getNextDocId = useCallback(() => {
-        if (allData?.nextDocId) {
-            setDocId(allData.nextDocId)
-        }
-    }, [allData, id])
-
-    useEffect(getNextDocId, [getNextDocId])
 
 
-    const columnsIssued = [
-        {
-            header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium text-center text-gray-900 w-[5%]'
-        },
-
-        {
-            header: 'Doc No',
-            accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
-        },
-
-        {
-            header: 'Order No',
-            accessor: (item) => item?.Order?.docId,
-            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
-        },
 
 
-        {
-            header: 'Customer Name',
-            accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[500px]  py-1 px-2'
-        },
 
-    ];
 
-    const columnsInendentRaise = [
-        {
-            header: 'S.No',
-            accessor: (item, index) => index + 1,
-            className: 'font-medium text-center text-gray-900 w-[5%]'
-        },
 
-        {
-            header: 'Doc No',
-            accessor: (item) => item?.docId,
-            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
-        },
 
-        {
-            header: 'Order No',
-            accessor: (item) => item?.Order?.docId,
-            className: 'font-medium text-gray-900 w-[40px] py-1 px-2'
-        },
 
-        // {
-        //     header: 'Style No',
-        //     accessor: (item) => item?.OrderDetails?.style?.name,
-        //     className: 'font-medium text-gray-900 w-[70px] py-1 px-2'
-        // },
-        //   {
-        //     header: 'Requirement No',
-        //     accessor: (item) => item?.RequirementPlanningForm?.docId,
-        //     className: 'font-medium text-gray-900 w-[40px]  py-1 px-2'
-        // },
-        {
-            header: 'Customer Name',
-            accessor: (item) => item?.Party?.name,
-            className: 'font-medium text-gray-900 w-[500px]  py-1 px-2'
-        },
 
-    ];
 
-    const handleIssuedView = (id) => {
 
+
+
+    const handleIendentRaiseView = (id) => {
+
+        setMaterialRequstId(id)
+        // setOrderId(id)
+        setForm(true)
+        setReadOnly(true);
+    };
+
+
+
+    const handleMaterialIssueiew = (id) => {
         setId(id)
         setForm(true)
         setReadOnly(true);
     };
 
-    const handleIssuedEdit = (id) => {
+    const handleMaterialIssueEdit = (id) => {
         setId(id)
         setForm(true)
-        setReadOnly(false);
+        setReadOnly(true);
     };
 
+    const onNew = () => {
+        setId("");
+        setReadOnly(false);
+        setOrderId('')
+        setOrderDetailsId("")
+        setIssueItems([])
+        setMaterialIssueTypeList([])
+    }
 
-    const handleIssuedDelete = async (id) => {
+    const handleDelete = async (id, RaiseIndenetYarnItems, RaiseIndenetAccessoryItems) => {
+        let deleteItems = {
+            RaiseIndenetYarnItems, RaiseIndenetAccessoryItems
+        }
         if (id) {
             if (childRecord.current > 0) {
                 Swal.fire({
@@ -185,35 +148,6 @@ const MaterialIssue = () => {
 
     };
 
-
-    const handleIendentRaiseView = (id) => {
-
-        setMaterialRequstId(id)
-        // setOrderId(id)
-        setForm(true)
-        setReadOnly(true);
-    };
-
-
-
-    const handleMaterialIssueiew = (id) => {
-        setId(id)
-        setForm(true)
-        setReadOnly(true);
-    };
-
-
-
-    const onNew = () => {
-        setId("");
-        setReadOnly(false);
-        setOrderId('')
-        setOrderDetailsId("")
-        setIssueItems([])
-    }
-
-    if (isLoading || isFetching) return <Loader />
-
     return (
         <>
             {form ? (
@@ -224,7 +158,8 @@ const MaterialIssue = () => {
                     partyId={partyId} setPartyId={setPartyId} docId={docId} active={active} setShowOrderForm={setShowOrderForm} date={date} sampleDetails={sampleDetails} issueItems={issueItems} setIssueItems={setIssueItems}
                     dueDate={dueDate} setDueDate={setDueDate} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue} setMaterialRequstId={setMaterialRequstId} materialRequstId={materialRequstId}
                     requirementId={requirementId} setRequirementId={setRequirementId} alreadyIssuedItems={alreadyIssuedItems} setAlreadyIssuedItems={setAlreadyIssuedItems} Stock={Stock} setStock={setStock}
-                    onNew={onNew}
+                    onNew={onNew} materialIssueTypeList={materialIssueTypeList} setMaterialIssueTypeList={setMaterialIssueTypeList} accessoryIssueItems={accessoryIssueItems} setAccessoryIssueItems={setAccessoryIssueItems} AccessoryStock={AccessoryStock} setAccessoryStock={setAccessoryStock} isReport={isReport}
+                    setIsReport={setIsReport}
                 />
 
 
@@ -255,8 +190,8 @@ const MaterialIssue = () => {
 
                         <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
                             <button
-                                onClick={() => setIsReport("Material Request")}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport === "Material Request"
+                                onClick={() => setIssueReport("Material Request")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${issueReport == "Material Request"
                                     ? "bg-blue-600 text-white shadow"
                                     : "bg-transparent text-gray-700 hover:text-blue-600"
                                     }`}
@@ -265,8 +200,8 @@ const MaterialIssue = () => {
                             </button>
 
                             <button
-                                onClick={() => setIsReport("Material Issue")}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${isReport === "Material Issue"
+                                onClick={() => setIssueReport("Material Issue")}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${issueReport == "Material Issue"
                                     ? "bg-blue-600 text-white shadow"
                                     : "bg-transparent text-gray-700 hover:text-blue-600"
                                     }`}
@@ -280,12 +215,13 @@ const MaterialIssue = () => {
 
 
                     </div>
-                    {isReport == "Material Issue" ?
+                    {issueReport == "Material Issue" ?
                         <>
 
                             <MaterialIssueFormReport
                                 onView={handleMaterialIssueiew}
-
+                                onDelete={handleDelete}
+                                onEdit={handleMaterialIssueEdit}
 
                             />
 

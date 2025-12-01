@@ -324,5 +324,8 @@ export const RoundOff = [
 export const cancelTypes = [
     { show: "CANCEL", value: "CANCEL" },
     { show: "SHORTCLOSE", value: "SHORTCLOSE" },
-
+]
+export const RequestMaterialType = [
+    { show: "Yarn", value: "Yarn" },
+    { show: "Trims & Accessories", value: "Accessories" },
 ]

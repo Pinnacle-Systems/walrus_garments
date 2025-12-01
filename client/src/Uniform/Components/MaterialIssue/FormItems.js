@@ -3,10 +3,12 @@ import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import YarnDetails from "./YarnDetails";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import YarnIssueItems from "./YarnItems";
+import AccessoryIssueItems from "./AccessoryItems";
 
-const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue, setIsMaterialIssue, setSubGridForm, subGridForm,
-    requirementId, setRequirementId
-}) => {
+const FormItems = ({ Stock, setStock ,setAccessoryStock , issueItems, readOnly, setIssueItems, materialTypeList, setIsReport, isReport,
+    requirementId, setRequirementId ,AccessoryStock ,setAccessoryIssueItems ,accessoryIssueItems ,id
+}) => { 
 
 
 
@@ -102,209 +104,60 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
 
     return (
         <>
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[480px] overflow-y-auto">
-                <div className="w-[45%] mb-3 h-[200px]">
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="font-medium text-slate-700">Stock Qty</h2>
-                    </div>
-                    <table>
-                        <thead className="bg-gray-200 text-gray-800">
+            <div className="py-1 bg-white rounded-md shadow-sm h-[500px] ">
+                <div className="mb-3">
+                    {materialTypeList?.length > 0 ? (
+                        <div className="flex gap-2  rounded-lg shadow-sm p-1 w-fit">
+                            {materialTypeList.some((i) => i.value === "Yarn") && (
+                                <button
+                                    onClick={() => setIsReport("Yarn")}
+                                    className={`
+          px-3 py-1.5 text-xs rounded-md transition-all duration-200  border border-gray-300
+          ${isReport === "Yarn"
+                                            ? "bg-blue-600 text-white shadow-sm"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+        `}
+                                >
+                                    Yarn Required Details
+                                </button>
+                            )}
 
-                            <tr>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-8">S No</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-80">Yarn</td>
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-52">Color</td>
-
-                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Stock Qty</td>
-
-                            </tr>
-
-                        </thead>
-                        <tbody>
-
-                            {(Stock ? Stock : []).map((indent, index) => {
-                                return (
-
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{index + 1}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{indent?.Yarn?.name} </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs">{indent?.Color?.name} </td>
-
-                                        <td className="border border-gray-300 px-2 py-1  text-xs text-right">{parseFloat(indent.qty).toFixed(3)}</td>
-
-                                    </tr>
-                                );
-
-
-                            })}
-                        </tbody>
-                    </table>
-
+                            {materialTypeList.some((i) => i.value === "Accessories") && (
+                                <button
+                                    onClick={() => setIsReport("Accessories")}
+                                    className={`
+          px-3 py-1.5 text-xs rounded-md transition-all duration-200   border border-gray-300
+          ${isReport === "Accessories"
+                                            ? "bg-blue-600 text-white shadow-sm"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+        `}
+                                >
+                                    Trims & Accessories Required Details
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex items-center h-[30px] text-md text-gray-500">
+                            Request Items
+                        </div>
+                    )}
                 </div>
-
-
-
-
-
-
 
                 <div>
-                    <div className="flex justify-between items-center ">
-                        <h2 className="font-medium text-slate-700">Issue Qty</h2>
-                    </div>
-
+                    {isReport == "Yarn" && (
+                        <>
+                            <YarnIssueItems Stock={Stock} setStock={setStock} setSt issueItems={issueItems} readOnly={readOnly} setIssueItems={setIssueItems} materialTypeList={materialTypeList} setIsReport={setIsReport} isReport={isReport} requirementId={requirementId} setRequirementId={setRequirementId} id={id}
+                            />
+                        </>
+                    )}
+                    {isReport == "Accessories" && (
+                        <>
+                            <AccessoryIssueItems AccessoryStock={AccessoryStock} setAccessoryStock={setAccessoryStock} accessoryIssueItems={accessoryIssueItems} 
+                            setAccessoryIssueItems={setAccessoryIssueItems} id={id}
+                            />
+                        </>
+                    )}
                 </div>
-                <div className="flex flex-row gap-10 h-[200px]">
-                    <div className="w-[80%] flex flex-col ">
-                        <div className="justify-end items-center mt-2 mb-5">
-                            <table className="w-full border-collapse table-fixed">
-                                <thead className="bg-gray-200 text-gray-800">
-
-                                    <tr>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-8">S No</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-48">Style</td>
-
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-64">Yarn</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Color</td>
-                                        {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Stock Qty (Kgs)</td> */}
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Required Qty (Kgs)</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Already Issue Qty (Kgs)</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Balance Issue Qty (Kgs)</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Issue Qty (Kgs)</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-                                    {(issueItems ? issueItems : []).map((indent, index) => {
-                                        return (
-                                            <React.Fragment key={index}>
-
-                                                <tr
-                                                    className={`${indent?.requirementPlanningFormId === requirementId ? "border-2 border-gray-500" : ""} `}
-                                                    onContextMenu={(e) => {
-                                                        // if (!readOnly) {
-                                                        handleRightClick(e, index, "shiftTimeHrs");
-                                                        // }
-                                                    }}
-                                                    disabled={true}
-                                                >
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs">{index + 1}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.styleColor}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.Yarn?.name}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs"
-                                                    >{indent?.Color?.name}
-                                                    </td>
-                                                    {/* <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {parseFloat(indent?.availableQty || 0).toFixed(3)}
-                                                    </td> */}
-                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {parseFloat(indent?.requiredQty || 0).toFixed(3)}
-                                                    </td>
-                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {parseFloat(indent?.alreadyIssueQty || 0).toFixed(3)}
-                                                    </td>
-
-                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        {Math.max(
-                                                            parseFloat(indent?.requiredQty || 0) -
-                                                            parseFloat(indent?.alreadyIssueQty || 0),
-                                                            0
-                                                        ).toFixed(3)
-                                                        }
-                                                    </td>
-
-
-                                                    <td className="border border-gray-300 px-1 py-1 text-right text-xs">
-                                                        <input
-                                                            onKeyDown={e => {
-                                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                                if (e.key === "Delete") { handleInputChange("0.000", index, "issueQty") }
-                                                            }}
-                                                            min={"0"}
-                                                            type="number"
-                                                            onFocus={(e) => e.target.select()}
-                                                            className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                            value={(!indent.issueQty) ? 0.000 : indent.issueQty}
-                                                            disabled={!calculateStockQty(indent)?.qty > 0}
-                                                            onChange={(e) => {
-
-
-                                                                handleInputChange(parseFloat(e.target.value), index, "issueQty", indent)
-
-
-                                                            }}
-                                                            onBlur={(e) => {
-                                                                if (parseFloat(e.target.value) < parseFloat(indent.qty)) {
-                                                                    handleInputChange(parseFloat(e.target.value), index, "issueQty", indent)
-
-                                                                }
-
-                                                            }}
-                                                        /></td>
-                                                </tr>
-
-
-
-
-
-
-                                            </React.Fragment>
-                                        );
-
-
-                                    })}
-
-
-
-
-                                    {contextMenu && (
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                top: `${contextMenu.mouseY - 50}px`,
-                                                left: `${contextMenu.mouseX + 20}px`,
-
-                                                // background: "gray",
-                                                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                                padding: "8px",
-                                                borderRadius: "4px",
-                                                zIndex: 1000,
-                                            }}
-                                            className="bg-gray-100"
-                                            onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
-                                        >
-                                            <div className="flex flex-col gap-1">
-                                                <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        deleteRow(contextMenu.rowId);
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete{" "}
-                                                </button>
-                                                {/* <button
-                                                    className=" text-black text-[12px] text-left rounded px-1"
-                                                    onClick={() => {
-                                                        handleDeleteAllRows();
-                                                        handleCloseContextMenu();
-                                                    }}
-                                                >
-                                                    Delete All
-                                                </button> */}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </tbody>
-
-                            </table>
-                        </div>
-                    </div>
 
 
 
@@ -313,11 +166,9 @@ const FormItems = ({ Stock, issueItems, readOnly, setIssueItems, isMaterialIssue
 
 
 
-                </div>
-            </div>
-            <div>
 
             </div>
+
         </>
     )
 }

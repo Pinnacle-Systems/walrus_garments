@@ -44,6 +44,7 @@ export {default as partyBranchContactMasterApi }  from "./PartyBranchContactMast
 export  {default as partyContactMasterApi  }   from "./PartyContactMasterService"
 export  { default as TermsandCondtionsApi  }   from "./Term&ConditionsMasterService"
 export  { default as HsnMasterApi  }   from "./HsnMasterServices"
+export  { default as AccessoryStockApi  }   from "./AccessoryStockService"
 
 
 

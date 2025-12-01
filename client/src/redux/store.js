@@ -24,6 +24,7 @@ import {
   partyContactMasterApi,
   TermsandCondtionsApi,
   HsnMasterApi,
+  AccessoryStockApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -184,7 +185,8 @@ const commonReducers = {
   accessoryBillEntry: accessoryBillEntryApi.reducer,
   accessoryCategoryMaster: AccessoryCategoryMasterApi.reducer,
   StockReportControl : StockReportControlApi.reducer,
-  AccessoryStockTransfer : AccessoryStockTransferApi.reducer
+  AccessoryStockTransfer : AccessoryStockTransferApi.reducer ,
+  accessorystock : AccessoryStockApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -295,7 +297,8 @@ AccessoryPurchaseReturnApi.middleware,
 accessoryBillEntryApi.middleware,
 AccessoryCategoryMasterApi.middleware,
 StockReportControlApi.middleware ,
-AccessoryStockTransferApi.middleware
+AccessoryStockTransferApi.middleware,
+AccessoryStockApi.middleware
 ];
 
 

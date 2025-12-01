@@ -6,7 +6,7 @@ import { findFromList } from '../../../Utils/helper';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
 
-const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection , poInwardOrDirectInward }) => {
+const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, poInwardOrDirectInward }) => {
 
 
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems?.filter(i => i.poItemsId !== ""));
@@ -34,7 +34,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     //     });
     // }
 
-    
+
 
     function addItem(id, obj) {
         setInwardItems([])
@@ -67,8 +67,8 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         });
     }
 
-    // console.log(localInwardItems, "isChecked", localInwardItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1)
     function isItemAdded(id) {
+
         return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId) === parseInt(id)) !== -1;
     }
 
@@ -97,6 +97,8 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         setInwardItemSelection([])
         setInwardItems(prevInwardItems => {
             let oldInwardItems = prevInwardItems?.filter(item => isItemAdded(item.poItemsId))
+            console.log(prevInwardItems, "prevInwardItems")
+
             let newInwardItems = localInwardItems?.filter(item => {
                 return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item)) === -1
             })
@@ -105,13 +107,16 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
                 return {
-                    accessoryId : poItem?.accessoryId,
-                    accessoryItemId : poItem?.accessoryItemId,
-                    accessoryGroupId : poItem?.accessoryGroupId,
-                    colorId : poItem?.colorId,    
-                    sizeId : poItem?.sizeId,
+                    orderId: poItem?.orderId,
+                    orderDetailsId: poItem?.orderDetailsId,
+                    accessoryRequirementPlanningId: poItem?.accessoryRequirementPlanningId,
+                    accessoryId: poItem?.accessoryId,
+                    accessoryItemId: poItem?.accessoryItemId,
+                    accessoryCategoryId : poItem?.accessoryCategoryId,
+                    accessoryGroupId: poItem?.accessoryGroupId,
+                    colorId: poItem?.colorId,
+                    sizeId: poItem?.sizeId,
                     poItemsId: poItem?.id,
-                    orderId: poItem?.AccessoryPo?.orderId,
                     poNo: poItem?.AccessoryPo?.docId,
                     fabricId: poItem?.fabricId,
                     gaugeId: poItem?.gaugeId,
@@ -169,7 +174,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
                                 <></>
                                 :
                                 <AccessoryPoItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId}
-                                    handleDone={handleDone} handleCancel={handleCancel}  poInwardOrDirectInward={poInwardOrDirectInward}
+                                    handleDone={handleDone} handleCancel={handleCancel} poInwardOrDirectInward={poInwardOrDirectInward}
 
                                 />
                             }

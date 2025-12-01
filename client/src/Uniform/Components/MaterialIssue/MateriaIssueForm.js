@@ -1,6 +1,6 @@
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DropdownInput, DropdownWithSearch, TextInput } from "../../../Inputs";
+import { DropdownInput, DropdownWithSearch, MultiSelectDropdown, MultiSelectDropdownNew, TextInput } from "../../../Inputs";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useCallback, useEffect, useState } from "react";
@@ -11,11 +11,12 @@ import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { useAddRequirementPlanningFormMutation, useDeleteRequirementPlanningFormMutation, useGetRequirementPlanningFormByIdQuery, useGetRequirementPlanningFormQuery, useUpdateRequirementPlanningFormMutation } from "../../../redux/uniformService/RequirementPlanningFormServices";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import { Colors, packingCover } from "../../../Utils/DropdownData";
+import { Colors, packingCover, RequestMaterialType } from "../../../Utils/DropdownData";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetRaiseIndentByIdQuery, useGetRaiseIndentQuery, useGetRaiseIndentStockValidationByIdQuery } from "../../../redux/uniformService/RaiseIndenetServices";
 import { useAddMaterialIssueMutation, useDeleteMaterialIssueMutation, useGetMaterialIssueByIdQuery, useGetMaterialIssueStockValidationByIdQuery, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssueServices";
 import { Loader } from "../../../Basic/components";
+import { multiSelectOption } from "../../../Utils/contructObject";
 
 const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderData, orderId, setOrderId, onNew,
 
@@ -25,7 +26,8 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
     isMaterialIssue, setIsMaterialIssue, materialRequstId, setMaterialRequstId, alreadyIssuedItems, setAlreadyIssuedItems,
 
-    Stock, setStock
+    Stock, setStock, setMaterialIssueTypeList, materialIssueTypeList,
+    accessoryIssueItems, setAccessoryIssueItems, AccessoryStock, setAccessoryStock, isReport, setIsReport,
 
 
 
@@ -82,7 +84,33 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 }, {})
             );
             setStock(Stock);
+            setIsReport(data?.MaterialIssueTypeList ? data?.MaterialIssueTypeList[0]?.value : "")
 
+            setMaterialIssueTypeList(
+                data?.MaterialIssueTypeList
+                    ? data?.MaterialIssueTypeList?.map((item) => {
+                        return {
+                            value: item.value,
+                            label: item.value,
+                            id: item.id
+                        };
+                    })
+                    : []
+            );
+                const AccessoryStock = Object.values(
+                (data?.Order?.AccessoryStock || []).reduce((acc, item) => {
+                    const key = `${item.accessoryId}-${item.colorId}-${item.uomId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+            setAccessoryStock(AccessoryStock)
+            setAccessoryIssueItems(data?.AccessoryMaterialIssueItems ?  data?.AccessoryMaterialIssueItems : [])
             setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setPartyId(data?.partyId ? data?.partyId : "")
@@ -90,36 +118,8 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
         }
         else {
 
-            // data?.RaiseIndentItems?.map(item => {
-            //     const allColors = item?.RaiseIndenetYarnItems
-            //         ?.map(yarn => yarn?.Color?.name)
-            //         .filter(Boolean)
-            //         .join(" - ");
-            //     const RaiseIndenetYarnItems = item?.RaiseIndenetYarnItems?.map(yarn => {
+            setIsReport(data?.MaterialTypeList ? data?.MaterialTypeList[0]?.value : "")
 
-
-            //         return {
-            //             ...yarn,
-
-            //         };
-            //     });
-            //     const totalYarnQty = RaiseIndenetYarnItems?.reduce(
-            //         (sum, yarn) => sum + yarn.qty,
-            //         0
-            //     );
-            //     return {
-            //         OrderDetails: {
-            //             style: {
-            //                 name: `${item?.OrderDetails?.style?.name} / ${allColors}`
-            //             }
-            //         },
-            //         requirementPlanningFormId: item.requirementPlanningFormId,
-            //         orderdetailsId: item.orderdetailsId,
-            //         RaiseIndenetYarnItems,
-            //         totalYarnQty: Number(totalYarnQty?.toFixed(3)),
-            //     };
-            // }) 
-            // setIssueItems( data?.RaiseIndentItems ? data?.RaiseIndentItems : []);
             const mergedItems =
                 data?.RaiseIndentItems?.map(riItem => {
                     // get all materialIssueItems that match yarn, color & planningItemId
@@ -157,16 +157,73 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
             );
             setStock(Stock);
 
+
+
+            const accessoryMergedItems =
+                data?.AccessoryRaiseIndentItems?.map(riItem => {
+                    // get all materialIssueItems that match yarn, color & planningItemId
+                    const matches = data?.AccessoryMaterialIssueItems?.filter(miItem =>
+                        miItem.accessoryId == riItem.accessoryId &&
+                        miItem.accessoryGroupId == riItem.accessoryGroupId &&
+                        miItem.requirementPlanningItemsId == riItem.requirementPlanningItemsId
+                    ) || [];
+                    console.log(matches, "matches")
+
+
+                    const totalIssueQty = matches?.reduce(
+                        (sum, item) => sum + (Number(item.issueQty) || 0),
+                        0
+                    );
+
+                    return {
+                        ...riItem,
+                        alreadyIssueQty: totalIssueQty,
+                    };
+                }) || [];
+
+            setAccessoryIssueItems(accessoryMergedItems)
+
+
+            const accessoryStock = Object.values(
+                (data?.Order?.AccessoryStock || []).reduce((acc, item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+
+                    if (!acc[key]) {
+                        acc[key] = { ...item };
+                    } else {
+                        acc[key].qty += item.qty;
+                    }
+                    return acc;
+                }, {})
+            );
+            setAccessoryStock(accessoryStock)
+
             setAlreadyIssuedItems(data?.materialIssueItems ? data?.materialIssueItems : [])
             setOrderId(data?.orderId ? data?.orderId : "")
             setOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "")
             setMaterialRequstId(data?.id ? data?.id : "")
             setPartyId(data?.partyId ? data?.partyId : "")
+            setMaterialIssueTypeList(
+                data?.MaterialTypeList
+                    ? data?.MaterialTypeList?.map((item) => {
+                        return {
+                            value: item.value,
+                            label: item.value,
+                        };
+                    })
+                    : []
+            );
 
         }
 
     }, [orderDetailsId]);
 
+
+
+
+    console.log(accessoryIssueItems, "accessoryIssueItems");
+    console.log(AccessoryStock, "AccessoryStock");
+    console.log(materialIssueTypeList, 'materialIssueTypeList')
 
 
 
@@ -271,7 +328,8 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
         branchId, userId, companyId, docId,
         active,
         partyId, finYearId, orderYarnDetails, orderSizeDetails, orderId, orderDetailsId, isMaterialIssue, indentRaiseId: materialRequstId,
-        issueItems: issueItems?.filter(i => i.issueQty), materialRequstId
+        issueItems: issueItems?.filter(i => i.issueQty), materialRequstId, materialIssueTypeList,
+        accessoryIssueItems: accessoryIssueItems?.filter(i => i.issueQty)
     }
 
 
@@ -358,15 +416,15 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                 </div>
 
                 <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-10 gap-2">
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Basic Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Doc.Id" readOnly value={docId} />
+                                <ReusableInput label="Material Issue Id" readOnly value={docId} />
                                 <ReusableInput label="Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 
@@ -379,30 +437,59 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-4">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Order Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
+                            <div className="grid grid-cols-3 gap-x-3">
+                                <div className="col-span-1">
+                                    <TextInput
+                                        name="Order No"
+                                        placeholder="Order No"
+                                        value={findFromList(orderId, orderData?.data, "docId")}
+                                        disabled={true}
 
-                                <TextInput
-                                    name="Order No"
-                                    placeholder="Order No"
-                                    value={findFromList(orderId, orderData?.data, "docId")}
-                                    disabled={true}
+                                    />
+                                </div>
 
-                                />
+                                {/* <MultiSelectDropdown
+                                    name="Issue Material Type"
+                                    required={true}
+                                    disabled={!orderId}
+                                    options={multiSelectOption(RequestMaterialType ? RequestMaterialType : [], "show", "value")}
+                                    selected={materialTypeList}
+                                    setSelected={(value) => {
+                                        setMaterialTypeList(value)
+                                        // setIsReport(value[0]?.value)
+                                        // setRequestItems(value)
 
+                                    }}
+                                /> */}
+                                <div className="col-span-2">
+                                    <MultiSelectDropdownNew
+                                        name="Issue Material Type"
+                                        required={true}
+                                        disabled={readOnly || id ? !singleData?.data?.orderId : !orderId}
+                                        options={ id  ?   materialIssueTypeList : multiSelectOption(RequestMaterialType ? RequestMaterialType : [], "show", "value")}
+                                        selected={materialIssueTypeList}
+                                        setSelected={(value) => {
+                                            setMaterialIssueTypeList(value)
+                                            // setIsReport(value[0]?.value)
+                                            // setRequestItems(value)
+
+                                        }}
+                                    />
+                                </div>
 
                             </div>
 
                         </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2 ">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-4 ">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Contact Details
                             </h2>
-                            <div className="grid grid-cols-3 gap-x-3">
+                            <div className="grid grid-cols-1 gap-x-3">
                                 <TextInput
                                     name="Customer"
                                     placeholder="Contact name"
@@ -410,7 +497,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                                     // setValue={setContactPersonName}
                                     disabled={true}
                                 />
-                                <TextInput
+                                {/* <TextInput
                                     name="Contact Person"
                                     placeholder="Contact Person"
                                     value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
@@ -424,7 +511,7 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
                                     // setValue={setPhone}
                                     disabled={true}
 
-                                />
+                                /> */}
 
 
 
@@ -438,7 +525,8 @@ const MaterialIssueForm = ({ id, setId, onClose, readOnly, setReadOnly, orderDat
 
                         <FormItems
                             setIssueItems={setIssueItems} issueItems={issueItems} readOnly={readOnly} setReadOnly={setReadOnly} id={id} isMaterialIssue={isMaterialIssue} setIsMaterialIssue={setIsMaterialIssue}
-                            requirementId={requirementId} setRequirementId={setRequirementId} Stock={Stock}
+                            requirementId={requirementId} setRequirementId={setRequirementId} Stock={Stock} setStock={setStock} materialTypeList={materialIssueTypeList} isReport={isReport} setIsReport={setIsReport} AccessoryStock={AccessoryStock}
+                            accessoryIssueItems={accessoryIssueItems} setAccessoryIssueItems={setAccessoryIssueItems} setAccessoryStock={setAccessoryStock}
                         />
 
                     </fieldset>

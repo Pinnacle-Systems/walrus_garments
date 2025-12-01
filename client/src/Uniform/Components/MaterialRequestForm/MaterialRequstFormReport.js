@@ -218,27 +218,29 @@ const MaterialRequestFormReport = ({
                                         <div className="">S No</div>
                                     </th>
 
-                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                                    <th className="  font-medium text-[13px]  text-gray-900  text-center w-32">
                                         <div>Doc No</div>
 
                                     </th>
-                                    <th className="w-28 px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-28   font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Doc Date</div>
 
                                     </th>
-                                    <th className="w-28   px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                    <th className="w-28     font-medium text-[13px] text-gray-900  text-center ">
                                         <div>Order No</div>
-
+                                    </th>
+                                    <th className="w-28     font-medium text-[13px] text-gray-900  text-center ">
+                                        <div>Material </div>
                                     </th>
 
-                                    <th className="w-96   px-3  font-medium text-[13px]  text-gray-900  text-center  ">
+                                    <th className="w-96    font-medium text-[13px]  text-gray-900  text-center  ">
                                         <div>Customer</div>
 
                                     </th>
-                                    <th className="w-52   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-52   font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Status</div>
                                     </th>
-                                    <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-14   font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
                                     </th>
                                 </tr>
@@ -280,7 +282,7 @@ const MaterialRequestFormReport = ({
                                             }}
                                         />
                                     </th>
-                                    {/* <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -290,7 +292,7 @@ const MaterialRequestFormReport = ({
                                                 setSearchStyleNo(e.target.value);
                                             }}
                                         />
-                                    </th> */}
+                                    </th>
 
                                     <th className="w-32  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -321,7 +323,7 @@ const MaterialRequestFormReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(filtered ? filtered : []).filter( i  => type == "Partially"  ? i.issueQty != 0 && i?.issueQty >= i?.requestQty  : [] )?.map((dataObj, index) => (
+                                    {(filtered ? filtered : []).filter(i => type == "Partially" ? i.issueQty != 0 && i?.issueQty >= i?.requestQty : [])?.map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -343,6 +345,12 @@ const MaterialRequestFormReport = ({
                                             <td className="py-1.5 text-left">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
                                             <td className="py-1.5 text-left">{dataObj?.Order?.docId} </td>
+
+                                            <td className="py-1.5 text-left">{dataObj?.MaterialTypeList
+                                                ?.map(yarn => yarn?.value)
+                                                .filter(Boolean)
+                                                .join(" - ")} </td>
+
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                                             <td className="py-1.5 text-left">
@@ -397,7 +405,7 @@ const MaterialRequestFormReport = ({
                                                         {onDelete && (
                                                             <button
                                                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                                                onClick={() => onDelete(dataObj.id, dataObj.RaiseIndentItems)}
+                                                                onClick={() => onDelete(dataObj.id, dataObj.RaiseIndentItems, dataObj.AccessoryRaiseIndentItems)}
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />

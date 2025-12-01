@@ -117,22 +117,23 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, searchDocId, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, searchDelDate, searchDate, partyId,
 
     } = req.query
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
-    let data = await xprisma.MaterialIssue.findMany({
+    let data = await xprisma.materialIssue.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(searchDocId) ?
+            docId: serachDocNo ?
                 {
-                    contains: searchDocId
+                    contains: serachDocNo
                 }
                 : undefined,
             partyId: partyId ? parseInt(partyId) : undefined,
+
         },
         include: {
             MaterialIssueItems: {
@@ -156,7 +157,7 @@ async function get(req) {
                     styleColor: true,
                 }
             },
-    
+
             Order: {
                 select: {
                     docId: true
@@ -190,8 +191,8 @@ async function get(req) {
 
     });
     let totalCount = data.length;
-    if (searchDocDate) {
-        data = data.filter(i => i.docDate.includes(searchDocDate))
+    if (searchDate) {
+        data = data.filter(i => i.docDate.includes(searchDate))
     }
     if (searchDelDate) {
         data = data.filter(i => i.delDate.includes(searchDelDate))
@@ -231,7 +232,60 @@ async function getOne(id) {
                     },
                     yarnId: true,
                     issueQty: true,
+                    qty: true,
                     styleColor: true,
+                }
+            },
+            AccessoryMaterialIssueItems: {
+                select: {
+                    id: true,
+                    materialIssueId: true,
+                    orderDetailsId: true,
+                    orderId: true,
+                    accessoryId: true,
+                    Accessory: {
+                        select: {
+                            aliasName: true
+                        }
+                    },
+                    accessoryCategoryId: true,
+                    AccessoryCategory: {
+                        select: {
+                            name: true,
+                        }
+                    },
+                    AccessoryGroup: {
+                        select: {
+                            name: true,
+                        }
+                    },
+                    accessoryGroupId: true,
+                    uomId: true,
+                    Uom: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    colorId: true,
+                    Color: {
+                        select: {
+                            name: true,
+                        }
+                    },
+                    sizeId: true,
+                    Size: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    qty: true,
+                    requiredQty: true,
+                    issueQty: true,
+                    raiseIndentId: true,
+                    styleColor: true,
+                    accessoryRaiseIndentItemsId: true,
+                    accessoryRequirementPlanningId: true,
+
                 }
             },
             Order: {
@@ -259,9 +313,66 @@ async function getOne(id) {
                             branchId: true,
                             orderId: true
                         }
+                    },
+                    AccessoryStock: {
+                        select: {
+                            id: true,
+                            itemType: true,
+                            inOrOut: true,
+                            accessoryId: true,
+                            Accessory: {
+                                select: {
+                                    aliasName: true,
+                                }
+                            },
+                            accessoryGroupId: true,
+                            accessoryGroup: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            // accessoryCategoryId : true ,
+                            // Acc
+                            // accessoryItem: {
+                            //     select: {
+                            //         name: true
+                            //     }
+                            // },
+                            accessoryItemId: true,
+                            colorId: true,
+                            Color: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            uomId: true,
+                            Uom: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            sizeId: true,
+                            Size: {
+                                select: {
+                                    name: true
+                                }
+                            },
+                            qty: true,
+                            price: true,
+                            storeId: true,
+                            branchId: true,
+                            active: true,
+                            orderId: true,
+                            orderDetailsId: true,
+                            accessoryRequirementPlanningId: true,
+                            category: true,
+                            transactionId: true,
+                        }
                     }
                 }
             },
+
+            MaterialIssueTypeList: true
         }
 
     })
@@ -440,7 +551,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
 }
 
-async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId) {
+async function createYarnIssueItems(tx, MaterialIssueId, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId) {
 
     let promises
 
@@ -453,7 +564,7 @@ async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwar
                 requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
                 yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
                 colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                qty: item?.qty ? parseFloat(item.qty) : undefined,
+                qty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
                 issueQty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
                 styleColor: item?.styleColor ? item?.styleColor : undefined,
                 requirementPlanningItemsId: item?.requirementPlanningItemsId ? parseInt(item?.requirementPlanningItemsId) : undefined,
@@ -477,10 +588,82 @@ async function createIssueItems(tx, MaterialIssueId, issueItems, poType, poInwar
     return Promise.all(promises)
 }
 
+
+async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, transactionId, orderId) {
+
+    await tx.AccessoryStock.create({
+        data: {
+            itemType: poType ? poType : undefined,
+            inOrOut: poInwardOrDirectInward ? poInwardOrDirectInward : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
+            accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
+            accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
+            accessoryCategoryId: item?.accessoryCategoryId ? parseInt(item.accessoryCategoryId) : undefined,
+            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
+            qty: item?.issueQty ? parseFloat(0 - item?.issueQty) : undefined,
+            price: item.price ? parseInt(item.price) : undefined,
+            transactionId: transactionId ? parseInt(transactionId) : undefined,
+            orderId: orderId ? parseInt(orderId) : undefined,
+            orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+            accessoryRequirementPlanningId: item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : undefined,
+
+        }
+    })
+
+}
+
+async function createAccessoryIssueItems(tx, MaterialIssueId, accessoryIssueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId) {
+
+    let promises
+
+
+    promises = accessoryIssueItems.map(async (item, index) => {
+        let data = await tx.AccessoryMaterialIssueItems.create({
+            data: {
+                materialIssueId: parseInt(MaterialIssueId),
+                orderId: orderId ? parseInt(orderId) : undefined,
+                orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+                requirementPlanningFormId: item?.requirementPlanningFormId ? parseInt(item?.requirementPlanningFormId) : undefined,
+                accessoryId: item?.accessoryId ? parseInt(item.accessoryId) : undefined,
+                accessoryCategoryId: item?.accessoryCategoryId ? parseInt(item.accessoryCategoryId) : undefined,
+                accessoryGroupId: item?.accessoryGroupId ? parseInt(item.accessoryGroupId) : undefined,
+                uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+                sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+
+                colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                qty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
+                issueQty: item?.issueQty ? parseFloat(item.issueQty) : undefined,
+                requiredQty: item?.requiredQty ? parseFloat(item.requiredQty) : undefined,
+                raiseIndentId: materialRequstId ? parseInt(materialRequstId) : undefined,
+                styleColor: item?.styleColor ? item?.styleColor : undefined,
+                accessoryRaiseIndentItemsId: item?.id ? parseInt(item?.id) : undefined,
+                accessoryRequirementPlanningId: item?.accessoryRequirementPlanningId ? parseInt(item?.accessoryRequirementPlanningId) : undefined,
+
+
+            }
+        })
+
+        await createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id, orderId)
+    })
+
+
+
+
+
+
+
+
+
+    return Promise.all(promises)
+}
+
 async function create(req) {
 
-    const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, materialRequstId, storeId, orderId, indentRaiseId, orderDetailsId, isMaterialIssue, issueItems, poType } = req.body
+    const { userId, branchId, partyId, finYearId, materialIssueTypeList, notes, term, orderBy, draftSave, filePath,
+        phone, contactPersonName, materialRequstId, storeId, orderId, indentRaiseId, isMaterialIssue, issueItems, accessoryIssueItems, poType } = req.body
 
 
     let poInwardOrDirectInward = "MaterialIssue"
@@ -490,7 +673,7 @@ async function create(req) {
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
-
+    console.log(issueItems, 'issueItems')
 
     let data;
     await prisma.$transaction(async (tx) => {
@@ -508,11 +691,22 @@ async function create(req) {
                 // requirementId:  parseInt(requirementId) ,
 
 
+                MaterialIssueTypeList: materialIssueTypeList?.length > 0
+                    ? {
+                        create: materialIssueTypeList?.map((item) => ({
+
+                            name: item?.show ? item?.show : undefined,
+                            value: item?.value ? item?.value : undefined,
+                        })),
+                    }
+                    : undefined,
 
 
             },
         });
-        await createIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId)
+        await createYarnIssueItems(tx, data.id, issueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId)
+        await createAccessoryIssueItems(tx, data.id, accessoryIssueItems, poType, poInwardOrDirectInward, storeId, branchId, indentRaiseId, orderId, materialRequstId)
+
 
     })
 
@@ -525,26 +719,117 @@ async function create(req) {
 
 }
 
+async function UpdateYarnStock(tx, item, transactionId) {
 
+
+    const data = await prisma.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "MaterialIssue"
+        },
+        data:
+        {
+            qty: item?.issueQty ? parseFloat(0 - item?.issueQty) : undefined,
+        },
+    })
+}
+
+async function updateOrCreateYarnItems(tx, item) {
+
+    console.log(item, "itemmmm")
+
+    if (item?.id) {
+        let updatedata = await tx.MaterialIssueItems.update({
+            where: {
+                id: parseInt(item.id)
+            },
+            data: {
+                qty: item?.issueQty ? parseFloat(item?.issueQty) : undefined,
+                issueQty: item?.issueQty ? parseFloat(item?.issueQty) : undefined,
+
+
+            }
+        })
+
+        await UpdateYarnStock(tx, item, item.id);
+
+        return updatedata
+    }
+}
+
+
+async function UpdateAccessoryStock(tx, item, transactionId) {
+
+
+    const data = await prisma.accessoryStock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "MaterialIssue"
+        },
+        data:
+        {
+            qty: item?.issueQty ? parseFloat(0 - item?.issueQty) : undefined,
+        },
+    })
+}
+
+
+async function updateOrCreateAccessoryItems(tx, item) {
+
+    if (item?.id) {
+        let updatedata = await tx.AccessoryMaterialIssueItems.update({
+            where: {
+                id: parseInt(item.id)
+            },
+            data: {
+                qty: item?.issueQty ? parseFloat(item?.issueQty) : undefined,
+                issueQty: item?.issueQty ? parseFloat(item?.issueQty) : undefined,
+
+
+            }
+        })
+
+        await UpdateAccessoryStock(tx, item, item.id);
+
+        return updatedata
+    }
+}
+
+
+async function updateAccessoryIssueItems(tx, MaterialIssueId, accessoryIssueItems) {
+    let promises = (accessoryIssueItems || [])?.map(async (item) => await updateOrCreateAccessoryItems(tx, item))
+    console.log(accessoryIssueItems, "accessoryIssueItems")
+
+    return Promise.all(promises)
+}
+
+
+async function updateYarnIssueItems(tx, MaterialIssueId, yarnIssueItems) {
+    let promises = (yarnIssueItems || [])?.map(async (item) => await updateOrCreateYarnItems(tx, item))
+    console.log(yarnIssueItems, "yarnIssueItems")
+
+    return Promise.all(promises)
+}
 
 const update = async (id, body) => {
+
     const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId,
+        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, orderId, materialIssueTypeList, accessoryIssueItems, issueItems
     } = body;
 
-    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
 
-    const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
-    if (!dataFound) return { statusCode: 404, message: "No record found for order" };
+
+    const dataFound = await prisma.materialIssue.findUnique({ where: { id: parseInt(id) } });
+    if (!dataFound) return { statusCode: 404, message: "No record found for MaterialIssue" };
 
 
-    const parsedOrderDetails = JSON.parse(orderDetails || "[]");
 
-    const incomingSizeIds = orderSizeDetails?.filter(i => i.id).map(i => parseInt(i.id));
-    const incomingYarnIds = orderYarnDetails?.filter(i => i.id).map(i => parseInt(i.id));
+
+
+    // const incomingYarnIds = issueItems?.filter(i => i.id).map(i => parseInt(i.id));
+    // const incomingAccesssoryIds = accessoryIssueItems?.filter(i => i.id).map(i => parseInt(i.id));
+    const incomingmaterialIssueTypeListIds = materialIssueTypeList?.filter(i => i.id).map(i => parseInt(i.id));
 
     let data;
 
@@ -555,69 +840,40 @@ const update = async (id, body) => {
 
             },
             include: {
-                orderDetails: true
+                MaterialIssueItems: true,
+                AccessoryMaterialIssueItems: true,
             },
             data: {
-                docId: draftSave ? docIdNumber : dataFound?.docId,
-                partyId: partyId ? parseInt(partyId) : undefined,
-                packingCoverType,
-                branchId: branchId ? parseInt(branchId) : undefined,
-                contactPersonName,
-                address,
-                phone,
-                validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                orderDetailsId: parseInt(styleId),
-                RequirementYarnDetails: {
+                orderId: orderId ? parseInt(orderId) : undefined,
+                MaterialIssueTypeList: {
                     deleteMany: {
-                        ...(incomingSizeIds?.length > 0 && {
-                            id: { notIn: incomingSizeIds }
+                        ...(incomingmaterialIssueTypeListIds.length > 0 && {
+                            id: { notIn: incomingmaterialIssueTypeListIds }
                         })
                     },
 
-                    update: orderSizeDetails
-                        .filter(item => item.id)
-                        .map((sub) => ({
-                            where: { id: parseInt(sub.id) },
-                            data: {
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                            },
-                        })),
-                },
-
-                requirementSizeDetails: {
-                    deleteMany: {
-                        ...(incomingYarnIds?.length > 0 && {
-                            id: { notIn: incomingYarnIds }
-                        })
-                    },
-
-                    update: orderYarnDetails?.filter(item => item.id)?.map((sub) => ({
-                        where: { id: parseInt(sub.id) },
+                    update: incomingmaterialIssueTypeListIds?.filter(item => item.id).map((item) => ({
+                        where: { id: parseInt(item.id) },
                         data: {
-                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
+                            name: item?.value ? item?.value : undefined,
+                            value: item?.value ? item?.value : undefined,
                         },
                     })),
-                }
 
+
+                }
 
             },
         });
-
+        await updateYarnIssueItems(tx, data.id, issueItems)
+        await updateAccessoryIssueItems(tx, data.id, accessoryIssueItems)
 
     });
 
+
     return { statusCode: 0, data };
 };
+
 
 
 async function remove(id) {

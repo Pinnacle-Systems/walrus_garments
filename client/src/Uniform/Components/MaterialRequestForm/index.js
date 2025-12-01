@@ -36,14 +36,16 @@ const MaterialRequestForm = () => {
     const [sampleDetails, setSampleDetails] = useState([]);
     const [orderSizeDetails, setOrderSizeDetails] = useState([])
     const [orderYarnDetails, setOrderYarnDetails] = useState([])
-    const [raiseIndentItems, setRaiseIndentItems] = useState([])
     const [partyId, setPartyId] = useState("");
     const [childRecord, setChildrecord] = useState("")
     const [requirementId, setRequirementId] = useState("")
     const [isMaterialRequset, setIsMaterialRequset] = useState(false)
-    const [isReport, setIsReport] = useState("All")
+    const [isReport, setIsReport] = useState("")
     const [subGridForm, setSubGridForm] = useState(false)
     const [type, setType] = useState("All");
+    const [materialTypeList, setMaterialTypeList] = useState([])
+    const [raiseIndentItems, setRaiseIndentItems] = useState([])
+    const [accessoryRaiseIndentItems, setAccessoryRaiseIndentItems] = useState([])
 
     const params = {
         branchId, userId, finYearId
@@ -111,7 +113,11 @@ const MaterialRequestForm = () => {
     };
 
 
-    const handleDelete = async (id, RaiseIndentItems) => {
+
+    const handleDelete = async (id ,RaiseIndenetYarnItems , RaiseIndenetAccessoryItems) => {
+        let deleteItems = {
+            RaiseIndenetYarnItems, RaiseIndenetAccessoryItems
+        }
         if (id) {
             if (childRecord.current > 0) {
                 Swal.fire({
@@ -127,7 +133,7 @@ const MaterialRequestForm = () => {
                 return;
             }
             try {
-                await removeData({ id, body: RaiseIndentItems })
+                await removeData({ id, body: deleteItems })
                 setId("");
                 onNew();
                 Swal.fire({
@@ -155,7 +161,10 @@ const MaterialRequestForm = () => {
         setRaiseIndentItems([])
         setOrderSizeDetails([])
         setOrderYarnDetails([])
+        setAccessoryRaiseIndentItems([])
+        setMaterialTypeList([])
         setIsMaterialRequset(false)
+        setDocId("New")
         setPartyId("")
 
     }
@@ -175,7 +184,10 @@ const MaterialRequestForm = () => {
 
                     dueDate={dueDate} setDueDate={setDueDate} requirementId={requirementId} setRequirementId={setRequirementId} isMaterialRequset={isMaterialRequset} setIsMaterialRequset={setIsMaterialRequset} setSubGridForm={setSubGridForm} subGridForm={subGridForm}
 
-                    orderAllDataRefetch={orderAllDataRefetch} onNew={onNew}
+                    orderAllDataRefetch={orderAllDataRefetch} onNew={onNew} materialTypeList={materialTypeList} setMaterialTypeList={setMaterialTypeList}
+
+                    isReport={isReport} setIsReport={setIsReport} accessoryRaiseIndentItems={accessoryRaiseIndentItems} setAccessoryRaiseIndentItems={setAccessoryRaiseIndentItems}
+
                 />
 
             ) : (
@@ -183,7 +195,7 @@ const MaterialRequestForm = () => {
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-sm shadow-sm border border-gray-200">
 
                         <h1 className="text-2xl font-bold text-gray-800">Material Request</h1>
-                        <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
+                        {/* <div className="flex bg-gray-200 rounded-full p-0.5  w-fit shadow-sm">
                             <button
                                 onClick={() => setType("All")}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "All"
@@ -196,14 +208,15 @@ const MaterialRequestForm = () => {
 
                             <button
                                 onClick={() => setType("Partially")}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${type === "accessory"
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 
+                                    ${type === "Partially"
                                     ? "bg-blue-600 text-white shadow"
                                     : "bg-transparent text-gray-700 hover:text-blue-600"
                                     }`}
                             >
                                 Partially Received
                             </button>
-                        </div>
+                        </div> */}
 
                         <div className="flex flex-row  gap-4  ">
 
@@ -217,22 +230,22 @@ const MaterialRequestForm = () => {
                         </div>
                     </div>
 
-                    {isReport === "Material Request" || isReport === "All" ? (
+                    {/* {isReport === "Material Request" || isReport === "All" ? ( */}
 
 
-                        <MaterialRequestFormReport
-                            isReport={isReport}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            type = {type}
-                        />
-
-                    )
+                    <MaterialRequestFormReport
+                        isReport={isReport}
+                        onView={handleView}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        type={type}
+                    />
+                    {/* 
+                        )
                         :
-                        (
+                        ( */}
 
-                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                    {/* <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                                 <ReusableTable
                                     columns={columns}
                                     data={materialIssueData?.data || []}
@@ -241,10 +254,10 @@ const MaterialRequestForm = () => {
                                     onDelete={handleDelete}
                                     itemsPerPage={10}
                                 />
-                            </div>
-                        )
+                            </div> */}
+                    {/* ) */}
 
-                    }
+                    {/* } */}
 
 
 

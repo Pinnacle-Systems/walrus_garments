@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 
-const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGroupList, id, accessoryCategoryList, accessoryList, accessoryItems, uomList, colorList, sizeList, requirementItems ,orderSizeDetails }) => {
+const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGroupList, id, accessoryCategoryList, accessoryList, accessoryItems, uomList, colorList, sizeList, requirementItems, orderSizeDetails, tempOrderDetailsId, tempOrderId }) => {
 
 
     useEffect(() => {
@@ -32,6 +32,9 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
         setAccessoryItems(accessoryItems => {
             const newBlend = structuredClone(accessoryItems);
             newBlend[index][field] = value
+            newBlend[index]["orderId"] = tempOrderId
+            newBlend[index]["orderDetailsId"] = tempOrderDetailsId
+
             return newBlend
         });
     };
@@ -255,7 +258,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                                         </select>
                                     </td>
                                     <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                        {row?.uomId ?  parseFloat(orderQty).toFixed(3) : ""}
+                                        {row?.uomId ? parseFloat(orderQty).toFixed(3) : ""}
                                     </td>
                                     <td className='py-0.5 border border-gray-300 text-[11px]'>
                                         <input

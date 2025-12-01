@@ -24,6 +24,13 @@ import Swal from "sweetalert2";
 import { FaPlus } from "react-icons/fa";
 import { ReusableTable } from "../../../Inputs";
 import PurchaseOrderFormReport from "./PurchaseOrderFormReport";
+import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
+import { useGetTermsandCondtionsQuery } from "../../../redux/services/Term&ConditionsMasterService";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
 
 
@@ -51,7 +58,6 @@ export default function Form() {
 
   const [remarks, setRemarks] = useState("")
 
-  const [formReport, setFormReport] = useState(false);
 
   const [searchValue, setSearchValue] = useState("");
   const [deliveryType, setDeliveryType] = useState("")
@@ -67,17 +73,35 @@ export default function Form() {
     branchId, companyId, finYearId
   };
 
-  const { data: supplierList } =
-    useGetPartyQuery({ params: { ...params } });
-
-
-
-  const { data: supplierDetails } =
-    useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
 
 
 
+
+
+
+
+
+
+
+  const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
+    useGetTaxTemplateQuery({ params: { ...params } });
+
+      const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+      const { data: termsData } = useGetTermsandCondtionsQuery({ params: { ...params } });
+      const { data: branchList } = useGetBranchQuery({ params: { ...params } });
+      const { data: hsnData } =
+    useGetHsnMasterQuery({ params });
+      const { data: supplierDetails } =
+        useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+    
+      const { data: yarnList } = useGetYarnMasterQuery({ params });
+    
+      const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+    
+      const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, } });
+    
+    
 
   const { data: allData, isLoading, isFetching, refetch } = useGetPoQuery({ params, searchParams: searchValue });
 
@@ -216,59 +240,32 @@ export default function Form() {
   //   setSupplierId("")
   // }, [transType, id])
 
-  const allSuppliers = supplierList ? supplierList?.data : []
-  console.log(allSuppliers, "allSuppliers")
-  function filterSupplier() {
-    let finalSupplier = []
-    if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
-      finalSupplier = allSuppliers.filter(s => s.isGy)
-    } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
-      finalSupplier = allSuppliers.filter(s => s.isDy)
-    } else {
-      finalSupplier = allSuppliers.filter(s => s.isAcc)
-    }
-    return finalSupplier
-  }
-  const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
-  console.log(clientDetail, "clientDetail")
+  // const allSuppliers = supplierList ? supplierList?.data : []
+  // console.log(allSuppliers, "allSuppliers")
+  // function filterSupplier() {
+  //   let finalSupplier = []
+  //   if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
+  //     finalSupplier = allSuppliers.filter(s => s.isGy)
+  //   } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
+  //     finalSupplier = allSuppliers.filter(s => s.isDy)
+  //   } else {
+  //     finalSupplier = allSuppliers.filter(s => s.isAcc)
+  //   }
+  //   return finalSupplier
+  // }
+  // const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
+  // console.log(clientDetail, "clientDetail")
 
-  let supplierListBasedOnSupply = filterSupplier()
-  transType.toLowerCase().includes("greyyarn".toLowerCase())
-  console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
-  console.log(supplierId, "supplierId")
-  const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
+  // let supplierListBasedOnSupply = filterSupplier()
+  // transType.toLowerCase().includes("greyyarn".toLowerCase())
+  // console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
+  // console.log(supplierId, "supplierId")
+  // const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
 
-  console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
-  const columns = [
-    {
-      header: 'S.No',
-      accessor: (item, index) => parseInt(index) + 1,
-      className: 'font-medium text-gray-900 w-[20px] py-1 text-center'
-    },
-
-    {
-      header: 'Inward No',
-      accessor: (item) => item.docId,
-      className: 'font-medium uppercase text-gray-900 w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'TransType',
-      accessor: (item) => item.transType,
-      className: 'text-gray-800 uppercase w-[40px]  py-1  px-2'
-    },
-    {
-      header: 'Inward Date',
-      accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD"),
-      className: 'text-gray-800 uppercase w-[100px]  py-1  px-2'
-    },
-    {
-      header: 'Supplier',
-      accessor: (item) => findFromList(item.supplierId, supplierList?.data, "name"),
-      className: 'text-gray-800 uppercase w-[500px]'
-    },
+  // console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
 
 
-  ];
+
 
 
 
@@ -340,7 +337,9 @@ export default function Form() {
       {purchaseOrderForm ? (
         <PurchaseOrderForm
           onClose={() => { setPurchaseOrderForm(false); setReadOnly(prev => !prev) }} id={id} setId={setId} readOnly={readOnly} setReadOnly={setReadOnly} allData={allData}
-          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} poItems={poItems} setPoItems={setPoItems} onNew={onNew}
+          docId={docId} setDocId={setDocId} setTempPoItems={setTempPoItems} tempPoItems={tempPoItems} poItems={poItems} setPoItems={setPoItems} onNew={onNew} taxTypeList={taxTypeList}
+           supplierList={supplierList} supplierDetails={supplierDetails} branchList={branchList} hsnData={hsnData}
+          yarnList={yarnList} uomList={uomList}  colorList={colorList}  termsData={termsData} 
         />
 
       ) : (
@@ -375,7 +374,6 @@ export default function Form() {
           </div>
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <PurchaseOrderFormReport
-              columns={columns}
               data={allData?.data || []}
               onView={handleView}
               onEdit={handleEdit}

@@ -362,6 +362,11 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             id: parseInt(id)
         },
         include: {
+            order: {
+                select: {
+                    docId: true
+                }
+            },
             Po: true,
             directItems: {
                 include: {
@@ -450,7 +455,8 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
                 select: {
                     name: true
                 }
-            }
+            },
+ 
         }
     });
 
@@ -480,9 +486,9 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             // DirectReturnOrPoReturn: {
             //     poInwardOrDirectInward: "PurchaseReturn"
             // },
-            directReturnOrPoReturnId: {
-                lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
-            }
+            // directReturnOrPoReturnId: {
+            //     lt: JSON.parse(purchaseInwardReturnId) ? parseInt(purchaseInwardReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -581,7 +587,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
 
 
     let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
-    let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
+    // let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
 
 
 
@@ -656,7 +662,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
             cancelQty,
             poQty,
             stockQty,
-            stockRolls,
+            // stockRolls,
             allowedReturnRolls,
             allowedReturnQty,
             alreadyInwardedQty,
@@ -688,12 +694,6 @@ async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, desig
 
     console.log("itemTypePOID", itemType == "Accessory", colorId, uomId, sizeId, accessoryId, storeId)
 
-    // if (itemType == "DyedFabric") {
-    //     sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-    //     where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId} and gsmId=${gsmId}  and fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
-    //     storeId=${storeId};
-    //             `
-    // }
 
     if (itemType == "Accessory") {
 
@@ -703,8 +703,10 @@ async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, desig
     }
     else {
         sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId} ;`
+        where yarnId=${yarnId} and colorId=${colorId} and uomId=${uomId} ;`
     }
+
+    console.log(sql, "sqlstock")
 
     const stockData = await prisma.$queryRawUnsafe(sql);
     return stockData[0]
@@ -793,9 +795,9 @@ export function getPoItemObject(poMaterial, item) {
     }
 
     newItem.requirementPlanningItemsId = item?.RequirementPlanningItemsId ? parseInt(item?.RequirementPlanningItemsId) : undefined,
-    newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
-    newItem.orderDetailsId = item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
-    newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
+        newItem.orderId = item?.orderId ? parseInt(item?.orderId) : undefined,
+        newItem.orderDetailsId = item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+        newItem.uomId = item.uomId ? parseInt(item.uomId) : null;
     newItem.colorId = item.colorId ? parseInt(item.colorId) : undefined;
     newItem.qty = parseFloat(item.qty);
     newItem.price = parseFloat(item.price);

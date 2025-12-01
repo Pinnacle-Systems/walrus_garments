@@ -6,14 +6,14 @@ import SubGrid from "./SubGrid";
 import { Common } from "../../../Utils/DropdownData";
 import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, tempOrderDetailsId,
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId , tempOrderDetailsId,
     setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
-    colorList, uomList, sizeList, orderId
+    colorList, uomList, sizeList, orderId ,
 
 }) => {
 
     console.log(orderSizeDetails, "orderSizeDetails");
-    console.log(tempOrderDetailsId, "tempOrderDetailsId")
+    console.log(orderYarnDetails, "orderYarnDetails")
     console.log(requirementItems, "requirementItems");
     console.log(requirementForm, "requirementForm")
     console.log(processList, "processList")
@@ -34,6 +34,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
         const num = value === "" ? 0 : parseFloat(value);
+                    console.log("num", num);
 
         setOrderYarnDetails((prev) => {
             let newItems = structuredClone(prev);
@@ -55,7 +56,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 }
                 else {
 
-                    newItems[index]["percentage"] = num;
+                    newItems[index][field] = num;
                     console.log(newItems, "newItems");
 
                     const requirementArr = newItems?.map((yarn) => ({
@@ -75,8 +76,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                         lossPercentage: yarn?.lossPercentage,
                         processId: yarn?.processId,
                         wastagePercentage: yarn?.wastagePercentage,
-                        yarnType: yarn?.isProcess ? 'GreyYarn' : 'DyedYarn',
-                        RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
+                        yarnType:  'DyedYarn',
+                        // RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
 
                         // requiredQty: orderSizeDetails?.reduce(
                         //     (sum, size) =>
@@ -123,10 +124,33 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                 }
             }
-            else if (field === "isProcess") {
+           else if (field === "isProcess") {
 
-                newItems[index].yarnType = "GreyYarn";
+
+                setRequirementItems((prev) => {
+                    let reruirement = structuredClone(prev);
+                    console.log(prev, "prev")
+
+
+                    if (value == "Yes") {
+
+                        reruirement[index]["yarnType"] = "GreyYarn";
+                        reruirement[index][field] = value;
+
+                    } else {
+                        console.log(reruirement, "reruirement")
+                        reruirement[index]["yarnType"] = "DyedYarn";
+                        reruirement[index][field] = value;
+                        newItems[index].RequirementYarnProcessList = []
+
+                    }
+                    return reruirement
+
+                })
+
+
                 newItems[index][field] = value;
+
 
 
             }
@@ -156,7 +180,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     processId: yarn?.processId,
                     wastagePercentage: yarn?.wastagePercentage,
                     RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
-                    yarnType: yarn?.isProcess ? 'GreyYarn' : 'DyedYarn',
+                    yarnType: yarn?.isProcess == "Yes" ? 'GreyYarn' : 'DyedYarn',
                     requiredQty: orderSizeDetails?.reduce((sum, size) => {
                         const base = (yarn.percentage * size.weight / 100) * size.qty;
                         const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
@@ -173,7 +197,6 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
                 setRequirementItems((prev) => {
-                    console.log("prev snapshot:", JSON.parse(JSON.stringify(prev)));
 
                     const map = new Map();
 
@@ -270,6 +293,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             newFunction(yarn?.percentage, yarn?.yarnId);
         });
     }, [orderSizeDetails, orderYarnDetails]);
+
+
+
 
     const getQtyYarnSize = (sizeId, yarnId, colorId) => {
         // console.log(sizeId, yarnId, colorId, "sizeId, yarnId, colorId");
@@ -373,7 +399,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                     <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                         accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
-                        requirementItems={requirementItems} orderSizeDetails={orderSizeDetails}
+                        requirementItems={requirementItems} orderSizeDetails={orderSizeDetails} tempOrderId={tempOrderId} setTempOrderId={setTempOrderId}  tempOrderDetailsId={tempOrderDetailsId}
 
                     />
 
