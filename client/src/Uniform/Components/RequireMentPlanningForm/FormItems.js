@@ -6,9 +6,9 @@ import SubGrid from "./SubGrid";
 import { Common } from "../../../Utils/DropdownData";
 import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
-const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId , tempOrderDetailsId,
+const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId, tempOrderDetailsId,
     setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
-    colorList, uomList, sizeList, orderId ,
+    colorList, uomList, sizeList, orderId,
 
 }) => {
 
@@ -32,9 +32,10 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
     function handleInputChange(value, index, yarnId, field, subIndex) {
 
+            console.log("field", field);
 
         const num = value === "" ? 0 : parseFloat(value);
-                    console.log("num", num);
+        console.log("num", num);
 
         setOrderYarnDetails((prev) => {
             let newItems = structuredClone(prev);
@@ -44,6 +45,65 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 return sum + (parseFloat(item.percentage) || 0);
             }, 0);
 
+            const requirementArr = newItems?.map((yarn) => ({
+                yarn: yarn.Yarn.name,
+                percentage: yarn.percentage,
+                yarnKneedleId: yarn?.yarnKneedleId,
+                yarnId: yarn.yarnId,
+                count: yarn.count,
+                colorId: yarn?.colorId,
+                uomId: yarn?.uomId ? yarn?.uomId : 1,
+                // orderId: orderItemsData?.orderId,
+                // orderDetailsId: orderItemsData?.id,
+                orderId: tempOrderId,
+                orderDetailsId: tempOrderDetailsId,
+                partyId: orderItemsData?.order?.partyId,
+                isProcess: yarn?.isProcess,
+                lossPercentage: yarn?.lossPercentage,
+                processId: yarn?.processId,
+                wastagePercentage: yarn?.wastagePercentage,
+                yarnType: 'DyedYarn',
+                // RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
+
+                // requiredQty: orderSizeDetails?.reduce(
+                //     (sum, size) =>
+                //         sum + (yarn.percentage * size.weight / 100) * size.qty,
+
+                //     0
+                // ).toFixed(3),
+                requiredQty: orderSizeDetails?.reduce((sum, size) => {
+                    const base = (yarn.percentage * size.weight / 100) * size.qty;
+                    const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
+                        (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                        0
+                    );
+                    console.log(totalLossPercentage, "totalLossPercentage");
+                    const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
+                    return sum + withLoss;
+                }, 0).toFixed(3),
+            }));
+
+            setRequirementItems((prev) => {
+
+                const map = new Map();
+
+                prev.forEach((item) => {
+                    map.set(`${item.yarnId}-${item.colorId}`, { ...item });
+                });
+                console.log("map", map);
+
+                requirementArr.forEach((item) => {
+                    const key = `${item.yarnId}-${item.colorId}`;
+                    const existing = map.get(key) || {};
+
+                    map.set(key, {
+                        ...existing,
+                        ...item,
+                    });
+                });
+
+                return Array.from(map.values());
+            });
 
 
             if (field === "percentage") {
@@ -59,72 +119,73 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     newItems[index][field] = num;
                     console.log(newItems, "newItems");
 
-                    const requirementArr = newItems?.map((yarn) => ({
-                        yarn: yarn.Yarn.name,
-                        percentage: yarn.percentage,
-                        yarnKneedleId: yarn?.yarnKneedleId,
-                        yarnId: yarn.yarnId,
-                        count: yarn.count,
-                        colorId: yarn?.colorId,
-                        uomId: yarn?.uomId ? yarn?.uomId : 1,
-                        // orderId: orderItemsData?.orderId,
-                        // orderDetailsId: orderItemsData?.id,
-                        orderId: tempOrderId,
-                        orderDetailsId: tempOrderDetailsId,
-                        partyId: orderItemsData?.order?.partyId,
-                        isProcess: yarn?.isProcess,
-                        lossPercentage: yarn?.lossPercentage,
-                        processId: yarn?.processId,
-                        wastagePercentage: yarn?.wastagePercentage,
-                        yarnType:  'DyedYarn',
-                        // RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
+                    // const requirementArr = newItems?.map((yarn) => ({
+                    //     yarn: yarn.Yarn.name,
+                    //     percentage: yarn.percentage,
+                    //     yarnKneedleId: yarn?.yarnKneedleId,
+                    //     yarnId: yarn.yarnId,
+                    //     count: yarn.count,
+                    //     colorId: yarn?.colorId,
+                    //     uomId: yarn?.uomId ? yarn?.uomId : 1,
+                    //     // orderId: orderItemsData?.orderId,
+                    //     // orderDetailsId: orderItemsData?.id,
+                    //     orderId: tempOrderId,
+                    //     orderDetailsId: tempOrderDetailsId,
+                    //     partyId: orderItemsData?.order?.partyId,
+                    //     isProcess: yarn?.isProcess,
+                    //     lossPercentage: yarn?.lossPercentage,
+                    //     processId: yarn?.processId,
+                    //     wastagePercentage: yarn?.wastagePercentage,
+                    //     yarnType: 'DyedYarn',
+                    //     // RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
 
-                        // requiredQty: orderSizeDetails?.reduce(
-                        //     (sum, size) =>
-                        //         sum + (yarn.percentage * size.weight / 100) * size.qty,
+                    //     // requiredQty: orderSizeDetails?.reduce(
+                    //     //     (sum, size) =>
+                    //     //         sum + (yarn.percentage * size.weight / 100) * size.qty,
 
-                        //     0
-                        // ).toFixed(3),
-                        requiredQty: orderSizeDetails?.reduce((sum, size) => {
-                            const base = (yarn.percentage * size.weight / 100) * size.qty;
-                            const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
-                                (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
-                                0
-                            );
-                            console.log(totalLossPercentage, "totalLossPercentage");
-                            const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
-                            return sum + withLoss;
-                        }, 0).toFixed(3),
-                    }));
+                    //     //     0
+                    //     // ).toFixed(3),
+                    //     requiredQty: orderSizeDetails?.reduce((sum, size) => {
+                    //         const base = (yarn.percentage * size.weight / 100) * size.qty;
+                    //         const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
+                    //             (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
+                    //             0
+                    //         );
+                    //         console.log(totalLossPercentage, "totalLossPercentage");
+                    //         const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
+                    //         return sum + withLoss;
+                    //     }, 0).toFixed(3),
+                    // }));
 
-                    setRequirementItems((prev) => {
+                    // setRequirementItems((prev) => {
 
-                        const map = new Map();
+                    //     const map = new Map();
 
-                        prev.forEach((item) => {
-                            map.set(`${item.yarnId}-${item.colorId}`, { ...item });
-                        });
-                        console.log("map", map);
+                    //     prev.forEach((item) => {
+                    //         map.set(`${item.yarnId}-${item.colorId}`, { ...item });
+                    //     });
+                    //     console.log("map", map);
 
-                        requirementArr.forEach((item) => {
-                            const key = `${item.yarnId}-${item.colorId}`;
-                            const existing = map.get(key) || {};
+                    //     requirementArr.forEach((item) => {
+                    //         const key = `${item.yarnId}-${item.colorId}`;
+                    //         const existing = map.get(key) || {};
 
-                            map.set(key, {
-                                ...existing,
-                                ...item,
-                            });
-                        });
+                    //         map.set(key, {
+                    //             ...existing,
+                    //             ...item,
+                    //         });
+                    //     });
 
-                        return Array.from(map.values());
-                    });
+                    //     return Array.from(map.values());
+                    // });
 
 
 
 
                 }
             }
-           else if (field === "isProcess") {
+            else if (field === "isProcess") {
+
 
 
                 setRequirementItems((prev) => {
@@ -399,7 +460,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                     <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                         accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
-                        requirementItems={requirementItems} orderSizeDetails={orderSizeDetails} tempOrderId={tempOrderId} setTempOrderId={setTempOrderId}  tempOrderDetailsId={tempOrderDetailsId}
+                        requirementItems={requirementItems} orderSizeDetails={orderSizeDetails} tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId}
 
                     />
 

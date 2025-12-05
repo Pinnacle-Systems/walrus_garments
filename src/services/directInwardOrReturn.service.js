@@ -465,7 +465,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
                     name: true
                 }
             },
-            orderId : true,
+            orderId: true,
             orderDetailsId: true,
             requirementPlanningItemsId: true,
 
@@ -1496,7 +1496,7 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                     requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
 
 
-            
+
                 }
             })
 
@@ -1812,12 +1812,30 @@ async function update(id, body) {
 
 
 async function remove(id) {
-    const data = await prisma.directInwardOrReturn.delete({
+
+    const dataFound = await prisma.directInwardOrReturn.findUnique({
         where: {
             id: parseInt(id)
         },
+        include: {
+            DirectItems: true
+        }
     })
-    return { statusCode: 0, data };
+
+
+        console.log(dataFound?.poInwardOrDirectInward,"dataFound")
+        const poItemsId  =  dataFound?.DirectItems?.map(i  =>  i.id)
+
+    console.log(poItemsId,"poItemsId")
+    if (!dataFound) return NoRecordFound("directInwardOrReturn");
+
+
+    // const data = await prisma.directInwardOrReturn.delete({
+    //     where: {
+    //         id: parseInt(id)
+    //     },
+    // })
+    return { statusCode: 0, dataFound };
 }
 
 

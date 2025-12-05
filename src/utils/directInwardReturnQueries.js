@@ -356,7 +356,7 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         let alreadyInwardedQty = ((await getAlreadyInwardDataWithoutLimit(poInwardOrDirectInward, directItem?.poItemsId, directItem))?.alreadyInwardedQty || 0);
         let alreadyInwardedRolls = ((await getAlreadyInwardDataWithoutLimit(poInwardOrDirectInward, directItem?.poItemsId, directItem))?.alreadyInwardedRolls || 0);
         let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls);
-        let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty);
+        let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty) + parseFloat(directItem?.qty)
         // let returnLotDetails = (await getStockData(directItem, poInwardOrDirectInward, directItem?.returnLotDetails, directItem?.fabricId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType,))
         console.log(directItem, "directItem")
         let stockQty = parseFloat((await getStockQty(storeId, poType, directItem?.orderId, directItem?.colorId, directItem?.uomId, directItem?.designId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.gsmId, directItem?.sizeId, directItem?.fabricId, directItem?.kDiaId, directItem?.fDiaId, directItem?.yarnId))?.stockQty || 0)

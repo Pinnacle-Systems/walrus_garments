@@ -112,8 +112,8 @@ async function get(req) {
             }
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
-        totalCount = data.length
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+        // totalCount = data.length
+        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {
         data = await prisma.directReturnOrPoReturn.findMany({
             where: {

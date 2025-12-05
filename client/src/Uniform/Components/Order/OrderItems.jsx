@@ -236,20 +236,14 @@ const OrderItems = forwardRef(function OrderItems(
     setContextSubGridMenu(null);
   };
   const handleDeleteRow = (id) => {
-
-    // setOrderDetails((yarnBlend) => {
-    //   // if (yarnBlend.length <= 1) {
-    //   //   return yarnBlend;
-    //   // }
-    //   return yarnBlend.filter((_, index) => index !== parseInt(id));
-    // });
     console.log(id, "idddddddddddddddd");
-    setOrderDetails((prevOrderDetails) =>
-      prevOrderDetails?.filter((_, index) => index != (id))
-    );
 
-
+    setOrderDetails((prevOrderDetails) => {
+      console.log(prevOrderDetails, "prevOrderDetails");
+      return prevOrderDetails?.filter((_, index) => index !== id);
+    });
   };
+
 
 
 
@@ -568,7 +562,7 @@ const OrderItems = forwardRef(function OrderItems(
             </tbody>
           </table>
         </div>
-      </div>
+      </div>{console.log(contextMenu, "contextMenu"  )}
       {contextMenu && (
         <div
           style={{

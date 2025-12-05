@@ -388,12 +388,12 @@ async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, bran
     });
 }
 
-async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
+async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item, transactionId) {
 
     await tx.stock.create({
         data: {
             // itemType: inOrOut,
-            inOrOut: inOrOut,
+            inOrOut: "FromOrderTransferItems",
             yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
             gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
@@ -404,31 +404,57 @@ async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item) {
             storeId: storeId ? parseInt(storeId) : undefined,
             orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
             requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
-
+            transactionId: transactionId ? transactionId : ''
         }
     })
 
 }
 
-async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item) {
+async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, transactionId, transferType) {
 
-    await tx.stock.create({
-        data: {
-            // itemType: poType,
-            inOrOut: inOrOut,
-            yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
-            requirementPlanningItemsId: item["id"] ? parseInt(item["id"]) : undefined,
 
-        }
-    })
+    if (transferType != "OrderToGeneral") {
+        await tx.stock.create({
+            data: {
+                // itemType: poType,
+                inOrOut: "ToOrderTransferTtems",
+                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+                gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+                price: item["price"] ? parseFloat(item["price"]) : 0,
+                orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+                branchId: branchId ? parseInt(branchId) : undefined,
+                storeId: storeId ? parseInt(storeId) : undefined,
+                orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+                requirementPlanningItemsId: item["id"] ? parseInt(item["id"]) : undefined,
+                transactionId: transactionId ? transactionId : ""
+            }
+        })
+    } else {
+        await tx.stock.create({
+            data: {
+                // itemType: poType,
+                inOrOut: inOrOut,
+                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
+                gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+                price: item["price"] ? parseFloat(item["price"]) : 0,
+                orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+                branchId: branchId ? parseInt(branchId) : undefined,
+                storeId: storeId ? parseInt(storeId) : undefined,
+                orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
+                requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
+                category: transferType == "OrderToGeneral" ? "FromOrder" : "",
+                transactionId: transactionId ? transactionId : ""
+
+
+            }
+        })
+    }
+
+
 
 }
 
@@ -464,7 +490,8 @@ async function createStocktransferItems(
     storeId,
     branchId,
     orderItems,
-    fromOrderId
+    fromOrderId,
+    transferType
 ) {
     if (stockItems?.length) {
         await Promise.all(
@@ -481,8 +508,10 @@ async function createStocktransferItems(
                     },
                 });
 
-                await createYarnStock(tx, poType, inOrOut, branchId, storeId, item,);
-                if(fromOrderId){
+                await createYarnStock(tx, poType, inOrOut, branchId, storeId, item, data?.id);
+
+
+                if (fromOrderId) {
                     await UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item);
                 }
 
@@ -513,9 +542,12 @@ async function createStocktransferItems(
                     },
                 });
 
-                await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item);
+                await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, data?.id, transferType);
 
-                await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+                if (transferType != "OrderToGeneral") {
+
+                    await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+                }
 
             })
         );
@@ -554,14 +586,9 @@ async function create(req) {
 
             },
         });
-        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems , fromOrderId)
+        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems, fromOrderId, transferType)
 
     })
-
-
-
-
-
 
     return { statusCode: 0, data };
 
@@ -569,97 +596,139 @@ async function create(req) {
 
 
 
+async function UpdateFromAccessoryStock(tx, item, transactionId) {
+
+    console.log(transactionId, "FromOrderTransferItemsId")
+
+
+    const data = await prisma.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "FromOrderTransferItems"
+        },
+        data:
+        {
+            qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
+        },
+    })
+}
+
+async function UpdateToAccessoryStock(tx, item, transactionId) {
+    console.log(transactionId, "ToOrderTransferTtemsId")
+
+
+    const data = await prisma.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "ToOrderTransferTtems"
+        },
+        data:
+        {
+            qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+        },
+    })
+}
+
+
+
+
+async function updateOrCreateFrom(tx, item) {
+
+    if (item?.id) {
+
+
+        let updatedata = await tx.FromOrderTransferItems.update({
+            where: {
+                id: parseInt(item.id)
+            },
+            data: {
+                transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+
+
+            }
+        })
+
+        await UpdateFromAccessoryStock(tx, item, item.id);
+
+        return updatedata
+    }
+}
+
+async function updateOrCreateTo(tx, item) {
+
+    if (item?.id) {
+
+
+        let updatedata = await tx.ToOrderTransferTtems.update({
+            where: {
+                id: parseInt(item.id)
+            },
+            data: {
+                transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+
+
+            }
+        })
+
+        await UpdateToAccessoryStock(tx, item, item.id);
+
+        return updatedata
+    }
+}
+
+async function updatFromYarnTransferItemsItems(tx, stockItems, poType, poInwardOrDirectInward, storeId, branchId) {
+    let promises = stockItems?.map(async (item) => await updateOrCreateFrom(tx, item,))
+    return Promise.all(promises)
+}
+
+
+async function updatToYarnTransferItemsItems(tx, orderItems, poType, poInwardOrDirectInward, storeId, branchId) {
+    let promises = orderItems?.map(async (item) => await updateOrCreateTo(tx, item,))
+    return Promise.all(promises)
+}
+
 const update = async (id, body) => {
-    const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType,
-        address, phone, validDate, notes, term, orderBy, orderYarnDetails, orderSizeDetails, styleId,
+    const { docId, draftSave, finYearId, userId, branchId, partyId, poType, inOrOut, storeId,
+        address, phone, validDate, notes, term, transferType, orderYarnDetails, orderSizeDetails, orderItems, stockItems,
     } = body;
 
-    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
+    // let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    // const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    // let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
 
 
-    const dataFound = await prisma.order.findUnique({ where: { id: parseInt(id) } });
-    if (!dataFound) return { statusCode: 404, message: "No record found for order" };
+    const dataFound = await prisma.StockTransfer.findUnique({ where: { id: parseInt(id) } });
+    if (!dataFound) return { statusCode: 404, message: "No record found for StockTransfer" };
 
 
-    const parsedOrderDetails = JSON.parse(orderDetails || "[]");
-
-    const incomingSizeIds = orderSizeDetails?.filter(i => i.id).map(i => parseInt(i.id));
-    const incomingYarnIds = orderYarnDetails?.filter(i => i.id).map(i => parseInt(i.id));
 
     let data;
 
     await prisma.$transaction(async (tx) => {
-        data = await tx.MaterialIssue.update({
+        data = await tx.StockTransfer.update({
             where: {
                 id: parseInt(id),
 
             },
             include: {
-                orderDetails: true
+                FromOrderTransferItems: true,
+                ToOrderTransferTtems: true,
             },
             data: {
-                docId: draftSave ? docIdNumber : dataFound?.docId,
-                partyId: partyId ? parseInt(partyId) : undefined,
-                packingCoverType,
-                branchId: branchId ? parseInt(branchId) : undefined,
-                contactPersonName,
-                address,
-                phone,
-                validDate: validDate ? new Date(validDate) : undefined,
-                updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                orderDetailsId: parseInt(styleId),
-                RequirementYarnDetails: {
-                    deleteMany: {
-                        ...(incomingSizeIds?.length > 0 && {
-                            id: { notIn: incomingSizeIds }
-                        })
-                    },
+                transferType: transferType ? transferType : "",
+            }
 
-                    update: orderSizeDetails
-                        .filter(item => item.id)
-                        .map((sub) => ({
-                            where: { id: parseInt(sub.id) },
-                            data: {
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-                                weight: sub?.weight ? parseFloat(sub.weight) : undefined,
-                            },
-                        })),
-                },
-
-                requirementSizeDetails: {
-                    deleteMany: {
-                        ...(incomingYarnIds?.length > 0 && {
-                            id: { notIn: incomingYarnIds }
-                        })
-                    },
-
-                    update: orderYarnDetails?.filter(item => item.id)?.map((sub) => ({
-                        where: { id: parseInt(sub.id) },
-                        data: {
-                            colorId: yarn?.colorId ? parseInt(yarn.colorId) : undefined,
-                            percentage: yarn?.percentage ? parseFloat(yarn.percentage) : undefined,
-                            yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
-                            yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
-                            count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
-                            styleId: yarn?.styleId ? parseInt(yarn.styleId) : undefined,
-                        },
-                    })),
-                }
-
-
-            },
         });
 
+        await updatFromYarnTransferItemsItems(tx, stockItems, poType, storeId, branchId)
+
+        await updatToYarnTransferItemsItems(tx, orderItems, poType, storeId, branchId)
 
     });
 
     return { statusCode: 0, data };
 };
+
 
 
 async function remove(id) {

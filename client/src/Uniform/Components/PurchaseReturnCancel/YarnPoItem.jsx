@@ -11,7 +11,7 @@ import { HiPencil, HiTrash } from 'react-icons/hi'
 const YarnPoItem = ({ yarnList, uomList,
     colorList, gaugeList, designList, deleteRow,
     loopLengthList, setInwardItems, storeId,
-    diaList, index, handleInputChange, readOnly, removeItem, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
+    diaList, index, handleInputChange, readOnly, id, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
     handleRightClick
 
 }) => {
@@ -19,9 +19,8 @@ const YarnPoItem = ({ yarnList, uomList,
 
 
     const [lotGrid, setLotGrid] = useState(false)
-    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId })
+    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId , id})
 
-    console.log(data, "data")
 
 
     useEffect(() => {

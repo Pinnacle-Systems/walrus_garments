@@ -28,7 +28,7 @@ const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, mate
 
   const data = {
 
-    material,
+    name :  material,
     materialActive,
     rawMaterial: true,
     materialId

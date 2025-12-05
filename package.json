@@ -8,7 +8,7 @@
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
     "start": "node --max-old-space-size=4096 server.js",
-    "dev": "nodemon --exec 'node --max-old-space-size=4096' server.js",
+    "dev": "nodemon --max-old-space-size=4096 server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "server": "NODE_OPTIONS = --max-old-space-size=8192",
     "postinstall": "prisma generate",

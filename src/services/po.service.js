@@ -153,12 +153,33 @@ async function get(req) {
 async function getOne(id) {
     const childRecord = 0;
 
-    const po = await prisma.po.findUnique({
-        where: {
-            id: parseInt(id),
-        },
+    // Fetch PO with relations
+    let po = await prisma.po.findUnique({
+        where: { id: parseInt(id) },
         include: {
-            PoItems: true,
+            PoItems: {
+                select: {
+                    id: true,
+                    yarnId: true,
+                    colorId: true,
+                    uomId: true,
+                    requiredQty: true,
+                    qty: true,
+                    price: true,
+                    poId: true,
+                    count: true,
+                    isDeleted: true,
+                    requirementPlanningItemsId: true,
+                    orderId: true,
+                    taxPercent: true,
+                    hsnId: true,
+                    orderDetailsId: true,
+                    isPurchaseCancel: true,
+                    RequirementPlanningItems: {
+                        select: { requiredQty: true }
+                    }
+                }
+            },
             supplier: {
                 select: {
                     aliasName: true,
@@ -167,33 +188,53 @@ async function getOne(id) {
                     address: true,
                     pincode: true,
                     City: {
-                        select: {
-                            name: true,
-                        },
-                    },
-                },
+                        select: { name: true }
+                    }
+                }
             },
             DeliveryParty: {
                 select: {
                     name: true,
                     address: true,
-                    contactPersonName: true,
-                },
+                    contactPersonName: true
+                }
             },
             DeliveryBranch: {
                 select: {
                     branchName: true,
                     contactName: true,
-                    address: true,
-                },
-            },
-        },
+                    address: true
+                }
+            }
+        }
     });
 
     if (!po) return NoRecordFound("po");
 
-    return { statusCode: 0, data: { ...po, childRecord } };
+    // Compute PoItems with balanceQty
+    const updatedItems = po.PoItems?.map(item => {
+        const qty = parseFloat(item.qty) || 0;
+        const req = parseFloat(item?.RequirementPlanningItems?.requiredQty) || 0;
+
+        return {
+            ...item,
+            balanceQty: Math.max(0,parseFloat(req) - parseFloat(qty)),
+            requiredQty: req
+        };
+    }) || [];
+
+    // Assign updated PoItems back to PO object
+    po.PoItems = updatedItems;
+
+    return {
+        statusCode: 0,
+        data: {
+            ...po,
+            childRecord,
+        }
+    };
 }
+
 
 
 
@@ -354,7 +395,6 @@ export async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
 
-    console.log(purchaseInwardReturnId, "purchaseInwardReturnId", storeId)
 
 
     let data = await prisma.poItems.findUnique({
@@ -456,10 +496,11 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
                     name: true
                 }
             },
- 
+
         }
     });
 
+    console.log(data, "dataInPoItemasId503", )
 
 
     const alreadyInwardedData = await prisma?.directItems?.aggregate({
@@ -589,7 +630,7 @@ export async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId
     let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
     // let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
 
-
+  
 
     // let stockQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     // let stockRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)

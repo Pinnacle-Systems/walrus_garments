@@ -110,7 +110,7 @@ async function get(req) {
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
+    // let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     let data = await xprisma.order.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
@@ -160,7 +160,9 @@ async function get(req) {
 
 
     });
-    let totalCount = data.length;
+
+    console.log("data", data)
+    let totalCount = data?.length;
     // if (serachDocNo) {
     //     data = data.filter(i => i.docDate.includes(serachDocNo))
     // }
@@ -173,7 +175,7 @@ async function get(req) {
     // }
 
 
-    return { statusCode: 0, data, totalCount, nextDocId: newDocId };
+    return { statusCode: 0, data, totalCount };
 }
 
 

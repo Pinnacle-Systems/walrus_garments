@@ -144,7 +144,7 @@ const StockTransfer = () => {
                         </div>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true); setTransferType("") ;OnNew() }}
+                            onClick={() => { setForm(true);OnNew() }}
                         >
                             <FaPlus /> Create New
                         </button>

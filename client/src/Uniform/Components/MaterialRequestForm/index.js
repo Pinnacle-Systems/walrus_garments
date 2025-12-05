@@ -52,7 +52,7 @@ const MaterialRequestForm = () => {
     };
 
     const { data: allData, isLoading, isFetching } = useGetRaiseIndentQuery({ params: { branchId } });
-    const { data: materialIssueData } = useGetMaterialIssueQuery({ params: { branchId } });
+    // const { data: materialIssueData } = useGetMaterialIssueQuery({ params: { branchId } });
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching, refetch: orderAllDataRefetch } = useGetOrderQuery({ params });
 

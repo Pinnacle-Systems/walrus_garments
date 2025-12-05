@@ -120,92 +120,92 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-    const validateData = (data) => {
-
-        let mandatoryFields = ["styleId", "fiberContentId","socksMaterialId","socksTypeId"];
- 
-        if (data.partyId && data?.validDate) {
-            return true
-        }
-        // if(isGridDatasValid(data?.orderDetails, false, mandatoryFields)){
-        //     return true
-        // }
-
-        return false
-    }
-
     // const validateData = (data) => {
 
+    //     let mandatoryFields = ["styleId", "fiberContentId","socksMaterialId","socksTypeId"];
 
-    //     let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
-    //     let YarnmandatoryFields = ["colorId", "yarnId", "count", "yarnKneedleId"];
-    //     let SizemandatoryFields = ["sizeId", "weight", "qty"];
-
-
-    //     // let gridYarnDatasValid = data?.orderDetails.every(obj =>
-    //     //     obj?.YarnDetails?.every(yarn =>
-    //     //         YarnmandatoryFields.every(field =>
-    //     //             yarn?.[field] &&
-    //     //             yarn?.[field] !== "" &&
-    //     //             yarn?.[field] !== null &&
-    //     //             parseFloat(yarn?.[field]) !== 0
-    //     //         )
-    //     //     )
-    //     // );
-    //     // let gridSizeDatasValid = data?.orderDetails.every(obj =>
-    //     //     obj?.YarnDetails?.every(yarn =>
-    //     //         SizemandatoryFields.every(field =>
-    //     //             yarn?.[field] &&
-    //     //             yarn?.[field] !== "" &&
-    //     //             yarn?.[field] !== null &&
-    //     //             parseFloat(yarn?.[field]) !== 0
-    //     //         )
-    //     //     )
-    //     // );
-
-
-
-    //     // console.log(gridYarnDatasValid,"gridYarnDatasValid",gridSizeDatasValid,"gridSizeDatasValid")
-
-    //     // return data.partyId && data.validDate 
-    //     //     && isGridDatasValid(data.orderDetails, false, mandatoryFields) && data.orderDetails.length !== 0 
-
-    //     //        && gridYarnDatasValid &&  gridSizeDatasValid
-
-    //     if (!data?.orderDetails || data.orderDetails.length === 0) {
-    //             Swal.fire({
-    //                     title:"At least one order detail is required",
-    //                     icon: "success",
-    //                     draggable: true,
-    //                     timer: 1000,
-    //                     showConfirmButton: false,
-    //                     didOpen: () => {
-    //                         Swal.showLoading();
-    //                     }
-    //                 });
+    //     if (data.partyId && data?.validDate) {
+    //         return true
     //     }
-
-    //     // for (let i = 0; i < data.orderDetails.length; i++) {
-    //     //     let order = data.orderDetails[i];
-    //     //     for (let field of mandatoryFields) {
-    //     //         if (!order?.[field] || order[field] === "" || order[field] === null || parseFloat(order[field]) === 0) {
-    //     //             // throw new Error(`Order ${i + 1}: Missing or invalid ${field}`);
-
-    //     //             Swal.fire({
-    //     //                 title:(`Order ${i + 1}: Missing or invalid ${field}`),
-    //     //                 icon: "success",
-    //     //                 draggable: true,
-    //     //                 timer: 1000,
-    //     //                 showConfirmButton: false,
-    //     //                 didOpen: () => {
-    //     //                     Swal.showLoading();
-    //     //                 }
-    //     //             });
-    //     //         }
-    //     //     }
-
+    //     // if(isGridDatasValid(data?.orderDetails, false, mandatoryFields)){
+    //     //     return true
     //     // }
+
+    //     return false
     // }
+
+    const validateData = (data) => {
+
+
+        let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
+        let YarnmandatoryFields = ["colorId", "yarnId", "count", "yarnKneedleId"];
+        let SizemandatoryFields = ["sizeId", "weight", "qty"];
+
+
+        let gridYarnDatasValid = data?.orderDetails.every(obj =>
+            obj?.YarnDetails?.every(yarn =>
+                YarnmandatoryFields.every(field =>
+                    yarn?.[field] &&
+                    yarn?.[field] !== "" &&
+                    yarn?.[field] !== null &&
+                    parseFloat(yarn?.[field]) !== 0
+                )
+            )
+        );
+        let gridSizeDatasValid = data?.orderDetails.every(obj =>
+            obj?.YarnDetails?.every(yarn =>
+                SizemandatoryFields.every(field =>
+                    yarn?.[field] &&
+                    yarn?.[field] !== "" &&
+                    yarn?.[field] !== null &&
+                    parseFloat(yarn?.[field]) !== 0
+                )
+            )
+        );
+
+
+
+        console.log(gridYarnDatasValid, "gridYarnDatasValid", gridSizeDatasValid, "gridSizeDatasValid")
+
+        return data.partyId && data.validDate
+        // && isGridDatasValid(data.orderDetails, false, mandatoryFields) && data.orderDetails.length !== 0
+
+        // && gridYarnDatasValid && gridSizeDatasValid
+
+        // if (!data?.orderDetails || data.orderDetails.length === 0) {
+        //         Swal.fire({
+        //                 title:"At least one order detail is required",
+        //                 icon: "success",
+        //                 draggable: true,
+        //                 timer: 1000,
+        //                 showConfirmButton: false,
+        //                 didOpen: () => {
+        //                     Swal.showLoading();
+        //                 }
+        //             });
+        // }
+
+        // for (let i = 0; i < data?.orderDetails?.length; i++) {
+        //     let order = data.orderDetails[i];
+        //     for (let field of mandatoryFields) {
+        //         if (!order?.[field] || order[field] === "" || order[field] === null || parseFloat(order[field]) === 0) {
+        //             // throw new Error(`Order ${i + 1}: Missing or invalid ${field}`);
+
+        //             Swal.fire({
+        //                 title:(`Order ${i + 1}: Missing or invalid ${field}`),
+        //                 icon: "success",
+        //                 draggable: true,
+        //                 timer: 1000,
+        //                 showConfirmButton: false,
+        //                 didOpen: () => {
+        //                     Swal.showLoading();
+        //                 }
+        //             });
+        //         }
+        //     }
+
+        // }
+    }
 
     console.log(data, "datatata")
 
@@ -261,8 +261,20 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     };
 
     const saveData = (nextProcess) => {
+        let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
+
+        let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty"];
+        let yarnmandatoryFields = ["colorId", "yarnId", "count", "yarnKneedleId"];
+
+
+        let sizeAray = data?.orderDetails?.flatMap(item => item?.orderSizeDetails || []);
+        let yarnAray = data?.orderDetails?.flatMap(item => item?.orderYarnDetails || []);
+
+
+        console.log(sizeAray, "sizeAray", yarnAray, "yarnAray")
+
+
         if (!validateData(data)) {
-            // toast.info("Please fill all required fields...!", { position: "top-center" })
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "warning",
@@ -270,6 +282,36 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             });
             return
         }
+        if (data.orderDetails?.every(item => !item.styleId)) {
+            Swal.fire({
+                title: "Grid Items are missing...!",
+                icon: "warning",
+
+            });
+            return
+        }
+        if (!isGridDatasValid(data.orderDetails, false, mandatoryFields)) {
+            Swal.fire({
+                title: "Please fill all orderItems fields...!",
+                icon: "warning",
+            });
+            return;
+        }
+        if (!isGridDatasValid(sizeAray, false, sizemandatoryFields)) {
+            Swal.fire({
+                title: "Please fill all Size fields...!",
+                icon: "warning",
+            });
+            return;
+        }
+        if (!isGridDatasValid(yarnAray, false, yarnmandatoryFields)) {
+            Swal.fire({
+                title: "Please fill all Yarn fields...!",
+                icon: "warning",
+            });
+            return;
+        }
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }

@@ -547,7 +547,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-                        branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                        branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList} id={id}
 
                     />
 

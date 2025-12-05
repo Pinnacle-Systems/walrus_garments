@@ -503,6 +503,16 @@ async function getOne(id, req) {
                         }                    }
                 }
             },
+            Yarn : {
+                select : {
+                    name : true
+                }
+            },
+            Color : {
+                select : {
+                    name : true
+                }
+            }
                 
 
         }

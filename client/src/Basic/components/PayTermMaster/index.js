@@ -9,7 +9,7 @@ import {
 } from "../../../redux/services/PayTermMasterServices";
 
 import { toast } from "react-toastify";
-import { ReusableTable, TextInput, ToggleButton } from "../../../Inputs";
+import { ReusableTable, TextInput, TextInputNew, TextInputNew1, ToggleButton } from "../../../Inputs";
 import MastersForm from "../MastersForm/MastersForm";
 import Mastertable from "../MasterTable/Mastertable";
 import { statusDropdown } from "../../../Utils/DropdownData";
@@ -78,7 +78,7 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, aliasName, name, days, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, aliasName : aliasName.trim(), name, days, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
@@ -98,6 +98,7 @@ export default function Form() {
 
             });
             // toast.success(text + "Successfully");
+                setForm(false);
 
         } catch (error) {
             console.log("handle");
@@ -106,10 +107,7 @@ export default function Form() {
 
     const saveData = () => {
         if (!validateData(data)) {
-            // toast.error("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
-            Swal.fire({
+             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
 
@@ -118,22 +116,17 @@ export default function Form() {
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.aliasName == aliasName.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.aliasName?.trim() == aliasName?.trim());
         } else {
-            foundItem = allData?.data?.some(item => item.aliasName == aliasName.trim());
+            foundItem = allData?.data?.some(item => item?.aliasName?.trim() == aliasName?.trim());
 
         }
         if (foundItem) {
             Swal.fire({
-                text: "The Measurement  Name already exists.",
+                text: "The PayTerm already exists.",
                 icon: "warning",
             });
             return false;
-        }
-
-
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
         }
         if (id) {
             handleSubmitCustom(updateData, data, "Updated");
@@ -141,6 +134,8 @@ export default function Form() {
             handleSubmitCustom(addData, data, "Added");
         }
     };
+
+    console.log(allData?.data,"alldata")
 
     const deleteData = async (id) => {
         if (id) {
@@ -191,9 +186,9 @@ export default function Form() {
 
 
     useEffect(() => {
-        if (id) return
+        // if (id) return
 
-        setAliasName(` ${days} ${" "} ${name} `);
+        setAliasName(` ${days}${" "}${name}`);
     }, [name, days])
 
 
@@ -236,7 +231,7 @@ export default function Form() {
             header: "Pay Term",
             accessor: (item) => item?.aliasName,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-96",
+            className: "font-medium text-gray-900 text-left uppercase w-96",
         },
 
         {
@@ -433,7 +428,7 @@ export default function Form() {
                             setForm(true);
                             onNew();
                         }}
-                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-3 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
                         + Add New Pay Term
                     </button>
@@ -465,7 +460,7 @@ export default function Form() {
                         <div className="h-full flex flex-col bg-[f1f1f0] ">
                             <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                 <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                                    <h2 className="text-lg  font-semibold  text-gray-800">
                                         {id
                                             ? !readOnly
                                                 ? "Edit Pay Term  Master"
@@ -514,10 +509,10 @@ export default function Form() {
 
                                                     <fieldset className=' rounded mt-2'>
                                                         <div className='mb-3'>
-                                                            <TextInput name="Days" type="number" value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                            <TextInput name="Days" type="number" required={true}  value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         </div>
                                                         <div className='mb-3 '>
-                                                            <TextInput name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                            <TextInputNew1 name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         </div>
 
                                                         <div className='mb-3 '>

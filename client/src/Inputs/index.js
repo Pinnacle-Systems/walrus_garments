@@ -2381,3 +2381,55 @@ export const TextInputNew = ({
     </div>
   );
 };
+
+export const TextInputNew1 = ({
+  name,
+  label,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+  max,
+  handleChange
+}) => {
+  console.log(max, "max")
+  return (
+    <div className={`mb-2 ${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
+        </label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+
+          setValue(e.target.value.toUpperCase())
+        }
+
+        onBlur={onBlur}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        max={max ? String(max) : undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm
+         
+          ${className}`
+        }
+      />
+      {/* ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"} */}
+    </div>
+  );
+};

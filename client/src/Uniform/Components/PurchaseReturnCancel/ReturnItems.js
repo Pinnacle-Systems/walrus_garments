@@ -248,7 +248,7 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
                     {
                         (poInwardOrDirectInward === "PurchaseReturn" || poInwardOrDirectInward === "GeneralReturn") &&
 
-                        <YarnInwardItems purchaseInwardId={id} deleteRow={deleteRow} handleEdit={handleEdit}
+                        <YarnInwardItems id={id} deleteRow={deleteRow} handleEdit={handleEdit}
                             storeId={storeId} handleView={handleView}
                             transType={transType} directInwardReturnItems={directInwardReturnItems}
                             setDirectInwardReturnItems={setDirectInwardReturnItems}

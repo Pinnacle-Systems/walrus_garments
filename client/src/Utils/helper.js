@@ -287,6 +287,8 @@ export function convertSpaceToUnderScore(str) {
 
 export function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
 
+  console.log(datas, "isGridDatasValid")
+
   if (isRequiredAllData) {
     let gridDatasValid = datas.every(obj =>
       Object.values(obj).every(value => value !== "" && value !== null && value !== 0))
