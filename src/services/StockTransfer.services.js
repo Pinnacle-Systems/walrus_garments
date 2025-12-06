@@ -435,7 +435,7 @@ async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeI
         await tx.stock.create({
             data: {
                 // itemType: poType,
-                inOrOut: inOrOut,
+                inOrOut: "ToOrderTransferTtems",
                 yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
                 gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
@@ -493,65 +493,168 @@ async function createStocktransferItems(
     fromOrderId,
     transferType
 ) {
+    // if (stockItems?.length) {
+    //     let data;
+    //    data =   await Promise.all(
+    //         stockItems?.map(async (item) => {
+    //             await tx.FromOrderTransferItems.create({
+    //                 data: {
+    //                     stockTransferId: parseInt(stockTransferId),
+    //                     yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+    //                     colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+    //                     transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
+    //                     stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
+    //                     orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+
+    //                 },
+    //             });
+
+    //             console.log(data,"datadata")
+    //             await createYarnStock(tx, poType, inOrOut, branchId, storeId, item, data?.id);
+
+
+    //             if (fromOrderId) {
+    //                 await UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item);
+    //             }
+
+
+    //         })
+    //     );
+    // }
+
     if (stockItems?.length) {
-        await Promise.all(
-            stockItems?.map(async (item) => {
-                await tx.FromOrderTransferItems.create({
+        const results = await Promise.all(
+            stockItems.map(async (item) => {
+
+                const created = await tx.FromOrderTransferItems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
                         yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
-                        stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
-                        orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
-
+                        stockQty: item?.stockQty ? parseFloat(item.stockQty) : undefined,
+                        orderDetailsId: item?.orderDetailsId ? parseInt(item.orderDetailsId) : undefined,
                     },
                 });
 
-                await createYarnStock(tx, poType, inOrOut, branchId, storeId, item, data?.id);
+                // created.id is now available
+                console.log(created, "CREATED ITEM");
 
+                // 2️⃣ Update stock based on created item
+                await createYarnStock(
+                    tx,
+                    poType,
+                    inOrOut,
+                    branchId,
+                    storeId,
+                    item,
+                    created.id
+                );
 
+                // 3️⃣ Update requirement planning (only if fromOrderId exists)
                 if (fromOrderId) {
-                    await UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item);
+                    await UpdateRequirementPlanningItemsFromOrder(
+                        tx,
+                        poType,
+                        inOrOut,
+                        branchId,
+                        storeId,
+                        item
+                    );
                 }
 
-
+                return created; // return the created record
             })
         );
+
+        console.log(results, "ALL CREATED ITEMS");
     }
 
+    // if (orderItems?.length) {
+    //     let data
+    //     data = await Promise.all(
+    //         orderItems?.map(async (item) => {
+    //             await tx.ToOrderTransferTtems.create({
+    //                 data: {
+    //                     stockTransferId: parseInt(stockTransferId),
+    //                     RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
+    //                     colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+    //                     orderId: item?.orderId ? parseInt(item.orderId) : undefined,
+    //                     yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+    //                     style: item?.style ? item?.style : undefined,
+    //                     transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+    //                     qty: item?.qty ? parseFloat(item?.qty) : undefined,
+    //                     balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
+    //                     requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
+    //                     orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
+
+
+    //                 },
+    //             });
+
+    //             await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, data?.id, transferType);
+
+    //             if (transferType != "OrderToGeneral") {
+
+    //                 await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+    //             }
+
+    //         })
+    //     );
+    // }
 
     if (orderItems?.length) {
-        await Promise.all(
-            orderItems?.map(async (item) => {
-                await tx.ToOrderTransferTtems.create({
+
+        const data = await Promise.all(
+            orderItems.map(async (item) => {
+
+                // Create and store the created row
+                const created = await tx.ToOrderTransferTtems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
                         RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         orderId: item?.orderId ? parseInt(item.orderId) : undefined,
                         yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
-                        style: item?.style ? item?.style : undefined,
-                        transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
-                        qty: item?.qty ? parseFloat(item?.qty) : undefined,
-                        balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
-                        requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
-                        orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
-
-
+                        style: item?.style ?? undefined,
+                        transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
+                        qty: item?.qty ? parseFloat(item.qty) : undefined,
+                        balanceQty: item?.balanceQty ? parseFloat(item.balanceQty) : undefined,
+                        requiredQty: item?.requiredQty ? parseFloat(item.requiredQty) : undefined,
+                        orderDetailsId: item?.orderDetailsId ? parseInt(item.orderDetailsId) : undefined,
                     },
                 });
 
-                await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, data?.id, transferType);
+                // Must use created.id
+                await createYarnStockAgainstOrder(
+                    tx,
+                    poType,
+                    inOrOut,
+                    branchId,
+                    storeId,
+                    item,
+                    created.id,   // <- FIXED
+                    transferType
+                );
 
-                if (transferType != "OrderToGeneral") {
-
-                    await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
+                if (transferType !== "OrderToGeneral") {
+                    await UpdateRequirementPlanningItems(
+                        tx,
+                        poType,
+                        inOrOut,
+                        branchId,
+                        storeId,
+                        item
+                    );
                 }
 
+                return created; // Important for Promise.all result
             })
         );
+
+        console.log("Saved records:", data);
     }
+
 }
 
 

@@ -693,19 +693,18 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                                 onChange={(e) => {
                                                                     const val = e.target.value;
 
-
-                                                                    if (val <= parseFloat(stock?.stockQty?? 0)) {
-                                                                        if (/^\d+(\.\d{2})$/.test(val)) {
-                                                                        }
+                                                                        console.log(parseFloat(val),"parseFloat(val)",parseFloat(stock?.stockQty))
+                                                                    if (parseFloat(val) <= parseFloat(stock?.stockQty).toFixed(3)) {
+                                                                        
                                                                         handleInputChangeFromOrder(val, index, "transferQty", stock);
                                                                     } else {
                                                                         Swal.fire({
                                                                             title: "Transfer Qty cannot be more than Stock Qty",
                                                                             icon: "warning",
-
                                                                         });
                                                                     }
                                                                 }}
+
                                                                 // onBlur={(e) => {
                                                                 //     const formatted =
                                                                 //         e.target.value === "" ? "" : Number(e.target.value)

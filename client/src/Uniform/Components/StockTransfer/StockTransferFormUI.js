@@ -44,9 +44,6 @@ const StockTransferForm = ({
 
 
 
-    // const { data: generalStock } = useGetStockQuery({
-    //     transferType
-    //  });
 
 
     const {
@@ -80,7 +77,7 @@ const StockTransferForm = ({
 
 
     const data = {
-        orderItems: orderItems?.filter(item => parseInt(item.transferQty) > 0),
+        orderItems: orderItems?.filter(item => parseFloat(item.transferQty) > 0),
         stockItems, fromOrderId, toOrderId, docId, transferType, fromCustomerId, toCustomerId
 
 
@@ -293,7 +290,7 @@ const StockTransferForm = ({
         try {
             let returnData;
             if (text === "Updated") {
-                returnData = await callback({id, body: data }).unwrap();
+                returnData = await callback({ id, body: data }).unwrap();
             } else {
                 returnData = await callback(data).unwrap();
             }
@@ -398,13 +395,8 @@ const StockTransferForm = ({
     const saveData = (nextProcess) => {
         console.log(!validateQty(), "!validateQty()")
 
-        // if (!validateData(data)) {
-        //     Swal.fire({
-        //         title: "Please fill all required fields...!",
-        //         icon: "success",
-        //     });
-        //     return;
-        // }
+
+
 
         function validateQty() {
             const g1 = OrdergroupByYarnColor(orderItems);
@@ -427,8 +419,10 @@ const StockTransferForm = ({
             return true;
         }
 
-        if (!validateQty()) {
-            return;
+        if (transferType != "OrderToGeneral") {
+            if (!validateQty()) {
+                return;
+            }
         }
 
         // 4️⃣ Confirm popup
