@@ -312,7 +312,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
       </div>
 
       <div className="space-y-3 h-full py-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
 
           <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -332,14 +332,14 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
           <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
             <h2 className="font-medium text-slate-700 mb-2">
-              Supplier Details
+              Po Details
             </h2>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-2 gap-1">
               <DropdownInput
                 className={"w-[110px]"}
                 name="Material"
                 beforeChange={() => { }}
-                disabled={supplierId}
+                // disabled={supplierId}
                 options={YarnMaterial}
                 value={poType}
                 setValue={(value) => { setPoType(value); }}
@@ -349,26 +349,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
               />
 
-              <div className="">
 
-                {/* <DropdownInput name="Supplier" options={dropDownListObject(allSuppliers, "code", "id")}
-                  value={supplierId} setValue={setSupplierId} required={true}
-                  readOnly={readOnly}
-                  disabled={readOnly || po}
-
-                /> */}
-                <ReusableSearchableInput
-                  label="Supplier Id"
-                  component="PartyMaster"
-                  placeholder="Search Supplier Id..."
-                  optionList={supplierList?.data}
-                  setSearchTerm={(value) => { setSupplierId(value) }}
-                  searchTerm={supplierId}
-                  show={"isSupplier"}
-                  required={true}
-                  disabled={id}
-                />
-              </div>
 
               <DropdownInput name="Po Type"
                 options={PoTypes}
@@ -389,7 +370,25 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
           </div>
 
+          <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
+            <h2 className="font-medium text-slate-700 mb-2">
+              Supplier Details
+            </h2>
+            <div className="grid grid-cols-1 gap-1">
 
+              <ReusableSearchableInput
+                label="Supplier Id"
+                component="PartyMaster"
+                placeholder="Search Supplier Id..."
+                optionList={supplierList?.data}
+                setSearchTerm={(value) => { setSupplierId(value) }}
+                searchTerm={supplierId}
+                show={"isSupplier"}
+                required={true}
+                disabled={id}
+              />
+            </div>
+          </div>
 
         </div>
         <fieldset className=''>

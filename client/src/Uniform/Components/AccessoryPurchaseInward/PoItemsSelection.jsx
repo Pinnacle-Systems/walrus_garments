@@ -22,39 +22,54 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
 
 
-
-
     // function addItem(id, obj) {
-    //     // setInwardItems([])
-    //     setLocalInwardItems(localInwardItems => {
-    //         let newItems = structuredClone(localInwardItems);
+    //     setInwardItems([])
+    //     setLocalInwardItems(prevItems => {
+    //         let newItems = structuredClone(prevItems);
 
-    //         newItems.push(obj);
-    //         return newItems
+    //         console.log(newItems, "newItems")
+
+    //         const index = newItems.findIndex(v => v?.accessoryId === "");
+
+
+    //         if (index !== -1) {
+    //             newItems[index] = obj;
+    //         } else {
+    //             newItems.push(obj);
+    //         }
+
+    //         return newItems;
     //     });
     // }
 
-
-
     function addItem(id, obj) {
-        setInwardItems([])
-        setLocalInwardItems(prevItems => {
-            let newItems = structuredClone(prevItems);
+    setInwardItems([]);
 
-            console.log(newItems, "newItems")
+    setLocalInwardItems(prevItems => {
+        let newItems = structuredClone(prevItems);
 
-            const index = newItems.findIndex(v => v?.accessoryId === "");
+        // Check if same item already exists (prevent duplicates)
+        const isAlreadyAdded = newItems.some(v => v?.id == id);
+        if (isAlreadyAdded) {
+            console.log("Item already exists, not adding again");
+            return newItems; // ignore
+        }
 
+        // Find empty row to replace
+        const emptyIndex = newItems.findIndex(v => v?.accessoryId === "");
 
-            if (index !== -1) {
-                newItems[index] = obj;
-            } else {
-                newItems.push(obj);
-            }
+        if (emptyIndex !== -1) {
+            // Replace empty row
+            newItems[emptyIndex] = obj;
+        } else {
+            // Push new row
+            newItems.push(obj);
+        }
 
-            return newItems;
-        });
-    }
+        return newItems;
+    });
+}
+
 
     function removeItem(id) {
         console.log(id, "removeid")

@@ -454,7 +454,7 @@ const IndentRaiseForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, 
                                     :
 
                                     <DropdownWithSearch
-                                        options={orderData?.data}
+                                        options={orderData?.data?.filter(i  => i.isPlanning)}
                                         value={orderId}
                                         required={true}
 

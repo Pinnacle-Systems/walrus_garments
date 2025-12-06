@@ -1,4 +1,7 @@
+import { Plus } from "lucide-react"
+import { useState } from "react"
 import { useEffect } from "react"
+import Swal from "sweetalert2"
 
 const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGroupList, id, accessoryCategoryList, accessoryList, accessoryItems, uomList, colorList, sizeList, requirementItems, orderSizeDetails, tempOrderDetailsId, tempOrderId }) => {
 
@@ -26,6 +29,67 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
     }, 0)
 
     console.log(orderQty, "orderQty")
+    const [contextMenu, setContextMenu] = useState(null);
+
+    const handleRightClick = (event, rowIndex, type) => {
+
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
+    function addNewRow() {
+        if (readOnly) {
+
+            Swal.fire({
+                title: "Turn On Edit Mode",
+                icon: "warning",
+                draggable: true,
+                timer: 1000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            return
+        }
+        setAccessoryItems(prev => [
+            ...prev,
+            {
+                qty: "", sizeMeasurement: "", sizeId: ""
+
+            }
+        ]);
+    }
+
+
+    const handleDeleteRow = (id) => {
+        console.log(id, "idddddddddddddddd");
+
+        setAccessoryItems((prevOrderDetails) => {
+            console.log(prevOrderDetails, "prevOrderDetails");
+            return prevOrderDetails?.filter((_, index) => index !== id);
+        });
+    };
+
+
+
+
+    const handleDeleteAllRows = () => {
+        setAccessoryItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
+    };
+
 
     function handleInputChange(value, index, field) {
 
@@ -122,9 +186,10 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                             {accessoryItems?.map((row, index) => (
                                 <tr key={index} className="border border-blue-gray-200 cursor-pointer"
+
                                     onContextMenu={(e) => {
                                         if (!readOnly) {
-                                            // handleRightClick(e, index, "shiftTimeHrs");
+                                            handleRightClick(e, index, "notes");
                                         }
                                     }}
                                 >
@@ -285,6 +350,22 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                                     </td>
 
+                                    <td
+                                        className="w-10 border border-gray-300"
+
+                                    >
+                                        <button
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    addNewRow();
+                                                }
+                                            }}
+                                            className="flex items-center justify-center w-full py-1"
+                                        >
+                                            <Plus size={18} className="text-red-800" />
+                                        </button>
+                                    </td>
 
 
                                 </tr>
@@ -293,7 +374,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                     </table>
                 </div>
-                {/* {contextMenu && (
+                {contextMenu && (
                     <div
                         style={{
                             position: "absolute",
@@ -330,7 +411,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                             </button>
                         </div>
                     </div>
-                )} */}
+                )}
             </div>
         </>
     )

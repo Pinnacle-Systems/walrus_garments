@@ -12,7 +12,7 @@ import Swal from "sweetalert2";
 import { useAddMaterialMasterMutation } from "../../../redux/uniformService/MaterialMasterServices";
 
 const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, materialActive, setMaterialActive
-  , form, allData, setMaterialForm, materialForm, setMaterialId, materialId, }) => {
+  , form, allData, setMaterialForm, materialForm, setMaterialId, materialId,materialRefetch }) => {
 
   const {
     data: singleData,
@@ -24,6 +24,8 @@ const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, mate
   const [updateData] = useUpdatePartyMaterialMutation()
 
 
+
+  console.log(allData,"allData")
 
 
   const data = {
@@ -111,6 +113,7 @@ const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, mate
           showConfirmButton: false,
           timer: 2000
         });
+        materialRefetch()
       } catch (error) {
         Swal.fire({
           icon: 'error',
@@ -338,7 +341,7 @@ const RawMaterial = ({ material, setMaterial, id, readOnly, setRawMaterial, mate
           <div className="flex-1 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm p-2">
             <ReusableTable
               columns={columns}
-              data={allData?.materialData || []}
+              data={allData?.data || []}
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}

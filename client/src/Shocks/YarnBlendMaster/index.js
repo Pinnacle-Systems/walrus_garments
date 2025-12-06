@@ -83,6 +83,8 @@ export default function Form() {
                     Swal.showLoading();
                 }
             });
+            setForm(false)
+
         } catch (error) {
             console.log("handle");
 
@@ -174,7 +176,7 @@ export default function Form() {
         setId(id);
         setForm(true);
     }
-    
+
 
     const ACTIVE = (
         <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
@@ -275,7 +277,7 @@ export default function Form() {
                         setErrors({});
                     }}
                 >
-                    <div className="h-full flex flex-col bg-[f1f1f0]">
+                    <div className="h-full flex flex-col bg-gray-200 ">
                         <div className="border-b py-2 px-4 mx-3 flex justify-between items-center mt-4 sticky top-0 z-10 bg-white">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
@@ -316,7 +318,7 @@ export default function Form() {
                         </div>
 
                         <div className="flex-1 overflow-auto p-3">
-                            <div className="grid grid-cols-1  gap-3  h-full">
+                            <div className="grid grid-cols-1  gap-3  h-full bg-white px-2">
 
                                 <fieldset className=' rounded mt-2'>
                                     <div className=''>

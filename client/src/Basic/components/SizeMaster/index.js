@@ -212,7 +212,7 @@ export default function Form() {
             header: "Size",
             accessor: (item) => item?.name,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-96",
+            className: "font-medium text-gray-900 text-left uppercase w-96",
         },
 
         {
@@ -396,7 +396,7 @@ export default function Form() {
                             setErrors({});
                         }}
                     >
-                        <div className="h-full flex flex-col bg-[f1f1f0] ">
+                        <div className="h-full flex flex-col bg-gray-200 ">
                             <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">

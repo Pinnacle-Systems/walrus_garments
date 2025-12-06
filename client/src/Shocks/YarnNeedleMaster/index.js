@@ -498,11 +498,11 @@ export default function Form() {
                         setErrors({});
                     }}
                 >
-                    <div className="h-full flex flex-col bg-[f1f1f0]">
+                    <div className="h-full flex flex-col bg-gray-200 ">
                         <div className="border-b py-2 px-4 mx-3 flex justify-between items-center mt-4 sticky top-0 z-10 bg-white">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                    {id ? (!readOnly ? "Edit Yarn Blend" : "Yarn Blend Master ") : "Add New Yarn Blend"}
+                                    {id ? (!readOnly ? "Edit Yarn Needle" : "Yarn Needle Master ") : "Add New Yarn Needle"}
                                 </h2>
 
                             </div>
@@ -539,7 +539,7 @@ export default function Form() {
                         </div>
 
                         <div className="flex-1 overflow-auto p-3">
-                            <div className="grid grid-cols-2  gap-3  h-full">
+                            <div className="grid grid-cols-2  gap-3  bg-white px-2 py-1 h-full">
 
                                 <div className='flex flex-col'>
                                     <div className='mb-3'>

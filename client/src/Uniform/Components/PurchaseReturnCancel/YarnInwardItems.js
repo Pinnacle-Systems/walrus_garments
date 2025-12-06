@@ -12,6 +12,7 @@ import {
 import { toast } from 'react-toastify';
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
 import YarnPoItem from './YarnPoItem';
+import Swal from 'sweetalert2';
 
 
 const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, id, deleteRow, handleEdit, contextMenu,
@@ -46,11 +47,11 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
     //     setDirectInwardReturnItems(newBlend);
     // };
 
-    const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
-        console.log(value, "value", field, "field")
+    const handleInputChange = (value, index, field, balanceQty, poItem = undefined, poItemsId) => {
+        console.log(poItem, "poItempoItem", poItemsId)
         const newBlend = structuredClone(directInwardReturnItems);
-        newBlend[index][field] = value
-        if (poItem) {
+        // newBlend[index][field] = value
+        if (poItemsId) {
             newBlend[index]["poNo"] = poItem?.Po?.docId
             newBlend[index]["orderId"] = poItem?.orderId
             newBlend[index]["orderDetailsId"] = poItem?.orderDetailsId
@@ -85,10 +86,18 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
         }
 
-        if (field === "qty") {
+
+        if (field == "qty") {
             if (parseFloat(balanceQty) < parseFloat(value)) {
-                toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                // toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
+                Swal.fire({
+                    title: "Return Qty Can not be more than balance Qty",
+                    icon: "warning",
+                });
                 return
+            }
+            else {
+                newBlend[index][field] = value
             }
         }
         setDirectInwardReturnItems(newBlend);
@@ -198,15 +207,17 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                         </thead>
 
 
-                        <tbody className='overflow-y-auto  h-full w-full'>
+                        <tbody className='overflow-y-auto  h-full w-full'>{console.log(directInwardReturnItems, "directInwardReturnItems")}
                             {(directInwardReturnItems || [])?.map((item, index) => <YarnPoItem yarnList={yarnList} uomList={uomList}
                                 colorList={colorList} deleteRow={deleteRow}
                                 poList={poList}
                                 //  handleInputChangeLotNo={handleInputChangeLotNo}
                                 key={item.poItemsId}
                                 item={item} index={index} handleInputChange={handleInputChange}
-                                handleRightClick={handleRightClick}
-                                readOnly={readOnly} />)}
+                                handleRightClick={handleRightClick} setDirectInwardReturnItems={setDirectInwardReturnItems}
+                                readOnly={readOnly}
+                                directInwardReturnItems={directInwardReturnItems}
+                            />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                 <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 10 }).map(i =>

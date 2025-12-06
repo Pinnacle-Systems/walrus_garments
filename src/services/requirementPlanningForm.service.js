@@ -527,6 +527,10 @@ export async function getRequirementItems(req) {
 
             const styleName = yarns?.style?.name
 
+            console.log({
+                combinedColors ,  styleName
+            },"styleName")
+
             const poQty = item?.PoItems?.reduce((total, poItem) => {
                 return total + (poItem.qty || 0);
             }, 0) || 0;

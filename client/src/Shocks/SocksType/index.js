@@ -374,7 +374,7 @@ export default function Form() {
             </div> */}
             <div onKeyDown={handleKeyDown} className="p-1">
                 <div className="w-full flex bg-white p-1 justify-between  items-center">
-                    <h5 className="text-2xl font-bold text-gray-800">Socks Type Master</h5>
+                    <h5 className="text-2xl font-bold text-gray-800">Shocks Type Master</h5>
                     <div className="flex items-center">
                         <button
                             onClick={() => {
@@ -383,7 +383,7 @@ export default function Form() {
                             }}
                             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                         >
-                            + Add New Socks Type
+                            + Add New Shocks Type
                         </button>
                     </div>
                 </div>
@@ -407,18 +407,17 @@ export default function Form() {
                             widthClass={"w-[36%] h-[50%]"}
                             onClose={() => {
                                 setForm(false);
-                                // setErrors({});
                             }}
                         >
-                            <div className="h-full flex flex-col bg-[f1f1f0] ">
+                            <div className="h-full flex flex-col bg-gray-200  ">
                                 <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
                                             {id
                                                 ? !readOnly
-                                                    ? "Edit Socks Type "
-                                                    : "Socks Type Master"
-                                                : "Add New Socks Type"}
+                                                    ? "Edit Shocks Type "
+                                                    : "Shocks Type Master"
+                                                : "Add New Shocks Type"}
                                         </h2>
                                     </div>
                                     <div className="flex gap-2">

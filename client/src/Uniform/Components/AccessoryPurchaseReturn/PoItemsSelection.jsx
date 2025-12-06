@@ -22,11 +22,24 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     // if (supplierFetching || supplierLoading) return <Loader />
 
+    // function addItem(id) {
+    //     setLocalInwardItems(localInwardItems => {
+    //         let newItems = structuredClone(localInwardItems);
+    //         newItems.push(id);
+    //         return newItems
+    //     });
+    // }
+
     function addItem(id) {
-        setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems.push(id);
-            return newItems
+        setLocalInwardItems(prevItems => {
+            // if ID already exists → return same array (ignore)
+            if (prevItems.includes(id)) {
+                return prevItems;
+            }
+
+            // otherwise push the new id
+            const newItems = [...prevItems, id];
+            return newItems;
         });
     }
     function removeItem(id) {
@@ -93,7 +106,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-               
+
                 <div className='h-[500px] overflow-auto'>
 
 

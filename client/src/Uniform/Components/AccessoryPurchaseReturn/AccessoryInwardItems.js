@@ -14,7 +14,6 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
-        newBlend[index][field] = value;
 
         if (poItem) {
             newBlend[index]["orderId"] = poItem?.orderId
@@ -49,6 +48,10 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
             if (parseFloat(balanceQty) < parseFloat(value)) {
                 toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
                 return
+            }
+            else{
+        newBlend[index][field] = value;
+
             }
         }
         setDirectInwardReturnItems(newBlend);
@@ -156,7 +159,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                         {directInwardReturnItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList}
                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} storeId={storeId}
                             readOnly={readOnly} key={item.accessoryPoItemsId} index={index} handleInputChange={handleInputChange}
-                            handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward}
+                            handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward} setDirectInwardReturnItems={setDirectInwardReturnItems}
                         />)}
                         {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row'>

@@ -264,7 +264,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
 
         let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty"];
-        let yarnmandatoryFields = ["colorId", "yarnId", "count", "yarnKneedleId"];
+        let yarnmandatoryFields = ["colorId", "yarnId", "yarnKneedleId"];
 
 
         let sizeAray = data?.orderDetails?.flatMap(item => item?.orderSizeDetails || []);

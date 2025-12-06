@@ -173,9 +173,14 @@ export default function ReturnItems({ isSupplierOutside, removeItem, transType, 
         );
     };
 
-    function handleDeleteAllRows(index) {
-        setDirectInwardReturnItems([index])
-    }
+
+
+    const handleDeleteAllRows = () => {
+        setDirectInwardReturnItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
+    };
 
     function handleView(index) {
         setCurrentIndex(index)

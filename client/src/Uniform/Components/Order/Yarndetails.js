@@ -3,6 +3,7 @@ import { TextArea, TextInput } from '../../../Inputs'
 import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
+import { Plus } from 'lucide-react'
 
 
 
@@ -217,7 +218,9 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                     <div className={` relative w-full max-h-[300px] overflow-y-auto  py-1`}>
                                         <table className="w-full border-collapse table-fixed">
                                             <thead className="bg-gray-200 text-gray-800">
-                                                <tr>
+                                                <tr
+
+                                                >
                                                     <th
                                                         className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
@@ -241,12 +244,12 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                     >
                                                         Yarn
                                                     </th>
-                                                    <th
+                                                    {/* <th
 
                                                         className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
                                                         Count
-                                                    </th>
+                                                    </th> */}
                                                     <th
 
                                                         className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
@@ -267,7 +270,13 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                             <tbody className=' '>
 
                                                 {(item?.orderYarnDetails ? item?.orderYarnDetails : [])?.map((row, index) =>
-                                                    <tr className="border border-blue-gray-200 cursor-pointer " >
+                                                    <tr className="border border-blue-gray-200 cursor-pointer "
+
+                                                        onContextMenu={(e) => {
+                                                            if (!readOnly) {
+                                                                handleRightClick(e, index, "notes");
+                                                            }
+                                                        }}>
                                                         <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
 
                                                         <td className="py-0.5 border border-gray-300 text-[11px] ">
@@ -311,7 +320,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                         </td>
 
 
-                                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+                                                        {/* <td className="py-0.5 border border-gray-300 text-[11px]">
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                                                 disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
@@ -330,7 +339,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                     </option>
                                                                 )}
                                                             </select>
-                                                        </td>
+                                                        </td> */}
                                                         <td className="py-0.5 border border-gray-300 text-[11px]">
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -354,7 +363,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                             className="w-10 border border-gray-300"
 
                                                         >
-                                                            <input
+                                                            {/* <input
 
                                                                 onContextMenu={(e) => {
                                                                     if (!readOnly) {
@@ -369,7 +378,18 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                     }
                                                                 }}
 
-                                                            />
+                                                            /> */}
+                                                            <button
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        addNewRow();
+                                                                    }
+                                                                }}
+                                                                className="flex items-center justify-center w-full py-1"
+                                                            >
+                                                                <Plus size={18} className="text-red-800" />
+                                                            </button>
                                                         </td>
 
 

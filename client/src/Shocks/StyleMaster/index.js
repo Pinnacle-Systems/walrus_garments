@@ -66,12 +66,14 @@ const StyleMaster = () => {
     );
 
 
-    const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params, searchParams: searchValue });
-    const { data: colorList } =
-        useGetColorMasterQuery({ params });
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+
+        useEffect(() => {
+            setSku(name)
+        }, [name,setName]);
 
     const data = {
         id, sku, active,
@@ -415,7 +417,7 @@ const StyleMaster = () => {
                             // setErrors({});
                         }}
                     >
-                        <div className="h-full flex flex-col bg-[f1f1f0] ">
+                        <div className="h-full flex flex-col bg-gray-200 ">
                             <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">

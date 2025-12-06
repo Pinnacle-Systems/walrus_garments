@@ -270,7 +270,7 @@ export default function Form() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+      <div className="bg-white rounded-xl shadow-sm  mt-3">
         <ReusableTable
           columns={columns}
           data={allData?.data}
@@ -292,7 +292,7 @@ export default function Form() {
               setErrors({});
             }}
           >
-            <div className="h-full flex flex-col bg-[f1f1f0]">
+            <div className="h-full flex flex-col  bg-gray-200">
               <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
@@ -335,7 +335,7 @@ export default function Form() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-3">
+              <div className="flex-1  p-3">
                 <div className="grid grid-cols-1  gap-3  h-full">
                   <div className="lg:col-span- space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">

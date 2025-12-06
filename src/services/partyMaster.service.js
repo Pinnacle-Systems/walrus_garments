@@ -27,8 +27,8 @@ async function get(req) {
                     state: true
                 }
             },
-            PartyMaterials :true,
-            PartyContactDetails :true,
+            PartyMaterials: true,
+            PartyContactDetails: true,
         }
 
     });
@@ -36,10 +36,10 @@ async function get(req) {
         where: {
             active: active ? Boolean(active) : undefined,
         },
-     
+
 
     });
-    return { statusCode: 0, data ,materialData };
+    return { statusCode: 0, data, materialData };
 }
 
 
@@ -54,25 +54,25 @@ async function getOne(id) {
             PartyOnAccessoryItems: true,
             City: {
                 select: {
-                    id :true,
+                    id: true,
                     name: true,
                     state: true
                 }
             },
-            Currency :{
-                select :{
-                    name : true ,
-                    id : true
+            Currency: {
+                select: {
+                    name: true,
+                    id: true
                 }
             },
-            PartyMaterials :true,
-            partyBranch : true ,
-             PartyContactDetails :true,
-             BranchContactDetails : true,
+            PartyMaterials: true,
+            partyBranch: true,
+            PartyContactDetails: true,
+            BranchContactDetails: true,
 
 
 
-          
+
         }
     })
     if (!data) return NoRecordFound("party");
@@ -171,135 +171,135 @@ async function kycForm(body) {
 
 
 async function create(body) {
-    const { 
-        
-        companyId, active, userId,name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
+    const {
+
+        companyId, active, userId, name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient, processDetails, partyBranch,
         cityId, pincode, panNo, tinNo, cstNo, cstDate, yarn, fabric, isAcc, isGy, isDy, payTermDay,
-         faxNo, website, mail,  address,
+        faxNo, website, mail, address,
         gstNo, currencyId, costCode, igst, contactNumber, alterContactNumber, email, rawMaterial,
-        material,materialActive,partyMaterials,
-        branchName,branchCode ,branchType , branchEmail , branchAddress , branchContactPerson , branchContact , 
-        contactPersonName,department ,contact,designation ,isContact , id , isBranch ,branchStateValues ,isBranchContact ,
-landMark,contactPersonEmail,
-                         bankname , bankBranchName , accountNumber , ifscCode , msmeNo  ,    cinNo  ,  
-PartyContactDetails ,
- } = await body
-        
+        material, materialActive, partyMaterials,
+        branchName, branchCode, branchType, branchEmail, branchAddress, branchContactPerson, branchContact,
+        contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
+        landMark, contactPersonEmail,
+        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
+        PartyContactDetails,
+    } = await body
+
 
     let data;
-                  
-   
+
+
 
 
     data = await prisma.party.create(
         {
             data: {
-                isClient, isSupplier, isBuyer, name,  aliasName, code : partyCode , active, displayName,
-                  isAcc, isGy, isDy, 
+                isClient, isSupplier, isBuyer, name, aliasName, code: partyCode, active, displayName,
+                isAcc, isGy, isDy,
 
-                 address, landMark ,  
-                  cityId: cityId ? parseInt(cityId) : undefined,   pincode: pincode ? parseInt(pincode) : undefined,
-                  email,contact : contact ? parseInt(contact)  : undefined,
-
-       
-
-               currencyId: currencyId ? parseInt(currencyId) : undefined,  payTermDay ,     panNo,   gstNo,
+                address, landMark,
+                cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
+                email, contact: contact ? parseInt(contact) : undefined,
 
 
-                       bankName:  bankname ,branchName: bankBranchName ,accountNumber , ifscCode , msmeNo  ,    cinNo  ,  
+
+                currencyId: currencyId ? parseInt(currencyId) : undefined, payTermDay, panNo, gstNo,
+
+
+                bankName: bankname, branchName: bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
 
 
                 createdById: userId ? parseInt(userId) : undefined,
                 companyId: parseInt(companyId),
-                
 
-             partyBranch: branchStateValues?.branchName 
-                            ? {
+
+                partyBranch: branchStateValues?.branchName
+                    ? {
+                        create: {
+
+                            branchName: branchStateValues?.branchName || undefined,
+                            branchAliasName: branchStateValues?.branchAliasName || undefined,
+                            branchCode: branchStateValues?.branchCode || undefined,
+                            active: branchStateValues?.active || false,
+                            branchCityId: branchStateValues?.branchCityId || undefined,
+                            branchLandMark: branchStateValues?.branchLandMark || undefined,
+                            branchAddress: branchStateValues?.branchAddress || undefined,
+                            branchPincode: branchStateValues?.branchPincode || undefined,
+                            branchEmail: branchStateValues?.branchEmail || undefined,
+                            branchContactPerson: branchStateValues?.branchContactPerson || undefined,
+                            branchDesignation: branchStateValues?.branchDesignation || undefined,
+                            branchDepartment: branchStateValues?.branchDepartment || undefined,
+                            branchContact: branchStateValues?.branchContact || undefined,
+                            branchWebsite: branchStateValues?.branchWebsite || undefined,
+                            branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
+                            branchBankname: branchStateValues?.branchBankname || undefined,
+                            branchIfscCode: branchStateValues?.branchIfscCode || undefined,
+                            branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
+                            partyId: branchStateValues?.partyId || undefined,
+                            isMainBranch: branchStateValues?.isMainBranch || undefined,
+                            BranchType: branchStateValues?.BranchType || undefined,
+                            branchTypeId: branchStateValues?.branchTypeId || undefined,
+                            BranchContactDetails: {
                                 create: {
-                                
-                                      branchName: branchStateValues?.branchName || undefined,
-                                    branchAliasName: branchStateValues?.branchAliasName || undefined,
-                                    branchCode: branchStateValues?.branchCode || undefined,
-                                    active: branchStateValues?.active || false,
-                                    branchCityId: branchStateValues?.branchCityId || undefined,
-                                    branchLandMark: branchStateValues?.branchLandMark || undefined,
-                                    branchAddress: branchStateValues?.branchAddress || undefined,
-                                    branchPincode: branchStateValues?.branchPincode || undefined,
-                                    branchEmail: branchStateValues?.branchEmail || undefined,
-                                    branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-                                    branchDesignation: branchStateValues?.branchDesignation || undefined,
-                                    branchDepartment: branchStateValues?.branchDepartment || undefined,
-                                    branchContact: branchStateValues?.branchContact || undefined,
-                                    branchWebsite: branchStateValues?.branchWebsite || undefined,
-                                    branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-                                    branchBankname: branchStateValues?.branchBankname || undefined,
-                                    branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-                                    branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-                                    partyId: branchStateValues?.partyId || undefined,
-                                    isMainBranch: branchStateValues?.isMainBranch || undefined,
-                                    BranchType: branchStateValues?.BranchType || undefined,
-                                    branchTypeId: branchStateValues?.branchTypeId || undefined,
-                                    BranchContactDetails : {
-                                        create :{
-                                           
-                                                   contactPersonName: branchStateValues?.branchContactPerson || null,
-                                                    mobileNo: branchStateValues?.branchContactPersonContact || null,
-                                                    designation: branchStateValues?.branchContactDesignation || null,
-                                                    department: branchStateValues?.branchContactDepartment || null,
-                                                    email : branchStateValues?.branchContactPersonEmail ? branchStateValues?.branchContactPersonEmail : undefined,
-                                                                   
-                                        }
-                                    }
-                                    },
-                                    
+
+                                    contactPersonName: branchStateValues?.branchContactPerson || null,
+                                    mobileNo: branchStateValues?.branchContactPersonContact || null,
+                                    designation: branchStateValues?.branchContactDesignation || null,
+                                    department: branchStateValues?.branchContactDepartment || null,
+                                    email: branchStateValues?.branchContactPersonEmail ? branchStateValues?.branchContactPersonEmail : undefined,
+
                                 }
-                                
-                            : undefined,
-                            
-               PartyContactDetails: {
-                    create :   {
-                        
-                            contactPersonName: contactPersonName || null,
-                            mobileNo: contactNumber || null,
-                            Designation: designation || null,
-                            department: department || null,
-                            email : contactPersonEmail ? contactPersonEmail : undefined,
-                            // alterContactNumber: alterContactNumber || null,
-                       
-                    }  ,
-                    }  ,
+                            }
+                        },
+
+                    }
+
+                    : undefined,
+
+                PartyContactDetails: {
+                    create: {
+
+                        contactPersonName: contactPersonName || null,
+                        mobileNo: contactNumber || null,
+                        Designation: designation || null,
+                        department: department || null,
+                        email: contactPersonEmail ? contactPersonEmail : undefined,
+                        // alterContactNumber: alterContactNumber || null,
+
+                    },
+                },
 
 
 
-                PartyMaterials :  {
-                      createMany: partyMaterials.length >  0 ? {
+                PartyMaterials: {
+                    createMany: partyMaterials.length > 0 ? {
                         data: partyMaterials?.map((temp) => {
                             let newItem = {}
                             // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
                             newItem["name"] = temp["label"] ? temp["label"] : null;
                             newItem["value"] = temp["value"] ? temp["value"] : null;
 
-                      
+
                             return newItem
                         })
                     } : undefined
                 }
-             
-          
+
+
             }
         }
     )
-    
+
 
 
     return { statusCode: 0, data };
 }
 
 
-async function partyMaterial(  partyMaterials  ,id){
+async function partyMaterial(partyMaterials, id) {
 
-    console.log(partyMaterials,"partyMaterials")
-    
+    console.log(partyMaterials, "partyMaterials")
+
     let removedItems = partyMaterials?.filter(oldItem => {
         let result = partyMaterials.find(newItem => newItem.id === oldItem.id)
         if (result) return false
@@ -314,28 +314,28 @@ async function partyMaterial(  partyMaterials  ,id){
             }
         }
     })
-    
+
     const promises = partyMaterials.map(async (temp) => {
-        console.log(temp,"temp")
+        console.log(temp, "temp")
         if (temp?.id) {
             return await partyMaterials.update({
                 where: {
                     id: parseInt(temp?.id)
                 },
                 data: {
-                    partyId : parseInt(id),
+                    partyId: parseInt(id),
                     name: temp.name || undefined,
-                    value:temp.value  || undefined,
+                    value: temp.value || undefined,
 
                 }
             })
         } else {
             return await partyMaterials.create({
                 data: {
-                     partyId : parseInt(id),
+                    partyId: parseInt(id),
                     name: temp.label || undefined,
-                    value : temp.value || undefined,
-        
+                    value: temp.value || undefined,
+
                 }
             })
         }
@@ -401,11 +401,11 @@ async function partyMaterial(  partyMaterials  ,id){
 //             gstNo, mailId: mail,
 //             createdById: userId ? parseInt(userId) : undefined,
 //             companyId: companyId ? parseInt(companyId) : undefined, active,payTermDay, email
-        
+
 
 //         }   
-            
-     
+
+
 
 //     })
 
@@ -414,7 +414,7 @@ async function partyMaterial(  partyMaterials  ,id){
 
 // })
 //             }
-  
+
 
 
 
@@ -423,240 +423,178 @@ async function partyMaterial(  partyMaterials  ,id){
 //     return { statusCode: 0, data };
 // };
 
-async function update(id,body) {
-  const {
-   
-    companyId, active, userId, name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient,
-    processDetails, partyBranch, cityId, pincode, panNo, tinNo, cstNo, cstDate,
-    yarn, fabric, isAcc, isGy, isDy, payTermDay,
-    faxNo, website, mail, address, gstNo, currencyId, costCode, igst,
-    contactNumber, alterContactNumber, email, rawMaterial, material, materialActive, partyMaterials,
-    branchStateValues,
-    contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
-    landMark, contactPersonEmail,
-    bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-    PartyContactDetails,contactId
-  } = body;
+async function update(id, body) {
+    const {
+
+        companyId, active, userId, name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient,
+        processDetails, partyBranch, cityId, pincode, panNo, tinNo, cstNo, cstDate,
+        yarn, fabric, isAcc, isGy, isDy, payTermDay,
+        faxNo, website, mail, address, gstNo, currencyId, costCode, igst,
+        contactNumber, alterContactNumber, email, rawMaterial, material, materialActive, partyMaterials,
+        branchStateValues,
+        contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
+        landMark, contactPersonEmail,
+        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
+        PartyContactDetails, contactId
+    } = body;
 
 
-//   const data = await prisma.party.update({
-//     where: { id: parseInt(id) },
-//     data: {
-//       isClient,
-//       isSupplier,
-//       isBuyer,
-//       name,
-//       aliasName,
-//       code: partyCode,
-//       active,
-//       displayName,
-//       isAcc,
-//       isGy,
-//       isDy,
-//       address,
-//       landMark,
-//       cityId: cityId ? parseInt(cityId) : undefined,
-//       pincode: pincode ? parseInt(pincode) : undefined,
-//       email,
-//       contact: contact ? parseInt(contact) : undefined,
-//       currencyId: currencyId ? parseInt(currencyId) : undefined,
-//       payTermDay,
-//       panNo,
-//       gstNo,
-//       bankName: bankname,
-//       branchName: bankBranchName,
-//       accountNumber,
-//       ifscCode,
-//       msmeNo,
-//       cinNo,
-//       createdById: userId ? parseInt(userId) : undefined,
-//       companyId: parseInt(companyId),
-//       PartyContactDetails: contactId
-//         ? {
-//             update: {
-//               where: { id: parseInt(contactId) },
-//               data: {
-//                 contactPersonName: contactPersonName || undefined,
-//                 mobileNo: contactNumber || undefined,
-//                 Designation: designation || undefined,
-//                 department: department || undefined,
-//                 email: contactPersonEmail || undefined,
-//                 alterContactNumber: alterContactNumber || undefined,
-//               },
-//             },
-//           }
-//         : {
-//             create: {
-//               contactPersonName: contactPersonName || undefined,
-//               mobileNo: contactNumber || undefined,
-//               Designation: designation || undefined,
-//               department: department || undefined,
-//               email: contactPersonEmail || undefined,
-//             },
-//           },
-//     },
-// //   });
+    console.log(typeof(partyMaterials),'partyMaterials');
 
-//   // ✅ Call your custom function with the transaction client
+    data = await prisma.party.update({
+        where: { id: parseInt(id) },
+        data: {
+            isClient: isClient ? JSON.parse(isClient) : "",
+            isSupplier: isSupplier ? JSON.parse(isSupplier) : "",
+            name,
+            aliasName,
+            code: partyCode,
+            active: active ? JSON.parse(active) : "",
+            displayName,
 
-// });
-data = await prisma.party.update({
-  where: { id: parseInt(id) },
-  data: {
-    isClient,
-    isSupplier,
-    isBuyer,
-    name,
-    aliasName,
-    code: partyCode,
-    active,
-    displayName,
-    isAcc,
-    isGy,
-    isDy,
-    address,
-    landMark,
-    cityId: cityId ? parseInt(cityId) : undefined,
-    pincode: pincode ? parseInt(pincode) : undefined,
-    email,
-    contact: contact ? parseInt(contact) : undefined,
-    currencyId: currencyId ? parseInt(currencyId) : undefined,
-    payTermDay,
-    panNo,
-    gstNo,
-    bankName: bankname,
-    branchName: bankBranchName,
-    accountNumber,
-    ifscCode,
-    msmeNo,
-    cinNo,
-    createdById: userId ? parseInt(userId) : undefined,
-    companyId: parseInt(companyId),
+            address,
+            landMark,
+            cityId: cityId ? parseInt(cityId) : undefined,
+            pincode: pincode ? parseInt(pincode) : undefined,
+            email,
+            contact: contact ? parseInt(contact) : undefined,
+            currencyId: currencyId ? parseInt(currencyId) : undefined,
+            payTermDay,
+            panNo,
+            gstNo,
+            bankName: bankname,
+            branchName: bankBranchName,
+            accountNumber,
+            ifscCode,
+            msmeNo,
+            cinNo,
+            createdById: userId ? parseInt(userId) : undefined,
+            companyId: parseInt(companyId),
 
-    partyBranch: branchStateValues?.branchName
-      ? {
-          upsert: {
-            update: {
-              branchName: branchStateValues?.branchName || undefined,
-              branchAliasName: branchStateValues?.branchAliasName || undefined,
-              branchCode: branchStateValues?.branchCode || undefined,
-              active: branchStateValues?.active || false,
-              branchCityId: branchStateValues?.branchCityId || undefined,
-              branchLandMark: branchStateValues?.branchLandMark || undefined,
-              branchAddress: branchStateValues?.branchAddress || undefined,
-              branchPincode: branchStateValues?.branchPincode || undefined,
-              branchEmail: branchStateValues?.branchEmail || undefined,
-              branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-              branchDesignation: branchStateValues?.branchDesignation || undefined,
-              branchDepartment: branchStateValues?.branchDepartment || undefined,
-              branchContact: branchStateValues?.branchContact || undefined,
-              branchWebsite: branchStateValues?.branchWebsite || undefined,
-              branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-              branchBankname: branchStateValues?.branchBankname || undefined,
-              branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-              branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-              partyId: branchStateValues?.partyId || undefined,
-              isMainBranch: branchStateValues?.isMainBranch || undefined,
-              BranchType: branchStateValues?.BranchType || undefined,
-              branchTypeId: branchStateValues?.branchTypeId || undefined,
-              BranchContactDetails: {
+            partyBranch: branchStateValues?.branchName
+                ? {
+                    upsert: {
+                        update: {
+                            branchName: branchStateValues?.branchName || undefined,
+                            branchAliasName: branchStateValues?.branchAliasName || undefined,
+                            branchCode: branchStateValues?.branchCode || undefined,
+                            active: branchStateValues?.active || false,
+                            branchCityId: branchStateValues?.branchCityId || undefined,
+                            branchLandMark: branchStateValues?.branchLandMark || undefined,
+                            branchAddress: branchStateValues?.branchAddress || undefined,
+                            branchPincode: branchStateValues?.branchPincode || undefined,
+                            branchEmail: branchStateValues?.branchEmail || undefined,
+                            branchContactPerson: branchStateValues?.branchContactPerson || undefined,
+                            branchDesignation: branchStateValues?.branchDesignation || undefined,
+                            branchDepartment: branchStateValues?.branchDepartment || undefined,
+                            branchContact: branchStateValues?.branchContact || undefined,
+                            branchWebsite: branchStateValues?.branchWebsite || undefined,
+                            branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
+                            branchBankname: branchStateValues?.branchBankname || undefined,
+                            branchIfscCode: branchStateValues?.branchIfscCode || undefined,
+                            branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
+                            partyId: branchStateValues?.partyId || undefined,
+                            isMainBranch: branchStateValues?.isMainBranch || undefined,
+                            BranchType: branchStateValues?.BranchType || undefined,
+                            branchTypeId: branchStateValues?.branchTypeId || undefined,
+                            BranchContactDetails: {
+                                upsert: {
+                                    update: {
+                                        contactPersonName: branchStateValues?.branchContactPerson || null,
+                                        mobileNo: branchStateValues?.branchContactPersonContact || null,
+                                        designation: branchStateValues?.branchContactDesignation || null,
+                                        department: branchStateValues?.branchContactDepartment || null,
+                                        email: branchStateValues?.branchContactPersonEmail || undefined,
+                                        alterContactNumber: branchStateValues?.branchContactPersonAlterContact || null,
+                                    },
+                                    create: {
+                                        contactPersonName: branchStateValues?.branchContactPerson || null,
+                                        mobileNo: branchStateValues?.branchContactPersonContact || null,
+                                        designation: branchStateValues?.branchContactDesignation || null,
+                                        department: branchStateValues?.branchContactDepartment || null,
+                                        email: branchStateValues?.branchContactPersonEmail || undefined,
+                                        alterContactNumber: branchStateValues?.branchContactPersonAlterContact || null,
+
+                                    },
+                                },
+                            },
+                        },
+                        create: {
+                            branchName: branchStateValues?.branchName || undefined,
+                            branchAliasName: branchStateValues?.branchAliasName || undefined,
+                            branchCode: branchStateValues?.branchCode || undefined,
+                            active: branchStateValues?.active || false,
+                            branchCityId: branchStateValues?.branchCityId || undefined,
+                            branchLandMark: branchStateValues?.branchLandMark || undefined,
+                            branchAddress: branchStateValues?.branchAddress || undefined,
+                            branchPincode: branchStateValues?.branchPincode || undefined,
+                            branchEmail: branchStateValues?.branchEmail || undefined,
+                            branchContactPerson: branchStateValues?.branchContactPerson || undefined,
+                            branchDesignation: branchStateValues?.branchDesignation || undefined,
+                            branchDepartment: branchStateValues?.branchDepartment || undefined,
+                            branchContact: branchStateValues?.branchContact || undefined,
+                            branchWebsite: branchStateValues?.branchWebsite || undefined,
+                            branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
+                            branchBankname: branchStateValues?.branchBankname || undefined,
+                            branchIfscCode: branchStateValues?.branchIfscCode || undefined,
+                            branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
+                            partyId: branchStateValues?.partyId || undefined,
+                            isMainBranch: branchStateValues?.isMainBranch || undefined,
+                            BranchType: branchStateValues?.BranchType || undefined,
+                            branchTypeId: branchStateValues?.branchTypeId || undefined,
+                            BranchContactDetails: {
+                                create: {
+                                    contactPersonName: branchStateValues?.branchContactPerson || null,
+                                    mobileNo: branchStateValues?.branchContactPersonContact || null,
+                                    designation: branchStateValues?.branchContactDesignation || null,
+                                    department: branchStateValues?.branchContactDepartment || null,
+                                    email: branchStateValues?.branchContactPersonEmail || undefined,
+                                },
+                            },
+                        },
+                    },
+                }
+                : undefined,
+
+            PartyContactDetails: {
                 upsert: {
-                  update: {
-                    contactPersonName: branchStateValues?.branchContactPerson || null,
-                    mobileNo: branchStateValues?.branchContactPersonContact || null,
-                    designation: branchStateValues?.branchContactDesignation || null,
-                    department: branchStateValues?.branchContactDepartment || null,
-                    email: branchStateValues?.branchContactPersonEmail || undefined,
-                    alterContactNumber : branchStateValues?.branchContactPersonAlterContact || null,
-                  },
-                  create: {
-                    contactPersonName: branchStateValues?.branchContactPerson || null,
-                    mobileNo: branchStateValues?.branchContactPersonContact || null,
-                    designation: branchStateValues?.branchContactDesignation || null,
-                    department: branchStateValues?.branchContactDepartment || null,
-                    email: branchStateValues?.branchContactPersonEmail || undefined,
-                    alterContactNumber : branchStateValues?.branchContactPersonAlterContact || null,
-
-                  },
+                    update: {
+                        contactPersonName: contactPersonName || null,
+                        mobileNo: contactNumber || null,
+                        Designation: designation || null,
+                        department: department || null,
+                        email: contactPersonEmail || undefined,
+                    },
+                    create: {
+                        contactPersonName: contactPersonName || null,
+                        mobileNo: contactNumber || null,
+                        Designation: designation || null,
+                        department: department || null,
+                        email: contactPersonEmail || undefined,
+                    },
                 },
-              },
             },
-            create: {
-              branchName: branchStateValues?.branchName || undefined,
-              branchAliasName: branchStateValues?.branchAliasName || undefined,
-              branchCode: branchStateValues?.branchCode || undefined,
-              active: branchStateValues?.active || false,
-              branchCityId: branchStateValues?.branchCityId || undefined,
-              branchLandMark: branchStateValues?.branchLandMark || undefined,
-              branchAddress: branchStateValues?.branchAddress || undefined,
-              branchPincode: branchStateValues?.branchPincode || undefined,
-              branchEmail: branchStateValues?.branchEmail || undefined,
-              branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-              branchDesignation: branchStateValues?.branchDesignation || undefined,
-              branchDepartment: branchStateValues?.branchDepartment || undefined,
-              branchContact: branchStateValues?.branchContact || undefined,
-              branchWebsite: branchStateValues?.branchWebsite || undefined,
-              branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-              branchBankname: branchStateValues?.branchBankname || undefined,
-              branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-              branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-              partyId: branchStateValues?.partyId || undefined,
-              isMainBranch: branchStateValues?.isMainBranch || undefined,
-              BranchType: branchStateValues?.BranchType || undefined,
-              branchTypeId: branchStateValues?.branchTypeId || undefined,
-              BranchContactDetails: {
-                create: {
-                  contactPersonName: branchStateValues?.branchContactPerson || null,
-                  mobileNo: branchStateValues?.branchContactPersonContact || null,
-                  designation: branchStateValues?.branchContactDesignation || null,
-                  department: branchStateValues?.branchContactDepartment || null,
-                  email: branchStateValues?.branchContactPersonEmail || undefined,
-                },
-              },
-            },
-          },
-        }
-      : undefined,
 
-    PartyContactDetails: {
-      upsert: {
-        update: {
-          contactPersonName: contactPersonName || null,
-          mobileNo: contactNumber || null,
-          Designation: designation || null,
-          department: department || null,
-          email: contactPersonEmail || undefined,
+            PartyMaterials: {
+                deleteMany: {},
+                createMany: partyMaterials.length > 0
+                    ? {
+                        data: partyMaterials.map((temp) => ({
+                            name: temp.label || null,
+                            value: temp.value || null,
+                        })),
+                    }
+                    : undefined,
+            }
         },
-        create: {
-          contactPersonName: contactPersonName || null,
-          mobileNo: contactNumber || null,
-          Designation: designation || null,
-          department: department || null,
-          email: contactPersonEmail || undefined,
-        },
-      },
-    },
-
-    PartyMaterials: {
-      deleteMany: {}, 
-      createMany: partyMaterials.length > 0
-        ? {
-            data: partyMaterials.map((temp) => ({
-              name: temp.label || null,
-              value: temp.value || null,
-            })),
-          }
-        : undefined,
-    },
-  },
-});
+    });
 
 
-  return { statusCode: 0, data: data};
+    return { statusCode: 0, data: data };
 }
 
 async function updateMaterial(id, body) {
-    console.log(body,'body',id)
+    console.log(body, 'body', id)
     const { material, } = await body
     const dataFound = await prisma.rawMaterial.findUnique({
         where: {
@@ -669,7 +607,7 @@ async function updateMaterial(id, body) {
             id: parseInt(id),
         },
         data: {
-            name : material
+            name: material
         }
     })
     return { statusCode: 0, data };
@@ -720,7 +658,7 @@ async function getMaterialOne(id) {
         where: {
             id: parseInt(id)
         },
-  
+
     })
     if (!data) return NoRecordFound("party");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -732,15 +670,15 @@ async function getContactOne(id) {
         where: {
             id: parseInt(id)
         },
-  
+
     })
     if (!data) return NoRecordFound("party");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function updateContact(id, body) {
-    console.log(body,'body',id)
-    const { contactPersonName,designation , department  , contactNumber} = await body
+    console.log(body, 'body', id)
+    const { contactPersonName, designation, department, contactNumber } = await body
     const dataFound = await prisma.partyContactDetails.findUnique({
         where: {
             id: parseInt(id)
@@ -752,11 +690,11 @@ async function updateContact(id, body) {
             id: parseInt(id),
         },
         data: {
-            contactPersonName : contactPersonName ,
-            mobileNo  : contactNumber  ? contactNumber  : undefined,
-             Designation  : designation   ? designation : undefined ,
-            department : department ? department : undefined ,
-            
+            contactPersonName: contactPersonName,
+            mobileNo: contactNumber ? contactNumber : undefined,
+            Designation: designation ? designation : undefined,
+            department: department ? department : undefined,
+
         }
     })
     return { statusCode: 0, data };
@@ -769,7 +707,7 @@ async function getPartyBranchOne(id) {
         where: {
             id: parseInt(id)
         },
-  
+
     })
     if (!data) return NoRecordFound("party");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };

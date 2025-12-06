@@ -222,13 +222,14 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-
                 });
+
                 orderReftch()
                 if (nextProcess == "new") {
                     syncFormWithDb(undefined);
                     onNew()
                     // singleOrderReftch()
+                    setOrderId(returnData?.data?.orderId)
                     orderReftch()
 
                 }

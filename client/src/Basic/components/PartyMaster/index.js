@@ -57,6 +57,7 @@ import { FaInfoCircle, FaPlus, FaQuestionCircle, FaUpload } from "react-icons/fa
 import AddContactPersonDetails from "./PartyContactDetails";
 import ContactPersonDetails from "./PartyContactDetails";
 import ArtDesignReport from "./ArtDesign/ArtDesignReport";
+import { useGetMaterialMasterQuery } from "../../../redux/uniformService/MaterialMasterServices";
 
 const MODEL = "Party Master";
 
@@ -157,7 +158,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const [materialId, setMaterialId] = useState("")
   const [branchType, setBranchType] = useState("");
   const [branchInfo, setBranchInfo] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [partyMaterials, setPartyMaterials] = useState([]);
   const [materialForm, setMaterialForm] = useState(false)
   const [view, setView] = useState("all");
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -272,6 +273,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   );
 
 
+  const { data: materialList, refetch: materialRefetch } = useGetMaterialMasterQuery({ params });
+
   useEffect(() => {
     if (openPartyModal) {
       setId("");
@@ -280,7 +283,6 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   }, [openPartyModal]);
 
 
-  console.log(currencyList, "currency")
   const {
     data: singleData,
     refetch,
@@ -310,7 +312,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   }
 
 
-  console.log(selected, "selected")
+  console.log(partyMaterials, "partyMaterials")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -406,7 +408,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
           : []
       );
       // setSelected(data?.PartyMaterials ? data?.PartyMaterials  : []  )
-      setSelected(
+      setPartyMaterials(
         data?.PartyMaterials
           ? data.PartyMaterials.map((item) => ({
             label: item.name,
@@ -469,7 +471,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
 
 
-    partyMaterials: selected, material, materialActive, rawMaterial,
+    partyMaterials, material, materialActive, rawMaterial,
 
     branchStateValues: {
 
@@ -516,29 +518,51 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
     return false;
   };
 
-  console.log(attachments, "attachments")
 
   const handleSubmitCustom = async (callback, data, text, exit = false) => {
+
+
     try {
 
-
       const formData = new FormData();
-      for (let key in data) {
-        console.log(key, "hit")
-        if (key === 'attachments') {
 
-          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
+      for (let key in data) {
+        console.log("KEY:", key);
+        console.log("VALUE:", data[key]);
+        console.log("TYPE:", typeof data[key]);
+        if (key == 'attachments') {
+          formData.append(
+            key,
+            JSON.stringify(
+              data[key].map(i => ({
+                ...i,
+                filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath
+              }))
+            )
+          );
+
           data[key].forEach(option => {
+
 
             if (option?.filePath instanceof File) {
               formData.append('image', option.filePath);
             }
           });
         }
+
+
+
+        // 🔥 FIX HERE: If value is an array or object, convert to JSON
+        else if (typeof data[key] == "object") {
+          formData.append(key, JSON.stringify(data[key]));
+        }
+
+        // Normal case
         else {
           formData.append(key, data[key]);
         }
       }
+
 
       let returnData;
       if (text === "Updated") {
@@ -658,8 +682,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const saveData = () => {
 
     if (isSupplier) {
-      console.log(selected.length <= 0, "condiion")
-      if (selected.length <= 0) {
+      console.log(partyMaterials.length <= 0, "condiion")
+      if (partyMaterials.length <= 0) {
         Swal.fire({
           icon: 'error',
           title: `Select One Material...!`,
@@ -947,7 +971,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
   const options = allData?.materialData
 
   const handleCheckboxChange = (value) => {
-    setSelected((prev) =>
+    setPartyMaterials((prev) =>
       prev.includes(value)
         ? prev.filter((item) => item !== value)
         : [...prev, value]
@@ -1022,9 +1046,9 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
               setRawMaterial(false)
               setMaterialForm(false)
             }}
-            allData={allData}
 
-          >
+          >  {console.log(materialList, "materialList")}
+
             <RawMaterial
               addData={addData}
               updateData={updateData}
@@ -1033,11 +1057,12 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
               setMaterial={setMaterial}
               setMaterialActive={setMaterialActive}
               materialActive={materialActive}
-              allData={allData}
+              materialList={materialList}
               setMaterialForm={setMaterialForm}
               materialForm={materialForm}
               setMaterialId={setMaterialId}
               materialId={materialId}
+
 
             />
           </Modal>
@@ -1081,7 +1106,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
             />
           </Modal>
 
-          <div className="h-full flex flex-col bg-[f1f1f0] ">
+          <div className="h-full flex flex-col bg-gray-200 ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
                 <h2 className="text-md font-semibold text-gray-800">
@@ -1199,10 +1224,10 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
                               <MultiSelectDropdown
                                 // name={"Material List"}
-                                options={multiSelectOption(allData ? allData?.materialData : [], "name", "id")}
+                                options={multiSelectOption(materialList ? materialList?.data : [], "name", "id")}
                                 labelName="name"
-                                setSelected={setSelected}
-                                selected={selected}
+                                setSelected={setPartyMaterials}
+                                selected={partyMaterials}
                               />
                             </div>
                           )}
@@ -1284,18 +1309,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                       </div>
-                      {/* <div className="col-span-1">
-                          <DateInput
-                                name="Date of Registration"
-                                
-                                value={partyCode}
-        
-                                setValue={setPartyCode}
-                                readOnly={readOnly}
-                                disabled={childRecord.current > 0}
-                                className="focus:ring-2 focus:ring-blue-100 w-10"
-                              />
-                      </div> */}
+
                       <div className="mt-5 ml-3">
                         <ToggleButton
                           name="Status"
@@ -1885,7 +1899,8 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
               setMaterial={setMaterial}
               setMaterialActive={setMaterialActive}
               materialActive={materialActive}
-              allData={allData}
+              allData={materialList}
+              materialRefetch={materialRefetch}
               setMaterialForm={setMaterialForm}
               materialForm={materialForm}
               setMaterialId={setMaterialId}
@@ -1933,7 +1948,7 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
             />
           </Modal>
 
-          <div className="h-full flex flex-col bg-[f1f1f0] ">
+          <div className="h-full flex flex-col bg-gray-200 ">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3 ">
               <div className="flex items-center gap-2">
                 <h2 className="text-md font-semibold text-gray-800">
@@ -2051,10 +2066,10 @@ export default function Form({ partyId, onCloseForm, openModelForAddress }) {
 
                               <MultiSelectDropdown
                                 // name={"Material List"}
-                                options={multiSelectOption(allData ? allData?.materialData : [], "name", "id")}
+                                options={multiSelectOption(materialList ? materialList?.data : [], "name", "id")}
                                 labelName="name"
-                                setSelected={setSelected}
-                                selected={selected}
+                                setSelected={setPartyMaterials}
+                                selected={partyMaterials}
                               />
                             </div>
                           )}

@@ -7,34 +7,110 @@ import { toast } from 'react-toastify'
 import { useGetPoItemByIdQuery } from '../../../redux/uniformService/PoServices'
 import { findFromList, getAllowableReturnQty, isBetweenRange, sumArray } from '../../../Utils/helper'
 import { HiPencil, HiTrash } from 'react-icons/hi'
+import Swal from 'sweetalert2'
 
 const YarnPoItem = ({ yarnList, uomList,
     colorList, gaugeList, designList, deleteRow,
     loopLengthList, setInwardItems, storeId,
     diaList, index, handleInputChange, readOnly, id, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
-    handleRightClick
+    handleRightClick, setDirectInwardReturnItems, directInwardReturnItems
 
 }) => {
 
 
 
     const [lotGrid, setLotGrid] = useState(false)
-    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId , id})
-
-
+    const { data, isLoading, isFetching } = useGetPoItemByIdQuery({ id: item?.poItemsId, purchaseInwardId, storeId: storeId, poType: "DyedFabric" }, { skip: !item.poItemsId, id })
 
     useEffect(() => {
-        if (purchaseInwardId) return
-        if (isLoading || isFetching) return
-        const poItem = data?.data
+        if (!data?.data || isLoading || isFetching) return;
 
-        if (data?.data) {
-            // handleInputChange([{ lotNo: "", qty: "0.000", noOfRolls: 0 }], index, "returnLotDetails", 0, poItem);
-            handleInputChange(poItem?.alreadyInwardLotWiseData, index, "returnLotDetails", 0, poItem);
+        const poItem = data.data;
+
+        setDirectInwardReturnItems(prev => {
+            const newBlend = structuredClone(prev);
+
+            if (!newBlend[index]) return prev; // safety check
+
+            newBlend[index] = {
+                ...newBlend[index],   // keep old values
+                poNo: poItem?.Po?.docId,
+                orderId: poItem?.orderId,
+                orderDetailsId: poItem?.orderDetailsId,
+                requirementPlanningItemsId: poItem?.requirementPlanningItemsId,
+
+                yarnId: poItem?.yarnId,
+                colorId: poItem?.colorId,
+                gaugeId: poItem?.gaugeId,
+                gsmId: poItem?.gsmId,
+                fDiaId: poItem?.fDiaId,
+                designId: poItem?.designId,
+                discountAmount: poItem?.discountAmount,
+                discountType: poItem?.discountType,
+                kDiaId: poItem?.kDiaId,
+                loopLengthId: poItem?.loopLengthId,
+                poId: poItem?.poId,
+                price: poItem?.price,
+                taxPercent: poItem?.taxPercent,
+                uomId: poItem?.uomId,
+                poQty: poItem?.qty,
+
+                cancelQty: poItem?.alreadyCancelData?._sum?.qty
+                    ? parseFloat(poItem.alreadyCancelData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty
+                    ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyInwardedRolls: poItem?.alreadyInwardedData?._sum?.noOfRolls
+                    ? parseInt(poItem.alreadyInwardedData._sum.noOfRolls)
+                    : "0",
+
+                alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty
+                    ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyReturnedRolls: poItem?.alreadyReturnedData?._sum?.noOfRolls
+                    ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls)
+                    : "0",
+
+                balanceQty: poItem?.balanceQty
+                    ? parseFloat(poItem.balanceQty).toFixed(3)
+                    : "0.000",
+
+                poItemsId: poItem?.id,
+
+                stockQty: parseFloat(poItem?.stockQty).toFixed(3),
+                stockRolls: parseInt(poItem?.stockRolls),
+
+                allowedReturnRolls: poItem?.allowedReturnRolls,
+                allowedReturnQty: parseFloat(poItem?.allowedReturnQty).toFixed(3)
+            };
+
+            return newBlend;
+        });
+
+    }, [data]);
 
 
-        }
-    }, [isFetching, isLoading, data, purchaseInwardId])
+    console.log(item?.poItemsId, "poItemsId")
+
+    // useEffect(() => {
+    //     if (purchaseInwardId) return
+    //     if (isLoading || isFetching) return
+    //     const poItem = data?.data
+
+    //     if (data?.data) {
+    //         // handleInputChange([{ lotNo: "", qty: "0.000", noOfRolls: 0 }], index, "returnLotDetails", 0, poItem);
+    //         handleInputChange(poItem?.alreadyInwardLotWiseData, index, "returnLotDetails", 0, poItem,item?.poItemsId);
+
+
+    //     }
+    // }, [isFetching, isLoading, data, purchaseInwardId])
+
+
+
 
     // if (isLoading || isFetching) return <Loader />
 
@@ -72,7 +148,13 @@ const YarnPoItem = ({ yarnList, uomList,
                     handleInputChangeLotNo={handleInputChangeLotNo}
                     index={index} returnLotDetails={item?.returnLotDetails ? item?.returnLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
-            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>
+            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '
+                onContextMenu={(e) => {
+                    if (!readOnly) {
+                        handleRightClick(e, index, "shiftTimeHrs");
+                    }
+                }}
+            >
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
@@ -105,7 +187,10 @@ const YarnPoItem = ({ yarnList, uomList,
                             if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
                                 handleInputChange(event.target.value.replace(/^0+/, ''), index, "qty")
                             } else {
-                                toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
+                                Swal.fire({
+                                    title: "Return Qty Can not be more than balance Qty",
+                                    icon: "warning",
+                                });
                             }
                         }}
                         onBlur={(e) => {
@@ -141,17 +226,13 @@ const YarnPoItem = ({ yarnList, uomList,
                     <input
                         readOnly
                         className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                        // onKeyDown={(e) => {
-                        //     if (e.key === "Enter") {
-                        //         e.preventDefault();
-                        //         addNewRow();
-                        //     }
-                        // }}
-                        onContextMenu={(e) => {
-                            if (!readOnly) {
-                                handleRightClick(e, index, "shiftTimeHrs");
-                            }
-                        }}
+                    // onKeyDown={(e) => {
+                    //     if (e.key === "Enter") {
+                    //         e.preventDefault();
+                    //         addNewRow();
+                    //     }
+                    // }}
+
                     />
 
                 </td>

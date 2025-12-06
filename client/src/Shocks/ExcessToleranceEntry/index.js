@@ -244,6 +244,24 @@ export default function Form() {
 
 
 
+    useEffect(() => {
+        if (!Array.isArray(toleranceItems)) return;
+        if (toleranceItems.length >= 5) return;
+
+        setToleranceItems(prev => {
+            const safePrev = Array.isArray(prev) ? prev : [];
+
+            const newArray = Array.from(
+                { length: 3 - safePrev.length },
+                () => ({
+                    qty: "",
+                })
+            );
+
+            return [...safePrev, ...newArray];
+        });
+
+    }, [toleranceItems]);
 
 
 
@@ -420,7 +438,7 @@ export default function Form() {
                             setErrors({});
                         }}
                     >
-                        <div className="h-full flex flex-col bg-[f1f1f0]">
+                        <div className="h-full flex flex-col bg-gray-200">
                             <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
@@ -466,8 +484,8 @@ export default function Form() {
                             </div>
 
 
-                            <div className='flex-1 overflow-auto p-3 space-y-3'>
-                                <div className='grid grid-cols-8 gap-3'>
+                            <div className='flex-1 overflow-auto p-3 space-y-3 '>
+                                <div className='grid grid-cols-8 gap-3 bg-white px-2'>
                                     <div className='mb-3'>
                                         <DropdownWithSearch
                                             label="Material"
@@ -478,9 +496,9 @@ export default function Form() {
                                                 // setId()
                                                 // fetchExcessToleranceItems({ params: { materialId: value } });
                                             }}
-                                            required={true} readOnly={readOnly} disabled={toleranceItems?.length > 0 || excessType}
-                                            
-                                            />
+                                            required={true} readOnly={readOnly} disabled={excessType}
+
+                                        />
                                     </div>
                                     <div className=' '>
                                         <DropdownInput name="Transaction Type" options={ExcessToleranceType} value={excessType}
@@ -491,14 +509,14 @@ export default function Form() {
                                                 // fetchExcessToleranceItems({ params: { materialId, excessType: value } });
                                             }}
 
-                                            required={true} readOnly={readOnly} disabled={orderType ||  !materialId} />
+                                            required={true} readOnly={readOnly} disabled={orderType || !materialId} />
                                     </div>
 
 
 
                                     <div className='mb-3'>
                                         <DropdownInput name="Order Type" type="text" options={OrderType} value={orderType}
-                                            setValue={setOrderType} required={true} readOnly={readOnly}  />
+                                            setValue={setOrderType} required={true} readOnly={readOnly} />
                                     </div>
 
                                     <div className='mb-3'>
@@ -507,10 +525,10 @@ export default function Form() {
                                             setValue={(value) => {
                                                 setApplyOn(value)
                                                 // setId()
-                                                fetchExcessToleranceItems({ params: { materialId, excessType, orderType ,applyon: value } });
+                                                fetchExcessToleranceItems({ params: { materialId, excessType, orderType, applyon: value } });
                                             }}
 
-                                            required={true} readOnly={readOnly}  />
+                                            required={true} readOnly={readOnly} />
                                     </div>
 
                                     <div className='mb-3'>
@@ -575,8 +593,8 @@ export default function Form() {
 
 
                                 </div>
-                                <div>
-                                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[340px]">
+                                <div className=''>
+                                    <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[340px] ">
                                         <div className="flex justify-between items-center mb-2">
                                             <h2 className="font-bold text-slate-700">List Of Items</h2>
                                         </div>
@@ -610,26 +628,26 @@ export default function Form() {
                                                                 handleSelectRecord(row, row?.tempId);
                                                             }}
                                                         >
-                                                            <td className=" border border-gray-300 text-[11px] text-left py-2.5 px-2 ">
+                                                            <td className=" border border-gray-300 text-[11px] text-left py-1.5 px-2 ">
                                                                 {index + 1}
 
                                                             </td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">
 
                                                                 {findFromList(row.materialId, materialData?.data, "name")}
                                                             </td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">
                                                                 {row.excessType}
 
                                                             </td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2r">{row?.orderType}</td>
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2r">{row?.orderType}</td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">{row?.applyon}</td>
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">{row?.applyon}</td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">{row?.qty}</td>
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">{row?.qty}</td>
 
                                                             {/* <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">{row?.roundOfType}</td>
 
@@ -637,15 +655,15 @@ export default function Form() {
                                                                 {parseFloat(row?.bagweight || 0).toFixed(3)}
                                                             </td> */}
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">{parseFloat(row?.from || 0).toFixed(3)}</td>
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">{parseFloat(row?.to || 0).toFixed(3)}</td>
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">{parseFloat(row?.from || 0).toFixed(3)}</td>
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">{parseFloat(row?.to || 0).toFixed(3)}</td>
 
 
-                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-2.5 px-2">
+                                                            <td className="w-36 border border-gray-300 text-[11px] text-left py-1.5 px-2">
                                                                 {parseFloat(row?.excessQty || 0).toFixed(3)}
                                                             </td>
 
-                                                            <td className="w-36 border border-gray-300 text-[11px]  py-2.5 px-2 text-center">
+                                                            <td className="w-36 border border-gray-300 text-[11px]  py-1.5 px-2 text-center">
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={row.active}

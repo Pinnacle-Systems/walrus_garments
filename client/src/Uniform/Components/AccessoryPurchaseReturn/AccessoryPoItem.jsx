@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 import { useGetAccessoryPoItemByIdQuery } from '../../../redux/uniformService/AccessoryPoServices'
 import Swal from 'sweetalert2'
 
-const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId, handleRightClick, poInwardOrDirectInward }) => {
+const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList, item, index, handleInputChange, readOnly, deleteRow, purchaseInwardId, handleRightClick, poInwardOrDirectInward, setDirectInwardReturnItems }) => {
 
 
     const { data, isLoading, isFetching } = useGetAccessoryPoItemByIdQuery({ id: item.accessoryPoItemsId, purchaseInwardId, storeId: storeId, poType: "Accessory", poInwardOrDirectInward }, { skip: !item.accessoryPoItemsId })
@@ -28,17 +28,90 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
 
     }
 
+    // useEffect(() => {
+    //     if (purchaseInwardId) return
+    //     if (isLoading || isFetching) return
+    //     const poItem = data?.data
+
+    //     if (data?.data) {
+    //         handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+
+
+    //     }
+    // }, [isFetching, isLoading, data, purchaseInwardId])
+
     useEffect(() => {
-        if (purchaseInwardId) return
-        if (isLoading || isFetching) return
-        const poItem = data?.data
+        if (!data?.data || isLoading || isFetching) return;
 
-        if (data?.data) {
-            handleInputChange(poItem?.accessoryId, index, "accessoryId", 0, poItem);
+        const poItem = data?.data;
+
+        setDirectInwardReturnItems(prev => {
+            const newBlend = structuredClone(prev);
+
+            if (!newBlend[index]) return prev;
+
+            newBlend[index] = {
+                ...newBlend[index],   // keep previous values
+
+                // Common fields
+                orderId: poItem?.orderId,
+                orderDetailsId: poItem?.orderDetailsId,
+                poId: poItem?.poId,
+                price: poItem?.price,
+                taxPercent: poItem?.taxPercent,
+                uomId: poItem?.uomId,
+                poQty: poItem?.qty,
+                discountAmount: poItem?.discountAmount,
+                discountType: poItem?.discountType,
+                poItemsId: poItem?.id,
+
+                cancelQty: poItem?.alreadyCancelData?._sum?.qty
+                    ? parseFloat(poItem.alreadyCancelData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyInwardedQty: poItem?.alreadyInwardedData?._sum?.qty
+                    ? parseFloat(poItem.alreadyInwardedData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyInwardedRolls: poItem?.alreadyInwardedData?._sum?.noOfRolls
+                    ? parseInt(poItem.alreadyInwardedData._sum.noOfRolls)
+                    : "0",
+
+                alreadyReturnedQty: poItem?.alreadyReturnedData?._sum?.qty
+                    ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3)
+                    : "0.000",
+
+                alreadyReturnedRolls: poItem?.alreadyReturnedData?._sum?.noOfRolls
+                    ? parseInt(poItem.alreadyReturnedData._sum.noOfRolls)
+                    : "0",
+
+                balanceQty: poItem?.balanceQty
+                    ? parseFloat(poItem.balanceQty).toFixed(3)
+                    : "0.000",
+
+                stockQty: parseFloat(poItem?.stockQty).toFixed(3),
+                stockRolls: parseInt(poItem?.stockRolls),
+
+                allowedReturnRolls: poItem?.allowedReturnRolls,
+                allowedReturnQty: parseFloat(poItem?.allowedReturnQty).toFixed(3),
+
+            
+                accessoryRequirementPlanningId: poItem?.accessoryRequirementPlanningId,
+                poNo: poItem?.AccessoryPo?.docId,
+                accessoryGroupId: poItem?.accessoryGroupId,
+                accessoryItemId: poItem?.accessoryItemId,
+                colorId: poItem?.colorId,
+                sizeId: poItem?.sizeId,
+                accessoryId: poItem?.accessoryId,
+
+            };
+
+            return newBlend;
+        });
+
+    }, [data]);
 
 
-        }
-    }, [isFetching, isLoading, data, purchaseInwardId])
 
     const balanceQty = parseFloat(item?.alreadyInwardedQty || 0) - parseFloat(item?.alreadyReturnedQty || 0);
 
@@ -47,7 +120,13 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
 
     return (
 
-        <tr key={item.poItemsId} className='border border-blue-gray-200 cursor-pointer'>
+        <tr key={item.poItemsId} className='border border-blue-gray-200 cursor-pointer'
+            onContextMenu={(e) => {
+                if (!readOnly) {
+                    handleRightClick(e, index, "shiftTimeHrs");
+                }
+            }}
+        >
             <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
             <td className='w-12 border border-gray-300 text-[11px]   text-left p-0.5'>{item?.poNo}</td>
 
@@ -58,7 +137,7 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
             <td className='w-16 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
             <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(item?.poQty || 0).toFixed(3)}</td>
-            <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(balanceQty|| 0).toFixed(3)}</td>
+            <td className='w-16 border border-gray-300 text-[11px]  text-right p-0.5'>{parseFloat(balanceQty || 0).toFixed(3)}</td>
 
             <td className='py-0.5 border border-gray-300 text-[11px]'>
                 <input
@@ -81,7 +160,7 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Return Qty cannot be more than Balance Qty',
-                               
+
                             });
                             // handleInputChange(balanceQty, index, "qty"); 
                         } else {
@@ -89,14 +168,14 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
                         }
 
                     }}
-                    // onBlur={(e) => {
-                    //     if (!e.target.value) {
-                    //         handleInputChange(0.000, index, "qty");
-                    //         return
-                    //     }
-                    //     handleInputChange(e.target.value, index, "qty")
-                    // }
-                    // }
+                // onBlur={(e) => {
+                //     if (!e.target.value) {
+                //         handleInputChange(0.000, index, "qty");
+                //         return
+                //     }
+                //     handleInputChange(e.target.value, index, "qty")
+                // }
+                // }
 
                 />
                 <div className='text-center'>
@@ -108,11 +187,7 @@ const AccessoryPoItem = ({ storeId, uomList, sizeList, accessoryList, colorList,
                 <input
                     readOnly
                     className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                    onContextMenu={(e) => {
-                        if (!readOnly) {
-                            handleRightClick(e, index, "shiftTimeHrs");
-                        }
-                    }}
+
 
                 />
 

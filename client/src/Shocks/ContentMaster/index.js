@@ -7,8 +7,8 @@ import { ReusableTable, TextInput, ToggleButton } from '../../Inputs';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { useAddContentMasterMutation, useDeleteContentMasterMutation, useGetContentMasterByIdQuery, useGetContentMasterQuery, useUpdateContentMasterMutation } from '../../redux/uniformService/ContentMasterServices';
 import { Check, Plus, Power } from 'lucide-react';
-import Modal from '../../UiComponents/Modal';
 import Swal from 'sweetalert2';
+import Modal from '../../UiComponents/Modal';
 
 
 const MODEL = "Content Master"
@@ -83,7 +83,7 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-      
+
             });
         } catch (error) {
             console.log("handle");
@@ -96,11 +96,27 @@ export default function Form() {
             //     position: "top-center",
             // });
             Swal.fire({
-                title:  "Please fill all required fields...!",
+                title: "Please fill all required fields...!",
                 icon: "success",
 
             });
             return;
+        }
+
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+        if (foundItem) {
+            Swal.fire({
+                text: "The Content Name already exists.",
+                icon: "warning",
+                showConfirmButton: false,
+            });
+            return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
@@ -242,7 +258,7 @@ export default function Form() {
                         setErrors({});
                     }}
                 >
-                    <div className="h-full flex flex-col bg-[f1f1f0]">
+                    <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3  mt-4 flex justify-between items-center sticky top-0 z-10 bg-white">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
@@ -282,10 +298,10 @@ export default function Form() {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto p-3">
-                            <div className="grid grid-cols-1  gap-3  h-full">
+                        <div className="flex-1 overflow-auto p-3 e">
+                            <div className="grid grid-cols-1  gap-3  h-full bg-white">
 
-                                <fieldset className=' rounded mt-2'>
+                                <fieldset className=' rounded mt-2 p-1'>
                                     <div className=''>
                                         <div className='mb-3 w-[48%]'>
                                             <TextInput name="Content" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />

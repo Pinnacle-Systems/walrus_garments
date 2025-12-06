@@ -105,7 +105,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ORDER": <Order />,
     "DASHBOARD": <Dashboard />,
     "SHOCKS MATERIAL MASTER": <SocksMaterial />,
-    "SOCKS TYPE MASTER": <SocksType />,
+    "SHOCKS TYPE MASTER": <SocksType />,
     "YARN PURCHASE ORDER": <PurchaseOrder />,
     "UOM MASTER": <UomMaster />,
     "GSM MASTER": <GsmMaster />,
