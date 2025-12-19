@@ -193,11 +193,7 @@ async function update(id, body) {
         where: { id: parseInt(id) },
         data: {
             name,
-            sku,
-            // styleCode,
-            // fabricId: fabricId ? parseInt(fabricId) : null,
-            // colorId: colorId ? parseInt(colorId) : null,
-            active: active !== undefined ? JSON.parse(active) : undefined,
+            aliasName,
             companyId: companyId ? parseInt(companyId) : null,
         },
 

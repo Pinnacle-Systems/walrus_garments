@@ -61,9 +61,7 @@ const YarnIssueItems = ({ Stock, setStock, issueItems, id, setIssueItems, materi
         if (id) {
             totalAvailable = parseFloat(totalAvailable) + parseFloat(yarnItem?.qty)
         }
-        // else {
-        //     return totalAvailable
-        // }
+    
 
 
         const currentlyUsed = Stock

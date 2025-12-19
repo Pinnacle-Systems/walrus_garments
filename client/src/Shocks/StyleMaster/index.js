@@ -24,7 +24,7 @@ const StyleMaster = () => {
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [name, setName] = useState("");
-    const [sku, setSku] = useState("");
+    const [aliasName, setAliasName] = useState("");
 
     const [active, setActive] = useState(true);
 
@@ -59,7 +59,7 @@ const StyleMaster = () => {
             // if (id) setReadOnly(true);
             setName(data?.name ? data.name : "");
 
-            setSku(data?.sku ? data?.sku : "");
+            setAliasName(data?.sku ? data?.sku : "");
             setActive(id ? (data?.active ? data.active : false) : true);
         },
         [id]
@@ -72,11 +72,11 @@ const StyleMaster = () => {
 
 
         useEffect(() => {
-            setSku(name)
+            setAliasName(name)
         }, [name,setName]);
 
     const data = {
-        id, sku, active,
+        id, aliasName, active,
         //  productType, 
         name,
         // seoTitle, sleeve, fabricId, sizeTemplateId,
@@ -473,7 +473,7 @@ const StyleMaster = () => {
 
                                                         </div>
                                                         <div className="mb-3">
-                                                            <TextInput name="Alias Name" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
+                                                            <TextInput name="Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} />
                                                         </div>
 
                                                         <div className="mb-5">

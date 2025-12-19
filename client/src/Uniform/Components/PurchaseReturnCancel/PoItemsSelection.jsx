@@ -19,8 +19,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
 
-    const { data: supplierList, isLoading: supplierLoading, isFetching: supplierFetching } =
-        useGetPartyQuery({ params: { companyId, active: true } });
+ 
 
     // if (supplierFetching || supplierLoading) return <Loader />
 

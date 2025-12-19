@@ -161,7 +161,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                                     className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    PoQty
+                                    OrderQty
                                 </th>
 
 
@@ -169,7 +169,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                                     className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Qty
+                                   Po Qty
                                 </th>
 
 

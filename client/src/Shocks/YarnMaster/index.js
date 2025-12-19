@@ -569,14 +569,14 @@ export default function Form() {
 
                           </fieldset>
                           <div>
-                            <div className='h-[100px] mt-3'>
+                            {/* <div className='h-[100px] mt-3'>
                               <MultiSelectDropdown
                                 name="Counts List"
                                 required={true}
                                 options={multiSelectOption(countsData ? countsData?.data : [], "name", "id")}
                                 selected={countsList}
                                 setSelected={setCountslist} />
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </div>

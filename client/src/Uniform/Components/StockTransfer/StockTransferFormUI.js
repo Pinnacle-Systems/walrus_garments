@@ -286,7 +286,6 @@ const StockTransferForm = ({
 
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
-        console.log(callback, "callback")
         try {
             let returnData;
             if (text === "Updated") {
