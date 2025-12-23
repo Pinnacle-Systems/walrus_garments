@@ -38,5 +38,6 @@ export { default as GridTable } from "./GridTable";
 export { default as UomMaster } from "./Uommaster";
 export { default as MeasurementMaster } from "./MeasurementMaster";
 export { default as HsnMaster } from "./HsnMaster";
+export { default as AccessoryTemplate } from "./AccessoryTemplate";
 
 

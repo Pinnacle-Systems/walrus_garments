@@ -10,7 +10,6 @@ import OrderFormUi from './orderFormUi';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
 import { ReusableTable } from '../../../Inputs';
-import { Loader } from '../../../Basic/components';
 import OrderFormReport from './OrderReport';
 import { useGetSocksTypeQuery } from '../../../redux/uniformService/SocksTypeMasterService';
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
@@ -32,14 +31,18 @@ const Order = () => {
 
     const { data: supplierList , isLoading : isSupplierLoading , isFetching : isSupplierFetching } =
         useGetPartyQuery({ params: { ...params } });
-    const { data: socksMaterialData } = useGetSocksMaterialQuery({ params: { ...params } });
-    const { data: socksTypeData } = useGetSocksTypeQuery({ params: { ...params } });
+
+
+    //     const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
+    //     const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
+    // const { data: socksMaterialData } = useGetSocksMaterialQuery({ params: { ...params } });
+    // const { data: socksTypeData } = useGetSocksTypeQuery({ params: { ...params } });
+
+
     const { data: sizeList,  } = useGetSizeMasterQuery({ params: { ...params } });
-    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
     const { data: yarnNeedleList } = useGetYarnNeedleMasterQuery({ params: { ...params } });
     const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
     const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
-    const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
     const { data: yarnTypeList } = useGetYarnTypeMasterQuery({ params: { ...params } });
     const { data: colorlist, isLoading: isColorListLoading, isFetching: isColorListFetching, } = useGetColorMasterQuery({ params });
 
@@ -79,7 +82,8 @@ const Order = () => {
                         qty: 0.00, sizeMeasurement: "", sizeId: ""
 
                     }],
-                    orderYarnDetails: [{ yarnId: "" }]
+                    orderYarnDetails: [{ yarnId: "" }] ,
+                    orderAccessoryDetails : [{ accessoryId : ""}]
 
                 }
             })
@@ -141,7 +145,6 @@ const Order = () => {
 
     }
 
-    if (isSupplierLoading || isSupplierFetching ) return <Loader />;
 
 
     return (
@@ -149,9 +152,9 @@ const Order = () => {
             {showOrderForm ? (
                 <OrderFormUi orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowOrderForm(false); setReadOnly(prev => !prev) }}
                     setShowOrderForm={setShowOrderForm} supplierList={supplierList}
-                    socksTypeData={socksTypeData} sizeList={sizeList} styleList={styleList} yarnNeedleList={yarnNeedleList}
-                    yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist}
-                    socksMaterialData={socksMaterialData}
+                     sizeList={sizeList}  yarnNeedleList={yarnNeedleList}
+                    yarnList={yarnList} countsList={countsList}  yarnTypeList={yarnTypeList} colorlist={colorlist}
+                   
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">

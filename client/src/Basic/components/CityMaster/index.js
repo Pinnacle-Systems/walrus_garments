@@ -190,38 +190,31 @@ export default function Form() {
         }
     };
 
-    const deleteData = async () => {
-        if (readOnly) return toast.info("Turn On Edit Mode !..")
-
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                const deldata = await removeData(id).unwrap();
-                if (deldata?.statusCode == 1) {
-                    toast.error(deldata?.message)
-                    setForm(false)
-                    return
-                }
-                setId("");
-                dispatch({
-                    type: `StateMaster/invalidateTags`,
-                    payload: ['State'],
-                });
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted Successfully",
-                    icon: "success",
-                });
-
-                setForm(false)
-            } catch (error) {
-                toast.error("something went wrong");
-            }
-        }
-    };
-
+   const deleteData = async (id) => {
+ 
+     if (id) {
+       if (!window.confirm("Are you sure to delete...?")) {
+         return;
+       }
+       try {
+         await removeData(id)
+         setId("");
+         dispatch({
+           type: `countryMaster/invalidateTags`,
+           payload: ['Countries'],
+         });
+         // toast.success("Deleted Successfully");
+         Swal.fire({
+           title: "Deleted Successfully",
+           icon: "success",
+ 
+         });
+         setForm(false)
+       } catch (error) {
+         toast.error("something went wrong");
+       }
+     }
+   };
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {

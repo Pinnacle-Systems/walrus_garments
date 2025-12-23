@@ -8,6 +8,7 @@ import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, Ya
 import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
+import { AccessoryTemplate } from "..";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -136,6 +137,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY PURCHASE RETURN": <AccessoryPurchaseReturn />,
     "ACCESSORY PURCHASE BILL ENTRY": <AccessoryPurchaseBillEntry />,
     "ACCESSORY STOCK TRANSFER": <AccessoryStockTransfer />,
+    "ACCESSORY TEMPLATE" : <AccessoryTemplate  />
 
 
 

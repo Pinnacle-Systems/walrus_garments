@@ -1,23 +1,52 @@
 import React, { useEffect, useState } from 'react'
-import { TextArea, TextInput } from '../../../Inputs'
+import { DropdownInput, TextArea, TextInput } from '../../../Inputs'
 import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
 import { Plus } from 'lucide-react'
+import { dropDownListObject } from '../../../Utils/contructObject'
 
 
 
-export default function TableGridItems({ item, gridIndex, id, setOrderDetails, orderDetails, readOnly, yarnList, selectedIndex,
+export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOrderDetails, orderDetails, readOnly, yarnList, selectedIndex,
 
-    yarnNeedleList, countsList, colorlist, onClose ,accessoryTemplateData
+    onClose, colorlist, sizeList, orderQty, uomList, accessoryTemplate,
+
+    templateId, setTemplateId, setAceessoryTemplateItems, orderAccessoryDetails, accessoryTemplateData
 }) {
+
+
+    console.log(item, "accessory item")
+
+
+    useEffect(() => {
+
+        if (accessoryTemplateData?.data) {
+            // let data = accessoryTemplateData?.data
+            // console.log(data,"accessoryTemplateData")
+            // setAceessoryTemplateItems(data?.AccessoryTemplateItems ? data?.AccessoryTemplateItems : [])
+
+            setOrderDetails(prev => {
+                const updated = [...prev];
+
+                updated[selectedAccessoryIndex] = {
+                    ...updated[selectedAccessoryIndex],
+                    accessoryDetails: accessoryTemplateData
+                };
+
+                return updated;
+            });
+        }
+
+
+
+    }, [accessoryTemplateData]);
 
 
     const [contextMenu, setContextMenu] = useState(null);
 
 
     const handleRightClick = (event, rowIndex, type) => {
-        console.log(rowIndex, "rowIndexs");
 
         event.preventDefault();
         setContextMenu({
@@ -38,18 +67,11 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
 
 
     function handleInputChange(value, index, field) {
-
-
-        console.log(value, "value", index)
-        let orderYarnDetails = "orderYarnDetails"
-
-
-        setOrderDetails(orderDetails => {
+        setAceessoryTemplateItems(orderDetails => {
             const newBlend = structuredClone(orderDetails);
-            newBlend[gridIndex][orderYarnDetails][index][field] = value;
+            newBlend[index][field] = value;
             return newBlend
-        }
-        );
+        });
     };
 
 
@@ -116,13 +138,13 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
         setOrderDetails(prev => {
             // const updated = [...prev];
             const updated = structuredClone(prev);
-            updated[gridIndex].orderYarnDetails
+            updated[selectedAccessoryIndex].orderYarnDetails
                 .splice(yarnIndex, 1);
 
 
-            if (updated[gridIndex].orderYarnDetails
+            if (updated[selectedAccessoryIndex].orderYarnDetails
                 .length === 0) {
-                updated.splice(gridIndex, 1);
+                updated.splice(selectedAccessoryIndex, 1);
             }
 
             return updated;
@@ -157,20 +179,26 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                 <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                     <div className="flex items-center gap-2">
                         <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                            {id ? (!readOnly ? "Edit Yarn Details" : "Yarn Details ") : "Add New Yarn"}
+                            {id ? (!readOnly ? "Edit Accessory Details" : "Accessory Details ") : "Add New Accessory"}
                         </h2>
 
                     </div>
-                    <div className="flex gap-2">
+
+
+                    <div className="flex gap-2 ">
+                        <div>
+                            <DropdownInput name="Tax Type"
+                                options={dropDownListObject(accessoryTemplate ? accessoryTemplate?.data : [], "templateName", "id")}
+                                value={templateId}
+                                setValue={setTemplateId}
+                                required={true} readOnly={readOnly}
+                            />
+                        </div>
                         <div>
                             {readOnly && (
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        // setForm(false);
-                                        // setSearchValue("");
-                                        // setId(false);
-                                    }}
+                                    onClick={() => { }}
                                     className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                                 >
                                     Cancel
@@ -201,26 +229,12 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
                                     <div className="flex justify-between items-center mb-2">
                                         <h2 className="font-medium text-slate-700">List Of Items</h2>
-                                        {/* <div className="flex gap-2 items-center">
-
-                                            <button
-                                                onClick={() => {
-                                                    addNewRow()
-                                                }}
-                                                className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                                            >
-                                                <HiPlus className="w-3 h-3 mr-1" />
-                                                Add Item
-                                            </button>
-                                        </div> */}
 
                                     </div>
                                     <div className={` relative w-full max-h-[300px] overflow-y-auto  py-1`}>
                                         <table className="w-full border-collapse table-fixed">
-                                            <thead className="bg-gray-200 text-gray-800">
-                                                <tr
-
-                                                >
+                                            <thead className="bg-gray-200 text-gray-900">
+                                                <tr>
                                                     <th
                                                         className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
@@ -228,34 +242,57 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                     </th>
                                                     <th
 
-                                                        className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                                        className={`w-80 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
-                                                        Color
+                                                        Accessory Group
                                                     </th>
-                                                    {/* <th
-
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Yarn category
-                                </th> */}
                                                     <th
 
                                                         className={`w-44 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
-                                                        Yarn
+                                                        Accessory Category
+                                                    </th>
+                                                    <th
+
+                                                        className={`w-80 px-4 py-2 text-center font-medium text-[13px] `}
+                                                    >
+                                                        Accessory Name
+                                                    </th>
+
+                                                    <th
+
+                                                        className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                                    >
+                                                        Color
+                                                    </th>
+
+                                                    <th
+
+                                                        className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                                    >
+                                                        Size
+                                                    </th>
+                                                    <th
+
+                                                        className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                                    >
+                                                        UOM
                                                     </th>
                                                     {/* <th
 
-                                                        className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                                                        className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
-                                                        Count
+                                                        OrderQty
                                                     </th> */}
+
+
                                                     <th
 
-                                                        className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                                        className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
-                                                        Needle Type
+                                                        Po Qty
                                                     </th>
+
 
 
                                                     <th
@@ -267,118 +304,126 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                 </tr>
                                             </thead>
 
-                                            <tbody className=' '>
+                                            <tbody>
 
-                                                {(item?.orderYarnDetails ? item?.orderYarnDetails : [])?.map((row, index) =>
-                                                    <tr className="border border-blue-gray-200 cursor-pointer "
+                                                {item?.orderAccessoryDetails?.map((row, index) => (
+                                                    <tr key={index} className="border border-blue-gray-200 cursor-pointer"
 
                                                         onContextMenu={(e) => {
                                                             if (!readOnly) {
                                                                 handleRightClick(e, index, "notes");
                                                             }
-                                                        }}>
-                                                        <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
+                                                        }}
+                                                    >
+                                                        <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
+                                                            {index + 1}
+                                                        </td>
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
+                                                            {row?.AccessoryGroup?.name}
 
-                                                        <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                                        </td>
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
+                                                            {row?.AccessoryCategory?.name}
+
+                                                        </td>
+
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
+                                                            {row?.Accessory?.aliasName}
+                                                        </td>
+
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                                tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
-                                                                value={row.colorId}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
                                                                 onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                                                 onBlur={(e) => {
-                                                                    handleInputChange((e.target.value), index, "colorId")
+
+                                                                    handleInputChange(e.target.value, index, "colorId")
+
                                                                 }
                                                                 }
                                                             >
-                                                                <option >
+                                                                <option hidden>
                                                                 </option>
                                                                 {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
                                                                     <option value={blend.id} key={blend.id}>
-                                                                        {blend?.name}
-                                                                    </option>)}
+                                                                        {blend.name}
+                                                                    </option>
+                                                                )}
                                                             </select>
                                                         </td>
-                                                        <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
-                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnTypeId") } }}
-                                                                tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
-                                                                value={row.yarnId}
-                                                                onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
+                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                                                                onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                                                 onBlur={(e) => {
-                                                                    handleInputChange((e.target.value), index, "yarnId")
-                                                                }
-                                                                }
-                                                            >
-                                                                <option >
-                                                                </option>
-                                                                {(id ? yarnList?.data : yarnList?.data?.filter(item => item.active))?.map((blend) =>
-                                                                    <option value={blend.id} key={blend.id}>
-                                                                        {blend?.name}
-                                                                    </option>)}
 
-                                                            </select>
-                                                        </td>
+                                                                    handleInputChange(e.target.value, index, "sizeId")
 
-
-                                                        {/* <td className="py-0.5 border border-gray-300 text-[11px]">
-                                                            <select
-                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                                disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
-                                                                value={row.count}
-                                                                onChange={(e) => handleInputChange(e.target.value, index, "count")}
-                                                                onBlur={(e) => {
-                                                                    handleInputChange((e.target.value), index, "count")
                                                                 }
                                                                 }
                                                             >
                                                                 <option hidden>
                                                                 </option>
-                                                                {(allData?.data?.filter(count => count.yarnId == row.yarnId))?.map((blend) =>
+                                                                {(id ? sizeList?.data : sizeList?.data?.filter(item => item.active))?.map((blend) =>
                                                                     <option value={blend.id} key={blend.id}>
-                                                                        {blend?.id}
+                                                                        {blend.name}
                                                                     </option>
                                                                 )}
                                                             </select>
-                                                        </td> */}
-                                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+                                                        </td>
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
-                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                                disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none' value={row.yarnKneedleId}
-                                                                onChange={(e) => handleInputChange(e.target.value, index, "yarnKneedleId")}
+                                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                                                                onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                                                 onBlur={(e) => {
-                                                                    handleInputChange((e.target.value), index, "yarnKneedleId")
+
+                                                                    handleInputChange(e.target.value, index, "uomId")
+
                                                                 }
                                                                 }
                                                             >
                                                                 <option hidden>
                                                                 </option>
-                                                                {(id ? yarnNeedleList?.data : yarnNeedleList?.data.filter(item => item.active))?.map((blend) =>
+                                                                {(id ? uomList?.data : uomList?.data.filter(item => item.active))?.map((blend) =>
                                                                     <option value={blend.id} key={blend.id}>
-                                                                        {blend?.name}
+                                                                        {blend.name}
                                                                     </option>
                                                                 )}
                                                             </select>
                                                         </td>
+
+                                                        <td className='py-0.5 border border-gray-300 text-[11px]'>
+                                                            <input
+                                                                onKeyDown={e => {
+                                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                                                                }}
+                                                                min={"0"}
+                                                                type="number"
+                                                                onFocus={(e) => e.target.select()}
+                                                                className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                                value={(!row.qty) ? 0 : row.qty}
+                                                                disabled={readOnly || !row.accessoryId}
+                                                                onChange={(e) =>
+                                                                    handleInputChange(parseFloat(e.target.value), index, "qty")
+                                                                }
+                                                                onBlur={(e) => {
+                                                                    handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+
+                                                                }
+                                                                }
+
+                                                            />
+
+                                                        </td>
+
                                                         <td
                                                             className="w-10 border border-gray-300"
 
                                                         >
-                                                            {/* <input
-
-                                                                onContextMenu={(e) => {
-                                                                    if (!readOnly) {
-                                                                        handleRightClick(e, index, "notes");
-                                                                    }
-                                                                }}
-                                                                className='w-full '
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault();
-                                                                        addNewRow();
-                                                                    }
-                                                                }}
-
-                                                            /> */}
                                                             <button
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Enter") {
@@ -393,15 +438,8 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                         </td>
 
 
-
-
-
-
-
-
-
                                                     </tr>
-                                                )}
+                                                ))}
                                             </tbody>
                                         </table>
 
@@ -437,7 +475,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                             <button
                                                 className=" text-black text-[12px] text-left rounded px-1"
                                                 onClick={() => {
-                                                    handleDeleteAllRows(gridIndex);
+                                                    handleDeleteAllRows(selectedAccessoryIndex);
                                                     handleCloseContextMenu();
                                                 }}
                                             >

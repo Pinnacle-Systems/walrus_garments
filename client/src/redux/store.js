@@ -73,6 +73,7 @@ import ExcessToleranceMasterApi from "./services/ExcessToleranceServices";
 import AccessoryPurchaseCancelApi from "./uniformService/AccessoryPurchaseCancelServices";
 import AccessoryPurchaseInwardApi from "./uniformService/AccessoryInwardServices";
 import MaterialMasterApi from "./uniformService/MaterialMasterServices";
+import AccessoryTemplateMasterApi from "./uniformService/AccessoryTemplateMasterServices";
 
 const commonReducers = {
   openTabs, party,
@@ -187,6 +188,7 @@ const commonReducers = {
   StockReportControl : StockReportControlApi.reducer,
   AccessoryStockTransfer : AccessoryStockTransferApi.reducer ,
   accessorystock : AccessoryStockApi.reducer,
+  accessoryTemplateMaster : AccessoryTemplateMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -298,7 +300,8 @@ accessoryBillEntryApi.middleware,
 AccessoryCategoryMasterApi.middleware,
 StockReportControlApi.middleware ,
 AccessoryStockTransferApi.middleware,
-AccessoryStockApi.middleware
+AccessoryStockApi.middleware ,
+AccessoryTemplateMasterApi.middleware
 ];
 
 

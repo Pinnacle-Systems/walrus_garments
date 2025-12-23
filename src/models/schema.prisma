@@ -896,6 +896,8 @@ model AccessoryGroup {
   AccessoryMaterialIssueItems   AccessoryMaterialIssueItems[]
   FromAccessoryTransferItems    FromAccessoryTransferItems[]
   ToAccessoryTransferItems      ToAccessoryTransferItems[]
+  AccessoryTemplateItems        AccessoryTemplateItems[]
+  OrderAccessoryDetails         OrderAccessoryDetails[]
 }
 
 model AccessoryItem {
@@ -956,6 +958,8 @@ model Accessory {
   AccessoryStock                AccessoryStock[]
   AccessoryRaiseIndentItems     AccessoryRaiseIndentItems[]
   AccessoryMaterialIssueItems   AccessoryMaterialIssueItems[]
+  AccessoryTemplateItems        AccessoryTemplateItems[]
+  OrderAccessoryDetails         OrderAccessoryDetails[]
 }
 
 model AccessoryCategory {
@@ -973,6 +977,8 @@ model AccessoryCategory {
   AccessoryStock                AccessoryStock[]
   FromAccessoryTransferItems    FromAccessoryTransferItems[]
   ToAccessoryTransferItems      ToAccessoryTransferItems[]
+  AccessoryTemplateItems        AccessoryTemplateItems[]
+  OrderAccessoryDetails         OrderAccessoryDetails[]
 }
 
 enum PoTypes {
@@ -1065,6 +1071,8 @@ model Color {
   AccessoryStock                AccessoryStock[]
   AccessoryRaiseIndentItems     AccessoryRaiseIndentItems[]
   AccessoryMaterialIssueItems   AccessoryMaterialIssueItems[]
+  AccessoryTemplateItems        AccessoryTemplateItems[]
+  OrderAccessoryDetails         OrderAccessoryDetails[]
 }
 
 model UnitOfMeasurement {
@@ -1109,6 +1117,7 @@ model UnitOfMeasurement {
   AccessoryStock                            AccessoryStock[]
   AccessoryRaiseIndentItems                 AccessoryRaiseIndentItems[]
   AccessoryMaterialIssueItems               AccessoryMaterialIssueItems[]
+  OrderAccessoryDetails                     OrderAccessoryDetails[]
 }
 
 enum DeliveryType {
@@ -1767,6 +1776,8 @@ model Size {
   AccessoryStock                            AccessoryStock[]
   AccessoryRaiseIndentItems                 AccessoryRaiseIndentItems[]
   AccessoryMaterialIssueItems               AccessoryMaterialIssueItems[]
+  AccessoryTemplateItems                    AccessoryTemplateItems[]
+  OrderAccessoryDetails                     OrderAccessoryDetails[]
 }
 
 model SocksMaterial {
@@ -3481,6 +3492,8 @@ model Order {
   draftSave         Boolean?  @default(false)
   isPlanning        Boolean?  @default(false)
   isMaterialRequest Boolean?  @default(false)
+  AccessoryTemplate   AccessoryTemplate? @relation(fields: [accessoryTemplateId], references: [id], onDelete: Cascade)
+  accessoryTemplateId Int?
 
   orderDetails                 OrderDetails[]
   Sample                       Sample[]
@@ -3509,6 +3522,7 @@ model Order {
   AccessoryMaterialIssueItems  AccessoryMaterialIssueItems[]
   DirectItems                  DirectItems[]
   DirectReturnItems            DirectReturnItems[]
+  OrderAccessoryDetails        OrderAccessoryDetails[]
 }
 
 model OrderDetails {
@@ -3595,6 +3609,28 @@ model orderYarnDetails {
   yarnKneedleId  Int?
   OrderDetails   OrderDetails? @relation(fields: [orderdetailsId], references: [id], onDelete: Cascade)
   orderdetailsId Int?
+}
+
+model OrderAccessoryDetails {
+  id                  Int                @id @default(autoincrement())
+  Order               Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId             Int?
+  AccessoryTemplate   AccessoryTemplate? @relation(fields: [accessoryTemplateId], references: [id], onDelete: Cascade)
+  accessoryTemplateId Int?
+  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  AccessoryCategory   AccessoryCategory? @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId Int?
+  AccessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  Color               Color?             @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  qty                 Float?
+  active              Boolean?           @default(false)
 }
 
 model Machine {
@@ -4767,4 +4803,30 @@ model StockReportControl {
   id            Int      @id @default(autoincrement())
   isStockReport String?  @db.LongText
   active        Boolean? @default(false)
+}
+
+model AccessoryTemplate {
+  id                     Int                      @id @default(autoincrement())
+  templateName           String?
+  active                 Boolean?                 @default(false)
+  AccessoryTemplateItems AccessoryTemplateItems[]
+  OrderAccessoryDetails  OrderAccessoryDetails[]
+  Order                  Order[]                 
+}
+
+model AccessoryTemplateItems {
+  id                  Int                @id @default(autoincrement())
+  AccessoryTemplate   AccessoryTemplate? @relation(fields: [accessoryTemplateId], references: [id], onDelete: Cascade)
+  accessoryTemplateId Int?
+  Accessory           Accessory?         @relation(fields: [accessoryId], references: [id])
+  accessoryId         Int?
+  AccessoryCategory   AccessoryCategory? @relation(fields: [accessoryCategoryId], references: [id])
+  accessoryCategoryId Int?
+  AccessoryGroup      AccessoryGroup?    @relation(fields: [accessoryGroupId], references: [id])
+  accessoryGroupId    Int?
+  Color               Color?             @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Size                Size?              @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  active              Boolean?           @default(false)
 }

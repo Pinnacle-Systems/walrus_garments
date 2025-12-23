@@ -113,4 +113,5 @@ export const ACCESSORY_CATEGORY_API = "accessoryCategory"
 export const STOCK_REPORT_CONTROL = "stockReportControl"
 export const ACCESSORT_STOCK_TRANSFER_API = "accessoryStockTransfer"
 export const ACCESSORY_STOCK_API = "accessoryStock"
+export const ACCESSORY_TEMPLATE_API = "accessoryTemplate"
 

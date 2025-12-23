@@ -29,13 +29,20 @@ import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInpu
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
-import { Loader } from "../../../Basic/components";
+import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/FiberContentMasterServices";
+import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
+import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
+import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
+import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
+import { useGetAccessoryCategoryMasterQuery } from "../../../redux/uniformService/AccessoryCategoryMasterServices";
+import { useGetAccessoryTemplateMasterByIdQuery, useGetAccessoryTemplateMasterQuery } from "../../../redux/uniformService/AccessoryTemplateMasterServices";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 
 const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setId, id, onClose, supplierList, setShowOrderForm,
 
-    socksTypeData, sizeList, styleList, yarnNeedleList,
-    yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData
-
+    sizeList, yarnNeedleList,
+    yarnList, countsList, yarnTypeList, colorlist,
 }) => {
 
     const [editingItem, setEditingItem] = useState("");
@@ -61,11 +68,60 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [openModelForAddress, setOpenModelForAddress] = useState(false)
     const [packingCoverType, setPackingCoverType] = useState("")
     const [yarnItems, setYarnItems] = useState([])
-
+    const [templateId, setTemplateId] = useState("")
+    const [accessoryTemplateItems, setAceessoryTemplateItems] = useState([])
     const params = {
         branchId, userId, finYearId
     };
 
+    const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
+    const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
+    const { data: socksMaterialData } = useGetSocksMaterialQuery({ params: { ...params } });
+    const { data: socksTypeData } = useGetSocksTypeQuery({ params: { ...params } });
+
+    const { data: uomList } = useGetUomQuery({ params });
+
+
+
+    const { data: accessoryTemplate } = useGetAccessoryTemplateMasterQuery({
+        params,
+    }, { skip: id });
+
+
+
+
+
+
+
+
+    const {
+        data: accessoryTemplateData, isLoading: isAccessoryTemplateLoading, isFetching: isAccessoryTemplateFetching,
+
+    } = useGetAccessoryTemplateMasterByIdQuery(templateId, { skip: !templateId });
+
+
+    // useEffect(() => {
+
+    //     if (accessoryTemplateData?.data) {
+    //         // let data = accessoryTemplateData?.data
+    //         // console.log(data,"accessoryTemplateData")
+    //         // setAceessoryTemplateItems(data?.AccessoryTemplateItems ? data?.AccessoryTemplateItems : [])
+
+    //         setOrderDetails(prev => {
+    //             const updated = [...prev];
+
+    //             updated[selectedAccessoryIndex] = {
+    //                 ...updated[selectedAccessoryIndex],
+    //                 accessoryDetails: accessoryTemplateData
+    //             };
+
+    //             return updated;
+    //         });
+    //     }
+
+
+
+    // }, [isAccessoryTemplateFetching, isAccessoryTemplateLoading, accessoryTemplateData]);
 
 
     const {
@@ -93,6 +149,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         setAddress(data?.address ? data?.address : "");
         setValidDate(data?.validDate ? moment(data?.validDate).format("YYYY-MM-DD") : "");
         setOrderDetails(data?.orderDetails ? data?.orderDetails : []);
+        setAceessoryTemplateItems(data?.OrderAccessoryDetails ? data?.OrderAccessoryDetails : [])
         setPackingCoverType(data?.packingCoverType ? data?.packingCoverType : "");
         setNotes(data?.notes ? data?.notes : "")
         setOrderBy(data?.orderBy ? data?.orderBy : "");
@@ -113,7 +170,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         branchId, id, userId, companyId, notes, term, orderBy, docId,
         packingCoverType,
         active,
-        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(item => item.styleId)
+        partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(item => item.styleId),
+        accessoryTemplateItems
 
     }
 
@@ -215,7 +273,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             for (let key in data) {
 
 
-                if (key === 'orderDetails') {
+                if (key === 'orderDetails' || key === 'accessoryTemplateItems') {
                     formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
                     data[key].forEach(option => {
                         if (option?.filePath instanceof File) {
@@ -394,7 +452,6 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-    // if (isSingleFetching || isSingleLoading || isSingleSupplierLoading || isSingleSupplierFetching) return <Loader />
 
 
     return (
@@ -538,7 +595,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                             socksTypeData={socksTypeData} sizeList={sizeList} styleList={styleList} yarnNeedleList={yarnNeedleList}
                             yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist} socksMaterialData={socksMaterialData}
-
+                            accessoryTemplate={accessoryTemplate} templateId={templateId} setTemplateId={setTemplateId} accessoryTemplateItems={accessoryTemplateItems}
+                            setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList} accessoryTemplateData={accessoryTemplateData}
                         />
                     </fieldset>
 

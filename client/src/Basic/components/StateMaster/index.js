@@ -132,9 +132,7 @@ export default function Form() {
   const saveData = () => {
     if (readOnly) return toast.info("Turn On Edit Mode !..")
     if (!validateData(data)) {
-      // toast.error("Please fill all required fields...!", {
-      //   position: "top-center",
-      // });
+ 
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",
@@ -171,8 +169,7 @@ export default function Form() {
     }
   };
 
-  const deleteData = async () => {
-    if (readOnly) return toast.info("Turn On Edit Mode !..")
+  const deleteData = async (id) => {
 
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {

@@ -22,11 +22,17 @@ import { useGetYarnTypeMasterQuery } from '../../../redux/uniformService/YarnTyp
 import Swal from 'sweetalert2';
 import SizeDetailsSubGrid from './SizeDetails';
 import { Plus } from 'lucide-react';
+import AccessoryItems from './Accessories';
 
 const OrderItems = forwardRef(function OrderItems(
-  { readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
-    yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData },
+
+  {
+    readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
+    yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData, accessoryGroupList, accessoryCategoryList, accessoryList,
+    accessoryTemplate, setTemplateId, templateId, accessoryTemplateItems, setAceessoryTemplateItems , uomList ,accessoryTemplateData
+  },
   styleRef
+
 ) {
 
 
@@ -40,18 +46,24 @@ const OrderItems = forwardRef(function OrderItems(
   const [tableDataView, setTableDataView] = useState(false)
   const [currentItem, setCurrentItem] = useState();
   const [currentIndex, setCurrentIndex] = useState("");
+  const [currentAccessoryIndex, setCurrentAccessoryIndex] = useState("");
+
   const [gridEditableIndex, setGridEditableIndex] = useState(null);
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState("");
+  const [selectedAccessoryIndex, setAccessorySelectedIndex] = useState("");
+
   const params = {
     branchId, userId, finYearId
   };
 
+  const [tableAccessoryView, setAccessoryDataView] = useState(false)
 
 
 
 
   let GridIndex;
+  let accessoryGridIndex;
 
   // const { data: socksMaterialData } =
   //   useGetSocksMaterialQuery({ params: { ...params } });
@@ -99,7 +111,8 @@ const OrderItems = forwardRef(function OrderItems(
           qty: "", sizeMeasurement: "", sizeId: ""
 
         }],
-        orderYarnDetails: [{ yarnId: "" }]
+        orderYarnDetails: [{ yarnId: "" }],
+        orderAccessoryDetails : [{accessoryId : ""}]
 
       }
     ]);
@@ -155,6 +168,10 @@ const OrderItems = forwardRef(function OrderItems(
     setCurrentIndex(index)
     setTableDataView(true)
   }
+  function handleAccessoryView(index) {
+    setCurrentAccessoryIndex(index)
+    setAccessoryDataView(true)
+  }
 
   function deleteSubRow(rowIndex, subRowIndex) {
     if (readOnly) return toast.error("Turn on Edit Mode...");
@@ -179,7 +196,12 @@ const OrderItems = forwardRef(function OrderItems(
     console.log(selectedIndex, "selectedIndex")
 
   }
+  function setAccessoryIndex(index) {
+    console.log(index, "setInde");
+    setAccessorySelectedIndex(index)
+    console.log(selectedIndex, "selectedIndex")
 
+  }
 
   // const handleKeyDown = (e, index) => {
   //   if (e.key === "Enter") {
@@ -292,6 +314,39 @@ const OrderItems = forwardRef(function OrderItems(
         {/* ))} */}
       </Modal>
 
+      <Modal
+        isOpen={tableAccessoryView}
+        onClose={() => setAccessoryDataView(false)}
+        widthClass="px-2 h-[70%] w-[80%]"
+      >
+        <AccessoryItems
+          item={orderDetails[selectedAccessoryIndex]}
+          accessoryGridIndex={selectedAccessoryIndex}
+          selectedAccessoryIndex={selectedAccessoryIndex}
+          accessoryTemplateData={accessoryTemplateData}
+          id={id}
+          yarnTypeList={yarnTypeList}
+          gridEditableIndex={gridEditableIndex}
+          handleInputChange={handleInputChange}
+          currentItem={currentItem}
+          currentIndex={currentIndex}
+          colorlist={colorlist}
+          sizeList={sizeList}
+
+          readOnly={readOnly}
+          setOrderDetails={setOrderDetails}
+          orderDetails={orderDetails}
+          onClose={() => setAccessoryDataView(false)}
+          accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList}
+          accessoryTemplate={accessoryTemplate} templateId={templateId} setTemplateId={setTemplateId}
+          accessoryTemplateItems={accessoryTemplateItems}
+          setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList}
+
+
+        />
+        {/* ))} */}
+      </Modal>
+
       <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-auto">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
@@ -342,10 +397,17 @@ const OrderItems = forwardRef(function OrderItems(
 
                 <th
 
-                  className={`w-5 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Yarn Details
                 </th>
+                <th
+
+                  className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Accessory Details
+                </th>
+
 
                 <th
 
@@ -517,6 +579,21 @@ const OrderItems = forwardRef(function OrderItems(
                           {VIEW}
                         </button>
                       </td>
+
+                      <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
+                        <button
+                          readOnly={readOnly}
+                          className="text-center rounded py-1 "
+
+                          onClick={() => {
+                            handleAccessoryView(index)
+                            setAccessoryIndex(index)
+                            accessoryGridIndex = index
+                          }}
+                        >
+                          {VIEW}
+                        </button>
+                      </td>
                       <td className="border border-gray-300 text-center">
                         <button
                           onKeyDown={(e) => {
@@ -562,7 +639,7 @@ const OrderItems = forwardRef(function OrderItems(
             </tbody>
           </table>
         </div>
-      </div>{console.log(contextMenu, "contextMenu"  )}
+      </div>{console.log(contextMenu, "contextMenu")}
       {contextMenu && (
         <div
           style={{

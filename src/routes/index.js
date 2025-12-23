@@ -112,6 +112,7 @@ export { default as accessoryCategory } from "./accessoryCategory.route.js"
 export { default as stockReportControl } from "./stockReportControl.route.js"
 export { default as accessoryStockTransfer } from "./accessoryStockTransfer.route.js"
 export { default as accessoryStock } from "./accessoryStock.route.js"
+export { default as accessoryTemplate } from "./accessoryTemplate.route.js"
 
 
 
