@@ -7,8 +7,8 @@ import { Common } from "../../../Utils/DropdownData";
 import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
 const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId, tempOrderDetailsId,
-    setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
-    colorList, uomList, sizeList, orderId,
+    setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList, 
+    colorList, uomList, sizeList, orderId, stock, setStock
 
 }) => {
 
@@ -32,7 +32,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
     function handleInputChange(value, index, yarnId, field, subIndex) {
 
-            console.log("field", field);
+        console.log("field", field);
 
         const num = value === "" ? 0 : parseFloat(value);
         console.log("num", num);
@@ -225,6 +225,8 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                 newItems[index][field] = value;
 
+                console.log(field, "field", value, "value", newItems, "newItems");
+
                 const requirementArr = newItems?.map((yarn) => ({
                     yarn: yarn.Yarn.name,
                     percentage: yarn.percentage,
@@ -397,6 +399,83 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
+    function addItem(id, checked) {
+        setOrderYarnDetails(prev =>
+            prev.map(item => {
+                if (item.id === id) {
+                    if (checked) {
+                        return { ...item, isNotPurchase: true };
+                    } else {
+                        const { isPurchase, ...rest } = item;
+                        return rest;
+                    }
+                }
+                return item;
+            })
+        );
+    }
+
+
+    function removeItem(id) {
+        setOrderYarnDetails(localInwardItems => {
+            let newItems = structuredClone(localInwardItems);
+            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
+            return newItems
+        });
+    }
+
+    function handleChange(id, checked, index) {
+        if (checked) {
+            addItem(id, true);
+            handleInputChange(checked, index, null, "isNotPurchase");
+        } else {
+            addItem(id, false); // removes isPurchase
+            handleInputChange(checked, index, null, "isNotPurchase");
+
+        }
+    }
+
+
+
+
+    function handleSelectAllChange(checked, invoiceItems) {
+
+        setOrderYarnDetails(prev =>
+            prev.map(item => {
+                const isInInvoice = invoiceItems?.some(
+                    inv => parseInt(inv.id) === parseInt(item.id)
+                );
+
+                if (!isInInvoice) return item;
+
+                if (checked) {
+                    return { ...item, isNotPurchase: true };
+                } else {
+                    const { isNotPurchase, ...rest } = item;
+                    return rest;
+                }
+            })
+        );
+
+        setRequirementItems(prev =>
+            prev.map((item, index) => {
+
+                return {
+                    ...item,
+                    isNotPurchase: checked
+                };
+            })
+        );
+    }
+
+
+    function getSelectAll(items) {
+        if (!items || items.length === 0) return false;
+
+        return items.every(item => item.isNotPurchase == true);
+    }
+
+
 
     return (
         <>
@@ -461,7 +540,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                         accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
                         requirementItems={requirementItems} orderSizeDetails={orderSizeDetails} tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId}
-
+                        
                     />
 
                 )}
@@ -473,10 +552,15 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
                     <div className="overflow-x-auto mt-8 w-full">
-                        <table className="min-w-[1200px] border-collapse table-fixed">
+                        <table className="min-w-[1250px] border-collapse table-fixed">
                             <thead className="bg-gray-200 text-gray-800">
 
                                 <tr>
+                                    <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                        <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
+                                            checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
+                                        />
+                                    </th>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
 
@@ -485,9 +569,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
                                     {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td> */}
                                     <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Waste %</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-28">Waste %</td>
 
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-40">Size</td>
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-28">Size</td>
 
 
 
@@ -516,11 +600,11 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
                                     </td>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs">
+                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs  w-28">
                                         Size Weight (grams)
                                     </td>
                                     {orderSizeDetails?.map((item, index) => (
-                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs w-28">
                                             {item?.weight?.toFixed(3)}
                                         </td>
                                     ))}
@@ -529,7 +613,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                 </tr>
                                 <tr className="bg-white">
 
-                                    <td className="border border-gray-300 px-2 py-1 text-left  text-xs w-16">
+                                    <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28">
                                         Order Qty (kgs)
                                     </td>
                                     {orderSizeDetails?.map((item, index) => (
@@ -545,7 +629,14 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                             <tbody>
 
                                 {orderYarnDetails?.map((yarn, index) => (
-                                    <tr>
+                                    <tr
+
+                                    >
+                                        <td className='py-1 text-center border border-gray-300'>
+                                            <input type="checkbox" name="" id=""
+                                                checked={yarn.isNotPurchase || false}
+                                                onChange={(e) => handleChange(yarn.id, e.target.checked, index)} />
+                                        </td>
                                         <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
                                         <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Yarn?.name}</td>
                                         <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color?.name}</td>

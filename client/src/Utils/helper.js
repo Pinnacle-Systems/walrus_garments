@@ -1,6 +1,7 @@
 import moment from "moment";
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../Constants";
+import { useEffect, useRef } from "react";
 
 
 export function getImageUrlPath(fileName) {
@@ -392,3 +393,60 @@ export function autoFocusSelect(el, refObj, condition = true) {
     }
   }
 }
+
+
+const IDLE_TIME = 3 * 60 * 1000; 
+
+export const useIdleLogout = (
+    onLogout,
+    isLoggedIn,
+) => {
+    const timerRef = useRef(null);
+
+    console.log(isLoggedIn, 'isLoggedIn');
+    
+    useEffect(() => {
+        if (!isLoggedIn) {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+            return;
+        }
+
+        const resetTimer = () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+
+            timerRef.current = setTimeout(() => {
+                onLogout();
+            }, IDLE_TIME);
+        };
+
+        const events = [
+            "mousemove",
+            "mousedown",
+            "keydown",
+            "scroll",
+            "touchstart",
+        ];
+
+        events.forEach(event =>
+            window.addEventListener(event, resetTimer)
+        );
+
+        resetTimer(); // start timer immediately
+
+        return () => {
+            events.forEach(event =>
+                window.removeEventListener(event, resetTimer)
+            );
+
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+        };
+    }, [isLoggedIn, onLogout]);
+};

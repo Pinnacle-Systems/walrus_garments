@@ -16,22 +16,19 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
 }) {
 
 
-    console.log(item, "accessory item")
+    console.log(selectedAccessoryIndex, "selectedAccessoryIndex")
 
 
     useEffect(() => {
 
         if (accessoryTemplateData?.data) {
-            // let data = accessoryTemplateData?.data
-            // console.log(data,"accessoryTemplateData")
-            // setAceessoryTemplateItems(data?.AccessoryTemplateItems ? data?.AccessoryTemplateItems : [])
 
             setOrderDetails(prev => {
                 const updated = [...prev];
 
                 updated[selectedAccessoryIndex] = {
                     ...updated[selectedAccessoryIndex],
-                    accessoryDetails: accessoryTemplateData
+                    OrderAccessoryDetails: accessoryTemplateData?.data?.AccessoryTemplateItems || [],
                 };
 
                 return updated;
@@ -62,16 +59,25 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
     };
 
 
-    const { data: allData } = useGetYarnCountsQuery({ params })
+    // const { data: allData } = useGetYarnCountsQuery({ params })
 
 
 
     function handleInputChange(value, index, field) {
-        setAceessoryTemplateItems(orderDetails => {
+        let OrderAccessoryDetails = "OrderAccessoryDetails"
+        console.log(value, index, field, "value,index,field")
+        setOrderDetails(orderDetails => {
             const newBlend = structuredClone(orderDetails);
-            newBlend[index][field] = value;
+            if (field === "templateId") {
+                newBlend[selectedAccessoryIndex][field] = value
+            }
+            else {
+                newBlend[selectedAccessoryIndex][OrderAccessoryDetails][index][field] = value;
+            }
+
             return newBlend
-        });
+        }
+        );
     };
 
 
@@ -92,16 +98,17 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
     function addNewRow() {
         setOrderDetails(prev => {
             const newPrev = structuredClone(prev);
-            const orderYarnDetailsKey = "orderYarnDetails";
+            console.log(newPrev, "gridIndex", [selectedAccessoryIndex]);
 
-            if (!newPrev[selectedIndex][orderYarnDetailsKey]) {
-                newPrev[selectedIndex][orderYarnDetailsKey] = [];
+            const OrderAccessoryDetailsKey = "OrderAccessoryDetails";
+
+            if (!newPrev[selectedAccessoryIndex][OrderAccessoryDetailsKey]) {
+                newPrev[selectedAccessoryIndex][OrderAccessoryDetailsKey] = [];
             }
 
-            console.log(newPrev[selectedIndex][orderYarnDetailsKey], "gridIndex");
 
-            newPrev[selectedIndex][orderYarnDetailsKey].push({
-                yarnId: '',
+            newPrev[selectedAccessoryIndex][OrderAccessoryDetailsKey].push({
+                accessoryId: '',
             });
 
             return newPrev;
@@ -138,11 +145,11 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
         setOrderDetails(prev => {
             // const updated = [...prev];
             const updated = structuredClone(prev);
-            updated[selectedAccessoryIndex].orderYarnDetails
+            updated[selectedAccessoryIndex].OrderAccessoryDetails
                 .splice(yarnIndex, 1);
 
 
-            if (updated[selectedAccessoryIndex].orderYarnDetails
+            if (updated[selectedAccessoryIndex].OrderAccessoryDetails
                 .length === 0) {
                 updated.splice(selectedAccessoryIndex, 1);
             }
@@ -150,21 +157,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
             return updated;
         });
     }
-    function deleteSubRow(rowIndex, subRowIndex) {
 
-        setOrderDetails(prev => {
-            // const updated = [...prev];
-            const updated = structuredClone(prev);
-            updated[rowIndex].orderYarnDetails.splice(subRowIndex, 1);
-
-
-            if (updated[rowIndex].orderDetailsSubGrid.length === 0) {
-                updated.splice(rowIndex, 1);
-            }
-
-            return updated;
-        });
-    }
 
     console.log(orderDetails, "orderdetails")
     return (
@@ -187,12 +180,45 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
 
                     <div className="flex gap-2 ">
                         <div>
-                            <DropdownInput name="Tax Type"
+                            {/* <DropdownInput name="Tax Type"
                                 options={dropDownListObject(accessoryTemplate ? accessoryTemplate?.data : [], "templateName", "id")}
                                 value={templateId}
                                 setValue={setTemplateId}
                                 required={true} readOnly={readOnly}
-                            />
+                            /> */}
+                            <select
+                                value={item.templateId || ""}
+                                disabled={readOnly}
+                                className={`w-full rounded-md border px-2 py-1 text-left text-sm  text-gray-700
+    focus:outline-none focus:ring-2 focus:ring-blue-500
+    ${readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+  `}
+                                onChange={(e) => {
+                                    setTemplateId(e.target.value)
+                                    handleInputChange(e.target.value, selectedAccessoryIndex, "templateId")
+                                }
+
+                                }
+                                onKeyDown={(e) => {
+                                    if (e.key === "Delete") {
+                                        handleInputChange("", selectedAccessoryIndex, "templateId");
+                                    }
+                                }}
+                            >
+                                <option value="" disabled hidden>
+                                    Select Template
+                                </option>
+
+                                {(id
+                                    ? accessoryTemplate?.data
+                                    : accessoryTemplate?.data?.filter(t => t.active)
+                                )?.map(template => (
+                                    <option key={template.id} value={template.id}>
+                                        {template.templateName}
+                                    </option>
+                                ))}
+                            </select>
+
                         </div>
                         <div>
                             {readOnly && (
@@ -306,7 +332,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
 
                                             <tbody>
 
-                                                {item?.orderAccessoryDetails?.map((row, index) => (
+                                                {item?.OrderAccessoryDetails?.map((row, index) => (
                                                     <tr key={index} className="border border-blue-gray-200 cursor-pointer"
 
                                                         onContextMenu={(e) => {

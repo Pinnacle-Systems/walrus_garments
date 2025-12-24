@@ -528,8 +528,8 @@ export async function getRequirementItems(req) {
             const styleName = yarns?.style?.name
 
             console.log({
-                combinedColors ,  styleName
-            },"styleName")
+                combinedColors, styleName
+            }, "styleName")
 
             const poQty = item?.PoItems?.reduce((total, poItem) => {
                 return total + (poItem.qty || 0);
@@ -576,7 +576,7 @@ export async function getAccessoryRequirementItems(req) {
     let data = await prisma.accessoryRequirementPlanning.findMany({
 
         include: {
-            
+
             Accessory: {
                 select: {
                     aliasName: true,
@@ -600,7 +600,7 @@ export async function getAccessoryRequirementItems(req) {
             },
 
             RequirementPlanningForm: true,
-            AccessoryPoItems : true,
+            AccessoryPoItems: true,
             order: {
                 select: {
                     docId: true,
@@ -861,7 +861,7 @@ async function create(req) {
                             lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
                             wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
                             yarnType: sub?.yarnType ? sub?.yarnType : undefined,
-
+                            isNotPurchase: sub?.isNotPurchase ? sub?.isNotPurchase : false,
                             RequirementPlanningProcessList: sub?.RequirementYarnProcessList?.length
                                 ? {
                                     create: sub?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
@@ -887,6 +887,7 @@ async function create(req) {
                                 sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                                 uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
                                 colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                                isNotPurchase: sub?.isNotPurchase ? sub?.isNotPurchase : false,
 
 
 
@@ -922,6 +923,7 @@ async function create(req) {
                             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
                             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
                             wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                            isNotPurchase: yarn?.isNotPurchase ? yarn.isNotPurchase : false,
 
                             RequirementYarnProcessList: yarn?.RequirementYarnProcessList?.length > 0
                                 ? {
@@ -1038,6 +1040,8 @@ const update = async (id, body) => {
                         lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
                         wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
                         yarnType: sub?.yarnType ? sub?.yarnType : undefined,
+                        isNotPurchase: sub?.isNotPurchase ? sub?.isNotPurchase : false,
+
                         RequirementYarnProcessList: sub?.RequirementYarnProcessList?.length > 0
                             ? {
                                 create: sub?.RequirementYarnProcessList?.filter(item => item?.processId && item?.lossPercentage)?.map((sub) => ({
@@ -1068,6 +1072,7 @@ const update = async (id, body) => {
                         lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
                         wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
                         yarnType: yarn?.yarnType ? yarn?.yarnType : undefined,
+                        isNotPurchase: yarn?.isNotPurchase ? yarn?.isNotPurchase : false,
 
                         RequirementPlanningProcessList: yarn?.RequirementYarnProcessList?.length
                             ? {
@@ -1093,6 +1098,7 @@ const update = async (id, body) => {
                         sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
                         uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
                         colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                        isNotPurchase: sub?.isNotPurchase ? sub?.isNotPurchase : false,
 
 
                     })),

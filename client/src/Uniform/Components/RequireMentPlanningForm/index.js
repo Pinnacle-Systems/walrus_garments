@@ -42,8 +42,8 @@ const RequirementPlanningForm = () => {
     const [childRecord, setChildrecord] = useState("")
     const [jobNumber, setJobNumber] = useState("");
     const [yarnTotals, setYarnTotals] = useState([]);
-
-
+    const [poNumber, setPoNumber] = useState("");
+    const [stock, setStock] = useState([]);
     const [tempOrderId, setTempOrderId] = useState("");
     const [tempOrderDetailsId, setTempOrderDetailsId] = useState("");
 
@@ -186,7 +186,7 @@ const RequirementPlanningForm = () => {
 
                     tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
                 
-                    setAccessoryItems={setAccessoryItems}   accessoryItems={accessoryItems}
+                    setAccessoryItems={setAccessoryItems}   accessoryItems={accessoryItems}  setPoNumber={setPoNumber}  poNumber={poNumber} stock={stock} setStock={setStock}
 
                     />
 

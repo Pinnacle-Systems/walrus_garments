@@ -33,7 +33,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId,
 
-    setAccessoryItems, accessoryItems
+    setAccessoryItems, accessoryItems , setPoNumber ,poNumber ,setStock , stock
 
 
 }) => {
@@ -93,8 +93,11 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                     RequirementYarnProcessList: [{ processId: "", lossPercentage: "" }]
                 }))
             );
+            setAccessoryItems((data?.OrderAccessoryDetails ? data?.OrderAccessoryDetails : []))
             setTempOrderId(data?.orderId ? data?.orderId : "");
             setTempOrderDetailsId(data?.id ? data?.id : "");
+            setPoNumber(data?.Order?.poNumber ? data?.Order?.poNumber : "")
+            setStock(orderItemsData?.Stock ? orderItemsData?.Stock : [])
 
         }
         if (id) {
@@ -112,10 +115,9 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             setTempOrderDetailsId(data?.orderDetailsId ? data?.orderDetailsId : "");
             setAccessoryItems(data?.AccessoryRequirementPlanning ? data?.AccessoryRequirementPlanning : [])
 
-            const combined = data?.RequirementYarnDetails
-                ?.map(item => `${data?.OrderDetails?.style?.name || ""} - ${item?.Color?.name || ""}`)
-                .filter(Boolean)
-                .join(" / ");
+            const combined = `${data?.OrderDetails?.style?.name || ""} - ${data?.RequirementYarnDetails?.map(d => d?.Color?.name).filter(Boolean).join(" / ")
+                }`.replace(/ - $/, "");
+
 
             setCombo([{ allColorsWithStyle: combined }]);
 
@@ -383,8 +385,8 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                     Basic Details
                                 </h2>
                                 <div className="grid grid-cols-2 gap-1">
-                                    <ReusableInput label="Doc.Id" readOnly value={docId} />
-                                    <ReusableInput label="Date" value={date} setValue={setDate} type={"date"} required={true} readOnly={true} disabled />
+                                    <ReusableInput label="Requirement Doc Id" readOnly value={docId} />
+                                    <ReusableInput label="Requirement Date" value={date} setValue={setDate} type={"date"} required={true} readOnly={true} disabled />
 
                                 </div>
                             </div>
@@ -471,11 +473,20 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                             />}
 
                                     </div>
-                                    <div className='col-span-2'>
+                                    <div className='col-span-2 mt-2'>
+                                        <TextInput
+                                            name="po Reference Number"
+                                            placeholder="Contact name"
+                                            value={poNumber}
+                                            // setValue={setContactPersonName}
+                                            disabled={true}
+                                        />
+
+                                    </div>
+                                    <div className='col-span-2 mt-2'>
 
                                         <TextInput
                                             name="Job Number"
-                                            placeholder="Contact name"
                                             value={jobNumber}
                                             setValue={setJobNumber}
                                             readOnly={readOnly}
@@ -535,7 +546,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                 tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
                                 accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                                 accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList}
-                                colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
+                                colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId} setStock={setStock} stock={stock}
 
                             />
 

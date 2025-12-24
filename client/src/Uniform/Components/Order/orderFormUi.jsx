@@ -70,6 +70,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const [yarnItems, setYarnItems] = useState([])
     const [templateId, setTemplateId] = useState("")
     const [accessoryTemplateItems, setAceessoryTemplateItems] = useState([])
+    const [poNumber, setPoNumber] = useState("")
     const params = {
         branchId, userId, finYearId
     };
@@ -154,6 +155,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         setNotes(data?.notes ? data?.notes : "")
         setOrderBy(data?.orderBy ? data?.orderBy : "");
         setTerm(data?.term ? data?.term : "")
+        setPoNumber(data?.poNumber ? data?.poNumber : "")
 
     }, [id]);
 
@@ -171,7 +173,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         packingCoverType,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(item => item.styleId),
-        accessoryTemplateItems
+        accessoryTemplateItems, templateId , poNumber
 
     }
 
@@ -504,6 +506,13 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                                 <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}
                                     nextRef={inputPartyRef} required={true}
                                 />
+                                <TextInput
+                                    name="Po Reference No"
+                                    placeholder="Po Reference No"
+                                    value={poNumber}
+                                    setValue={setPoNumber}
+
+                                />
                             </div>
                         </div>
 
@@ -592,11 +601,12 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                         <OrderItems readOnly={readOnly} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
                             yarnItems={yarnItems} setYarnItems={setYarnItems} styleRef={styleRef}
-
                             socksTypeData={socksTypeData} sizeList={sizeList} styleList={styleList} yarnNeedleList={yarnNeedleList}
                             yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist} socksMaterialData={socksMaterialData}
                             accessoryTemplate={accessoryTemplate} templateId={templateId} setTemplateId={setTemplateId} accessoryTemplateItems={accessoryTemplateItems}
                             setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList} accessoryTemplateData={accessoryTemplateData}
+                        
+
                         />
                     </fieldset>
 

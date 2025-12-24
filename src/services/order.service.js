@@ -155,28 +155,33 @@ async function get(req) {
                     }
                 }
             },
-            OrderAccessoryDetails: true
-
+            _count: {
+                select: {
+                    RequirementPlanningForm: true
+                }
+            }
         },
 
 
     });
 
-    console.log("data", data)
     let totalCount = data?.length;
-    // if (serachDocNo) {
-    //     data = data.filter(i => i.docDate.includes(serachDocNo))
-    // }
+
     if (searchDate) {
         data = data?.filter(item => String(getDateFromDateTime(item.createdAt)).includes(searchDate))
     }
 
-    // if (pagination) {
-    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    // }
 
 
-    return { statusCode: 0, data, totalCount };
+
+    return {
+        statusCode: 0,
+        data: data = data.map(order => ({
+            ...order,
+            childRecord: order?._count.RequirementPlanningForm > 0
+        })),
+        totalCount
+    };
 }
 
 
@@ -190,51 +195,6 @@ async function getOne(id) {
             Party: {
                 select: {
                     name: true
-                }
-            },
-            OrderAccessoryDetails: {
-                select: {
-                    id: true,
-                    accessoryId: true,
-                    colorId: true,
-                    sizeId: true,
-                    uomId: true,
-                    accessoryCategoryId: true,
-                    accessoryGroupId: true,
-                    accessoryTemplateId: true,
-                    active: true,
-                    qty: true,
-                    Accessory: {
-                        select: {
-                            aliasName: true,
-                        }
-                    },
-                    AccessoryCategory: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    AccessoryGroup: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    Color: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    Size: {
-                        select: {
-                            name: true,
-                        }
-                    },
-                    Uom: {
-                        select: {
-                            name: true,
-                        }
-                    },
-
                 }
             },
 
@@ -277,6 +237,52 @@ async function getOne(id) {
                             }
                         }
                     },
+                    OrderAccessoryDetails: {
+                        select: {
+                            id: true,
+                            accessoryId: true,
+                            colorId: true,
+                            sizeId: true,
+                            uomId: true,
+                            accessoryCategoryId: true,
+                            accessoryGroupId: true,
+                            accessoryTemplateId: true,
+                            active: true,
+                            qty: true,
+                            Accessory: {
+                                select: {
+                                    aliasName: true,
+                                }
+                            },
+                            AccessoryCategory: {
+                                select: {
+                                    name: true,
+                                }
+                            },
+                            AccessoryGroup: {
+                                select: {
+                                    name: true,
+                                }
+                            },
+                            Color: {
+                                select: {
+                                    name: true,
+                                }
+                            },
+                            Size: {
+                                select: {
+                                    name: true,
+                                }
+                            },
+                            Uom: {
+                                select: {
+                                    name: true,
+                                }
+                            },
+
+                        }
+                    },
+
 
                     style: {
                         select: {
@@ -392,7 +398,6 @@ async function getOne(id) {
 }
 
 export async function getOneNew(id) {
-    console.log("hitttttt")
 
     const childRecord = 0;
     let data = await prisma.order.findUnique({
@@ -407,6 +412,7 @@ export async function getOneNew(id) {
                     name: true
                 }
             },
+
             orderDetails: {
                 where: {
                     isPlanning: false
@@ -622,7 +628,15 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
                     colorId: true,
                     Yarn: {
                         select: {
-                            name: true
+                            name: true,
+                            YarnOnYarnBlend: {
+                                select: {
+                                    id: true,
+                                    yarnBlendId: true,
+                                    percentage: true,
+
+                                }
+                            }
                         }
                     },
                     YarnType: {
@@ -637,17 +651,74 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
                     }
                 }
             },
+            OrderAccessoryDetails: {
+                select: {
+                    id: true,
+                    accessoryId: true,
+                    accessoryCategoryId: true,
+                    accessoryGroupId: true,
+                    colorId: true,
+                    sizeId: true,
+                    active: true,
+                    uomId: true,
+                    orderdetailsId: true,
+                    qty: true,
+                    Accessory: {
+                        select: {
+                            aliasName: true
+                        }
+                    },
+                    AccessoryCategory: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    AccessoryGroup: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Uom: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    Size: {
+                        select: {
+                            name: true
 
-
+                        }
+                    },
+                }
+            },
+            Order: {
+                select: {
+                    poNumber: true,
+                }
+            }
         }
-
     })
+
+
+    const result = await prisma.$queryRawUnsafe(`
+  select * from stock  where inorout = "GeneralInward";
+`);
+
+    const Stock = result || [];
+
+    console.log("Stock",Stock)
+
+
+
+
+
+
     if (!data) return NoRecordFound("order");
 
 
 
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return { statusCode: 0, data: { ...data, ...{ childRecord }  }  ,Stock};
 }
 
 
@@ -784,6 +855,7 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 //         }
 //     };
 // }
+
 export async function getStockvalidationById(id) {
     const childRecord = 0;
     let data = await prisma.order.findUnique({
@@ -1532,7 +1604,7 @@ export async function getOrderItemsByIdNew(id, stockValidation) {
 async function create(req) {
 
     const { userId, branchId, partyId, finYearId, packingCoverType, notes, term, orderBy, draftSave, filePath,
-        phone, contactPersonName, address, validDate, orderDetails, accessoryTemplateItems, accessoryTemplateId } = await req.body
+        phone, contactPersonName, address, validDate, orderDetails, accessoryTemplateItems, poNumber } = await req.body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
@@ -1562,8 +1634,7 @@ async function create(req) {
                 orderBy,
                 validDate: validDate ? new Date(validDate) : undefined,
                 draftSave: Boolean(draftSave),
-                accessoryTemplateId: accessoryTemplateId ? parseInt(accessoryTemplateId) : undefined,
-
+                poNumber: poNumber ? poNumber : undefined,
                 orderDetails: orderDetails?.length > 0
                     ? {
                         create: JSON.parse(orderDetails).map((item) => ({
@@ -1573,6 +1644,7 @@ async function create(req) {
                             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                             filePath: item?.filePath ? item?.filePath : undefined,
                             baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
+                            accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
 
                             orderSizeDetails: item?.orderSizeDetails?.length > 0
                                 ? {
@@ -1601,24 +1673,25 @@ async function create(req) {
                                     },
                                 }
                                 : undefined,
+                            OrderAccessoryDetails: item?.OrderAccessoryDetails?.length > 0 ?
+
+                                {
+                                    create: item?.OrderAccessoryDetails?.map((sub) => ({
+                                        accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
+                                        accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
+                                        accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
+                                        colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                                        sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                        uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+
+                                    })),
+                                } : undefined,
 
                         })),
                     }
                     : undefined,
-                OrderAccessoryDetails: accessoryTemplateItems?.length > 0 ?
 
-                    {
-                        create: JSON.parse(accessoryTemplateItems || [])?.map((sub) => ({
-                            accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
-                            accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
-                            accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
-                            colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                            uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
-                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-
-                        })),
-                    } : undefined,
             },
         });
 
@@ -1641,7 +1714,7 @@ async function create(req) {
 
 const update = async (id, body) => {
 
-    const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate, notes, term, orderBy, accessoryTemplateItems, accessoryTemplateId
+    const { docId, draftSave, finYearId, userId, branchId, partyId, orderDetails, contactPersonName, packingCoverType, address, phone, validDate, notes, term, orderBy, accessoryTemplateItems, poNumber
     } = body;
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -1657,7 +1730,6 @@ const update = async (id, body) => {
 
 
     const incomingIds = parsedOrderDetails?.filter(i => i.id).map(i => parseInt(i.id));
-    const incomingAccessoryIds = accessoryTemplateItems?.filter(i => i.id).map(i => parseInt(i.id));
 
     let data;
     await prisma.$transaction(async (tx) => {
@@ -1668,7 +1740,6 @@ const update = async (id, body) => {
             },
             include: {
                 orderDetails: true,
-                OrderAccessoryDetails: true,
             },
             data: {
                 docId: draftSave ? docIdNumber : dataFound?.docId,
@@ -1680,7 +1751,7 @@ const update = async (id, body) => {
                 phone,
                 validDate: validDate ? new Date(validDate) : undefined,
                 updatedById: parseInt(userId), notes, term, orderBy, draftSave: Boolean(draftSave),
-                accessoryTemplateId: accessoryTemplateId ? parseInt(accessoryTemplateId) : undefined,
+                poNumber: poNumber ? poNumber : undefined,
 
 
 
@@ -1704,6 +1775,8 @@ const update = async (id, body) => {
                                 socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                                 filePath: item?.filePath ? item?.filePath : undefined,
                                 baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
+                                accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
+
                                 orderSizeDetails: {
                                     deleteMany: {},
                                     createMany: {
@@ -1729,7 +1802,20 @@ const update = async (id, body) => {
                                         })) || [],
                                     },
                                 },
-
+                                OrderAccessoryDetails: {
+                                    deleteMany: {},
+                                    createMany: {
+                                        data: item?.OrderAccessoryDetails?.map((sub) => ({
+                                            accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
+                                            accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
+                                            accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
+                                            colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                                            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                            uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                        })) || [],
+                                    },
+                                },
                             },
                         })),
 
@@ -1740,6 +1826,7 @@ const update = async (id, body) => {
                             fiberContentId: item?.fiberContentId ? parseInt(item.fiberContentId) : undefined,
                             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
+                            accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
 
                             orderSizeDetails: {
                                 createMany: {
@@ -1763,44 +1850,22 @@ const update = async (id, body) => {
                                     })) || [],
                                 },
                             },
-                        })),
-                },
-                OrderAccessoryDetails: {
-                    deleteMany: {
-                        ...(incomingAccessoryIds.length > 0 && {
-                            id: { notIn: incomingAccessoryIds }
-                        })
-                    },
-                    update: accessoryTemplateItems
-                        .filter(item => item.id)
-                        .map((sub) => ({
-                            where: { id: parseInt(sub.id) },
-                            data: {
-                                accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
-                                accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
-                                accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
-                                colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                                sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
-                                qty: sub?.qty ? parseFloat(sub.qty) : undefined,
-
+                            OrderAccessoryDetails: {
+                                createMany: {
+                                    data: item?.orderAccessoryDetails?.map((sub) => ({
+                                        accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
+                                        accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
+                                        accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
+                                        colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
+                                        sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
+                                        uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
+                                        qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                                    })) || [],
+                                },
                             },
                         })),
-                    create: accessoryTemplateItems
-                        .filter(item => !item.id)
-                        .map((sub) => ({
-                            accessoryId: sub?.accessoryId ? parseInt(sub.accessoryId) : undefined,
-                            accessoryCategoryId: sub?.accessoryCategoryId ? parseInt(sub.accessoryCategoryId) : undefined,
-                            accessoryGroupId: sub?.accessoryGroupId ? parseInt(sub.accessoryGroupId) : undefined,
-                            colorId: sub?.colorId ? parseInt(sub.colorId) : undefined,
-                            sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                            uomId: sub?.uomId ? parseInt(sub.uomId) : undefined,
-                            qty: sub?.qty ? parseFloat(sub.qty) : undefined,
+                },
 
-
-
-                        })),
-                }
 
 
 

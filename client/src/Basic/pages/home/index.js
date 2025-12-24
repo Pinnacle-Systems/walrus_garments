@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AppHeader, AppFooter, Sidebar, Dashboard, Header } from "../../components";
 import Modal from "../../../UiComponents/Modal";
 import { BranchAndFinyearForm, LogoutConfirm } from "../../components";
@@ -7,6 +7,7 @@ import secureLocalStorage from "react-secure-storage";
 import SuperAdminHeader from "../../components/SuperAdminHeader";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useIdleLogout } from "../../../Utils/helper";
 
 const Home = () => {
   const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -19,6 +20,25 @@ const Home = () => {
   );
   const navigate = useNavigate();
   const openTabs = useSelector((state) => state.openTabs);
+
+
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+    
+      
+      const handleLogout = () => {
+        secureLocalStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/';
+    
+      };
+    
+      console.log('isLoggedIn status:', isLoggedIn);  
+    
+      useEffect(() => {
+        setIsLoggedIn(!!sessionStorage.getItem("sessionId"));
+      }, []); 
+      
+      useIdleLogout(handleLogout, isLoggedIn);
   return (
     <>
       <Modal

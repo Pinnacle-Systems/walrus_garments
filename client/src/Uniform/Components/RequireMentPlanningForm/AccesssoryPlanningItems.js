@@ -103,6 +103,72 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
         });
     };
 
+        function addItem(id, checked) {
+        setAccessoryItems(prev =>
+            prev.map(item => {
+                if (item.id === id) {
+                    if (checked) {
+                        return { ...item, isNotPurchase: true };
+                    } else {
+                        const { isPurchase, ...rest } = item;
+                        return rest;
+                    }
+                }
+                return item;
+            })
+        );
+    }
+
+
+    function removeItem(id) {
+        setAccessoryItems(localInwardItems => {
+            let newItems = structuredClone(localInwardItems);
+            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
+            return newItems
+        });
+    }
+
+    function handleChange(id, checked, index) {
+        if (checked) {
+            addItem(id, true);
+            handleInputChange(checked, index, null, "isNotPurchase");
+        } else {
+            addItem(id, false); // removes isPurchase
+            handleInputChange(checked, index, null, "isNotPurchase");
+
+        }
+    }
+
+
+
+
+    function handleSelectAllChange(checked, invoiceItems) {
+
+        setAccessoryItems(prev =>
+            prev.map(item => {
+                const isInInvoice = invoiceItems?.some(
+                    inv => parseInt(inv.id) === parseInt(item.id)
+                );
+
+                if (!isInInvoice) return item;
+
+                if (checked) {
+                    return { ...item, isNotPurchase: true };
+                } else {
+                    const { isNotPurchase, ...rest } = item;
+                    return rest;
+                }
+            })
+        );
+
+    }
+
+
+    function getSelectAll(items) {
+        if (!items || items.length === 0) return false;
+
+        return items.every(item => item.isNotPurchase == true);
+    }
     return (
         <>
             <div className=" p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
@@ -114,6 +180,11 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-900">
                             <tr>
+                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                    <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, accessoryItems ? accessoryItems : [])}
+                                        checked={getSelectAll(accessoryItems ? accessoryItems : [])}
+                                    />
+                                </th>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -169,7 +240,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                                     className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                   Po Qty
+                                    Po Qty
                                 </th>
 
 
@@ -193,6 +264,12 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                                         }
                                     }}
                                 >
+                                    <td className='py-1 text-center border border-gray-300'>
+                                        <input type="checkbox" name="" id=""
+                                        disabled={!row.id}
+                                            checked={row.isNotPurchase || false}
+                                            onChange={(e) => handleChange(row.id, e.target.checked, index)} />
+                                    </td>
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5">
                                         {index + 1}
                                     </td>

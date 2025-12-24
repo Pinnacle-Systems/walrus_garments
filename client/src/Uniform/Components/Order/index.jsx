@@ -29,7 +29,7 @@ const Order = () => {
 
     const params = { branchId, userId, finYearId, companyId };
 
-    const { data: supplierList , isLoading : isSupplierLoading , isFetching : isSupplierFetching } =
+    const { data: supplierList, isLoading: isSupplierLoading, isFetching: isSupplierFetching } =
         useGetPartyQuery({ params: { ...params } });
 
 
@@ -39,7 +39,7 @@ const Order = () => {
     // const { data: socksTypeData } = useGetSocksTypeQuery({ params: { ...params } });
 
 
-    const { data: sizeList,  } = useGetSizeMasterQuery({ params: { ...params } });
+    const { data: sizeList, } = useGetSizeMasterQuery({ params: { ...params } });
     const { data: yarnNeedleList } = useGetYarnNeedleMasterQuery({ params: { ...params } });
     const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
     const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
@@ -82,8 +82,8 @@ const Order = () => {
                         qty: 0.00, sizeMeasurement: "", sizeId: ""
 
                     }],
-                    orderYarnDetails: [{ yarnId: "" }] ,
-                    orderAccessoryDetails : [{ accessoryId : ""}]
+                    orderYarnDetails: [{ yarnId: "" }],
+                    orderAccessoryDetails: [{ accessoryId: "" }]
 
                 }
             })
@@ -108,21 +108,28 @@ const Order = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id, childRecord) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
-                let deldata = await removeData(id).unwrap();
-                if (deldata?.statusCode == 1) {
+                if (childRecord) {
                     Swal.fire({
                         icon: "error",
                         title: "Child record Exists",
-                        text: deldata.data?.message || "Data cannot be deleted!",
                     });
                     return;
                 }
+                let deldata = await removeData(id).unwrap();
+                // if (deldata?.statusCode == 1) {
+                //     Swal.fire({
+                //         icon: "error",
+                //         title: "Child record Exists",
+                //         text: deldata.data?.message || "Data cannot be deleted!",
+                //     });
+                //     return;
+                // }
                 setId("");
                 Swal.fire({
                     title: "Deleted Successfully",
@@ -152,9 +159,9 @@ const Order = () => {
             {showOrderForm ? (
                 <OrderFormUi orderDetails={orderDetails} setOrderDetails={setOrderDetails} readOnly={readOnly} setReadOnly={setReadOnly} id={id} setId={setId} onClose={() => { setShowOrderForm(false); setReadOnly(prev => !prev) }}
                     setShowOrderForm={setShowOrderForm} supplierList={supplierList}
-                     sizeList={sizeList}  yarnNeedleList={yarnNeedleList}
-                    yarnList={yarnList} countsList={countsList}  yarnTypeList={yarnTypeList} colorlist={colorlist}
-                   
+                    sizeList={sizeList} yarnNeedleList={yarnNeedleList}
+                    yarnList={yarnList} countsList={countsList} yarnTypeList={yarnTypeList} colorlist={colorlist}
+
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
@@ -172,7 +179,7 @@ const Order = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-                  
+
                         <OrderFormReport
                             onView={handleView}
                             onEdit={handleEdit}

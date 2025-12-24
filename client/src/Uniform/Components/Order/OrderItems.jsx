@@ -527,7 +527,6 @@ const OrderItems = forwardRef(function OrderItems(
                         </select>
                       </td>
 
-                      {/* Socks Type */}
                       <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                         <select
                           disabled={readOnly}
@@ -548,22 +547,6 @@ const OrderItems = forwardRef(function OrderItems(
                         </select>
                       </td>
 
-                      {/* <td className='flex items-center justify-center border border-gray-300 text-[11px] '>
-                        <button
-                          onClick={() => {
-                            handleView(index)
-                            setIndex(index)
-                            GridIndex = index
-                          }
-
-                          }
-                          // onMouseEnter={() => setTooltipVisible(true)}
-                          // onMouseLeave={() => setTooltipVisible(false)}
-                          className="text-blue-800 rounded h-full py-1  text-lg focus:outline-none"
-                        >
-                          <span className=''>👁</span>
-                        </button>
-                      </td> */}
 
                       <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
                         <button
@@ -574,7 +557,7 @@ const OrderItems = forwardRef(function OrderItems(
                             handleView(index)
                             setIndex(index)
                             GridIndex = index
-                          }}
+                            }}
                         >
                           {VIEW}
                         </button>

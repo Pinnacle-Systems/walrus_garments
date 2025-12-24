@@ -530,8 +530,10 @@ export default function Form() {
                             <div className='mt-3'>
 
                               <LongTextInput name="Yarn Name" className={'focus:outline-none  md:col-span-2 h-6 w-[500px] border border-gray-500 rounded'} type="text"
-                                value={name}
-                                disabled={(childRecord.current > 0)} />
+                                value={name} setValue={setName}
+                                disabled={(childRecord.current > 0)} 
+                                
+                                />
 
                             </div>
 
