@@ -22,23 +22,23 @@ const Home = () => {
   const openTabs = useSelector((state) => state.openTabs);
 
 
-      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      // const [isLoggedIn, setIsLoggedIn] = useState(false);
     
       
-      const handleLogout = () => {
-        secureLocalStorage.clear();
-        sessionStorage.clear();
-        window.location.href = '/';
+      // const handleLogout = () => {
+      //   secureLocalStorage.clear();
+      //   sessionStorage.clear();
+      //   window.location.href = '/';
     
-      };
+      // };
     
-      console.log('isLoggedIn status:', isLoggedIn);  
+      // console.log('isLoggedIn status:', isLoggedIn);  
     
-      useEffect(() => {
-        setIsLoggedIn(!!sessionStorage.getItem("sessionId"));
-      }, []); 
+      // useEffect(() => {
+      //   setIsLoggedIn(!!sessionStorage.getItem("sessionId"));
+      // }, []); 
       
-      useIdleLogout(handleLogout, isLoggedIn);
+      // useIdleLogout(handleLogout, isLoggedIn);
   return (
     <>
       <Modal

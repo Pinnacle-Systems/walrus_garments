@@ -33,7 +33,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId,
 
-    setAccessoryItems, accessoryItems, setPoNumber, poNumber, setYarnStock, yarnStock , setAccessoryStock, accessoryStock
+    setAccessoryItems, accessoryItems, setPoNumber, poNumber, setYarnStock, yarnStock, setAccessoryStock, accessoryStock
 
 
 }) => {
@@ -87,14 +87,53 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
         if (orderId) {
             setOrderSizeDetails(data?.orderSizeDetails ? data?.orderSizeDetails : [])
+            // setOrderYarnDetails(
+            //     (data?.orderYarnDetails || []).map(item => ({
+            //         ...item,
+            //         wastagePercentage: 10,
+            //         RequirementYarnProcessList: [{ processId: "", lossPercentage: "" }]
+            //     }))
+            // );
             setOrderYarnDetails(
-                (data?.orderYarnDetails || []).map(item => ({
-                    ...item,
-                    wastagePercentage: 10,
-                    RequirementYarnProcessList: [{ processId: "", lossPercentage: "" }]
-                }))
+                (data?.orderYarnDetails || []).map(item => {
+                    const stockItem = (data?.yarnStock || []).find(
+                        s =>
+                            s.yarnId == item.yarnId &&
+                            s.colorId == item.colorId
+                    );
+
+                    return {
+                        ...item,
+                        stockQty: stockItem?.qty || 0,
+                        wastagePercentage: 1,
+                        RequirementYarnProcessList: [
+                            { processId: "", lossPercentage: "" }
+                        ],
+                    };
+                })
             );
-            setAccessoryItems((data?.OrderAccessoryDetails ? data?.OrderAccessoryDetails : []))
+            setAccessoryItems(
+                (data?.OrderAccessoryDetails || []).map(item => {
+                    const stockItem = (data?.accessoryStock || []).find(
+                        s =>
+                            s.accessoryCategoryId == item.accessoryCategoryId &&
+                            s.accessoryGroupId == item.accessoryGroupId &&
+                            s.accessoryId == item.accessoryId 
+                    );
+
+                    console.log("Stock Item", stockItem, item)
+                    return {
+                        ...item,
+                        stockQty: stockItem?.qty || 0,
+                        wastagePercentage: 1,
+                        RequirementYarnProcessList: [
+                            { processId: "", lossPercentage: "" }
+                        ],
+                    };
+                })
+            );
+
+            // setAccessoryItems((data?.OrderAccessoryDetails ? data?.OrderAccessoryDetails : []))
             setTempOrderId(data?.orderId ? data?.orderId : "");
             setTempOrderDetailsId(data?.id ? data?.id : "");
             setPoNumber(data?.Order?.poNumber ? data?.Order?.poNumber : "")

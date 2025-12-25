@@ -360,6 +360,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     "ORDER",
     "YARN",
     "ACCESSORY ",
+    "MATERIAL MOVEMENT",
     "PRODUCTION",
     "PROCESS",
     "STOCK TRANSFER",

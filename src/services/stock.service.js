@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { getStockProperty } from '../utils/helper.js';
-import { getFinishedGoodsStockReport, getStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
+import { getFinishedGoodsStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
+import moment from "moment"
+
 const prisma = new PrismaClient()
 const xprisma = prisma.$extends({
     result: {
@@ -370,14 +372,6 @@ async function get(req) {
                     { rawMaterialsSalesDetailsId: null }
                 ] : undefined
             },
-            // by: ["storeId", "itemType", "processId",
-            //     "yarnId",
-            //     "fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId",
-            //     "accessoryId", "sizeId",
-            //     "colorId",
-            //     "uomId",
-            //     "lotNo", "branchId", 'inOrOut'
-            // ],
 
             by: [
                 "yarnId",
@@ -423,6 +417,55 @@ async function get(req) {
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     }
     return { statusCode: 0, data, totalCount };
+}
+
+
+export async function getStockReport(req) {
+    const { itemType, orderId, toDate } = req.query
+
+
+const DateFormatted = moment(toDate).format("YYYY-MM-DD");
+    let data;
+
+    let sql;
+    let whereClause;
+
+    if (orderId) {
+        whereClause = `s.orderId = ${orderId} `
+    } else {
+        whereClause = `s.inOrOut = 'GeneralInward'`
+    }
+
+    if (itemType == "DyedYarn") {
+        sql =
+            `
+  SELECT
+      y.name AS yarn,
+      c.name AS  color,
+      SUM(s.qty) AS total_qty
+  FROM stock s
+  LEFT JOIN yarn y ON y.id = s.yarnId
+  LEFT JOIN color c ON c.id = s.colorId
+  WHERE
+      s.itemType = '${itemType}'
+      AND DATE(s.createdAt) <= '${DateFormatted}'
+      AND  ${whereClause}
+  GROUP BY
+      y.name,
+      c.name
+  ORDER BY
+      y.name,
+      c.name
+`
+    }
+    console.log(sql, "sql")
+
+    data = await prisma.$queryRawUnsafe(sql);
+
+
+
+
+    return { statusCode: 0, data };
 }
 
 
@@ -489,31 +532,32 @@ async function getOne(id, req) {
                     Party: {
                         select: {
                             name: true,
-                            id : true
+                            id: true
                         }
                     },
-                   
+
                 },
             },
-            OrderDetails : {
-                select : {
-                    style : {
-                        select : {
-                            name : true
-                        }                    }
+            OrderDetails: {
+                select: {
+                    style: {
+                        select: {
+                            name: true
+                        }
+                    }
                 }
             },
-            Yarn : {
-                select : {
-                    name : true
+            Yarn: {
+                select: {
+                    name: true
                 }
             },
-            Color : {
-                select : {
-                    name : true
+            Color: {
+                select: {
+                    name: true
                 }
             }
-                
+
 
         }
 
@@ -606,10 +650,10 @@ export async function _getAccessory(req) {
     if (status == "Order") {
         data = await xprisma.accessoryStock.groupBy({
             where: {
-        
+
             },
             by: [
-                
+
                 "accessoryId", "sizeId",
                 "colorId",
                 "uomId",
@@ -617,7 +661,7 @@ export async function _getAccessory(req) {
             ],
             _sum: {
                 qty: true,
-            
+
             },
         })
         data = data.filter(item => (item._sum.qty > 0));
@@ -703,7 +747,7 @@ export async function _getAccessory(req) {
             // ],
 
             by: [
-            
+
 
                 "accessoryId", "sizeId",
                 "colorId",
@@ -815,7 +859,7 @@ export async function _getOneAccessory(id, req) {
         //                     id : true
         //                 }
         //             },
-                   
+
         //         },
         //     },
         //     OrderDetails : {
@@ -826,7 +870,7 @@ export async function _getOneAccessory(id, req) {
         //                 }                    }
         //         }
         //     }
-                
+
 
         // }
 

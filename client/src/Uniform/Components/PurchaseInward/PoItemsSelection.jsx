@@ -27,16 +27,36 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     function addItem(id, obj) {
 
+        // setLocalInwardItems(prevItems => {
+        //     let newItems = structuredClone(prevItems);
+        //     console.log(newItems, "newItemsnewItems")
+
+        //     const index = newItems?.findIndex(v => v?.yarnId == "");
+
+
+        //     if (index !== -1) {
+        //         newItems[index] = obj;
+        //     } else {
+        //         newItems.push(obj);
+        //     }
+
+        //     return newItems;
+        // });
+
         setLocalInwardItems(prevItems => {
             let newItems = structuredClone(prevItems);
-            console.log(newItems, "newItemsnewItems")
 
-            const index = newItems?.findIndex(v => v?.yarnId === "");
+            const isAlreadyAdded = newItems.some(v => v?.id == id);
+            if (isAlreadyAdded) {
+                return newItems;
+            }
 
+            const emptyIndex = newItems.findIndex(v => v?.yarnId == "");
 
-            if (index !== -1) {
-                newItems[index] = obj;
+            if (emptyIndex !== -1) {
+                newItems[emptyIndex] = obj;
             } else {
+                // Push new row
                 newItems.push(obj);
             }
 
@@ -55,13 +75,13 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
         // });
         setLocalInwardItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            newItems = newItems?.filter(item => parseInt(item) !== parseInt(id))
+            newItems = newItems?.filter(item => parseInt(item.id || item.poItemsId || item) !== parseInt(id))
             return newItems
         });
     }
 
     function isItemAdded(id) {
-        console.log(localInwardItems, "localInwardItemsremove")
+        console.log(localInwardItems, "localInwardItemsremove", id)
 
         return localInwardItems?.findIndex(item => parseInt(item.id || item.poItemsId || item) === parseInt(id)) !== -1;
 
@@ -81,9 +101,9 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
     function handleSelectAllChange(value, poItems) {
         if (value) {
-            poItems?.forEach(item => addItem(item.id, item))
+            poItems?.filter(i => i.id)?.forEach(item => addItem(item.id, item))
         } else {
-            poItems?.forEach(item => removeItem(item.id))
+            poItems?.filter(i => i.id)?.forEach(item => removeItem(item.id))
         }
     }
 
@@ -99,7 +119,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
             console.log(prevInwardItems, "prevInwardItems")
 
             let newInwardItems = localInwardItems?.filter(item => {
-                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem?.poItemsId) === parseInt(item.id)) === -1
+                return prevInwardItems?.findIndex(prevItem => parseInt(prevItem.id || prevItem.poItemsId || prevItem) === parseInt(item.id)) === -1
             })
             console.log([...oldInwardItems, ...newInwardItems], "...oldInwardItems, ...newInwardItems")
             return [...oldInwardItems, ...newInwardItems?.map(poItem => {
@@ -107,8 +127,8 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                     poItemsId: poItem?.id,
                     orderId: poItem?.orderId,
-                    orderDetailsId : poItem?.orderDetailsId,
-                    requirementPlanningItemsId : poItem?.requirementPlanningItemsId,
+                    orderDetailsId: poItem?.orderDetailsId,
+                    requirementPlanningItemsId: poItem?.requirementPlanningItemsId,
                     poNo: poItem?.Po?.docId,
                     fabricId: poItem?.fabricId,
                     colorId: poItem?.colorId,
@@ -147,7 +167,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-            
+
                 <div className='h-[560px] overflow-auto'>
                     {
                         <>
@@ -170,7 +190,7 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
 
                 </div>
             </div>
-  
+
         </>
     )
 }

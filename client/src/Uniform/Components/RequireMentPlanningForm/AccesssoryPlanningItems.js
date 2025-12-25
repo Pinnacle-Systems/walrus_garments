@@ -103,7 +103,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
         });
     };
 
-        function addItem(id, checked) {
+    function addItem(id, checked) {
         setAccessoryItems(prev =>
             prev.map(item => {
                 if (item.id === id) {
@@ -240,10 +240,15 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
 
                                     className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Po Qty
+                                    Purchase Qty
                                 </th>
 
+                                <th
 
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Stock Qty
+                                </th>
 
                                 <th
 
@@ -266,7 +271,7 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                                 >
                                     <td className='py-1 text-center border border-gray-300'>
                                         <input type="checkbox" name="" id=""
-                                        disabled={!row.id}
+                                            disabled={!row.id}
                                             checked={row.isNotPurchase || false}
                                             onChange={(e) => handleChange(row.id, e.target.checked, index)} />
                                     </td>
@@ -426,7 +431,9 @@ const AccessoryRequirementPlannig = ({ setAccessoryItems, readOnly, accessoryGro
                                         />
 
                                     </td>
-
+                                    <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                                        {row?.stockQty ? parseFloat(row.stockQty).toFixed(3) : ""}
+                                    </td>
                                     <td
                                         className="w-10 border border-gray-300"
 

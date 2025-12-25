@@ -395,7 +395,7 @@ export function autoFocusSelect(el, refObj, condition = true) {
 }
 
 
-const IDLE_TIME = 3 * 60 * 1000; 
+const IDLE_TIME = 10 * 60 * 1000; 
 
 export const useIdleLogout = (
     onLogout,

@@ -46,19 +46,19 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
-    // getStockById: builder.query({
-    //   query: ({ params }) => {
-    //     return {
-    //       url: `${STOCK_API}/${params.productId || params.salePrice || params.fromOrderId}`,
-    //       method: "GET",
-    //       headers: {
-    //         "Content-type": "application/json; charset=UTF-8",
-    //       },
-    //       params
-    //     };
-    //   },
-    //   providesTags: ["Stock"],
-    // }),
+    getStockReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getStockReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
     getStockById: builder.query({
       query: ({ params }) => {
         const { productId, fromOrderId, salePrice, ...rest } = params;
@@ -116,6 +116,7 @@ export const {
   useUpdateStockMutation,
   useDeleteStockMutation,
   useGetPcsStockQuery,
+  useLazyGetStockReportQuery,
 
 } = stockApi;
 

@@ -48,18 +48,14 @@ const PoItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, 
     setLocalInwardItems(prevItems => {
         let newItems = structuredClone(prevItems);
 
-        // Check if same item already exists (prevent duplicates)
         const isAlreadyAdded = newItems.some(v => v?.id == id);
         if (isAlreadyAdded) {
-            console.log("Item already exists, not adding again");
-            return newItems; // ignore
+            return newItems;
         }
 
-        // Find empty row to replace
         const emptyIndex = newItems.findIndex(v => v?.accessoryId === "");
 
         if (emptyIndex !== -1) {
-            // Replace empty row
             newItems[emptyIndex] = obj;
         } else {
             // Push new row

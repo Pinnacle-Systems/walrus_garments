@@ -4,7 +4,7 @@ import {
     get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove,
     getPcsStock as _getPcsStock,
     _getAccessory,
-    _getOneAccessory
+    _getOneAccessory , getStockReport as _getStockReport
 } from '../services/stock.service.js';
 
 async function get(req, res, next) {
@@ -23,6 +23,16 @@ export async function getPcsStock(req, res, next) {
         console.error(`Error`, err.message);
     }
 }
+
+export async function getStockReport(req, res, next) {
+    try {
+        res.json(await _getStockReport(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+    }
+}
+
 
 async function getOne(req, res, next) {
 

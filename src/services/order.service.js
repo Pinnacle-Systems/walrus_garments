@@ -701,26 +701,44 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 
 
     const GeneralYarnStock = await prisma.$queryRawUnsafe(`
-  select * from stock  where inorout = "GeneralInward";
+SELECT 
+  yarnId,
+  COALESCE(colorId, 0) AS colorId,
+  SUM(qty) AS qty
+FROM stock
+WHERE inorout = 'GeneralInward'
+GROUP BY yarnId, colorId
+
 `);
     const GeneralAccessoryStock = await prisma.$queryRawUnsafe(`
-  select * from Accessorystock  where inorout = "GeneralInward";
-`);
+SELECT 
+  accessoryId,
+  accessoryGroupId,
+  accessoryCategoryId,
+  COALESCE(colorId, 0) AS colorId,
+  sizeId,
+  SUM(qty) AS qty
+FROM AccessoryStock
+WHERE inorout = 'GeneralInward'
+GROUP BY accessoryId, accessoryGroupId,accessoryCategoryId,colorId,sizeId`);
 
     const YarnStock = GeneralYarnStock || [];
     const AccessoryStock = GeneralAccessoryStock || [];
 
-    console.log("Stock", YarnStock, AccessoryStock)
+    console.log("data", data)
 
-
-
+    const updatedData = {
+        ...data,
+        yarnStock: YarnStock,
+        accessoryStock: AccessoryStock,
+    };
 
     if (!data) return NoRecordFound("order");
 
 
 
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord }  }  , YarnStock , AccessoryStock };
+    return { statusCode: 0, data: { ...updatedData, ...{ childRecord } } };
 }
 
 

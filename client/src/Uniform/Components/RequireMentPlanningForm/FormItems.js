@@ -8,7 +8,7 @@ import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
 const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId, tempOrderDetailsId,
     setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
-    colorList, uomList, sizeList, orderId, yarnStock, setYarnStock , accessoryStock, setAccessoryStock
+    colorList, uomList, sizeList, orderId, yarnStock, setYarnStock, accessoryStock, setAccessoryStock
 
 }) => {
 
@@ -16,14 +16,12 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     console.log(requirementItems, "requirementItems");
     console.log(requirementForm, "requirementForm")
     console.log(yarnStock, "yarnStock")
-    // console.log(orderYarnDetails, "orderYarnDetails")
+    console.log(accessoryItems, "accessoryItems")
+    console.log(accessoryStock, "accessoryStock")
 
-    orderYarnDetails?.forEach(req => {
-        const stockItem = yarnStock?.find(s => s.yarnId === req.yarnId);
-        req.stockQty = stockItem ? stockItem.qty : 0;
-    });
 
-    // orderYarnDetails is now updated
+
+
 
 
     console.log(orderYarnDetails, "orderYarnDetails")
@@ -784,19 +782,19 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                         <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
 
 
-                                  
-                                                <td className="border border-gray-300 px-1 py-1  text-[12px] ">
-                                                    <input
-                                                        type="number"
 
-                                                        min={"0"}
-                                                        onFocus={(e) => e.target.select()}
-                                                        className=" rounded text-[11.5px] w-full text-right bg-transparent"
-                                                        value={parseFloat(yarn?.stockQty || 0).toFixed(3)}
-                                                        disabled={true}
+                                        <td className="border border-gray-300 px-1 py-1  text-[12px] ">
+                                            <input
+                                                type="number"
 
-                                                    />
-                                                </td>
+                                                min={"0"}
+                                                onFocus={(e) => e.target.select()}
+                                                className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                value={parseFloat(yarn?.stockQty || 0).toFixed(3)}
+                                                disabled={true}
+
+                                            />
+                                        </td>
 
 
 

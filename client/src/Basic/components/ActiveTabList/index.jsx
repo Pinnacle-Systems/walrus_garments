@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { ExcessToleranceQty, FiberContent, MaterialMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockTransfer } from "../../../Uniform/Components";
+import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockReport, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 import { AccessoryTemplate } from "..";
@@ -137,7 +137,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY PURCHASE RETURN": <AccessoryPurchaseReturn />,
     "ACCESSORY PURCHASE BILL ENTRY": <AccessoryPurchaseBillEntry />,
     "ACCESSORY STOCK TRANSFER": <AccessoryStockTransfer />,
-    "ACCESSORY TEMPLATE" : <AccessoryTemplate  />
+    "ACCESSORY TEMPLATE": <AccessoryTemplate />,
+    "STOCK REPORT": <StockReport />,
 
 
 
