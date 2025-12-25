@@ -700,15 +700,17 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
     })
 
 
-    const result = await prisma.$queryRawUnsafe(`
+    const GeneralYarnStock = await prisma.$queryRawUnsafe(`
   select * from stock  where inorout = "GeneralInward";
 `);
+    const GeneralAccessoryStock = await prisma.$queryRawUnsafe(`
+  select * from Accessorystock  where inorout = "GeneralInward";
+`);
 
-    const Stock = result || [];
+    const YarnStock = GeneralYarnStock || [];
+    const AccessoryStock = GeneralAccessoryStock || [];
 
-    console.log("Stock",Stock)
-
-
+    console.log("Stock", YarnStock, AccessoryStock)
 
 
 
@@ -718,7 +720,7 @@ export async function getOrderItemsById(id, prevProcessId, packingCategory, pack
 
 
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord }  }  ,Stock};
+    return { statusCode: 0, data: { ...data, ...{ childRecord }  }  , YarnStock , AccessoryStock };
 }
 
 

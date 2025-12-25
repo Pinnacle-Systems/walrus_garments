@@ -33,7 +33,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
 
     setRequirementItems, requirementItems, onNew, allData, tempOrderId, setTempOrderId, tempOrderDetailsId, setTempOrderDetailsId,
 
-    setAccessoryItems, accessoryItems , setPoNumber ,poNumber ,setStock , stock
+    setAccessoryItems, accessoryItems, setPoNumber, poNumber, setYarnStock, yarnStock , setAccessoryStock, accessoryStock
 
 
 }) => {
@@ -56,6 +56,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching, refetch: singleOrderReftch } = useGetOrderByIdNewQuery({ id: orderId, requirement: true }, { skip: !orderId });
 
     const { data: orderItemsData, isLoading: orderItemsDataLoading, isFetching: orderItemsDataFetching } = useGetOrderItemsByIdQuery({ id: styleId }, { skip: !styleId });
+
 
 
     const { data: accessoryGroupList } = useGetAccessoryGroupMasterQuery({
@@ -97,7 +98,6 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
             setTempOrderId(data?.orderId ? data?.orderId : "");
             setTempOrderDetailsId(data?.id ? data?.id : "");
             setPoNumber(data?.Order?.poNumber ? data?.Order?.poNumber : "")
-            setStock(orderItemsData?.Stock ? orderItemsData?.Stock : [])
 
         }
         if (id) {
@@ -149,6 +149,9 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
     useEffect(() => {
         if (styleId && orderItemsData?.data) {
             syncFormWithDb(orderItemsData?.data, styleId);
+            setYarnStock(orderItemsData?.YarnStock ? orderItemsData?.YarnStock : [])
+            setAccessoryStock(orderItemsData?.AccessoryStock ? orderItemsData?.AccessoryStock : [])
+
         }
 
     }, [orderItemsDataFetching, orderItemsDataLoading, styleId, syncFormWithDb, orderItemsData]);
@@ -546,8 +549,8 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                 tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId} setTempOrderDetailsId={setTempOrderDetailsId}
                                 accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                                 accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList}
-                                colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId} setStock={setStock} stock={stock}
-
+                                colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId} styleId={styleId}
+                                yarnStock={yarnStock} accessoryStock={accessoryStock} setYarnStock={setYarnStock} setAccessoryStock={setAccessoryStock}
                             />
 
                         </fieldset>

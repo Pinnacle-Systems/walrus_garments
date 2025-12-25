@@ -7,17 +7,27 @@ import { Common } from "../../../Utils/DropdownData";
 import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
 const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId, tempOrderDetailsId,
-    setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList, 
-    colorList, uomList, sizeList, orderId, stock, setStock
+    setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
+    colorList, uomList, sizeList, orderId, yarnStock, setYarnStock , accessoryStock, setAccessoryStock
 
 }) => {
 
     console.log(orderSizeDetails, "orderSizeDetails");
-    console.log(orderYarnDetails, "orderYarnDetails")
     console.log(requirementItems, "requirementItems");
     console.log(requirementForm, "requirementForm")
-    console.log(processList, "processList")
+    console.log(yarnStock, "yarnStock")
     // console.log(orderYarnDetails, "orderYarnDetails")
+
+    orderYarnDetails?.forEach(req => {
+        const stockItem = yarnStock?.find(s => s.yarnId === req.yarnId);
+        req.stockQty = stockItem ? stockItem.qty : 0;
+    });
+
+    // orderYarnDetails is now updated
+
+
+    console.log(orderYarnDetails, "orderYarnDetails")
+
 
     const [tableDataView, setTableDataView] = useState(false)
     const [processView, setProcessView] = useState(false)
@@ -540,7 +550,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     <AccessoryRequirementPlannig accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                         accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList} colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId}
                         requirementItems={requirementItems} orderSizeDetails={orderSizeDetails} tempOrderId={tempOrderId} setTempOrderId={setTempOrderId} tempOrderDetailsId={tempOrderDetailsId}
-                        
+
                     />
 
                 )}
@@ -591,6 +601,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                                     <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
 
+                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Stock Qty  (kgs)</td>
 
                                 </tr>
 
@@ -770,10 +781,24 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                                         ))}
 
-
-
-
                                         <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
+
+
+                                  
+                                                <td className="border border-gray-300 px-1 py-1  text-[12px] ">
+                                                    <input
+                                                        type="number"
+
+                                                        min={"0"}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                        value={parseFloat(yarn?.stockQty || 0).toFixed(3)}
+                                                        disabled={true}
+
+                                                    />
+                                                </td>
+
+
 
 
 
