@@ -649,24 +649,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
               </div>
 
-
-
-
-
-
-
-
-
-
             </div>
 
           </div>
-
-
-
-
-
-
 
         </div>
         <fieldset className=''>
@@ -816,6 +801,21 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           </div>
         </div>
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </>
   )
 }

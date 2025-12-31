@@ -52,4 +52,5 @@ export { default as AccessoryPurchaseReturn } from "./AccessoryPurchaseReturn";
 export { default as AccessoryPurchaseBillEntry } from "./AccessoryPurchaseBillEntry";
 export { default as AccessoryStockTransfer } from "./AccessoryStockTransfer";
 export { default as StockReport } from "./StockReport";
+export { default as MachineWiseProduction } from "./MachineWiseProductionEntry";
 

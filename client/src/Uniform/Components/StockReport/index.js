@@ -135,6 +135,8 @@ const StockReport = () => {
                             <DropdownInput name="Store"
                                 options={dropDownListObject(storeOptions, "storeName", "id")}
                                 value={localStoreId} setValue={setLocalStoreId} required={true} />
+
+
                             <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} />
                         </div>
                         <div className='py-1.5 mt-2'>
@@ -158,7 +160,7 @@ const StockReport = () => {
                                                 stockReport: true,
                                                 storeId,
                                                 itemType,
-                                                toDate: endDate,
+                                                toDate: localEndDate,
                                                 orderId,
                                                 poType
                                             }
@@ -184,29 +186,57 @@ const StockReport = () => {
                                 </div>
                                 :
 
-                                (poType == "Accessory" && stockList.length !== 0) ?
-                                    <table className='w-full border border-gray-500 text-xs'>
-                                        <thead>
-                                            <tr className='bg-blue-200 border border-gray-500 sticky top-10 py-1'>
-                                                <td>S.No</td>
-                                                <td>AccessoryGroup</td>
-                                                <td>accessoryCategory</td>
-                                                <td>Accessory</td>
-                                                <td>Size</td>
-                                                <td>Qty</td>
+                                (itemType == "Accessory" && stockList.length !== 0) ?
+                                    <table className="min-w-[1250px] border-collapse table-fixed">
+                                        <thead className="bg-gray-200 text-gray-800">
 
+                                            <tr>
+
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">accessoryGroup </td>
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">AccessoryCategory </td>
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Accessory</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty</td>
                                             </tr>
+
+
+
+
+
+
+
                                         </thead>
                                         <tbody>
-                                            {stockList.map((item, index) => (
-                                                <tr key={index} className="text-center border border-gray-500 even:bg-gray-100">
-                                                    <td className='p-1'>{index + 1}</td>
-                                                    <td className='p-1'>{item.yarn}</td>
-                                                    <td className='p-1'>{item.color}</td>
-                                                    <td className='p-1'>{item.total_qty}</td>
+
+                                            {stockList?.map((yarn, index) => (
+                                                <tr
+
+                                                >
+
+                                                    <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.AccessoryGroup}</td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.accessoryCategory}</td>
+                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.accessory}</td>
+
+                                                    <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
+
+
+
+
+
+
+
+
+
+
+
+
+
                                                 </tr>
                                             ))}
+
                                         </tbody>
+
                                     </table>
                                     :
                                     <table className="min-w-[1250px] border-collapse table-fixed">

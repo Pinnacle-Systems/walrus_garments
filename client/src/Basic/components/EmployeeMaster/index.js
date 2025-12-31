@@ -203,7 +203,7 @@ export default function Form() {
         setImage(null);
         setEmployeeCategory("");
         setPermanent("");
-        setActive(false);
+        setActive(true);
         setLeavingDate("");
         setLeavingReason("");
         setCanRejoin(false);
@@ -807,7 +807,7 @@ export default function Form() {
 
                   <div className="bg-white p-3 rounded-md border border-gray-200">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-2">{console.log(active,"active")}
                       <ToggleButton
                         name="Status"
                         options={statusDropdown}

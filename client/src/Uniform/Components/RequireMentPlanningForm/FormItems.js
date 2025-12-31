@@ -604,7 +604,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                 </tr>
 
                                 <tr className="bg-white">
-                                    <td colSpan={7} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
+                                    <td colSpan={8} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
 
 
 
@@ -612,6 +612,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                     <td className="border border-gray-300 px-2 py-1 text-left text-xs  w-28">
                                         Size Weight (grams)
                                     </td>
+
                                     {orderSizeDetails?.map((item, index) => (
                                         <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs w-28">
                                             {item?.weight?.toFixed(3)}

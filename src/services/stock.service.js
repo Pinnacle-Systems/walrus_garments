@@ -424,7 +424,7 @@ export async function getStockReport(req) {
     const { itemType, orderId, toDate } = req.query
 
 
-const DateFormatted = moment(toDate).format("YYYY-MM-DD");
+    const DateFormatted = moment(toDate).format("YYYY-MM-DD");
     let data;
 
     let sql;
@@ -456,6 +456,34 @@ const DateFormatted = moment(toDate).format("YYYY-MM-DD");
   ORDER BY
       y.name,
       c.name
+`
+    }
+    if (itemType == "Accessory") {
+        sql =
+            `
+  SELECT
+     A.aliasName AS accessory,
+      AG.name AS  AccessoryGroup,
+        AC.name AS  accessoryCategory,
+      SUM(s.qty) AS total_qty
+  FROM accessoryStock S
+  LEFT JOIN accessory A ON A.id = S.accessoryId
+    LEFT JOIN AccessoryGroup AG ON AG.id = S.accessoryGroupId
+
+    LEFT JOIN AccessoryCategory AC ON AC.id = S.accessoryCategoryId
+  LEFT JOIN color c ON c.id = s.colorId
+  WHERE
+      s.itemType = '${itemType}'
+       AND DATE(s.createdAt) <= '${DateFormatted}'
+      AND  ${whereClause}
+  GROUP BY
+      A.aliasName ,
+      AG.name,
+      AC.name
+  ORDER BY
+        A.aliasName ,
+      AG.name,
+      AC.name
 `
     }
     console.log(sql, "sql")

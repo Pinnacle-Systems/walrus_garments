@@ -395,3 +395,8 @@ label {
 .swal2-styled.swal2-cancel:hover {
   filter: brightness(1.1);
 }
+
+.custom-multiselect .dropdown-content {
+  max-height: 200px;
+  overflow-y: auto;
+}

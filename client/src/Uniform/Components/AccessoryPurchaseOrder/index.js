@@ -155,12 +155,7 @@ export default function Form() {
           Swal.fire({
             title: "Deleted Successfully",
             icon: "success",
-            // draggable: true,
-            // timer: 1000,
-            // showConfirmButton: false,
-            // didOpen: () => {
-            //   Swal.showLoading();
-            // }
+     
           });
         }
         else {

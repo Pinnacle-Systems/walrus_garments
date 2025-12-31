@@ -1929,6 +1929,7 @@ model AccessoryStock {
   accessoryRequirementPlanningId Int?
   category                       String?
   transactionId                  Int?
+  createdAt                      DateTime?                     @default(now())
 }
 
 model Location {
