@@ -193,7 +193,7 @@ async function update(id, body) {
         where: { id: parseInt(id) },
         data: {
             name,
-            aliasName,
+            sku,
             companyId: companyId ? parseInt(companyId) : null,
         },
 

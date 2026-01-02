@@ -25,6 +25,7 @@ const StyleMaster = () => {
     const [id, setId] = useState("");
     const [name, setName] = useState("");
     const [aliasName, setAliasName] = useState("");
+    const [sku, setSku] = useState("");
 
     const [active, setActive] = useState(true);
 
@@ -76,7 +77,7 @@ const StyleMaster = () => {
         }, [name,setName]);
 
     const data = {
-        id, aliasName, active,
+        id,  aliasName, active,sku,
         //  productType, 
         name,
         // seoTitle, sleeve, fabricId, sizeTemplateId,
@@ -85,7 +86,7 @@ const StyleMaster = () => {
     }
 
     const validateData = (data) => {
-        if (data.name && data.sku) {
+        if (data.name ) {
             return true;
         }
         return false;
@@ -473,7 +474,7 @@ const StyleMaster = () => {
 
                                                         </div>
                                                         <div className="mb-3">
-                                                            <TextInput name="Alias Name" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} />
+                                                            <TextInput name="Alias Name" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
                                                         </div>
 
                                                         <div className="mb-5">
