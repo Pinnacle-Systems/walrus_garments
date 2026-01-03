@@ -4,9 +4,8 @@ import { useAddbranchTypeMutation, useDeletebranchTypeMutation, useGetbranchType
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Check, Plus, Power } from "lucide-react";
-import Mastertable from "../../../Basic/components/MasterTable/Mastertable";
 import Modal from "../../../UiComponents/Modal";
-import { ReusableTable, TextInput, ToggleButton } from "../../../Inputs";
+import { ReusableTable, TextInput, TextInputNew, ToggleButton } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 
 
@@ -449,8 +448,8 @@ export default function Form() {
                         <div className="grid grid-cols-2  gap-3  h-full">
                           <fieldset className=' rounded mt-2'>
 
-                            <TextInput
-                              name="BranchType Name"
+                            <TextInputNew
+                              name="Branch Type Name"
                               type="text"
                               value={name}
                               setValue={setName}

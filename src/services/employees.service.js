@@ -140,7 +140,8 @@ async function get(req) {
                     name: true
                 }
             },
-            EmployeeCategory: true
+            EmployeeCategory: true,
+            
         }
     })
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);  
