@@ -38,7 +38,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
-    function handleInputChange(value, index, yarnId, field, subIndex) {
+    function handleInputChange(value, index, yarnId, field, subIndex, colorId) {
 
         console.log("field", field);
 
@@ -299,9 +299,9 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         setRequirementForm((prev) => {
             const newItems = structuredClone(prev);
             newItems.forEach((item) => {
-                if (item.yarnId === yarnId) {
+                if (item.yarnId == yarnId && item?.colorId == colorId) {
                     item.requireWeight = Number(
-                        ((parseFloat(item.weight) * num) / 100).toFixed(5)
+                        ((parseFloat(item.weight) * num) / 100).toFixed(3)
                     );
                     item[field] = value
                 }
@@ -315,12 +315,12 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
-    function newFunction(value, yarnId) {
+    function newFunction(value, yarnId, colorId) {
         setRequirementForm((prev) => {
             const newItems = structuredClone(prev);
             const percent = value === "" ? 0 : parseFloat(value);
             newItems.forEach((item) => {
-                if (item.yarnId === yarnId) {
+                if (item.yarnId === yarnId && item?.colorId == colorId) {
                     item.requireWeight = parseFloat(((parseFloat(item.weight) * percent) / 100).toFixed(5));
                 }
             });
@@ -361,7 +361,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
         setRequirementForm(combined);
         orderYarnDetails?.forEach((yarn) => {
-            newFunction(yarn?.percentage, yarn?.yarnId);
+            newFunction(yarn?.percentage, yarn?.yarnId, yarn?.colorId);
         });
     }, [orderSizeDetails, orderYarnDetails]);
 
@@ -382,8 +382,25 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     };
 
 
-    const getRequireWeight = (yarnId) => {
-        return requirementForm?.reduce((total, item) => {
+    // const getRequireWeight = (yarnId,colorId) => {
+    //     return requirementForm?.reduce((total, item) => {
+    //         if (item.yarnId !== yarnId) return total;
+
+    //         const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
+    //         const base = parseFloat(item?.requireWeight || 0) * parseFloat(sizeQty || 0);
+
+    //         const totalLossPercentage = (item?.RequirementYarnProcessList || []).reduce(
+    //             (acc, process) => acc + (parseFloat(process?.lossPercentage) || 0),
+    //             0
+    //         );
+    //         const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
+
+    //         return total + withLoss;
+    //     }, 0).toFixed(3);
+    // };
+
+    const getRequireWeight = (yarnId, colorId) => {
+        return requirementForm?.filter(i => i.yarnId == yarnId && i.colorId == colorId)?.reduce((total, item) => {
             if (item.yarnId !== yarnId) return total;
 
             const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
@@ -398,6 +415,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             return total + withLoss;
         }, 0).toFixed(3);
     };
+
 
     useEffect(() => {
         orderYarnDetails?.forEach((yarn) => {
@@ -624,7 +642,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                 <tr className="bg-white">
 
                                     <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28">
-                                        Order Qty (kgs)
+                                        Order Qty (Pair)
                                     </td>
                                     {orderSizeDetails?.map((item, index) => (
                                         <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
@@ -711,7 +729,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                 onChange={(e) => {
                                                     const val = parseFloat(e.target.value).toFixed(3);
 
-                                                    handleInputChange(val, index, yarn?.yarnId, "percentage");
+                                                    handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
 
 
                                                 }}
@@ -719,7 +737,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                     const formatted =
                                                         e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
                                                     e.target.value = formatted;
-                                                    handleInputChange(formatted, index, yarn?.yarnId, "percentage");
+                                                    handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
                                                 }}
                                                 placeHolder="0.000"
                                             />
@@ -780,7 +798,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
                                         ))}
 
-                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId)}</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId)}</td>
 
 
 
