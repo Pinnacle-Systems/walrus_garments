@@ -331,3 +331,9 @@ export const RequestMaterialType = [
     { show: "Yarn", value: "Yarn" },
     { show: "Trims & Accessories", value: "Accessories" },
 ]
+
+export const packingCoverTypes = [
+    { show: "PRINTED", value: "PRINTED" },
+    { show: "PLAIN", value: "PLAIN" },
+
+]

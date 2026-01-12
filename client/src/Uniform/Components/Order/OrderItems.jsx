@@ -29,7 +29,7 @@ const OrderItems = forwardRef(function OrderItems(
   {
     readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
     yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData, accessoryGroupList, accessoryCategoryList, accessoryList,
-    accessoryTemplate, setTemplateId, templateId, accessoryTemplateItems, setAceessoryTemplateItems , uomList ,accessoryTemplateData
+    accessoryTemplate, setTemplateId, templateId, accessoryTemplateItems, setAceessoryTemplateItems, uomList, accessoryTemplateData
   },
   styleRef
 
@@ -112,7 +112,7 @@ const OrderItems = forwardRef(function OrderItems(
 
         }],
         orderYarnDetails: [{ yarnId: "" }],
-        orderAccessoryDetails : [{accessoryId : ""}]
+        orderAccessoryDetails: [{ accessoryId: "" }]
 
       }
     ]);
@@ -394,7 +394,23 @@ const OrderItems = forwardRef(function OrderItems(
                 >
                   Socks Type
                 </th>
+                <th
 
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Leg Color
+                </th>          <th
+
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Foot Color
+
+                </th>          <th
+
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Stripes Color
+                </th>
                 <th
 
                   className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
@@ -546,8 +562,62 @@ const OrderItems = forwardRef(function OrderItems(
                           ))}
                         </select>
                       </td>
-
-
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "legColorId") } }}
+                          tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
+                          value={item.legColorId}
+                          onChange={(e) => handleInputChange(e.target.value, index, "legColorId")}
+                          onBlur={(e) => {
+                            handleInputChange((e.target.value), index, "legColorId")
+                          }
+                          }
+                        >
+                          <option >
+                          </option>
+                          {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>)}
+                        </select>
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "footColorId") } }}
+                          tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
+                          value={item.footColorId}
+                          onChange={(e) => handleInputChange(e.target.value, index, "footColorId")}
+                          onBlur={(e) => {
+                            handleInputChange((e.target.value), index, "footColorId")
+                          }
+                          }
+                        >
+                          <option >
+                          </option>
+                          {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>)}
+                        </select>
+                      </td>                 <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "stripesColorId") } }}
+                          tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
+                          value={item.stripesColorId}
+                          onChange={(e) => handleInputChange(e.target.value, index, "stripesColorId")}
+                          onBlur={(e) => {
+                            handleInputChange((e.target.value), index, "stripesColorId")
+                          }
+                          }
+                        >
+                          <option >
+                          </option>
+                          {(id ? colorlist?.data : colorlist?.data?.filter(item => item.active))?.map((blend) =>
+                            <option value={blend.id} key={blend.id}>
+                              {blend?.name}
+                            </option>)}
+                        </select>
+                      </td>
                       <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
                         <button
                           readOnly={readOnly}
@@ -557,7 +627,7 @@ const OrderItems = forwardRef(function OrderItems(
                             handleView(index)
                             setIndex(index)
                             GridIndex = index
-                            }}
+                          }}
                         >
                           {VIEW}
                         </button>

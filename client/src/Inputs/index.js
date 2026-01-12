@@ -592,7 +592,7 @@ export const TextArea = ({
   onBlur = null,
 }) => {
   return (
-    <div className="mb-3 w-full">
+    <div className="mb-1 w-full">
       {name && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
           {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}

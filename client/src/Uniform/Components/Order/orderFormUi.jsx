@@ -25,7 +25,7 @@ import OrderItems from "./OrderItems";
 import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
-import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextArea, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
 import { MdDrafts } from "react-icons/md";
@@ -173,7 +173,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
         packingCoverType,
         active,
         partyId, finYearId, phone, contactPersonName, address, validDate, orderDetails: orderDetails?.filter(item => item.styleId),
-        accessoryTemplateItems, templateId , poNumber
+        accessoryTemplateItems, templateId, poNumber
 
     }
 
@@ -543,8 +543,9 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
 
 
-                                    <div className="mb-3 col-span-2">
-                                        <TextInput
+                                    <div className="mb-1 col-span-2">
+                                        <TextArea
+                                            cols={10}
                                             name="Address"
                                             placeholder="Contact name"
                                             value={findFromList(partyId, supplierList?.data, "address")}
@@ -605,7 +606,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                             yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist} socksMaterialData={socksMaterialData}
                             accessoryTemplate={accessoryTemplate} templateId={templateId} setTemplateId={setTemplateId} accessoryTemplateItems={accessoryTemplateItems}
                             setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList} accessoryTemplateData={accessoryTemplateData}
-                        
+
 
                         />
                     </fieldset>
