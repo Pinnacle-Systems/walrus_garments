@@ -1055,7 +1055,6 @@ model Color {
   requirementYarnDetails        RequirementYarnDetails[]
   RaiseIndentItems              RaiseIndentItems[]
   RaiseIndenetYarnItems         RaiseIndenetYarnItems[]
-  OrderDetails                  OrderDetails[]
   MaterialIssueYarnItems        MaterialIssueYarnItems[]
   FromOrderTransferItems        FromOrderTransferItems[]
   ToOrderTransferTtems          ToOrderTransferTtems[]
@@ -1073,6 +1072,9 @@ model Color {
   AccessoryMaterialIssueItems   AccessoryMaterialIssueItems[]
   AccessoryTemplateItems        AccessoryTemplateItems[]
   OrderAccessoryDetails         OrderAccessoryDetails[]
+  legColorDetails               OrderDetails[]                 @relation(name: "LegColorRelation")
+  FootColorDetails              OrderDetails[]                 @relation(name: "FootColorRelation")
+  StripesColorDetails           OrderDetails[]                 @relation(name: "StripesColorRelation")
 }
 
 model UnitOfMeasurement {
@@ -3524,26 +3526,25 @@ model Order {
 }
 
 model OrderDetails {
-  id                            Int                            @id @default(autoincrement())
-  Order                         Order?                         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId                       Int?
-  yarnNeedleId                  Int?
-  yarnNeedle                    YarnNeedle?                    @relation(fields: [yarnNeedleId], references: [id])
-  machineId                     Int?
-  machine                       Machine?                       @relation(fields: [machineId], references: [id])
-  fiberContentId                Int?
-  fiberContent                  FiberContent?                  @relation(fields: [fiberContentId], references: [id])
-  description                   String?                        @db.LongText
-  qty                           Float?
-  socksMaterialId               Int?
-  socksMaterial                 SocksMaterial?                 @relation(fields: [socksMaterialId], references: [id])
-  measurements                  String?
-  sizeId                        Int?
-  size                          Size?                          @relation(fields: [sizeId], references: [id])
-  styleId                       Int?
-  style                         Style?                         @relation(fields: [styleId], references: [id])
-  Color                         Color?                         @relation(fields: [baseColorId], references: [id])
-  baseColorId                   Int?
+  id              Int            @id @default(autoincrement())
+  Order           Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         Int?
+  yarnNeedleId    Int?
+  yarnNeedle      YarnNeedle?    @relation(fields: [yarnNeedleId], references: [id])
+  machineId       Int?
+  machine         Machine?       @relation(fields: [machineId], references: [id])
+  fiberContentId  Int?
+  fiberContent    FiberContent?  @relation(fields: [fiberContentId], references: [id])
+  description     String?        @db.LongText
+  qty             Float?
+  socksMaterialId Int?
+  socksMaterial   SocksMaterial? @relation(fields: [socksMaterialId], references: [id])
+  measurements    String?
+  sizeId          Int?
+  size            Size?          @relation(fields: [sizeId], references: [id])
+  styleId         Int?
+  style           Style?         @relation(fields: [styleId], references: [id])
+
   noOfStripes                   String?
   socksTypeId                   Int?
   socksType                     SocksType?                     @relation(fields: [socksTypeId], references: [id])
@@ -3552,6 +3553,14 @@ model OrderDetails {
   isMaterialRequest             Boolean?                       @default(false)
   AccessoryTemplate             AccessoryTemplate?             @relation(fields: [accessoryTemplateId], references: [id], onDelete: Cascade)
   accessoryTemplateId           Int?
+  LegColor                      Color?                         @relation("LegColorRelation", fields: [legColorId], references: [id])
+  legColorId                    Int?
+  FootColor                     Color?                         @relation("FootColorRelation", fields: [footColorId], references: [id])
+  footColorId                   Int?
+  StripesColor                  Color?                         @relation("StripesColorRelation", fields: [stripesColorId], references: [id])
+  stripesColorId                Int?
+  stripeLines                   Int?
+  nameAndLogo                   String?
   orderSizeDetails              orderSizeDetails[]
   orderYarnDetails              orderYarnDetails[]
   RequirementPlanningForm       RequirementPlanningForm[]
@@ -3937,6 +3946,7 @@ model RequirementSizeDetails {
   gsmId                     Int?
   weight                    Float?
   remarks                   String?
+  wastagePercentage         Float?
 }
 
 model RequirementYarnDetails {

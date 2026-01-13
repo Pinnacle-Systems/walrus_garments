@@ -589,7 +589,7 @@ const RequirmentForm = ({ id, setId, setDocId, onClose, readOnly, setReadOnly, o
                                 accessoryItems={accessoryItems} setAccessoryItems={setAccessoryItems}
                                 accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList} accessoryList={accessoryList}
                                 colorList={colorList} uomList={uomList} sizeList={sizeList} orderId={orderId} styleId={styleId}
-                                yarnStock={yarnStock} accessoryStock={accessoryStock} setYarnStock={setYarnStock} setAccessoryStock={setAccessoryStock}
+                                yarnStock={yarnStock} accessoryStock={accessoryStock} setYarnStock={setYarnStock} setAccessoryStock={setAccessoryStock}  setOrderSizeDetails={setOrderSizeDetails}
                             />
 
                         </fieldset>

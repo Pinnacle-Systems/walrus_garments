@@ -255,7 +255,8 @@ async function getOne(id) {
                         }
                     },
                     weight: true,
-                    sizeId: true
+                    sizeId: true,
+                    wastagePercentage: true,
                 }
             },
             RequirementPlanningItems: {
@@ -901,7 +902,7 @@ async function create(req) {
                         createMany: {
                             data: orderSizeDetails?.map((sub) => ({
                                 sizeId: sub?.sizeId ? parseInt(sub.sizeId) : undefined,
-                                // sizeMeasurement: sub?.sizeMeasurement || undefined,
+                                wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
                                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
                                 weight: sub?.weight ? parseFloat(sub.weight) : undefined,
                             })),
@@ -922,7 +923,7 @@ async function create(req) {
                             isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
                             processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
                             lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                            wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                            // wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
                             isNotPurchase: yarn?.isNotPurchase ? yarn.isNotPurchase : false,
 
                             RequirementYarnProcessList: yarn?.RequirementYarnProcessList?.length > 0
@@ -1038,7 +1039,7 @@ const update = async (id, body) => {
                         isProcess: sub?.isProcess ?? undefined,
                         processId: sub?.processId ? parseInt(sub.processId) : undefined,
                         lossPercentage: sub?.lossPercentage ? parseFloat(sub.lossPercentage) : undefined,
-                        wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
+                        // wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
                         yarnType: sub?.yarnType ? sub?.yarnType : undefined,
                         isNotPurchase: sub?.isNotPurchase ? sub?.isNotPurchase : false,
 
@@ -1070,7 +1071,7 @@ const update = async (id, body) => {
                         isProcess: yarn?.isProcess ? yarn.isProcess : undefined,
                         processId: yarn?.processId ? parseInt(yarn.processId) : undefined,
                         lossPercentage: yarn?.lossPercentage ? parseFloat(yarn.lossPercentage) : undefined,
-                        wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
+                        // wastagePercentage: yarn?.wastagePercentage ? parseFloat(yarn.wastagePercentage) : undefined,
                         yarnType: yarn?.yarnType ? yarn?.yarnType : undefined,
                         isNotPurchase: yarn?.isNotPurchase ? yarn?.isNotPurchase : false,
 
@@ -1119,6 +1120,8 @@ const update = async (id, body) => {
                                 sizeMeasurement: sub?.sizeMeasurement || undefined,
                                 qty: sub?.qty ? parseFloat(sub.qty) : undefined,
                                 weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+                                wastagePercentage: sub?.wastagePercentage ? parseFloat(sub.wastagePercentage) : undefined,
+
                             },
                         })),
 

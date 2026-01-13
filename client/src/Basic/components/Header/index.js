@@ -197,7 +197,7 @@ const Header = ({ profile, setProfile }) => {
 
                     </button>
                     <div
-                        className={`-ml-40 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
+                        className={`-ml-48 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
                     >
                         <div className="bg-beige flex p-2 items-center rounded-lg">
                             <div className="mr-2 w-12">

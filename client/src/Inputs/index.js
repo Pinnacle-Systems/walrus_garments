@@ -251,7 +251,7 @@ export const MultiSelectDropdownNew = ({
   const customStyles = {
     control: (base) => ({
       ...base,
-      minHeight: "30px",       
+      minHeight: "30px",
       height: "28px",
       borderRadius: "6px",
       fontSize: "13px",
@@ -261,7 +261,7 @@ export const MultiSelectDropdownNew = ({
 
     valueContainer: (base) => ({
       ...base,
-      padding: "0 6px",         
+      padding: "0 6px",
       height: "28px",
     }),
 
@@ -356,8 +356,10 @@ export const TextInput = ({
         max={max ? String(max) : undefined}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm
-         
+          transition-all duration-150 shadow-sm 
+                  ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
           ${className}`
         }
       />
@@ -367,6 +369,8 @@ export const TextInput = ({
     </div>
   );
 };
+
+
 
 export const PasswordTextInput = ({
   name,
@@ -2087,7 +2091,10 @@ export const ReusableSearchableInput = forwardRef(
       const handleClickOutside = (event) => {
         if (containerRef.current && !containerRef.current.contains(event.target)) {
           setIsDropdownOpen(false);
+          setIsListShow(false)
+
         }
+        console.log(event, "eventevent")
       };
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -2161,7 +2168,7 @@ export const ReusableSearchableInput = forwardRef(
         <Modal
           isOpen={openModel}
           onClose={() => setOpenModel(false)}
-          widthClass={"w-[10%] h-[10%]"}
+          widthClass={"w-[90%] h-[98%]"}
         >
           <DynamicRenderer
             componentName={component}

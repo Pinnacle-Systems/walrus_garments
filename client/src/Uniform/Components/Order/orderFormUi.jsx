@@ -447,7 +447,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const styleRef = useRef(null);
 
     useEffect(() => {
-        if (dateRef.current) {
+        if (dateRef.current && !id) {
             dateRef.current.focus();
         }
     }, []);

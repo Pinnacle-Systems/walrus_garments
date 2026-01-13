@@ -8,7 +8,7 @@ import AccessoryRequirementPlannig from "./AccesssoryPlanningItems";
 
 const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, requirementForm, setOrderYarnDetails, id, readOnly, processList, setYarnTotals, setRequirementItems, requirementItems, orderItemsData, tempOrderId, setTempOrderId, tempOrderDetailsId,
     setAccessoryItems, accessoryItems, accessoryGroupList, accessoryCategoryList, accessoryList,
-    colorList, uomList, sizeList, orderId, yarnStock, setYarnStock, accessoryStock, setAccessoryStock
+    colorList, uomList, sizeList, orderId, yarnStock, setYarnStock, accessoryStock, setAccessoryStock, setOrderSizeDetails
 
 }) => {
 
@@ -35,7 +35,15 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
+    function sizeHandleInputChange(value, index, field) {
+        setOrderSizeDetails((prev) => {
+            let newItems = structuredClone(prev);
+            newItems[index][field] = value;
 
+            return newItems;
+
+        })
+    }
 
 
     function handleInputChange(value, index, yarnId, field, subIndex, colorId) {
@@ -71,24 +79,35 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 processId: yarn?.processId,
                 wastagePercentage: yarn?.wastagePercentage,
                 yarnType: 'DyedYarn',
-                // RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
 
-                // requiredQty: orderSizeDetails?.reduce(
-                //     (sum, size) =>
-                //         sum + (yarn.percentage * size.weight / 100) * size.qty,
+                requiredQty: (
+                    orderSizeDetails?.reduce((sum, size) => {
+                        const qty = Number(size?.qty || 0);
+                        const sizeWeight = parseFloat(size?.weight || 0);
+                        const wastagePercentage = parseFloat(size?.wastagePercentage || 0);
+                        const yarnPercentage = parseFloat(yarn?.percentage || 0);
 
-                //     0
-                // ).toFixed(3),
-                requiredQty: orderSizeDetails?.reduce((sum, size) => {
-                    const base = (yarn.percentage * size.weight / 100) * size.qty;
-                    const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
-                        (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
-                        0
-                    );
-                    console.log(totalLossPercentage, "totalLossPercentage");
-                    const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
-                    return sum + withLoss;
-                }, 0).toFixed(3),
+                        // Base yarn weight
+                        const base = (yarnPercentage * sizeWeight / 100) * qty;
+
+                        // Wastage weight
+                        const wastageWeight = (base * wastagePercentage) / 100;
+
+                        // Process loss %
+                        const totalLossPercentage = (yarn?.RequirementYarnProcessList || [])
+                            .reduce(
+                                (acc, process) => acc + parseFloat(process?.lossPercentage || 0),
+                                0
+                            );
+
+                        const processLossWeight = (base * totalLossPercentage) / 100;
+
+                        const withLoss = base + wastageWeight + processLossWeight;
+
+                        return sum + withLoss;
+                    }, 0) || 0
+                ).toFixed(3),
+
             }));
 
             setRequirementItems((prev) => {
@@ -252,15 +271,33 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     wastagePercentage: yarn?.wastagePercentage,
                     RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
                     yarnType: yarn?.isProcess == "Yes" ? 'GreyYarn' : 'DyedYarn',
-                    requiredQty: orderSizeDetails?.reduce((sum, size) => {
-                        const base = (yarn.percentage * size.weight / 100) * size.qty;
-                        const totalLossPercentage = (yarn?.RequirementYarnProcessList || []).reduce(
-                            (acc, process) => acc + (parseFloat(process.lossPercentage) || 0),
-                            0
-                        );
-                        const withLoss = base * (((parseFloat(totalLossPercentage) || 0) + (parseFloat(yarn?.wastagePercentage) || 0) + 100)) / 100;
-                        return sum + withLoss;
-                    }, 0).toFixed(3),
+                    requiredQty: (
+                        orderSizeDetails?.reduce((sum, size) => {
+                            const qty = Number(size?.qty || 0);
+                            const sizeWeight = parseFloat(size?.weight || 0);
+                            const wastagePercentage = parseFloat(size?.wastagePercentage || 0);
+                            const yarnPercentage = parseFloat(yarn?.percentage || 0);
+
+                            // Base yarn weight
+                            const base = (yarnPercentage * sizeWeight / 100) * qty;
+
+                            // Wastage weight
+                            const wastageWeight = (base * wastagePercentage) / 100;
+
+                            // Process loss %
+                            const totalLossPercentage = (yarn?.RequirementYarnProcessList || [])
+                                .reduce(
+                                    (acc, process) => acc + Number(process?.lossPercentage || 0),
+                                    0
+                                );
+
+                            const processLossWeight = (base * totalLossPercentage) / 100;
+
+                            const withLoss = base + wastageWeight + processLossWeight;
+
+                            return sum + withLoss;
+                        }, 0) || 0
+                    ).toFixed(3),
 
 
 
@@ -352,7 +389,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                     requireWeight: 0,
                     weight: size.weight,
                     uomId: size.uomId,
-                    wastagePercentage: yarn?.wastagePercentage,
+                    wastagePercentage: size?.wastagePercentage,
                     RequirementYarnProcessList: yarn?.RequirementYarnProcessList,
                     isProcess: yarn?.isProcess,
                 });
@@ -382,39 +419,72 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     };
 
 
-    // const getRequireWeight = (yarnId,colorId) => {
-    //     return requirementForm?.reduce((total, item) => {
+    const getRequireWeight = (yarnId, colorId) => {
+        if (!Array.isArray(requirementForm)) return "0.000";
+
+        const total = requirementForm
+            .filter(
+                i => i.yarnId === yarnId && i.colorId === colorId
+            )
+            .reduce((sum, item) => {
+                const sizeData = orderSizeDetails?.find(
+                    s => s.sizeId === item.sizeId
+                );
+
+                const sizeQty = Number(sizeData?.qty || 0);
+                const wastage = parseFloat(sizeData?.wastagePercentage || 0);
+                const requireWeight = parseFloat(item?.requireWeight || 0);
+
+                const base = requireWeight * sizeQty;
+                const wasteWeight = ((requireWeight * wastage) / 100) * 100
+
+                console.log({
+                    requireWeight, wastage, wasteWeight
+                })
+
+                // wastage weight
+                const wastageWeight = (base * wastage) / 100;
+
+                // process loss percentage
+                const totalLossPercentage = (item?.RequirementYarnProcessList || [])
+                    .reduce(
+                        (acc, process) => acc + Number(process?.lossPercentage || 0),
+                        0
+                    );
+
+                const processLossWeight = (base * totalLossPercentage) / 100;
+
+                const withLoss = base + wastageWeight + processLossWeight;
+
+                return sum + withLoss;
+            }, 0);
+
+        return total.toFixed(3);
+    };
+
+    // const getRequireWeight = (yarnId, colorId) => {
+    //     return requirementForm?.filter(i => i.yarnId == yarnId && i.colorId == colorId)?.reduce((total, item) => {
     //         if (item.yarnId !== yarnId) return total;
 
     //         const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
+    //         const wastage = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.wastagePercentage || 0;
+
     //         const base = parseFloat(item?.requireWeight || 0) * parseFloat(sizeQty || 0);
+    //         const wastagePercentage = base / wastage
 
     //         const totalLossPercentage = (item?.RequirementYarnProcessList || []).reduce(
     //             (acc, process) => acc + (parseFloat(process?.lossPercentage) || 0),
     //             0
     //         );
-    //         const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
+    //         // const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
+    //         const withLoss = base + wastagePercentage ;
+    //         console.log({
+    //             wastagePercentage
+    //         })
 
     //         return total + withLoss;
     //     }, 0).toFixed(3);
     // };
-
-    const getRequireWeight = (yarnId, colorId) => {
-        return requirementForm?.filter(i => i.yarnId == yarnId && i.colorId == colorId)?.reduce((total, item) => {
-            if (item.yarnId !== yarnId) return total;
-
-            const sizeQty = orderSizeDetails?.find(s => s.sizeId === item.sizeId)?.qty || 0;
-            const base = parseFloat(item?.requireWeight || 0) * parseFloat(sizeQty || 0);
-
-            const totalLossPercentage = (item?.RequirementYarnProcessList || []).reduce(
-                (acc, process) => acc + (parseFloat(process?.lossPercentage) || 0),
-                0
-            );
-            const withLoss = base * ((parseFloat(totalLossPercentage) || 0) + (parseFloat(item?.wastagePercentage) || 0) + 100) / 100;
-
-            return total + withLoss;
-        }, 0).toFixed(3);
-    };
 
 
     useEffect(() => {
@@ -503,6 +573,50 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
+    const getRequireWeightNew = (yarnId, colorId, sizeId) => {
+        if (!Array.isArray(requirementForm)) return "0.000";
+
+        const total = requirementForm
+            .filter(
+                i => i.yarnId === yarnId && i.colorId === colorId && i.sizeId == sizeId
+            )
+            .reduce((sum, item) => {
+                const sizeData = orderSizeDetails?.find(
+                    s => s.sizeId === item.sizeId
+                );
+
+                const sizeQty = Number(sizeData?.qty || 0);
+                const wastage = parseFloat(sizeData?.wastagePercentage || 0);
+                const requireWeight = parseFloat(item?.requireWeight || 0);
+
+                const base = requireWeight * sizeQty;
+                const wasteWeight = ((sizeData?.weight * wastage) / 100)
+
+                console.log({
+                    requireWeight, base, wasteWeight
+                })
+
+                // wastage weight
+                const wastageWeight = (sizeQty * wasteWeight)
+
+                // process loss percentage
+                const totalLossPercentage = (item?.RequirementYarnProcessList || [])
+                    .reduce(
+                        (acc, process) => acc + Number(process?.lossPercentage || 0),
+                        0
+                    );
+
+                const processLossWeight = (base * totalLossPercentage) / 100;
+
+                const withLoss = base + wastageWeight + processLossWeight;
+
+                return sum + withLoss;
+            }, 0);
+
+        return total.toFixed(3);
+    };
+
+
     return (
         <>
             {/* <Modal
@@ -575,265 +689,480 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                 {type == "yarn" && (
 
 
+                    <>
+                        {/* <div className="overflow-x-auto mt-8 w-full">
+                            <table className="min-w-[1250px] border-collapse table-fixed">
+                                <thead className="bg-gray-200 text-gray-800">
 
-
-                    <div className="overflow-x-auto mt-8 w-full">
-                        <table className="min-w-[1250px] border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-800">
-
-                                <tr>
-                                    <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
-                                        <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
-                                            checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
-                                        />
-                                    </th>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
-
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
-                                    {/* <td className="border border-gray-300 px-2 py-1 text-center text-xs w-16">loss %</td> */}
-                                    <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-28">Waste %</td>
-
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-28">Size</td>
-
-
-
-
-
-
-                                    {orderSizeDetails?.map((item, index) => {
-                                        return (
-                                            <td
-                                                key={index}
-                                                className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-20"
-                                            >
-                                                {item?.size?.name}
-                                            </td>
-                                        )
-                                    })}
-
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
-
-                                    <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Stock Qty  (kgs)</td>
-
-                                </tr>
-
-                                <tr className="bg-white">
-                                    <td colSpan={8} rowSpan={2} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
-
-
-
-                                    </td>
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-xs  w-28">
-                                        Size Weight (grams)
-                                    </td>
-
-                                    {orderSizeDetails?.map((item, index) => (
-                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs w-28">
-                                            {item?.weight?.toFixed(3)}
-                                        </td>
-                                    ))}
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
-
-                                </tr>
-                                <tr className="bg-white">
-
-                                    <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28">
-                                        Order Qty (Pair)
-                                    </td>
-                                    {orderSizeDetails?.map((item, index) => (
-                                        <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                            {item?.qty?.toFixed(3)}
-                                        </td>
-                                    ))}
-                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
-
-                                </tr>
-
-                            </thead>
-                            <tbody>
-
-                                {orderYarnDetails?.map((yarn, index) => (
-                                    <tr
-
-                                    >
-                                        <td className='py-1 text-center border border-gray-300'>
-                                            <input type="checkbox" name="" id=""
-                                                checked={yarn.isNotPurchase || false}
-                                                onChange={(e) => handleChange(yarn.id, e.target.checked, index)} />
-                                        </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Yarn?.name}</td>
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color?.name}</td>
-
-
-
-
-                                        <td className="py-0.5 border border-gray-300 text-[11px]">
-                                            <select
-                                                onKeyDown={e => {
-                                                    if (e.key === "Delete") {
-                                                        handleInputChange("", index, yarn?.yarnId, "isProcess");
-                                                    }
-                                                }}
-                                                disabled={readOnly}
-                                                className="text-left w-full rounded h-full py-1"
-                                                value={yarn?.isProcess}   // 👈 default "No"
-                                                onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
-                                                onBlur={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
-                                            >
-                                                {Common?.map(size => (
-                                                    <option value={size.value} key={size.id}>
-                                                        {size?.show}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-
-                                        <td className="py-0.5 border border-gray-300 text-[11px]  flex justify-center items-center">
-
-                                            <button
-                                                onClick={() => {
-                                                    setProcessView(true)
-                                                    setSelectedItem(yarn)
-                                                    setSelectedIndex(index)
-                                                }}
-                                                disabled={readOnly || yarn?.isProcess === "No"}
-                                                className="text-blue-800 flex items-center  py-1.5 bg-blue-50 rounded"
-                                            >
-                                                👁 <span className="text-xs"></span>
-                                            </button>
-
-                                        </td>
-
-
-                                        <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
-                                            <input
-                                                className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                onFocus={e => e.target.select()}
-                                                value={yarn?.percentage}
-
-
-
-
-                                                disabled={readOnly}
-                                                onKeyDown={(e) => {
-                                                    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                }}
-                                                onChange={(e) => {
-                                                    const val = parseFloat(e.target.value).toFixed(3);
-
-                                                    handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
-
-
-                                                }}
-                                                onBlur={(e) => {
-                                                    const formatted =
-                                                        e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
-                                                    e.target.value = formatted;
-                                                    handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
-                                                }}
-                                                placeHolder="0.000"
+                                    <tr>
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                            <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
+                                                checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
                                             />
-                                        </td>
-                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] ">
-                                            <input
-                                                className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={(yarn?.wastagePercentage ?? 10?.toFixed(3))}
-                                                onFocus={e => e.target.select()}
-                                                onKeyDown={(e) => {
-                                                    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                }}
+                                        </th>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
 
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Process(Y/N) </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-12  ">Process</td>
+                                        <td className="border border-gray-300  py-1 text-center text-xs w-20">Required %</td>
 
-                                                    handleInputChange(val, index, yarn?.yarnId, "wastagePercentage");
-                                                }}
-                                                placeHolder="0.00"
-
-                                                disabled={readOnly || !yarn?.percentage}
-                                                onBlur={(e) => {
-                                                    const formatted =
-                                                        e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
-                                                    e.target.value = formatted;
-                                                    handleInputChange(formatted, index, yarn?.yarnId, "wastagePercentage");
-                                                }}
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-28">Size</td>
 
 
 
 
-                                            />
-                                        </td>
-                                        <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]">
-
-                                        </td>
 
 
-                                        {(orderSizeDetails || []).map((size) => (
-                                            <>
-                                                <td className="border border-gray-300 px-1 py-1  text-[12px] ">
-                                                    <input
-                                                        type="number"
-
-                                                        min={"0"}
-                                                        onFocus={(e) => e.target.select()}
-                                                        className=" rounded text-[11.5px] w-full text-right bg-transparent"
-                                                        value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId) || "").toFixed(3)}
-                                                        disabled={true}
-
-                                                    />
+                                        {orderSizeDetails?.map((item, index) => {
+                                            return (
+                                                <td
+                                                    key={index}
+                                                    className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-20"
+                                                >
+                                                    {item?.size?.name}
                                                 </td>
+                                            )
+                                        })}
 
-                                            </>
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">RequiredQty (kgs)</td>
 
+                                        <td className="border border-gray-300 px-2 py-1 text-center text-xs w-32">Stock Qty  (kgs)</td>
+
+                                    </tr>
+
+                                    <tr className="bg-white">
+                                        <td colSpan={7} rowSpan={3} className="bg-white border-l border-gray-300 text-end justify-end px-4 font-bold" >
+
+
+
+                                        </td>
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-xs  w-28 bg-gray-200">
+                                            Size Weight (grams)
+                                        </td>
+
+                                        {orderSizeDetails?.map((item, index) => (
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs w-28">
+                                                {item?.weight?.toFixed(3)}
+                                            </td>
                                         ))}
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
 
-                                        <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId)}</td>
+                                    </tr>
+                                    <tr className="bg-white">
 
+                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
+                                            Order Qty (Pair)
+                                        </td>
+                                        {orderSizeDetails?.map((item, index) => (
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                                {item?.qty?.toFixed(3)}
+                                            </td>
+                                        ))}
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
 
-
-                                        <td className="border border-gray-300 px-1 py-1  text-[12px] ">
-                                            <input
-                                                type="number"
-
-                                                min={"0"}
-                                                onFocus={(e) => e.target.select()}
-                                                className=" rounded text-[11.5px] w-full text-right bg-transparent"
-                                                value={parseFloat(yarn?.stockQty || 0).toFixed(3)}
-                                                disabled={true}
-
-                                            />
+                                    </tr>
+                                    <tr className="bg-white">
+                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
+                                            waste %
                                         </td>
 
 
+                                        {orderSizeDetails?.map((item, index) => (
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                                <input
+                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={(item?.wastagePercentage ?? 1?.toFixed(3))}
+                                                    onFocus={e => e.target.select()}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                    }}
 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
 
+                                                        sizeHandleInputChange(val, index, "wastagePercentage");
+                                                    }}
+                                                    placeHolder="0.00"
+
+                                                    onBlur={(e) => {
+                                                        const formatted =
+                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                        e.target.value = formatted;
+                                                        sizeHandleInputChange(formatted, index, "wastagePercentage");
+                                                    }}
+                                                />
+                                            </td>
+                                        ))}
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
 
 
                                     </tr>
-                                ))}
 
-                            </tbody>
+                                </thead>
+                                <tbody>
 
-                        </table>
-                    </div>
+                                    {orderYarnDetails?.map((yarn, index) => (
+                                        <tr
+
+                                        >
+                                            <td className='py-1 text-center border border-gray-300'>
+                                                <input type="checkbox" name="" id=""
+                                                    checked={yarn.isNotPurchase || false}
+                                                    onChange={(e) => handleChange(yarn.id, e.target.checked, index)} />
+                                            </td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
+                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Yarn?.name}</td>
+                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color?.name}</td>
+
+
+
+
+                                            <td className="py-0.5 border border-gray-300 text-[11px]">
+                                                <select
+                                                    onKeyDown={e => {
+                                                        if (e.key === "Delete") {
+                                                            handleInputChange("", index, yarn?.yarnId, "isProcess");
+                                                        }
+                                                    }}
+                                                    disabled={readOnly}
+                                                    className="text-left w-full rounded h-full py-1"
+                                                    value={yarn?.isProcess}   // 👈 default "No"
+                                                    onChange={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
+                                                    onBlur={(e) => handleInputChange(e.target.value, index, yarn?.yarnId, "isProcess")}
+                                                >
+                                                    {Common?.map(size => (
+                                                        <option value={size.value} key={size.id}>
+                                                            {size?.show}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+
+                                            <td className="py-0.5 border border-gray-300 text-[11px]  flex justify-center items-center">
+
+                                                <button
+                                                    onClick={() => {
+                                                        setProcessView(true)
+                                                        setSelectedItem(yarn)
+                                                        setSelectedIndex(index)
+                                                    }}
+                                                    disabled={readOnly || yarn?.isProcess === "No"}
+                                                    className="text-blue-800 flex items-center  py-1.5 bg-blue-50 rounded"
+                                                >
+                                                    👁 <span className="text-xs"></span>
+                                                </button>
+
+                                            </td>
+
+
+                                            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                                <input
+                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    onFocus={e => e.target.select()}
+                                                    value={yarn?.percentage}
+
+
+
+
+                                                    disabled={readOnly}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                    }}
+                                                    onChange={(e) => {
+                                                        const val = parseFloat(e.target.value).toFixed(3);
+
+                                                        handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+
+
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        const formatted =
+                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                        e.target.value = formatted;
+                                                        handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+                                                    }}
+                                                    placeHolder="0.000"
+                                                />
+                                            </td>
+
+                                            <td className="border-b border-gray-300 px-2 py-1 text-left text-[12px]">
+
+                                            </td>
+
+
+                                            {(orderSizeDetails || []).map((size) => (
+                                                <>
+                                                    <td className="border border-gray-300 px-1 py-1  text-[12px] ">
+                                                        <input
+                                                            type="number"
+
+                                                            min={"0"}
+                                                            onFocus={(e) => e.target.select()}
+                                                            className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                            value={parseFloat(getQtyYarnSize(size?.sizeId, yarn?.yarnId, yarn?.colorId) || "").toFixed(3)}
+                                                            disabled={true}
+
+                                                        />
+                                                    </td>
+
+                                                </>
+
+                                            ))}
+
+                                            <td className="border border-gray-300 px-2 py-1 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId)}</td>
+
+
+
+                                            <td className="border border-gray-300 px-1 py-1  text-[12px] ">
+                                                <input
+                                                    type="number"
+
+                                                    min={"0"}
+                                                    onFocus={(e) => e.target.select()}
+                                                    className=" rounded text-[11.5px] w-full text-right bg-transparent"
+                                                    value={parseFloat(yarn?.stockQty || 0).toFixed(3)}
+                                                    disabled={true}
+
+                                                />
+                                            </td>
+
+
+
+
+
+
+                                        </tr>
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+                        </div> */}
+
+                        <div className="overflow-x-auto mt-8 w-full">
+                            <table className="min-w-[1250px] border-collapse table-fixed">
+                                <thead className="bg-gray-200 text-gray-800">
+
+                                    <tr>
+                                        {/* <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                            <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
+                                                checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
+                                            />
+                                        </th> */}
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</th>
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Sizes </th>
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-20    ">Weight </th>
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Order Qty</th>
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Waste % </th>
+
+                                        {orderYarnDetails?.map((item, index) => {
+                                            return (
+                                                <th
+                                                    key={index}
+                                                    className="border border-gray-300 px-2 py-1 text-center text-[11px] text-xs w-60"
+                                                >
+                                                    {item?.Yarn?.name} / {item?.Color?.name}
+                                                </th>
+                                            )
+                                        })}
+
+                                    </tr>
+                                    <tr>
+                                        <td colspan={5}>
+
+                                        </td>
+                                        {orderYarnDetails?.map((yarn, index) => (
+
+                                            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs w-60">
+                                                <input
+                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    onFocus={e => e.target.select()}
+                                                    value={yarn?.percentage}
+
+
+
+
+                                                    disabled={readOnly}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                    }}
+                                                    onChange={(e) => {
+                                                        const val = parseFloat(e.target.value).toFixed(2);
+
+                                                        handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+
+
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        const formatted =
+                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(2);
+                                                        e.target.value = formatted;
+                                                        handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+                                                    }}
+                                                    placeHolder="0.000"
+                                                />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    {orderSizeDetails?.map((item, index) => (
+                                        <tr
+                                            key={index}
+                                            className="border border-gray-300 px-2 py-1 text-center text-xs"
+                                        >
+                                            {/* <td
+                                                className="border border-gray-300 px-2 py-2 text-center"
+                                            >
+                                                <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
+                                                    checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
+                                                />
+                                            </td> */}
+                                            <td
+                                                className="border border-gray-300 px-2 py-2 text-center"
+                                            >
+                                                {index + 1}
+                                            </td>
+                                            <td
+                                                className="border border-gray-300 px-2 py-2 text-left"
+                                            >
+                                                {item?.size?.name}
+                                            </td>
+
+                                            <td
+                                                className="border border-gray-300 px-2 py-2 text-right"
+                                            >
+                                                {item?.weight}
+                                            </td>
+                                            <td
+                                                className="border border-gray-300 px-2 py-2 text-right"
+                                            >
+                                                {parseFloat(item?.qty).toFixed(2)}
+                                            </td>
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                                <input
+                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={((item?.wastagePercentage))}
+                                                    onFocus={e => e.target.select()}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                    }}
+
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+
+                                                        sizeHandleInputChange(val, index, "wastagePercentage");
+                                                    }}
+                                                    placeHolder="0.00"
+
+                                                    onBlur={(e) => {
+                                                        const formatted =
+                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(2);
+                                                        e.target.value = formatted;
+                                                        sizeHandleInputChange(formatted, index, "wastagePercentage");
+                                                    }}
+                                                />
+                                            </td>
+                                            {orderYarnDetails?.map((yarn, i) => (
+                                                <td
+                                                    key={i}
+                                                    className="border border-gray-300 px-2 py-2 text-right"
+                                                >
+                                                    {getRequireWeightNew(yarn?.yarnId, yarn?.colorId, item?.sizeId)}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                    <tr>
+                                        <td colspan={5} className="px-2 py-1 text-right text-[12px] font-bold">
+                                            Total Required Qty
+                                        </td>
+                                        {orderYarnDetails?.map((yarn, index) => (
+
+                                            <td className="border border-gray-300 px-2 py-2 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId)}</td>
+
+                                        ))}
+                                    </tr>
+                                    {/*
+                                    <tr className="bg-white">
+
+                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
+                                            Order Qty (Pair)
+                                        </td>
+                                        {orderSizeDetails?.map((item, index) => (
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                                {item?.qty?.toFixed(3)}
+                                            </td>
+                                        ))}
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
+
+                                    </tr>
+                                    <tr className="bg-white">
+                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
+                                            waste %
+                                        </td>
+
+
+                                        {orderSizeDetails?.map((item, index) => (
+                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                                <input
+                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={(item?.wastagePercentage ?? 1?.toFixed(3))}
+                                                    onFocus={e => e.target.select()}
+                                                    onKeyDown={(e) => {
+                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                    }}
+
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+
+                                                        sizeHandleInputChange(val, index, "wastagePercentage");
+                                                    }}
+                                                    placeHolder="0.00"
+
+                                                    // disabled={readOnly || !item?.percentage}
+                                                    onBlur={(e) => {
+                                                        const formatted =
+                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
+                                                        e.target.value = formatted;
+                                                        sizeHandleInputChange(formatted, index, "wastagePercentage");
+                                                    }}
+                                                />
+                                            </td>
+                                        ))}
+                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
+
+
+                                    </tr> */}
+
+                                </thead>
+
+
+                            </table>
+                        </div>
+                    </>
 
 
                 )}
 
 
 
-            </div>
+            </div >
             <div>
 
             </div>

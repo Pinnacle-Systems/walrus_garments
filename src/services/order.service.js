@@ -148,11 +148,12 @@ async function get(req) {
                     orderSizeDetails: true,
                     orderYarnDetails: true,
                     isPlanning: true,
-                    Color: {
+                    LegColor: {
                         select: {
                             name: true
                         }
                     }
+
                 }
             },
             _count: {
@@ -208,13 +209,11 @@ async function getOne(id) {
                     socksTypeId: true,
                     filePath: true,
                     sizeId: true,
-                    baseColorId: true,
                     isPlanning: true,
-                    Color: {
-                        select: {
-                            name: true
-                        }
-                    },
+                    legColorId: true,
+                    footColorId: true,
+                    stripesColorId: true,
+
                     orderSizeDetails: true,
                     orderYarnDetails: {
                         select: {
@@ -426,13 +425,11 @@ export async function getOneNew(id) {
                     socksTypeId: true,
                     filePath: true,
                     sizeId: true,
-                    baseColorId: true,
                     isPlanning: true,
-                    Color: {
-                        select: {
-                            name: true
-                        }
-                    },
+                    legColorId: true,
+                    footColorId: true,
+                    stripesColorId: true,
+
                     orderSizeDetails: true,
                     orderYarnDetails: {
                         select: {
@@ -1663,8 +1660,10 @@ async function create(req) {
                             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                             filePath: item?.filePath ? item?.filePath : undefined,
-                            baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
                             accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
+                            legColorId: item?.legColorId ? parseInt(item?.legColorId) : undefined,
+                            footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
+                            stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
 
                             orderSizeDetails: item?.orderSizeDetails?.length > 0
                                 ? {
@@ -1796,6 +1795,9 @@ const update = async (id, body) => {
                                 filePath: item?.filePath ? item?.filePath : undefined,
                                 baseColorId: item?.baseColorId ? parseInt(item?.baseColorId) : undefined,
                                 accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
+                                legColorId: item?.legColorId ? parseInt(item?.legColorId) : undefined,
+                                footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
+                                stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
 
                                 orderSizeDetails: {
                                     deleteMany: {},
@@ -1847,6 +1849,10 @@ const update = async (id, body) => {
                             socksMaterialId: item?.socksMaterialId ? parseInt(item.socksMaterialId) : undefined,
                             socksTypeId: item?.socksTypeId ? parseInt(item.socksTypeId) : undefined,
                             accessoryTemplateId: item?.templateId ? parseInt(item?.templateId) : undefined,
+                            legColorId: item?.legColorId ? parseInt(item?.legColorId) : undefined,
+                            footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
+                            stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
+
 
                             orderSizeDetails: {
                                 createMany: {
