@@ -405,11 +405,18 @@ const OrderItems = forwardRef(function OrderItems(
                 >
                   Foot Color
 
-                </th>          <th
+                </th>
+                <th
 
                   className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Stripes Color
+                </th>
+                <th
+
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Name & Logo
                 </th>
                 <th
 
@@ -599,7 +606,9 @@ const OrderItems = forwardRef(function OrderItems(
                               {blend?.name}
                             </option>)}
                         </select>
-                      </td>                 <td className="py-0.5 border border-gray-300 text-[11px] ">
+                      </td>
+
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
                         <select
                           onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "stripesColorId") } }}
                           tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none'
@@ -617,6 +626,20 @@ const OrderItems = forwardRef(function OrderItems(
                               {blend?.name}
                             </option>)}
                         </select>
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                          <textarea
+                        type="text"
+                  
+                        min="0"
+                        rows={1}
+                        onFocus={e => e.target.select()}
+                        className="text-left rounded w-full py-1 text-xs "
+                        value={item.nameAndLogo}
+                        disabled={readOnly }
+                        onChange={e => handleInputChange(e.target.value, index, "nameAndLogo")}
+                        onBlur={e => handleInputChange(e.target.value, index, "nameAndLogo")}
+                      />
                       </td>
                       <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
                         <button

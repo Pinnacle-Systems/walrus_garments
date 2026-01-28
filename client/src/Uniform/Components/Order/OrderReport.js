@@ -118,7 +118,7 @@ const OrderFormReport = ({
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-    console.log(indexOfLastItem, "indexOfLastItem")
+    console.log(currentItems, "currentItems")
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -314,7 +314,7 @@ const OrderFormReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(currentItems ? currentItems : []).map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
