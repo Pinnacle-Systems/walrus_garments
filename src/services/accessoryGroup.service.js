@@ -1,10 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 
-
-
-const prisma = new PrismaClient()
-   
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.accessoryGroup.findMany({

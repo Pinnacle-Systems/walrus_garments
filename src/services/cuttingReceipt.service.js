@@ -1,13 +1,11 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
-
-
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 import { getDateFromDateTime, getItemPanel, getYearShortCode, getYearShortCodeForFinYear, stockDataUpdatePanelWise } from '../utils/helper.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { getCuttingReceiptInwardDetailsAlreadyData, getFabricConsumptionAlreadyData } from '../utils/directInwardReturnQueries.js';
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
+
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.cuttingReceipt.findFirst({
         where: {

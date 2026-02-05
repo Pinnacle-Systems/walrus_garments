@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 import { generateSubscriptionCode, findDateInRange } from '../utils/helper.js';
-
-const prisma = new PrismaClient()
 
 const xprisma = prisma.$extends({
     result: {

@@ -1,11 +1,8 @@
 import { NoRecordFound } from '../configs/Responses.js';
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getYearShortCode, getYearShortCodeForFinYear } from "../utils/helper.js";
 import { getTableRecordWithId } from '../utils/helperQueries.js';
-
-const prisma = new PrismaClient()
-
 
 function findIsNumber(docId) {
     const parts = docId?.split('/');

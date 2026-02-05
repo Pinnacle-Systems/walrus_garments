@@ -1,10 +1,7 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 import { generateSubscriptionCode } from '../utils/helper.js';
 import bcrypt from "bcrypt";
-
-const prisma = new PrismaClient()
-
 
 async function get() {
     const data = await prisma.company.findMany();

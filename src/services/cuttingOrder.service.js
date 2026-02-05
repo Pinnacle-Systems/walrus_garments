@@ -1,11 +1,9 @@
 import { NoRecordFound } from '../configs/Responses.js';
-import { PrismaClient } from '@prisma/client'
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getYearShortCodeForFinYear, substract, getYearShortCode, } from "../utils/helper.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { getDataCuttingReceiptInwardDetails } from '../utils/directInwardReturnQueries.js';
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.cuttingOrder.findFirst({

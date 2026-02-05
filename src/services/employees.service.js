@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { exclude, base64Tobuffer } from "../utils/helper.js"
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
 
 const xprisma = prisma.$extends({
     result: {

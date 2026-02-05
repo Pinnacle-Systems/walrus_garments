@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
 import { convertToImportFormat } from "../utils/excelDataTransform.js";
@@ -6,8 +5,7 @@ import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getDateTimeRangeForCurrentYear, getYearShortCode, getYearShortCodeForFinYear } from "../utils/helper.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import { createAllClass, createAllColor, createAllSize, getAllClass, getAllColor, getAllSize } from '../query/masters.js';
-const prisma = new PrismaClient()
-
+import { prisma } from '../lib/prisma.js';
 
 async function getNextDocId(branchId) {
 

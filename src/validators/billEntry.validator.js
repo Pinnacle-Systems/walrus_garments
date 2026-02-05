@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 // import { validateSupplierActive } from "./commonValidators.js"
+import { prisma } from "../lib/prisma.js";
 import { substract } from "../utils/helper.js";
-
-const prisma = new PrismaClient()
 
 export default async function billEntyItemsValidation(billEntyItems, billEntryId) {
     let promises = billEntyItems.map(async (billEntryItem) => {

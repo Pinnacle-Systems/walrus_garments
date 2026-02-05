@@ -1,10 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 import { exclude } from '../utils/helper.js';
-
-
-
-const prisma = new PrismaClient()
 
 async function get(req) {
 
