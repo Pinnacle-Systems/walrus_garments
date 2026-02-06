@@ -1,11 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import { getYearShortCode, getYearShortCodeForFinYear, substract } from './helper.js'
 import { getFinYearStartTimeEndTime } from './finYearHelper.js'
-
-
-
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
 
 export async function getTableRecordWithId(id, tableName) {
     return await prisma[tableName].findUnique({

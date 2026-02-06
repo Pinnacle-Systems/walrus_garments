@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 import { getStockProperty } from '../utils/helper.js';
 import { getFinishedGoodsStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
 import moment from "moment"
 
-const prisma = new PrismaClient()
 const xprisma = prisma.$extends({
     result: {
         stock: {

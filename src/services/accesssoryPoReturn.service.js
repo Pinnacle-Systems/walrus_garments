@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { billItemsFiltration, getDateFromDateTime, getRemovedItems, getYearShortCode, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from "../utils/helperQueries.js"
@@ -7,7 +6,8 @@ import { getAllDataPoItems, getPoItemObject } from './po.service.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { getPurchaseReturnItemsAlreadyData } from '../utils/AccessoryInwardReturnQueries.js';
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
+
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
         case "PurchaseReturn":

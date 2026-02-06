@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 
-
-
-const prisma = new PrismaClient()
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.dia.findMany({
@@ -14,7 +11,6 @@ async function get(req) {
     });
     return { statusCode: 0, data };
 }
-
 
 async function getOne(id) {
     const childRecord = 0;

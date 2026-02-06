@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
 import { getDateFromDateTimeYear, getStockProperty, substract } from "./helper.js";
 import { getTableRecordWithId } from "./helperQueries.js";
-
-const prisma = new PrismaClient()
 
 export async function getStockObject(transType, inwardOrReturn, item, storeId, branchId) {
     let newItem = {};

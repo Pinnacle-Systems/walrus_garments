@@ -3,8 +3,7 @@ import { getDateFromDateTime, getYearShortCodeForFinYear } from '../utils/helper
 import { getAlreadyPaidAmount, getTableRecordWithId } from "../utils/helperQueries.js"
 import billEntyItemsValidation from '../validators/billEntry.validator.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma.js';
 
 async function getNextDocId(branchId, isProcessBillEntry, shortCode, startTime, endTime) {
     let lastObject = await prisma.billEntry.findFirst({

@@ -1,11 +1,7 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
 import { exclude, getRemovedItems } from '../utils/helper.js';
 import { parse } from 'path';
-
-
-const prisma = new PrismaClient()
-
 
 async function get(req) {
     const { companyId, active } = req.query

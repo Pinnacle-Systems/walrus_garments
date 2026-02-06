@@ -1,8 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "../lib/prisma.js";
 import { findStyleItem, findStyleTypeName, getFilterStudentList, getSingleOrderData, getStudentList, getTableRecordWithId } from "../utils/helperQueries.js";
-
-const prisma = new PrismaClient()
-
 
 export async function getCuttingOrderParams(filterOrderImportIdList) {
     console.log(filterOrderImportIdList, "filterOrderImportIdList")

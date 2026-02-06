@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { getDateFromDateTime, getItemFullNameFromShortCode, getDateTimeRange, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from "../utils/helperQueries.js"
@@ -8,7 +7,7 @@ import { createProcessDeliveryValidation } from '../validators/processDelivery.v
 import { getTotalQty } from '../utils/ProcessHelpers/getTotalQuantity.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
-const prisma = new PrismaClient()
+import { prisma } from "../lib/prisma.js";
 
 async function getNextDocId(branchId, processId, shortCode, startTime, endTime) {
     let lastObject = await prisma.processDelivery.findFirst({

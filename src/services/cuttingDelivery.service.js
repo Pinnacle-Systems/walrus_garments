@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 
 import { getTableRecordWithId } from '../utils/helperQueries.js';
@@ -6,8 +5,8 @@ import { getDateFromDateTime, getYearShortCode, getYearShortCodeForFinYear } fro
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { getStockQty } from '../utils/stockHelper.js';
+import { prisma } from '../lib/prisma.js';
 
-const prisma = new PrismaClient()
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.cuttingDelivery.findFirst({
         where: {

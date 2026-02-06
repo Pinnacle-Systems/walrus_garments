@@ -1,19 +1,13 @@
-import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
-
-
-
 import { billItemsFiltration, getDateFromDateTime, getRemovedItems, getYearShortCodeForFinYear, substract, balanceQtyCalculation, balanceReturnQtyCalculation, getYearShortCode } from '../utils/helper.js';
 import { getTableRecordWithId } from "../utils/helperQueries.js"
 import { createManyStockWithId, updateManyStockWithId } from '../utils/stockHelper.js';
 import { getCancelItemsAlreadyData, getDirectInwardReturnItemsAlreadyData, getDirectInwardReturnItemsLotBreakUp } from '../utils/directInwardReturnQueries.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
-const prisma = new PrismaClient()
-
+import { prisma } from '../lib/prisma.js';
 
 async function getNextDocId(branchId, poInwardOrDirectInward, shortCode, startTime, endTime) {
-
 
 
     let lastObject = await prisma.AccesssoryPurchaseCancel.findFirst({
