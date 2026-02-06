@@ -10,7 +10,7 @@ import { Plus } from 'lucide-react'
 
 
 const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gridIndex, handleAdd, contextSubGridMenu, handleCloseSubGridContextMenu,
-  handleRightSubGridClick, addNewRow
+  handleRightSubGridClick, yarnNeedleList
 }) => {
 
 
@@ -67,13 +67,15 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
 
 
       <tr>
-        <td colSpan={13} className="p-0">
-          <div className="flex justify-end w-full">
+        <td colSpan={16} className="p-0">
+          <div className="flex justify-end  w-full">
             <table className="w-auto border border-gray-300">
               <thead className="bg-gray-200 text-gray-800">
                 <tr>
                   <th className="w-8 px-4 py-1.5 text-center font-medium text-[13px]">S.No</th>
                   <th className="w-28 px-4 py-1.5 text-center font-medium text-[13px]">Size</th>
+                  <th className="w-28 px-4 py-1.5 text-center font-medium text-[13px]">Needle Type</th>
+
                   <th className="w-28 px-4 py-1.5text-center font-medium text-[13px]">Weight</th>
 
                   <th className="w-44 px-4 py-1.5 text-center font-medium text-[13px]">Size Measurement</th>
@@ -118,7 +120,25 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         ))}
                       </select>
                     </td>
-
+                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <select
+                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
+                        disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none' value={yarn.yarnKneedleId}
+                        onChange={(e) => handleInputChange(e.target.value, index, "yarnKneedleId")}
+                        onBlur={(e) => {
+                          handleInputChange((e.target.value), index, "yarnKneedleId")
+                        }
+                        }
+                      >
+                        <option hidden>
+                        </option>
+                        {(id ? yarnNeedleList?.data : yarnNeedleList?.data.filter(item => item.active))?.map((blend) =>
+                          <option value={blend.id} key={blend.id}>
+                            {blend?.name}
+                          </option>
+                        )}
+                      </select>
+                    </td>
 
                     {/* 
                     <td className="py-0.5 border border-gray-300 text-[11px]">
@@ -192,7 +212,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                         onChange={e => handleInputChange(e.target.value, index, "qty")}
                         onBlur={(e) => {
-                          handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                          handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
                         }
                         }
 

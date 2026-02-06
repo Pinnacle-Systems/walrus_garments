@@ -213,7 +213,10 @@ async function getOne(id) {
                     legColorId: true,
                     footColorId: true,
                     stripesColorId: true,
-                    nameAndLogo : true,
+                    nameAndLogo: true,
+                    packingCover: true,
+                    packingType: true,
+                    notes: true,
                     orderSizeDetails: true,
                     orderYarnDetails: {
                         select: {
@@ -429,7 +432,7 @@ export async function getOneNew(id) {
                     legColorId: true,
                     footColorId: true,
                     stripesColorId: true,
-                    nameAndLogo : true,
+                    nameAndLogo: true,
                     orderSizeDetails: true,
                     orderYarnDetails: {
                         select: {
@@ -1665,6 +1668,9 @@ async function create(req) {
                             footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
                             stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
                             nameAndLogo: item?.nameAndLogo ? item?.nameAndLogo : undefined,
+                            packingCover: item?.packingCover ? item?.packingCover : undefined,
+                            packingType: item?.packingType ? item?.packingType : undefined,
+                            notes: item?.notes ? item?.notes : undefined,
 
                             orderSizeDetails: item?.orderSizeDetails?.length > 0
                                 ? {
@@ -1675,6 +1681,8 @@ async function create(req) {
                                             qty: sub?.qty ? parseFloat(sub.qty) : undefined,
                                             weight: sub?.weight ? parseFloat(sub.weight) : undefined,
                                             uomId: sub?.uomId ? parseFloat(sub.uomId) : undefined,
+                                            yarnKneedleId: sub?.yarnKneedleId ? parseInt(sub.yarnKneedleId) : undefined,
+
                                         })),
                                     },
                                 }
@@ -1688,7 +1696,7 @@ async function create(req) {
                                             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
                                             count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                         })),
                                     },
                                 }
@@ -1800,7 +1808,9 @@ const update = async (id, body) => {
                                 footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
                                 stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
                                 nameAndLogo: item?.nameAndLogo ? item?.nameAndLogo : undefined,
-
+                                packingCover: item?.packingCover ? item?.packingCover : undefined,
+                                packingType: item?.packingType ? item?.packingType : undefined,
+                                notes: item?.notes ? item?.notes : undefined,
                                 orderSizeDetails: {
                                     deleteMany: {},
                                     createMany: {
@@ -1809,6 +1819,7 @@ const update = async (id, body) => {
                                             sizeMeasurement: sub?.sizeMeasurement || undefined,
                                             qty: sub?.qty ? parseFloat(sub.qty) : undefined,
                                             weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+                                            yarnKneedleId: sub?.yarnKneedleId ? parseInt(sub.yarnKneedleId) : undefined,
 
                                         })) || [],
                                     },
@@ -1822,7 +1833,7 @@ const update = async (id, body) => {
                                             yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                             yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
                                             count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                            yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                            // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                         })) || [],
                                     },
                                 },
@@ -1855,7 +1866,9 @@ const update = async (id, body) => {
                             footColorId: item?.footColorId ? parseInt(item?.footColorId) : undefined,
                             stripesColorId: item?.stripesColorId ? parseInt(item?.stripesColorId) : undefined,
                             nameAndLogo: item?.nameAndLogo ? item?.nameAndLogo : undefined,
-
+                            packingCover: item?.packingCover ? item?.packingCover : undefined,
+                            packingType: item?.packingType ? item?.packingType : undefined,
+                            notes: item?.notes ? item?.notes : undefined,
 
                             orderSizeDetails: {
                                 createMany: {
@@ -1864,6 +1877,7 @@ const update = async (id, body) => {
                                         sizeMeasurement: sub?.sizeMeasurement || undefined,
                                         qty: sub?.qty ? parseFloat(sub.qty) : undefined,
                                         weight: sub?.weight ? parseFloat(sub.weight) : undefined,
+                                        yarnKneedleId: sub?.yarnKneedleId ? parseInt(sub.yarnKneedleId) : undefined,
 
                                     })) || [],
                                 },
@@ -1875,7 +1889,7 @@ const update = async (id, body) => {
                                         yarncategoryId: yarn?.yarncategoryId ? parseInt(yarn.yarncategoryId) : undefined,
                                         yarnId: yarn?.yarnId ? parseInt(yarn.yarnId) : undefined,
                                         count: yarn?.count ? parseInt(yarn?.count) : undefined,
-                                        yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
+                                        // yarnKneedleId: yarn?.yarnKneedleId ? parseInt(yarn.yarnKneedleId) : undefined,
                                     })) || [],
                                 },
                             },

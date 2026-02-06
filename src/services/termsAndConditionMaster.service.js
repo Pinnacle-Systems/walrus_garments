@@ -49,17 +49,17 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const {      termsAndCondition , active } = await body
+    const {   name ,   termsAndCondition , active } = await body
     const data = await prisma.TermsAndConditionsNew.create({
         data: {
-            termsAndCondition , active
-        },
+            termsAndCondition , active ,name
+        }, 
     });
     return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    const { termsAndCondition , active} = await body
+    const { termsAndCondition , active,name } = await body
     const dataFound = await prisma.TermsAndConditionsNew.findUnique({
         where: {
             id: parseInt(id)
@@ -70,8 +70,8 @@ async function update(id, body) {
         where: {
             id: parseInt(id),
         },
-        data: {
-           termsAndCondition , active
+        data: { 
+           termsAndCondition , active ,name
         },
     })
     return { statusCode: 0, data };

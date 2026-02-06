@@ -696,8 +696,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 </option>
                 {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
                   <option value={blend.id} key={blend.id}>
-                    {blend?.termsAndCondition.substring(0, 50)}
-                  </option>)}
+                    {blend?.name}
+                  </option>
+                )}
               </select>
             </div>
           </div>
@@ -735,7 +736,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               Po Summary
             </h2>
 
-            <button className="text-sm bg-sky-500 hover:text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
+            <button className="text-sm bg-sky-500 text-white font-semibold hover:bg-sky-800 transition p-1 ml-5 rounded"
               onClick={() => {
                 if (!taxTemplateId) {
                   toast.info("Please Select Tax Template !", { position: "top-center" })

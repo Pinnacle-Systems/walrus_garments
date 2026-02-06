@@ -2283,6 +2283,7 @@ export const ReusableSearchableInput = forwardRef(
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
+                        console.log("Enter handled here!!!!!")
                         setSearchTerm(item.id);
                         setSearch("");
                         setIsListShow(false);
@@ -2389,7 +2390,7 @@ export const TextInputNew = ({
   );
 };
 
-export const TextInputNew1 = ({
+export const TextInputNew1 = forwardRef(({
   name,
   label,
   type = "text",
@@ -2404,23 +2405,23 @@ export const TextInputNew1 = ({
   width = "full",
   max,
   handleChange
-}) => {
-  console.log(max, "max")
+}, ref) => {
   return (
-    <div className={`mb-2 ${width}`}>
+    <div className={`mb ${width}`}>
       {name && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
           {required ? <RequiredLabel name={label ? label : name} /> : name}
         </label>
       )}
       <input
+        ref={ref}  // ✅ ref attached here
         type={type}
         value={value}
-        onChange={(e) =>
-
-          setValue(e.target.value.toUpperCase())
-        }
-
+        onChange={(e) => {
+          const val = e.target.value.toUpperCase();
+          setValue(val);
+          if (handleChange) handleChange(val);
+        }}
         onBlur={onBlur}
         placeholder={name}
         readOnly={readOnly}
@@ -2429,14 +2430,10 @@ export const TextInputNew1 = ({
         max={max ? String(max) : undefined}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm
-         
-          ${className}`
-        }
+          transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+          ${className}`}
       />
-      {/* ${readOnly || disabled
-            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-            : "bg-white hover:border-gray-400"} */}
     </div>
   );
-};
+});
+

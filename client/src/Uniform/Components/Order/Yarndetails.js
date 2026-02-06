@@ -250,12 +250,12 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                     >
                                                         Count
                                                     </th> */}
-                                                    <th
+                                                    {/* <th
 
                                                         className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                                     >
                                                         Needle Type
-                                                    </th>
+                                                    </th> */}
 
 
                                                     <th
@@ -340,7 +340,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                 )}
                                                             </select>
                                                         </td> */}
-                                                        <td className="py-0.5 border border-gray-300 text-[11px]">
+                                                        {/* <td className="py-0.5 border border-gray-300 text-[11px]">
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                                                 disabled={readOnly} className='text-left w-full rounded py-1 focus:outline-none' value={row.yarnKneedleId}
@@ -358,7 +358,7 @@ export default function TableGridItems({ item, gridIndex, id, setOrderDetails, o
                                                                     </option>
                                                                 )}
                                                             </select>
-                                                        </td>
+                                                        </td> */}
                                                         <td
                                                             className="w-10 border border-gray-300"
 

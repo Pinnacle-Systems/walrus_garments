@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { useAddCountsMasterMutation, useDeleteCountsMasterMutation, useGetCountsMasterByIdQuery, useGetCountsMasterQuery, useUpdateCountsMasterMutation } from '../../redux/uniformService/CountsMasterServices';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
-import { ReusableTable, TextArea, TextInput, ToggleButton } from '../../Inputs';
+import { ReusableTable, TextArea, TextInput, TextInputNew, TextInputNew1, ToggleButton } from '../../Inputs';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
@@ -70,7 +70,8 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, termsAndCondition, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, termsAndCondition, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
+        name
     }
 
     const validateData = (data) => {
@@ -88,7 +89,7 @@ export default function Form() {
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-            
+
             });
             setForm(false);
 
@@ -103,7 +104,7 @@ export default function Form() {
             //     position: "top-center",
             // });
             Swal.fire({
-                title:  "Please fill all required fields...!",
+                title: "Please fill all required fields...!",
                 icon: "success",
 
             });
@@ -149,6 +150,8 @@ export default function Form() {
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {
             event.preventDefault();
             saveData();
+        }else{
+            
         }
     };
 
@@ -216,7 +219,9 @@ export default function Form() {
     };
     return (
 
-        <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
+        <div 
+        // onKeyDown={handleKeyDown}
+         className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Terms & Conditions Master</h5>
                 <div className="flex items-center">
@@ -248,7 +253,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[40%] h-[45%]"}
+                        widthClass={"w-[40%] h-[60%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -298,29 +303,29 @@ export default function Form() {
                             </div>
 
                             <div className="flex-1 overflow-auto p-3">
-                                <div className="grid grid-cols-1  gap-3  h-full">
-                                    <div className="lg:col-span- space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="space-y-4 ">
-                                                <fieldset className=' rounded mt-2'>
-                                                    <div className=''>
-                                                        {/* <div className='mb-3 w-[48%]'>
-                                                            <TextArea         inputClass="h-8" name="Terms & Conditions" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div> */}
-                                                        <div className='mt-3  flex gap-x-9 '>
-                                                            <label className='block text-xs font-bold text-gray-600 mt-3'>Terms And Condition :</label>
-                                                            <textarea className="w-64  h-10 overflow-auto focus:outline-none border border-gray-500 rounded p-2 text-xs"
-                                                                value={termsAndCondition}
-                                                                disabled={readOnly}
-                                                                onChange={(e) => setTermsAndCondition(e.target.value)}
-                                                            >
-                                                            </textarea>
-                                                        </div>
-                                                        <div className='mt-5'>
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                        </div>
-                                                    </div>
-                                                </fieldset>
+                                <div className="grid grid-cols-1   h-full">
+                                    <div className="lg:col-span-1 space-y-3">
+                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full grid grid-cols-2">
+
+
+                                            <div className="">
+                                                <TextInputNew1 name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+
+                                            </div>
+                                            <div className='  flex   col-span-2 flex-col'>
+                                                <label className='block text-xs font-bold text-gray-600 mt-3 mb-2'>Terms And Condition :</label>
+                                                <textarea className="w-96  h-28 overflow-auto  p-2 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm "
+                                                    value={termsAndCondition}
+                                                    disabled={readOnly}
+                                                    onChange={(e) => setTermsAndCondition(e.target.value)}
+                                                    // onChange={(e) => console.log( "termsand", e.target.value)}
+                                                >
+                                                </textarea>
+                                            </div>
+                                            <div className='mt-5'>
+                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                             </div>
                                         </div>
                                     </div>

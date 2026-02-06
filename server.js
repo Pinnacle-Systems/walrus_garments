@@ -227,7 +227,7 @@ const io = new Server(httpServer, {
 
 io.on("connection", socketMain);
 
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 9999;
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

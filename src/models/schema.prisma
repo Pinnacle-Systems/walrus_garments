@@ -3561,6 +3561,9 @@ model OrderDetails {
   stripesColorId                Int?
   stripeLines                   Int?
   nameAndLogo                   String?
+  packingCover                  String?
+  packingType                   String?
+  notes                         String?
   orderSizeDetails              orderSizeDetails[]
   orderYarnDetails              orderYarnDetails[]
   RequirementPlanningForm       RequirementPlanningForm[]
@@ -3602,6 +3605,8 @@ model orderSizeDetails {
   orderdetailsId  Int?
   Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
   uomId           Int?
+    YarnNeedle     YarnNeedle?   @relation(fields: [yarnKneedleId], references: [id])
+  yarnKneedleId  Int?
 }
 
 model orderYarnDetails {
@@ -3724,6 +3729,7 @@ model YarnNeedle {
   RequirementYarnDetails RequirementYarnDetails[]
   RaiseIndenetYarnItems  RaiseIndenetYarnItems[]
   MaterialIssueYarnItems MaterialIssueYarnItems[]
+  orderSizeDetails      orderSizeDetails[]
 }
 
 model PartyKYC {

@@ -344,19 +344,18 @@ const OrderItems = forwardRef(function OrderItems(
 
 
         />
-        {/* ))} */}
       </Modal>
 
-      <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[350px] overflow-auto">
+      <div className="border border-slate-200 p-2 px-2 bg-white rounded-md shadow-sm h-[350px] ">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
 
 
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="w-[96vw] h-[300px] overflow-x-auto overflow-y-auto ">
 
-          <table className="w-full  table-fixed">
+          <table className=" table-fixed w-[100vw]">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
                 <th
@@ -378,7 +377,7 @@ const OrderItems = forwardRef(function OrderItems(
                 </th>
                 <th
 
-                  className={`w-40 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-72 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Fiber Content
                 </th>
@@ -414,9 +413,27 @@ const OrderItems = forwardRef(function OrderItems(
                 </th>
                 <th
 
-                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                  className={`w-64 px-4 py-2 text-center font-medium text-[13px] `}
                 >
                   Name & Logo
+                </th>
+                <th
+
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Packing Cover
+                </th>
+                <th
+
+                  className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Packing Type
+                </th>
+                <th
+
+                  className={`w-72 px-4 py-2 text-center font-medium text-[13px] `}
+                >
+                  Notes
                 </th>
                 <th
 
@@ -441,7 +458,7 @@ const OrderItems = forwardRef(function OrderItems(
 
               </tr>
             </thead>
-            <tbody>
+            <tbody className='overflow-y-auto'>
               {(orderDetails ? orderDetails : []).map((item, index) => {
                 return (
                   <React.Fragment key={index}>
@@ -628,18 +645,60 @@ const OrderItems = forwardRef(function OrderItems(
                         </select>
                       </td>
                       <td className="py-0.5 border border-gray-300 text-[11px] ">
-                          <textarea
-                        type="text"
-                  
-                        min="0"
-                        rows={1}
-                        onFocus={e => e.target.select()}
-                        className="text-left rounded w-full py-1 text-xs "
-                        value={item.nameAndLogo}
-                        disabled={readOnly }
-                        onChange={e => handleInputChange(e.target.value, index, "nameAndLogo")}
-                        onBlur={e => handleInputChange(e.target.value, index, "nameAndLogo")}
-                      />
+                        <textarea
+                          type="text"
+
+                          min="0"
+                          rows={1}
+                          onFocus={e => e.target.select()}
+                          className="text-left rounded w-full py-1 text-xs "
+                          value={item.nameAndLogo}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "nameAndLogo")}
+                          onBlur={e => handleInputChange(e.target.value, index, "nameAndLogo")}
+                        />
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <select
+                          className="text-left rounded w-full py-1 text-xs "
+
+                          value={item.packingCover}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "packingCover")}
+                          onBlur={e => handleInputChange(e.target.value, index, "packingCover")}
+                        >
+                          <option value=''>Select Status</option>
+                          <option value='printed'>PRINTED</option>
+                          <option value='plain'>PLAIN</option>
+                        </select>
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px]">
+                        <input
+                          type="text"
+
+                          min="0"
+                          rows={1}
+                          onFocus={e => e.target.select()}
+                          className="text-left rounded w-full py-1 text-xs "
+                          value={item.packingType}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "packingType")}
+                          onBlur={e => handleInputChange(e.target.value, index, "packingType")}
+                        />
+                      </td>
+                      <td className="py-0.5 border border-gray-300 text-[11px] ">
+                        <textarea
+                          type="text"
+
+                          min="0"
+                          rows={1}
+                          onFocus={e => e.target.select()}
+                          className="text-left rounded w-full py-1 text-xs "
+                          value={item.notes}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "notes")}
+                          onBlur={e => handleInputChange(e.target.value, index, "notes")}
+                        />
                       </td>
                       <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-center'>
                         <button
@@ -704,6 +763,7 @@ const OrderItems = forwardRef(function OrderItems(
                       contextSubGridMenu={contextSubGridMenu}
                       setContextSubGridMenu={setContextSubGridMenu}
                       handleRightSubGridClick={handleRightSubGridClick}
+                      yarnNeedleList={yarnNeedleList}
                     />
 
                   </React.Fragment>
@@ -715,7 +775,7 @@ const OrderItems = forwardRef(function OrderItems(
             </tbody>
           </table>
         </div>
-      </div>{console.log(contextMenu, "contextMenu")}
+      </div>
       {contextMenu && (
         <div
           style={{

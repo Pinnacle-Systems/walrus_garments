@@ -9,7 +9,7 @@ import {
   useUpdateCountryMutation,
 } from "../../../redux/services/CountryMasterService";
 
-import { TextInput, ToggleButton, ReusableTable } from "../../../Inputs";
+import { TextInput, ToggleButton, ReusableTable, TextInputNew, TextInputNew1 } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Modal from "../../../UiComponents/Modal";
 
@@ -242,9 +242,9 @@ export default function Form() {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-16",  
+      className: "font-medium text-gray-900 text-center uppercase w-16",
     },
- 
+
 
 
   ];
@@ -252,6 +252,14 @@ export default function Form() {
     setId(id);
     setForm(true);
   }
+
+  const countryNameRef = useRef(null);
+
+  useEffect(() => {
+    if (form && countryNameRef.current) {
+      countryNameRef.current.focus();
+    }
+  }, [form]);
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
@@ -343,17 +351,19 @@ export default function Form() {
                         <div className="p-2">
                           <div className="flex">
                             <div className="mb-3 w-[60%]">
-                              <TextInput
+                              <TextInputNew1
                                 name="Country Name"
                                 type="text"
                                 value={name}
                                 setValue={setName}
                                 required={true}
                                 readOnly={readOnly}
+                                ref={countryNameRef}
+
                               />
                             </div>
                             <div className="mb-3 ml-5 ">
-                              <TextInput
+                              <TextInputNew1
                                 name="Code"
                                 type="text"
                                 value={code}

@@ -323,8 +323,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const saveData = (nextProcess) => {
         let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
 
-        let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty"];
-        let yarnmandatoryFields = ["colorId", "yarnId", "yarnKneedleId"];
+        let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty","yarnKneedleId"];
+        let yarnmandatoryFields = ["colorId", "yarnId",];
 
 
         let sizeAray = data?.orderDetails?.flatMap(item => item?.orderSizeDetails || []);
@@ -469,7 +469,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                     editingItem={editingItem} onCloseForm={() => { setOpenModelForAddress(false); setShowAddressPopup(true) }} />
             </Modal>
 
-            <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
+            <div className=" bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto ">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Order Information</h1>
                     <div className="gpa-4">
@@ -491,7 +491,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                 </div>
 
-                <div className="space-y-3 h-full ">
+                <div className=" space-y-3 h-full ">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 

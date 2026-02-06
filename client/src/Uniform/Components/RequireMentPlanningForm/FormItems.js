@@ -20,8 +20,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     console.log(accessoryStock, "accessoryStock")
 
 
-
-
+    const [wastagePercentage, setWasterPercentage] = useState("")
 
 
     console.log(orderYarnDetails, "orderYarnDetails")
@@ -338,7 +337,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
             newItems.forEach((item) => {
                 if (item.yarnId == yarnId && item?.colorId == colorId) {
                     item.requireWeight = Number(
-                        ((parseFloat(item.weight) * num) / 100).toFixed(3)
+                        ((parseFloat(item.weight) * num) / 100).toFixed(4)
                     );
                     item[field] = value
                 }
@@ -356,9 +355,13 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
         setRequirementForm((prev) => {
             const newItems = structuredClone(prev);
             const percent = value === "" ? 0 : parseFloat(value);
+            console.log(newItems
+                .filter(
+                    i => i.yarnId === yarnId && i.colorId === colorId
+                ), "arry foir test");
             newItems.forEach((item) => {
                 if (item.yarnId === yarnId && item?.colorId == colorId) {
-                    item.requireWeight = parseFloat(((parseFloat(item.weight) * percent) / 100).toFixed(5));
+                    item.requireWeight = parseFloat(((item.weight) * percent) / 100).toFixed(5);
                 }
             });
             return newItems;
@@ -419,49 +422,55 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     };
 
 
-    const getRequireWeight = (yarnId, colorId) => {
-        if (!Array.isArray(requirementForm)) return "0.000";
+    // const getRequireWeight = (yarnId, colorId) => {
+    //     if (!Array.isArray(requirementForm)) return "0.000";
 
-        const total = requirementForm
-            .filter(
-                i => i.yarnId === yarnId && i.colorId === colorId
-            )
-            .reduce((sum, item) => {
-                const sizeData = orderSizeDetails?.find(
-                    s => s.sizeId === item.sizeId
-                );
+    //     const total = requirementForm
+    //         .filter(
+    //             i => i.yarnId === yarnId && i.colorId === colorId
+    //         )
+    //         .reduce((sum, item) => {
+    //             const sizeData = orderSizeDetails?.find(
+    //                 s => s.sizeId === item.sizeId
+    //             );
 
-                const sizeQty = Number(sizeData?.qty || 0);
-                const wastage = parseFloat(sizeData?.wastagePercentage || 0);
-                const requireWeight = parseFloat(item?.requireWeight || 0);
 
-                const base = requireWeight * sizeQty;
-                const wasteWeight = ((requireWeight * wastage) / 100) * 100
 
-                console.log({
-                    requireWeight, wastage, wasteWeight
-                })
 
-                // wastage weight
-                const wastageWeight = (base * wastage) / 100;
+    //             const sizeQty = Number(sizeData?.qty || 0);
+    //             const wastage = parseFloat(sizeData?.wastagePercentage || 0);
+    //             const requireWeight = parseFloat(item?.requireWeight || 0);
 
-                // process loss percentage
-                const totalLossPercentage = (item?.RequirementYarnProcessList || [])
-                    .reduce(
-                        (acc, process) => acc + Number(process?.lossPercentage || 0),
-                        0
-                    );
+    //             const base = requireWeight * sizeQty;
+    //             const wasteWeight = ((requireWeight * wastage) / 100) * 100
 
-                const processLossWeight = (base * totalLossPercentage) / 100;
 
-                const withLoss = base + wastageWeight + processLossWeight;
 
-                return sum + withLoss;
-            }, 0);
+    //             // wastage weight
+    //             const wastageWeight = (base * wastage) / 100;
 
-        return total.toFixed(3);
-    };
+    //             // process loss percentage
+    //             const totalLossPercentage = (item?.RequirementYarnProcessList || [])
+    //                 .reduce(
+    //                     (acc, process) => acc + Number(process?.lossPercentage || 0),
+    //                     0
+    //                 );
 
+    //             const processLossWeight = (base * totalLossPercentage) / 100;
+
+    //             const withLoss = base + wastageWeight + processLossWeight;
+
+    //             return sum + withLoss;
+    //         }, 0);
+
+    //     return total.toFixed(5);
+    // };
+
+
+
+
+
+    //   old
     // const getRequireWeight = (yarnId, colorId) => {
     //     return requirementForm?.filter(i => i.yarnId == yarnId && i.colorId == colorId)?.reduce((total, item) => {
     //         if (item.yarnId !== yarnId) return total;
@@ -485,6 +494,27 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
     //         return total + withLoss;
     //     }, 0).toFixed(3);
     // };
+
+
+
+
+
+    const getRequireWeight = (yarnId, colorId, percentage) => {
+        if (!Array.isArray(orderSizeDetails) || !percentage) return "0.000";
+
+        const total = orderSizeDetails.reduce((sum, size) => {
+            const weight = Number(size.weight) || 0;
+            const qty = Number(size.qty) || 0;
+            const pct = Number(percentage) || 0;
+
+            const requiredQty = (pct * weight / 100) * qty;
+            return sum + requiredQty;
+        }, 0);
+
+        console.log(total, "total")
+
+        return total.toFixed(3);
+    };
 
 
     useEffect(() => {
@@ -573,48 +603,96 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
 
 
 
-    const getRequireWeightNew = (yarnId, colorId, sizeId) => {
-        if (!Array.isArray(requirementForm)) return "0.000";
+    // const getRequireWeightNew = (yarnId, colorId, sizeId) => {
+    //     if (!Array.isArray(requirementForm)) return "0.000";
 
-        const total = requirementForm
-            .filter(
-                i => i.yarnId === yarnId && i.colorId === colorId && i.sizeId == sizeId
-            )
-            .reduce((sum, item) => {
-                const sizeData = orderSizeDetails?.find(
-                    s => s.sizeId === item.sizeId
-                );
+    //     const total = requirementForm
+    //         .filter(
+    //             i => i.yarnId === yarnId && i.colorId === colorId
+    //         )
+    //         .reduce((sum, item) => {
+    //             const sizeData = orderSizeDetails?.find(
+    //                 s => s.sizeId === item.sizeId
+    //             );
 
-                const sizeQty = Number(sizeData?.qty || 0);
-                const wastage = parseFloat(sizeData?.wastagePercentage || 0);
-                const requireWeight = parseFloat(item?.requireWeight || 0);
+    //             console.log("filter for ", requirementForm
+    //         .filter(
+    //             i => i.yarnId === yarnId && i.colorId === colorId
+    //         ))
 
-                const base = requireWeight * sizeQty;
-                const wasteWeight = ((sizeData?.weight * wastage) / 100)
 
-                console.log({
-                    requireWeight, base, wasteWeight
-                })
+    //             const sizeQty = Number(sizeData?.qty || 0);
+    //             const wastage = parseFloat(sizeData?.wastagePercentage || 0);
+    //             const requireWeight = parseFloat(item?.requireWeight || 0);
 
-                // wastage weight
-                const wastageWeight = (sizeQty * wasteWeight)
+    //             const base = requireWeight * sizeQty;
+    //             const wasteWeight = ((sizeData?.weight * wastage) / 100)
 
-                // process loss percentage
-                const totalLossPercentage = (item?.RequirementYarnProcessList || [])
-                    .reduce(
-                        (acc, process) => acc + Number(process?.lossPercentage || 0),
-                        0
-                    );
+    //             console.log({
+    //                 requireWeight, base, wasteWeight
+    //             })
 
-                const processLossWeight = (base * totalLossPercentage) / 100;
+    //             // wastage weight
+    //             const wastageWeight = (sizeQty * wasteWeight)
 
-                const withLoss = base + wastageWeight + processLossWeight;
+    //             // process loss percentage
+    //             const totalLossPercentage = (item?.RequirementYarnProcessList || [])
+    //                 .reduce(
+    //                     (acc, process) => acc + Number(process?.lossPercentage || 0),
+    //                     0
+    //                 );
 
-                return sum + withLoss;
-            }, 0);
+    //             const processLossWeight = (base * totalLossPercentage) / 100;
 
-        return total.toFixed(3);
+    //             const withLoss = base + wastageWeight + processLossWeight;
+
+    //             return sum + withLoss;
+    //         }, 0);
+
+    //     return total.toFixed(3);
+    // };
+
+    const getRequireWeightNew = (yarnId, colorId, sizeId, index) => {
+
+
+        if (!Array.isArray(requirementForm) || !Array.isArray(orderSizeDetails)) {
+            return "0.000";
+        }
+
+        // 🔹 size comes from size array index
+        const sizeData = orderSizeDetails[index];
+        if (!sizeData || sizeData.sizeId !== sizeId) return "0.000";
+
+        // 🔹 take ONLY one matching item from requirementForm
+        const item = requirementForm.find(
+            i =>
+                i.yarnId === yarnId &&
+                i.colorId === colorId &&
+                i.sizeId === sizeId
+        );
+
+        if (!item) return "0.000";
+
+        const sizeQty = Number(sizeData.qty || 0);
+        const wastage = parseFloat(sizeData.wastagePercentage || 0);
+        const requireWeight = parseFloat(item.requireWeight || 0);
+
+        const base = requireWeight * sizeQty;
+
+        const wasteWeight = ((Number(sizeData.weight || 0) * wastage) / 100);
+        const wastageWeight = sizeQty * wasteWeight;
+
+        // 🔹 process loss %
+        const totalLossPercentage = (item.RequirementYarnProcessList || [])
+            .reduce((acc, p) => acc + Number(p?.lossPercentage || 0), 0);
+
+        const processLossWeight = (base * totalLossPercentage) / 100;
+
+        const total = base + wastageWeight + processLossWeight;
+
+        return (total || 0).toFixed(4);
     };
+
 
 
     return (
@@ -961,7 +1039,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                         <th className="border border-gray-300 px-2 py-1 text-center text-xs w-24">Sizes </th>
                                         <th className="border border-gray-300 px-2 py-1 text-center text-xs w-20    ">Weight </th>
                                         <th className="border border-gray-300 px-2 py-1 text-center text-xs w-20">Order Qty</th>
-                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Waste % </th>
+                                        {/* <th className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Waste % </th> */}
 
                                         {orderYarnDetails?.map((item, index) => {
                                             return (
@@ -973,60 +1051,93 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                 </th>
                                             )
                                         })}
+                                        <th className="border border-gray-300 px-2 py-1 text-center text-xs w-16">Waste % </th>
+
 
                                     </tr>
                                     <tr>
-                                        <td colspan={5}>
+                                        <td colspan={4}>
 
                                         </td>
                                         {orderYarnDetails?.map((yarn, index) => (
 
-                                            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs w-60">
-                                                <input
-                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    onFocus={e => e.target.select()}
-                                                    value={yarn?.percentage}
+                                            <>
+
+                                                <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs w-60">
+                                                    <input
+                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        onFocus={e => e.target.select()}
+                                                        value={yarn?.percentage}
 
 
 
 
-                                                    disabled={readOnly}
-                                                    onKeyDown={(e) => {
-                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                    }}
-                                                    onChange={(e) => {
-                                                        const val = parseFloat(e.target.value).toFixed(2);
+                                                        disabled={readOnly}
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onChange={(e) => {
+                                                            const val = parseFloat(e.target.value).toFixed(2);
 
-                                                        handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+                                                            handleInputChange(val, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
 
 
-                                                    }}
-                                                    onBlur={(e) => {
-                                                        const formatted =
-                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(2);
-                                                        e.target.value = formatted;
-                                                        handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
-                                                    }}
-                                                    placeHolder="0.000"
-                                                />
-                                            </td>
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            const formatted =
+                                                                e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(2);
+                                                            e.target.value = formatted;
+                                                            handleInputChange(formatted, index, yarn?.yarnId, "percentage", null, yarn?.colrId);
+                                                        }}
+                                                        placeHolder="0.000"
+                                                    />
+                                                </td>
+
+                                            </>
+
+
+
                                         ))}
+
+                                        <td className="border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs w-24">
+                                            <input
+                                                className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={((wastagePercentage))}
+                                                onFocus={e => e.target.select()}
+                                                onKeyDown={(e) => {
+                                                    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                }}
+
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setWasterPercentage(val)
+                                                    // sizeHandleInputChange(val, index, "wastagePercentage");
+                                                }}
+                                                placeHolder="0.00"
+
+                                            // onBlur={(e) => {
+                                            //     const formatted =
+                                            //         e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(2);
+                                            //     e.target.value = formatted;
+                                            //     sizeHandleInputChange(formatted, index, "wastagePercentage");
+                                            // }}
+                                            />
+                                        </td>
+
+
                                     </tr>
                                     {orderSizeDetails?.map((item, index) => (
                                         <tr
                                             key={index}
                                             className="border border-gray-300 px-2 py-1 text-center text-xs"
                                         >
-                                            {/* <td
-                                                className="border border-gray-300 px-2 py-2 text-center"
-                                            >
-                                                <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, orderYarnDetails ? orderYarnDetails : [])}
-                                                    checked={getSelectAll(orderYarnDetails ? orderYarnDetails : [])}
-                                                />
-                                            </td> */}
+
                                             <td
                                                 className="border border-gray-300 px-2 py-2 text-center"
                                             >
@@ -1048,7 +1159,7 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                             >
                                                 {parseFloat(item?.qty).toFixed(2)}
                                             </td>
-                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
+                                            {/* <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
                                                 <input
                                                     className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                                     type="number"
@@ -1074,81 +1185,36 @@ const FormItems = ({ orderSizeDetails, orderYarnDetails, setRequirementForm, req
                                                         sizeHandleInputChange(formatted, index, "wastagePercentage");
                                                     }}
                                                 />
-                                            </td>
+                                            </td> */}
                                             {orderYarnDetails?.map((yarn, i) => (
                                                 <td
                                                     key={i}
                                                     className="border border-gray-300 px-2 py-2 text-right"
                                                 >
-                                                    {getRequireWeightNew(yarn?.yarnId, yarn?.colorId, item?.sizeId)}
+                                                    {getRequireWeightNew(yarn?.yarnId, yarn?.colorId, item.sizeId, index) || 0}
                                                 </td>
                                             ))}
+                                            <td className="border border-gray-300 px-2 py-2 text-right">
+                                                {parseFloat(((item?.weight * wastagePercentage) / 100) * item.qty).toFixed(4)}
+                                            </td>
+
                                         </tr>
                                     ))}
                                     <tr>
-                                        <td colspan={5} className="px-2 py-1 text-right text-[12px] font-bold">
+                                        <td colspan={4} className="px-2 py-1 text-right text-[12px] font-bold">
                                             Total Required Qty
                                         </td>
                                         {orderYarnDetails?.map((yarn, index) => (
 
-                                            <td className="border border-gray-300 px-2 py-2 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId)}</td>
-
-                                        ))}
-                                    </tr>
-                                    {/*
-                                    <tr className="bg-white">
-
-                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
-                                            Order Qty (Pair)
-                                        </td>
-                                        {orderSizeDetails?.map((item, index) => (
-                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                                {item?.qty?.toFixed(3)}
+                                            <td className="border border-gray-300 px-2 py-2 text-right text-[12px] font-bold"> {getRequireWeight(yarn?.yarnId, yarn?.colorId, yarn?.percentage)}
                                             </td>
-                                        ))}
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
 
+                                        ))}
+                                        <td className="border border-gray-300 px-2 py-2 text-right">
+                                            {/* {parseFloat(((item?.weight * wastagePercentage) / 100) * item.qty).toFixed(4)} */}
+                                        </td>   
                                     </tr>
-                                    <tr className="bg-white">
-                                        <td className="border border-gray-300 px-2 py-1 text-left  text-xs  w-28 bg-gray-200">
-                                            waste %
-                                        </td>
 
-
-                                        {orderSizeDetails?.map((item, index) => (
-                                            <td key={index} className="border border-gray-300 px-2 py-1 text-[11px] text-right text-xs">
-                                                <input
-                                                    className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={(item?.wastagePercentage ?? 1?.toFixed(3))}
-                                                    onFocus={e => e.target.select()}
-                                                    onKeyDown={(e) => {
-                                                        if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                    }}
-
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-
-                                                        sizeHandleInputChange(val, index, "wastagePercentage");
-                                                    }}
-                                                    placeHolder="0.00"
-
-                                                    // disabled={readOnly || !item?.percentage}
-                                                    onBlur={(e) => {
-                                                        const formatted =
-                                                            e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
-                                                        e.target.value = formatted;
-                                                        sizeHandleInputChange(formatted, index, "wastagePercentage");
-                                                    }}
-                                                />
-                                            </td>
-                                        ))}
-                                        <td className="border border-gray-300 px-2 py-1 text-left text-[11px] "></td>
-
-
-                                    </tr> */}
 
                                 </thead>
 
