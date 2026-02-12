@@ -35,8 +35,8 @@ const YarnPoItems = ({
     yarnList,
     uomList,
     colorList,
-    countsList,
-
+    totals,
+    isOpen
 }) => {
 
     const { data: excessToleranceData } = useGetExcessToleranceItemsQuery({ params });
@@ -63,12 +63,28 @@ const YarnPoItems = ({
         )
     }, [setPoItems, poItems])
 
-    console.log(poMaterial, "poMaterial")
+
+        useEffect(() => {
+        if (poItems?.length >= 8) return
+        setPoItems(prev => {
+            let newArray = Array?.from({ length: 8 - prev?.length }, () => {
+                return {
+                    yarnId: "",
+                    colorId: "",
+                    uomId: "",
+                    discountValue: "0.00",
+
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [isOpen])
 
 
     const handleInputChange = (value, index, field, requiredQty, balanceQty, weightPerBag) => {
 
-        console.log(balanceQty, "balanceQty")
 
         const newBlend = structuredClone(poItems);
 
@@ -238,30 +254,11 @@ const YarnPoItems = ({
 
 
 
-    console.log("poItems", poItems)
 
 
-    const addNewRow = () => {
-        const newRow = {
-            yarnId: "",
-            qty: "0",
-            tax: "0",
-            colorId: "",
-            uomId: "",
-            price: "0",
-            discountValue: "0.00",
-            noOfBags: 0,
-            weightPerBag: 0,
-        };
-        setPoItems([...poItems, newRow]);
-    };
 
 
-    const deleteRow = (id) => {
-        setPoItems((yarnBlend) =>
-            yarnBlend.filter((row, index) => index !== parseInt(id))
-        );
-    };
+
 
 
     const handleDeleteRow = (id) => {
@@ -307,12 +304,14 @@ const YarnPoItems = ({
     return (
         <>
             <Modal isOpen={Number.isInteger(currentSelectedIndex)} onClose={() => setCurrentSelectedIndex("")}>
-                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside} hsnData={hsnData?.data}
+                <TaxDetailsFullTemplate readOnly={readOnly} setCurrentSelectedIndex={setCurrentSelectedIndex} taxTypeId={taxTypeId} currentIndex={currentSelectedIndex} poItems={poItems} handleInputChange={handleInputChange} isSupplierOutside={isSupplierOutside} hsnData={hsnData?.data} totals={totals}
                 />
             </Modal>
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
-                <div className="flex justify-between items-center mb-2">
+            <div
+                className={`border border-slate-200 p-2 bg-white rounded-md shadow-sm ${isOpen ? "h-[200px]" : "h-[350px]"
+                    } flex flex-col`}
+            >                <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <button className="font-bold text-slate-700 bord"
                         onKeyDown={(e) => {
@@ -342,9 +341,9 @@ const YarnPoItems = ({
                 </div>
 
 
-                <div className={` relative w-full overflow-y-auto py-1`}>
+                <div className={` relative w-full overflow-y-auto py-1 `}>
                     <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-900">
+                        <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -390,7 +389,7 @@ const YarnPoItems = ({
                                 >
                                     Balance Purchase Qty  (kgs)
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -401,7 +400,7 @@ const YarnPoItems = ({
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     No of Bags
-                                </th>
+                                </th> */}
 
                                 <th
 
@@ -449,10 +448,10 @@ const YarnPoItems = ({
                                     }}
                                 >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                    <td className="py-0.5 border border-gray-300 text-[11px] td-outline-focus">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
-                                            tabIndex={"0"} disabled={readOnly || transType == "Order Purchase" || !transType} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly  || !transType || row.alreadyInwardedQty > 0 || row?.cancelQty > 0} className='text-left w-full rounded py-1 focus'
                                             value={row.yarnId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
                                             onBlur={(e) => {
@@ -463,17 +462,17 @@ const YarnPoItems = ({
                                         >
                                             <option >
                                             </option>
-                                            {(id ? yarnList?.data : yarnList?.data?.filter(item => item?.active))?.map((blend) =>
+                                            {(id ? yarnList?.data : yarnList?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
                                         </select>
                                     </td>
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                    <td className="py-0.5 border border-gray-300 text-[11px] td-outline-focus">
                                         {findFromList(row?.hsnId, hsnData?.data, "name")}
                                     </td>
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                    <td className="py-0.5 border border-gray-300 text-[11px] td-outline-focus">
 
                                         <select
                                             onKeyDown={e => {
@@ -481,13 +480,13 @@ const YarnPoItems = ({
                                                     handleInputChange("", index, "colorId")
                                                 }
                                             }}
-                                            disabled={readOnly || transType == "Order Purchase" || !transType || !row?.yarnId}
-                                            className="text-left w-full rounded py-1 table-data-input"
+                                            disabled={readOnly || transType == "Order Purchase" || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0}
+                                            className="text-left w-full rounded py-1 "
                                             value={row.colorId}
                                             onChange={e => handleInputChange(e.target.value, index, "colorId")}
                                             onBlur={e => handleInputChange(e.target.value, index, "colorId")}
                                         >
-                                            <option hidden></option>
+                                            <option ></option>
                                             {(id ? colorList?.data : colorList?.data.filter(item => item.active))?.map(blend => (
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
@@ -502,17 +501,17 @@ const YarnPoItems = ({
 
 
 
-                                    <td className="w-12 border border-gray-300 text-[11px] py-0.5">
+                                    <td className="w-12 border border-gray-300 text-[11px] py-0.5 td-outline-focus">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            disabled={readOnly || !transType || !row?.yarnId} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                            disabled={readOnly || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0} className='text-left w-full rounded py-1 ' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
                                             }
                                         >
 
-                                            <option hidden>
+                                            <option >
                                             </option>
                                             {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
@@ -525,26 +524,26 @@ const YarnPoItems = ({
 
 
 
-                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2">
+                                    <td className="w-48 border border-gray-300 text-[11px] text-right py-1.5 px-2 td-outline-focus">
                                         {(row.requiredQty || 0.000)?.toFixed(3)}
                                     </td>
 
 
 
-                                    <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2">
-                                        {row?.balanceQty
-                                            ? parseFloat(row.balanceQty).toFixed(3)
-                                            : 0.000}                                    </td>
+                                    <td className="border border-gray-300 text-[11px] text-right py-1.5 px-2 td-outline-focus">
+                                        {(row?.balanceQty
+                                            ? parseFloat(row.balanceQty)
+                                            : 0.000).toFixed(3)}                                    </td>
 
-
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+{/* 
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs td-outline-focus">
                                         <input
-                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right td-outline-focus"
                                             type="number"
                                             value={row?.weightPerBag}
                                             onFocus={e => e.target.select()}
                                             placeHolder="0.000"
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0}
                                             onChange={(e) => {
 
                                                 handleInputChange(e.target.value, index, "weightPerBag");
@@ -560,14 +559,14 @@ const YarnPoItems = ({
 
                                         />
                                     </td>
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs td-outline-focus">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
                                             value={row?.noOfBags}
                                             onFocus={e => e.target.select()}
                                             placeHolder="0.000"
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0}
                                             onChange={(e) => {
                                                 const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
 
@@ -584,9 +583,9 @@ const YarnPoItems = ({
 
 
                                         />
-                                    </td>
+                                    </td> */}
 
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs td-outline-focus">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
@@ -600,7 +599,7 @@ const YarnPoItems = ({
 
 
 
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0}
                                             onChange={(e) => {
                                                 const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
 
@@ -609,7 +608,7 @@ const YarnPoItems = ({
 
                                             }}
                                             onBlur={(e) => {
-                                                const balanceQty = Math.max(0, (parseFloat(row?.requiredQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
+                                                const balanceQty = Math.max(0, (parseFloat(row?.alreadyInwardedQty) || 0) - (parseFloat(row?.alreadyPoqty) || 0));
                                                 const val = e.target.value;
                                                 const formatted = e.target.value === "" ? "" : parseFloat(e.target.value).toFixed(3);
                                                 e.target.value = formatted;
@@ -619,7 +618,7 @@ const YarnPoItems = ({
                                         />
                                     </td>
 
-                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+                                    <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs td-outline-focus">
                                         <input
                                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                             type="number"
@@ -635,7 +634,7 @@ const YarnPoItems = ({
 
                                             placeHolder="0.000"
 
-                                            disabled={readOnly || !transType || !row?.yarnId}
+                                            disabled={readOnly || !transType || !row?.yarnId || row.alreadyInwardedQty > 0 || row?.cancelQty > 0}
                                             onChange={(e) => {
                                                 const numVal = parseFloat(e.target.value) || 0;
 
@@ -652,7 +651,7 @@ const YarnPoItems = ({
 
                                         />
                                     </td>
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right td-outline-focus">
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
@@ -666,7 +665,7 @@ const YarnPoItems = ({
                                             disabled={true}
                                         />
                                     </td>
-                                    <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right'>
+                                    <td className='w-40 py-0.5 border border-gray-300 text-[11px] text-right td-outline-focus'>
                                         <button
                                             className="text-center rounded py-1 w-20"
                                             onKeyDown={(e) => {
@@ -697,25 +696,7 @@ const YarnPoItems = ({
                                     </td>
 
 
-                                    {/* <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
-                                        <input
-                                            readOnly
-                                            className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                                            // onKeyDown={(e) => {
-                                            //     if (e.key === "Enter") {
-                                            //         e.preventDefault();
-                                            //         addNewRow();
-                                            //     }
-                                            // }}
-                                            onContextMenu={(e) => {
-                                                if (!readOnly) {
-                                                    handleRightClick(e, index, "shiftTimeHrs");
-                                                }
-                                            }}
-                                        />
 
-
-                                    </td> */}
 
 
                                 </tr>

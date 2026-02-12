@@ -37,7 +37,6 @@ import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices"
 export default function Form() {
 
   const today = new Date()
-  const componentRef = useRef();
 
   const [readOnly, setReadOnly] = useState(false);
   const [docId, setDocId] = useState("new")
@@ -106,66 +105,17 @@ export default function Form() {
   const { data: allData, isLoading, isFetching, refetch } = useGetPoQuery({ params, searchParams: searchValue });
 
 
-  // const getNextDocId = useCallback(() => {
-  //   if (id || isLoading || isFetching) return
-  //   if (allData?.nextDocId) {
-  //     setDocId(allData.nextDocId)
-  //   }
-  // }, [allData, isLoading, isFetching, id])
 
-  // useEffect(getNextDocId, [getNextDocId])
 
-  const {
-    data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetPoByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddPoMutation();
-  const [updateData] = useUpdatePoMutation();
   const [removeData] = useDeletePoMutation();
 
-  const syncFormWithDb = useCallback((data) => {
-    if (id) {
-      setReadOnly(true);
-    } else {
-      setReadOnly(false);
-    }
-
-    setTransType(data?.transType ? data.transType : "GreyYarn");
-    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"));
-
-    setPoItems(data?.PoItems ? data?.PoItems : [])
-    if (data?.docId) {
-      setDocId(data?.docId)
-    }
-    if (data?.date) setDate(data?.date);
-
-    setPayTermId(data?.payTermId ? data?.payTermId : "");
-    setDiscountType(data?.discountType ? data?.discountType : "Percentage")
-    setDiscountValue(data?.discountValue ? data?.discountValue : "0")
-    setSupplierId(data?.supplierId ? data?.supplierId : "");
-    setDueDate(data?.dueDate ? moment.utc(data?.dueDate).format("YYYY-MM-DD") : "");
-    setDeliveryType(data?.deliveryType ? data?.deliveryType : "")
-    if (data) {
-      setDeliveryToId(data?.deliveryType === "ToSelf" ? data?.deliveryBranchId : data?.deliveryPartyId)
-    } else {
-      setDeliveryToId("")
-    }
-    setRemarks(data?.remarks ? data.remarks : "")
-
-  }, [id]);
 
 
 
 
-  useEffect(() => {
-    if (id) {
-      syncFormWithDb(singleData?.data);
-    } else {
-      syncFormWithDb(undefined);
-    }
-  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+
 
   const data = {
     transType, supplierId, dueDate, payTermId,
@@ -181,88 +131,13 @@ export default function Form() {
 
 
 
-  const validateData = (data) => {
-    let mandatoryFields = ["uomId", "colorId", "qty", "price"];
-    if (transType === "GreyYarn" || transType === "DyedYarn") {
-      mandatoryFields = [...mandatoryFields, ...["yarnId", "noOfBags"]]
-    } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-      mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-    }
-    return data.supplierId && data.dueDate && data.payTermId
-      && isGridDatasValid(data.poItems, false, mandatoryFields) && data.poItems.length !== 0
-  }
-
-  const handleSubmitCustom = async (callback, data, text) => {
-    try {
-      let returnData;
-      if (text === "Updated") {
-        returnData = await callback(data).unwrap();
-      } else {
-        returnData = await callback(data).unwrap();
-      }
-
-      if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
-        return
-      }
-      setId("")
-      syncFormWithDb(undefined)
-      toast.success(text + "Successfully");
-    } catch (error) {
-      console.log("handle");
-    }
-  };
-
-
-  const saveData = () => {
-
-    if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
-    } else {
-      handleSubmitCustom(addData, data, "Added");
-    }
-  }
-
-
-  const handleKeyDown = (event) => {
-    let charCode = String.fromCharCode(event.which).toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-      event.preventDefault();
-      saveData();
-    }
-  };
 
 
 
-  // useEffect(() => {
-  //   if (id) return
-  //   setPoItems([]);
-  //   setSupplierId("")
-  // }, [transType, id])
 
-  // const allSuppliers = supplierList ? supplierList?.data : []
-  // console.log(allSuppliers, "allSuppliers")
-  // function filterSupplier() {
-  //   let finalSupplier = []
-  //   if (transType.toLowerCase().includes("GreyYarn".toLowerCase())) {
-  //     finalSupplier = allSuppliers.filter(s => s.isGy)
-  //   } else if (transType.toLowerCase().includes("DyedYarn".toLowerCase())) {
-  //     finalSupplier = allSuppliers.filter(s => s.isDy)
-  //   } else {
-  //     finalSupplier = allSuppliers.filter(s => s.isAcc)
-  //   }
-  //   return finalSupplier
-  // }
-  // const clientDetail = ((allSuppliers || []).filter(val => val.isClient === true));
-  // console.log(clientDetail, "clientDetail")
 
-  // let supplierListBasedOnSupply = filterSupplier()
-  // transType.toLowerCase().includes("greyyarn".toLowerCase())
-  // console.log(supplierListBasedOnSupply, "supplierListBasedOnSupply")
-  // console.log(supplierId, "supplierId")
-  // const payTermDay = supplierListBasedOnSupply?.find(item => item.id === Number(supplierId))?.payTermDay ?? 0;
 
-  // console.log(payTermDay, "payTermDay from supplierListBasedOnSupply");
+
 
 
 

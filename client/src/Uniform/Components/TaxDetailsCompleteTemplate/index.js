@@ -7,85 +7,31 @@ import { useGetTaxTemplateByIdQuery } from '../../../redux/services/TaxTemplateS
 import { useGetTaxTermMasterQuery } from '../../../redux/services/TaxTermMasterServices';
 
 
-const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId  , hsnData }) => {
-    const substract = s
-    const [formulas, setFormulas] = useState([])
-    console.log(poItems,"poItems")
+const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelectedIndex, readOnly, handleInputChange, isSupplierOutside, taxTypeId, hsnData, totals }) => {
+ 
+    // console.log(poItems, "poItems")
 
-    const { data, isLoading, isFetching } = useGetTaxTemplateByIdQuery(taxTypeId, { skip: !taxTypeId })
-
-    const { data: taxTermMaster, isLoading: isTemplateTermLoading, isFetching: isTemplateTermFetching } = useGetTaxTermMasterQuery(taxTypeId)
-
-    function getFormula(constant) {
-        // console.log(constant, "constant")
-
-        const split = constant.split("_");
-        let name = split[0];
-        let value = split[1];
-        let formula = formulas.find(f => f.name === name)
-        return formula ? formula[value.toLowerCase()] : ""
-    }
-
-    function getRegex(formula) {
-        let input = formula;
-        const words = formula.match(/\{(.*?)\}/g)
-        if (!words) return formula
-        words.forEach(element => {
-            input = input.replace(element, getFormula(element.slice(1, -1)))
-        });
-        // console.log(input, "input")
-
-        return getRegex(input)
-    }
-
-    const getName = useCallback((id) => {
-        if (!taxTermMaster) return ""
-        let data = taxTermMaster?.data?.find(t => parseInt(t.id) === parseInt(id))
-        if (!data) return ""
-        return data.name
-    }, [taxTermMaster])
-
-    const getIsPoItem = useCallback((id) => {
-        if (!taxTermMaster) return false
-        let data = taxTermMaster.data.find(t => parseInt(t.id) === parseInt(id))
-        if (!data) return false
-        return data.isPoWise
-    }, [taxTermMaster])
-
-
-    useEffect(() => {
-        if (data && taxTermMaster) {
-            setFormulas(data?.data?.TaxTemplateDetails?.map(f => {
-                return { name: (getName(f.taxTermId)), isPowise: getIsPoItem(f.taxTermId), displayName: f.displayName, value: f.value, amount: f.amount }
-            }))
-        }
-
-    }, [isLoading, isFetching, isTemplateTermFetching, isTemplateTermLoading, taxTypeId, taxTermMaster, data, getName, getIsPoItem])
-
-
-    if (!formulas || isFetching || isLoading || isTemplateTermFetching || isTemplateTermLoading) {
-        return <Loader />
-    }
     const row = poItems[index];
 
-    console.log(row,"row")
+    // console.log(row, "row")
 
     if (!row) return null
 
-    let overAllDiscountType = "Flat"
-    let overAllDiscountValue = 0;
 
-    let price = isNaN(parseFloat(row["price"])) ? 0 : parseFloat(row["price"])
-    let qty = isNaN(parseFloat(row["qty"])) ? 0 : parseFloat(row["qty"])
     let discountType = row["discountType"];
     let discountValue = isNaN(parseFloat(row["discountValue"])) ? 0 : parseFloat(row["discountValue"]);
     let taxPercent = isNaN(parseFloat(row["taxPercent"])) ? 0 : parseFloat(row["taxPercent"])
-    // let taxPercent =  parseFloat(row["Yarn"]["hsnId"])  ?  findFromList(row["Yarn"]["hsnId"],hsnData,"tax")  : 0
 
 
-    if (!taxTermMaster || !formulas) return <div>Tax Term Not Loaded</div>
-    console.log(formulas, "formulas")
-    console.log(taxPercent,"taxPercenttaxPercent",discountType) 
+
+
+
+
+
+
+
+
+
 
     return (
         <div className={`${(Number.isInteger(index)) ? "block" : "hidden"} bg-gray-200 z-50 overflow-auto `}>
@@ -103,6 +49,14 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                     </tr>
                 </thead>
                 <tbody>
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">Gross Amount</td>
+                        <td className="border border-gray-500  text-right" colSpan={2}
+                        >
+                            {parseFloat(row?.totals?.gross).toFixed(2)}
+
+                        </td>
+                    </tr>
                     <tr>
                         <td className="border border-gray-500">Discount Type</td>
                         <td className="border border-gray-500" colSpan={2}
@@ -125,8 +79,15 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                         <td className="border border-gray-500" colSpan={2}
                         >
                             <input type="text" disabled={readOnly || !discountType} className='h-7 w-full text-right' value={discountValue}
-                            onFocus={(e) => e.target.select()}
-                            onChange={(e) => handleInputChange(e.target.value, index, "discountValue")} />
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => handleInputChange(e.target.value, index, "discountValue")} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="border border-gray-500 py-1.5">Taxable Amount</td>
+                        <td className="border border-gray-500 text-right" colSpan={2}
+                        >
+                            {parseFloat(row?.totals?.taxable).toFixed(2)}
                         </td>
                     </tr>
                     <tr className='h-7'>
@@ -140,12 +101,39 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                             }
                         >
                             <input type="text" disabled={readOnly} className='h-7 w-full text-right'
-                                value={taxPercent} onChange={(e) => { handleInputChange(e.target.value, index, "taxPercent") }} 
+                                value={taxPercent} onChange={(e) => { handleInputChange(e.target.value, index, "taxPercent") }}
                                 onFocus={(e) => e.target.select()}
-                                />
+                            />
                         </td>
                     </tr>
-                    {formulas.filter(item => !item.isPowise).map((f, i) =>
+
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">CGST</td>
+                        <td className="border border-gray-500 tes  text-right" colSpan={2}
+                        >
+                            {(row?.totals?.cgst).toFixed(2)}
+
+                        </td>
+                    </tr>
+
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">SGST</td>
+                        <td className="border border-gray-500  text-right" colSpan={2}
+                        >
+                            {(row?.totals?.sgst).toFixed(2)}
+
+                        </td>
+                    </tr>
+
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">Net Amount</td>
+                        <td className="border border-gray-500  text-right" colSpan={2}
+                        >
+                            {(row?.totals?.net).toFixed(2)}
+
+                        </td>
+                    </tr>
+                    {/* {formulas.filter(item => !item.isPowise).map((f, i) =>
                         <tr key={i}>
                             <td className="border border-gray-500 font-semibold">{f.displayName}</td>
                             <td className="border border-gray-500 font-semibold text-right">
@@ -158,7 +146,7 @@ const TaxDetailsFullTemplate = ({ poItems, currentIndex: index, setCurrentSelect
                             </td>
                             
                         </tr>
-                    )}
+                    )} */}
                 </tbody>
             </table>
         </div>

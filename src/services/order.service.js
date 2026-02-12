@@ -6,6 +6,8 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, docId, isUpdate) {
 
+    console.log(shortCode,'shortCode')
+
     if (saveType) {
         return "Draft Save"
     }
@@ -39,9 +41,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/1`
+        let newDocId = `${branchObj.branchCode}${shortCode}/ORD/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ORD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${shortCode}/ORD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -103,7 +105,7 @@ async function get(req) {
     } = req.query
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     // let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     let data = await xprisma.order.findMany({
         where: {
@@ -1621,7 +1623,7 @@ async function create(req) {
         phone, contactPersonName, address, validDate, orderDetails, accessoryTemplateItems, poNumber } = await req.body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
     console.log(accessoryTemplateItems?.length, "parsedAccessoryTemplateItems");

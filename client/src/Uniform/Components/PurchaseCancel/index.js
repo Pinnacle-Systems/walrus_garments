@@ -12,6 +12,7 @@ import { useDeletePurchaseCancelMutation, useGetPurchaseCancelQuery } from '../.
 import PurchaseCancelForm from './PurchaseCancelForm';
 import PurchaseCancelFormReport from './PurchaseCancelFormReport';
 import Swal from 'sweetalert2';
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 
 
@@ -31,37 +32,14 @@ const PurchaseCancel = () => {
         branchId, userId, finYearId
     };
     const { data: allData, isLoading, isFetching } = useGetPurchaseCancelQuery({ params: { branchId, inwardOrReturn: "PurchaseCancel", finYearId } });
+   
+   
     const { data: partyData } = useGetPartyQuery({ params })
+
+
     const [removeData] = useDeletePurchaseCancelMutation();
-    const columns = [
-        {
-            header: 'S.No',
-            accessor: (item, index) => index + 1,
-            cellClass: () => 'font-medium text-gray-900'
-        },
+      const [invalidateTagsDispatch] = useInvalidateTags();
 
-        {
-            header: 'Doc No.',
-            accessor: (item) => item.docId,
-            cellClass: () => 'font-medium text-gray-900'
-        },
-
-        {
-            header: 'Inward Date',
-            accessor: (item) => moment.utc(item.createdAt).format("YYYY-MM-DD")
-        },
-        {
-            header: 'Supplier',
-            accessor: (item) => findFromList(item.supplierId, partyData?.data, "name"),
-            cellClass: () => 'uppercase'
-        },
-        {
-            header: 'Po Type',
-            accessor: (item) => item.poType,
-            cellClass: () => 'text-gray-800 uppercase'
-        },
-
-    ];
 
 
 
@@ -85,6 +63,7 @@ const PurchaseCancel = () => {
             }
             try {
                 await removeData(orderId)
+                invalidateTagsDispatch()
                 setId("");
                 onNew();
                 // toast.success("Deleted Successfully");
@@ -160,7 +139,6 @@ const PurchaseCancel = () => {
                             itemsPerPage={10}
                         /> */}
                         <PurchaseCancelFormReport
-                            columns={columns}
                             data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}

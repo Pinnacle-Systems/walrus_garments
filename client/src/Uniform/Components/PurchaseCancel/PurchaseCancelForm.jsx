@@ -11,13 +11,13 @@ import {
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
-import { DropdownInput, DisabledInput, ReusableSearchableInput } from "../../../Inputs";
+import { DropdownInput, DisabledInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 import { PoTypes, poTypes, YarnMaterial } from '../../../Utils/DropdownData';
 import { useDispatch } from "react-redux";
 import Modal from "../../../UiComponents/Modal";
 import PoItemsSelection from "./PoItemsSelection";
-import { getCommonParams, getDateFromDateTime, isGridDatasValid } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getDateFromDateTime, isGridDatasValid } from "../../../Utils/helper";
 import YarnCancelItems from "./YarnCanceltems";
 import AccessoryCancelItems from "./AccessoryCancelItems";
 import FabricCancelItems from "./FabricCancelItems";
@@ -29,6 +29,8 @@ import { ReusableInput } from "../Order/CommonInput";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import Swal from "sweetalert2";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+
 
 const MODEL = "Purchase Cancel";
 
@@ -69,7 +71,6 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
   const { data: supplierList } =
     useGetPartyQuery({ params: { companyId, active: true } });
-  console.log(supplierList?.data?.filter(s => s.isSupplier), "final")
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
@@ -92,6 +93,8 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   const [addData] = useAddPurchaseCancelMutation();
   const [updateData] = useUpdatePurchaseCancelMutation();
   const [removeData] = useDeletePurchaseCancelMutation();
+  const [invalidateTagsDispatch] = useInvalidateTags();
+
 
   const syncFormWithDb = useCallback((data) => {
     console.log("hit", id)
@@ -105,7 +108,13 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }
     setPoType(data?.poType ? data.poType : "DyedYarn");
 
-    setInwardItems(data?.cancelItems ? structuredClone(data.cancelItems) : [])
+    // setInwardItems(data?.cancelItems ? structuredClone(data.cancelItems) : [])
+
+    setInwardItems(data?.cancelItems ? data?.cancelItems?.map(i => ({
+      ...i,
+      qty: i.qty ? parseFloat(i?.qty).toFixed(3) : "",
+
+    })) : []);
     if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
     setSupplierId(data?.supplierId ? data?.supplierId : "");
     setRemarks(data?.remarks ? data.remarks : "")
@@ -142,12 +151,10 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
   }
 
   const validateData = (data) => {
-    let mandatoryFields = ["poItemsId", "qty"];
-    if (poType === "GreyYarn" || poType === "DyedYarn") {
-      mandatoryFields.push("noOfBags")
-    }
-    return data.poType && data.supplierId
-      && isGridDatasValid(data.cancelItems, false, mandatoryFields)
+    let mandatoryFields = ["cancelType", "qty"];
+
+    return data.poType && data.supplierId && data?.po
+      && isGridDatasValid(data.cancelItems?.filter(i => i.poId), false, mandatoryFields)
       && data.cancelItems.length !== 0
   }
 
@@ -176,6 +183,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
         type: `po/invalidateTags`,
         payload: ['po'],
       });
+      invalidateTagsDispatch()
     } catch (error) {
       console.log("handle", error);
     }
@@ -184,10 +192,13 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
   const saveData = () => {
 
-    // if (!validateData(data)) {
-    //   toast.info("Please fill all required fields...!", { position: "top-center" })
-    //   return
-    // }
+    if (!validateData(data)) {
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "error",
+
+      }); return
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
@@ -199,21 +210,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
     }
   }
 
-  const deleteData = async () => {
-    if (id) {
-      if (!window.confirm("Are you sure to delete...?")) {
-        return;
-      }
-      try {
-        await removeData(id)
-        setId("");
-        onNew();
-        toast.success("Deleted Successfully");
-      } catch (error) {
-        toast.error("something went wrong");
-      }
-    }
-  };
+
 
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -297,7 +294,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
           setInwardItems={setInwardItems} />
       </Modal>
 
-      <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto">
+      <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto" handleKeyDown={handleKeyDown}>
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Cancel </h1>
           <button
@@ -315,10 +312,13 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
 
-          <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
+          <fieldset className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
+            {/* <h2 className="font-medium text-slate-700 mb-2">
               Basic Details
-            </h2>
+            </h2> */}
+            <legend className="legend">
+              Basic Details
+            </legend>
             <div className="grid grid-cols-2 gap-1">
 
               <div className="col-span-1">
@@ -328,12 +328,15 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
               <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
 
             </div>
-          </div>
+          </fieldset>
 
-          <div className="col-span-2 border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-            <h2 className="font-medium text-slate-700 mb-2">
+          <fieldset className="col-span-1 border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+            {/* <h2 className="font-medium text-slate-700 mb-2">
               Po Details
-            </h2>
+            </h2> */}
+            <legend className="legend">
+              Po Details
+            </legend>
             <div className="grid grid-cols-2 gap-1">
               <DropdownInput
                 className={"w-[110px]"}
@@ -368,27 +371,50 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
             </div>
 
-          </div>
+          </fieldset>
 
-          <div className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
+          <fieldset className="border border-slate-100 p-2 bg-white rounded-md shadow-sm col-span-2">
+            {/* <h2 className="font-medium text-slate-700 mb-2">
               Supplier Details
-            </h2>
-            <div className="grid grid-cols-1 gap-1">
+            </h2> */}
+            <legend className="legend">
+              Supplier Details
+            </legend>
+            <div className="grid grid-cols-4 gap-1 ">
+              <div className="col-span-2">
+                <ReusableSearchableInput
+                  label="Supplier Id"
+                  component="PartyMaster"
+                  placeholder="Search Supplier Id..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setSupplierId(value) }}
+                  searchTerm={supplierId}
+                  show={"isSupplier"}
+                  required={true}
+                  disabled={id}
+                />
+              </div>
 
-              <ReusableSearchableInput
-                label="Supplier Id"
-                component="PartyMaster"
-                placeholder="Search Supplier Id..."
-                optionList={supplierList?.data}
-                setSearchTerm={(value) => { setSupplierId(value) }}
-                searchTerm={supplierId}
-                show={"isSupplier"}
-                required={true}
-                disabled={id}
+              <TextInput
+                name="Contact Person"
+                placeholder="Contact name"
+                value={findFromList(supplierId, supplierList?.data, "contactPersonEmail")}
+                disabled={true}
+              />
+
+
+              <TextInput
+                name="Phone"
+                placeholder="Contact name"
+                value={findFromList(supplierId, supplierList?.data, "contactPersonNumber")}
+
+                disabled={true}
+
+
               />
             </div>
-          </div>
+
+          </fieldset>
 
         </div>
         <fieldset className=''>
@@ -404,7 +430,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
         </fieldset>
         <div className="grid grid-cols-3 gap-3">
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+          {/* <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-bold text-slate-700 mb-2 text-base">Terms & Conditions</h2>
             <textarea
               readOnly={readOnly}
@@ -417,8 +443,11 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
             />
 
-          </div>
+          </div> */}
 
+          <div className=" bg-white">
+
+          </div>
 
 
 
@@ -430,7 +459,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
               onChange={(e) => {
                 //    setNotes(e.target.value)
               }}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
               placeholder="Additional notes..."
             />
           </div>
@@ -450,7 +479,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
 
 
 
-              <div className="flex justify-between py-1 text-sm">
+              {/* <div className="flex justify-between py-1 text-sm">
                 <span className="text-slate-600 font-bold">Order By</span>
                 <input
                   type="text"
@@ -460,7 +489,7 @@ const PurchaseCancelForm = ({ onClose, id, setId }) => {
                 //    value={orderBy}
                 //    onChange={(e) => setOrderBy(e.target.value)}
                 />
-              </div>
+              </div> */}
 
 
 

@@ -8,6 +8,43 @@ const useInvalidateTags = () => {
             type: `Sample/invalidateTags`,
             payload: ["Sample"],
         },
+        {
+            type: `po/invalidateTags`,
+            payload: ["po"],
+        },
+        {
+            type: `purchaseCancel/invalidateTags`,
+            payload: ["PurchaseCancel"],
+        },
+
+        {
+            type: `directInwardOrReturn/invalidateTags`,
+            payload: ["DirectInwardOrReturn"],
+        },
+        {
+            type: `directCancelOrReturn/invalidateTags`,
+            payload: ["DirectCancelOrReturn"],
+        },
+        {
+            type: `billEntry/invalidateTags`,
+            payload: ["BillEntry"],
+        },
+        {
+            type: `accessoryPo/invalidateTags`,
+            payload: ["accessoryPo"],
+        },
+           {
+            type: `AccessoryPurchaseCancel/invalidateTags`,
+            payload: ["AccessoryPurchaseCancel"],
+        },
+           {
+            type: `AccessoryPurchaseInward/invalidateTags`,
+            payload: ["AccessoryPurchaseInward"],
+        },
+           {
+            type: `AccessoryPurchaseReturn/invalidateTags`,
+            payload: ["AccessoryPurchaseReturn"],
+        },
 
     ];
 

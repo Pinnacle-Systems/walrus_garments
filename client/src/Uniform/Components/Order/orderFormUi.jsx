@@ -74,6 +74,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const params = {
         branchId, userId, finYearId
     };
+    const [isOpen, setIsOpen] = useState(true);
 
     const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
     const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
@@ -101,28 +102,35 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     } = useGetAccessoryTemplateMasterByIdQuery(templateId, { skip: !templateId });
 
 
-    // useEffect(() => {
-
-    //     if (accessoryTemplateData?.data) {
-    //         // let data = accessoryTemplateData?.data
-    //         // console.log(data,"accessoryTemplateData")
-    //         // setAceessoryTemplateItems(data?.AccessoryTemplateItems ? data?.AccessoryTemplateItems : [])
-
-    //         setOrderDetails(prev => {
-    //             const updated = [...prev];
-
-    //             updated[selectedAccessoryIndex] = {
-    //                 ...updated[selectedAccessoryIndex],
-    //                 accessoryDetails: accessoryTemplateData
-    //             };
-
-    //             return updated;
-    //         });
-    //     }
+    useEffect(() => {
+        if (orderDetails?.length >= 3) return
+        setOrderDetails(prev => {
+            let newArray = Array?.from({ length: 3 - prev?.length }, () => {
+                return {
+                    yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
+                    measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
+                    stripecolorId: "", noOfStripes: "0", socksTypeId: "",
+                    orderSizeDetails: [
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
 
 
 
-    // }, [isAccessoryTemplateFetching, isAccessoryTemplateLoading, accessoryTemplateData]);
+
+
+                    ],
+                    orderYarnDetails: [{ yarnId: "" }],
+                    orderAccessoryDetails: [{ accessoryId: "" }]
+
+                }
+            })
+            return [...prev, ...newArray]
+        }
+        )
+    }, [isOpen])
 
 
     const {
@@ -323,7 +331,7 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
     const saveData = (nextProcess) => {
         let mandatoryFields = ["styleId", "fiberContentId", "socksMaterialId", "socksTypeId"];
 
-        let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty","yarnKneedleId"];
+        let sizemandatoryFields = ["sizeId", "weight", "sizeMeasurement", "qty", "yarnKneedleId"];
         let yarnmandatoryFields = ["colorId", "yarnId",];
 
 
@@ -463,23 +471,17 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
             <Modal
                 isOpen={openModelForAddress}
                 onClose={() => setOpenModelForAddress(false)}
-                widthClass={"w-[10%] h-[10%]"}
+                widthClass={"w-[90%] h-[90%]"}
             >
                 <DynamicRenderer openModelForAddress={openModelForAddress} componentName={"PartyMaster"}
                     editingItem={editingItem} onCloseForm={() => { setOpenModelForAddress(false); setShowAddressPopup(true) }} />
             </Modal>
 
-            <div className=" bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto ">
-                <div className="flex justify-between items-center mb-1">
+            <div className=" bg-[#F1F1F0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto ">
+                <div className="flex justify-between items-center mb-1 bg-[#FFFF] py-1">
                     <h1 className="text-2xl font-bold text-gray-800">Order Information</h1>
                     <div className="gpa-4">
-                        {/* <button
-                            onClick={onClose}
-                            className="text-indigo-600 hover:text-indigo-700"
-                            title="Open Report"
-                        >
-                            <HiOutlineDocumentText className="w-7 h-6" />
-                        </button> */}
+
                         <button
                             onClick={onClose}
                             className="text-indigo-600 hover:text-indigo-700"
@@ -491,125 +493,192 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
 
                 </div>
 
-                <div className=" space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div className=" space-y-3 h-full relative">
+
+                    {isOpen && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
+                            <fieldset className="border border-slate-200 px-2 py-1 bg-white rounded-md shadow-sm col-span-1">
+                                {/* <h2 className="font-medium text-slate-700 mb-2">
                                 Order Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Order No" readOnly value={docId} />
+                            </h2> */}
+                                <legend className="legend">
+                                    Order Details
+                                </legend>
+                                <div className="grid grid-cols-2 gap-1">
+                                    <ReusableInput label="Order No" readOnly value={docId} />
 
-                                <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-                                <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}
-                                    nextRef={inputPartyRef} required={true}
-                                />
-                                <TextInput
-                                    name="Po Reference No"
-                                    placeholder="Po Reference No"
-                                    value={poNumber}
-                                    setValue={setPoNumber}
+                                    <ReusableInput label="Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                                    <DateInputNew name="Delivery Date" type="date" value={validDate} setValue={setValidDate} readOnly={readOnly} ref={dateRef}
+                                        nextRef={inputPartyRef} required={true}
+                                    />
+                                    <TextInput
+                                        name="Po Reference No"
+                                        placeholder="Po Reference No"
+                                        value={poNumber}
+                                        setValue={setPoNumber}
 
-                                />
-                            </div>
-                        </div>
-
-
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
-
-                            <div className="grid grid-cols-1">
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-                                    <div className="col-span-2">
-                                        <ReusableSearchableInput
-                                            label="Customer Id"
-                                            component="PartyMaster"
-                                            placeholder="Search Customer Id..."
-                                            optionList={supplierList?.data}
-                                            onDeleteItem={onDeleteItem}
-                                            setSearchTerm={setPartyId}
-                                            searchTerm={partyId}
-                                            ref={inputPartyRef}
-                                            nextRef={styleRef}
-                                            show={"isClient"}
-                                        />
-                                    </div>
+                                    />
+                                </div>
+                            </fieldset>
 
 
 
+                            <fieldset className="border border-slate-200 px-2 py-1 bg-white rounded-md shadow-sm">
+                                {/* <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2> */}
+                                <legend className="legend">
+                                    Customer Details
+                                </legend>
+
+                                <div className="grid grid-cols-1">
+                                    <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                                        <div className="col-span-2">
+                                            <ReusableSearchableInput
+                                                label="Customer Id"
+                                                component="PartyMaster"
+                                                placeholder="Search Customer Id..."
+                                                optionList={supplierList?.data}
+                                                onDeleteItem={onDeleteItem}
+                                                setSearchTerm={setPartyId}
+                                                searchTerm={partyId}
+                                                ref={inputPartyRef}
+                                                nextRef={styleRef}
+                                                show={"isClient"}
+                                            />
+                                        </div>
 
 
 
-                                    <div className="mb-1 col-span-2">
-                                        <TextArea
-                                            cols={10}
-                                            name="Address"
-                                            placeholder="Contact name"
-                                            value={findFromList(partyId, supplierList?.data, "address")}
-                                            setValue={setAddress}
-                                            disabled={true}
-                                        // onChange={(e) => setPhone(e.target.value)}
-
-                                        />
 
 
 
+                                        <div className="mb-1 col-span-2">
+                                            <TextArea
+                                                cols={5}
+                                                rows={2}
+                                                name="Address"
+                                                placeholder="Contact name"
+                                                value={findFromList(partyId, supplierList?.data, "address")}
+                                                setValue={setAddress}
+                                                disabled={true}
+                                            // onChange={(e) => setPhone(e.target.value)}
+
+                                            />
+
+
+
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </fieldset>
+
+
+
+
+                            <fieldset className="border border-slate-200 px-2 py-1 bg-white rounded-md shadow-sm col-span-1">
+
+                                <legend className="legend">
+                                    Contact Details
+
+                                </legend>
+                                <div className="grid grid-cols-2 gap-x-3">
+                                    <TextInput
+                                        name="Contact Person"
+                                        placeholder="Contact name"
+                                        value={findFromList(partyId, supplierList?.data, "contactPersonName")}
+                                        setValue={setContactPersonName}
+                                        disabled={true}
+                                    />
+                                    <TextInput
+                                        name="Contact Number"
+                                        placeholder="Contact Number"
+                                        value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
+                                        setValue={setPhone}
+                                        disabled={true}
+                                    // onChange={(e) => setPhone(e.target.value)}
+
+                                    />
+                                    <TextInput
+                                        name="Email"
+                                        placeholder="Email"
+                                        value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
+                                        setValue={setPhone}
+                                        disabled={true}
+                                    // onChange={(e) => setPhone(e.target.value)}
+
+                                    />
+                                </div>
+                            </fieldset>
+
                         </div>
+                    )}
+<div className="">
+  <button
+    onClick={() => setIsOpen(!isOpen)}
+    className={`
+      absolute right-4 z-50 ${isOpen ? "top-36" : "top-0"}
+      w-8 h-8
+      flex items-center justify-center
+      rounded-full
+      bg-gradient-to-br from-gray-700 to-gray-900
+      border border-white/20
+      text-white
+      shadow-[0_4px_10px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]
+      hover:shadow-[0_6px_18px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.25)]
+      active:translate-y-[1px]
+      transition-all duration-200
+    `}
+    aria-label={isOpen ? "Collapse details" : "Expand details"}
+  >
+    <svg
+      className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0"}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  </button>
+
+  {/* Tooltip */}
+  <div
+    className={`
+      absolute right-20 ${isOpen ? "top-36" : "top-0"}
+      opacity-0 group-hover:opacity-100
+      scale-95 group-hover:scale-100
+      transition-all duration-200
+      pointer-events-none
+      bg-gray-900 text-white text-xs px-2 py-1 rounded
+      shadow-lg
+      whitespace-nowrap
+    `}
+  >
+    {isOpen ? "Hide Details" : "Show Details"}
+  </div>
+</div>
 
 
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Contact Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-x-3">
-                                <TextInput
-                                    name="Contact Person"
-                                    placeholder="Contact name"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonName")}
-                                    setValue={setContactPersonName}
-                                    disabled={true}
-                                />
-                                <TextInput
-                                    name="Contact Number"
-                                    placeholder="Contact Number"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonNumber")}
-                                    setValue={setPhone}
-                                    disabled={true}
-                                // onChange={(e) => setPhone(e.target.value)}
 
-                                />
-                                <TextInput
-                                    name="Email"
-                                    placeholder="Email"
-                                    value={findFromList(partyId, supplierList?.data, "contactPersonEmail")}
-                                    setValue={setPhone}
-                                    disabled={true}
-                                // onChange={(e) => setPhone(e.target.value)}
 
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <fieldset className=''>
+
+                    <div className='relative'>
 
                         <OrderItems readOnly={readOnly} setOrderDetails={setOrderDetails} orderDetails={orderDetails} id={id}
                             yarnItems={yarnItems} setYarnItems={setYarnItems} styleRef={styleRef}
                             socksTypeData={socksTypeData} sizeList={sizeList} styleList={styleList} yarnNeedleList={yarnNeedleList}
                             yarnList={yarnList} countsList={countsList} fiberContent={fiberContent} yarnTypeList={yarnTypeList} colorlist={colorlist} socksMaterialData={socksMaterialData}
                             accessoryTemplate={accessoryTemplate} templateId={templateId} setTemplateId={setTemplateId} accessoryTemplateItems={accessoryTemplateItems}
-                            setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList} accessoryTemplateData={accessoryTemplateData}
+                            setAceessoryTemplateItems={setAceessoryTemplateItems} uomList={uomList} accessoryTemplateData={accessoryTemplateData} isOpen={isOpen}
 
 
                         />
-                    </fieldset>
+                    </div>
 
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
@@ -629,12 +698,8 @@ const OrderFormUi = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, set
                             </button>
                         </div>
 
-                        {/* Right Buttons */}
                         <div className="flex gap-2 flex-wrap">
-                            {/* <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                <FiShare2 className="w-4 h-4 mr-2" />
-                                Email
-                            </button> */}
+
                             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
                                 onClick={() => setReadOnly(false)}
                             >

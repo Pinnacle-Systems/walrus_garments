@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
 import toast from 'react-hot-toast';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
-import { Modal, MultiSelectDropdown, TextInput, ToggleButton } from '../../Inputs';
+import {  MultiSelectDropdown, TextInput, ToggleButton } from '../../Inputs';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
 import { statusDropdown } from '../../Utils/DropdownData';
 import { useGetSizeMasterQuery } from '../../redux/uniformService/SizeMasterService';
@@ -10,6 +10,7 @@ import { useAddSizeTemplateMutation, useDeleteSizeTemplateMutation, useGetSizeTe
 import { Loader } from '../../Basic/components';
 import { multiSelectOption } from '../../Utils/contructObject';
 import { findFromList } from '../../Utils/helper';
+import Modal from '../../UiComponents/Modal';
 
 
 

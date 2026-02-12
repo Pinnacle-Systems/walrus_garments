@@ -14,6 +14,8 @@ import { useModal } from "../Basic/pages/home/context/ModalContext";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
 import Select from "react-select";
+import Modal from "../UiComponents/Modal";
+
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
   const inputSelectionStart = event.target.selectionStart;
@@ -1449,37 +1451,37 @@ export const DropdownWithSearchNew = ({
   );
 };
 
-export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
-  if (!isOpen) return null;
+// export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
+//   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center  justify-center overflow-auto bg-gray-800 bg-opacity-50 mb-5">
-      <div className={`relative bg-white rounded-lg ${widthClass}`}>
-        {onClose ? (
-          <button
-            className="absolute top-0 hover:bg-red-400 right-0 m-4 text-gray-600 hover:text-gray-800 focus:outline-none mb-5"
-            onClick={onClose}
-          >
-            <svg
-              className="h-6 w-6 fill-current "
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title>Close</title>
-              <path
-                d="M14.348 5.652a.999.999 0 00-1.414 0L10 8.586l-2.93-2.93a.999.999 0 10-1.414 1.414L8.586 10l-2.93 2.93a.999.999 0 101.414 1.414L10 11.414l2.93 2.93a.999.999 0 101.414-1.414L11.414 10l2.93-2.93a.999.999 0 000-1.414z"
-                fillRule="evenodd"
-              />
-            </svg>
-          </button>
-        ) : (
-          ""
-        )}
-        {children}
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center  justify-center overflow-auto bg-gray-800 bg-opacity-50 mb-5">
+//       <div className={`relative bg-white rounded-lg ${widthClass}`}>
+//         {onClose ? (
+//           <button
+//             className="absolute top-0 hover:bg-red-400 right-0 m-4 text-gray-600 hover:text-gray-800 focus:outline-none mb-5"
+//             onClick={onClose}
+//           >
+//             <svg
+//               className="h-6 w-6 fill-current "
+//               viewBox="0 0 20 20"
+//               xmlns="http://www.w3.org/2000/svg"
+//             >
+//               <title>Close</title>
+//               <path
+//                 d="M14.348 5.652a.999.999 0 00-1.414 0L10 8.586l-2.93-2.93a.999.999 0 10-1.414 1.414L8.586 10l-2.93 2.93a.999.999 0 101.414 1.414L10 11.414l2.93 2.93a.999.999 0 101.414-1.414L11.414 10l2.93-2.93a.999.999 0 000-1.414z"
+//                 fillRule="evenodd"
+//               />
+//             </svg>
+//           </button>
+//         ) : (
+//           ""
+//         )}
+//         {children}
+//       </div>
+//     </div>
+//   );
+// };
 
 export const ToggleButton = ({
   name,
@@ -1721,7 +1723,7 @@ export const ReusableTable = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(item.id)}
+                                onClick={() => onDelete(item.id,item?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1752,7 +1754,7 @@ export const ReusableTable = ({
 
   );
 };
-
+ 
 
 // export function ReusableSearchableInput({
 //   label,
@@ -2168,12 +2170,13 @@ export const ReusableSearchableInput = forwardRef(
         <Modal
           isOpen={openModel}
           onClose={() => setOpenModel(false)}
-          widthClass={"w-[90%] h-[98%]"}
+          widthClass={"w-[90%] h-[98%] "}
         >
           <DynamicRenderer
             componentName={component}
             editingItem={editingItem}
             onCloseForm={() => setOpenModel(false)}
+            show={show}
           />
         </Modal>
 
@@ -2437,3 +2440,7 @@ export const TextInputNew1 = forwardRef(({
   );
 });
 
+export function childRecordCount(count) {
+        return  Object.values(count).some(v => v > 0);
+
+}  

@@ -7,7 +7,9 @@ import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, handleCancel, handleDone, readOnly ,po }) => {
+const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, handleCancel, handleDone, readOnly, po, handleSelectAllChange,
+    getSelectAll
+}) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -16,18 +18,20 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
     const [dataPerPage, setDataPerPage] = useState("10");
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
+    const [searchYarn, setSearchYarn] = useState("")
+    const [searchColor, setSearchColor] = useState("")
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
     )
     const handleOnclick = (e) => {
         setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
     }
-    const searchFields = { searchDocId: poNo, searchPoDate, searchSupplierAliasName: supplier, searchPoType, searchDueDate }
+    const searchFields = { searchDocId: poNo, searchPoDate, searchSupplierAliasName: supplier, searchPoType, searchDueDate, searchYarn, searchColor }
 
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetPoItemsQuery({
         params: {
-            branchId, supplierId, poType , ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber, isPurchaseCancelFilter: true  , poInwardOrDirectInward : po
-        } 
+            branchId, supplierId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber, isPurchaseCancelFilter: true, poInwardOrDirectInward: po
+        }
     })
     const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
     useEffect(() => {
@@ -101,9 +105,9 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                 <tr>
                                                     <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
 
-                                                        {/* <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
-                                        checked={getSelectAll(poItems?.data ? poItems.data : [])}
-                                    /> */}
+                                                        <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
+                                                            checked={getSelectAll(poItems?.data ? poItems.data : [])}
+                                                        />
                                                     </th>
                                                     <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                                     {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
@@ -134,7 +138,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                         />
 
                                                     </th>
-                                                    <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
+                                                    {/* <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
                                                         <label>Po Material</label>
                                                         <input
                                                             type="text"
@@ -159,7 +163,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                             }}
                                                         />
 
-                                                    </th>
+                                                    </th> */}
                                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-64">
 
                                                         <label>Yarn</label>
@@ -167,9 +171,9 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                             type="text"
                                                             className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
                                                             placeholder="Search"
-                                                            value={searchDueDate}
+                                                            value={searchYarn}
                                                             onChange={(e) => {
-                                                                setDueDate(e.target.value);
+                                                                setSearchYarn(e.target.value);
                                                             }}
                                                         />
                                                     </th>
@@ -182,10 +186,10 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                             type="text"
                                                             className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
                                                             placeholder="Search"
-                                                            value={searchDueDate}
-                                                        // onChange={(e) => {
-                                                        //     setDueDate(e.target.value);
-                                                        // }}
+                                                            value={searchColor}
+                                                            onChange={(e) => {
+                                                                setSearchColor(e.target.value);
+                                                            }}
                                                         />
                                                     </th>
 
@@ -194,28 +198,13 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
 
                                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
                                                         <label>Uom</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
-                                                            placeholder="Search"
-                                                            value={searchDueDate}
-                                                        // onChange={(e) => {
-                                                        //     setDueDate(e.target.value);
-                                                        // }}
-                                                        />
+
 
                                                     </th>
                                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
                                                         <label>Price</label>
-                                                        <input
-                                                            type="text"
-                                                            className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
-                                                            placeholder="Search"
-                                                            value={searchDueDate}
-                                                            onChange={(e) => {
-                                                                setDueDate(e.target.value);
-                                                            }}
-                                                        /> </th>
+
+                                                    </th>
 
                                                     <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Po Qty</th>
                                                     <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Already Cancel Qty</th>
@@ -251,8 +240,8 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                             <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
                                                             <td className='py-1'> {dataObj?.Po?.docId}</td>
                                                             <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Po?.createdAt)} </td>
-                                                            <td className='py-1'> {dataObj?.Po?.poMaterial}</td>
-                                                            <td className='py-1'> {dataObj?.Po?.poType}</td>
+                                                            {/* <td className='py-1'> {dataObj?.Po?.poMaterial}</td>
+                                                            <td className='py-1'> {dataObj?.Po?.poType}</td> */}
 
                                                             <td className='py-1'> {dataObj?.Yarn?.name}</td>
                                                             <td className='py-1'> {dataObj?.Color?.name}</td>

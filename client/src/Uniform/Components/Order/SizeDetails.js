@@ -68,7 +68,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
 
       <tr>
         <td colSpan={16} className="p-0">
-          <div className="flex justify-end  w-full">
+          <div className="flex  justify-start  w-full">
             <table className="w-auto border border-gray-300">
               <thead className="bg-gray-200 text-gray-800">
                 <tr>

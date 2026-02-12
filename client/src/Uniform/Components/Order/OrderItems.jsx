@@ -29,7 +29,8 @@ const OrderItems = forwardRef(function OrderItems(
   {
     readOnly, itemHeading, setOrderDetails, orderDetails, id, setYarnItems, socksTypeData, sizeList, styleList, yarnNeedleList,
     yarnList, countsList, fiberContent, yarnTypeList, colorlist, socksMaterialData, accessoryGroupList, accessoryCategoryList, accessoryList,
-    accessoryTemplate, setTemplateId, templateId, accessoryTemplateItems, setAceessoryTemplateItems, uomList, accessoryTemplateData
+    accessoryTemplate, setTemplateId, templateId, accessoryTemplateItems, setAceessoryTemplateItems, uomList, accessoryTemplateData ,
+    isOpen
   },
   styleRef
 
@@ -62,29 +63,10 @@ const OrderItems = forwardRef(function OrderItems(
 
 
 
-  let GridIndex;
+  let GridIndex;   //  ite used   don't remove this
   let accessoryGridIndex;
 
-  // const { data: socksMaterialData } =
-  //   useGetSocksMaterialQuery({ params: { ...params } });
-  // const { data: socksTypeData } =
-  //   useGetSocksTypeQuery({ params: { ...params } });
-  // const { data: sizeList, isLoading: isSizeListLoading } = useGetSizeMasterQuery({ params: { ...params } });
-  // const { data: styleList, isLoading: isStyleListLoading } = useGetStyleMasterQuery({ params: { ...params } });
-  // const { data: yarnNeedleList } = useGetYarnNeedleMasterQuery({ params: { ...params } });
-  // const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
-  // const { data: countsList } = useGetCountsMasterQuery({ params: { ...params } });
 
-
-
-  // const { data: fiberContent } = useGetFiberContentMasterQuery({ params: { ...params } });
-  // const { data: yarnTypeList } = useGetYarnTypeMasterQuery({ params: { ...params } });
-
-  // const {
-  //   data: colorlist,
-  //   isLoading: isColorListLoading,
-  //   isFetching: isColorListFetching,
-  // } = useGetColorMasterQuery({ params });
 
   function addNewRow() {
     if (readOnly) {
@@ -346,17 +328,17 @@ const OrderItems = forwardRef(function OrderItems(
         />
       </Modal>
 
-      <div className="border border-slate-200 p-2 px-2 bg-white rounded-md shadow-sm h-[350px] ">
+      <div className={`border border-slate-200 p-2 px-2 bg-white rounded-md shadow-sm ${isOpen ? "h-[350px]"  : "h-[540px]"}  `}>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-medium text-slate-700">List Of Items</h2>
 
 
         </div>
 
-        <div className="w-[96vw] h-[300px] overflow-x-auto overflow-y-auto ">
+        <div className={`w-[96vw] ${isOpen ? "h-[300px]"  : "h-[500px]"} overflow-x-auto overflow-y-auto `}>
 
           <table className=" table-fixed w-[100vw]">
-            <thead className="bg-gray-200 text-gray-800">
+            <thead className="bg-gray-200 text-gray-800 top-0 sticky z-0">
               <tr>
                 <th
                   className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}

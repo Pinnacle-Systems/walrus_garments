@@ -2,13 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react'
 import moment from 'moment/moment';
 import Calendar from './Calendar';
 import HolidayEntryModalForm from './HolidayEntryModalForm';
-import { Modal } from "../../../Inputs"
 import toasterTrigger from "../../../Utils/toastTrigger";
 import 'react-toastify/dist/ReactToastify.css';
 import HolidayReport from './HolidayReport';
 import { filterByMonth } from './helper';
 import { useNavigate } from 'react-router-dom';
 import { useGetHolidaysCalenderQuery } from '../../../redux/services/HolidaysServices';
+import Modal from '../../../UiComponents/Modal';
 
 
 const HolidayCalendar = () => {

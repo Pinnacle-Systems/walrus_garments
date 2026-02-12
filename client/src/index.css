@@ -400,3 +400,28 @@ label {
   max-height: 200px;
   overflow-y: auto;
 }
+
+.legend {
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: #334155;
+  margin-left: 0.25rem;
+}
+
+.td-outline-focus:focus-within {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+/* Remove default input focus ring */
+.td-outline-focus input:focus,
+.td-outline-focus select:focus,
+.td-outline-focus textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.header{
+  z-index: 5;
+}
+

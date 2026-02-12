@@ -25,17 +25,21 @@ async function get(req) {
             },
             PartyMaterials: true,
             PartyContactDetails: true,
+            _count: {
+                select: {
+                    Order: true,
+                    PoSupplier: true,
+                    PurchaseCancel: true,
+                    DirectInwardOrReturn: true,
+                    DirectReturnOrPoReturn: true
+
+                }
+            }
         }
 
     });
-    const materialData = await prisma.rawMaterial.findMany({
-        where: {
-            active: active ? Boolean(active) : undefined,
-        },
 
-
-    });
-    return { statusCode: 0, data, materialData };
+    return { statusCode: 0, data };
 }
 
 
@@ -177,13 +181,14 @@ async function create(body) {
         branchName, branchCode, branchType, branchEmail, branchAddress, branchContactPerson, branchContact,
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
-        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
+        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments,
         PartyContactDetails,
     } = await body
 
 
     let data;
 
+    console.log(body,"body")
 
 
 
@@ -209,84 +214,33 @@ async function create(body) {
                 companyId: parseInt(companyId),
 
 
-                // partyBranch: branchStateValues?.branchName
-                //     ? {
-                //         create: {
-
-                //             branchName: branchStateValues?.branchName || undefined,
-                //             branchAliasName: branchStateValues?.branchAliasName || undefined,
-                //             branchCode: branchStateValues?.branchCode || undefined,
-                //             active: branchStateValues?.active || false,
-                //             branchCityId: branchStateValues?.branchCityId || undefined,
-                //             branchLandMark: branchStateValues?.branchLandMark || undefined,
-                //             branchAddress: branchStateValues?.branchAddress || undefined,
-                //             branchPincode: branchStateValues?.branchPincode || undefined,
-                //             branchEmail: branchStateValues?.branchEmail || undefined,
-                //             branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-                //             branchDesignation: branchStateValues?.branchDesignation || undefined,
-                //             branchDepartment: branchStateValues?.branchDepartment || undefined,
-                //             branchContact: branchStateValues?.branchContact || undefined,
-                //             branchWebsite: branchStateValues?.branchWebsite || undefined,
-                //             branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-                //             branchBankname: branchStateValues?.branchBankname || undefined,
-                //             branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-                //             branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-                //             partyId: branchStateValues?.partyId || undefined,
-                //             isMainBranch: branchStateValues?.isMainBranch || undefined,
-                //             BranchType: branchStateValues?.BranchType || undefined,
-                //             branchTypeId: branchStateValues?.branchTypeId || undefined,
-                //             BranchContactDetails: {
-                //                 create: {
-
-                //                     contactPersonName: branchStateValues?.branchContactPerson || null,
-                //                     mobileNo: branchStateValues?.branchContactPersonContact || null,
-                //                     designation: branchStateValues?.branchContactDesignation || null,
-                //                     department: branchStateValues?.branchContactDepartment || null,
-                //                     email: branchStateValues?.branchContactPersonEmail ? branchStateValues?.branchContactPersonEmail : undefined,
-
-                //                 }
-                //             }
-                //         },
-
-                //     }
-
-                //     : undefined,
-
-                // PartyContactDetails: {
-                //     create: {
-
-                //         contactPersonName: contactPersonName || null,
-                //         mobileNo: contactNumber || null,
-                //         Designation: designation || null,
-                //         department: department || null,
-                //         email: contactPersonEmail ? contactPersonEmail : undefined,
-                //         // alterContactNumber: alterContactNumber || null,
-
-                //     },
-                // },
+                contactPersonName: contactPersonName ? contactPersonName : null,
+                designation: designation ? designation : null,
+                department: department ? department : null,
+                contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
+                contactPersonNumber: contactNumber ? contactNumber : null,
 
 
+                PartyAttachments: {
+                    createMany: attachments?.length > 0 ? {
+                        data: attachments?.map((temp) => {
+                            let newItem = {}
+                            // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
+                            newItem["name"] = temp["name"] ? temp["name"] : null;
+                            newItem["filePath"] = temp["filePath"] ? temp["filePath"] : null;
 
-                // PartyMaterials: {
-                //     createMany: partyMaterials.length > 0 ? {
-                //         data: partyMaterials?.map((temp) => {
-                //             let newItem = {}
-                //             // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
-                //             newItem["name"] = temp["label"] ? temp["label"] : null;
-                //             newItem["value"] = temp["value"] ? temp["value"] : null;
 
-
-                //             return newItem
-                //         })
-                //     } : undefined
-                // }
+                            return newItem
+                        })
+                    } : undefined
+                }
 
 
             }
         }
     )
 
-
+    console.log(data,"data")
 
     return { statusCode: 0, data };
 }
@@ -352,7 +306,7 @@ async function update(id, body) {
         contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-        PartyContactDetails, contactId
+        PartyContactDetails, contactId, attachments
     } = body;
 
 
@@ -387,121 +341,26 @@ async function update(id, body) {
             createdById: userId ? parseInt(userId) : undefined,
             companyId: parseInt(companyId),
 
-            // partyBranch: branchStateValues?.branchName
-            //     ? {
-            //         upsert: {
-            //             update: {
-            //                 branchName: branchStateValues?.branchName || undefined,
-            //                 branchAliasName: branchStateValues?.branchAliasName || undefined,
-            //                 branchCode: branchStateValues?.branchCode || undefined,
-            //                 active: branchStateValues?.active || false,
-            //                 branchCityId: branchStateValues?.branchCityId || undefined,
-            //                 branchLandMark: branchStateValues?.branchLandMark || undefined,
-            //                 branchAddress: branchStateValues?.branchAddress || undefined,
-            //                 branchPincode: branchStateValues?.branchPincode || undefined,
-            //                 branchEmail: branchStateValues?.branchEmail || undefined,
-            //                 branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-            //                 branchDesignation: branchStateValues?.branchDesignation || undefined,
-            //                 branchDepartment: branchStateValues?.branchDepartment || undefined,
-            //                 branchContact: branchStateValues?.branchContact || undefined,
-            //                 branchWebsite: branchStateValues?.branchWebsite || undefined,
-            //                 branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-            //                 branchBankname: branchStateValues?.branchBankname || undefined,
-            //                 branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-            //                 branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-            //                 partyId: branchStateValues?.partyId || undefined,
-            //                 isMainBranch: branchStateValues?.isMainBranch || undefined,
-            //                 BranchType: branchStateValues?.BranchType || undefined,
-            //                 branchTypeId: branchStateValues?.branchTypeId || undefined,
-            //                 BranchContactDetails: {
-            //                     upsert: {
-            //                         update: {
-            //                             contactPersonName: branchStateValues?.branchContactPerson || null,
-            //                             mobileNo: branchStateValues?.branchContactPersonContact || null,
-            //                             designation: branchStateValues?.branchContactDesignation || null,
-            //                             department: branchStateValues?.branchContactDepartment || null,
-            //                             email: branchStateValues?.branchContactPersonEmail || undefined,
-            //                             alterContactNumber: branchStateValues?.branchContactPersonAlterContact || null,
-            //                         },
-            //                         create: {
-            //                             contactPersonName: branchStateValues?.branchContactPerson || null,
-            //                             mobileNo: branchStateValues?.branchContactPersonContact || null,
-            //                             designation: branchStateValues?.branchContactDesignation || null,
-            //                             department: branchStateValues?.branchContactDepartment || null,
-            //                             email: branchStateValues?.branchContactPersonEmail || undefined,
-            //                             alterContactNumber: branchStateValues?.branchContactPersonAlterContact || null,
+            contactPersonName: contactPersonName ? contactPersonName : null,
+            designation: designation ? designation : null,
+            department: department ? department : null,
+            contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
+            contactPersonNumber: contactNumber ? contactNumber : null,
 
-            //                         },
-            //                     },
-            //                 },
-            //             },
-            //             create: {
-            //                 branchName: branchStateValues?.branchName || undefined,
-            //                 branchAliasName: branchStateValues?.branchAliasName || undefined,
-            //                 branchCode: branchStateValues?.branchCode || undefined,
-            //                 active: branchStateValues?.active || false,
-            //                 branchCityId: branchStateValues?.branchCityId || undefined,
-            //                 branchLandMark: branchStateValues?.branchLandMark || undefined,
-            //                 branchAddress: branchStateValues?.branchAddress || undefined,
-            //                 branchPincode: branchStateValues?.branchPincode || undefined,
-            //                 branchEmail: branchStateValues?.branchEmail || undefined,
-            //                 branchContactPerson: branchStateValues?.branchContactPerson || undefined,
-            //                 branchDesignation: branchStateValues?.branchDesignation || undefined,
-            //                 branchDepartment: branchStateValues?.branchDepartment || undefined,
-            //                 branchContact: branchStateValues?.branchContact || undefined,
-            //                 branchWebsite: branchStateValues?.branchWebsite || undefined,
-            //                 branchAccountNumber: branchStateValues?.branchAccountNumber || undefined,
-            //                 branchBankname: branchStateValues?.branchBankname || undefined,
-            //                 branchIfscCode: branchStateValues?.branchIfscCode || undefined,
-            //                 branchBankBranchName: branchStateValues?.branchBankBranchName || undefined,
-            //                 partyId: branchStateValues?.partyId || undefined,
-            //                 isMainBranch: branchStateValues?.isMainBranch || undefined,
-            //                 BranchType: branchStateValues?.BranchType || undefined,
-            //                 branchTypeId: branchStateValues?.branchTypeId || undefined,
-            //                 BranchContactDetails: {
-            //                     create: {
-            //                         contactPersonName: branchStateValues?.branchContactPerson || null,
-            //                         mobileNo: branchStateValues?.branchContactPersonContact || null,
-            //                         designation: branchStateValues?.branchContactDesignation || null,
-            //                         department: branchStateValues?.branchContactDepartment || null,
-            //                         email: branchStateValues?.branchContactPersonEmail || undefined,
-            //                     },
-            //                 },
-            //             },
-            //         },
-            //     }
-            //     : undefined,
+            PartyAttachments: {
+                createMany: attachments?.length > 0 ? {
+                    data: JSON.parse(attachments)?.map((temp) => {
+                        let newItem = {}
+                        // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
+                        newItem["name"] = temp["name"] ? temp["name"] : null;
+                        newItem["filePath"] = temp["filePath"] ? temp["filePath"] : null;
 
-            // PartyContactDetails: {
-            //     upsert: {
-            //         update: {
-            //             contactPersonName: contactPersonName || null,
-            //             mobileNo: contactNumber || null,
-            //             Designation: designation || null,
-            //             department: department || null,
-            //             email: contactPersonEmail || undefined,
-            //         },
-            //         create: {
-            //             contactPersonName: contactPersonName || null,
-            //             mobileNo: contactNumber || null,
-            //             Designation: designation || null,
-            //             department: department || null,
-            //             email: contactPersonEmail || undefined,
-            //         },
-            //     },
-            // },
 
-            // PartyMaterials: {
-            //     deleteMany: {},
-            //     createMany: partyMaterials.length > 0
-            //         ? {
-            //             data: partyMaterials.map((temp) => ({
-            //                 name: temp.label || null,
-            //                 value: temp.value || null,
-            //             })),
-            //         }
-            //         : undefined,
-            // }
+                        return newItem
+                    })
+                } : undefined
+            }
+
         },
     });
 

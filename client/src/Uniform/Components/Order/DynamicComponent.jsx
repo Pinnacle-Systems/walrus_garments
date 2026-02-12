@@ -3,10 +3,12 @@ import { ColorMaster, EmployeeCategoryMaster, PartyMaster } from "../../../Basic
 
 
 
-const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, editingItem }) => {
+const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, editingItem ,show }) => {
 
     const COMPONENTS = {
-        PartyMaster: () => <PartyMaster partyId={editingItem} onCloseForm={onCloseForm} openModelForAddress={openModelForAddress} />,
+        PartyMaster: () => <PartyMaster partyId={editingItem} onCloseForm={onCloseForm} openModelForAddress={openModelForAddress}
+        show={show}
+        />,
         EmployeeCategoryMaster: () => <EmployeeCategoryMaster />,
         ColorMaster: () => <ColorMaster />,
     };

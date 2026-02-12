@@ -44,7 +44,13 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
     if (isLoading || isFetching) return <Loader />
 
     return (
-        <tr key={poItemId} className="border border-blue-gray-200 cursor-pointer "  >
+        <tr key={poItemId} className="border border-blue-gray-200 cursor-pointer "  
+               onContextMenu={(e) => {
+                        if (!readOnly) {
+                            handleRightClick(e, index, "shiftTimeHrs");
+                        }
+                    }}
+        >
             <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
             <td className="py-0.5 border border-gray-300 text-[11px] ">{poItem?.Po?.docId}</td>
             <td className="py-0.5 border border-gray-300 text-[11px]">{poItem?.Yarn?.name}</td>
@@ -84,17 +90,17 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
                 />
             </td>*/}
 
-            <td className=" border border-gray-300 text-right text-[11px] py-1.5 px-2 text-xs">
+            <td className=" border border-gray-300  text-[11px] py-0.5 text-xs td-outline-focus">
                 <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 text-xs' value={cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
+                    disabled={readOnly || !poItem?.id} className='text-left w-full rounded py-1 text-xs' value={cancelType} onChange={(e) => handleInputChange(e.target.value, index, "cancelType")}
                     onBlur={(e) => {
                         handleInputChange((e.target.value), index, "cancelType")
                     }
                     }
                 >
 
-                    <option hidden>
+                    <option >
                     </option>
                     <option value="" >
                         Select
@@ -107,13 +113,13 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
                 </select>
             </td>
 
-            <td className="w-28 py-0.5 border border-gray-300 text-[11px]">
+            <td className="w-28 py-0.5 border border-gray-300 text-[11px] td-outline-focus">
                 <input
                     min={"0"}
                     type="number"
-                    className="text-right rounded py-1 w-full table-data-input"
+                    className="text-right rounded py-1 w-full "
                     value={qty}
-                    disabled={readOnly}
+                    disabled={readOnly || !poItem?.id}
                     onKeyDown={(e) => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
                         // if (e.altKey) { e.preventDefault() }
@@ -167,7 +173,7 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
                 />
             </td>
 
-            <td className="w-16 px-1 py-1 text-center">
+            {/* <td className="w-16 px-1 py-0.5 text-center td-outline-focus">
     
                 <input
                     readOnly
@@ -184,7 +190,7 @@ const YarnPoItem = ({ poItemId, index, handleInputChange, readOnly, qty, cancelT
                         }
                     }}
                 />
-            </td>
+            </td> */}
 
         </tr>
     )

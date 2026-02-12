@@ -32,9 +32,9 @@ async function getNextDocId(branchId, poInwardOrDirectInward, shortCode, startTi
         }
     });
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PC/1`
+    let newDocId = `${branchObj.branchCode}${shortCode}/PC/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/PC/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}${shortCode}/PC/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }
@@ -359,7 +359,7 @@ async function create(body) {
         vehicleNo, specialInstructions, remarks,
         branchId, active, userId, finYearId } = await body
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     let data;
     let processValid;

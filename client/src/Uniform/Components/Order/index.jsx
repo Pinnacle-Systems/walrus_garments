@@ -78,10 +78,16 @@ const Order = () => {
                     yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
                     measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
                     stripecolorId: "", noOfStripes: "0", socksTypeId: "",
-                    orderSizeDetails: [{
-                        qty: 0.00, sizeMeasurement: "", sizeId: ""
+                    orderSizeDetails: [
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" },
+                        { qty: 0.00, sizeMeasurement: "", sizeId: "" }
 
-                    }],
+
+
+                    ],
                     orderYarnDetails: [{ yarnId: "" }],
                     orderAccessoryDetails: [{ accessoryId: "" }]
 

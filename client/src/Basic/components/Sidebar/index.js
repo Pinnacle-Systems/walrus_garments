@@ -408,7 +408,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
           }
           setIsOpen(!isOpen);
         }}
-        className="fixed z-[99] top-[28.5%] left-0 bg-gradient-to-r from-gray-700 to-gray-600 text-white w-8 h-12 flex items-center justify-center rounded-r-xl shadow-xl cursor-pointer transition-all duration-300 hover:from-gray-800 hover:to-gray-700 hover:scale-105"
+        className="fixed z-[99] top-[20%] left-0 bg-gradient-to-r from-gray-700 to-gray-600 text-white w-8 h-12 flex items-center justify-center rounded-r-xl shadow-xl cursor-pointer transition-all duration-300 hover:from-gray-800 hover:to-gray-700 hover:scale-105"
       >
         {isOpen ? (
           <ArrowLeftCircle size={22} className="text-white transition-all duration-300" />

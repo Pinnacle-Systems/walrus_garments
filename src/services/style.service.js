@@ -10,6 +10,13 @@ async function get(req) {
 
             active: active ? Boolean(active) : undefined,
         },
+        include : {
+                _count : {
+                    select : {
+                        OrderDetails : true
+                    }
+                }
+        }
 
     });
     return { statusCode: 0, data };
@@ -22,18 +29,7 @@ async function getOne(id) {
         where: {
             id: parseInt(id)
         },
-        // include: {
-        //     StylePanel: {
-        //         select: {
-        //             panelId: true,
-        //             StylePanelProcess: {
-        //                 select: {
-        //                     processId: true
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+ 
     });
 
     if (!data) return NoRecordFound("style");

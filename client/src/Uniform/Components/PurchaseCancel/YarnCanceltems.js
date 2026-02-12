@@ -11,7 +11,7 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 }) => {
     const handleInputChange = (value, index, field, balanceQty, poItem) => {
 
-        console.log(value, index, "indexindex")
+        // console.log(value, index, "indexindex")
 
         setInwardItems(inwardItems => {
             const newBlend = structuredClone(inwardItems);
@@ -33,28 +33,8 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
                     Swal.fire({
                         icon: "warning",
                         title: "Cancel Qty is greater than Balance Qty!",
-                        text: "Are you sure you want to continue?",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes",
-                        cancelButtonText: "No",
-                        confirmButtonColor: "#2563eb", // Tailwind blue-600
-                        cancelButtonColor: "#ef4444",  // Tailwind red-500
-                        didOpen: () => {
-                            // 👇 Force visible white text (fix Tailwind/Bootstrap override issue)
-                            const confirmBtn = Swal.getConfirmButton();
-                            const cancelBtn = Swal.getCancelButton();
-                            confirmBtn.style.color = "#fff";
-                            cancelBtn.style.color = "#fff";
-                            confirmBtn.style.fontWeight = "600";
-                            cancelBtn.style.fontWeight = "600";
-                        },
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            console.log('User confirmed action');
-                        } else {
-                            console.log('User cancelled');
-                        }
-                    });
+
+                    })
 
                     return inwardItems
                 }
@@ -79,13 +59,12 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
         });
     };
 
-    console.log(inwardItems, "inwardItems")
 
     useEffect(() => {
-        if (id) return
-        if (inwardItems?.length >= 1) return;
+        // if (id) return
+        if (inwardItems?.length >= 7) return;
         setInwardItems((prev) => {
-            let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+            let newArray = Array.from({ length: 7 - prev.length }, (i) => {
                 return {
                     yarnId: "",
                     qty: "0.00",
@@ -112,11 +91,12 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 
 
     const handleDeleteRow = (id) => {
+            console.log(id,"id")
         setInwardItems((yarnBlend) => {
             if (yarnBlend.length <= 1) {
                 return yarnBlend;
             }
-            return yarnBlend.filter((_, index) => index !== parseInt(id));
+            return yarnBlend.filter((_, index) => index != parseInt(id));
         });
     };
     const handleDeleteAllRows = () => {
@@ -147,20 +127,12 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+            <div className="relative border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[280px] flex flex-col ">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
 
-                        {/* <button
-                            onClick={() => {
-                                addNewRow()
-                            }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                        >
-                            <HiPlus className="w-3 h-3 mr-1" />
-                            Add Item
-                        </button> */}
+
                         <button className="font-bold text-slate-700 bord"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -189,9 +161,9 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
                     </div>
 
                 </div>
-                <div className={` relative w-full overflow-y-auto py-1`}>
-                    <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-900">
+                <div className="flex-1 overflow-y-auto overflow-auto ">
+                    <table className="w-full border-collapse table-fixed ">
+                        <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -213,11 +185,11 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Colors
+                                    Color
                                 </th>
                                 <th
 
-                                    className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
                                 </th>
@@ -254,25 +226,25 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 
                                     className={`w-24 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Cancel Type
+                                    Cancel Type <span className="text-red-500">*</span>
                                 </th>
 
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Cancel Qty
+                                    Cancel Qty <span className="text-red-500">*</span>
                                 </th>
-                                <th
+                                {/* <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Actions
-                                </th>
+                                </th> */}
                                 {/* ))} */}
                             </tr>
                         </thead>
-                        <tbody className='overflow-y-auto  h-full w-full'>
+                        <tbody className=''>{console.log(inwardItems,"inwardItems")}
 
                             {inwardItems.map((item, index) => <YarnPoItem
                                 deleteRow={deleteRow}
@@ -293,12 +265,13 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
                         </tbody>
 
                     </table>
+
                 </div>
                 {contextMenu && (
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 50}px`,
+                            top: `${contextMenu.mouseY - 260}px`,
                             left: `${contextMenu.mouseX - 30}px`,
 
                             // background: "gray",

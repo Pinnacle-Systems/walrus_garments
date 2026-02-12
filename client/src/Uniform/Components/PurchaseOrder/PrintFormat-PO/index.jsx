@@ -25,6 +25,544 @@ Font.register({
   src: "https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;1,400;1,600&display=swap",
 });
 
+
+const YarnPurchaseOrderPrintFormat = ({
+  isTaxHookDetailsLoading,
+  poNumber,
+  poDate,
+  deliveryToId,
+  dueDate,
+  payTermId,
+  deliveryType,
+  supplierDetails,
+  poItems,
+  taxTemplateId,
+  discountType,
+  discountValue,
+  remarks,
+  poType,
+  branchData,
+  termsAndCondition,
+  taxDetails,
+  deliveryTo,
+  taxKey,
+  taxGroupWise,
+  colorList, uomList, yarnList, sizeList, term, termsData, useTaxDetailsHook,
+  totals
+
+}) => {
+
+
+  const filledPoItems = [
+    ...poItems,
+    ...Array(Math.max(0, 10 - poItems.length)).fill({}), // empty rows
+  ];
+
+
+
+  function findAccessoryName(accessoryId, accessoryArray, field) {
+
+    let accessoryObj = accessoryArray?.find(item => parseInt(item.id) == accessoryId)
+
+    if (field == "accessoryItem") {
+      return accessoryObj?.accessoryItem?.name
+    }
+    else if ("accessoryGroup") {
+      return accessoryObj?.accessoryItem?.AccessoryGroup?.name
+    }
+
+  }
+
+
+
+  if (isTaxHookDetailsLoading) return <Loader />
+
+
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.borderBox}>
+        <View style={styles.page}>
+
+          <View style={styles.header}>
+            <View style={{ width: 125, flexWrap: 'wrap' }}>
+              <Text style={styles.companyText}>{branchData?.address}</Text>
+
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={[styles.companyText, { width: 40 }]}>Mobile</Text>
+                <Text style={styles.companyText}>: {branchData?.contactMobile}</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={[styles.companyText, { width: 40 }]}>Email</Text>
+                <Text style={styles.companyText}>: {branchData?.contactEmail}</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={[styles.companyText, { width: 40 }]}>GST No</Text>
+                <Text style={styles.companyText}>: {branchData?.gstNo}</Text>
+              </View>
+            </View>
+
+            <View style={{ alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  color: "#1D3A76",
+                  fontWeight: "bold",
+                  marginBottom: 4,
+                  marginTop: 10,
+                  textAlign: "center",
+                }}
+              >
+                {branchData?.branchName}
+              </Text>
+            </View>
+
+            <Image src={Sangeethatex} style={styles.logo} />
+          </View>
+
+          <View >
+            <Text style={styles.greenTitle}>YARN  PURCHASE ORDER</Text>
+            <View style={{ alignItems: "flex-end", marginTop: 5, marginBottom: 3, marginRight: 7 }}>
+              <View style={{}}>
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO No</Text>
+                  <Text style={styles.companyText}>: {poNumber}</Text>
+                </View>
+
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO Date</Text>
+                  <Text style={styles.companyText}>: {getDateFromDateTimeToDisplay(poDate)}</Text>
+                </View>
+
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>Due Date</Text>
+                  <Text style={styles.companyText}>: {getDateFromDateTimeToDisplay(dueDate)}</Text>
+                </View>
+              </View>
+            </View>
+
+
+
+
+          </View>
+
+
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+            {/* SUPPLIER DETAILS */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>SUPPLIER DETAILS</Text>
+              <View style={styles.boxContent}>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    paddingHorizontal: 4,
+                    marginBottom: 4,
+                    color: "#0F766E",
+                  }}
+                >
+                  {supplierDetails?.name}
+                </Text>
+
+                <Text style={{ textTransform: "uppercase", marginBottom: 2 }}>{supplierDetails?.address}</Text>
+
+                <View style={{ flexDirection: "row", marginTop: 2 }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.contactPersonNumber}</Text>
+                </View>
+
+                {/* <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.panNo}</Text>
+                </View> */}
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.gstNo}</Text>
+                </View>
+
+                <View style={{ flexDirection: "row" }}>
+                  <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                  <Text style={styles.companyText}>: {supplierDetails?.email}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* DELIVERY TO */}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>DELIVERY TO</Text>
+              <View style={styles.boxContent}>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    paddingHorizontal: 4,
+                    marginBottom: 4,
+                    color: "#0F766E",
+                  }}
+                >
+                  {deliveryType === "ToSelf" ? deliveryTo?.branchName : deliveryTo?.name}
+                </Text>
+
+                {deliveryTo?.address && <Text style={{ paddingHorizontal: 4, textTransform: "uppercase", marginBottom: 2 }}>{deliveryTo.address}</Text>}
+
+                {deliveryTo?.contactMobile && (
+                  <View style={{ flexDirection: "row" }}>
+                    <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
+                    <Text style={styles.companyText}>: {deliveryTo?.contactMobile}</Text>
+                  </View>
+                )}
+
+                {deliveryType === "ToSelf" ? (
+                  <>
+                    {deliveryTo?.gstNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.contactEmail && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.contactEmail}</Text>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {deliveryTo?.panNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.panNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.gstNo && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
+                      </View>
+                    )}
+                    {deliveryTo?.email && (
+                      <View style={{ flexDirection: "row" }}>
+                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
+                        <Text style={styles.companyText}>: {deliveryTo?.email}</Text>
+                      </View>
+                    )}
+                  </>
+                )}
+              </View>
+            </View>
+          </View>
+
+
+
+          <View style={styles.tableHeader}>
+            <Text style={[styles.th, { flex: 0.5 }]}>S.No</Text>
+            <Text style={[styles.th, { flex: 5 }]}>Item</Text>
+            <Text style={[styles.th, { flex: 2 }]}>Color</Text>
+            <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
+            <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
+            <Text style={[styles.th, { flex: 1.2 }]}>Amount</Text>
+          </View>
+
+
+          {filledPoItems?.map((val, index) => (
+            <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
+              <Text style={[styles.td, { flex: 0.5 }]}>{index + 1}</Text>
+              <Text style={[styles.td, { flex: 5 }]}>
+                {findFromList(val.yarnId, yarnList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 2 }]}>
+                {findFromList(val.colorId, colorList?.data, "name")}
+              </Text>
+              <Text style={[styles.td, { flex: 1 }]}>
+                {findFromList(val.uomId, uomList?.data, "name")}
+              </Text>
+              {/* <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                      {parseFloat(val.noOfBags).toFixed(3)}
+                    </Text> */}
+
+
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {isNaN(val.qty) ? "" : parseFloat(val.qty).toFixed(3)}
+              </Text>
+
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {isNaN(val.price) ? "" : parseFloat(val.price).toFixed(3)}
+              </Text>
+
+              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+                {isNaN(val.taxPercent) ? "" : parseFloat(val.taxPercent).toFixed(3)}
+              </Text>
+
+              <Text style={[styles.td, { flex: 1.2, textAlign: "right" }]}>
+                {val.qty && val.price && !isNaN(val.qty * val.price)
+                  ? (val.qty * val.price).toFixed(3)
+                  : ""}
+              </Text>
+            </View>
+          ))}
+
+
+
+          <View
+            style={{
+              flexDirection: "row",
+              // borderTop: "1 solid #9ca3af",
+              borderBottom: "1 solid #9ca3af",
+            }}
+          >
+            <Text
+              style={{
+                flex: 11.5,
+                textAlign: "center",
+                fontSize: 8,
+                fontWeight: "bold",
+                padding: 3,
+              }}
+            >
+              TOTAL
+            </Text>
+            <Text
+              style={{
+                flex: 2,
+                textAlign: "right",
+                fontSize: 8,
+                padding: 3,
+                borderLeft: "1 solid #9ca3af",
+              }}
+            >
+              {parseFloat(totals.taxable).toFixed(2)}
+            </Text>
+          </View>
+
+
+          <View
+            style={{
+              alignSelf: "flex-end",
+              border: "1 solid #9ca3af",
+              // marginTop: 4,
+              width: 100,
+            }}
+          >
+            <View style={{}}>
+              <Text style={{
+                fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 2, backgroundColor: "#1D3A76", color: "#FFFF"
+              }}>
+                TAX DETAILS
+              </Text>
+            </View>
+            {/* <TaxDetails taxGroupWise={taxGroupWise} items={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} useTaxDetailsHook={useTaxDetailsHook} /> */}
+            {totals?.slabBreakup?.map(i => (
+              <>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    borderTop: "1 solid #9ca3af",
+                    borderRight: "1 solid #9ca3af",
+                  }}
+                >
+                  <Text style={{ flex: 2, fontSize: 8, padding: 3 }}>
+                    {i.tax}
+                  </Text>
+                  <Text
+                    style={{
+                      flex: 1,
+                      textAlign: "right",
+                      fontSize: 8,
+                      padding: 3,
+                    }}
+                  >
+                    {/* {parseFloat(taxDetails[taxKey]?.sgstAmount ?? 0).toFixed(3)} */}
+                    {parseFloat(i.amount).toFixed(3)}
+
+                  </Text>
+                </View>
+              </>
+
+            ))}
+
+
+            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#1D3A76", color: "#FFFF" }}>
+              <Text style={{ flex: 1, fontSize: 8, paddingTop: 3 }}>Net Amount</Text>
+              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
+                {parseFloat(totals.net).toFixed(3)}
+              </Text>
+            </View>
+          </View>
+
+
+          <View >
+
+            <View
+              style={{
+                marginTop: 6,
+                border: "1 solid #9ca3af",
+                borderRadius: 4,
+                overflow: "hidden",
+              }}
+            >
+              <View
+                style={{
+                  borderBottom: "1 solid #9ca3af",
+                  backgroundColor: "#1D3A76",
+                  paddingVertical: 5,
+                  paddingHorizontal: 6,
+                  marginBottom: 4
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 9,
+                    fontWeight: "bold",
+                    color: "#FFFFFF",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Amount in Words: Rs.{" "}
+                  {numberToText.convertToText(totals?.net || 0, {
+                    language: "en-in",
+                    separator: "",
+                  })}{" "}
+                  Only
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  borderTop: "1 solid #9ca3af",
+                  height: 130,
+                }}
+              >
+                <View
+                  style={{
+                    flex: 0.3,
+                    borderRight: "1 solid #9ca3af",
+                    backgroundColor: "#f0f4ff",
+                    paddingVertical: 5,
+                    paddingHorizontal: 6,
+                    minHeight: 60,
+                    width: 40
+
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      fontWeight: "bold",
+                      color: "#1D3A76",
+                      flexWrap: "wrap"
+                    }}
+                  >
+                    Remarks:
+                  </Text>
+                  <Text style={{ fontSize: 8, flexWrap: "wrap" }}>
+                    {remarks || "—"}
+                  </Text>
+                </View>
+
+
+                <View
+                  style={{
+                    flex: 0.7,
+                    paddingVertical: 5,
+                    paddingHorizontal: 6,
+                    minHeight: 60,
+                    width: 100
+
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      fontWeight: "bold",
+                      color: "#1D3A76",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    Terms & Conditions:
+                  </Text>
+                  <Text style={{ fontSize: 8, flexWrap: "wrap" }}>
+                    {/* {term || "—"}
+                        */}
+                    {findFromList(term, termsData?.data, "termsAndCondition")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+
+
+
+
+
+
+
+          </View>
+
+          <View style={{ marginTop: 20 }}>
+            <Text
+              style={{ fontSize: 8, textAlign: "right", fontWeight: "bold" }}
+            >
+              For {branchData.branchName}
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 20,
+              }}
+            >
+              {["Prepared By", "Verified By", "Received By", "Approved By"].map(
+                (role) => (
+                  <Text
+                    key={role}
+                    style={{
+                      fontSize: 8,
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      flex: 1,
+                    }}
+                  >
+                    {role}
+                  </Text>
+                )
+              )}
+            </View>
+          </View>
+
+
+
+
+
+
+
+        </View>
+        <View style={{
+          marginTop: 20, textAlign: "center", fontSize: 8,
+
+        }}>
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} / ${totalPages}`
+            }
+          />
+        </View>
+
+
+
+      </Page>
+    </Document >
+  );
+};
+
+
+
 const styles = StyleSheet.create({
   // page: {
   //   fontFamily: "Helvetica",
@@ -62,7 +600,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginBottom: 1,
     textAlign: "left",
-    marginRight : 4
+    marginRight: 4
   },
   greenTitle: {
     textAlign: "center",
@@ -226,511 +764,6 @@ const styles = StyleSheet.create({
     flexShrink: 1, // helps long text wrap properly
   },
 });
-const YarnPurchaseOrderPrintFormat = ({
-  isTaxHookDetailsLoading,
-  poNumber,
-  poDate,
-  deliveryToId,
-  dueDate,
-  payTermId,
-  deliveryType,
-  supplierDetails,
-  poItems,
-  taxTemplateId,
-  discountType,
-  discountValue,
-  remarks,
-  poType,
-  branchData,
-  termsAndCondition,
-  taxDetails,
-  deliveryTo,
-  taxKey,
-  taxGroupWise,
-  colorList, uomList, yarnList, sizeList, term, termsData, useTaxDetailsHook
-
-}) => {
-
-
-  const filledPoItems = [
-    ...poItems,
-    ...Array(Math.max(0, 10 - poItems.length)).fill({}), // empty rows
-  ];
-
-
-
-  function findAccessoryName(accessoryId, accessoryArray, field) {
-
-    let accessoryObj = accessoryArray?.find(item => parseInt(item.id) == accessoryId)
-
-    if (field == "accessoryItem") {
-      return accessoryObj?.accessoryItem?.name
-    }
-    else if ("accessoryGroup") {
-      return accessoryObj?.accessoryItem?.AccessoryGroup?.name
-    }
-
-  }
-
-
-
-  if (isTaxHookDetailsLoading) return <Loader />
-
-
-
-  return (
-    <Document>
-      <Page size="A4" style={styles.borderBox}>
-        <View style={styles.page}>
-
-          <View style={styles.header}>
-            <View style={{ width: 125, flexWrap: 'wrap' }}>
-              <Text style={styles.companyText}>{branchData.address}</Text>
-
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={[styles.companyText, { width: 40 }]}>Mobile</Text>
-                <Text style={styles.companyText}>: {branchData.contactMobile}</Text>
-              </View>
-
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={[styles.companyText, { width: 40 }]}>Email</Text>
-                <Text style={styles.companyText}>: {branchData.contactEmail}</Text>
-              </View>
-
-              <View style={{ flexDirection: 'row' }}>
-                <Text style={[styles.companyText, { width: 40 }]}>GST No</Text>
-                <Text style={styles.companyText}>: {branchData.gstNo}</Text>
-              </View>
-            </View>
-
-            <View style={{ alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "#1D3A76",
-                  fontWeight: "bold",
-                  marginBottom: 4,
-                  marginTop: 10,
-                  textAlign: "center",
-                }}
-              >
-                {branchData.branchName}
-              </Text>
-            </View>
-
-            <Image src={Sangeethatex} style={styles.logo} />
-          </View>
-
-          <View >
-            <Text style={styles.greenTitle }>YARN  PURCHASE ORDER</Text>
-            <View style={{ alignItems: "flex-end", marginTop : 5, marginBottom : 3 , marginRight: 7 }}>
-              <View style={{}}>
-                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO No</Text>
-                  <Text style={styles.companyText}>: {poNumber}</Text>
-                </View>
-
-                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO Date</Text>
-                  <Text style={styles.companyText}>: {getDateFromDateTimeToDisplay(poDate)}</Text>
-                </View>
-
-                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                  <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>Due Date</Text>
-                  <Text style={styles.companyText}>: {getDateFromDateTimeToDisplay(dueDate)}</Text>
-                </View>
-              </View>
-            </View>
-
-
-
-
-          </View>
-
-
-          
-          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 , marginBottom : 6 }}>
-            {/* SUPPLIER DETAILS */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>SUPPLIER DETAILS</Text>
-              <View style={styles.boxContent}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    paddingHorizontal: 4,
-                    marginBottom: 4,
-                    color: "#0F766E",
-                  }}
-                >
-                  {supplierDetails?.name}
-                </Text>
-
-                <Text style={{textTransform : "uppercase" , marginBottom : 2}}>{supplierDetails?.address}</Text>
-
-                <View style={{ flexDirection: "row", marginTop: 2 }}>
-                  <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
-                  <Text style={styles.companyText}>: {supplierDetails?.contactPersonNumber}</Text>
-                </View>
-
-                {/* <View style={{ flexDirection: "row" }}>
-                  <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
-                  <Text style={styles.companyText}>: {supplierDetails?.panNo}</Text>
-                </View> */}
-
-                <View style={{ flexDirection: "row" }}>
-                  <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
-                  <Text style={styles.companyText}>: {supplierDetails?.gstNo}</Text>
-                </View>
-
-                <View style={{ flexDirection: "row" }}>
-                  <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
-                  <Text style={styles.companyText}>: {supplierDetails?.email}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* DELIVERY TO */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>DELIVERY TO</Text>
-              <View style={styles.boxContent}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    paddingHorizontal: 4,
-                    marginBottom: 4,
-                    color: "#0F766E",
-                  }}
-                >
-                  {deliveryType === "ToSelf" ? deliveryTo?.branchName : deliveryTo?.name}
-                </Text>
-
-                {deliveryTo?.address && <Text style={{ paddingHorizontal: 4 , textTransform : "uppercase" , marginBottom : 2 }}>{deliveryTo.address}</Text>}
-
-                {deliveryTo?.contactMobile && (
-                  <View style={{ flexDirection: "row" }}>
-                    <Text style={[styles.companyText, { width: 70 }]}>Mobile No</Text>
-                    <Text style={styles.companyText}>: {deliveryTo?.contactMobile}</Text>
-                  </View>
-                )}
-
-                {deliveryType === "ToSelf" ? (
-                  <>
-                    {deliveryTo?.gstNo && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
-                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
-                      </View>
-                    )}
-                    {deliveryTo?.contactEmail && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
-                        <Text style={styles.companyText}>: {deliveryTo?.contactEmail}</Text>
-                      </View>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {deliveryTo?.panNo && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text style={[styles.companyText, { width: 70 }]}>PAN No</Text>
-                        <Text style={styles.companyText}>: {deliveryTo?.panNo}</Text>
-                      </View>
-                    )}
-                    {deliveryTo?.gstNo && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text style={[styles.companyText, { width: 70 }]}>GST No</Text>
-                        <Text style={styles.companyText}>: {deliveryTo?.gstNo}</Text>
-                      </View>
-                    )}
-                    {deliveryTo?.email && (
-                      <View style={{ flexDirection: "row" }}>
-                        <Text style={[styles.companyText, { width: 70 }]}>Email</Text>
-                        <Text style={styles.companyText}>: {deliveryTo?.email}</Text>
-                      </View>
-                    )}
-                  </>
-                )}
-              </View>
-            </View>
-          </View>
-
-
-
-          <View style={styles.tableHeader}>
-            <Text style={[styles.th, { flex: 0.5 }]}>S.No</Text>
-            <Text style={[styles.th, { flex: 5 }]}>Item</Text>
-            <Text style={[styles.th, { flex: 2 }]}>Color</Text>
-            <Text style={[styles.th, { flex: 1 }]}>UOM</Text>
-            <Text style={[styles.th, { flex: 1 }]}>Qty</Text>
-            <Text style={[styles.th, { flex: 1 }]}>Rate</Text>
-            <Text style={[styles.th, { flex: 1 }]}>Tax(%)</Text>
-            <Text style={[styles.th, { flex: 1.2 }]}>Amount</Text>
-          </View>
-
-
-          {filledPoItems?.map((val, index) => (
-            <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
-              <Text style={[styles.td, { flex: 0.5 }]}>{index + 1}</Text>
-              <Text style={[styles.td, { flex: 5 }]}>
-                {findFromList(val.yarnId, yarnList?.data, "name")}
-              </Text>
-              <Text style={[styles.td, { flex: 2 }]}>
-                {findFromList(val.colorId, colorList?.data, "name")}
-              </Text>
-              <Text style={[styles.td, { flex: 1 }]}>
-                {findFromList(val.uomId, uomList?.data, "name")}
-              </Text>
-              {/* <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
-                      {parseFloat(val.noOfBags).toFixed(3)}
-                    </Text> */}
-
-
-              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
-                {isNaN(val.qty) ? "" : parseFloat(val.qty).toFixed(3)}
-              </Text>
-
-              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
-                {isNaN(val.price) ? "" : parseFloat(val.price).toFixed(3)}
-              </Text>
-
-              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
-                {isNaN(val.taxPercent) ? "" : parseFloat(val.taxPercent).toFixed(3)}
-              </Text>
-
-              <Text style={[styles.td, { flex: 1.2, textAlign: "right" }]}>
-                {val.qty && val.price && !isNaN(val.qty * val.price)
-                  ? (val.qty * val.price).toFixed(3)
-                  : ""}
-              </Text>
-            </View>
-          ))}
-
-
-
-          <View
-            style={{
-              flexDirection: "row",
-              // borderTop: "1 solid #9ca3af",
-              borderBottom: "1 solid #9ca3af",
-            }}
-          >
-            <Text
-              style={{
-                flex: 11.5,
-                textAlign: "center",
-                fontSize: 8,
-                fontWeight: "bold",
-                padding: 3,
-              }}
-            >
-              TOTAL
-            </Text>
-            <Text
-              style={{
-                flex: 2,
-                textAlign: "right",
-                fontSize: 8,
-                padding: 3,
-                borderLeft: "1 solid #9ca3af",
-              }}
-            >
-              {parseFloat(taxDetails.taxableAmount).toFixed(2)}
-            </Text>
-          </View>
-
-
-          <View
-            style={{
-              alignSelf: "flex-end",
-              border: "1 solid #9ca3af",
-              // marginTop: 4,
-              width: 100,
-            }}
-          >
-            <View style={{}}>
-              <Text style={{
-                fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 2, backgroundColor: "#1D3A76", color: "#FFFF"
-              }}>
-                TAX DETAILS
-              </Text>
-            </View>
-            <TaxDetails taxGroupWise={taxGroupWise} items={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} useTaxDetailsHook={useTaxDetailsHook} />
-
-
-
-            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#1D3A76", color: "#FFFF" }}>
-              <Text style={{ flex: 1, fontSize: 8, paddingTop: 3 }}>Net Amount</Text>
-              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
-                {parseFloat(taxDetails.netAmount).toFixed(3)}
-              </Text>
-            </View>
-          </View>
-
-
-          <View >
-
-            <View
-              style={{
-                marginTop: 6,
-                border: "1 solid #9ca3af",
-                borderRadius: 4,
-                overflow: "hidden",
-              }}
-            >
-              <View
-                style={{
-                  borderBottom: "1 solid #9ca3af",
-                  backgroundColor: "#1D3A76",
-                  paddingVertical: 5,
-                  paddingHorizontal: 6,
-                  marginBottom : 4
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 9,
-                    fontWeight: "bold",
-                    color: "#FFFFFF",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  Amount in Words: Rs.{" "}
-                  {numberToText.convertToText(taxDetails?.netAmount || 0, {
-                    language: "en-in",
-                    separator: "",
-                  })}{" "}
-                  Only
-                </Text>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  borderTop: "1 solid #9ca3af",
-                  height: 130,
-                }}
-              >
-                <View
-                  style={{
-                    flex: 0.3,
-                    borderRight: "1 solid #9ca3af",
-                    backgroundColor: "#f0f4ff",
-                    paddingVertical: 5,
-                    paddingHorizontal: 6,
-                    minHeight: 60,
-                    width: 40
-
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 8,
-                      fontWeight: "bold",
-                      color: "#1D3A76",
-                      flexWrap: "wrap"
-                    }}
-                  >
-                    Remarks:
-                  </Text>
-                  <Text style={{ fontSize: 8, flexWrap: "wrap" }}>
-                    {remarks || "—"}
-                  </Text>
-                </View>
-
-
-                <View
-                  style={{
-                    flex: 0.7,
-                    paddingVertical: 5,
-                    paddingHorizontal: 6,
-                    minHeight: 60,
-                    width: 100
-
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 8,
-                      fontWeight: "bold",
-                      color: "#1D3A76",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    Terms & Conditions:
-                  </Text>
-                  <Text style={{ fontSize: 8, flexWrap: "wrap" }}>
-                    {/* {term || "—"}
-                        */}
-                    {findFromList(term, termsData?.data, "termsAndCondition")}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-
-
-
-
-
-
-
-          </View>
-
-          <View style={{ marginTop: 20 }}>
-            <Text
-              style={{ fontSize: 8, textAlign: "right", fontWeight: "bold" }}
-            >
-              For {branchData.branchName}
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: 20,
-              }}
-            >
-              {["Prepared By", "Verified By", "Received By", "Approved By"].map(
-                (role) => (
-                  <Text
-                    key={role}
-                    style={{
-                      fontSize: 8,
-                      textAlign: "center",
-                      fontWeight: "bold",
-                      flex: 1,
-                    }}
-                  >
-                    {role}
-                  </Text>
-                )
-              )}
-            </View>
-          </View>
-
-
-
-
-
-
-
-        </View>
-        <View style={{
-          marginTop: 20, textAlign: "center", fontSize: 8,
-
-        }}>
-          <Text
-            render={({ pageNumber, totalPages }) =>
-              `Page ${pageNumber} / ${totalPages}`
-            }
-          />
-        </View>
-
-
-
-      </Page>
-    </Document >
-  );
-};
 
 export default YarnPurchaseOrderPrintFormat;
 

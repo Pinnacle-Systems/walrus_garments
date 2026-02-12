@@ -72,11 +72,9 @@ import { MachineMaster } from "..";
 const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDropdownOpen, heading, setIsOpen }) => {
   const dispatch = useDispatch();
 
-  const [hoveredGroupId, setHoveredGroupId] = useState(null);
-  const navigate = useNavigate();
+ 
 
 
-  console.log(groups, "groups")
   const priority = {
     "SAMPLE": 1,
     "ORDER": 2,

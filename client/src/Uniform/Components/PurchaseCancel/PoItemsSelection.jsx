@@ -7,21 +7,39 @@ import YarnPoItemSelection from './YarnPoItemSelection';
 import FabricPoItemSelection from './FabricPoItemSelection';
 import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 
-const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, setInwardItemSelection , po }) => {
-   
-   
-    console.log(inwardItems,"inwardItems")
+const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, setInwardItemSelection, po }) => {
+
+
+    console.log(inwardItems, "inwardItems")
     const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));
 
 
-    console.log(localInwardItems,"localInwardItems")
+    console.log(localInwardItems, "localInwardItems")
 
 
     function addItem(id) {
-        setLocalInwardItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems.push(id);
-            return newItems
+        // setLocalInwardItems(localInwardItems => {
+        //     let newItems = structuredClone(localInwardItems);
+        //     newItems.push(id);
+        //     return newItems
+        // });
+
+        setLocalInwardItems(prevItems => {
+            let newItems = structuredClone(prevItems);
+
+            const isAlreadyAdded = newItems?.some(v => v == id);
+
+                console.log(isAlreadyAdded,"isAlreadyAdded",newItems)
+
+            
+            if (isAlreadyAdded) {
+                return newItems ;
+            }else {
+                 newItems.push(id);
+            }
+
+
+            return newItems;
         });
     }
     function removeItem(id) {
@@ -52,10 +70,7 @@ const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, set
         setInwardItemSelection(false);
     }
 
-    function handleCancel() {
-        setLocalInwardItems([]);
-        setInwardItemSelection(false);
-    }
+
 
     function handleSelectAllChange(value, poItems) {
         if (value) {
@@ -87,8 +102,8 @@ const PoItemsSelection = ({ poType, supplierId, setInwardItems, inwardItems, set
                     {
                         <>
                             {/* {poType.includes("Yarn") ? */}
-                                <YarnPoItemSelection poType={poType} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleDone={handleDone} getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange}    po={po} />
-                              {
+                            <YarnPoItemSelection poType={poType} handleChange={handleChange} supplierId={supplierId} isItemAdded={isItemAdded} handleDone={handleDone} getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} po={po} />
+                            {
                                 //         transtype.includes("Fabric") ?
 
                                 //             <FabricPoItemSelection poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} />

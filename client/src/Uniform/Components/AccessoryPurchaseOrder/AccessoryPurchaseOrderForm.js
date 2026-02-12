@@ -36,6 +36,7 @@ import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterServi
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails";
 import { groupBy } from "lodash";
 import { useGetAccessoryCategoryMasterQuery } from "../../../redux/uniformService/AccessoryCategoryMasterServices";
+import { calculateTaxWithHSNBreakupAndInsertIntoPoItems } from "../../../Utils/TaxSummary";
 
 
 
@@ -348,7 +349,14 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
 
   let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
-  console.log(taxDetails, "taxDetails")
+
+  let isSupplierOutside
+
+  const totals = calculateTaxWithHSNBreakupAndInsertIntoPoItems(poItems?.filter(i => i.id || i.accessoryId), isSupplierOutside, discountType, discountValue);
+
+
+
+
   const supplierRef = useRef(null)
 
   const dateRef = useRef(null);
@@ -371,7 +379,9 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
           setDiscountType={setDiscountType}
           discountValue={discountValue}
           setDiscountValue={setDiscountValue}
-          poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} />
+          poItems={poItems} taxTypeId={taxTemplateId} readOnly={readOnly} 
+          totals={totals}
+          />
       </Modal>
       <Modal
         isOpen={tableDataView && poType !== "General Purchase"}
@@ -414,7 +424,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
             // termsAndCondition={termsAndCondition} 
             colorList={colorList} uomList={uomList} accessoryList={accessoryList} sizeList={sizeList}
             accessoryGroupList={accessoryGroupList} accessoryCategoryList={accessoryCategoryList}
-            term={term}
+            term={term} totals={totals}
           />
         </PDFViewer>
       </Modal>
@@ -634,7 +644,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
                 accessoryList={accessoryList}
                 colorList={colorList}
                 uomList={uomList} accessoryCategoryList={accessoryCategoryList}
-                sizeList={sizeList} hsnData={hsnData} handleRightClick={handleRightClick} handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu}
+                sizeList={sizeList} hsnData={hsnData} handleRightClick={handleRightClick} handleCloseContextMenu={handleCloseContextMenu} contextMenu={contextMenu} totals={totals}
 
               />
             </>
@@ -647,7 +657,7 @@ const PurchaseOrderForm = ({ onClose, id, setId, readOnly, setReadOnly, docId, s
               colorList={colorList}
               uomList={uomList}
               sizeList={sizeList} hsnData={hsnData} handleRightClick={handleRightClick} handleCloseContextMenu={handleCloseContextMenu}
-              contextMenu={contextMenu}
+              contextMenu={contextMenu} totals={totals}
             />
           }
 
