@@ -68,6 +68,9 @@ export function calculateTaxWithHSNBreakupAndInsertIntoPoItems(poItems, isSuppli
         const overallShare = overallDiscount * ratio;
         const finalTaxable = item._taxableBeforeOverall - overallShare;
 
+        console.log(totalTaxableBeforeOverall, 'totalTaxableBeforeOverall', overallShare, 'overallShare', item._taxableBeforeOverall)
+
+
         let cgst = 0, sgst = 0, igst = 0;
         const taxType = item.taxType || (isSupplierOutside ? "IGST" : "CGST_SGST");
 

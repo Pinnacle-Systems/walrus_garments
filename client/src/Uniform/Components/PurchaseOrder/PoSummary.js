@@ -77,9 +77,14 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                 totalTaxableBeforeOverall === 0
                     ? 0
                     : item._taxableBeforeOverall / totalTaxableBeforeOverall;
+                    
 
             const overallShare = overallDiscount * ratio;
             const finalTaxable = item._taxableBeforeOverall - overallShare;
+
+
+                                console.log(totalTaxableBeforeOverall,'totalTaxableBeforeOverall',overallShare,'overallShare')
+
 
             let cgst = 0, sgst = 0, igst = 0;
             const taxType = item.taxType || (isSupplierOutside ? "IGST" : "CGST_SGST");
