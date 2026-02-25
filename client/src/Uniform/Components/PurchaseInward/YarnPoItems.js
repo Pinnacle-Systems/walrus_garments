@@ -1,19 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { CLOSE_ICON, DELETE, PLUS } from "../../../icons";
+import { useEffect, useState } from "react";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { VIEW } from "../../../icons";
-import TaxDetailsFullTemplate from "../TaxDetailsCompleteTemplate";
-import Modal from "../../../UiComponents/Modal";
-import { priceWithTax, sumArray } from "../../../Utils/helper";
-import { discountTypes } from "../../../Utils/DropdownData";
+import {  getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
-import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
-import { YarnLotGrid } from "./LotGrid";
 import Swal from "sweetalert2";
 
 const YarnPoItems = ({
@@ -30,7 +23,9 @@ const YarnPoItems = ({
     handleCloseContextMenu,
     handleRightClick,
     setInwardItemSelection,
-    supplierId
+    supplierId,
+    itemList,
+    sizeList
 }) => {
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
     const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
@@ -38,23 +33,16 @@ const YarnPoItems = ({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(poItems);
         newBlend[index][field] = value;
-        if (field === "yarnId") {
-            newBlend[index]["taxPercent"] = findYarnTax(value);
-        }
-        // if (field !== "qty") {
-        //   newBlend[index]["qty"] = (
-        //     parseFloat(newBlend[index]["noOfBags"]) *
-        //     parseFloat(newBlend[index]["weightPerBag"])
-        //   ).toFixed(3);
-        // }
+        
+        console.log(newBlend,"newBlend");
         setPoItems(newBlend);
     };
 
     useEffect(() => {
         if (id) return
-        if (poItems?.length >= 1) return;
+        if (poItems?.length >= 9) return;
         setPoItems((prev) => {
-            let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+            let newArray = Array.from({ length: 9 - prev.length }, (i) => {
                 return {
                     yarnId: "",
                     qty: "0.00",
@@ -107,6 +95,8 @@ const YarnPoItems = ({
     const { data: yarnList } = useGetYarnMasterQuery({ params });
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
+    // const { data: itemList } = useGetItemMasterQuery({ params });
+    // const { data: sizeList } = useGetSizeMasterQuery({ params });
 
 
     function findYarnTax(id) {
@@ -251,21 +241,10 @@ const YarnPoItems = ({
 
     return (
         <>
-            {/* <Modal widthClass={"max-h-[600px] overflow-auto"} onClose={onClose} isOpen={Number.isInteger(currentSelectedLotGrid)}>
-                <YarnLotGrid
-                    isDirect
-                    readOnly={readOnly}
-                    onClose={onClose}
-                    addNewLotNo={addNewLotNo}
-                    removeLotNo={removeLotNo}
-                    handleInputChangeLotNo={handleInputChangeLotNo}
-                    index={currentSelectedLotGrid}
-                    lotDetails={selectedRow?.lotDetails ? selectedRow?.lotDetails : []}
-                    inwardLotDetails={selectedRow?.inwardLotDetails ? selectedRow?.inwardLotDetails : []} />
-            </Modal> */}
+            
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[330px]">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <button className="font-bold text-slate-700 bord"
@@ -276,6 +255,7 @@ const YarnPoItems = ({
 
                             }
                         }}
+                        disabled={true}
                         onClick={() => {
                             if (!supplierId) {
                                 Swal.fire({
@@ -295,9 +275,9 @@ const YarnPoItems = ({
                     </button>
 
                 </div>
-                <div className={` relative w-full overflow-y-auto py-1`}>
+                <div className={` relative w-full h-[250px] overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800">
+                        <thead className="bg-gray-200 text-gray-800 top-0 sticky">
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -308,13 +288,19 @@ const YarnPoItems = ({
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Items
+                                    Item
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Colors
+                                    Size
+                                </th>
+                                <th
+
+                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Color
                                 </th>
                                 <th
 
@@ -322,18 +308,8 @@ const YarnPoItems = ({
                                 >
                                     UOM
                                 </th>
-                                {/* <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Lot Det.
-                                </th> */}
-                                {/* <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    No. of Bags
-                                </th> */}
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
@@ -346,12 +322,7 @@ const YarnPoItems = ({
                                 >
                                     Price
                                 </th>
-                                {/* <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Price(with Tax)
-                                </th> */}
 
                                 <th
 
@@ -359,12 +330,7 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
-                                {/* <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    View Tax
-                                </th> */}
                                 <th
 
                                     className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
@@ -381,39 +347,61 @@ const YarnPoItems = ({
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
                                             tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
-                                            value={row.yarnId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
+                                            value={row.itemId}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
                                             onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "yarnId")
+                                                handleInputChange((e.target.value), index, "itemId")
                                             }
                                             }
                                         >
                                             <option >
                                             </option>
-                                            {(id ? yarnList?.data : yarnList?.data?.filter(item => item.active))?.map((blend) =>
+                                            {(id ? itemList?.data : itemList?.data)?.map((blend) =>
+                                                <option value={blend.id} key={blend.id}>
+                                                    {blend?.name}
+                                                </option>)}
+                                        </select>
+                                    </td>
+                                    {/* {console.log(row,"row")} */}
+
+                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                        <select
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
+                                            tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
+                                            value={row.sizeId}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
+                                            onBlur={(e) => {
+                                                handleInputChange((e.target.value), index, "sizeId")
+                                            }
+                                            }
+                                            disabled={readOnly || !row.itemId}
+                                        >
+                                            <option >
+                                            </option>
+                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data,sizeList?.data,"sizeId",row?.itemId)   )?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
                                         </select>
                                     </td>
 
-
-
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "colorId")
                                             }
                                             }
+                                            disabled={readOnly || !row.sizeId}
+
                                         >
                                             <option hidden>
                                             </option>
-                                            {(id ? colorList?.data : colorList?.data.filter(item => item.active))?.map((blend) =>
+                                            {(id ? colorList?.data : (getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId)))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>
@@ -427,11 +415,13 @@ const YarnPoItems = ({
                                     <td className="w-40 border border-gray-300 text-[11px] py-0.5">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                            className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
                                             }
+                                            disabled={readOnly || !row.colorId}
+
                                         >
 
                                             <option hidden>
@@ -457,7 +447,7 @@ const YarnPoItems = ({
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={row?.qty}
-                                            // disabled={true}
+                                            disabled={readOnly || !row.uomId}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "qty")
                                             }
@@ -479,7 +469,7 @@ const YarnPoItems = ({
                                             className="text-right rounded py-1 w-full px-1 table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             value={(!row.price) ? 0 : row.price}
-                                            disabled={readOnly}
+                                            disabled={readOnly || !row.qty}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")
                                             }
@@ -488,6 +478,7 @@ const YarnPoItems = ({
 
                                             }
                                             }
+
                                         />
 
                                     </td>

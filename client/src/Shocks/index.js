@@ -17,3 +17,4 @@ export { default as YarnNeedle } from "./YarnNeedleMaster";
 export { default as ExcessToleranceQty } from "./ExcessToleranceEntry";
 export { default as MaterialMaster } from "./MaterialMaster";
 export { default as TermsandCondition } from "./TermsandConditionsMaster";
+export { default as ItmeMaster } from "./ItemMaster";

@@ -3,7 +3,7 @@ import "./Header.css"
 import dp from "../../../assets/default-dp.png"
 import { Bell, Search } from "lucide-react"
 import Profile from "./Profile";
-import logo from "../../../assets/pinnacle2.jpeg"
+import logo from "../../../assets/walrusNew.png"
 // import { useState } from "react"
 import { LogOut } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -155,7 +155,7 @@ const Header = ({ profile, setProfile }) => {
 
     return (
 
-        <div className='py-1  w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
+        <div className='py-1 h-10 w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
             <Modal
                 isOpen={logout}
                 onClose={() => {
@@ -165,8 +165,8 @@ const Header = ({ profile, setProfile }) => {
             >
                 <Logout setLogout={setLogout} />
             </Modal>
-            <div className="w-32 ms-3">
-                <img className="rounded-lg"
+            <div className=" ms-3">
+                <img className="rounded-lg h-9"
                     src={logo}
                     alt="" />
             </div>

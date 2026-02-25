@@ -13,7 +13,7 @@ import {
 import FormHeader from "../../../Basic/components/FormHeader";
 import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, TextInputNew, TextInputNew1 } from "../../../Inputs";
 import ReportTemplate from '../../../Basic/components/ReportTemplate';
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { Loader } from "../../../Basic/components";
@@ -188,37 +188,18 @@ export default function Form() {
                             <div className='mr-1 md:ml-2'>
                                 <fieldset className='frame my-1'>
                                     <legend className='sub-heading'>Location Info</legend>
-                                    <div className='grid grid-cols-2 my-2'>
-                                        <CheckBox name="Yarn" value={isYarn} setValue={setIsYarn}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                        />
-                                        <CheckBox name="Fabric" value={isFabric} setValue={setIsFabric}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                        />
-                                    </div>
-                                    <div className='grid grid-cols-2 my-2'>
-                                        <CheckBox name="Accessory" value={isAccessory} setValue={setIsAccessory}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                        />
-                                        <CheckBox name="Garments" value={isGarments} setValue={setIsGarments}
-                                            readOnly={readOnly}
-                                            disabled={childRecord.current > 0}
-                                        />
-                                    </div>
+                          
                                     <div className='grid grid-cols-1 my-2'>
                                         <DropdownInput
-                                            name="Location"
-                                            options={dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")}
+                                            name="Branch"
+                                            options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
                                             value={locationId}
                                             setValue={setLocationId}
                                             required={true}
                                             readOnly={readOnly}
                                             disabled={childRecord.current > 0}
                                         />
-                                        <TextInput name="Store" type="text" value={storeName} setValue={setStoreName} readOnly={readOnly}
+                                        <TextInputNew1  name="Store" type="text" value={storeName} setValue={setStoreName} readOnly={readOnly}
                                             disabled={childRecord.current > 0}
                                         />
                                         <CheckBox name="Active" value={active} setValue={setActive} readOnly={readOnly} />

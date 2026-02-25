@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
 import toast from 'react-hot-toast';
-import Mastertable from '../MasterTable/Mastertable';
-import MastersForm from '../MastersForm/MastersForm';
-import { CheckBox, ReusableTable, TextInput, ToggleButton } from '../../../Inputs';
+import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../../Inputs';
 import { useAddColorMasterMutation, useDeleteColorMasterMutation, useGetColorMasterByIdQuery, useGetColorMasterQuery, useUpdateColorMasterMutation } from '../../../redux/uniformService/ColorMasterService';
-import { statusDropdown } from '../../../Utils/DropdownData';
-import { Check, Plus, Power } from 'lucide-react';
+import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 
@@ -53,7 +50,6 @@ export default function Form() {
   const syncFormWithDb = useCallback(
     (data) => {
       if (!id) {
-        setReadOnly(false);
         setName("");
         setPantone("");
         setIsGrey(false);
@@ -86,23 +82,28 @@ export default function Form() {
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData?.data?.id)
-      // toast.success(text + "Successfully");
-      setForm(false);
+
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
 
       });
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
+      }
     } catch (error) {
       console.log("handle");
     }
   };
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
@@ -130,9 +131,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
 
@@ -224,6 +225,14 @@ export default function Form() {
 
   ];
 
+  const firstInputFocus = useRef(null);
+
+  useEffect(() => {
+    if (form && firstInputFocus.current) {
+      firstInputFocus.current.focus();
+    }
+  }, [form]);
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
@@ -294,12 +303,30 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                               border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => {
+                          saveData("close")
+                        }}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {(!readOnly && !id) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new")
+                        }}
+
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
                       </button>
                     )}
                   </div>
@@ -310,21 +337,17 @@ export default function Form() {
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                      <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
+                        <div className="grid grid-cols-2  gap-3 ">
 
-                          <fieldset className='my-1'>
-                            <TextInput name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                            {/* <div className="grid grid-cols-2">
-                                                   <TextInput name="Pantone" type="text" value={pantone} setValue={setPantone} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                   <div className={`h-20 w-32`} style={{ backgroundColor: pantone }}></div>
-                                               </div> */}
-                            {/* <CheckBox name="Grey" readOnly={readOnly} value={isGrey} setValue={setIsGrey} /> */}
+                            <TextInputNew1 name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} 
+                            ref={firstInputFocus}
+                            />
+                          <div className='mt-5'>
+
                             <ToggleButton name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-                          </fieldset>
+                          </div>
                           <div>
 
-                          </div>
                         </div>
                       </div>
                     </div>

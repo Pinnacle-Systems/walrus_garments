@@ -1,38 +1,28 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
 import { useGetCityQuery } from "../../../redux/services/CityMasterService";
 import {
   useAddPartyMutation,
-  useDeletePartyBranchMutation,
   useDeletePartyMutation,
   useGetPartyByIdQuery,
   useGetPartyQuery,
   useUpdatePartyMutation,
 } from "../../../redux/services/PartyMasterService";
-import { useGetCertificateQuery } from "../../../redux/services/CertificateMasterService";
 import moment from "moment";
 import { findFromList, renameFile } from "../../../Utils/helper";
 import {
   dropDownListMergedObject,
   dropDownListObject,
-  multiSelectOption,
 } from "../../../Utils/contructObject";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import MastersForm from "../MastersForm/MastersForm";
 import {
 
   ToggleButton,
-  DateInput,
   DropdownInput,
   TextInput,
-  FancyCheckBox,
-  MultiSelectDropdown,
-  CheckBox,
-  RadioButton,
   TextArea,
   ReusableTable,
-  DropdownWithSearch,
   TextInputNew1,
   childRecordCount,
 } from "../../../Inputs";
@@ -41,25 +31,12 @@ import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMaste
 import { toast } from "react-toastify";
 import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
-import { useSendKycEmailMutation } from "../../../redux/services/emailApi";
-import CommonTable from "../../../Shocks/CommonReport/CommonTable";
-import { FaChevronRight } from "react-icons/fa6";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
-import AddBranch from "./AddBranch";
 import Modal from "../../../UiComponents/Modal";
-import RawMaterial from "./AddRawMaterial";
-import { BracesIcon, Check, LayoutGrid, Paperclip, Plus, Table } from "lucide-react";
-import Mastertable from "../MasterTable/Mastertable";
+import { Check, LayoutGrid, Plus, Table } from "lucide-react";
 import { useGetbranchTypeQuery } from "../../../redux/uniformService/BranchTypeMaster";
-import { useGetCountriesQuery, useGetCountryByIdQuery } from "../../../redux/services/CountryMasterService";
 import Swal from "sweetalert2";
 import Loader from "../Loader";
-import { faL } from "@fortawesome/free-solid-svg-icons";
-import { FaInfoCircle, FaPlus, FaQuestionCircle, FaUpload } from "react-icons/fa";
-import AddContactPersonDetails from "./PartyContactDetails";
-import ContactPersonDetails from "./PartyContactDetails";
-import ArtDesignReport from "./ArtDesign/ArtDesignReport";
-import { useGetMaterialMasterQuery } from "../../../redux/uniformService/MaterialMasterServices";
 import { getImageUrlPath } from "../../../Constants";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
@@ -389,7 +366,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
       setSupplier(data?.isSupplier || false);
-      setClient(data?.isClient || false);
+      setClient(data?.isClient || true);
       setBranchAddress(data?.branchAddress ? data?.branchAddress : "")
       setBranchEmail(data?.branchEmail ? data?.branchEmail : "")
       setBranchContact(data?.branchContact ? data?.branchContact : "")
@@ -513,8 +490,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
   } = useGetProcessMasterQuery({ params });
 
   const validateData = (data) => {
-    if (data.name && data?.partyCode && data?.gstNo && data?.address && data?.cityId && data?.pincode) {
+    if ((data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.gstNo && data?.address && data?.cityId && data?.pincode) {
       return true;
+    }
+    if(isBranch){
+        return data?.parentId  && data?.branchTypeId
     }
 
 

@@ -83,8 +83,8 @@ export const Generalpurchase = [
 ]
 
 export const directOrPo = [
-    { show: "General Purchase Inward", value: "GeneralInward" },
-    { show: "Order Purchase Inward", value: "PurchaseInward" },
+    // { show: "General Purchase Inward", value: "GeneralInward" },
+    // { show: "Order Purchase Inward", value: "PurchaseInward" },
     { show: "Direct Inward", value: "DirectInward" },
 
 
@@ -96,9 +96,9 @@ export const purchaseType = [
 
 ]
 export const directOrPoreturn = [
-    { show: "General Return", value: "GeneralReturn" },
-    { show: "Purchase Return", value: "PurchaseReturn" },
-    // { show: "Direct Return", value: "DirectReturn" },
+    // { show: "General Return", value: "GeneralReturn" },
+    // { show: "Purchase Return", value: "PurchaseReturn" },
+    { show: "Direct Return", value: "DirectReturn" },
 
 
 ]
@@ -337,3 +337,15 @@ export const packingCoverTypes = [
     { show: "PLAIN", value: "PLAIN" },
 
 ]
+
+export const ItemTypes = [
+    { show: "MEN'S", value: "MENS" },
+    { show: "WOMEN'S", value: "WOMENS" },
+    { show: "CHILDREN'S", value: "CHILDRENS" },
+]
+export const PriceMethod = [
+    { show: "STANDARD", value: "STANDARD" },
+    { show: "SIZE WISE", value: "SIZE" },
+    { show: "SIZE AND COLOR WISE", value: "SIZE_COLOR" },
+]
+

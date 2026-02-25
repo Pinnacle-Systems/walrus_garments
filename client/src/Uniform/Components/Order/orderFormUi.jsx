@@ -1,41 +1,31 @@
-import { HiPlus, HiShare, HiPrinter, HiTrash, HiMinus, HiLocationMarker, HiCheck, HiOutlineDocumentText } from "react-icons/hi";
-import { FaRegSave, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 import { FaFileAlt } from "react-icons/fa";
-import { HiX, HiOutlineRefresh } from "react-icons/hi";
+import { HiOutlineRefresh } from "react-icons/hi";
 import {
-    ReusableDropdown,
     ReusableInput,
 } from "./CommonInput";
 
-import { FiSave, FiPlusCircle, FiMail, FiPrinter, FiX, FiCopy, FiShare2, FiEdit2 } from "react-icons/fi";
-import AddressForm from "../../../Shocks/CommonReport/AddressForm";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { FiSave, FiPrinter, FiEdit2 } from "react-icons/fi";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
-    useGetOrderQuery,
     useGetOrderByIdQuery,
     useAddOrderMutation,
     useUpdateOrderMutation,
-    useDeleteOrderMutation,
 } from "../../../redux/uniformService/OrderService";
-import { useDeletePartyMutation, useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useDeletePartyMutation } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import moment from "moment";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import OrderItems from "./OrderItems";
-import { packingCover } from "../../../Utils/DropdownData";
 import DynamicRenderer from "./DynamicComponent";
 import Modal from "../../../UiComponents/Modal";
-import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextArea, TextInput } from "../../../Inputs";
+import { DateInputNew, ReusableSearchableInput, TextArea, TextInput } from "../../../Inputs";
 import Swal from "sweetalert2";
 import "../../../../src/swapStyle.css";
-import { MdDrafts } from "react-icons/md";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
 import { useGetFiberContentMasterQuery } from "../../../redux/uniformService/FiberContentMasterServices";
 import { useGetSocksMaterialQuery } from "../../../redux/uniformService/SocksMaterialMasterService";
 import { useGetSocksTypeQuery } from "../../../redux/uniformService/SocksTypeMasterService";
-import { useGetAccessoryGroupMasterQuery } from "../../../redux/uniformService/AccessoryGroupMasterServices";
-import { useGetAccessoryMasterQuery } from "../../../redux/uniformService/AccessoryMasterServices";
-import { useGetAccessoryCategoryMasterQuery } from "../../../redux/uniformService/AccessoryCategoryMasterServices";
 import { useGetAccessoryTemplateMasterByIdQuery, useGetAccessoryTemplateMasterQuery } from "../../../redux/uniformService/AccessoryTemplateMasterServices";
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 

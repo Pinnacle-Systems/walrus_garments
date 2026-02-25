@@ -24,7 +24,6 @@ import Swal from 'sweetalert2';
 
 
 
-const MODEL = "Fin Year Master";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -41,7 +40,7 @@ export default function Form() {
   console.log(from)
 
   const params = { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }
-  const { data: allData, isLoading, isFetching } = useGetFinYearQuery({ params, searchParams: searchValue });
+  const { data: allData } = useGetFinYearQuery({ params, searchParams: searchValue });
   const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetFinYearByIdQuery(id, { skip: !id });
 
   const [addData] = useAddFinYearMutation();
@@ -91,7 +90,7 @@ export default function Form() {
     return true
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
@@ -102,29 +101,43 @@ export default function Form() {
         icon: "success",
 
       });
-      setForm(false);
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
+      }
     } catch (error) {
       console.log("handle")
       setForm(false);
     }
   }
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (!validateOneActiveFinYear(data.active)) {
-      toast.error("Only one Fin year can be active...!", { position: "top-center" })
+      Swal.fire({
+        title: "Only one Fin year can be active...!",
+        icon: "success",
+
+      });
       return
     }
     if (!validateData(data)) {
-      toast.error("Please fill all required fields...!", { position: "top-center" })
+      // toast.error("Please fill all required fields...!", { position: "top-center" })
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "success",
+
+      });
       return
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated")
+      handleSubmitCustom(updateData, data, "Updated", nextProcess)
     } else {
-      handleSubmitCustom(addData, data, "Added")
+      handleSubmitCustom(addData, data, "Added", nextProcess)
     }
   }
 
@@ -162,13 +175,6 @@ export default function Form() {
 
   const onNew = () => { setId(""); setReadOnly(false); setForm(true); setSearchValue("") }
 
-  function onDataClick(id) {
-    setId(id);
-    setForm(true);
-  }
-  const tableHeaders = ["S.NO", "from", "to", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-  const tableDataNames = ["index+1", "dataObj.from",
-    "dataObj.to", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
   const handleView = (id) => {
     setId(id);
     setForm(true);
@@ -223,187 +229,7 @@ export default function Form() {
 
 
   return (
-    //   <div onKeyDown={handleKeyDown}>
-    //       <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-    //           <h5 className='my-1'>Fin Year Master</h5>
-    //           <div className="flex items-center gap-4">
-    //                     <button
-    //                       onClick={() => {
-    //                         setForm(true);
-    //                         onNew();
-    //                       }}
-    //                       className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-    //                     >
-    //                       <Plus size={16} />
-    //                       Add New Fin Year
-    //                     </button>
-
-    //                   </div>
-    //       </div>
-    //       <div className='w-full flex items-start'>
-    //           <Mastertable
-    //               header={'Fin Year list'}
-    //               searchValue={searchValue}
-    //               setSearchValue={setSearchValue}
-    //               onDataClick={onDataClick}
-    //               // setOpenTable={setOpenTable}
-    //               tableHeaders={tableHeaders}
-    //               tableDataNames={tableDataNames}
-    //               data={allData?.data}
-    //               setReadOnly={setReadOnly}
-    //               loading={
-    //                   isLoading || isFetching
-    //               }
-
-    //               />
-    //       </div>
-    //       {/* {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[50%]"} onClose={() => { setForm(false); setErrors({}); }}>
-    //           <MastersForm
-    //               onNew={onNew}
-    //               onClose={() => {
-    //                   setForm(false);
-    //                   setSearchValue("");
-    //                   setId(false);
-    //               }}
-    //               model={MODEL}
-    //               childRecord={childRecord.current}
-    //               saveData={saveData}
-    //               setReadOnly={setReadOnly}
-    //               deleteData={deleteData}
-    //               readOnly={readOnly}
-    //               emptyErrors={() => setErrors({})}
-    //           >
-    //               <fieldset className=' rounded mt-2'>
-    //                   <div className=''>
-    //                       <div className="flex flex-wrap justify-between">
-    //                           <div className='mb-3 w-[48%]'>
-    //                               <DateInput name="From" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-    //                           </div>
-    //                           <div className='mb-3 w-[48%]'>
-    //                               <DateInput name="To" value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-    //                           </div>
-    //                       </div>
-    //                       <div className='mb-3 w-[48%]'>
-    //                           <DisabledInput name="Short Code" value={code} disabled={(childRecord.current > 0)} />
-    //                       </div>
-
-    //                       <div className='mb-5'>
-    //                           <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-    //                       </div>
-
-    //                   </div>
-    //               </fieldset>
-    //           </MastersForm>
-    //       </Modal>} */}
-    // {form && (
-    //   <Modal
-    //     isOpen={form}
-    //     form={form}
-    //     widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-    //     onClose={() => {
-    //       setForm(false);
-    //       setErrors({});
-    //     }}
-    //   >
-    //     <div className="h-full flex flex-col bg-[f1f1f0]">
-    //       <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-    //         <div className="flex items-center gap-2">
-    //           <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-    //             {id ? (!readOnly ? "Edit Fin year Master" : "Fin year Master") : "Add New Fin year"}
-    //           </h2>
-
-    //         </div>
-    //         <div className="flex gap-2">
-    //           <div>
-    //             {readOnly && (
-    //               <button
-    //                 type="button"
-    //                 onClick={() => {
-    //                   setForm(false);
-    //                   setSearchValue("");
-    //                   setId(false);
-    //                 }}
-    //                 className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-    //               >
-    //                 Cancel
-    //               </button>
-    //             )}
-    //           </div>
-    //           <div className="flex gap-2">
-    //             {!readOnly && (
-    //               <button
-    //                 type="button"
-    //                 onClick={saveData}
-    //                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-    //             border border-green-600 flex items-center gap-1 text-xs"
-    //               >
-    //                 <Check size={14} />
-    //                 {id ? "Update" : "Save"}
-    //               </button>
-    //             )}
-    //           </div>
-    //         </div>
-    //       </div>
-
-    //       <div className="flex-1 overflow-auto p-3">
-    //         <div className="grid grid-cols-1  gap-3  h-full">
-    //           <div className="lg:col-span- space-y-3">
-    //             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-
-
-    //               <div className="space-y-2 w-[50%]">
-    //                 {/* <TextInput
-    //                   ref={input1Ref}
-    //                   name="Full Name"
-    //                   value={name}
-    //                   setValue={setName}
-    //                   required={true}
-    //                   readOnly={readOnly}
-    //                   disabled={childRecord.current > 0}
-    //                   onKeyDown={(e) => handleKeyNext(e, input2Ref)}
-    //                 /> */}
-    //  <DateInput name="From" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
-
-    //   {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
-
-    //         <div className="">
-    //                 <DateInput name="To" value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-    //        </div>
-    //        <div>
-    //              <DisabledInput name="Short Code" value={code} disabled={(childRecord.current > 0)} />
-    //        </div>
-
-    //     <div>
-    //       <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}   disabled={childRecord.current > 0}  />
-    //     </div>
-
-    //               </div>
-    //             </div>
-
-
-    //           </div>
-
-
-
-
-
-
-
-
-
-
-    //         </div>
-    //       </div>
-
-
-    //     </div>
-
-
-
-    //   </Modal>
-    // )}
-    //   </div>
+    
 
 
 
@@ -440,7 +266,7 @@ export default function Form() {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[60%]"}
+            widthClass={"w-[40%] h-[40%]"}
             onClose={() => {
               setForm(false);
               setErrors({});
@@ -477,12 +303,30 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                          border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => {
+                          saveData("close")
+                        }}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {(!readOnly && !id) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new")
+                        }}
+
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
                       </button>
                     )}
                   </div>
@@ -490,34 +334,28 @@ export default function Form() {
               </div>
 
               <div className="flex-1 overflow-auto p-3 ">
-                <div className="grid grid-cols-1  gap-3  h-full ">
-                  <div className="lg:col-span-2 space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                      <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
-
-                          <fieldset>
-
-                            <DateInputNew type={"date"} name="From" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                <div className="lg:col-span-2 h-full">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <div className="grid grid-cols-2 gap-3">
 
 
-                            {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
+                      <DateInputNew type={"date"} name="From" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                            <DateInputNew name="To" type={"date"} value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                            <div className='mt-3'>
+                      {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
 
-                              <TextInput name="Short Code" value={code} disabled={true} />
-                            </div>
-                            <div className='mt-4'>
+                      <DateInputNew name="To" type={"date"} value={to} setValue={setTo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
-                            </div>
+                      <div className=''>
 
-                          </fieldset>
-
-                        </div>
+                        <TextInput name="Short Code" value={code} disabled={true} />
                       </div>
+                      <div className='mt-2'>
+
+                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                      </div>
+
+
                     </div>
                   </div>
                 </div>

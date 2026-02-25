@@ -1,24 +1,20 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
-import FormHeader from "../../../Basic/components/FormHeader";
-import { toast } from "react-toastify";
 
 // import { poTypes, } from '../../../Utils/DropdownData';
 
-import moment from "moment";
 // import PoSummary from "./PoSummary";
 
 import {
-  useAddDirectCancelOrReturnMutation, useDeleteDirectCancelOrReturnMutation,
-  useGetDirectCancelOrReturnByIdQuery, useGetDirectCancelOrReturnQuery, useUpdateDirectCancelOrReturnMutation
+  useDeleteDirectCancelOrReturnMutation,
+  useGetDirectCancelOrReturnQuery
 }
   from "../../../redux/uniformService/DirectCancelOrReturnServices";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { getCommonParams } from "../../../Utils/helper";
 
 import PurchaseReturnForm from "./PurchaseReturnForm";
-import CommonTable from "../../../Shocks/CommonReport/CommonTable";
 import { FaPlus } from "react-icons/fa";
 import PurchaseCancelFormReport from "./PurchaseReturnFormReport";
 import Swal from "sweetalert2";
@@ -28,6 +24,8 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService";
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -70,12 +68,15 @@ export default function Form() {
   const { data: branchdata } = useGetBranchByIdQuery(branchId, { skip: !branchId });
 
 
-    const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
-    const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
+  const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
+  const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
 
 
-  const { data: yarnList } =
-    useGetYarnMasterQuery({ params: { companyId } });
+  const { data: itemList } =
+    useGetItemMasterQuery({ params: { companyId } });
+
+  const { data: sizeList } =
+    useGetSizeMasterQuery({ params: { companyId } });
 
   const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching } =
     useGetColorMasterQuery({ params: { companyId } });
@@ -141,16 +142,16 @@ export default function Form() {
       {showManufacturer ? (
         <PurchaseReturnForm isLoading={isLoading} isFetching={isFetching} poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} allData={allData} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
           onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} supplierId={supplierId} setSupplierId={setSupplierId}
-        supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-        branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList} locationData={locationData} 
-        termsAndCondition={termsAndCondition}
-          />
+          supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+          branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
+          termsAndCondition={termsAndCondition} sizeList={sizeList}
+        />
 
       ) : (
         <div className="p-2 bg-[#F1F1F0] ">
           <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-    
-            <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Return</h1>
+
+            <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
 
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
@@ -161,7 +162,7 @@ export default function Form() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-         
+
             <PurchaseCancelFormReport
               data={allData?.data || []}
               onView={handleView}

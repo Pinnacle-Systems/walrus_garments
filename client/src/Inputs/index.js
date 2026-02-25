@@ -13,7 +13,7 @@ import { useGetPartyQuery } from "../redux/services/PartyMasterService";
 import { useModal } from "../Basic/pages/home/context/ModalContext";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import Modal from "../UiComponents/Modal";
 
 export const handleOnChange = (event, setValue) => {
@@ -222,7 +222,55 @@ export const MultiSelectDropdown = ({
   );
 };
 
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <input
+        type="checkbox"
+        checked={props.isSelected}
+        onChange={() => null}
+        style={{ marginRight: 8 }}
+      />
+      {props.label}
+    </components.Option>
+  );
+};
 
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue } = props;
+  const selected = getValue();
+
+  const MAX_DISPLAY = 5;
+
+  let displayText = "";
+
+  if (selected.length > 0) {
+    const labels = selected.slice(0, MAX_DISPLAY).map((item) => item.label);
+
+    if (selected.length > MAX_DISPLAY) {
+      displayText = `${labels.join(", ")} +${selected.length - MAX_DISPLAY
+        } more`;
+    } else {
+      displayText = labels.join(", ");
+    }
+  }
+
+  return (
+    <components.ValueContainer {...props}>
+      <div
+        style={{
+          fontSize: "13px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {displayText}
+      </div>
+      {children[1]}
+    </components.ValueContainer>
+  );
+};
 export const MultiSelectDropdownNew = ({
   name,
   selected,
@@ -233,83 +281,85 @@ export const MultiSelectDropdownNew = ({
   tabIndex = null,
   className = "",
   required,
-  disabled
+  disabled,
 }) => {
-  console.log(options, "options");
-  console.log(selected, "selected");
 
-  // const customStyles = {
-  //   control: (base) => ({
-  //     ...base,
-  //     minHeight: "10px",
-  //     borderRadius: "8px",
-  //     fontSize: "12px",
-  //     paddingLeft: "4px",
-  //     borderColor: "#d1d5db",
-  //     boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-  //   }),
-  // };
+const customStyles = {
+  control: (base) => ({
+    ...base,
+    minHeight: "30px",
+    height: "28px",
+    borderRadius: "6px",
+    fontSize: "13px",
+    borderColor: "#d1d5db",
+    padding: "0",
+  }),
 
-  const customStyles = {
-    control: (base) => ({
-      ...base,
-      minHeight: "30px",
-      height: "28px",
-      borderRadius: "6px",
-      fontSize: "13px",
-      borderColor: "#d1d5db",
-      padding: "0",
-    }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused
+      ? "#f3f4f6"
+      : "#ffffff",
+    color: "#111827",
+    fontSize: "11px",
+    paddingTop: "4px",
+    paddingBottom: "4px",
+  }),
 
-    valueContainer: (base) => ({
-      ...base,
-      padding: "0 6px",
-      height: "28px",
-    }),
+  menu: (base) => ({
+    ...base,
+    zIndex: 9999,   // 🔥 important
+  }),
 
-    input: (base) => ({
-      ...base,
-      margin: "0",
-      padding: "0",
-    }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,   // 🔥 for modals
+  }),
 
-    multiValue: (base) => ({
-      ...base,
-      padding: "0 4px",
-    }),
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 6px",
+    height: "28px",
+  }),
 
-    indicatorsContainer: (base) => ({
-      ...base,
-      height: "28px",
-    }),
-  };
+  input: (base) => ({
+    ...base,
+    margin: "0",
+    padding: "0",
+  }),
 
+  multiValue: (base) => ({
+    ...base,
+    padding: "0 4px",
+  }),
+
+  indicatorsContainer: (base) => ({
+    ...base,
+    height: "28px",
+  }),
+};
   return (
-    <div
-      className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
-    >
+    <div className={`block text-xs font-bold text-gray-600 mb-1 ${className} `}>
       <span className="mb-3">
         {required ? <RequiredLabel name={label ? label : name} /> : name}
       </span>
-      <div className="mt-1">
 
-
-
+      <div className="mt-1 ">
         <Select
           isMulti
           options={options}
           value={selected}
           onChange={setSelected}
+          components={{ Option, ValueContainer }}
+          closeMenuOnSelect={false}
+          hideSelectedOptions={false}
+          placeholder=""
+          maxMenuHeight={200}   
           styles={customStyles}
-          className="w-full"
-          disabled={disabled}
+
+
         />
-
       </div>
-
-
-
-
     </div>
   );
 };
@@ -1723,7 +1773,7 @@ export const ReusableTable = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(item.id,item?._count)}
+                                onClick={() => onDelete(item.id, item?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1754,7 +1804,7 @@ export const ReusableTable = ({
 
   );
 };
- 
+
 
 // export function ReusableSearchableInput({
 //   label,
@@ -2432,15 +2482,148 @@ export const TextInputNew1 = forwardRef(({
         tabIndex={tabIndex ?? undefined}
         max={max ? String(max) : undefined}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
-          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
-          ${className}`}
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+            ${className}`}
       />
     </div>
   );
 });
 
 export function childRecordCount(count) {
-        return  Object.values(count).some(v => v > 0);
+  return Object.values(count).some(v => v > 0);
 
-}  
+}
+
+
+export const DropdownInputNew = forwardRef(({
+  name,
+  beforeChange = () => { },
+  onBlur = null,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className = "",
+  readOnly = false,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+  autoFocus = false,
+  width = "full",
+  country,
+  openOnFocus = false,
+  show   // new prop
+}, ref) => {
+
+
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+
+  const isDisabled = readOnly || disabled;
+
+  useEffect(() => {
+    if (ref?.current && openOnFocus) {
+      ref.current.focus();
+
+    }
+  }, [openOnFocus]);
+
+
+  return (
+    <div className={`mb-1 ${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? <RequiredLabel name={name} /> : name}
+        </label>
+      )}
+      <select
+        ref={ref}
+        onBlur={onBlur}
+        autoFocus={autoFocus}
+        tabIndex={tabIndex ?? undefined}
+        defaultValue={defaultValue}
+        required={required}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+          ${className}`}
+        value={value}
+        onChange={(e) => {
+          beforeChange();
+          handleOnChange(e);
+        }}
+        onFocus={(e) => {
+          if (openOnFocus) {
+            e.target.click();
+          }
+        }}
+        disabled={isDisabled}
+      >
+        <option value="" hidden={!clear} className="text-gray-800">
+          Select
+        </option>
+        {options?.map((option, index) => (
+          <option
+            key={index}
+            value={option.value}
+            className="text-xs py-1 text-gray-800"
+          >
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+});
+
+
+export const PriceInputWithTax = forwardRef(({
+  name,
+  value,
+  setValue,
+  taxType,
+  setTaxType,
+  required = false,
+  disabled = false,
+}, ref) => {
+
+  return (
+    <div className="mb w-full">
+      <label className="block text-xs font-bold text-gray-600 mb-1">
+        {name}
+      </label>
+
+      <div className="flex">
+        {/* Price Input */}
+        <input
+          ref={ref}
+          type="number"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={disabled}
+          className="w-full px-3 py-1.5 text-xs border border-gray-300 
+          rounded-l-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Enter Price"
+        />
+
+        {/* Dropdown */}
+        <select
+          value={taxType}
+          onChange={(e) => setTaxType(e.target.value)}
+          disabled={disabled}
+          className="px-2 text-xs border border-l-0 border-gray-300 
+          rounded-r-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="withTax">With Tax</option>
+          <option value="withoutTax">Without Tax</option>
+        </select>
+      </div>
+    </div>
+  );
+});
+
+
+

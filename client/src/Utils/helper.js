@@ -200,7 +200,7 @@ export function findFromListReturnsItem(id, list) {
 }
 
 export function isBetweenRange(startValue, endValue, value) {
-  console.log(startValue, endValue, value,"startValue, endValue, value")
+  console.log(startValue, endValue, value, "startValue, endValue, value")
   return (parseFloat(startValue) <= parseFloat(value)) && (parseFloat(value) <= parseFloat(endValue))
 }
 
@@ -212,9 +212,9 @@ export function substract(num1, num2) {
 }
 
 export function getAllowableReturnQty(inwardedQty, returnedQty, stockQty) {
-  console.log(inwardedQty,"inwardedQty",returnedQty,"returnedQty",stockQty,"stockQty")
+  console.log(inwardedQty, "inwardedQty", returnedQty, "returnedQty", stockQty, "stockQty")
   let balanceReturnQty = parseFloat(inwardedQty) + parseFloat(returnedQty);
-  console.log(balanceReturnQty < stockQty,"balanceReturnQty",balanceReturnQty , "stockQty",stockQty)
+  console.log(balanceReturnQty < stockQty, "balanceReturnQty", balanceReturnQty, "stockQty", stockQty)
   return (balanceReturnQty < parseFloat(stockQty)) ? balanceReturnQty : parseFloat(stockQty)
 }
 
@@ -349,28 +349,28 @@ export function renameFile(originalFile) {
 }
 
 
-export async function classListData(data){
+export async function classListData(data) {
   let classData = data;
   const order = { "PLAYSCHOOL": 0, "PRE-KG": 1, "LKG": 2, "UKG": 3 };
 
   classData.sort((a, b) => {
-      const extractParts = (className) => {
-          let match = className.match(/^([A-Za-z]+)-?(\d*)([A-Za-z]*)$/);
-          if (!match) return [Infinity, "", ""]; 
-  
-          let [_, prefix, num, suffix] = match;
-          num = num ? parseInt(num, 10) : (order[prefix] !== undefined ? order[prefix] : Infinity);
-          
-          return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
-      };
-  
-      let [orderA, numA, suffixA] = extractParts(a.name);
-      let [orderB, numB, suffixB] = extractParts(b.name);
-  
-      if (orderA !== orderB) return orderA - orderB;
-      if (numA !== numB) return numA - numB;
-      return suffixA.localeCompare(suffixB);
-    });
+    const extractParts = (className) => {
+      let match = className.match(/^([A-Za-z]+)-?(\d*)([A-Za-z]*)$/);
+      if (!match) return [Infinity, "", ""];
+
+      let [_, prefix, num, suffix] = match;
+      num = num ? parseInt(num, 10) : (order[prefix] !== undefined ? order[prefix] : Infinity);
+
+      return [order[prefix] !== undefined ? order[prefix] : num, num, suffix];
+    };
+
+    let [orderA, numA, suffixA] = extractParts(a.name);
+    let [orderB, numB, suffixB] = extractParts(b.name);
+
+    if (orderA !== orderB) return orderA - orderB;
+    if (numA !== numB) return numA - numB;
+    return suffixA.localeCompare(suffixB);
+  });
 }
 
 
@@ -395,58 +395,92 @@ export function autoFocusSelect(el, refObj, condition = true) {
 }
 
 
-const IDLE_TIME = 10 * 60 * 1000; 
+const IDLE_TIME = 10 * 60 * 1000;
 
 export const useIdleLogout = (
-    onLogout,
-    isLoggedIn,
+  onLogout,
+  isLoggedIn,
 ) => {
-    const timerRef = useRef(null);
+  const timerRef = useRef(null);
 
-    console.log(isLoggedIn, 'isLoggedIn');
-    
-    useEffect(() => {
-        if (!isLoggedIn) {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-                timerRef.current = null;
-            }
-            return;
-        }
+  console.log(isLoggedIn, 'isLoggedIn');
 
-        const resetTimer = () => {
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-            }
+  useEffect(() => {
+    if (!isLoggedIn) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
 
-            timerRef.current = setTimeout(() => {
-                onLogout();
-            }, IDLE_TIME);
-        };
+    const resetTimer = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
 
-        const events = [
-            "mousemove",
-            "mousedown",
-            "keydown",
-            "scroll",
-            "touchstart",
-        ];
+      timerRef.current = setTimeout(() => {
+        onLogout();
+      }, IDLE_TIME);
+    };
 
-        events.forEach(event =>
-            window.addEventListener(event, resetTimer)
-        );
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
 
-        resetTimer(); // start timer immediately
+    events.forEach(event =>
+      window.addEventListener(event, resetTimer)
+    );
 
-        return () => {
-            events.forEach(event =>
-                window.removeEventListener(event, resetTimer)
-            );
+    resetTimer(); // start timer immediately
 
-            if (timerRef.current) {
-                clearTimeout(timerRef.current);
-                timerRef.current = null;
-            }
-        };
-    }, [isLoggedIn, onLogout]);
+    return () => {
+      events.forEach(event =>
+        window.removeEventListener(event, resetTimer)
+      );
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isLoggedIn, onLogout]);
 };
+
+
+export function getUniqueArrayBySize(rowData, allData, key, itemId) {
+
+  const item = rowData?.filter(i => i.id == itemId)?.[0]
+
+  console.log(item, "item", rowData)
+
+
+  if (item?.priceMethod == "STANDARD") {
+    return allData
+  } else {
+    return allData?.filter(all =>
+      item?.ItemPriceList?.some(item => item[key] == all?.id)
+    )
+  }
+}
+
+
+export function getUniqueArrayByColor(masterData, allData, key, itemId) {
+
+  const item = masterData?.filter(i => i.id == itemId)?.[0]
+
+  console.log(item, "item", masterData)
+
+
+  if (item?.priceMethod == "SIZE_COLOR") {
+    return allData?.filter(all =>
+      item?.ItemPriceList?.some(item => item[key] == all?.id)
+    )
+  } else {
+    return allData
+  }
+}

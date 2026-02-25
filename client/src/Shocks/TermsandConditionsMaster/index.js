@@ -50,9 +50,9 @@ export default function Form() {
     const syncFormWithDb = useCallback(
         (data) => {
             if (!id) {
-                setReadOnly(false);
                 setName("");
                 setActive(id ? (data?.active) : true);
+                setTermsAndCondition(data?.termsAndCondition ? data?.termsAndCondition : '')
 
 
             } else {
@@ -81,7 +81,7 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -91,14 +91,18 @@ export default function Form() {
                 icon: "success",
 
             });
-            setForm(false);
-
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             // toast.error("Please fill all required fields...!", {
             //     position: "top-center",
@@ -110,13 +114,30 @@ export default function Form() {
             });
             return;
         }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Terms & Condtions  already exists.",
+                icon: "warning",
+                showConfirmButton: false,
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -150,14 +171,15 @@ export default function Form() {
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {
             event.preventDefault();
             saveData();
-        }else{
-            
+        } else {
+
         }
     };
 
     const onNew = () => {
         setId("");
         setForm(true);
+        setTermsAndCondition("")
         setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
@@ -185,7 +207,12 @@ export default function Form() {
             accessor: (item, index) => index + 1,
             className: "font-medium text-gray-900 w-12  text-center",
         },
-
+        {
+            header: "Name",
+            accessor: (item) => item?.name,
+            //   cellClass: () => "font-medium  text-gray-900",
+            className: "font-medium text-gray-900 text-left uppercase w-[200px]",
+        },
         {
             header: "Terms & conditions",
             accessor: (item) => item?.termsAndCondition,
@@ -217,11 +244,20 @@ export default function Form() {
         setReadOnly(false);
         console.log("Edit");
     };
+
+    const firstInputFocus = useRef(null);
+
+    useEffect(() => {
+        if (form && firstInputFocus.current) {
+            firstInputFocus.current.focus();
+        }
+    }, [form]);
+
     return (
 
-        <div 
-        // onKeyDown={handleKeyDown}
-         className="p-1 h-[90%]">
+        <div
+            // onKeyDown={handleKeyDown}
+            className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Terms & Conditions Master</h5>
                 <div className="flex items-center">
@@ -290,12 +326,30 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                  border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close")
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                                                border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new")
+                                                }}
+
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -309,18 +363,18 @@ export default function Form() {
 
 
                                             <div className="">
-                                                <TextInputNew1 name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                                                <TextInputNew1 name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} ref={firstInputFocus} />
 
                                             </div>
                                             <div className='  flex   col-span-2 flex-col'>
-                                                <label className='block text-xs font-bold text-gray-600 mt-3 mb-2'>Terms And Condition :</label>
+                                                <label className='block text-xs font-bold text-gray-600 mt-3 mb-2'>Terms And Condition  <span className="text-red-500">*</span></label>
                                                 <textarea className="w-96  h-28 overflow-auto  p-2 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm "
                                                     value={termsAndCondition}
                                                     disabled={readOnly}
                                                     onChange={(e) => setTermsAndCondition(e.target.value)}
-                                                    // onChange={(e) => console.log( "termsand", e.target.value)}
+                                                // onChange={(e) => console.log( "termsand", e.target.value)}
                                                 >
                                                 </textarea>
                                             </div>

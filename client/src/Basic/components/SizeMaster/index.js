@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import secureLocalStorage from 'react-secure-storage';
 import {
@@ -9,11 +9,9 @@ import {
     useUpdateSizeMasterMutation
 } from '../../../redux/uniformService/SizeMasterService';
 import toast from 'react-hot-toast';
-import MastersForm from '../MastersForm/MastersForm';
-import { ReusableTable, TextInput, ToggleButton } from '../../../Inputs';
-import Mastertable from '../MasterTable/Mastertable';
+import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
-import { Check, Plus, Power } from 'lucide-react';
+import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 
@@ -60,7 +58,6 @@ export default function Form() {
     const syncFormWithDb = useCallback(
         (data) => {
             if (!id) {
-                setReadOnly(false);
                 setName("");
                 // setAccessory(data?.isAccessory || false);
                 setActive(id ? (data?.active) : true);
@@ -90,31 +87,29 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
             // toast.success(text + "Successfully");
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-                // draggable: true,
-                // timer: 1000,
-                // showConfirmButton: false,
-                // didOpen: () => {
-                //     Swal.showLoading();
-                // }
+
             });
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
-            // toast.error("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
+
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
@@ -122,13 +117,27 @@ export default function Form() {
             });
             return;
         }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim() == name?.trim());
+        } else {
+            foundItem = allData?.data?.some(item => item?.name?.trim() == name?.trim());
+
+        }
+        if (foundItem) {
+            Swal.fire({
+                text: "The size name is already exists.",
+                icon: "warning",
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -225,139 +234,17 @@ export default function Form() {
     ];
 
 
+    const firstInputFocus = useRef(null);
+
+    useEffect(() => {
+        if (form && firstInputFocus.current) {
+            firstInputFocus.current.focus();
+        }
+    }, [form]);
+
 
     return (
-        // <div onKeyDown={handleKeyDown}>
-        //     <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-        //         <h5 className='my-1'>Size Master</h5>
-        //         <div className="flex items-center gap-4">
-        //             <button
-        //                 onClick={() => {
-        //                     setForm(true);
-        //                     onNew();
-        //                 }}
-        //                 className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-        //             >
-        //                 <Plus size={16} />
-        //                 Add Size
-        //             </button>
 
-        //         </div>
-        //     </div>
-        //     <div className='w-full flex items-start'>
-        //         <Mastertable
-        //             header={'Size list'}
-        //             searchValue={searchValue}
-        //             setSearchValue={setSearchValue}
-        //             onDataClick={onDataClick}
-        //             // setOpenTable={setOpenTable}
-        //             setReadOnly={setReadOnly}
-        //             deleteData={deleteData}
-        //             tableHeaders={tableHeaders}
-        //             tableDataNames={tableDataNames}
-        //             data={allData?.data}
-        //             loading={
-        //                 isLoading || isFetching
-        //             } />
-        //     </div>
-
-        //     {form && (
-        //         <Modal
-        //             isOpen={form}
-        //             form={form}
-        //             widthClass={"w-[40%] max-w-6xl h-[50vh]"}
-        //             onClose={() => {
-        //                 setForm(false);
-        //                 setErrors({});
-        //             }}
-        //         >
-        //             <div className="h-full flex flex-col bg-[f1f1f0]">
-        //                 <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-        //                     <div className="flex items-center gap-2">
-        //                         <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-        //                             {id ? (!readOnly ? "Edit Size  " : "Size Master") : "Add New  Size"}
-        //                         </h2>
-
-        //                     </div>
-        //                     <div className="flex gap-2">
-        //                         <div>
-        //                             {readOnly && (
-        //                                 <button
-        //                                     type="button"
-        //                                     onClick={() => {
-        //                                         setForm(false);
-        //                                         setSearchValue("");
-        //                                         setId(false);
-        //                                     }}
-        //                                     className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-        //                                 >
-        //                                     Cancel
-        //                                 </button>
-        //                             )}
-        //                         </div>
-        //                         <div className="flex gap-2">
-        //                             {!readOnly && (
-        //                                 <button
-        //                                     type="button"
-        //                                     onClick={saveData}
-        //                                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-        //                                 border border-green-600 flex items-center gap-1 text-xs"
-        //                                 >
-        //                                     <Check size={14} />
-        //                                     {id ? "Update" : "Save"}
-        //                                 </button>
-        //                             )}
-        //                         </div>
-        //                     </div>
-        //                 </div>
-
-        //                 <div className="flex-1 overflow-auto p-3">
-        //                     <div className="grid grid-cols-1  gap-3  h-full">
-        //                         <div className="lg:col-span- space-y-3">
-        //                             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-
-        // <fieldset className=' rounded mt-2'>
-        //     <div className=''>
-        //         <div className="flex flex-wrap justify-between">
-        //             <div className='mb-3 w-[48%]'>
-        //                 <TextInput name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-        //             </div>
-
-        //         </div>
-
-
-        //         <div className='mb-5'>
-        //             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-        //         </div>
-
-        //     </div>
-        // </fieldset>
-
-        //                             </div>
-
-
-        //                         </div>
-
-
-
-
-
-
-
-
-
-
-        //                     </div>
-        //                 </div>
-
-
-        //             </div>
-
-
-
-        //         </Modal>
-        //     )}
-        // </div>
         <div onKeyDown={handleKeyDown} className="p-1">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Size Master</h5>
@@ -390,7 +277,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[40%] h-[50%]"}
+                        widthClass={"w-[40%] h-[40%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -427,12 +314,30 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                        border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close")
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new")
+                                                }}
+
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -447,12 +352,14 @@ export default function Form() {
                                                 <div className="grid grid-cols-2  gap-3  h-full">
                                                     <fieldset className=' rounded mt-2'>
                                                         <div className='mb-3'>
-                                                            <TextInput name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                            <TextInputNew1 name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                                ref={firstInputFocus}
+                                                            />
                                                         </div>
 
 
 
-                                                        <div className='mb-5'>
+                                                        <div className='mt-5'>
                                                             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                         </div>
 

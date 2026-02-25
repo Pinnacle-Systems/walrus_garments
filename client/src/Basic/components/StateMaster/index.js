@@ -12,7 +12,7 @@ import { useGetCountriesQuery } from "../../../redux/services/CountryMasterServi
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, ToggleButton, ReusableTable } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, ToggleButton, ReusableTable, TextInputNew1, DropdownInputNew } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import { useDispatch } from "react-redux";
@@ -44,7 +44,7 @@ export default function Form() {
   const childRecord = useRef(0);
   const dispatch = useDispatch();
 
-  console.log(childRecord,"childRecord")
+  console.log(childRecord, "childRecord")
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -69,18 +69,7 @@ export default function Form() {
   const [removeData] = useDeleteStateMutation();
 
   const syncFormWithDb = useCallback((data) => {
-    if (!id) {
-      setReadOnly(false);
-      setActive(false)
-      setName("");
-      setCode("");
-      setActive(id ? (data?.active) : true);
 
-      setCountry("");
-      setGstNo("");
-
-      return
-    }
     // setReadOnly(true);
     setActive(true)
     setName(data?.name || "");
@@ -108,16 +97,19 @@ export default function Form() {
     return false;
   };
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId(returnData.data.id)
-      // toast.success(text + "Successfully");
       Swal.fire({
         title: text + "Successfully",
         icon: "success",
       });
-
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
+      }
       dispatch({
         type: `countryMaster/invalidateTags`,
         payload: ['Countries'],
@@ -129,10 +121,10 @@ export default function Form() {
     }
   };
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (readOnly) return toast.info("Turn On Edit Mode !..")
     if (!validateData(data)) {
- 
+
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",
@@ -144,10 +136,11 @@ export default function Form() {
 
     let foundItem;
     if (id) {
-      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+      foundItem = allData?.data
+        ?.filter((i) => i.id != id)
+        ?.some((item) => item.name == name && item.countryId == country);
     } else {
-      foundItem = allData?.data?.some(item => item.name === name);
-
+      foundItem = allData?.data?.some((item) => item.name == name && item.countryId == country);
     }
     if (foundItem) {
       Swal.fire({
@@ -163,9 +156,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
 
@@ -262,6 +255,14 @@ export default function Form() {
 
   ];
 
+  const countryNameRef = useRef(null);
+
+  useEffect(() => {
+    if (form && countryNameRef.current) {
+      countryNameRef.current.focus();
+    }
+  }, [form]);
+
   return (
 
     <div onKeyDown={handleKeyDown} className="p-1">
@@ -296,10 +297,9 @@ export default function Form() {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[60%]"}
+            widthClass={"w-[40%] h-[320px]"}
             onClose={() => {
               setForm(false);
-              setErrors({});
             }}
           >
             <div className="h-full flex flex-col bg-gray-200 ">
@@ -333,12 +333,29 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                    border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => {
+                          saveData("close");
+                        }}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!readOnly && !id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new");
+                        }}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
                       </button>
                     )}
                   </div>
@@ -347,82 +364,85 @@ export default function Form() {
 
               <div className="flex-1 overflow-auto p-3 ">
                 <div className="grid grid-cols-1  gap-3  h-full ">
-                  <div className="lg:col-span-2 space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                      <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <fieldset className="grid grid-cols-2 gap-2 rounded mt-2">
+                      <div className=" ">
+                        <TextInputNew1
+                          name="State Name"
+                          type="text"
+                          value={name}
+                          setValue={setName}
+                          required={true}
+                          readOnly={readOnly}
+                          ref={countryNameRef}
+                          disabled={(childRecord.current > 0)}
 
+                        />
+                      </div>
+                      <div className="">
+                        <DropdownInputNew
+                          name="Country"
+                          options={dropDownListObject(
+                            id
+                              ? countriesList?.data
+                              : countriesList?.data?.filter(
+                                (item) => item?.active
+                              ),
+                            "name",
+                            "id"
+                          )}
+                          value={country}
+                          setValue={setCountry}
+                          required={true}
+                          readOnly={readOnly}
+                          className={`w-[150px]`}
+                          disabled={(childRecord.current > 0)}
 
-                          <fieldset className=' rounded mt-2'>
-                            <div className=' mb-3'>
-                              <DropdownInput
-                                name="Country"
-                                options={dropDownListObject(id ? countriesList?.data : countriesList?.data?.filter(item => item?.active), "name", "id")}
-                                value={country}
-                                setValue={setCountry}
-                                required={true}
-                                readOnly={readOnly}
-                                className={`w-[150px]`}
-                              />
-                            </div>
+                        />
+                      </div>
 
-                            <div className="mb-3 ">
-                              <TextInput
-                                name="State Name"
-                                type="text"
-                                value={name}
-                                setValue={setName}
-                                required={true}
-                                readOnly={readOnly}
+                      <div className="">
+                        <TextInputNew1
+                          name="Code"
+                          type="text"
+                          value={code}
+                          setValue={setCode}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={(childRecord.current > 0)}
+                        />
+                      </div>
 
-                                disabled={(childRecord.current > 0)}
-                              />
-                            </div>
-                            <div className="mb-3 ">
-                              <TextInput
-                                name="Code"
-                                type="text"
-                                value={code}
-                                setValue={setCode}
-                                required={true}
-                                readOnly={readOnly}
-                                disabled={(childRecord.current > 0)}
-
-                              />
-                            </div>
-
-                            <div className="mb-3 ">
-
-                              <TextInput
+                      {/* <div className="">
+                              
+                              <TextInputNew
                                 name="GST No"
                                 type="text"
                                 value={gstNo}
                                 setValue={setGstNo}
                                 readOnly={readOnly}
-                                disabled={(childRecord.current > 0)}
+                              // disabled={(childRecord.current > 0)}
 
                               />
-                            </div>
+                            </div> */}
 
-
-
-
-                            <div>
-                              <ToggleButton name="Status" value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                            </div>
-
-                          </fieldset>
-
-                        </div>
+                      <div>
+                        <ToggleButton
+                          name="Status"
+                          value={active}
+                          setActive={setActive}
+                          required={true}
+                          readOnly={readOnly}
+                        />
                       </div>
-                    </div>
+                    </fieldset>
                   </div>
                 </div>
               </div>
             </div>
           </Modal>
         )}
-      </div >
+      </div>
     </div >
   )
 }

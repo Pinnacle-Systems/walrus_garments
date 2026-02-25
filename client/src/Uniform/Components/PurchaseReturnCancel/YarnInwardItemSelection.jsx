@@ -45,11 +45,14 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
 
     return (
 
-        <div className='border border-gray-200  shadow-sm bg-[#f1f1f0]'>
+        <div className='border border-gray-200  shadow-sm bg-[#f1f1f0] h-full'>
+            <div className="h-[500px]">
+
+            
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                 <div className="flex items-center gap-2">
                     <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                        Po Items
+                       Po Inward Items
                     </h2>
 
                 </div>
@@ -81,17 +84,13 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                     </div>
                 </div>
             </div>
-            <div className="flex-1 overflow-y-auto rounded-md ">
+            <div className="flex-1 rounded-md ">
 
-                <div className="h-full flex flex-col bg-[#f1f1f0] px-1 w-full ">
+               
+                            <div className="mt-4 mb-5 px-1 w-full overflow-y-auto ">
 
-                    <div className="flex flex-row w-full">
-                        <div className="flex flex-col w-full">
-                            <div className="mt-4 mb-5 w-full">
 
-                                <div className="  overflow-auto ">
-
-                                    <table className="border-collapse w-full">
+                                    <table className="border-collapse w-full table-fixed top-0 sticky">
                                         <thead className="bg-gray-200 text-gray-800">
                                             <tr>
                                                 <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
@@ -100,8 +99,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                         checked={getSelectAll(poItems?.data ? poItems.data : [])}
                                                     />
                                                 </th>
-                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-5">S No</th>
-                                                {/* <th className="px-4 py-1.5 border border-gray-300 text-center text-xs w-36">Po Type</th> */}
+                                                <th className="border border-gray-300 px-2 py-1 text-center text-xs w-8">S No</th>
                                                 <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
 
                                                     <label>Inward Doc No</label>
@@ -116,7 +114,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                             /> */}
 
                                                 </th>
-                                                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
+                                                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-16">
                                                     <label>Inward Date</label>
                                                     {/* <input
                                                                 type="text"
@@ -131,7 +129,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                 </th>
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs  w-64">
 
-                                                    <label>Yarn</label>
+                                                    <label>Item</label>
                                                     {/* <input
                                                                 type="text"
                                                                 className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
@@ -143,6 +141,19 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                             /> */}
                                                 </th>
 
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-14">
+
+                                                    <label>Size</label>
+                                                    {/* <input
+                                                                type="text"
+                                                                className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
+                                                                placeholder="Search"
+                                                                value={searchDueDate}
+                                                                onChange={(e) => {
+                                                                    setDueDate(e.target.value);
+                                                                }}
+                                                            /> */}
+                                                </th>
 
                                                 <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-32">
 
@@ -161,7 +172,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
 
 
 
-                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-14">
                                                     <label>Uom</label>
                                                     {/* <input
                                                                 type="text"
@@ -174,7 +185,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                             /> */}
 
                                                 </th>
-                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-20">
+                                                <th className="px-1 py-1.5 border border-gray-300 text-xs  w-16">
                                                     <label>Price</label>
                                                     {/* <input
                                                                 type="text"
@@ -188,7 +199,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                 </th>
 
                                                 {/* <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Stock Qty</th> */}
-                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">AllowedReturnQty </th>
+                                                <th className="px-4 py-1.5 border border-gray-300 text-xs  w-20">Allowed Return Qty </th>
 
 
 
@@ -232,9 +243,11 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                                             {getDateFromDateTimeToDisplay(item?.DirectInwardOrReturn?.createdAt)}
                                                         </td>
                                                         <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                                            {item?.Yarn?.name}
+                                                            {item?.Item?.name}
                                                         </td>
-
+                                                        <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                                            {item?.Size?.name}
+                                                        </td>
                                                         <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
                                                             {item?.Color?.name}
                                                         </td>
@@ -255,12 +268,9 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                             )}
                                         </tbody>
                                     </table>
-                                </div>
                             </div>
 
-                        </div>
-                    </div>
-                </div>
+            </div>
             </div>
             <ReactPaginate
                 previousLabel={"<"}

@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import secureLocalStorage from 'react-secure-storage';
 // import { dropDownListObject, multiSelectOption } from '../../../Utils/contructObject';
 import Mastertable from '../../Basic/components/MasterTable/Mastertable';
 import MastersForm from '../../Basic/components/MastersForm/MastersForm';
-import { childRecordCount, ReusableTable, TextInput, ToggleButton } from '../../Inputs';
+import { childRecordCount, ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../Inputs';
 import BrowseSingleImage from '../../Basic/components/BrowseSingleImage';
 import { useAddStyleMasterMutation, useDeleteStyleMasterMutation, useGetStyleMasterByIdQuery, useGetStyleMasterQuery, useUpdateStyleMasterMutation } from '../../redux/uniformService/StyleMasterService';
 import { useGetFabricMasterQuery } from '../../redux/uniformService/FabricMasterService';
@@ -93,7 +93,7 @@ const StyleMaster = () => {
     }
 
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -101,13 +101,18 @@ const StyleMaster = () => {
             } else {
                 returnData = await callback(data).unwrap();
             }
-            setId(returnData.data.id);
-            // toast.success(text + "Successfully");
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
 
             });
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
+
             setForm(false)
         } catch (error) {
             console.log("handle");
@@ -115,7 +120,7 @@ const StyleMaster = () => {
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -146,9 +151,9 @@ const StyleMaster = () => {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -263,6 +268,14 @@ const StyleMaster = () => {
 
     ];
 
+    const firstInputFocus = useRef(null);
+
+    useEffect(() => {
+        if (form && firstInputFocus.current) {
+            firstInputFocus.current.focus();
+        }
+    }, [form]);
+
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1">
@@ -297,7 +310,7 @@ const StyleMaster = () => {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[36%] h-[50%]"}
+                        widthClass={"w-[36%] h-[45%]"}
                         onClose={() => {
                             setForm(false);
                             // setErrors({});
@@ -334,12 +347,30 @@ const StyleMaster = () => {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                                border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close")
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new")
+                                                }}
+
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -348,27 +379,23 @@ const StyleMaster = () => {
 
                             <div className="flex-1 overflow-auto p-3 ">
                                 <div className="grid grid-cols-1  gap-3  h-full ">
-                                    <div className="lg:col-span-2 space-y-3">
+                                    <div className="lg:col-span-2 ">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="space-y-4 ">
-                                                <div className="grid grid-cols-2  gap-3  h-full">
-                                                    <fieldset className=' rounded mt-2'>
+                                            <div className="grid grid-cols-3  gap-3">
 
-                                                        <div className="mb-3">
-                                                            <TextInput name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                                                <div className=" col-span-3">
+                                                    <TextInputNew1 name="Style Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} ref={firstInputFocus} />
 
-                                                        </div>
-                                                        <div className="mb-3">
-                                                            <TextInput name="Alias Name" type="text" value={sku} setValue={setSku} required={true} readOnly={readOnly} />
-                                                        </div>
-
-                                                        <div className="mb-5">
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
-                                                        </div>
-
-                                                    </fieldset>
                                                 </div>
+                                                <div className="mb-3 col-span-1"  >
+                                                    <TextInputNew1 name="Code" type="text" value={sku} setValue={setSku} readOnly={readOnly} />
+                                                </div>
+                                                <div className="col-span-1 mt-5">
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+
+                                                </div>
+
+
                                             </div>
                                         </div>
                                     </div>

@@ -9,6 +9,7 @@ import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 import YarnPoItems from "./YarnPoItems";
 import FabricPoItems from "./FabricPoItems";
+// eslint-disable-next-line no-unused-vars
 import AccessoryPoItems from "./AccessoryPoItems"
 import Consolidation from "../Consolidation";
 import PoItemsSelection from "./PoItemsSelection";
@@ -53,7 +54,7 @@ import NewModal from "../../../UiComponents/NewModal/index.js";
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, yarnList, colorList, uomList, supplierId, setSupplierId ,locationData ,termsAndCondition
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList
 
 }) => {
 
@@ -137,7 +138,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             setReadOnly(false);
         }
         setTransType(data?.poType ? data.poType : "DyedYarn");
-        setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "PurchaseReturn")
+        setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectReturn")
         setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setDirectInwardReturnItems(data?.directReturnItems ? data.directReturnItems : []);
 
@@ -172,7 +173,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         payTermId,
         branchId, id, userId,
         storeId,
-        directReturnItems: directInwardReturnItems?.filter(po => po?.yarnId),
+        directReturnItems: directInwardReturnItems?.filter(po => po?.itemId),
         discountType,
         discountValue,
         dcNo,
@@ -418,7 +419,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         poItems={directInwardReturnItems?.filter(item => item?.yarnId)}
                         supplierDetails={supplierDetails ? supplierDetails?.data : null}
                         // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={yarnList} uomList={uomList} colorList={colorList}
+                        yarnList={itemList} uomList={uomList} colorList={colorList}
                         payTermList={payTermList} termsAndCondition={termsAndCondition} taxDetails={taxDetails}
                         deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
                     />
@@ -445,7 +446,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     supplierDetails={supplierDetails ? supplierDetails?.data : null}
                     singleData={singleData ? singleData.data : null}
                     deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                    yarnList={yarnList} uomList={uomList} colorList={colorList}
+                    yarnList={itemList} uomList={uomList} colorList={colorList}
                 />
             </div>
             <div>
@@ -454,9 +455,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
             </div>
 
-            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
+            <div className="w-full h-[90vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Yarn Purchse Return</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Purchse Return</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -483,21 +484,31 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
+
+
+                            </div>
+                        </div>
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                            <h2 className="font-medium text-slate-700 mb-2">
+                                Location Details
+                            </h2>
+                            <div className="grid grid-cols-2 gap-2">
                                 <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
-                                <DropdownInput name="Po Type"
-
-                                    options={YarnMaterial}
-                                    value={transType}
-                                    setValue={setTransType}
-                                    required={true}
-                                    readOnly={readOnly} />
+                                <DropdownInput name="Location"
+                                    options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
+                                    value={locationId}
+                                    setValue={(value) => { setLocationId(value); setStoreId("") }}
+                                    required={true} readOnly={id || readOnly} />
+                                <DropdownInput name="Store"
+                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
+                                    value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
                             </div>
-                        </div>
 
+                        </div>
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                             <h2 className="font-medium text-slate-700 mb-2">
@@ -524,35 +535,21 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             </div>
 
                         </div>
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Location Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-2">
-                                <DropdownInput name="Location"
-                                    options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
-                                    value={locationId}
-                                    setValue={(value) => { setLocationId(value); setStoreId("") }}
-                                    required={true} readOnly={id || readOnly} />
-                                <DropdownInput name="Store"
-                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
-                                    value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
-                            </div>
+                    </div>
 
-                        </div>
+                    <div>
+                        <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
+                            removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
+                            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                            branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
+
+                        />
                     </div>
 
 
-                    <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
-                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
-                        supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-                        branchdata={branchdata} yarnList={yarnList} colorList={colorList} uomList={uomList} id={id}
 
-                    />
-
-
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* <div className="grid grid-cols-3 gap-3">
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
                             <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
                             <textarea
@@ -638,7 +635,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         )}
 
 
-                    </div>
+                    </div> */}
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
 

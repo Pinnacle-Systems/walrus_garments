@@ -12,7 +12,7 @@ import { useGetStateQuery } from "../../../redux/services/StateMasterService";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, DisabledInput, ToggleButton, ReusableTable } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, DisabledInput, ToggleButton, ReusableTable, TextInputNew1, DropdownInputNew } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import Loader from "../Loader";
@@ -98,7 +98,7 @@ export default function Form() {
     };
 
     const validateData = (data) => {
-        if (data.name && data.code) {
+        if (data.name && data?.state) {
             return true;
         }
         return false;
@@ -110,7 +110,7 @@ export default function Form() {
         setSearchValue("");
     };
 
-    const handleSubmitCustom = async (callback, data, text, exit = false) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -121,14 +121,11 @@ export default function Form() {
             });
             onNew()
             setId('')
-            if (exit) {
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
                 setForm(false)
-            }
-            if (exit) {
-                if (openPartyModal === true) {
-                    dispatch(push({ name: lastTapName }));
-                }
-                dispatch(setOpenPartyModal(false));
             }
             dispatch({
                 type: `StateMaster/invalidateTags`,
@@ -141,7 +138,7 @@ export default function Form() {
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (readOnly) return toast.info("Turn On Edit Mode !..")
 
         if (!validateData(data)) {
@@ -166,11 +163,14 @@ export default function Form() {
             });
             return false;
         }
+        if (!window.confirm("Are you sure save the details ...?")) {
+            return;
+        }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
             console.log("hit");
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
     const saveExitData = () => {
@@ -190,31 +190,31 @@ export default function Form() {
         }
     };
 
-   const deleteData = async (id) => {
- 
-     if (id) {
-       if (!window.confirm("Are you sure to delete...?")) {
-         return;
-       }
-       try {
-         await removeData(id)
-         setId("");
-         dispatch({
-           type: `countryMaster/invalidateTags`,
-           payload: ['Countries'],
-         });
-         // toast.success("Deleted Successfully");
-         Swal.fire({
-           title: "Deleted Successfully",
-           icon: "success",
- 
-         });
-         setForm(false)
-       } catch (error) {
-         toast.error("something went wrong");
-       }
-     }
-   };
+    const deleteData = async (id) => {
+
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
+                return;
+            }
+            try {
+                await removeData(id)
+                setId("");
+                dispatch({
+                    type: `countryMaster/invalidateTags`,
+                    payload: ['Countries'],
+                });
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+
+                });
+                setForm(false)
+            } catch (error) {
+                toast.error("something went wrong");
+            }
+        }
+    };
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {
@@ -286,7 +286,13 @@ export default function Form() {
         },
 
     ];
+    const countryNameRef = useRef(null);
 
+    useEffect(() => {
+        if (form && countryNameRef.current) {
+            countryNameRef.current.focus();
+        }
+    }, [form]);
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1">
@@ -321,10 +327,9 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[40%] h-[65%]"}
+                        widthClass={"w-[40%] h-[350px]"}
                         onClose={() => {
                             setForm(false);
-                            setErrors({});
                         }}
                     >
                         <div className="h-full flex flex-col bg-gray-200 ">
@@ -358,12 +363,29 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                            border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close");
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {!readOnly && !id && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new");
+                                                }}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -372,46 +394,72 @@ export default function Form() {
 
                             <div className="flex-1 overflow-auto p-3 ">
                                 <div className="grid grid-cols-1  gap-3  h-full ">
-                                    <div className="lg:col-span-2 space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="space-y-4 ">
-                                                <div className="grid grid-cols-2  gap-3  h-full">
-                                                    <fieldset className=' rounded mt-2'>
+                                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                                        <div className="grid grid-cols-2  gap-3 ">
+                                            <div className="">
+                                                <TextInputNew1
+                                                    ref={countryNameRef}
+                                                    name="City Name"
+                                                    type="text"
+                                                    value={name}
+                                                    setValue={setName}
+                                                    required={true}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                />
+                                            </div>
+                                            <div className="">
+                                                <TextInputNew1
+                                                    name="Code"
+                                                    type="text"
+                                                    value={code}
+                                                    setValue={setCode}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                />
+                                            </div>
 
+                                            <div className=" ">
+                                                <DropdownInputNew
+                                                    name="State"
+                                                    options={
+                                                        Array.isArray(stateList?.data)
+                                                            ? dropDownListObject(
+                                                                id
+                                                                    ? stateList?.data
+                                                                    : stateList?.data?.filter(
+                                                                        (item) => item?.active
+                                                                    ),
+                                                                "name",
+                                                                "id"
+                                                            )
+                                                            : []
+                                                    }
+                                                    value={state}
+                                                    setValue={setState}
+                                                    required={true}
+                                                    readOnly={readOnly}
+                                                    disabled={childRecord.current > 0}
+                                                />
+                                            </div>
+                                            <div className="">
+                                                <TextInputNew1
+                                                    name="Country"
+                                                    type="text"
+                                                    value={countryFromState()}
+                                                    disabled={true}
+                                                />
+                                            </div>
 
-
-                                                        <div className="mb-3">
-                                                            <TextInput name="City Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
-                                                        <div className="mb-3">
-                                                            <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
-
-                                                        <div className="mb-3 ">
-                                                            <DropdownInput name="State"
-                                                                options={
-                                                                    Array.isArray(stateList?.data)
-                                                                        ? dropDownListObject(
-                                                                            id ? stateList?.data : stateList?.data?.filter(item => item?.active),
-                                                                            "name",
-                                                                            "id"
-                                                                        )
-                                                                        : []
-                                                                }
-                                                                value={state} setValue={setState} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
-                                                        <div className="mb-3">
-                                                            <TextInput name="Country" type="text" value={countryFromState()} disabled={true} />
-                                                        </div>
-
-                                                        <div className="mb-3">
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                        </div>
-
-
-
-                                                    </fieldset>
-                                                </div>
+                                            <div className="">
+                                                <ToggleButton
+                                                    name="Status"
+                                                    options={statusDropdown}
+                                                    value={active}
+                                                    setActive={setActive}
+                                                    required={true}
+                                                    readOnly={readOnly}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -420,7 +468,7 @@ export default function Form() {
                         </div>
                     </Modal>
                 )}
-            </div >
+            </div>
         </div >
     );
 }

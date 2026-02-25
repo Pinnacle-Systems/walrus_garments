@@ -323,19 +323,15 @@ async function getStockDataBySingleLot(directItem, poInwardOrDirectInward, retur
 
 }
 
-async function getStockQty(storeId, itemType, orderId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId, yarnId) {
+async function getStockQty(storeId, itemType, itemId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId, yarnId) {
     let sql;
 
-    console.log("itemTypePOID", itemType == "Accessory", colorId, uomId, sizeId, storeId)
-    if (orderId) {
+ 
+        sql = `select sum(qty) as stockQty from stock
+        where itemId = ${itemId} and sizeId = ${sizeId}  and colorId=${colorId} and uomId=${uomId} ;`
 
-        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where orderId = ${orderId} yarnId = ${yarnId} and colorId=${colorId} and uomId=${uomId} ;`
-    }
-    else {
-        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where yarnId = ${yarnId} and colorId=${colorId} and uomId=${uomId} ;`
-    }
+        console.log(sql, "sql query retuen Stock Qty")
+    
     const stockData = await prisma.$queryRawUnsafe(sql);
     return stockData[0]
 
@@ -357,8 +353,8 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls);
         let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty) + parseFloat(directItem?.qty)
         // let returnLotDetails = (await getStockData(directItem, poInwardOrDirectInward, directItem?.returnLotDetails, directItem?.fabricId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType,))
-        console.log(directItem, "directItem")
-        let stockQty = parseFloat((await getStockQty(storeId, poType, directItem?.orderId, directItem?.colorId, directItem?.uomId, directItem?.designId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.gsmId, directItem?.sizeId, directItem?.fabricId, directItem?.kDiaId, directItem?.fDiaId, directItem?.yarnId))?.stockQty || 0)
+        // console.log(directItem, "directItem")
+        let stockQty = parseFloat((await getStockQty(storeId, poType, directItem?.itemId, directItem?.colorId, directItem?.uomId, directItem?.designId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.gsmId, directItem?.sizeId, directItem?.fabricId, directItem?.kDiaId, directItem?.fDiaId, directItem?.yarnId))?.stockQty || 0)
         if(directItem?.id){
             stockQty = stockQty + parseFloat(directItem?.qty || 0)
         }

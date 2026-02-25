@@ -13,7 +13,9 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
 
 
 
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
+    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));    // const [localInwardItems, setLocalInwardItems] = useState(
+
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -84,31 +86,13 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
     return (
         <>
             <div className='h-full w-full flex flex-col'>
-                {/* <div className='flex justify-between text-center bg-gray-300 rounded-b-md sticky top-0'>
-                    <div className='p-2 rounded-lg flex items-center gap-5'>
-                        <label className='text-xs font-semibold'>TransType</label>
-                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={transtype} disabled={true} />
-                    </div>
-                    <div className='p-2 rounded-lg flex items-center gap-5'>
-                        <label className='text-xs font-semibold'>Supplier</label>
-                        <input className='text-xs h-6 rounded border border-gray-500 bg-white' value={findFromList(supplierId, supplierList?.data, "name")} disabled={true} />
-                    </div>
-                </div> */}
-                <div className='h-[500px] overflow-auto'>
 
-                    <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone} />
 
-                </div>
+                <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone} />
+
 
             </div>
-            {/* <div className='flex justify-end gap-4 mt-3'>
-                <button onClick={handleDone} className='bg-lime-400 hover:bg-lime-600 hover:text-white p-1 px-3 text-sm rounded font-semibold transition'>
-                    Done
-                </button>
-                <button onClick={handleCancel} className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'>
-                    Cancel
-                </button>
-            </div> */}
+
         </>
     )
 }

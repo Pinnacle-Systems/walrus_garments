@@ -348,7 +348,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
 
   const masters = allowedPages.filter((page) => page.type === "Masters")
   const mastersGroup = [...new Set(masters.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
-  const transactions = allowedPages.filter((page) => page.type === "Transactions")
+  const transactions = allowedPages.filter((page) => page.type === "Transactions" && page.active)
   console.log(transactions, "transactions")
   const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
   const reports = allowedPages.filter((page) => page.type === "Reports")
@@ -357,15 +357,14 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
 
 
   const order = [
-    "ORDER",
-    "YARN",
-    "ACCESSORY ",
-    "MATERIAL MOVEMENT",
-    "PRODUCTION",
-    "PROCESS",
-    "STOCK TRANSFER",
-    "OPENING STOCK",
-    "SAMPLE",
+    "PO",
+    "STOCK",
+    // "MATERIAL MOVEMENT",
+    // "PRODUCTION",
+    // "PROCESS",
+    // "STOCK TRANSFER",
+    // "OPENING STOCK",
+    // "SAMPLE",
   ];
 
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))
@@ -423,8 +422,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
           className={`fixed z-[999] top-[16.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${isMainDropdownOpen ? "h-[450px]" : "h-auto"
             } rounded-lg py-4 flex flex-col items-center shadow-xl transition-all duration-300`}
         >
-          {/* Dashboard Link */}
-          <div
+          {/* <div
             className="text-white hover:text-gray-300 cursor-pointer mb-4 flex flex-col items-center"
 
             onClick={(() => {
@@ -438,9 +436,8 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
             })}>
             <LayoutDashboard size={20} />
             <span className="text-[11px] text-center mt-1">Dashboard</span>
-          </div>
+          </div> */}
 
-          {/* Main Menu Items */}
           {headers.map((ele, index) => (
             <div
               key={index}

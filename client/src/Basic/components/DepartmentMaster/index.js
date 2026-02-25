@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
 import {
   useGetDepartmentQuery,
@@ -8,19 +8,13 @@ import {
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,
 } from "../../../redux/services/DepartmentMasterService";
-import FormHeader from "../FormHeader";
-import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, ToggleButton, ReusableTable } from "../../../Inputs";
-import ReportTemplate from "../ReportTemplate";
-import Mastertable from "../MasterTable/Mastertable";
-import MastersForm from "../MastersForm/MastersForm";
+import { TextInput, ToggleButton, ReusableTable, TextInputNew1 } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import { Check, Plus, Power } from "lucide-react";
+import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
 
-const MODEL = "Department Master";
 
 export default function Form() {
 
@@ -43,7 +37,7 @@ export default function Form() {
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
   };
-  const { data: allData, isLoading, isFetching } = useGetDepartmentQuery({ params, searchParams: searchValue });
+  const { data: allData } = useGetDepartmentQuery({ params, searchParams: searchValue });
   console.log(id, "id")
   const {
     data: singleData,
@@ -61,7 +55,7 @@ export default function Form() {
       // setReadOnly(false);
       setName("");
       setCode("");
-      setActive(id ? (data?.active ?? true) : false);
+      setActive(id ? (data?.active ?? true) : true);
     } else {
       // setReadOnly(true);
 
@@ -84,13 +78,13 @@ export default function Form() {
   }
 
   const validateData = (data) => {
-    if (data.name && data.code) {
+    if (data.name) {
       return true;
     }
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
@@ -100,7 +94,12 @@ export default function Form() {
         icon: "success",
 
       });
-      setForm(false);
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
+      }
     } catch (error) {
       console.log("handle");
       setForm(false);
@@ -108,7 +107,7 @@ export default function Form() {
     }
   };
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (readOnly) return toast.info("Turn On Edit Mode !..")
 
     if (!validateData(data)) {
@@ -140,9 +139,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
 
@@ -192,10 +191,6 @@ export default function Form() {
     setSearchValue("");
   };
 
-  function onDataClick(id) {
-    setId(id);
-    setForm(true);
-  }
 
 
 
@@ -245,146 +240,16 @@ export default function Form() {
 
   ];
 
+  const FisrtInputFocus = useRef(null);
+
+  useEffect(() => {
+    if (form && FisrtInputFocus.current) {
+      FisrtInputFocus.current.focus();
+    }
+  }, [form]);
+
   return (
-    //   <div onKeyDown={handleKeyDown}>
-    //       <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-    //           <h5 className='my-1'>Department Master</h5>
-    //          <div className="flex items-center gap-4">
-    //                     <button
-    //                       onClick={() => {
-    //                         setForm(true);
-    //                         onNew();
-    //                       }}
-    //                       className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-    //                     >
-    //                       <Plus size={16} />
-    //                       Add New Department
-    //                     </button>
 
-    //                   </div>
-    //       </div>
-    //       <div className='w-full flex items-start'>
-    //           <Mastertable
-    //               header={'Department list'}
-    //               searchValue={searchValue}
-    //               setSearchValue={setSearchValue}
-    //               onDataClick={onDataClick}
-    //               tableHeaders={tableHeaders}
-    //               tableDataNames={tableDataNames}
-    //               data={allData?.data}
-    //               loading={
-    //                   isLoading || isFetching
-    //               }
-    //               setReadOnly={setReadOnly}
-    //               deleteData={deleteData}
-    //           />
-    //       </div>
-
-    //    {form && (
-    //   <Modal
-    //     isOpen={form}
-    //     form={form}
-    //     widthClass={"w-[30%] max-w-6xl h-[50vh]"}
-    //     onClose={() => {
-    //       setForm(false);
-    //       setErrors({});
-    //     }}
-    //   >
-    //     <div className="h-full flex flex-col bg-[f1f1f0]">
-    //       <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-    //         <div className="flex items-center gap-2">
-    //           <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-    //             {id ? (!readOnly ? "Edit Department Master" : "Department Master") : "Add New Department"}
-    //           </h2>
-
-    //         </div>
-    //         <div className="flex gap-2">
-    //           <div>
-    //             {readOnly && (
-    //               <button
-    //                 type="button"
-    //                 onClick={() => {
-    //                   setForm(false);
-    //                   setSearchValue("");
-    //                   setId(false);
-    //                 }}
-    //                 className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-    //               >
-    //                 Cancel
-    //               </button>
-    //             )}
-    //           </div>
-    //           <div className="flex gap-2">
-    //             {!readOnly && (
-    //               <button
-    //                 type="button"
-    //                 onClick={saveData}
-    //                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-    //             border border-green-600 flex items-center gap-1 text-xs"
-    //               >
-    //                 <Check size={14} />
-    //                 {id ? "Update" : "Save"}
-    //               </button>
-    //             )}
-    //           </div>
-    //         </div>
-    //       </div>
-
-    //       <div className="flex-1 overflow-auto p-3">
-    //         <div className="grid grid-cols-1  gap-3  h-full">
-    //           <div className="lg:col-span- space-y-3">
-    //             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-
-
-    //               <div className="space-y-2 w-[50%]">
-
-    //                   <TextInput 
-    //                       // ref={input1Ref}
-    //                       name="Department Name" 
-    //                       type="text" 
-    //                       value={name} 
-    //                       setValue={setName}
-    //                       required={true} 
-    //                       readOnly={readOnly}
-    //                       disabled={childRecord?.current > 0}
-    //                       // onKeyDown={(e) => handleKeyNext(e, input2Ref)}
-    //                     />
-
-    //                 {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
-
-    //                   <div className="">
-    //                     <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly}   disabled={childRecord.current > 0}/>
-    //                      </div>
-    //                   <div>
-    //                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}   disabled={childRecord.current > 0}  />
-    //                   </div>
-
-    //               </div>
-    //             </div>
-
-
-    //           </div>
-
-
-
-
-
-
-
-
-
-
-    //         </div>
-    //       </div>
-
-
-    //     </div>
-
-
-
-    //   </Modal>
-    // )}
-    //   </div>
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold text-gray-800">Department Master</h5>
@@ -420,7 +285,6 @@ export default function Form() {
             widthClass={"w-[40%] h-[45%]"}
             onClose={() => {
               setForm(false);
-              setErrors({});
             }}
           >
             <div className="h-full flex flex-col bg-gray-200 ">
@@ -454,12 +318,30 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                         border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => {
+                          saveData("close")
+                        }}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {(!readOnly && !id) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new")
+                        }}
+
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
                       </button>
                     )}
                   </div>
@@ -470,31 +352,27 @@ export default function Form() {
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                      <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
-                          <div className="space-y-2 ">
+                      <div className="grid grid-cols-2  gap-3  ">
 
-                            <TextInput
-                              name="Department Name"
-                              type="text"
-                              value={name}
-                              setValue={setName}
-                              required={true}
-                              readOnly={readOnly}
-                              disabled={childRecord?.current > 0}
-                            />
+                        <TextInputNew1
+                          name="Department Name"
+                          type="text"
+                          value={name}
+                          setValue={setName}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord?.current > 0}
+                          ref={FisrtInputFocus}
+                        />
 
-                            {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
 
-                            <div className="">
-                              <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
-                            </div>
-                            <div>
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
-                            </div>
-
-                          </div>
+                        <div className="">
+                          <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} readOnly={readOnly} disabled={childRecord.current > 0} />
                         </div>
+                        <div className="mt-3">
+                          <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} disabled={childRecord.current > 0} />
+                        </div>
+
                       </div>
                     </div>
                   </div>

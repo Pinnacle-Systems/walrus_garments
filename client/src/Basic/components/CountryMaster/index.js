@@ -97,7 +97,7 @@ export default function Form() {
     return false;
   };
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id);
@@ -106,7 +106,12 @@ export default function Form() {
         icon: "success",
 
       });
-      setForm(false);
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
+      }
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -116,7 +121,7 @@ export default function Form() {
     }
   };
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     console.log("saveData hit");
     if (!validateData(data)) {
       // toast.error("Please fill all required fields...!", {
@@ -148,10 +153,10 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
       console.log("updateData hit");
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
 
@@ -331,12 +336,30 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                          border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => {
+                          saveData("close")
+                        }}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {(!readOnly && !id) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new")
+                        }}
+
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
                       </button>
                     )}
                   </div>

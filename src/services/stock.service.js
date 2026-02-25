@@ -420,71 +420,66 @@ async function get(req) {
 
 
 export async function getStockReport(req) {
-    const { itemType, orderId, toDate } = req.query
+    const { itemId, sizeId, colorId, storeId, toDate } = req.query
 
 
     const DateFormatted = moment(toDate).format("YYYY-MM-DD");
     let data;
 
     let sql;
-    let whereClause;
 
-    if (orderId) {
-        whereClause = `s.orderId = ${orderId} `
-    } else {
-        whereClause = `s.inOrOut = 'GeneralInward'`
+    let conditions = [];
+
+    if (itemId) {
+        conditions.push(`ST.itemId = '${itemId}'`);
     }
 
-    if (itemType == "DyedYarn") {
-        sql =
-            `
+    if (sizeId) {
+        conditions.push(`ST.sizeId = '${sizeId}'`);
+    }
+
+    if (colorId) {
+        conditions.push(`ST.colorId = '${colorId}'`);
+    }
+
+    if (storeId) {
+        conditions.push(`ST.storeId = '${storeId}'`);
+    }
+
+    if (DateFormatted) {
+        conditions.push(`DATE(ST.createdAt) <= '${DateFormatted}'`);
+    }
+
+    let whereClause = conditions.length > 0
+        ? "WHERE " + conditions.join(" AND ")
+        : "";
+
+    sql =
+        `
   SELECT
-      y.name AS yarn,
-      c.name AS  color,
-      SUM(s.qty) AS total_qty
-  FROM stock s
-  LEFT JOIN yarn y ON y.id = s.yarnId
-  LEFT JOIN color c ON c.id = s.colorId
-  WHERE
-      s.itemType = '${itemType}'
-      AND DATE(s.createdAt) <= '${DateFormatted}'
-      AND  ${whereClause}
-  GROUP BY
-      y.name,
-      c.name
-  ORDER BY
-      y.name,
-      c.name
-`
-    }
-    if (itemType == "Accessory") {
-        sql =
-            `
-  SELECT
-     A.aliasName AS accessory,
-      AG.name AS  AccessoryGroup,
-        AC.name AS  accessoryCategory,
-      SUM(s.qty) AS total_qty
-  FROM accessoryStock S
-  LEFT JOIN accessory A ON A.id = S.accessoryId
-    LEFT JOIN AccessoryGroup AG ON AG.id = S.accessoryGroupId
+      I.name AS Item,
+      S.name AS  Size,
+	  C.name AS  Color,
+      SUM(ST.qty) AS total_qty
+  FROM stock ST
+  LEFT JOIN Item I ON I.id = ST.itemId
+  LEFT JOIN Size S ON S.id = ST.sizeId
+  LEFT JOIN Color C on C.id =  ST.colorId
+ ${whereClause}
 
-    LEFT JOIN AccessoryCategory AC ON AC.id = S.accessoryCategoryId
-  LEFT JOIN color c ON c.id = s.colorId
-  WHERE
-      s.itemType = '${itemType}'
-       AND DATE(s.createdAt) <= '${DateFormatted}'
-      AND  ${whereClause}
   GROUP BY
-      A.aliasName ,
-      AG.name,
-      AC.name
+       I.name,
+       S.name,
+       C.name
+HAVING 
+    SUM(ST.qty) > 0
   ORDER BY
-        A.aliasName ,
-      AG.name,
-      AC.name
+       I.name,
+       S.name,
+       C.name
 `
-    }
+
+
     console.log(sql, "sql")
 
     data = await prisma.$queryRawUnsafe(sql);

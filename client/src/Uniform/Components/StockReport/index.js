@@ -17,6 +17,9 @@ import { DateInput, DropdownInput, DropdownWithSearch } from '../../../Inputs';
 import { dropDownListObject } from '../../../Utils/contructObject';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import Swal from 'sweetalert2';
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 const StockReport = () => {
     const [poType, setPoType] = useState("")
@@ -29,35 +32,40 @@ const StockReport = () => {
     const [localPoType, setLocalPoType] = useState(poType);
     const [itemType, setItemType] = useState(poType);
     const [orderId, setOrderId] = useState("");
-
+    const [sizeId, setSizeId] = useState("");
+    const [colorId, setColorId] = useState("")
+    const [itemId, setItemId] = useState("")
     const [localLocationId, setLocalLocationId] = useState(locationId);
 
 
+
     const { companyId, branchId } = getCommonParams()
+
+    const params = {
+        branchId, companyId
+    };
+
     const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
     const storeOptions = locationData ?
         locationData.data.filter(item => parseInt(item.locationId) === parseInt(localLocationId)) :
         [];
+
+
+    const { data: itemList } = useGetItemMasterQuery({ params: { companyId } });
+    const { data: sizeList } = useGetSizeMasterQuery({ params });
+    const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params }, });
+
+
+
     const [fetchData, { data: stockData, refetch }] = useLazyGetStockReportQuery();
 
 
-    const { data: orderData, isLoading: orderDatalDataLoading, isFetching: orderDatalDataFetching, refetch: orderReftch } = useGetOrderQuery({ branchId });
 
     let stockList = stockData ? stockData.data : []
 
 
-    const nemericFields = ["Opening_Stock", "In_Qty", "Out_Qty", "Closing_Stock", "No_Of_Rolls", "Qty", "No_Of_Bags"];
-
-
-    function handleDone() {
-        if (!(localPoType && localStoreId && localEndDate)) return toast.info("Choose Po Type, Store , End Date ... !", { position: "top-center" })
-        setEndDate(localEndDate);
-        setStoreId(localStoreId);
-        setLocationId(localLocationId);
-        setPoType(localPoType);
-    }
 
 
 
@@ -89,52 +97,36 @@ const StockReport = () => {
                         <div className='grid grid-cols-6 gap-4 p-2'>
 
                             <div className=' items-center justify-center md:my-1 px-1 data flex flex-col'>
-                                <label className='block text-xs font-bold text-slate-700 mb-1'>Po Type</label>
+                                <label className='block text-xs font-bold text-slate-700 mb-1'>Item</label>
                                 <select id='dd' autoFocus name="name" className='w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-                      transition-all duration-150 shadow-sm' value={localPoType} onChange={(e) => {
-                                        if (e.target.value != "Order Purchase") {
-                                            setOrderId("")
-                                        }
-                                        setLocalPoType(e.target.value)
+                      transition-all duration-150 shadow-sm' value={itemId} onChange={(e) => {
+
+                                        setItemId(e.target.value)
                                     }}>
                                     <option value={""}>Select</option>
-                                    {PoTypes.map((option, index) => <option key={index} value={option.value} >
-                                        {option.show}
-                                    </option>)}
+                                    {(itemList?.data)?.map((blend) =>
+                                        <option value={blend.id} key={blend.id}>
+                                            {blend?.name}
+                                        </option>)}
                                 </select>
                             </div>
-                            {localPoType == "Order Purchase" && (
-                                <DropdownWithSearch
-                                    options={orderData?.data}
-                                    value={orderId}
-                                    setValue={setOrderId}
-                                    // readOnly={readOnly}
-                                    labelField={"docId"}
-                                    label={"Order No"}
-                                    required={true}
-                                />
-                            )}
-                            <div className=' items-center justify-center md:my-1 px-1 data flex flex-col'>
-                                <label className='block text-xs font-bold text-slate-700 mb-1'>Po Type</label>
-                                <select id='dd' autoFocus name="name" className='w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
-                      focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-                      transition-all duration-150 shadow-sm' value={itemType} onChange={(e) => setItemType(e.target.value)}>
-                                    <option value={""}>Select</option>
-                                    {poTypes.map((option, index) => <option key={index} value={option.value} >
-                                        {option.show}
-                                    </option>)}
-                                </select>
-                            </div>
-                            <DropdownInput name="Location"
+
+                            <DropdownInput name="Size"
+                                options={dropDownListObject(sizeList?.data, "name", "id")}
+                                value={sizeId} setValue={setSizeId} required={true} clear={true} />
+                            <DropdownInput name="Color"
+                                options={dropDownListObject(colorList?.data, "name", "id")}
+                                value={colorId} setValue={setColorId} required={true} clear={true} />
+                            {/* <DropdownInput name="Location"
                                 options={branchList ? (dropDownListObject(branchList.data, "branchName", "id")) : []}
                                 value={localLocationId}
                                 setValue={(value) => { setLocalLocationId(value); setLocalStoreId("") }}
                                 required={true}
-                            />
-                            <DropdownInput name="Store"
-                                options={dropDownListObject(storeOptions, "storeName", "id")}
-                                value={localStoreId} setValue={setLocalStoreId} required={true} />
+                            /> */}
+                            <DropdownInput name="Location"
+                                options={dropDownListObject(locationData?.data, "storeName", "id")}
+                                value={storeId} setValue={setStoreId} required={true} clear={true} />
 
 
                             <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} />
@@ -144,13 +136,13 @@ const StockReport = () => {
                                 className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'
                                 onClick={() => {
 
-                                    if (!(localPoType && localStoreId && localEndDate)) {
-                                        Swal.fire({
-                                            icon: "warning",
-                                            title: "Choose Po Type, Store , End Date ... ",
-                                        });
-                                        return
-                                    }
+                                    // if (!(localStoreId && localEndDate)) {
+                                    //     Swal.fire({
+                                    //         icon: "warning",
+                                    //         title: "Choose Item,  , End Date ... ",
+                                    //     });
+                                    //     return
+                                    // }
                                     fetchData(
                                         {
                                             params:
@@ -159,10 +151,12 @@ const StockReport = () => {
                                                 branchId,
                                                 stockReport: true,
                                                 storeId,
-                                                itemType,
                                                 toDate: localEndDate,
-                                                orderId,
-                                                poType
+                                                itemId,
+                                                sizeId,
+                                                colorId
+
+
                                             }
                                         },
                                     )
@@ -186,42 +180,40 @@ const StockReport = () => {
                                 </div>
                                 :
 
-                                (itemType == "Accessory" && stockList.length !== 0) ?
-                                    <table className="min-w-[1250px] border-collapse table-fixed">
-                                        <thead className="bg-gray-200 text-gray-800">
 
-                                            <tr>
+                                <table className="min-w-[1250px] border-collapse table-fixed">
+                                    <thead className="bg-gray-200 text-gray-800">
 
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">accessoryGroup </td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">AccessoryCategory </td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Accessory</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty</td>
-                                            </tr>
+                                        <tr>
 
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Item </td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Size </td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
 
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty </td>
 
 
 
-
-
-                                        </thead>
-                                        <tbody>
-
-                                            {stockList?.map((yarn, index) => (
-                                                <tr
-
-                                                >
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.AccessoryGroup}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.accessoryCategory}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.accessory}</td>
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
+                                        </tr>
 
 
 
+
+                                    </thead>
+                                    <tbody>
+
+                                        {stockList?.map((yarn, index) => (
+                                            <tr
+
+                                            >
+
+                                                <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Item}</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Size}</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color}</td>
+
+                                                <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
 
 
 
@@ -232,61 +224,15 @@ const StockReport = () => {
 
 
 
-                                                </tr>
-                                            ))}
-
-                                        </tbody>
-
-                                    </table>
-                                    :
-                                    <table className="min-w-[1250px] border-collapse table-fixed">
-                                        <thead className="bg-gray-200 text-gray-800">
-
-                                            <tr>
-
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Yarn </td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty </td>
 
 
 
                                             </tr>
+                                        ))}
 
+                                    </tbody>
 
-
-
-                                        </thead>
-                                        <tbody>
-
-                                            {stockList?.map((yarn, index) => (
-                                                <tr
-
-                                                >
-
-                                                    <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.yarn}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.color}</td>
-                                                    <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                </tr>
-                                            ))}
-
-                                        </tbody>
-
-                                    </table>
+                                </table>
                         }
                     </div>
                 </div>

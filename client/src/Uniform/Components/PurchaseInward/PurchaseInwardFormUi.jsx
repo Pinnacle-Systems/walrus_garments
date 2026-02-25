@@ -1,30 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCommonParams, sumArray } from "../../../Utils/helper";
-import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
-import { ReusableInpu, ReusableInput } from "../Order/CommonInput";
+import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { FaFileAlt } from "react-icons/fa";
+import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
-import { directOrPo, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
+import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
-import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
-import { useAddDirectInwardOrReturnMutation, useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useGetDirectInwardOrReturnQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
+import { useAddDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import moment from "moment";
 import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import AccessoryPoItems from "./AccessoryPoItems";
 import Modal from "../../../UiComponents/Modal";
 import PoItemsSelection from "./PoItemsSelection";
 import YarnPoItems from "./YarnPoItems";
 import YarnInwardPoItems from "./YarnInwardItem";
-import AccessoryInwardItems from "./AccessoryInwardItems";
 import Swal from "sweetalert2";
+import BarCodePrintFormat from "./BarcodePrintFormat";
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, locationData, supplierList,
-    yarnList , colorList , uomList
+  yarnList, colorList, uomList
 
 }) => {
 
@@ -32,7 +30,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
   const storeOptions = locationData ?
-    locationData.data.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
+    locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
     [];
 
 
@@ -51,6 +49,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
 
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
@@ -77,7 +76,8 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-
+  const { data: itemList } = useGetItemMasterQuery({ params });
+  const { data: sizeList } = useGetSizeMasterQuery({ params });
 
   // const { data: branchList } = useGetBranchQuery({ params: { companyId } });
 
@@ -122,7 +122,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       setReadOnly(false);
     }
     setTransType(data?.poType ? data.poType : "DyedYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "GeneralInward")
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDirectInwardReturnItems(data?.DirectItems ? data.DirectItems : []);
     if (data?.docId) {
@@ -159,9 +159,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     poInwardOrDirectInward,
     supplierId, dcDate,
     payTermId,
-    branchId, id, userId,
+    id, userId,
     storeId,
-    directInwardReturnItems,
+    directInwardReturnItems : directInwardReturnItems?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -170,7 +170,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     vehicleNo,
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
-    partyId
+    partyId,
+    branchId,
+
   }
 
   console.log(data, "data")
@@ -223,7 +225,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
   const validateData = (data) => {
 
-    if (data?.partyId && data?.locationId && data?.storeId && data?.poInwardOrDirectInward && data?.poType && data?.dcDate && data?.dcDate) {
+    if (data?.partyId && data?.branchId && data?.storeId && data?.poInwardOrDirectInward && data?.poType && data?.dcDate && data?.dcDate) {
       return true
     }
 
@@ -332,47 +334,29 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   }
 
 
-  // if (!branchList || !locationData) return <Loader />
 
-  let taxItems = transType !== "Accessory" ? directInwardReturnItems.map(item => {
-    let newItem = structuredClone(item)
-    newItem["qty"] = sumArray(newItem?.inwardLotDetails ? newItem?.inwardLotDetails : [], "qty")
-    return newItem
-  }) : directInwardReturnItems
 
-  console.log(directInwardReturnItems?.some(item => item.yarnId === "" || item.fabricId === "" || item.accessoryId === ""), "condition")
+
 
   const saveData = (nextProcess) => {
+            let mandatoryFields = ["itemId", "sizeId", "colorId","uomId","qty","price"];
+
     if (!validateData(data)) {
-      // toast.info("Please fill all required fields...!", { position: "top-center" })
 
 
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+
       });
       return
     }
-    if (directInwardReturnItems?.some(item => item.yarnId === "" || item.fabric === "" || item.accessoryId === "")
-    ) {
+    if (!isGridDatasValid((data?.directInwardReturnItems)?.filter(i  => i.itemId), false, mandatoryFields)) {
       Swal.fire({
-        title: "Please select items...!",
-        icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
+        title: "Please fill all Po Items Mandatory fields...!",
+        icon: "warning",
       });
-      return
-
+      return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
@@ -427,10 +411,22 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           supplierId={partyId}
           inwardItems={directInwardReturnItems}
           setInwardItems={setDirectInwardReturnItems} poInwardOrDirectInward={poInwardOrDirectInward} />
+      </Modal>{console.log(barcodePrintOpen, "barcodePrintOpen")}
+      <Modal
+        isOpen={barcodePrintOpen}
+        onClose={() => setBarcodePrintOpen(false)}
+        widthClass={"px-2 h-[90%] w-[90%]"}
+      >
+        <BarCodePrintFormat
+          data={directInwardReturnItems}
+          // barCodePerPage={barCodePerPage}
+          sizeList={sizeList}
+          itemList={itemList}
+        />
       </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Yarn Purchase Inward </h1>
+          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward </h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -472,22 +468,22 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 ref={inwardTyperef}
               />
 
-              <DropdownInput name="Po Type"
+              {/* <DropdownInput name="Po Type"
                 options={YarnMaterial}
                 value={transType}
                 setValue={setTransType}
                 required={true}
                 readOnly={readOnly}
-              />
+              /> */}
 
-              <DropdownInput name="Location"
+              <DropdownInput name="Branch"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                 value={locationId}
                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                 required={true}
               // readOnly={ readOnly}
               />
-              <DropdownInput name="Store"
+              <DropdownInput name="Location"
                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
                 value={storeId} setValue={setStoreId} required={true}
               // readOnly={id || readOnly}
@@ -556,6 +552,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
             <YarnPoItems
               poItems={directInwardReturnItems} setPoItems={setDirectInwardReturnItems} setInwardItemSelection={setInwardItemSelection} supplierId={partyId} handleRightClick={handleRightClick} contextMenu={contextMenu}
               handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+              itemList={itemList} sizeList={sizeList}
 
             />
 
@@ -582,7 +579,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           }
         </fieldset>
 
-        <div className="grid grid-cols-3 gap-3">
+        {/* <div className="grid grid-cols-3 gap-3">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-medium text-slate-700 mb-2 text-base">Terms & Conditions</h2>
             <textarea
@@ -615,7 +612,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           </div>
 
 
-          {/* Pricing Summary (Grand Total) Section */}
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
             <h2 className="font-semibold text-slate-800 mb-2 text-base">
               Qty Summary
@@ -721,7 +717,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
           <div className="flex gap-2 flex-wrap">
@@ -747,9 +743,18 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit
             </button>
-            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-              <FaWhatsapp className="w-4 h-4 mr-2" />
-              WhatsApp
+            <button
+              className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 flex items-center text-sm"
+              onClick={() => {
+                // const allStockRows = readyGoods.flatMap(
+                //   (item) => item.Stock
+                // );
+                // setBarcodeItems(allStockRows);
+                setBarcodePrintOpen(true);
+              }}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Barcode
             </button>
             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
               <FiPrinter className="w-4 h-4 mr-2" />

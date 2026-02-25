@@ -1,11 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
-
-import FormHeader from "../../../Basic/components/FormHeader";
-import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, ReusableTable, ToggleButton } from "../../../Inputs";
-import ReportTemplate from '../../../Basic/components/ReportTemplate'
+import { TextInput, ReusableTable, ToggleButton, TextInputNew1 } from "../../../Inputs";
 import { useAddHsnMasterMutation, useDeleteHsnMasterMutation, useGetHsnMasterByIdQuery, useGetHsnMasterQuery, useUpdateHsnMasterMutation } from "../../../redux/services/HsnMasterServices";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
@@ -64,28 +60,34 @@ export default function Form() {
     }
 
     const validateData = (data) => {
-        if (data.name &&  data.tax) {
+        if (data.name && data.tax) {
             return true;
         }
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             await callback(data)
             setId("")
             syncFormWithDb(undefined)
             Swal.fire({
-                title: `${text}  Successfullty`  ,
+                title: `${text}  Successfullty`,
                 icon: "success",
-           
+
             });
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -94,13 +96,30 @@ export default function Form() {
             });
             return;
         }
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+        } else {
+            foundItem = allData?.data?.some(item => item.name === name);
+
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Hsn  already exists.",
+                icon: "warning",
+                showConfirmButton: false,
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -115,7 +134,7 @@ export default function Form() {
                 Swal.fire({
                     title: "Deleted" + "  " + "Successfully",
                     icon: "success",
-                 
+
                 });
             } catch (error) {
                 toast.error("something went wrong");
@@ -196,8 +215,16 @@ export default function Form() {
         console.log("Edit");
     };
 
+    const firstInputFocus = useRef(null);
+
+    useEffect(() => {
+        if (form && firstInputFocus.current) {
+            firstInputFocus.current.focus();
+        }
+    }, [form]);
+
     return (
- 
+
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Hsn Master</h5>
@@ -267,12 +294,30 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                          border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close")
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                           border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new")
+                                                }}
+
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                           border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -285,18 +330,10 @@ export default function Form() {
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                             <div className="space-y-4 ">
                                                 <fieldset className=' rounded mt-2'>
-                                                    {/* <div className=''>
-                                                        <div className='mb-3 w-[48%]'>
-                                                            <TextInput name="Counts" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        </div>
 
-                                                        <div className='mb-5'>
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                        </div>
-                                                    </div> */}
                                                     <div className='grid grid-cols-3 my-2 gap-5'>
-                                                        <TextInput name="HSN Code" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                        <TextInput name="Tax Percentage" type="text"  max={"100"} value={tax} setValue={setTax} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        <TextInputNew1 name="HSN Code" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} ref={firstInputFocus} />
+                                                        <TextInputNew1 name="Tax Percentage" type="text" max={"100"} value={tax} setValue={setTax} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                                                     </div>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />

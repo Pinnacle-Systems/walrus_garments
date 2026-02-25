@@ -5,7 +5,7 @@ import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import secureLocalStorage from 'react-secure-storage';
 import toast from 'react-hot-toast';
 import { dropDownListObject } from '../../../Utils/contructObject';
-import { TextInput, ToggleButton, CheckBox, DropdownInput, ReusableTable } from "../../../Inputs";
+import { TextInput, ToggleButton, CheckBox, DropdownInput, ReusableTable, TextInputNew1 } from "../../../Inputs";
 import MastersForm from "../MastersForm/MastersForm";
 import Mastertable from "../MasterTable/Mastertable";
 import { statusDropdown } from "../../../Utils/DropdownData";
@@ -54,7 +54,6 @@ export default function Form() {
     const syncFormWithDb = useCallback(
         (data) => {
             if (!id) {
-                setReadOnly(false);
                 setStoreName("");
                 setLocationId("");
                 setIsAccessory(false);
@@ -93,7 +92,7 @@ export default function Form() {
     }
 
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -104,16 +103,18 @@ export default function Form() {
 
             });
 
-            // dispatch({
-            //     type: `LocationMaster/invalidateTags`,
-            //     payload: ['Location'],
-            //   }); 
+            if (nextProcess == "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             // toast.error("Please fill all required fields...!", {
             //     position: "top-center",
@@ -125,13 +126,28 @@ export default function Form() {
             });
             return;
         }
+
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.storeName?.trim() == storeName?.trim() && item?.locationId == locationId)
+        } else {
+            foundItem = allData?.data?.some(item => item?.storeName?.trim() == storeName?.trim() && item?.locationId == locationId);
+
+        }
+        if (foundItem) {
+            Swal.fire({
+                text: "The location and store name already exist",
+                icon: "warning",
+            });
+            return false;
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -215,7 +231,7 @@ export default function Form() {
             header: "Location",
             accessor: (item) => item?.storeName,
             //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-96",
+            className: "font-medium text-gray-900 text-left uppercase w-72",
         },
 
         {
@@ -227,181 +243,17 @@ export default function Form() {
 
     ];
 
+    const firstInputFocus = useRef(null);
+
+    useEffect(() => {
+        if (form && firstInputFocus.current) {
+            firstInputFocus.current.focus();
+        }
+    }, [form]);
+
 
     return (
-        // <div onKeyDown={handleKeyDown}>
-        //     <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-        //         <h5 className='my-1'>Location Master</h5>
-        //         <div className="flex items-center gap-4">
-        //             <button
-        //                 onClick={() => {
-        //                     setForm(true);
-        //                     onNew();
-        //                 }}
-        //                 className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-        //             >
-        //                 <Plus size={16} />
-        //                 Add Location
-        //             </button>
 
-        //         </div>
-        //     </div>
-        //     <div className='w-full flex items-start'>
-        //         <Mastertable
-        //             header={'Location list'}
-        //             searchValue={searchValue}
-        //             setSearchValue={setSearchValue}
-        //             onDataClick={onDataClick}
-        //             // setOpenTable={setOpenTable}
-        //             tableHeaders={tableHeaders}
-        //             tableDataNames={tableDataNames}
-        //             setReadOnly={setReadOnly}
-        //             deleteData={deleteData}
-        //             branchList={branchList}
-        //             data={allData?.data}
-        //             loading={
-        //                 isLoading || isFetching
-        //             } />
-
-        //     </div>
-
-        //     {form && (
-        //         <Modal
-        //             isOpen={form}
-        //             form={form}
-        //             widthClass={"w-[40%] max-w-6xl h-[60vh]"}
-        //             onClose={() => {
-        //                 setForm(false);
-        //                 setErrors({});
-        //             }}
-        //         >
-        //             <div className="h-full flex flex-col bg-[f1f1f0]">
-        //                 <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-        //                     <div className="flex items-center gap-2">
-        //                         <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-        //                             {id ? (!readOnly ? "Edit Location  " : "Location Master") : "Add New  Location "}
-        //                         </h2>
-
-        //                     </div>
-        //                     <div className="flex gap-2">
-        //                         <div>
-        //                             {readOnly && (
-        //                                 <button
-        //                                     type="button"
-        //                                     onClick={() => {
-        //                                         setForm(false);
-        //                                         setSearchValue("");
-        //                                         setId(false);
-        //                                     }}
-        //                                     className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-        //                                 >
-        //                                     Cancel
-        //                                 </button>
-        //                             )}
-        //                         </div>
-        //                         <div className="flex gap-2">
-        //                             {!readOnly && (
-        //                                 <button
-        //                                     type="button"
-        //                                     onClick={saveData}
-        //                                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-        //                                 border border-green-600 flex items-center gap-1 text-xs"
-        //                                 >
-        //                                     <Check size={14} />
-        //                                     {id ? "Update" : "Save"}
-        //                                 </button>
-        //                             )}
-        //                         </div>
-        //                     </div>
-        //                 </div>
-
-        //                 <div className="flex-1 overflow-auto p-3">
-        //                     <div className="grid grid-cols-1  gap-3  h-full">
-        //                         <div className="lg:col-span- space-y-3">
-        //                             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-
-        // <fieldset className=' rounded mt-2'>
-        //     <div className=''>
-        //         <div className="flex flex-wrap justify-between mt-4">
-
-        //             <div className='mb-3'>
-        //                 <CheckBox name="Yarn" value={isYarn} setValue={setIsYarn}
-        //                     readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-        //             <div className='mb-3'>
-        //                 <CheckBox name="Fabric" value={isFabric} setValue={setIsFabric}
-        //                     readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-        //             <div className='mb-3'>
-        //                 <CheckBox name="Accessory" value={isAccessory} setValue={setIsAccessory}
-        //                     readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-        //             <div className='mb-3'>
-        //                 <CheckBox name="Garments" value={isGarments} setValue={setIsGarments}
-        //                     readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-        //         </div>
-        //         <div className='flex-col'>
-        //             <div className='mb-3 w-[48%]'>
-        //                 <DropdownInput
-        //                     name="Location"
-        //                     options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
-        //                     value={locationId}
-        //                     setValue={setLocationId}
-        //                     required={true}
-        //                     readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-        //             <div className='mb-3 w-[48%]'>
-        //                 <TextInput name="Store" type="text" value={storeName} setValue={setStoreName} readOnly={readOnly}
-        //                     disabled={childRecord.current > 0}
-        //                 />
-        //             </div>
-
-
-        //         </div>
-
-        //         <div className='mb-5 mt-3'>
-        //             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-        //         </div>
-
-        //     </div>
-        // </fieldset>
-
-        //                             </div>
-
-
-        //                         </div>
-
-
-
-
-
-
-
-
-
-
-        //                     </div>
-        //                 </div>
-
-
-        //             </div>
-
-
-
-        //         </Modal>
-        //     )}
-        // </div>
         <div onKeyDown={handleKeyDown} className="p-1">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Location Master</h5>
@@ -434,7 +286,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[45%] h-[65%]"}
+                        widthClass={"w-[45%] h-[44%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -471,12 +323,30 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                        border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => {
+                                                    saveData("close")
+                                                }}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                                                border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveData("new")
+                                                }}
+
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                {"Save & New"}
                                             </button>
                                         )}
                                     </div>
@@ -485,63 +355,37 @@ export default function Form() {
 
                             <div className="flex-1  p-3 ">
                                 <div className="grid grid-cols-1  gap-3  h-full ">
-                                    <div className="lg:col-span-2 space-y-3">
+                                    <div className="lg:col-span-2 ">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                                <div className="flex flex-row mt-3">
 
-                                                    <div className=''>
-                                                        <CheckBox name="Yarn" value={isYarn} setValue={setIsYarn}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                        />
-                                                    </div>
-                                                    <div className=''>
-                                                        <CheckBox name="Fabric" value={isFabric} setValue={setIsFabric}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                        />
-                                                    </div>
-                                                    <div className=''>
-                                                        <CheckBox name="Accessory" value={isAccessory} setValue={setIsAccessory}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                        />
-                                                    </div>
-                                                    {/* <div className='    '>
-                                                        <CheckBox name="Garments" value={isGarments} setValue={setIsGarments}
-                                                            readOnly={readOnly}
-                                                            disabled={childRecord.current > 0}
-                                                        />
-                                                    </div> */}
+                                            <div className="grid grid-cols-2  gap-3  ">
+
+                                                <div className=' '>
+                                                    <DropdownInput
+                                                        name="Branch"
+                                                        options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
+                                                        value={locationId}
+                                                        setValue={setLocationId}
+                                                        required={true}
+                                                        readOnly={readOnly}
+                                                        disabled={childRecord.current > 0}
+                                                        ref={firstInputFocus}
+                                                    />
                                                 </div>
-                                                <div className="grid grid-cols-2  gap-3  h-full">
-                                                    <fieldset className=' rounded mt-2'>
-
-                                                        <div className='mb-3 '>
-                                                            <DropdownInput
-                                                                name="Location"
-                                                                options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
-                                                                value={locationId}
-                                                                setValue={setLocationId}
-                                                                required={true}
-                                                                readOnly={readOnly}
-                                                                disabled={childRecord.current > 0}
-                                                            />
-                                                        </div>
-                                                        <div className='mb-3 '>
-                                                            <TextInput name="Store" type="text" value={storeName} setValue={setStoreName} readOnly={readOnly}
-                                                                disabled={childRecord.current > 0}
-                                                            />
-                                                        </div>
-
-
-
-                                                        <div className='mb-5 mt-3'>
-                                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                        </div>
-
-                                                    </fieldset>
+                                                <div className=''>
+                                                    <TextInputNew1 name="Location" required={true}
+                                                        type="text" value={storeName} setValue={setStoreName} readOnly={readOnly}
+                                                        disabled={childRecord.current > 0}
+                                                    />
                                                 </div>
+                                                <div className=''>
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                </div>
+
+
+
+
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

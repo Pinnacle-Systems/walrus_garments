@@ -1,31 +1,18 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
-import { getRemovedItems } from '../utils/helper.js';
 
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.item.findMany({
-        where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
-            active: active ? Boolean(active) : undefined,
-        },
         include: {
-            ItemType: true,
-            ItemPanel: {
+            ItemPriceList: true,
+            _count: {
                 select: {
-                    id: true,
-                    panelId: true,
-                    ItemPanelProcess: {
-                        select: {
-                            processId: true
-                        }
-
-                    }
+                    DirectItems: true,
                 }
             }
-
-
         },
+
     });
     return { statusCode: 0, data };
 }
@@ -38,31 +25,32 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            ItemType: true,
-            ItemPanel: {
+            ItemPriceList: {
                 select: {
                     id: true,
-                    panelId: true,
-                    ItemPanelProcess: {
+                    itemId: true,
+                    colorId: true,
+                    Color: {
                         select: {
-                            processId: true
+                            name: true
                         }
-
-                    }
+                    },
+                    Size: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    sizeId: true,
+                    purchasePrice: true,
+                    salesPrice: true,
                 }
             }
         }
+
     })
     if (!data) return NoRecordFound("item");
-    const modifiedData = {
-        ...data,
-        ItemPanel: data.ItemPanel.map(panel => ({
-            panelId: panel.panelId,
-            id: panel.id,
-            selectedAddons: panel.ItemPanelProcess.map(process => process.processId)
-        }))
-    }
-    return { statusCode: 0, data: { ...modifiedData, childRecord } };
+
+    return { statusCode: 0, data: { ...data, childRecord } };
 }
 
 async function getSearch(req) {
@@ -84,48 +72,41 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 async function create(body) {
-    const { name, code, companyId, active, itemTypeId, itemDescription, panelId } = body
-    const itemdata = await prisma.item.create({
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active } = body
+    const data = await prisma.item.create({
         data: {
-            name,
-            code,
-            itemDescription,
-            companyId: parseInt(companyId),
-            itemTypeId: itemTypeId ? parseInt(itemTypeId) : undefined,
-            active
+            styleId: styleId ? parseInt(styleId) : undefined,
+            sizeId: sizeId ? parseInt(sizeId) : undefined,
+            name: name ? name : undefined,
+            hsnId: hsnId ? parseInt(hsnId) : undefined,
+            code: code ? code : undefined,
+            itemType: itemType ? itemType : undefined,
+            priceMethod: priceMethod ? priceMethod : undefined,
+            // salesPrice: salesPrice ? salesPrice : undefined,
+            // purchasePrice: purchasePrice ? purchasePrice : undefined,
+            // purchaseTaxType: purchaseTaxType ? purchaseTaxType : undefined,
+            // salesTaxType: salesTaxType ? salesTaxType : undefined,
+            active: active ? active : undefined,
+
+            ItemPriceList: itemPriceList?.length > 0
+                ? {
+                    create: itemPriceList?.map((item) => ({
+
+                        colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
+                        sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
+                        purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
+                        salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+                    })),
+                }
+                : undefined,
+
+
         }
     });
 
-    const itemPanelData = await Promise.all(
-        panelId.map(async (panel) => {
-            return await prisma.itemPanel.create({
-                data: {
-                    Item: { connect: { id: itemdata.id } },
-                    Panel: { connect: { id: parseInt(panel.panelId) } }
-                }
-            });
-        })
-    );
 
-    const itemPanelProcessData = await Promise.all(
-        itemPanelData.map(async (itemPanel, index) => {
-            if (panelId[index]?.selectedAddons) {
-                return Promise.all(
-                    panelId[index].selectedAddons.map(async (addon) => {
-                        return await prisma.itemPanelProcess.create({
-                            data: {
-                                ItemPanel: { connect: { id: itemPanel.id } },
-                                Process: { connect: { id: parseInt(addon) } }
-                            }
-                        });
-                    })
-                );
-            }
-            return [];
-        })
-    );
 
-    return { statusCode: 0, data: { item: itemdata, panels: itemPanelData, panelProcesses: itemPanelProcessData } };
+    return { statusCode: 0, data: { data } };
 }
 
 // async function updateStylePanel(tx, sampleDetails, sampleData) {
@@ -243,8 +224,67 @@ async function deleteItemPanelId(tx, removeItemPanelIds) {
 }
 
 
+
+
+
+async function updateItemPriceList(tx, itemPriceList, item) {
+    let removedItems = item?.ItemPriceList?.filter(oldItem => {
+        let result = itemPriceList.find(newItem => newItem.id === oldItem.id)
+        if (result) return false
+        return true
+    })
+
+    console.log(item, "item");
+
+    let removedItemsId = removedItems.map(item => parseInt(item.id))
+
+    await tx.ItemPriceList.deleteMany({
+        where: {
+            id: {
+                in: removedItemsId
+            }
+        }
+    })
+
+    const promises = itemPriceList.map(async (item) => {
+        if (item?.id) {
+            return await tx.ItemPriceList.update({
+                where: {
+                    id: parseInt(item.id)
+                },
+
+                data: {
+
+                    sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
+                    purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
+                    colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
+                    salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+
+                }
+            })
+        } else {
+            return await tx.ItemPriceList.create({
+                data: {
+
+                    purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
+                    sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
+                    colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
+                    salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+
+
+                }
+            })
+        }
+    })
+    return Promise.all(promises)
+}
+
+
 async function update(id, body) {
-    const { name, code, companyId, active, itemTypeId, itemDescription, panelId } = await body;
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, salesTaxType, priceMethod, active,
+
+        itemPriceList
+    } = body
 
 
 
@@ -254,48 +294,52 @@ async function update(id, body) {
             id: parseInt(id)
         },
         include: {
-            ItemPanel: {
-                select: {
-                    id: true,
-                    Panel: true,
-                    panelId: true,
-                    itemId: true,
-                    ItemPanelProcess: true
-
-                }
-            }
+            ItemPriceList: true
         }
+
     });
     if (!dataFound) return NoRecordFound("item");
-    let panelData;
+    let data;
 
 
-    let oldPanelIds = dataFound.ItemPanel.map(item => parseInt(item.id))
-    let currentPanelIds = panelId.filter(i => i?.id)?.map(item => parseInt(item.id))
-    let removeItemPanelIds = getRemovedItems(oldPanelIds, currentPanelIds);
 
-    console.log(removeItemPanelIds, "removeItemPanelIds")
 
     await prisma.$transaction(async (tx) => {
 
-        await deleteItemPanelId(tx, removeItemPanelIds);
-        panelData = await tx.item.update({
+        data = await tx.item.update({
             where: {
                 id: parseInt(id)
             },
+
             data: {
-                name,
-                code,
-                itemDescription,
-                companyId: parseInt(companyId),
-                itemTypeId: itemTypeId ? parseInt(itemTypeId) : undefined,
-                active
+                styleId: styleId ? parseInt(styleId) : undefined,
+                sizeId: sizeId ? parseInt(sizeId) : undefined,
+                name: name ? name : undefined,
+                hsnId: hsnId ? parseInt(hsnId) : undefined,
+                code: code ? code : undefined,
+                itemType: itemType ? itemType : undefined,
+                priceMethod: priceMethod ? priceMethod : undefined,
+
+                // salesPrice: salesPrice ? salesPrice : undefined,
+                // purchasePrice: purchasePrice ? purchasePrice : undefined,
+                // purchaseTaxType: purchaseTaxType ? purchaseTaxType : undefined,
+                // salesTaxType: salesTaxType ? salesTaxType : undefined,
+                active: active ? active : undefined,
             },
+            include: {
+                ItemPriceList: true
+            }
+
+
+
+
+
         })
-        await updateItemPanelData(tx, panelId, panelData.id)
+
+        await updateItemPriceList(tx, itemPriceList, data)
 
     })
-    return { statusCode: 0, data: panelData };
+    return { statusCode: 0, data: data };
 }
 
 
@@ -359,7 +403,7 @@ async function checkIsItemIsUsed(itemId) {
 async function remove(id) {
     let data;
 
-    await checkIsItemIsUsed(id)
+    // await checkIsItemIsUsed(id)
     data = await prisma.item.delete({
         where: {
             id: parseInt(id)
