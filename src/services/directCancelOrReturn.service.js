@@ -618,12 +618,11 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
             supplierId: supplierId ? parseInt(supplierId) : undefined,
-            noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : undefined,
-            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-            kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-            fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
             qty: item["returnQty"] ? 0 - parseFloat(item["returnQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
+            branchId: branchId ? parseFloat(branchId) : 0,
+            storeId: storeId ? parseFloat(storeId) : 0,
+
 
 
 
@@ -650,7 +649,8 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                 price: item["price"] ? parseFloat(item["price"]) : 0,
-                directItemsId: item["directItemsId"] ? parseInt(item["directItemsId"]) : undefined,
+                directItemsId: item["id"] ? parseInt(item["id"]) : undefined,
+                poNo: item["poNo"] ? item["poNo"] : "",
 
 
             }
@@ -813,7 +813,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
-                    directItemsId: item["directItemsId"] ? parseInt(item["directItemsId"]) : undefined,
+                    directItemsId: item["id"] ? parseInt(item["id"]) : undefined,
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                     orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
                     orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,

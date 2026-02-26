@@ -1,15 +1,41 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import YarnDirectItem from './YarnDirectItem';
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-     setDirectInwardReturnItems, readOnly,  sizeList, itemList, colorList, uomList ,supplierId }) => {
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList,
 
+}) => {
 
+    const [contextMenu, setContextMenu] = useState(false)
 
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+    const handleRightClick = (event, rowIndex, type) => {
+        event.preventDefault();
+        setContextMenu({
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            rowId: rowIndex,
+            type,
+        });
+    };
 
-   useEffect(() => {
-        if (directInwardReturnItems?.length >= 9  ) return
+    const handleDeleteRow = (id) => {
+        setDirectInwardReturnItems((yarnBlend) =>
+            yarnBlend.filter((row, index) => index !== parseInt(id))
+        );
+    };
+    const handleDeleteAllRows = () => {
+        setDirectInwardReturnItems((prevRows) => {
+            if (prevRows.length <= 1) return prevRows;
+            return [prevRows[0]];
+        });
+    };
+
+    useEffect(() => {
+        if (directInwardReturnItems?.length >= 9) return
         setDirectInwardReturnItems(prev => {
             let newArray = Array?.from({ length: 9 - prev?.length }, () => {
                 return {
@@ -26,6 +52,21 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
         )
     }, [setDirectInwardReturnItems, directInwardReturnItems])
 
+ const addNewRow = () => {
+        const newRow = {
+            itemId: "",
+            qty: "",
+            tax: "0",
+            colorId: "",
+            uomId: "",
+            price: "",
+            discountTypes: "",
+            discountValue: "0.00",
+            id: '',
+            poItemsId: ""
+        };
+        setDirectInwardReturnItems([...directInwardReturnItems, newRow]);
+    };
 
     return (
         <>
@@ -103,6 +144,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     Gross
                                 </th>
+                    
 
                             </tr>
                         </thead>
@@ -113,7 +155,9 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 sizeList={sizeList}
                                 key={item.poItemsId}
                                 item={item} index={index} handleInputChange={handleInputChange}
-                                readOnly={readOnly} />)}
+                                readOnly={readOnly}
+                                handleRightClick={handleRightClick} addNewRow={addNewRow}
+                            />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                 <tr className='w-12 border border-gray-300 text-[11px]  h-8 text-center p-0.5'>
                                     {Array.from({ length: 11 }).map(i =>
@@ -125,6 +169,44 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                         </tbody>
                     </table>
                 </div>
+                {contextMenu && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: `${contextMenu.mouseY - 50}px`,
+                            left: `${contextMenu.mouseX - 30}px`,
+
+                            // background: "gray",
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                        }}
+                        className="bg-gray-100"
+                        onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                    >
+                        <div className="flex flex-col gap-1">
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteRow(contextMenu.rowId);
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete{" "}
+                            </button>
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteAllRows();
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     )

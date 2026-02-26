@@ -15,6 +15,7 @@ import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
+import { childRecordCount } from '../../../Inputs';
 
 
 
@@ -82,7 +83,17 @@ const PurchaseInward = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id,childRecord) => {
+
+
+        if (childRecordCount(childRecord)) {
+            Swal.fire({
+                icon: 'error',
+                text: 'Child Record Exists',
+            });
+            return
+        }
+
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;

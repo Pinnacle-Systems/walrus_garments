@@ -806,28 +806,28 @@ export default function Form() {
                               <tbody>
 
                                 {itemPriceList.map((item, index) => (
-                                  <tr key={index} className="border border-gray-200 hover:bg-gray-50"
+                                  <tr key={index} className=""
                                     onContextMenu={(e) => {
                                       if (!readOnly) {
                                         handleRightSubGridClick(e, index, "notes");
                                       }
                                     }}
                                   >
-                                    <td className="w-12 px-4 py-2 text-center text-xs">{index + 1}</td>
-                                    <td className="w-80 px-4 py-2 text-left text-xs">
+                                    <td className="border border-gray-200 w-12 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                    <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
                                       {findFromList(item?.sizeId, sizeData?.data, "name")}
                                     </td>
-                                    <td className="w-80 px-4 py-2 text-left text-xs">
+                                    <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
                                       {findFromList(item?.colorId, colorData?.data, "name")}
                                     </td>
-                                    <td className="w-32 px-4 py-2 text-left text-xs">
+                                    <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
                                       <input
                                         type="text"
 
                                         min="0"
                                         rows={1}
                                         onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full py-1 text-xs "
+                                        className="text-right rounded w-full px-1 py-1 text-xs "
                                         value={item.purchasePrice}
                                         disabled={readOnly}
                                         onChange={e => handleInputChange(e.target.value, index, "purchasePrice")}
@@ -835,14 +835,14 @@ export default function Form() {
                                       />
                                     </td>
 
-                                    <td className="w-32 px-4 py-2 text-left text-xs">
+                                    <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
                                       <input
                                         type="text"
 
                                         min="0"
                                         rows={1}
                                         onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full py-1 text-xs "
+                                        className="text-right rounded w-full px-1 py-1 text-xs "
                                         value={item.salesPrice}
                                         disabled={readOnly}
                                         onChange={e => handleInputChange(e.target.value, index, "salesPrice")}

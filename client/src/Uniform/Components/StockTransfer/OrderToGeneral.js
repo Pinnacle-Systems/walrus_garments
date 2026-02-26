@@ -7,11 +7,10 @@ import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterS
 
 
 export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, toOrderId, setStockItems
-    , yarnList, colorList, stockItems
+    , yarnList, colorList, stockItems, sizeList, itemList, uomList
 }) {
 
 
-    console.log(tempOrderItems, "tempOrderItems")
 
 
 
@@ -40,39 +39,57 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
 
 
-    function addItem(id, obj) {
-        console.log(obj, "obj")
+    function addItem(obj) {
 
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            newItems.push(obj);
+            const isAlreadyAdded = newItems.some(i => i.sizeId == obj.sizeId && i.itemId == obj.itemId && i.colorId == obj.colorId);
+
+            if (isAlreadyAdded) {
+                return newItems
+            } else {
+                newItems.push(obj);
+
+            }
+
             return newItems
         });
-        setOrderItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems.push(obj);
-            return newItems
-        });
-    }
-    function removeItem(id) {
-        setStockItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems = newItems?.filter(item => parseInt(item.id) !== parseInt(id))
-            return newItems
-        });
- 
+
     }
 
-    function handleChange(id, obj) {
-        if (isItemAdded(id, obj)) {
-            removeItem(id)
+
+    function removeItem(obj) {
+        setStockItems(localInwardItems => {
+            let newItems = structuredClone(localInwardItems);
+            newItems = newItems?.filter(item =>
+                parseInt(item.itemId) !== parseInt(obj?.itemId) &&
+                parseInt(item.sizeId) !== parseInt(obj?.sizeId) &&
+                parseInt(item.colorId) !== parseInt(obj?.colorId)
+
+
+
+            )
+            return newItems
+        });
+
+    }
+
+    function handleChange(obj) {
+        if (isItemAdded(obj)) {
+            removeItem(obj)
         } else {
-            addItem(id, obj)
+            addItem(obj)
         }
     }
 
-    function isItemAdded(id) {
-        return stockItems?.findIndex(item => parseInt(item?.id) === parseInt(id)) !== -1
+    function isItemAdded(obj) {
+        return stockItems?.findIndex(item =>
+
+            parseInt(item?.itemId) == parseInt(obj?.itemId) &&
+            parseInt(item?.sizeId) == parseInt(obj?.sizeId) &&
+            parseInt(item?.colorId) == parseInt(obj?.colorId)
+
+        ) !== -1
     }
 
     function handleSelectAllChange(value, poItems) {
@@ -84,7 +101,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
     }
 
     function getSelectAll(poItems) {
-        return poItems?.every(item => isItemAdded(item.id))
+        return poItems?.every(item => isItemAdded(item))
     }
 
     return (
@@ -143,12 +160,12 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                             </th>
 
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Style Name</th>
-                                            <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-96">Yarn</th>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Item</th>
+                                            <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-14">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty</th>
 
 
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Balance  Qty</th>
 
 
                                         </tr>
@@ -174,33 +191,34 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
                                                 onClick={() => {
                                                     if (yarnItem?.remainingQty !== 0) {
-                                                        handleChange(yarnItem.id, yarnItem)
+                                                        handleChange(yarnItem)
                                                     }
                                                 }}
 
                                             >
                                                 <td className='py-1 text-center'>
                                                     <input type="checkbox" name="" id=""
-                                                        checked={isItemAdded(yarnItem.id, yarnItem)}
+                                                        checked={isItemAdded(yarnItem)}
                                                     // disabled={yarnItem?.balanceQty === 0}
                                                     />
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                                                     {index + 1}
                                                 </td>
+                                                <td className="w-5 border border-gray-300 px-2 py-1 text-left text-xs">
+                                                    {findFromList(yarnItem?.itemId, itemList, "name")}
+                                                </td>
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
-                                                    {yarnItem?.OrderDetails?.style?.name}
+                                                    {findFromList(yarnItem?.sizeId, sizeList, "name")}
                                                 </td>
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {findFromList(yarnItem?.yarnId, yarnList, "name")}
-                                                </td>
+
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
                                                     {findFromList(yarnItem?.colorId, colorList, "name")}
                                                 </td>
 
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
 
-                                                    {parseFloat(yarnItem?.qty || 0).toFixed(3)}
+                                                    {parseFloat(yarnItem?._sum?.qty || 0).toFixed(3)}
                                                 </td>
                                             </tr>
                                         ))}

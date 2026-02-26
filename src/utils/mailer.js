@@ -11,6 +11,8 @@ const MAIL_SETTINGS = {
 const transporter = createTransport(MAIL_SETTINGS);
 
 export async function sendMail(params) {
+    console.log(params,'params')
+    
     try {
         let info = await transporter.sendMail({
             from: MAIL_SETTINGS.auth.user,
@@ -27,6 +29,8 @@ export async function sendMail(params) {
      </div>
       `,
         });
+
+        console.log(info,"info")
         return info;
     } catch (error) {
         console.log(error);

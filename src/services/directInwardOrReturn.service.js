@@ -107,6 +107,11 @@ async function get(req) {
                     select: {
                         name: true
                     }
+                },
+                _count: {
+                    select: {
+                        DirectItems: true
+                    }
                 }
             }
         });
@@ -143,6 +148,11 @@ async function get(req) {
                         name: true,
                         id: true,
                         aliasName: true
+                    }
+                },
+                _count: {
+                    select: {
+                        DirectItems: true
                     }
                 }
             }
@@ -212,6 +222,11 @@ async function getOne(id) {
                     inwardLotDetails: true,
                     poItemsId: true,
                     itemId: true,
+                    DirectReturnItems : {
+                        select : {
+                            qty : true
+                        }
+                    }   
                 },
 
 
@@ -391,7 +406,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
                     poType: true
                 }
             },
-        
+
             Color: {
                 select: {
                     name: true
@@ -406,19 +421,19 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
                 select: {
                     name: true
                 }
-            },  
-            Item : {
-                select : {
-                    name : true
+            },
+            Item: {
+                select: {
+                    name: true
                 }
             }
 
-    
-        
-        
-         
-     
-      
+
+
+
+
+
+
 
         }
     });
@@ -524,7 +539,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
     // const poItemObj = getStockObject(data?.DirectInwardOrReturn?.poType, data)
     // let stockData;
-  
+
     //     stockData = await prisma.stock.groupBy({
     //         where: {
     //             ...poItemObj,
@@ -547,7 +562,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
 
 
-    
+
 
 
 
@@ -1261,6 +1276,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                 price: item["price"] ? parseFloat(item["price"]) : 0,
+                poNo: item["poNo"] ? item["poNo"] : undefined,
 
 
 
@@ -1273,7 +1289,6 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                 poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
-                poNo: item["poNo"] ? item["poNo"] : undefined,
 
             }
         })
@@ -1340,6 +1355,7 @@ async function create(body) {
 
 
 async function deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardReturnIds) {
+
     return await tx.directItems.deleteMany({
         where: {
             id: {
@@ -1349,10 +1365,39 @@ async function deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardRetu
     })
 }
 
+async function deleteStockReturnItems(tx, removeItemsPurchaseInwardReturnIds) {
+
+    console.log(removeItemsPurchaseInwardReturnIds, "removeItemsPurchaseInwardReturnIds")
+
+
+    const existingStock = await tx.Stock.findMany({
+        where: {
+            transactionId: {
+                in: removeItemsPurchaseInwardReturnIds
+            },
+            inOrOut: "DirectInward"
+        }
+    });
+
+    console.log(existingStock, "existingStock")
+
+    if (!existingStock.length) {
+        throw new Error("No DirectInward stock available for given transaction IDs");
+    }
+
+    return await tx.Stock.deleteMany({
+        where: {
+            transactionId: {
+                in: removeItemsPurchaseInwardReturnIds
+            },
+            inOrOut: "DirectInward"
+        }
+    });
+}
+
 
 
 async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, stockTransactionId) {
-    console.log(stockTransactionId, "stockTransactionId")
     await tx.stock.updateMany({
         where: {
             transactionId: parseInt(stockTransactionId),
@@ -1455,9 +1500,13 @@ async function update(id, body) {
     let currentDirectInwardReturnIds = directInwardReturnItems.filter(i => i?.id)?.map(item => parseInt(item.id))
     let removeItemsPurchaseInwardReturnIds = getRemovedItems(oldDirectInwardReturnIds, currentDirectInwardReturnIds);
 
+    console.log(removeItemsPurchaseInwardReturnIds, 'removeItemsPurchaseInwardReturnIds')
+
     await prisma.$transaction(async (tx) => {
 
         await deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardReturnIds);
+        await deleteStockReturnItems(tx, removeItemsPurchaseInwardReturnIds);
+
         piData = await tx.directInwardOrReturn.update({
             where: {
                 id: parseInt(id)
@@ -1477,7 +1526,6 @@ async function update(id, body) {
             },
         })
         await updateAllPInwardReturnItems(tx, directInwardReturnItems, piData.id, poType, poInwardOrDirectInward, storeId, branchId)
-        // await dataIntegrityValidation(tx, processValid = false);
     })
     return { statusCode: 0, data: piData };
 }
@@ -1495,6 +1543,7 @@ async function update(id, body) {
 
 
 async function remove(id) {
+
 
 
 

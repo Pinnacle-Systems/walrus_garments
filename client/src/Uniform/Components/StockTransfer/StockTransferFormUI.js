@@ -15,6 +15,11 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { useAddStockTransferMutation, useGetStockTransferByIdQuery, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
 import { Loader } from "../../../Basic/components";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+import { useGetUomQuery } from "../../../redux/services/UomMasterService";
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 
 const StockTransferForm = ({
     docId, id, readOnly, setId, setForm,
@@ -27,44 +32,35 @@ const StockTransferForm = ({
 
 
 
-    const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
+    const [fromLocation, setFromLocation] = useState("")
+    const [toLocation, setToLocation] = useState("")
+
+
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
-    const { data: yarnList } = useGetYarnMasterQuery({ params: { ...params } });
+    const { data: uomList } = useGetUomQuery({ params });
+    const { data: itemList } = useGetItemMasterQuery({ params });
+    const { data: sizeList } = useGetSizeMasterQuery({ params });
+    const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
 
 
 
 
 
-
-    // const { data: fromOrderData, isLoading: isfromOrderLoading, isFetching: isfromOrderFetching } = useGetStockValidationByIdQuery(fromOrderId, { skip: !fromOrderId });
 
 
 
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
 
 
+    const { data: allStockData, isLoading, isFetching } = useGetStockQuery({ params: { ...params, storeId: fromLocation } });
+
+    console.log(allStockData, "allStockData  ")
 
 
 
     const {
         data: stockData, isFetching: stockFetching, isLoading: stockLoading, } = useGetStockByIdQuery(
-            {
-                params: {
-                    transferType,
-                    fromOrderId,
-                    storeId: 1
-                },
-            },
-            {
-                skip:
-                    (!transferType) ||
-                    (transferType === "Order" && !fromOrderId) ||
-                    (transferType === "OrderToGeneral" && !fromOrderId)
-
-
-
-            }
-        );
+            { params: { storeId: toLocation }, }, { skip: fromLocation });
 
 
 
@@ -189,18 +185,6 @@ const StockTransferForm = ({
     }, [orderId, id]);
 
 
-    console.log(tempOrderItems, "tempOrderItems")
-    console.log(tempStockItems, "tempStockItems")
-
-    console.log(orderItems, "orderItems")
-    console.log(stockItems, "stockItems")
-
-    console.log(stockData, "stockData")
-    console.log((transferType === "Order" ||
-        transferType === "General" ||
-        transferType === "OrderToGeneral"), "transferType", transferType == "GeneOrderToGeneralral")
-
-
 
     useEffect(() => {
 
@@ -225,63 +209,21 @@ const StockTransferForm = ({
     }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
 
 
-    // useEffect(() => {
-
-    //     if (fromOrderData?.data) {
-    //         let data = fromOrderData?.data
-    //         console.log()
-    //         setFromCustomerId(fromOrderData?.data?.partyId ? fromOrderData?.data?.partyId : undefined)
-    //        setTempStockItems(data?.map(item => ({
-    //             ...item,
-    //             stockQty: item?._sum?.qty
-    //         })))
-
-
-    //     }
-
-    // }, [isfromOrderFetching, isfromOrderLoading, fromOrderId, syncFormWithDb, fromOrderData]);
 
 
     useEffect(() => {
 
-        if (stockData?.data) {
-            if (fromOrderId) {
-                setFromCustomerId(stockData?.data?.[0]?.Order?.Party?.id ? stockData?.data?.[0]?.Order?.Party?.id : undefined)
-                const grouped = Object.values(
-                    stockData?.data?.reduce((acc, item) => {
-                        const key = `${item.yarnId}-${item.colorId}-${item.orderId}-${item.orderDetailsId}`;
 
-                        if (!acc[key]) {
-                            acc[key] = {
-                                ...item,
-                                qty: item.qty
-                            };
-                        } else {
-                            acc[key].qty += item.qty;
-                        }
-
-                        return acc;
-                    }, {})
-                );
-                console.log(grouped, "grouped")
-                setTempStockItems(grouped?.map(i => ({
-                    ...i,
-                    stockQty: i.qty,
-
-                })))
-            }
-            else {
-
-                setTempStockItems(stockData?.data?.map(item => ({
-                    ...item,
-                    stockQty: item?._sum?.qty
-                })))
-            }
+        setTempStockItems(allStockData?.data?.map(item => ({
+            ...item,
+            stockQty: item?._sum?.qty
+        })))
 
 
-        }
 
-    }, [stockFetching, stockLoading, fromOrderId, transferType, syncFormWithDb, stockData]);
+
+
+    }, [allStockData, isLoading, isFetching]);
 
 
 
@@ -293,18 +235,7 @@ const StockTransferForm = ({
             } else {
                 returnData = await callback(data).unwrap();
             }
-            // if (returnData.statusCode === 1) {
-            //     // toast.error(returnData.message);
-            // } else {
-            //     Swal.fire({
-            //         icon: 'success',
-            //         title: `${text || 'Saved'} Successfully`,
-            //         showConfirmButton: false,
-            //         timer: 2000
-            //     });
-            //     // setId("")
-            //     syncFormWithDb(undefined)
-            // }
+
             if (returnData?.statusCode === 0) {
                 Swal.fire({
                     title: text + "  " + "Successfully",
@@ -318,14 +249,9 @@ const StockTransferForm = ({
                     onClose()
                 }
 
-                // setId(returnData?.data?.id);
-                // setForm(false)
-                // refetch()
-
 
 
             } else {
-                // toast.error(returnData?.message);
                 Swal.fire({
                     title: returnData?.message,
                     icon: "error",
@@ -455,6 +381,13 @@ const StockTransferForm = ({
     }, []);
 
 
+
+
+    const storeOptions = locationData ?
+        locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(params.branchId)) :
+        []
+
+
     if (isSingleOrderLoading || isSingleOrderFetching || stockFetching || stockLoading || isSingleDataLoading || isSingleDataFetching) return <Loader />
 
 
@@ -462,7 +395,7 @@ const StockTransferForm = ({
         <>
             <div className="w-full h-[84vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Yarn Stock Transfer</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
                     <div className="gpa-4">
                         {/* <button
                                         onClick={onClose}
@@ -507,185 +440,31 @@ const StockTransferForm = ({
                                 <div className="grid grid-cols-10 gap-x-3 gap-y-1">
                                     <div className="col-span-2">
 
-                                        <DropdownInput name="Stock Transfer Type"
-                                            options={stockTransferType}
-                                            value={transferType}
-                                            setValue={(value) => { setTransferType(value); OnNew() }}
-                                            required={true}
-                                            ref={inputRef1}
-                                            openOnFocus={true}
-                                            readOnly={readOnly}
+                                        <DropdownInput name="From Location"
+                                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
+                                            value={fromLocation} setValue={setFromLocation} required={true}
+                                            readOnly={id || readOnly} clear={true}
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
 
+                                        <DropdownInput name="To Location"
+                                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocation), "storeName", "id")}
+                                            value={toLocation} setValue={setToLocation} required={true}
+                                            disabled={!fromLocation}
+                                            readOnly={readOnly || !fromLocation}
+                                            clear={true}
                                         />
                                     </div>
 
-                                    {transferType === "General" && (
-
-                                        <div className="col-span-1" >
-
-                                            <TextInput name="From Order"
-                                                value={"General"}
-                                                required={true}
-                                                readOnly={true}
-                                            // className={`${transferType == "General" ? "bg-purple-500 text-white" : ""}`}
-
-                                            />
-                                        </div>
-
-
-                                    )}
-                                    {transferType === "Order" && (
-                                        <>
-                                            <div className="col-span-1">
 
 
 
 
-                                                {id ?
-                                                    <TextInput
-
-                                                        name={"From Order No"}
-                                                        value={findFromList(singleData?.data?.fromOrderId, orderData?.data, "docId")}
-                                                    // className={"bg-purple-400 text-white"}
-
-                                                    />
-                                                    :
-
-                                                    <DropdownWithSearch
-                                                        options={orderData?.data?.filter(i => i.isPlanning)}
-
-                                                        value={fromOrderId}
-                                                        setValue={setFromOrderId}
-                                                        // readOnly={id ? true : false}
-                                                        labelField={"docId"}
-                                                        label={"From Order No"}
-                                                    // className={"bg-gradient-to-r from-purple-500 via-purple-500"}
-                                                    // className={"bg-purple-400 text-white"}
-
-                                                    />
-
-                                                }
-                                            </div>
-                                            <div className="col-span-3">
-
-                                                <TextInput name="From Customer"
-                                                    value={findFromList(fromCustomerId, supplierList?.data, "name")}
-                                                    setValue={setFromCustomerId}
-                                                    required={true}
-                                                    readOnly={true}
-                                                />
-                                            </div>
-
-
-                                        </>
-                                    )}
 
 
 
-                                    {/* 
-                                    {((transferType === "Order" || "General") && id) ?
-                                        <TextInput
 
-                                            name={"To Order No"}
-                                            value={findFromList(singleData?.data?.toOrderId, orderData?.data, "docId")}
-
-                                        />
-                                        :
-                                        (transferType === "Order" || "General") ?
-
-                                            <DropdownWithSearch
-                                                options={orderData?.data?.filter(item => item.id !== parseInt(fromOrderId) && item.isPlanning)}
-                                                required={true}
-
-                                                value={toOrderId}
-                                                setValue={setToOrderId}
-                                                // readOnly={id ? true : false}
-                                                labelField={"docId"}
-                                                label={"To Order No"}
-                                            />
-
-                                            :
-
-                                            <></>
-                                    } */}
-
-
-                                    {
-                                        ((transferType === "Order" ||
-                                            transferType === "General") && id) ? (
-                                            <TextInput
-                                                name="To Order No"
-                                                value={findFromList(singleData?.data?.toOrderId, orderData?.data, "docId")}
-                                            />
-                                        ) : (transferType === "Order" ||
-                                            transferType === "General") ? (
-                                            <DropdownWithSearch
-                                                options={orderData?.data?.filter(
-                                                    item => item.id !== parseInt(fromOrderId) && item.isPlanning
-                                                )}
-                                                required={true}
-                                                value={toOrderId}
-                                                setValue={setToOrderId}
-                                                labelField="docId"
-                                                label="To Order No"
-                                            />
-                                        ) : (
-                                            <></>
-                                        )
-                                    }
-
-
-
-                                    {(transferType === "Order" || transferType === "General") && (
-                                        <>
-                                            <div className="col-span-3" >
-                                                <TextInput
-                                                    name={transferType === "Order" ? "To Customer" : "Customer"}
-                                                    placeholder="Contact name"
-                                                    value={findFromList(toCustomerId, supplierList?.data, "name")}
-                                                    // setValue={setContactPersonName}
-                                                    disabled={true}
-                                                />
-
-                                            </div>
-                                        </>
-                                    )}
-                                    {
-                                        ((transferType === "OrderToGeneral") && id) ? (
-                                            <TextInput
-                                                name="From Order No"
-                                                value={findFromList(singleData?.data?.fromOrderId, orderData?.data, "docId")}
-                                            />
-                                        ) : (transferType === "OrderToGeneral") ? (
-                                            <DropdownWithSearch
-                                                options={orderData?.data?.filter(
-                                                    item => item.isPlanning
-                                                )}
-                                                required={true}
-                                                value={fromOrderId}
-                                                setValue={setFromOrderId}
-                                                labelField="docId"
-                                                label="From Order No"
-                                            />
-                                        ) : (
-                                            <></>
-                                        )
-                                    }
-
-                                    {
-                                        transferType === "OrderToGeneral" && (
-                                            <div className="col-span-1" >
-
-                                                <TextInput name="To General"
-                                                    value={"Move To Stock"}
-                                                    required={true}
-                                                    readOnly={true}
-                                                // className={`${transferType == "General" ? "bg-purple-500 text-white" : ""}`}
-
-                                                />
-                                            </div>
-                                        )
-                                    }
 
 
                                 </div>
@@ -695,10 +474,11 @@ const StockTransferForm = ({
                     </div>
                     <div className="h-[55vh] overflow-y-auto">
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
-                            colorList={colorList?.data} yarnList={yarnList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
+                            colorList={colorList?.data}  tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
                             toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data} transferType={transferType}
-
+                            fromLocation={fromLocation} locationData={locationData} itemList={itemList?.data} uomList={uomList?.data}
+                            sizeList={sizeList?.data}
                         />
                     </div>
                     <div className=" flex flex-col md:flex-row gap-2 justify-between mt-5">

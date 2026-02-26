@@ -1,55 +1,38 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
-import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
-import FormHeader from "../../../Basic/components/FormHeader";
 import { toast } from "react-toastify";
 import { DropdownInput, DateInput, TextInput, ReusableSearchableInput } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
-import YarnPoItems from "./YarnPoItems";
-import FabricPoItems from "./FabricPoItems";
 // eslint-disable-next-line no-unused-vars
-import AccessoryPoItems from "./AccessoryPoItems"
-import Consolidation from "../Consolidation";
 import PoItemsSelection from "./PoItemsSelection";
-import AccessoryInwardItems from "./AccessoryInwardItems";
-import FabricInwardItems from "./FabricInwardItems";
 import moment from "moment";
 // import PoSummary from "./PoSummary";
 import Modal from "../../../UiComponents/Modal";
-import { useGetBranchByIdQuery, useGetBranchQuery } from "../../../redux/services/BranchMasterService";
-import {
-    useGetLocationMasterQuery,
-} from "../../../redux/uniformService/LocationMasterServices";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 import { Loader } from '../../../Basic/components';
 import {
     useAddDirectCancelOrReturnMutation, useDeleteDirectCancelOrReturnMutation,
-    useGetDirectCancelOrReturnByIdQuery, useGetDirectCancelOrReturnQuery, useUpdateDirectCancelOrReturnMutation
+    useGetDirectCancelOrReturnByIdQuery, useUpdateDirectCancelOrReturnMutation
 }
     from "../../../redux/uniformService/DirectCancelOrReturnServices";
-import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { directOrPo, directOrPoreturn, poTypes, YarnMaterial } from "../../../Utils/DropdownData";
+import { getCommonParams, sumArray } from "../../../Utils/helper";
+import { directOrPoreturn } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
-import { HiOutlineRefresh, HiX } from "react-icons/hi";
+import { HiOutlineRefresh } from "react-icons/hi";
 import { ReusableInput } from "../Order/CommonInput";
 import ReturnItems from "./ReturnItems";
 import Swal from "sweetalert2";
 import PrintFormatGreyYarnPurchaseReturn from "./NewPrintFormat/index.js"
-import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
-import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService.js";
-import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { PDFViewer } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf.js";
 import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
-import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService.js";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
-import PrintPreviewModal from "../../../UiComponents/NewModal/index.js";
-import NewModal from "../../../UiComponents/NewModal/index.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
@@ -69,7 +52,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [docId, setDocId] = useState("New")
     const [date, setDate] = useState();
     const [payTermId, setPayTermId] = useState("");
-    const [dcDate, setDcDate] = useState("");
+    const [dcDate, setDcDate] = useState(moment.utc(new Date()).format("YYYY-MM-DD"));
     const [transType, setTransType] = useState("DyedYarn");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
@@ -96,29 +79,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     // const branchIdFromApi = useRef(branchId);
 
-    console.log(printModalOpen, "printModalOpen")
-    const params = {
-        branchId, companyId
-    };
-
-
-
-
-
-
-
-
-
-
-    // const getNextDocId = useCallback(() => {
-    //     if (isLoading || isFetching) return
-    //     if (id) return
-    //     if (allData?.nextDocId) {
-    //         setDocId(allData.nextDocId)
-    //     }
-    // }, [allData, isLoading, isFetching, id])
-
-    // useEffect(getNextDocId, [getNextDocId])
 
     const {
         data: singleData,
@@ -146,7 +106,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         // if (data?.date) setDate(data?.date);
         setPayTermId(data?.payTermId ? data?.payTermId : "");
         setSupplierId(data?.supplierId ? data?.supplierId : "");
-        setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
+        setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setDcNo(data?.dcNo ? data.dcNo : "")
         setLocationId(data?.branchId ? data.branchId : "")
         setStoreId(data?.storeId ? data.storeId : "")
@@ -180,7 +140,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         remarks,
         specialInstructions,
         vehicleNo,
-        finYearId
+        finYearId,locationId
     }
 
     function isSupplierOutside() {
@@ -192,19 +152,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const validateData = (data) => {
         let mandatoryFields = ["uomId", "colorId", "price"];
-        let lotMandatoryFields = ["qty"]
-        if (transType === "GreyYarn" || transType === "DyedYarn") {
-            mandatoryFields = [...mandatoryFields, "yarnId"]
-            lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
-        } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-            mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-            lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
-        } else if (transType === "Accessory") {
-            mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-        }
+
 
         return data.poType && data.supplierId && data.dcDate && data.dcNo
-            && data.directReturnItems.length !== 0
+            && data.directReturnItems.length !== 0 && data?.locationId  && data?.storeId
 
     }
 
@@ -238,10 +189,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const saveData = () => {
 
-        // if (!validateData(data)) {
-        //     toast.info("Please fill all required fields...!", { position: "top-center" })
-        //     return
-        // }
+        if (!validateData(data)) {
+
+
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "success",
+
+            }); return
+        }
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }
@@ -416,7 +372,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         discountValue={discountValue}
                         ref={componentRef}
                         poNumber={docId} poDate={date} payTermId={payTermId}
-                        poItems={directInwardReturnItems?.filter(item => item?.yarnId)}
+                        poItems={directInwardReturnItems?.filter(item => item?.itemId)}
                         supplierDetails={supplierDetails ? supplierDetails?.data : null}
                         // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
                         yarnList={itemList} uomList={uomList} colorList={colorList}
@@ -549,93 +505,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-                    {/* <div className="grid grid-cols-3 gap-3">
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">   Terms & Conditions</h2>
-                            <textarea
-                                readOnly={readOnly}
-                                value={term}
-                                onChange={(e) => {
-                                    setTerm(e.target.value)
-                                }}
-                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
-
-                            />
-                        </div>
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm ">
-                            <h2 className="font-medium text-slate-700 mb-2 text-base">Notes</h2>
-                            <textarea
-                                readOnly={readOnly}
-                                value={notes}
-                                onChange={(e) => {
-                                    setNotes(e.target.value)
-                                }}
-                                className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                                placeholder="Additional notes..."
-                            />
-                        </div>
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-semibold text-slate-800 mb-2 text-base">
-                                Qty Summary
-                            </h2>
-
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Total Qty</span>
-                                    <span className="font-medium">{parseInt(getTotalQty())}   No's</span>
-                                </div>
-
-                                <div className="flex justify-between py-1 text-sm">
-                                    <span className="text-slate-600">Approved By</span>
-                                    <input
-                                        type="text"
-                                        className="w-60 pl-2.5 pr-8 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-                                        placeholder="Order By"
-                                        readOnly
-                                        value={approvedBy}
-                                        onChange={(e) => setApprovedBy(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {showExtraCharge && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                                <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h3 className="text-base font-semibold">Add Extra Charge</h3>
-                                        <button onClick={() => setShowExtraCharge(false)} className="text-slate-400 hover:text-slate-600">
-                                            <HiX className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Description</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="e.g. Delivery fee"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                                            <input
-                                                type="number"
-                                                className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                        <button className="w-full bg-indigo-600 text-white py-1.5 px-3 rounded text-sm hover:bg-indigo-700 transition">
-                                            Apply Charge
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-
-                    </div> */}
 
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
 

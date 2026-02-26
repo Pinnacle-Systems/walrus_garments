@@ -155,7 +155,7 @@ const Header = ({ profile, setProfile }) => {
 
     return (
 
-        <div className='py-1 h-10 w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
+        <div className='py-1 h-12 w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
             <Modal
                 isOpen={logout}
                 onClose={() => {
@@ -166,7 +166,7 @@ const Header = ({ profile, setProfile }) => {
                 <Logout setLogout={setLogout} />
             </Modal>
             <div className=" ms-3">
-                <img className="rounded-lg h-9"
+                <img className="rounded-lg h-10"
                     src={logo}
                     alt="" />
             </div>

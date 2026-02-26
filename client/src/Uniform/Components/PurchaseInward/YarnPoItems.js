@@ -3,7 +3,7 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import {  getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -33,8 +33,8 @@ const YarnPoItems = ({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(poItems);
         newBlend[index][field] = value;
-        
-        console.log(newBlend,"newBlend");
+
+        console.log(newBlend, "newBlend");
         setPoItems(newBlend);
     };
 
@@ -44,7 +44,7 @@ const YarnPoItems = ({
         setPoItems((prev) => {
             let newArray = Array.from({ length: 9 - prev.length }, (i) => {
                 return {
-                    yarnId: "",
+                    itemId: "",
                     qty: "0.00",
                     tax: "0",
                     colorId: "",
@@ -64,7 +64,7 @@ const YarnPoItems = ({
 
     const addNewRow = () => {
         const newRow = {
-            yarnId: "",
+            itemId: "",
             qty: "",
             tax: "0",
             colorId: "",
@@ -241,7 +241,7 @@ const YarnPoItems = ({
 
     return (
         <>
-            
+
 
 
             <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[330px]">
@@ -343,7 +343,13 @@ const YarnPoItems = ({
                         <tbody>
 
                             {(poItems ? poItems : [])?.map((row, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer " >
+                                <tr className="border border-blue-gray-200 cursor-pointer "
+                                    onContextMenu={(e) => {
+                                        if (!readOnly) {
+                                            handleRightClick(e, index, "shiftTimeHrs");
+                                        }
+                                    }}
+                                >
                                     <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
@@ -380,7 +386,7 @@ const YarnPoItems = ({
                                         >
                                             <option >
                                             </option>
-                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data,sizeList?.data,"sizeId",row?.itemId)   )?.map((blend) =>
+                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
@@ -501,11 +507,7 @@ const YarnPoItems = ({
                                                     addNewRow();
                                                 }
                                             }}
-                                            onContextMenu={(e) => {
-                                                if (!readOnly) {
-                                                    handleRightClick(e, index, "shiftTimeHrs");
-                                                }
-                                            }}
+
                                         />
                                     </td>
 

@@ -126,7 +126,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "REQUIREMENT PLANNING FORM": <RequirementPlanningForm />,
     "MATERIAL REQUEST FORM": <MaterialRequestForm />,
     "MATERIAL ISSUE FORM": <MaterialIssue />,
-    "YARN STOCK TRANSFER": <StockTransfer />,
+    "STOCK TRANSFER": <StockTransfer />,
     "EXCESS TOLERANCE(%) ENTRY": <ExcessToleranceQty />,
     "ACCESSORY PURCHASE ORDER": <AccessoryPurchaseOrder />,
     "ACCESSORY PURCHASE CANCEL": <AccessoryPurchasecancel />,
@@ -140,7 +140,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY TEMPLATE": <AccessoryTemplate />,
     "STOCK REPORT": <StockReport />,
     "MACHIE WISE PRODUCTION ENTRY": <MachineWiseProduction /> ,
-    "ITEM MASTER" : <ItmeMaster/>
+    "ITEM MASTER" : <ItmeMaster/> ,
+    "OPENING STOCK" : <OpeningStock />
 
 
 

@@ -1,13 +1,11 @@
-import { FaFileAlt, FaPlus } from "react-icons/fa";
-import { ReusableInput } from "../Order/CommonInput";
-import { useCallback, useEffect, useState } from "react";
+import { FaPlus } from "react-icons/fa";
+import { useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
-import { DateInputNew, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import StockTransferForm from "./StockTransferFormUI";
 import StockTransferReport from "./stockTransferReport";
 import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
-import { useDeleteStockTransferMutation, useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
+import { useDeleteStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
 
 
@@ -139,7 +137,7 @@ const StockTransfer = () => {
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Yarn Stock Transfer</h1>
+                            <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
 
                         </div>
                         <button

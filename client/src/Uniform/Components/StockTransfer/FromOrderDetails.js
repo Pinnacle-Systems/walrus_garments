@@ -1,8 +1,4 @@
-import React, { useEffect } from 'react'
-import { TextArea, TextInput } from '../../../Inputs'
-import { findFromList, params } from '../../../Utils/helper'
-import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
-import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
+import { findFromList } from '../../../Utils/helper'
 
 
 
@@ -24,19 +20,7 @@ export default function FromOrderDetails({ fromOrderId, setOrderItems, orderItem
                 )
             )
         );
-        // setStockItems(
-        //     tempStockItems?.filter((stockItem, index) => {
-        //         const orderItem = orderItems?.[index];
-        //         if (!orderItem) return false; // skip if no corresponding order item
-
-        //         return (
-        //             stockItem?.yarnId === orderItem?.yarnId &&
-        //             stockItem?.color === orderItem?.color &&
-        //             stockItem?.count === orderItem?.count &&
-        //             stockItem?.shade === orderItem?.shade
-        //         );
-        //     })
-        // );
+   
 
         onClose()
     }
@@ -48,97 +32,7 @@ export default function FromOrderDetails({ fromOrderId, setOrderItems, orderItem
 
 
 
-    // function handleInputChange(value, index, field) {
 
-
-    //     console.log(value, "value", index)
-    //     let orderYarnDetails = "orderYarnDetails"
-
-
-    //     setOrderDetails(orderDetails => {
-    //         const newBlend = structuredClone(orderDetails);
-    //         newBlend[gridIndex][orderYarnDetails][index][field] = value;
-    //         return newBlend
-    //     }
-    //     );
-    // };
-
-    // function addNewRow() {
-    //     setOrderDetails(prev => {
-    //         const newPrev = structuredClone(prev);
-    //         const orderYarnDetailsKey = "orderYarnDetails";
-
-    //         if (!newPrev[selectedIndex][orderYarnDetailsKey]) {
-    //             newPrev[selectedIndex][orderYarnDetailsKey] = [];
-    //         }
-
-    //         console.log(newPrev[selectedIndex][orderYarnDetailsKey], "gridIndex");
-
-    //         newPrev[selectedIndex][orderYarnDetailsKey].push({
-    //             yarnId: '',
-    //         });
-
-    //         return newPrev;
-    //     });
-
-
-    // }
-
-    // function handleEdit(index) {
-    //     setOrderDetails(prev => {
-    //         const newPrev = structuredClone(prev);
-
-    //         const itemData = newPrev[index]?.orderDetailsSubGrid?.[0] || {};
-
-    //         if (!Array.isArray(newPrev[index].orderDetailsSubGrid)) {
-    //             newPrev[index].orderDetailsSubGrid = [];
-    //         }
-
-    //         newPrev[index].orderDetailsSubGrid.push({
-
-    //             size: "",
-    //             sizeMesaurement: "",
-    //             qty: 0,
-
-    //         });
-
-    //         return newPrev;
-    //     });
-    // }
-
-    // function deleteRow(yarnIndex) {
-    //     // if (readOnly) return toast.info("Turn on Edit Mode...!!!")
-    //     // setOrderDetails(prev => prev.filter((_, i) => i !== index))
-    //     setOrderDetails(prev => {
-    //         // const updated = [...prev];
-    //         const updated = structuredClone(prev);
-    //         updated[gridIndex].orderYarnDetails
-    //             .splice(yarnIndex, 1);
-
-
-    //         if (updated[gridIndex].orderYarnDetails
-    //             .length === 0) {
-    //             updated.splice(gridIndex, 1);
-    //         }
-
-    //         return updated;
-    //     });
-    // }
-    // function deleteSubRow(rowIndex, subRowIndex) {
-
-    //     setOrderDetails(prev => {
-    //         // const updated = [...prev];
-    //         const updated = structuredClone(prev);
-    //         updated[rowIndex].orderYarnDetails.splice(subRowIndex, 1);
-
-
-    //         if (updated[rowIndex].orderDetailsSubGrid.length === 0) {
-    //             updated.splice(rowIndex, 1);
-    //         }
-
-    //         return updated;
-    //     });
-    // }
 
     function addItem(id, obj) {
         console.log(obj, "obj")

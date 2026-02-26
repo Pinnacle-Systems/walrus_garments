@@ -13,7 +13,7 @@ import Swal from 'sweetalert2'
 const YarnDirectItem = ({ itemList, uomList,
     colorList, sizeList, designList, gsmList,
     loopLengthList, storeId,
-    diaList, index, handleInputChange, readOnly, deleteRow, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo }) => {
+    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo ,addNewRow }) => {
     const [lotGrid, setLotGrid] = useState(false)
 
 
@@ -60,7 +60,13 @@ const YarnDirectItem = ({ itemList, uomList,
                     handleInputChangeLotNo={handleInputChangeLotNo}
                     index={index} returnLotDetails={item?.returnLotDetails ? item?.returnLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
-            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '>
+            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '
+                onContextMenu={(e) => {
+                    if (!readOnly) {
+                        handleRightClick(e, index, "shiftTimeHrs");
+                    }
+                }}
+            >
                 <td className='py-0.5 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{item?.poNo}</td>
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.itemId, itemList?.data, "name")} </td>
@@ -123,7 +129,20 @@ const YarnDirectItem = ({ itemList, uomList,
                         disabled={true}
                     />
                 </td>
+{/* 
+                <td className="w-16 px-1 py-1 text-center  border border-gray-300">
+                    <input
+                        readOnly
+                        className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                addNewRow();
+                            }
+                        }}
 
+                    />
+                </td> */}
 
 
 

@@ -29,9 +29,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
 
-  const storeOptions = locationData ?
-    locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(locationId)) :
-    [];
+
 
 
   const [showExtraCharge, setShowExtraCharge] = useState(false)
@@ -66,8 +64,9 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     branchId, companyId
   };
 
-  // const { data: supplierList } =
-  //   useGetPartyQuery({ params: { ...params } });
+   const storeOptions = locationData ?
+    locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(branchId)) :
+    [];
 
 
   const { data: taxTypeList } =
@@ -133,7 +132,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     setPartyId(data?.supplierId ? data?.supplierId : "")
     setPayTermId(data?.payTermId ? data?.payTermId : "");
     setSupplierId(data?.supplierId ? data?.supplierId : "");
-    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : "");
+    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDcNo(data?.dcNo ? data.dcNo : "")
     setLocationId(data?.branchId ? data?.branchId : "")
     setStoreId(data?.storeId ? data.storeId : "")
@@ -478,7 +477,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
               <DropdownInput name="Branch"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
-                value={locationId}
+                value={branchId}
                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                 required={true}
               // readOnly={ readOnly}
