@@ -43,6 +43,7 @@ async function getOne(id) {
                     sizeId: true,
                     purchasePrice: true,
                     salesPrice: true,
+                    
                 }
             }
         }
@@ -72,7 +73,9 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 async function create(body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active } = body
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active ,
+        sectionId
+     } = body
     const data = await prisma.item.create({
         data: {
             styleId: styleId ? parseInt(styleId) : undefined,
@@ -80,7 +83,7 @@ async function create(body) {
             name: name ? name : undefined,
             hsnId: hsnId ? parseInt(hsnId) : undefined,
             code: code ? code : undefined,
-            itemType: itemType ? itemType : undefined,
+            sectionId: sectionId ? parseInt(sectionId) : undefined,
             priceMethod: priceMethod ? priceMethod : undefined,
             // salesPrice: salesPrice ? salesPrice : undefined,
             // purchasePrice: purchasePrice ? purchasePrice : undefined,
@@ -283,7 +286,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 async function update(id, body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, salesTaxType, priceMethod, active,
 
-        itemPriceList
+        itemPriceList ,sectionId
     } = body
 
 
@@ -317,7 +320,7 @@ async function update(id, body) {
                 name: name ? name : undefined,
                 hsnId: hsnId ? parseInt(hsnId) : undefined,
                 code: code ? code : undefined,
-                itemType: itemType ? itemType : undefined,
+                sectionId: sectionId ? parseInt(sectionId) : undefined,
                 priceMethod: priceMethod ? priceMethod : undefined,
 
                 // salesPrice: salesPrice ? salesPrice : undefined,

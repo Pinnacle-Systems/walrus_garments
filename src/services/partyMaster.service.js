@@ -16,7 +16,11 @@ async function get(req) {
 
             PartyOnAccessoryItems: true,
             partyBranch: true,
-
+            BranchType: {
+                select: {
+                    name: true
+                }
+            },
             City: {
                 select: {
                     name: true,
@@ -182,13 +186,13 @@ async function create(body) {
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments,
-        PartyContactDetails,
+        branchTypeId,
     } = await body
 
 
     let data;
 
-    console.log(body,"body")
+    console.log(body, "body")
 
 
 
@@ -219,6 +223,7 @@ async function create(body) {
                 department: department ? department : null,
                 contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
                 contactPersonNumber: contactNumber ? contactNumber : null,
+                branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
 
 
                 PartyAttachments: {
@@ -240,7 +245,7 @@ async function create(body) {
         }
     )
 
-    console.log(data,"data")
+    console.log(data, "data")
 
     return { statusCode: 0, data };
 }
@@ -306,7 +311,7 @@ async function update(id, body) {
         contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-        PartyContactDetails, contactId, attachments
+        PartyContactDetails, contactId, attachments ,branchTypeId
     } = body;
 
 
@@ -340,6 +345,7 @@ async function update(id, body) {
             cinNo,
             createdById: userId ? parseInt(userId) : undefined,
             companyId: parseInt(companyId),
+            branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
 
             contactPersonName: contactPersonName ? contactPersonName : null,
             designation: designation ? designation : null,

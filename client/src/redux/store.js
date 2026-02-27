@@ -50,7 +50,8 @@ import {
   accessoryBillEntryApi,
   AccessoryCategoryMasterApi,
   StockReportControlApi,
-  AccessoryStockTransferApi
+  AccessoryStockTransferApi,
+  SectionMasterApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -185,10 +186,11 @@ const commonReducers = {
   AccessoryPurchaseReturn: AccessoryPurchaseReturnApi.reducer,
   accessoryBillEntry: accessoryBillEntryApi.reducer,
   accessoryCategoryMaster: AccessoryCategoryMasterApi.reducer,
-  StockReportControl : StockReportControlApi.reducer,
-  AccessoryStockTransfer : AccessoryStockTransferApi.reducer ,
-  accessorystock : AccessoryStockApi.reducer,
-  accessoryTemplateMaster : AccessoryTemplateMasterApi.reducer,
+  StockReportControl: StockReportControlApi.reducer,
+  AccessoryStockTransfer: AccessoryStockTransferApi.reducer,
+  accessorystock: AccessoryStockApi.reducer,
+  accessoryTemplateMaster: AccessoryTemplateMasterApi.reducer,
+  SectionMaster: SectionMasterApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -298,10 +300,11 @@ billEntryApi.middleware,
 AccessoryPurchaseReturnApi.middleware,
 accessoryBillEntryApi.middleware,
 AccessoryCategoryMasterApi.middleware,
-StockReportControlApi.middleware ,
+StockReportControlApi.middleware,
 AccessoryStockTransferApi.middleware,
-AccessoryStockApi.middleware ,
-AccessoryTemplateMasterApi.middleware
+AccessoryStockApi.middleware,
+AccessoryTemplateMasterApi.middleware,
+SectionMasterApi.middleware
 ];
 
 

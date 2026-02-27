@@ -163,7 +163,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Item</th>
                                             <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-14">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty</th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty(Pcs) </th>
 
 
 

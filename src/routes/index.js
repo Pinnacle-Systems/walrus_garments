@@ -113,6 +113,7 @@ export { default as stockReportControl } from "./stockReportControl.route.js"
 export { default as accessoryStockTransfer } from "./accessoryStockTransfer.route.js"
 export { default as accessoryStock } from "./accessoryStock.route.js"
 export { default as accessoryTemplate } from "./accessoryTemplate.route.js"
+export { default as section } from "./section.route.js"
 
 
 

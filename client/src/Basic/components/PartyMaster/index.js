@@ -39,6 +39,7 @@ import Swal from "sweetalert2";
 import Loader from "../Loader";
 import { getImageUrlPath } from "../../../Constants";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { useGetPartyBranchByIdQuery } from "../../../redux/services/PartyBranchMasterService";
 
 const MODEL = "Party Master";
 
@@ -89,7 +90,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const [parentId, setParentId] = useState("")
   const [isBranch, setIsBranch] = useState(false);
   const [branchTypeId, setBranchTypeId] = useState("");
-  const [branchId, setBranchId] = useState("")
 
 
 
@@ -263,9 +263,13 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const openPartyModal = useSelector((state) => state.party.openPartyModal);
   const lastTapName = useSelector((state) => state.party.lastTab);
 
-  const activeTab = useSelector(
-    (state) => state.openTabs.tabs.find((tab) => tab.active).name
-  );
+  const {
+    data: singleBranchData,
+    isFetching: singleBranchFetching,
+    isLoading: singleBranchLoading,
+  } = useGetPartyBranchByIdQuery(parentId, {
+    skip: id
+  });
 
 
 
@@ -311,11 +315,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const syncFormWithDb = useCallback(
     (data) => {
 
-      let contactdetails = data?.PartyContactDetails?.[0]
-      console.log(contactDetails, "contactDetails")
-      if (materialId) {
-        setMaterial()
-      }
+
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
       setAliasName(data?.aliasName || "");
@@ -355,7 +355,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setPriceTemplateId(data?.priceTemplateId || "");
       setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
       setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
-      
+
       setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
       setContactPersonEmail(data?.contactPersonEmail ? data?.contactPersonEmail : "")
       setContactNumber(data?.contactPersonNumber ? data?.contactPersonNumber : "")
@@ -384,18 +384,10 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setAlterContactNumber(data?.alterContactNumber ? data?.alterContactNumber : "")
       setCurrency(data?.currencyId ? data?.currencyId : "");
       setPayTermDay(data?.payTermDay ? data?.payTermDay : "0");
-      setProcessDetails(
-        data?.PartyOnProcess
-          ? data.PartyOnProcess.map((item) => {
-            return {
-              value: parseInt(item.processId),
-              label: findFromList(item.processId, processList.data, "name"),
-            };
-          })
-          : []
-      );
-      // setSelected(data?.PartyMaterials ? data?.PartyMaterials  : []  )
       setAttachments(data?.PartyAttachments ? data?.PartyAttachments : []);
+      setBranchTypeId(data?.branchTypeId ?  data?.branchTypeId : "")
+      setIsBranch(data?.isBranch ? data?.isBranch : '')
+
     },
 
     [id]
@@ -405,6 +397,31 @@ export default function Form({ partyId, show, openModelForAddress }) {
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+
+
+
+
+  const syncFormWithDbNew = useCallback(
+    (data) => {
+      setPanNo(data?.panNo ? data?.panNo : "")
+      setGstNo(data?.gstNo ? data?.gstNo : "")
+      setMsmeNo(data?.msmeNo ? data?.msmeNo : "")
+      setCinNo(data?.cinNo ? data?.cinNo : "")
+
+    },
+
+    [id]
+  );
+
+
+
+  useEffect(() => {
+    syncFormWithDbNew(singleBranchData?.data);
+  }, [singleBranchFetching, singleBranchLoading, parentId, syncFormWithDbNew, singleBranchData]);
+
+
+
 
   const data = {
 
@@ -450,33 +467,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-    partyMaterials, material, materialActive, rawMaterial,
+    partyMaterials, material, materialActive, rawMaterial, branchTypeId
 
-    branchStateValues: {
-
-
-      branchName,
-      branchAddress,
-      branchContact,
-      branchContactPerson,
-      branchEmail,
-      openingHours,
-      branchWebsite,
-      branchAliasName,
-      branchCode,
-      branchActive,
-      branchCity,
-      branchLandMark,
-      branchPincode,
-      branchContactDesignation,
-      branchContactDepartment,
-      branchBankname,
-      branchBankBranchName,
-      branchAccountNumber,
-      branchIfscCode,
-      branchContactPersonEmail,
-      branchContactPersonContact
-    },
 
 
   };
@@ -493,8 +485,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
     if ((data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.gstNo && data?.address && data?.cityId && data?.pincode) {
       return true;
     }
-    if(isBranch){
-        return data?.parentId  && data?.branchTypeId
+    if (isBranch) {
+      return data?.parentId && data?.branchTypeId
     }
 
 
@@ -844,6 +836,13 @@ export default function Form({ partyId, show, openModelForAddress }) {
       className: 'text-gray-800 uppercase w-96'
 
     },
+    {
+      header: "Branch Type",
+      accessor: (item) => item?.BranchType?.name || "-",
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-left uppercase w-40 pl-2",
+    },
+
     {
       header: 'Address',
       accessor: (item) => item.address,

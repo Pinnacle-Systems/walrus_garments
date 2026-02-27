@@ -86,13 +86,13 @@ const PurchaseInward = () => {
     const handleDelete = async (id,childRecord) => {
 
 
-        if (childRecordCount(childRecord)) {
-            Swal.fire({
-                icon: 'error',
-                text: 'Child Record Exists',
-            });
-            return
-        }
+        // if (childRecordCount(childRecord)) {
+        //     Swal.fire({
+        //         icon: 'error',
+        //         text: 'Child Record Exists',
+        //     });
+        //     return
+        // }
 
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {

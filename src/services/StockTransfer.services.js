@@ -8,7 +8,6 @@ function findIsNumber(docId) {
     const parts = docId?.split('/');
     const last = parts[parts?.length - 1];
 
-    console.log(last, "lastttt")
 
     if (last == "Drift") {
         return false
@@ -17,7 +16,6 @@ function findIsNumber(docId) {
         return true
     }
 
-    // return !isNaN(Number(last));
 }
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, docId, isUpdate) {
@@ -28,10 +26,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
     else if (isUpdate == "drift") {
         let lastObject = await prisma.StockTransfer.findFirst({
             where: {
-                // branchId: parseInt(branchId),
-                // docId: {
-                //     not: findIsNumber(docId)
-                // },
+
                 draftSave: false,
                 AND: [
                     {
@@ -131,28 +126,9 @@ async function get(req) {
                     contains: serachDocNo
                 }
                 : undefined,
-            fromOrder: {
-                docId: fromOrderNo ? { contains: fromOrderNo } : undefined
 
-            },
-            toOrder: {
-                docId: toOrderNo ? { contains: toOrderNo } : undefined
+        },
 
-            }
-            // partyId: partyId ? parseInt(partyId) : undefined,
-        },
-        include: {
-            fromOrder: {
-                select: {
-                    docId: true
-                }
-            },
-            toOrder: {
-                select: {
-                    docId: true
-                }
-            }
-        },
 
         orderBy: {
             id: "desc",
@@ -169,9 +145,7 @@ async function get(req) {
         data = data.filter(i => i.delDate.includes(searchDelDate))
     }
 
-    // if (pagination) {
-    //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    // }
+
 
 
     return { statusCode: 0, data, totalCount, nextDocId: newDocId };
@@ -186,31 +160,8 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            FromOrderTransferItems: true,
-            ToOrderTransferTtems: {
-                select: {
-                    id: true,
-                    stockTransferId: true,
-                    RequirementPlanningId: true,
-                    colorId: true,
-                    orderId: true,
-                    yarnId: true,
-                    style: true,
-                    transferQty: true,
-                    balanceQty: true,
-                    requiredQty: true,
-                    Color: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    Yarn: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            }
+                FromLocationTransferItems : true,
+                ToLocationTransferTtems : true,
         }
 
     })
@@ -385,267 +336,124 @@ async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, bran
     });
 }
 
-async function createYarnStock(tx, poType, inOrOut, branchId, storeId, item, transactionId) {
+async function createFromLocationStock(tx, branchId, storeId, item, transactionId) {
 
     await tx.stock.create({
         data: {
-            // itemType: inOrOut,
-            inOrOut: "FromOrderTransferItems",
-            yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-            gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
+            inOrOut: "FromLocationTransferItems",
+            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
-            orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
+            qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
+
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
-            orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
-            requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
             transactionId: transactionId ? transactionId : ''
         }
     })
 
 }
 
-async function createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, transactionId, transferType) {
-
-
-    if (transferType != "OrderToGeneral") {
-        await tx.stock.create({
-            data: {
-                // itemType: poType,
-                inOrOut: "ToOrderTransferTtems",
-                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-                gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
-                branchId: branchId ? parseInt(branchId) : undefined,
-                storeId: storeId ? parseInt(storeId) : undefined,
-                orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
-                requirementPlanningItemsId: item["id"] ? parseInt(item["id"]) : undefined,
-                transactionId: transactionId ? transactionId : ""
-            }
-        })
-    } else {
-        await tx.stock.create({
-            data: {
-                // itemType: poType,
-                inOrOut: "ToOrderTransferTtems",
-                yarnId: item["yarnId"] ? parseInt(item["yarnId"]) : undefined,
-                gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
-                branchId: branchId ? parseInt(branchId) : undefined,
-                storeId: storeId ? parseInt(storeId) : undefined,
-                orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
-                requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
-                category: transferType == "OrderToGeneral" ? "FromOrder" : "",
-                transactionId: transactionId ? transactionId : ""
-
-
-            }
-        })
-    }
+async function createToLocationStock(tx, branchId, storeId, item, transactionId, transferType) {
 
 
 
-}
-
-async function UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item) {
-
-    const existing = await tx.requirementPlanningItems.findUnique({
-        where: { id: parseInt(item.id) },
-        select: { tranferQty: true }
-    });
-
-    const oldQty = Number(existing?.tranferQty || 0);
-    const newQty = Number(item?.transferQty || 0);
-
-    const finalQty = oldQty + newQty;
-
-    console.log("Old:", oldQty, "New:", newQty, "Final:", finalQty);
-
-    await tx.requirementPlanningItems.update({
-        where: { id: parseInt(item.id) },
+    await tx.stock.create({
         data: {
-            tranferQty: finalQty
+            inOrOut: "ToLocationTransferItems",
+            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+            price: item["price"] ? parseFloat(item["price"]) : 0,
+            qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
+            transactionId: transactionId ? transactionId : ''
+
         }
-    });
+    })
+
+
+
+
 }
+
 
 
 async function createStocktransferItems(
     tx,
     stockTransferId,
     stockItems,
-    poType,
-    inOrOut,
-    storeId,
-    branchId,
-    orderItems,
-    fromOrderId,
-    transferType
+    fromLocationId,
+    toLocationId,
+    branchId
+
 ) {
-    // if (stockItems?.length) {
-    //     let data;
-    //    data =   await Promise.all(
-    //         stockItems?.map(async (item) => {
-    //             await tx.FromOrderTransferItems.create({
-    //                 data: {
-    //                     stockTransferId: parseInt(stockTransferId),
-    //                     yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
-    //                     colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-    //                     transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
-    //                     stockQty: item?.stockQty ? parseFloat(item?.stockQty) : undefined,
-    //                     orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
-
-    //                 },
-    //             });
-
-    //             console.log(data,"datadata")
-    //             await createYarnStock(tx, poType, inOrOut, branchId, storeId, item, data?.id);
-
-
-    //             if (fromOrderId) {
-    //                 await UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, branchId, storeId, item);
-    //             }
-
-
-    //         })
-    //     );
-    // }
 
     if (stockItems?.length) {
         const results = await Promise.all(
             stockItems.map(async (item) => {
 
-                const created = await tx.FromOrderTransferItems.create({
+                const created = await tx.FromLocationTransferItems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
-                        yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
+                        itemId: item?.itemId ? parseInt(item.itemId) : undefined,
+                        sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
-                        stockQty: item?.stockQty ? parseFloat(item.stockQty) : undefined,
-                        orderDetailsId: item?.orderDetailsId ? parseInt(item.orderDetailsId) : undefined,
+                        stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
                     },
                 });
 
-                // created.id is now available
-                console.log(created, "CREATED ITEM");
 
-                // 2️⃣ Update stock based on created item
-                await createYarnStock(
+                await createFromLocationStock(
                     tx,
-                    poType,
-                    inOrOut,
                     branchId,
-                    storeId,
+                    fromLocationId,
                     item,
                     created.id
                 );
 
-                // 3️⃣ Update requirement planning (only if fromOrderId exists)
-                if (fromOrderId) {
-                    await UpdateRequirementPlanningItemsFromOrder(
-                        tx,
-                        poType,
-                        inOrOut,
-                        branchId,
-                        storeId,
-                        item
-                    );
-                }
 
-                return created; // return the created record
+                return created;
             })
         );
 
         console.log(results, "ALL CREATED ITEMS");
     }
 
-    // if (orderItems?.length) {
-    //     let data
-    //     data = await Promise.all(
-    //         orderItems?.map(async (item) => {
-    //             await tx.ToOrderTransferTtems.create({
-    //                 data: {
-    //                     stockTransferId: parseInt(stockTransferId),
-    //                     RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
-    //                     colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-    //                     orderId: item?.orderId ? parseInt(item.orderId) : undefined,
-    //                     yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
-    //                     style: item?.style ? item?.style : undefined,
-    //                     transferQty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
-    //                     qty: item?.qty ? parseFloat(item?.qty) : undefined,
-    //                     balanceQty: item?.balanceQty ? parseFloat(item?.balanceQty) : undefined,
-    //                     requiredQty: item?.requiredQty ? parseFloat(item?.requiredQty) : undefined,
-    //                     orderDetailsId: item?.orderDetailsId ? parseInt(item?.orderDetailsId) : undefined,
 
 
-    //                 },
-    //             });
-
-    //             await createYarnStockAgainstOrder(tx, poType, inOrOut, branchId, storeId, item, data?.id, transferType);
-
-    //             if (transferType != "OrderToGeneral") {
-
-    //                 await UpdateRequirementPlanningItems(tx, poType, inOrOut, branchId, storeId, item);
-    //             }
-
-    //         })
-    //     );
-    // }
-
-    if (orderItems?.length) {
+    if (stockItems?.length) {
 
         const data = await Promise.all(
-            orderItems.map(async (item) => {
+            stockItems.map(async (item) => {
 
                 // Create and store the created row
-                const created = await tx.ToOrderTransferTtems.create({
+                const created = await tx.ToLocationTransferTtems.create({
                     data: {
                         stockTransferId: parseInt(stockTransferId),
-                        RequirementPlanningId: item?.RequirementPlanningId ? parseInt(item.RequirementPlanningId) : undefined,
+                        itemId: item?.itemId ? parseInt(item.itemId) : undefined,
+                        sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                        orderId: item?.orderId ? parseInt(item.orderId) : undefined,
-                        yarnId: item?.yarnId ? parseInt(item.yarnId) : undefined,
-                        style: item?.style ?? undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
-                        qty: item?.qty ? parseFloat(item.qty) : undefined,
-                        balanceQty: item?.balanceQty ? parseFloat(item.balanceQty) : undefined,
-                        requiredQty: item?.requiredQty ? parseFloat(item.requiredQty) : undefined,
-                        orderDetailsId: item?.orderDetailsId ? parseInt(item.orderDetailsId) : undefined,
+                        stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
                     },
                 });
 
                 // Must use created.id
-                await createYarnStockAgainstOrder(
+                await createToLocationStock(
                     tx,
-                    poType,
-                    inOrOut,
                     branchId,
-                    storeId,
+                    toLocationId,
                     item,
-                    created.id,   // <- FIXED
-                    transferType
+                    created.id,
                 );
 
-                if (transferType !== "OrderToGeneral") {
-                    await UpdateRequirementPlanningItems(
-                        tx,
-                        poType,
-                        inOrOut,
-                        branchId,
-                        storeId,
-                        item
-                    );
-                }
 
-                return created; // Important for Promise.all result
+                return created;
             })
         );
 
@@ -658,8 +466,8 @@ async function createStocktransferItems(
 
 async function create(req) {
 
-    const { userId, branchId, fromOrderId, toOrderId, finYearId, draftSave, transferType, fromCustomerId, toCustomerId,
-        storeId, orderItems, stockItems, poType } = req.body
+    const { userId, branchId, fromOrderId, toLocationId, fromLocationId, finYearId, draftSave, toCustomerId,
+        storeId, stockItems, } = req.body
 
 
     let inOrOut = "StockTransfer"
@@ -677,16 +485,12 @@ async function create(req) {
         data = await tx.StockTransfer.create({
             data: {
                 docId,
-                fromOrderId: fromOrderId ? parseInt(fromOrderId) : undefined,
-                toOrderId: toOrderId ? parseInt(toOrderId) : undefined,
-                transferType: transferType ? transferType : undefined,
-                fromCustomerId: fromCustomerId ? parseInt(fromCustomerId) : undefined,
-                toCustomerId: toCustomerId ? parseInt(toCustomerId) : undefined,
-
+                fromLocationId: fromLocationId ? parseInt(fromLocationId) : undefined,
+                toLocationId: toLocationId ? parseInt(toLocationId) : undefined,
 
             },
         });
-        await createStocktransferItems(tx, data.id, stockItems, poType, inOrOut, storeId, branchId, orderItems, fromOrderId, transferType)
+        await createStocktransferItems(tx, data.id, stockItems, fromLocationId, toLocationId, branchId)
 
     })
 
@@ -696,15 +500,14 @@ async function create(req) {
 
 
 
-async function UpdateFromAccessoryStock(tx, item, transactionId) {
+async function UpdateFromLocationStock(tx, item, transactionId) {
 
-    console.log(transactionId, "FromOrderTransferItemsId")
 
 
     const data = await prisma.stock.updateMany({
         where: {
             transactionId: parseInt(transactionId),
-            inOrOut: "FromOrderTransferItems"
+            inOrOut: "FromLocationTransferItems"
         },
         data:
         {
@@ -713,14 +516,13 @@ async function UpdateFromAccessoryStock(tx, item, transactionId) {
     })
 }
 
-async function UpdateToAccessoryStock(tx, item, transactionId) {
-    console.log(transactionId, "ToOrderTransferTtemsId")
+async function UpdateToLocationStock(tx, item, transactionId) {
 
 
     const data = await prisma.stock.updateMany({
         where: {
             transactionId: parseInt(transactionId),
-            inOrOut: "ToOrderTransferTtems"
+            inOrOut: "ToLocationTransferItems"
         },
         data:
         {
@@ -732,12 +534,12 @@ async function UpdateToAccessoryStock(tx, item, transactionId) {
 
 
 
-async function updateOrCreateFrom(tx, item) {
+async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
 
     if (item?.id) {
 
 
-        let updatedata = await tx.FromOrderTransferItems.update({
+        let updatedata = await tx.FromLocationTransferItems.update({
             where: {
                 id: parseInt(item.id)
             },
@@ -748,7 +550,7 @@ async function updateOrCreateFrom(tx, item) {
             }
         })
 
-        await UpdateFromAccessoryStock(tx, item, item.id);
+        await UpdateFromLocationStock(tx, item, item.id);
 
         return updatedata
     }
@@ -759,7 +561,7 @@ async function updateOrCreateTo(tx, item) {
     if (item?.id) {
 
 
-        let updatedata = await tx.ToOrderTransferTtems.update({
+        let updatedata = await tx.ToLocationTransferItems.update({
             where: {
                 id: parseInt(item.id)
             },
@@ -770,34 +572,32 @@ async function updateOrCreateTo(tx, item) {
             }
         })
 
-        await UpdateToAccessoryStock(tx, item, item.id);
+        await UpdateToLocationStock(tx, item, item.id);
 
         return updatedata
     }
 }
 
-async function updatFromYarnTransferItemsItems(tx, stockItems, poType, poInwardOrDirectInward, storeId, branchId) {
-    let promises = stockItems?.map(async (item) => await updateOrCreateFrom(tx, item,))
+async function updatFromLocationTransferItemsItems(tx, stockItems, fromLocationId, branchId) {
+    let promises = stockItems?.map(async (item) => await updateOrCreateFrom(tx, item, fromLocationId, branchId))
     return Promise.all(promises)
 }
 
 
-async function updatToYarnTransferItemsItems(tx, orderItems, poType, poInwardOrDirectInward, storeId, branchId) {
-    let promises = orderItems?.map(async (item) => await updateOrCreateTo(tx, item,))
+async function updatToLocationTransferItemsItems(tx, stockItems, toLocationId, branchId) {
+    let promises = stockItems?.map(async (item) => await updateOrCreateTo(tx, item, toLocationId, branchId))
     return Promise.all(promises)
 }
 
 const update = async (id, body) => {
-    const { docId, draftSave, finYearId, userId, branchId, partyId, poType, inOrOut, storeId,
-        address, phone, validDate, notes, term, transferType, orderYarnDetails, orderSizeDetails, orderItems, stockItems,
+    const { branchId, poType, storeId, orderItems, stockItems, toLocationId, fromLocationId,
     } = body;
 
-    // let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    // const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
-    // let docIdNumber = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, false, docId, "drift");
+
 
 
     const dataFound = await prisma.StockTransfer.findUnique({ where: { id: parseInt(id) } });
+
     if (!dataFound) return { statusCode: 404, message: "No record found for StockTransfer" };
 
 
@@ -810,19 +610,14 @@ const update = async (id, body) => {
                 id: parseInt(id),
 
             },
-            include: {
-                FromOrderTransferItems: true,
-                ToOrderTransferTtems: true,
-            },
-            data: {
-                transferType: transferType ? transferType : "",
-            }
+
+
 
         });
 
-        await updatFromYarnTransferItemsItems(tx, stockItems, poType, storeId, branchId)
+        await updatFromLocationTransferItemsItems(tx, stockItems, fromLocationId, branchId)
 
-        await updatToYarnTransferItemsItems(tx, orderItems, poType, storeId, branchId)
+        await updatToLocationTransferItemsItems(tx, orderItems, toLocationId, branchId)
 
     });
 

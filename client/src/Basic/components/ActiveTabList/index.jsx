@@ -4,7 +4,7 @@ import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
-import { ExcessToleranceQty, FiberContent, ItmeMaster, MaterialMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
+import { ExcessToleranceQty, FiberContent, ItmeMaster, MaterialMaster, SectionMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
 import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, MachineWiseProduction, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockReport, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
@@ -139,9 +139,10 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ACCESSORY STOCK TRANSFER": <AccessoryStockTransfer />,
     "ACCESSORY TEMPLATE": <AccessoryTemplate />,
     "STOCK REPORT": <StockReport />,
-    "MACHIE WISE PRODUCTION ENTRY": <MachineWiseProduction /> ,
-    "ITEM MASTER" : <ItmeMaster/> ,
-    "OPENING STOCK" : <OpeningStock />
+    "MACHIE WISE PRODUCTION ENTRY": <MachineWiseProduction />,
+    "ITEM MASTER": <ItmeMaster />,
+    "OPENING STOCK": <OpeningStock />,
+    "SECTION MASTER": <SectionMaster />
 
 
 

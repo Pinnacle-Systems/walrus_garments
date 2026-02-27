@@ -131,7 +131,7 @@ const StockTransfer = () => {
                     readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
                     date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
                     setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
-                    onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId}
+                    onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId} branchId={branchId}
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">

@@ -13,6 +13,7 @@ import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterServ
 import { useGetHsnMasterQuery } from "../../redux/services/HsnMasterServices";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
 import { findFromList } from "../../Utils/helper";
+import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
 
 
 export default function Form() {
@@ -39,7 +40,8 @@ export default function Form() {
   const [priceMethod, setPriceMethod] = useState("STANDARD")
   const childRecord = useRef(0);
   const [itemPriceList, setItemPriceList] = useState([])
-  console.log(itemPriceList, "itemPriceList");
+  const [sectionId, setSectionId] = useState('')
+
 
   const [contextMenu, setContextMenu] = useState(null);
   const params = {
@@ -85,6 +87,10 @@ export default function Form() {
     data: hsnData,
   } = useGetHsnMasterQuery({ params, searchParams: searchValue });
 
+  const {
+    data: sectionData,
+  } = useGetSectionMasterQuery({ params, searchParams: searchValue });
+
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -100,6 +106,7 @@ export default function Form() {
         setSalesPrice(data?.salesPrice ? data?.salesPrice : "")
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
+        setSectionId(data?.sectionId ? data?.sectionId : "")
 
 
       } else {
@@ -115,13 +122,16 @@ export default function Form() {
         setSalesPrice(data?.salesPrice ? data?.salesPrice : "")
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
+        setSectionId(data?.sectionId ? data?.sectionId : "")
+
+
+
         if (data?.priceMethod === "STANDARD") {
           setPurchasePrice(data?.ItemPriceList?.[0]?.purchasePrice ? data?.ItemPriceList?.[0]?.purchasePrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
         } else {
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
           const uniqueSizes = [...new Set(data?.ItemPriceList?.map(item => item.sizeId))];
-          console.log(uniqueSizes, "uniquesizes");
 
           const uniqueColors = [...new Set(data?.ItemPriceList?.map(item => item.colorId))];
           setSizeList(
@@ -166,7 +176,8 @@ export default function Form() {
     hsnId,
     active,
     priceMethod,
-    itemPriceList: priceMethod === "STANDARD" ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice }] : itemPriceList
+    itemPriceList: priceMethod === "STANDARD" ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice }] : itemPriceList ,
+    sectionId
 
   };
 
@@ -636,10 +647,14 @@ export default function Form() {
 
                     <div className="col-span-2">
                       <DropdownInput
-                        name="Item Type"
-                        options={ItemTypes}
-                        value={itemType}
-                        setValue={setItemType}
+                        name="Section Type"
+                        options={dropDownListObject(
+                          id ? sectionData?.data : sectionData?.data?.filter(item => item.active),
+                          "name",
+                          "id"
+                        )}
+                        value={sectionId}
+                        setValue={setSectionId}
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}

@@ -26,14 +26,14 @@ const StockTransferForm = ({
     fromCustomerId, setFromCustomerId, onClose, setTransferType, transferType, toCustomerId, setToCustomerId, params, requirementId, setRequirementId,
     orderData, orderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     date, OnNew,
-    yarnTotals, setYarnTotals, toOrderId, setToOrderId
+    yarnTotals, setYarnTotals, toOrderId, branchId
 
 }) => {
 
 
 
-    const [fromLocation, setFromLocation] = useState("")
-    const [toLocation, setToLocation] = useState("")
+    const [fromLocationId, setFromLocationId] = useState("")
+    const [toLocationId, setToLocationId] = useState("")
 
 
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
@@ -52,7 +52,7 @@ const StockTransferForm = ({
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
 
 
-    const { data: allStockData, isLoading, isFetching } = useGetStockQuery({ params: { ...params, storeId: fromLocation } });
+    const { data: allStockData, isLoading, isFetching } = useGetStockQuery({ params: { ...params, storeId: fromLocationId } });
 
     console.log(allStockData, "allStockData  ")
 
@@ -60,7 +60,7 @@ const StockTransferForm = ({
 
     const {
         data: stockData, isFetching: stockFetching, isLoading: stockLoading, } = useGetStockByIdQuery(
-            { params: { storeId: toLocation }, }, { skip: fromLocation });
+            { params: { storeId: toLocationId }, }, { skip: fromLocationId });
 
 
 
@@ -73,8 +73,10 @@ const StockTransferForm = ({
 
 
     const data = {
-        orderItems: orderItems?.filter(item => parseFloat(item.transferQty) > 0),
-        stockItems, fromOrderId, toOrderId, docId, transferType, fromCustomerId, toCustomerId
+        stockItems,  docId, 
+        toLocationId,
+        fromLocationId,
+        branchId,
 
 
     }
@@ -90,97 +92,11 @@ const StockTransferForm = ({
 
         if (id) {
 
-            setOrderItems(data?.ToOrderTransferTtems ? data?.ToOrderTransferTtems : [])
-            setStockItems(data?.FromOrderTransferItems ? data?.FromOrderTransferItems : [])
-            setTransferType(data?.transferType ? data?.transferType : "")
-            setFromCustomerId(data?.fromCustomerId ? data?.fromCustomerId : "")
-            setToCustomerId(data?.toCustomerId ? data?.toCustomerId : "")
+            setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
+            setToLocationId(data?.toLocationId ? data?.toLocationId : "")
+            setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : "")
 
-        } else {
-
-
-
-            setToCustomerId(data?.partyId ? data?.partyId : "")
-
-
-
-
-
-            setTempOrderItems(() => {
-
-                const stockMap =
-                    data?.Stock?.reduce((acc, item) => {
-                        const key = `${item.yarnId}-${item.colorId}-${item?.orderDetailsId ? item?.orderDetailsId : ""}`;
-                        acc[key] = (acc[key] || 0) + parseFloat(item.qty || 0);
-                        return acc;
-                    }, {}) || {};
-
-                const result = data?.RequirementPlanningForm?.flatMap(form => {
-
-                    const combinedColorName = form?.RequirementPlanningItems
-                        ?.map(y => `${y.Color.name || ""}`.trim())
-                        .join(" + ");
-
-                    return form?.RequirementPlanningItems?.map(item => {
-
-                        const requiredQty = parseFloat(item?.requiredQty || 0);
-
-                        const issuedQty = item?.materialIssueItems?.reduce(
-                            (sum, next) => sum + (parseFloat(next?.issueQty) || 0),
-                            0
-                        );
-
-                        const remainingQty = Math.max(
-                            parseFloat(item?.requiredQty || 0) - parseFloat(issuedQty || 0),
-                            0
-                        );
-
-                        const poQty =
-                            item?.PoItems?.reduce((sum, p) => sum + parseFloat(p.qty || 0), 0) || 0;
-
-                        const stockKey = `${item.yarnId}-${item.colorId}-${item?.orderDetailsId ? item?.orderDetailsId : ""}`;
-                        const availableStock = stockMap[stockKey] || 0;
-
-                        const usedStockQty = Math.min(requiredQty, availableStock);
-                        const balanceQty = requiredQty - usedStockQty;
-
-                        stockMap[stockKey] = availableStock - usedStockQty;
-
-                        return {
-                            ...item,
-                            poQty,
-                            requiredQty: Number(requiredQty.toFixed(3)),
-                            remainingQty: remainingQty,
-                            issuedQty: Number(issuedQty.toFixed(3)),
-                            usedStockQty: Number(usedStockQty.toFixed(3)),
-                            balanceQty: Number(balanceQty.toFixed(3)),
-                            currentStock: Number(availableStock.toFixed(3)),
-                            orderDetailsId: form.orderDetailsId,
-                            orderId: form.orderId,
-                            style: `${form?.OrderDetails?.style?.name} `,
-                        };
-                    });
-                }) || [];
-
-                return result;
-            });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }
+        } 
 
     }, [orderId, id]);
 
@@ -442,17 +358,17 @@ const StockTransferForm = ({
 
                                         <DropdownInput name="From Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
-                                            value={fromLocation} setValue={setFromLocation} required={true}
+                                            value={fromLocationId} setValue={setFromLocationId} required={true}
                                             readOnly={id || readOnly} clear={true}
                                         />
                                     </div>
                                     <div className="col-span-2">
 
                                         <DropdownInput name="To Location"
-                                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocation), "storeName", "id")}
-                                            value={toLocation} setValue={setToLocation} required={true}
-                                            disabled={!fromLocation}
-                                            readOnly={readOnly || !fromLocation}
+                                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocationId), "storeName", "id")}
+                                            value={toLocationId} setValue={setToLocationId} required={true}
+                                            disabled={!fromLocationId}
+                                            readOnly={readOnly || !fromLocationId}
                                             clear={true}
                                         />
                                     </div>
@@ -477,7 +393,7 @@ const StockTransferForm = ({
                             colorList={colorList?.data}  tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
                             toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data} transferType={transferType}
-                            fromLocation={fromLocation} locationData={locationData} itemList={itemList?.data} uomList={uomList?.data}
+                            fromLocation={fromLocationId} locationData={locationData} itemList={itemList?.data} uomList={uomList?.data}
                             sizeList={sizeList?.data}
                         />
                     </div>

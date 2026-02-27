@@ -68,12 +68,6 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             return newBlend
         });
 
-        setOrderItems(localInwardItems => {
-            let newItems = structuredClone(localInwardItems);
-            newItems[index][field] = parseFloat(value);
-            return newItems
-        });
-
 
     };
 
@@ -188,10 +182,12 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
 
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Yarn</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
+
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Kgs)</th>
-                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Kgs)</th>
+                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
+                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)</th>
                                             {/* <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Balance Transfer Qty (Kgs)</th> */}
 
                                         </tr>
@@ -214,14 +210,18 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 </td>
 
                                                 <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {findFromList(stock?.yarnId, yarnList, "name")}
+                                                    {findFromList(stock?.itemId, itemList, "name")}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                                                    {findFromList(stock?.sizeId, sizeList, "name")}
+
                                                 </td>
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                                                     {findFromList(stock?.colorId, colorList, "name")}
 
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
-                                                    {parseFloat(stock?.stockQty).toFixed(3)}
+                                                    {parseFloat(stock?._sum?.qty).toFixed(3)}
 
                                                 </td>
 
@@ -243,8 +243,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         onChange={(e) => {
                                                             const val = e.target.value;
 
-                                                            console.log(parseFloat(val), "parseFloat(val)", parseFloat(stock?.stockQty))
-                                                            if (parseFloat(val) <= parseFloat(stock?.stockQty).toFixed(3)) {
+                                                            if (parseFloat(val) <= parseFloat(stock?._sum?.qty).toFixed(3)) {
 
                                                                 handleInputChangeFromOrder(val, index, "transferQty", stock);
                                                             } else {
@@ -255,7 +254,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                             }
                                                         }}
 
-                                            
+
                                                         placeHolder="0.000"
                                                     />
                                                 </td>

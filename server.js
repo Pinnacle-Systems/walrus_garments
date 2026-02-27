@@ -56,6 +56,7 @@ import {
   accessoryStockTransfer,
   accessoryStock,
   accessoryTemplate,
+  section,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -208,6 +209,7 @@ app.use("/stockReportControl", stockReportControl);
 app.use("/accessoryStockTransfer", accessoryStockTransfer)
 app.use("/accessoryStock", accessoryStock)
 app.use("/accessoryTemplate", accessoryTemplate)
+app.use("/section", section);
 
 
 

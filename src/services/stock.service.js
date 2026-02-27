@@ -358,26 +358,7 @@ async function getOne(id, req) {
             storeId: storeId ? parseInt(storeId) : undefined,
         },
         include: {
-            Order: {
-                select: {
-                    Party: {
-                        select: {
-                            name: true,
-                            id: true
-                        }
-                    },
-
-                },
-            },
-            OrderDetails: {
-                select: {
-                    style: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
+          
             Item: {
                 select: {
                     name: true

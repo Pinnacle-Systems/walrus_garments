@@ -108,11 +108,7 @@ async function get(req) {
                         name: true
                     }
                 },
-                _count: {
-                    select: {
-                        DirectItems: true
-                    }
-                }
+            
             }
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
@@ -1533,6 +1529,10 @@ async function update(id, body) {
 
 
 
+function stockCheckingMethod(id){
+
+
+}
 
 
 
@@ -1545,7 +1545,7 @@ async function update(id, body) {
 async function remove(id) {
 
 
-
+    await stockCheckingMethod(id)
 
     const data = await prisma.directInwardOrReturn.delete({
         where: {
