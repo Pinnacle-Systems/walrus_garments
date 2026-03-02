@@ -1,0 +1,186 @@
+import Swal from "sweetalert2";
+import { findFromList } from "../../../Utils/helper";
+import { useGetStockQuery } from "../../../redux/services/StockService";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
+    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId,id
+}) {
+
+
+    const searchParams = {
+        storeId: fromLocationId,
+        searchItem: item?.itemId,
+        searchColor: item?.colorId,
+        searchSize: item?.sizeId
+
+    };
+
+    if (item?.itemId) searchParams.searchItem = item.itemId;
+    if (item?.colorId) searchParams.searchColor = item.colorId;
+    if (item?.sizeId) searchParams.searchSize = item.sizeId;
+
+    console.log(item, "itemitem", searchParams)
+
+    const { data: allStockData, isLoading, isFetching } = useGetStockQuery(
+        {
+             searchParams
+
+        }, { skip: !fromLocationId  || !id}
+    );
+
+    console.log(allStockData, "allStockData", item?.itemId)
+
+    const currentStockQty = allStockData?.data?.[0]?._sum?.qty
+
+    console.log(currentStockQty, "currentStockQty", allStockData?.data?.[0]?._sum?.qty)
+
+
+    // useEffect(() => {
+    //     const fetchStockForItems = async () => {
+    //         const updatedStock = {};
+
+    //         for (const row of stockItems) {
+    //             if (!row?.itemId || !fromLocationId) continue;
+
+    //             const response = await axios.get("/api/stock-qty", {
+    //                 params: {
+    //                     storeId: fromLocationId,
+    //                     itemId: row.itemId,
+    //                     colorId: row.colorId,
+    //                     sizeId: row.sizeId,
+    //                 },
+    //             });
+
+    //             const key = `${row.itemId}_${row.colorId}_${row.sizeId}`;
+    //             updatedStock[key] = response.data.qty;
+    //         }
+
+    //         setStockMap(updatedStock);
+    //     };
+
+    //     fetchStockForItems();
+    // }, [stockItems, fromLocationId]);
+
+    return (
+
+        <>
+            <tr
+                key={index}
+                className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                    }`}
+                onContextMenu={(e) => {
+                    if (!readOnly) {
+                        handleRightClickFromOrder(e, index, "notes");
+                    }
+                }}
+            >
+                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                    {index + 1}
+                </td>
+
+                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+                    {findFromList(item?.itemId, itemList, "name")}
+                </td>
+                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                    {findFromList(item?.sizeId, sizeList, "name")}
+
+                </td>
+                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                    {findFromList(item?.colorId, colorList, "name")}
+                </td>
+                <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
+                    {id ? currentStockQty : item?._sum?.qty }
+                </td>
+                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-right">
+                    {item?.price ? parseFloat(item?.price).toFixed(2) : ""}
+                </td>
+                {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+                    <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                        <input
+                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={parseFloat(item?.discountPrice || "")}
+
+
+
+
+                            onKeyDown={(e) => {
+                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (!val) {
+                                    handleInputChangeFromOrder(0, index, "discountPrice");
+                                    return
+                                }
+                                if (parseFloat(val) <= parseFloat(item?._sum?.qty).toFixed(3)) {
+
+                                    handleInputChangeFromOrder(val, index, "discountPrice", item);
+                                } else {
+                                    Swal.fire({
+                                        title: "Transfer Qty cannot be more than Stock Qty",
+                                        icon: "warning",
+                                    });
+                                }
+                            }}
+
+
+                            placeHolder="0.000"
+                        />
+                    </td>
+                )}
+
+
+
+                <td className="w-12 border border-gray-300 text-right text-[11px] py-1 px-2 text-xs">
+                    <input
+                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={parseFloat(item?.transferQty || "")}
+
+
+
+
+                        onKeyDown={(e) => {
+                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                                handleInputChangeFromOrder(0, index, "transferQty");
+                                return
+                            }
+                            if (parseFloat(val) <= parseFloat(item?._sum?.qty).toFixed(3)) {
+
+                                handleInputChangeFromOrder(val, index, "transferQty", item);
+                            } else {
+                                Swal.fire({
+                                    title: "Transfer Qty cannot be more than Stock Qty",
+                                    icon: "warning",
+                                });
+                            }
+                        }}
+
+
+                        placeHolder="0.000"
+                    />
+                </td>
+
+            </tr>
+
+
+        </>
+    )
+}
+
+
+
+

@@ -33,17 +33,21 @@ const useInvalidateTags = () => {
             type: `accessoryPo/invalidateTags`,
             payload: ["accessoryPo"],
         },
-           {
+        {
             type: `AccessoryPurchaseCancel/invalidateTags`,
             payload: ["AccessoryPurchaseCancel"],
         },
-           {
+        {
             type: `AccessoryPurchaseInward/invalidateTags`,
             payload: ["AccessoryPurchaseInward"],
         },
-           {
+        {
             type: `AccessoryPurchaseReturn/invalidateTags`,
             payload: ["AccessoryPurchaseReturn"],
+        },
+        {
+            type: `stock/invalidateTags`,
+            payload: ["Stock"],
         },
 
     ];

@@ -60,6 +60,7 @@ import {
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
+import { getStockQty } from './src/controllers/stock.controller.js';
 
 const app = express()
 // app.use(express.json())
@@ -97,6 +98,12 @@ app.get('/', function (req, res) {
 BigInt.prototype['toJSON'] = function () {
   return parseInt(this.toString());
 };
+
+const router = express.Router()
+
+router.get("/stock-qty", getStockQty);
+
+// console.log("hityttttt",router.get())
 
 
 app.use("/employees", employees);

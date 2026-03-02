@@ -89,7 +89,6 @@ async function get(req) {
                 ] : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
-                // poInwardOrDirectInward,
                 docId: Boolean(searchDocId) ?
                     {
                         contains: searchDocId
@@ -108,7 +107,7 @@ async function get(req) {
                         name: true
                     }
                 },
-            
+
             }
         });
         data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
@@ -218,11 +217,12 @@ async function getOne(id) {
                     inwardLotDetails: true,
                     poItemsId: true,
                     itemId: true,
-                    DirectReturnItems : {
-                        select : {
-                            qty : true
+                    sectionId: true,
+                    DirectReturnItems: {
+                        select: {
+                            qty: true
                         }
-                    }   
+                    }
                 },
 
 
@@ -1249,7 +1249,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             uomId: item?.uomId ? parseInt(item.uomId) : undefined,
             qty: (item.qty) ? parseFloat(item.qty) : undefined,
             price: item.price ? parseFloat(item.price) : undefined,
-
+            sectionId: item?.sectionId ? parseInt(item?.sectionId) : undefined,
 
 
 
@@ -1273,6 +1273,7 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                 price: item["price"] ? parseFloat(item["price"]) : 0,
                 poNo: item["poNo"] ? item["poNo"] : undefined,
+                sectionId: item["sectionId"] ? parseInt(item["sectionId"]) : undefined,
 
 
 
@@ -1378,7 +1379,7 @@ async function deleteStockReturnItems(tx, removeItemsPurchaseInwardReturnIds) {
     console.log(existingStock, "existingStock")
 
     if (!existingStock.length) {
-        throw new Error("No DirectInward stock available for given transaction IDs");
+        return
     }
 
     return await tx.Stock.deleteMany({
@@ -1407,6 +1408,7 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
             uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
             qty: item["qty"] ? parseFloat(item["qty"]) : 0,
             price: item["price"] ? parseFloat(item["price"]) : 0,
+            sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
 
         }
     })
@@ -1433,6 +1435,7 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                 price: item["price"] ? parseFloat(item["price"]) : 0,
+                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
 
 
 
@@ -1459,11 +1462,13 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 qty: item["qty"] ? parseFloat(item["qty"]) : 0,
                 price: item["price"] ? parseFloat(item["price"]) : 0,
+                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
 
             }
         })
 
-
+     await   createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
+        // await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id, partyId)
 
     }
 }
@@ -1529,7 +1534,7 @@ async function update(id, body) {
 
 
 
-function stockCheckingMethod(id){
+function stockCheckingMethod(id) {
 
 
 }

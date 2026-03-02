@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
@@ -14,7 +14,9 @@ import { useGetHsnMasterQuery } from "../../redux/services/HsnMasterServices";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
 import { findFromList } from "../../Utils/helper";
 import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
+import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
 
+import { TriangleAlert } from "lucide-react";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -30,6 +32,7 @@ export default function Form() {
   const [code, setCode] = useState("");
   const [hsnId, setHsnId] = useState('')
   const [salesPrice, setSalesPrice] = useState("")
+
   const [purchasePrice, setPurchasePrice] = useState('')
   const [salesTaxType, setSalesTaxType] = useState("")
   const [purchaseTaxType, setPurchaseTaxType] = useState("")
@@ -41,12 +44,18 @@ export default function Form() {
   const childRecord = useRef(0);
   const [itemPriceList, setItemPriceList] = useState([])
   const [sectionId, setSectionId] = useState('')
+  const [minStockQty, setMinStockQty] = useState("")
+  const [selectedItem, setSelectedItem] = useState({});
+  const [gridIndex, setGridIndex] = useState();
 
 
   const [contextMenu, setContextMenu] = useState(null);
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
+    ),
+    branchId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "branchId"
     ),
   };
 
@@ -56,7 +65,6 @@ export default function Form() {
     isFetching,
   } = useGetItemMasterQuery({ params, searchParams: searchValue });
 
-  console.log(allData, "datatat");
 
   const {
     data: singleData,
@@ -91,6 +99,17 @@ export default function Form() {
     data: sectionData,
   } = useGetSectionMasterQuery({ params, searchParams: searchValue });
 
+  const {
+    data: locationData,
+  } = useGetLocationMasterQuery({ params, searchParams: searchValue });
+
+  const storeOptions = locationData ?
+    locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(1)) :
+    [];
+
+
+
+  console.log(itemPriceList, 'itemPriceList')
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -107,7 +126,8 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
-
+        setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
+        setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
 
       } else {
         setName(data?.name ? data?.name : "")
@@ -123,12 +143,16 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
+        setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
 
 
 
         if (data?.priceMethod === "STANDARD") {
           setPurchasePrice(data?.ItemPriceList?.[0]?.purchasePrice ? data?.ItemPriceList?.[0]?.purchasePrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
+          setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
+          setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
+
         } else {
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
           const uniqueSizes = [...new Set(data?.ItemPriceList?.map(item => item.sizeId))];
@@ -176,7 +200,7 @@ export default function Form() {
     hsnId,
     active,
     priceMethod,
-    itemPriceList: priceMethod === "STANDARD" ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice }] : itemPriceList ,
+    itemPriceList: priceMethod === "STANDARD" && !id ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice, minStockQty }] : itemPriceList,
     sectionId
 
   };
@@ -224,12 +248,6 @@ export default function Form() {
     // if price method === standard
     //  data = {...data, itemPricelist: [sizeId: null, colorId: null, purchasePrice, salesPrice]}
 
-    const temp = {
-      ...data,
-      itemPriceList: priceMethod === "STANDARD" ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice }] : data.itemPriceList
-    }
-
-    console.log(temp, "temp")
 
     let foundItem;
     if (id) {
@@ -382,13 +400,6 @@ export default function Form() {
     setReadOnly(false);
   };
 
-  const firstInputFocus = useRef(null);
-
-  useEffect(() => {
-    if (form && firstInputFocus.current) {
-      firstInputFocus.current.focus();
-    }
-  }, [form]);
 
   function findName(arr, id) {
     if (!arr) return ""
@@ -425,18 +436,45 @@ export default function Form() {
     );
   };
 
+  function handleInputChangeForGrid(value, index, field) {
+
+    console.log(value, index, field, "value, index, field")
+
+    let gridField = "MinimumStockQty"
+
+
+    setItemPriceList(orderDetails => {
+      const newBlend = structuredClone(orderDetails);
+
+      const minStock = structuredClone(newBlend[gridIndex][gridField])
+      minStock[index][field] = value;
+
+      newBlend[gridIndex][gridField] = minStock;
+
+
+      return newBlend
+    }
+    );
+  };
+
+
+
+
+
+
+  console.log(itemPriceList, "itemPriceList");
+
   function setItems() {
     if (!sizeList?.length) return;
 
     if (id) {
       const existingCombinations = itemPriceList.map(item => `${item.sizeId}-${item.colorId}`);
 
-      console.log(existingCombinations, "existingCombinations");
       const newCombinations = colorList?.length
         ? sizeList.flatMap(size =>
           colorList.map(color => `${size.value}-${color.value}`))
         : sizeList.map(size => `${size.value}-null`);
-      const pusNewCombinations = newCombinations.filter(comb => !existingCombinations.includes(comb)).map(comb => {
+      const pushNewCombinations = newCombinations.filter(comb => !existingCombinations.includes(comb)).map(comb => {
         const [sizeId, colorId] = comb.split("-");
         return {
           sizeId: sizeId === "null" ? null : parseInt(sizeId),
@@ -448,8 +486,14 @@ export default function Form() {
         }
       }
       );
-      if (pusNewCombinations.length) {
-        setItemPriceList(prev => [...prev, ...pusNewCombinations]);
+      if (pushNewCombinations.length) {
+        setItemPriceList(prev => [
+          ...prev,
+          ...pushNewCombinations.map(item => ({
+            ...item,
+            MinimumStock: [{ locationId: "", minStockQty: "" }]   // ✅ add new array here
+          }))
+        ]);
       }
       const removedCombinations = existingCombinations.filter(comb => !newCombinations.includes(comb));
 
@@ -482,7 +526,11 @@ export default function Form() {
           }));
 
 
-      setItemPriceList(itemPriceArray);
+      setItemPriceList(itemPriceArray?.map?.(i => ({
+        ...i,
+        MinimumStockQty: [{ locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }]
+
+      })));
     }
 
 
@@ -509,6 +557,21 @@ export default function Form() {
       return prevItemPriceList?.filter((_, index) => index !== id);
     });
   };
+
+
+  const firstInputFocus = useRef(null);
+
+  useEffect(() => {
+    if (form && firstInputFocus.current) {
+      firstInputFocus.current.focus();
+    }
+  }, [form]);
+
+
+
+  console.log(itemPriceList, "itemPriceList");
+
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
@@ -627,6 +690,7 @@ export default function Form() {
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
+                        ref={firstInputFocus}
                       />
                     </div>
 
@@ -696,7 +760,14 @@ export default function Form() {
                               name="Price Method"
                               options={PriceMethod}
                               value={priceMethod}
-                              setValue={setPriceMethod}
+                              setValue={(value) => {
+                                setPriceMethod(value)
+                                if (colorList || sizeList) {
+                                  setSizeList([])
+                                  setColorList([])
+                                  setItemPriceList([])
+                                }
+                              }}
                               required
                               readOnly={readOnly}
                               disabled={childRecord.current > 0}
@@ -721,6 +792,16 @@ export default function Form() {
                                   name="Sales Price"
                                   value={salesPrice}
                                   setValue={setSalesPrice}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Minimun Stock Qty"
+                                  value={minStockQty}
+                                  setValue={setMinStockQty}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
                                   required={true}
@@ -778,134 +859,237 @@ export default function Form() {
                             </>
                           )}
                         </div>
+                        {priceMethod != "STANDARD" && (
+                          <>
+                            <div className="grid grid-cols-12 gap-3 ">
+                              <div className="col-span-8 w-full h-[300px] ">
+                                <div className={` relative overflow-y-auto py-1 h-full`}>
+                                  <table className="w-full border-collapse table-fixed ">
+                                    <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
+                                      <tr>
+                                        <th
+                                          className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          S.No
+                                        </th>
+                                        <th
 
-                        <div className="w-full h-[300px]">
-                          <div className={` relative overflow-y-auto py-1 w-1/2 h-full`}>
-                            <table className="w-full border-collapse table-fixed ">
-                              <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
-                                <tr>
-                                  <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
-                                  >
-                                    S.No
-                                  </th>
-                                  <th
+                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          Size Name
+                                        </th>
+                                        {priceMethod == "SIZE_COLOR" && (
+                                          <th
 
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                  >
-                                    Size Name
-                                  </th>
-                                  <th
-
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
-                                  >
-                                    Color Name
-                                  </th>
-                                  <th
-
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                  >
-                                    Purchase Price
-                                  </th>
-
-                                  <th
-
-                                    className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                  >
-                                    Sales Price
-                                  </th>
+                                            className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                          >
+                                            Color Name
+                                          </th>
+                                        )}
 
 
-                                </tr>
-                              </thead>
-                              <tbody>
+                                        <th
 
-                                {itemPriceList.map((item, index) => (
-                                  <tr key={index} className=""
-                                    onContextMenu={(e) => {
-                                      if (!readOnly) {
-                                        handleRightSubGridClick(e, index, "notes");
-                                      }
-                                    }}
-                                  >
-                                    <td className="border border-gray-200 w-12 px-1 py-1 text-center text-xs ">{index + 1}</td>
-                                    <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
-                                      {findFromList(item?.sizeId, sizeData?.data, "name")}
-                                    </td>
-                                    <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
-                                      {findFromList(item?.colorId, colorData?.data, "name")}
-                                    </td>
-                                    <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
+                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          Sales Price
+                                        </th>
+                                        <th
 
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs "
-                                        value={item.purchasePrice}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "purchasePrice")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "purchasePrice")}
-                                      />
-                                    </td>
+                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          Offer Price
+                                        </th>
+                                        <th
 
-                                    <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
+                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          LowStockAlert
+                                        </th>
 
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs "
-                                        value={item.salesPrice}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                      />
-                                    </td>                                  </tr>
-                                ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+
+                                      {itemPriceList.map((item, index) => (
+                                        <tr key={index} className=""
+                                          onContextMenu={(e) => {
+                                            if (!readOnly) {
+                                              handleRightSubGridClick(e, index, "notes");
+                                            }
+                                          }}
+                                        >
+                                          <td className="border border-gray-200 w-12 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                          <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
+                                            {findFromList(item?.sizeId, sizeData?.data, "name")}
+                                          </td>
+
+                                          {priceMethod == "SIZE_COLOR" && (
+                                            <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
+                                              {findFromList(item?.colorId, colorData?.data, "name")}
+                                            </td>
+                                          )}
 
 
 
-                              </tbody>
-                            </table>
 
-                          </div>
-                        </div>
-                        {contextMenu && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: `${contextMenu.mouseY - 40}px`,
-                              left: `${contextMenu.mouseX - 80}px`,
+                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
 
-                              boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                              padding: "8px",
-                              borderRadius: "4px",
-                              zIndex: 1000,
-                            }}
-                            className="bg-gray-100"
-                            onMouseLeave={handleCloseContextMenu}
-                          >
-                            <div className="flex flex-col gap-1">
-                              <button
-                                className=" text-black text-[12px] text-left rounded px-1"
-                                onClick={() => {
-                                  handleDeleteRow(contextMenu.rowId);
-                                  handleCloseContextMenu();
-                                }}
-                              >
-                                Delete{" "}
-                              </button>
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              value={item.salesPrice}
+                                              disabled={readOnly}
+                                              onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                            />
+                                          </td>
+                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              value={item.salesPrice}
+                                              disabled={readOnly}
+                                              onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                            />
+                                          </td>
+                                          <td
+                                            className="border border-gray-200 w-32 px-1 py-1 text-left text-xs"
+
+                                          >
+
+                                            <TriangleAlert
+                                              onClick={() => {
+                                                setGridIndex(prev => (prev === index ? null : index));
+                                              }}
+                                              className={`w-4 h-4 transition-transform duration-200 ${gridIndex === index ? "rotate-90" : ""
+                                                } text-red-500`}
+                                            />
+                                          </td>
+
+
+
+
+                                        </tr>
+                                      ))}
+
+
+
+                                    </tbody>
+                                  </table>
+
+                                </div>
+                              </div>
+                              {contextMenu && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: `${contextMenu.mouseY - 40}px`,
+                                    left: `${contextMenu.mouseX - 80}px`,
+
+                                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                    padding: "8px",
+                                    borderRadius: "4px",
+                                    zIndex: 1000,
+                                  }}
+                                  className="bg-gray-100"
+                                  onMouseLeave={handleCloseContextMenu}
+                                >
+                                  <div className="flex flex-col gap-1">
+                                    <button
+                                      className=" text-black text-[12px] text-left rounded px-1"
+                                      onClick={() => {
+                                        handleDeleteRow(contextMenu.rowId);
+                                        handleCloseContextMenu();
+                                      }}
+                                    >
+                                      Delete{" "}
+                                    </button>
+
+                                  </div>
+                                </div>
+                              )}
+
+                              {itemPriceList[gridIndex] && (
+                                <>
+                                  <div className="col-span-4">
+                                    <table className="w-full  table-fixed">
+                                      <thead className="bg-gray-200 text-gray-800">
+                                        <tr>
+                                          <th className="w-8 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">S.No</th>
+                                          <th className="w-32 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Location</th>
+                                          <th className="w-20 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Minimun Stock Qty</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>{console.log()}
+                                        {(itemPriceList[gridIndex]?.MinimumStockQty)?.map((row, index) => (
+                                          <tr key={`${selectedItem.itemId}-${selectedItem.sizeId}-${index}`} className="border border-blue-gray-200 cursor-pointer">
+                                            <td className="py-0.5 border border-gray-300 text-[11px] text-center">
+                                              {index + 1}
+                                            </td>{console.log(row, "row")}
+                                            <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                              <select
+                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChangeForGrid("", index, "locationId") } }}
+                                                tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
+                                                value={row.locationId}
+                                                onChange={(e) => {
+                                                  handleInputChangeForGrid(e.target.value, index, "locationId")
+                                                }}
+
+                                                disabled={readOnly}
+                                              >
+                                                <option >
+                                                </option>
+                                                {(id ? storeOptions : storeOptions?.filter(i => i.active
+                                                ))?.map((blend) =>
+                                                  <option value={blend.id} key={blend.id}>
+                                                    {blend?.storeName}
+                                                  </option>
+                                                )}
+                                              </select>
+                                            </td>
+                                            <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
+                                              <input
+                                                type="text"
+
+                                                min="0"
+                                                rows={1}
+                                                onFocus={e => e.target.select()}
+                                                className="text-right rounded w-full px-1 py-1 text-xs "
+                                                value={row.minStockQty}
+                                                disabled={readOnly}
+                                                onChange={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
+                                                onBlur={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
+                                              />                                        </td>
+
+
+                                          </tr>
+                                        ))}
+
+                                      </tbody>
+
+                                    </table>
+                                  </div>
+                                </>
+                              )}
+
 
                             </div>
-                          </div>
-                        )}
+                          </>)}
 
                       </div>
 
                     </fieldset>
+
+
 
                   </div>
                 </fieldset>

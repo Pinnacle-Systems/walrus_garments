@@ -359,7 +359,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   const order = [
     "PO",
     "STOCK",
-    // "MATERIAL MOVEMENT",
+    "SALES",
     // "PRODUCTION",
     // "PROCESS",
     // "STOCK TRANSFER",

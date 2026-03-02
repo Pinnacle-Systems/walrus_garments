@@ -3,11 +3,13 @@ import { TextArea, TextInput } from '../../../Inputs'
 import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
+import { useState } from 'react'
 
 
 
 export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, toOrderId, setStockItems
-    , yarnList, colorList, stockItems, sizeList, itemList, uomList
+    , yarnList, colorList, stockItems, sizeList, itemList, locationData, fromLocationId,
+    searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
 }) {
 
 
@@ -15,15 +17,8 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
 
 
+
     function handleDone() {
-        // setStockItems(
-        //     tempStockItems?.filter(stockItem =>
-        //         orderItems?.some(orderItem =>
-        //             stockItem?.yarnId === orderItem?.yarnId &&
-        //             stockItem?.colorId === orderItem?.colorId // use colorId for safety
-        //         )
-        //     )
-        // );
 
         onClose()
     }
@@ -47,10 +42,18 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
             if (isAlreadyAdded) {
                 return newItems
+            }
+
+
+
+            const emptyIndex = newItems.findIndex(v => v?.itemId == "");
+
+            if (emptyIndex !== -1) {
+                newItems[emptyIndex] = obj;
             } else {
                 newItems.push(obj);
-
             }
+
 
             return newItems
         });
@@ -116,7 +119,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                         <div className="border-b py-1.5 px-2 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                    {toOrderId}
+                                    {findFromList(fromLocationId, locationData?.data, "storeName")} Stock Items
                                 </h2>
 
                             </div>
@@ -164,6 +167,54 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                             <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-14">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty(Pcs) </th>
+
+
+
+
+                                        </tr>
+                                        <tr>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+
+                                            </th>
+
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+
+
+                                            </th>
+                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">
+                                                <input
+                                                    type="text"
+                                                    className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                                    placeholder="Search"
+                                                    value={searchItem}
+                                                    onChange={(e) => {
+                                                        setSearchItem(e.target.value);
+                                                    }}
+                                                />
+                                            </th>
+                                            <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-14">
+                                                <input
+                                                    type="text"
+                                                    className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                                    placeholder="Search"
+                                                    value={searchSize}
+                                                    onChange={(e) => {
+                                                        setSearchSize(e.target.value);
+                                                    }}
+                                                />
+                                            </th>
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">
+                                                <input
+                                                    type="text"
+                                                    className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                                    placeholder="Search"
+                                                    value={searchColor}
+                                                    onChange={(e) => {
+                                                        setSearchColor(e.target.value);
+                                                    }}
+                                                />
+                                            </th>
+                                            <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs"> </th>
 
 
 

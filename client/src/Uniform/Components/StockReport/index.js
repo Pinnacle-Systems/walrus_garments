@@ -129,7 +129,7 @@ const StockReport = () => {
                                 value={storeId} setValue={setStoreId} required={true} clear={true} />
 
 
-                            <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} />
+                            {/* <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} /> */}
                         </div>
                         <div className='py-1.5 mt-2'>
                             <button

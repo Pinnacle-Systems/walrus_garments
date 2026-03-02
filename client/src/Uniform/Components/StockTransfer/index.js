@@ -39,7 +39,7 @@ const StockTransfer = () => {
     const [tempStockItems, setTempStockItems] = useState([])
 
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams()
+    const { branchId, userId,  finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
@@ -50,14 +50,7 @@ const StockTransfer = () => {
 
     const [removeData] = useDeleteStockTransferMutation()
 
-    // const getNextDocId = useCallback(() => {
-    //     //   if (id || isLoading || isFetching) return
-    //     if (allData?.nextDocId) {
-    //         setDocId(allData.nextDocId)
-    //     }
-    // }, [allData, id])
 
-    // useEffect(getNextDocId, [getNextDocId])
 
     const handleView = (id) => {
         setId(id)

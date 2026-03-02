@@ -1464,9 +1464,12 @@ model DirectItems {
   requirementPlanningItemsId Int?
   Item                       Item?                     @relation(fields: [itemId], references: [id])
   itemId                     Int?
-  BillEntryItems             BillEntryItems[]
-  DirectReturnItems          DirectReturnItems[]
-  inwardLotDetails           InwardLotDetails[]
+  Section                    Section?                  @relation(fields: [sectionId], references: [id])
+  sectionId                  Int?
+
+  BillEntryItems    BillEntryItems[]
+  DirectReturnItems DirectReturnItems[]
+  inwardLotDetails  InwardLotDetails[]
 }
 
 model AccessoryInward {
@@ -1957,6 +1960,7 @@ model Location {
   AccessoryStock             AccessoryStock[]
   FromLocation               StockTransfer[]              @relation(name: "fromLocation")
   ToLocation                 StockTransfer[]              @relation(name: "toLocation")
+  MinimumStockQty            MinimumStockQty[]
 }
 
 enum ProcessIO {
@@ -4334,6 +4338,8 @@ model ToLocationTransferTtems {
   transferQty     Float?
   balanceQty      Float?
   requiredQty     Float?
+  price           String?
+  discountPrice   String?
 }
 
 model AccessoyStockTransfer {
@@ -4501,6 +4507,9 @@ model DirectReturnItems {
   requirementPlanningItemsId Int?
   Item                       Item?                     @relation(fields: [itemId], references: [id])
   itemId                     Int?
+  Section                    Section?                  @relation(fields: [sectionId], references: [id])
+
+  sectionId Int?
 }
 
 model AccessoryReturn {
@@ -4853,22 +4862,35 @@ model Item {
 }
 
 model ItemPriceList {
-  id            Int     @id @default(autoincrement())
-  item          Item?   @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Color         Color?  @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Size          Size?   @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  purchasePrice String?
-  salesPrice    String?
+  id              Int               @id @default(autoincrement())
+  item            Item?             @relation(fields: [itemId], references: [id],onDelete: Cascade)
+  itemId          Int?
+  Color           Color?            @relation(fields: [colorId], references: [id])
+  colorId         Int?
+  Size            Size?             @relation(fields: [sizeId], references: [id])
+  sizeId          Int?
+  purchasePrice   String?
+  salesPrice      String?
+  minStockQty     String?
+  MinimumStockQty MinimumStockQty[]
+}
+
+model MinimumStockQty {
+  id              Int            @id @default(autoincrement())
+  ItemPriceList   ItemPriceList? @relation(fields: [itemPriceListId], references: [id],onDelete: Cascade)
+  itemPriceListId Int?
+  Location        Location?      @relation(fields: [locationId], references: [id])
+  locationId      Int?
+  minStockQty     String?
 }
 
 model Section {
-  id     Int      @id @default(autoincrement())
-  name   String?
-  code   String?
-  active Boolean? @default(false)
-  Item   Item[]
-  stocks Stock[]
+  id                Int                 @id @default(autoincrement())
+  name              String?
+  code              String?
+  active            Boolean?            @default(false)
+  Item              Item[]
+  stocks            Stock[]
+  DirectItems       DirectItems[]
+  DirectReturnItems DirectReturnItems[]
 }

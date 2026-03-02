@@ -2,18 +2,20 @@ import React, { useEffect, useRef, useState } from "react"
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi"
 import { toast } from "react-toastify";
 import Modal from "../../../UiComponents/Modal";
-import StockTransferDetails from "./ToOrderDetails";
+import StockTransferDetails from "./TranferItems";
 import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import { useGetStockQuery } from "../../../redux/services/StockService";
 import { findFromList } from "../../../Utils/helper";
-import ToOrderDetails from "./ToOrderDetails";
+import ToOrderDetails from "./TranferItems";
 import FromOrderDetails from "./FromOrderDetails";
 import Swal from "sweetalert2";
 import OrderToGeneral from "./OrderToGeneral";
+import TransferItems from "./TranferItems";
 
 const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferType, singleData, id,
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
-    toOrderId, fromOrderId, orderData, fromLocation, locationData, sizeList, itemList, uomList
+    toOrderId, fromOrderId, orderData, fromLocationId, locationData, sizeList, itemList, uomList, toLocationId,
+    orderToGeneral, setOrderToGeneral, searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
 
 
 }) => {
@@ -23,13 +25,26 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     console.log(tempOrderItems, "tempOrderItems")
     console.log(stockItems, "stockItems")
 
+    useEffect(() => {
+        if (stockItems?.length >= 11) return;
+        setStockItems((prev) => {
+            let newArray = Array.from({ length: 11 - prev.length }, (i) => {
+                return {
+                    itemId: "",
+                    sizeId: "",
+                    colorId: "",
+                    uomId: "",
 
+                };
+            });
+            return [...prev, ...newArray];
+        });
+    }, [setStockItems, stockItems]);
 
 
 
     const [tableDataView, setTableDataView] = useState(false)
     const [tableStockDataView, setTableStockDataView] = useState(false)
-    const [orderToGeneral, setOrderToGeneral] = useState(false)
 
 
 
@@ -93,21 +108,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
     return (
         <>
-            <Modal
-                isOpen={tableDataView}
-                onClose={() => setTableDataView(false)}
-                widthClass=" h-[70%] w-[90%]"
-            >
-                <ToOrderDetails
-                    tempOrderItems={tempOrderItems}
-                    setOrderItems={setOrderItems} orderItems={orderItems}
-                    setTempOrderItems={setTempOrderItems}
-                    tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} stockItems={stockItems} setStockItems={setStockItems}
-                    onClose={() => setTableDataView(false)}
-                    toOrderId={findFromList(toOrderId, orderData, "docId")}
 
-                />
-            </Modal>
             <Modal
                 isOpen={tableStockDataView}
                 onClose={() => setTableStockDataView(false)}
@@ -126,8 +127,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             </Modal>
             <Modal
                 isOpen={orderToGeneral}
-                // onClose={() => setOrderToGeneral(false)}
-                widthClass="  h-[70%] w-[80%]"
+                widthClass="  h-[94%] w-[90%]"
             >
                 <OrderToGeneral
                     tempOrderItems={tempOrderItems}
@@ -139,6 +139,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                     fromOrderId={fromOrderId}
                     itemList={itemList} uomList={uomList}
                     sizeList={sizeList}
+                    fromLocationId={fromLocationId} locationData={locationData}
+                    searchItem={searchItem} setSearchItem={setSearchItem}
+                    searchColor={searchColor} setSearchColor={setSearchColor}
+                    searchSize={searchSize} setSearchSize={setSearchSize}
 
                 />
             </Modal>
@@ -146,54 +150,38 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm h-[500px] ">
+            <div className="border h-full border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+                <div className="flex justify-between items-center mb-2">
+                    <h2 className="font-bold text-slate-700">Transfer Items</h2>
 
 
-                <div className="flex flex-row gap-7">
-                    <div className="flex justify-between items-center ">
-                        <h2 className="font-medium text-slate-700">(From Location Stock)
-                            <span
-                                // className="ml-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold"
-                                className="ml-4 text-purple-400 font-bold"
-                            >
-                                {findFromList(fromLocation, locationData?.data, "storeName")}
-                            </span>
-                        </h2>
-                    </div>
-                    <button
-                        onClick={() => {
-                            setOrderToGeneral(true)
-                        }}
-                        disabled={id}
-
-                        className="text-blue-800 rounded h-full py-1  text-lg focus:outline-none"
-                    >
-                        <span className=''>👁</span>
-                    </button>
                 </div>
 
 
                 <div className="flex flex-row gap-40 ">
-                    <div className="w-[70%] flex flex-col">
+                    <div className="w-full flex flex-col">
                         <div className="justify-end items-center ">
-                            <div className="h-[140px] overflow-y-auto ">
-                                <table className="w-full border-collapse ">
+                            <div className=" ">
+                                <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
 
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
-
+                                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
-                                            <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)</th>
-                                            {/* <th className="w-12 px-4 py-1.5 border border-gray-300  text-xs">Balance Transfer Qty (Kgs)</th> */}
+                                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
+                                            <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Sales Price</th>
+                                            {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+
+                                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Discount Price</th>
+                                            )}
+                                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
 
                                         </tr>
                                     </thead>
 
-                                    <tbody>
+                                    {/* <tbody>
                                         {stockItems?.map((stock, index) => (
                                             <tr
                                                 key={index}
@@ -218,20 +206,21 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                 </td>
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                                                     {findFromList(stock?.colorId, colorList, "name")}
-
                                                 </td>
                                                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
-                                                    {parseFloat(stock?._sum?.qty).toFixed(3)}
+                                                    {stock?._sum?.qty ? parseFloat(stock?._sum?.qty).toFixed(2) : ""}
 
                                                 </td>
-
-                                                <td className="w-12 border border-gray-300 text-right text-[11px] py-1 px-2 text-xs">
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-right">
+                                                    {stock?.price ? parseFloat(stock?.price).toFixed(2) : ""}
+                                                </td>
+                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                                                     <input
                                                         className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
-                                                        value={parseFloat(stock?.transferQty || 0)}
+                                                        value={parseFloat(stock?.discountPrice || "")}
 
 
 
@@ -242,7 +231,48 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                                         onFocus={(e) => e.target.select()}
                                                         onChange={(e) => {
                                                             const val = e.target.value;
+                                                            if (!val) {
+                                                                handleInputChangeFromOrder(0, index, "discountPrice");
+                                                                return
+                                                            }
+                                                            if (parseFloat(val) <= parseFloat(stock?._sum?.qty).toFixed(3)) {
 
+                                                                handleInputChangeFromOrder(val, index, "discountPrice", stock);
+                                                            } else {
+                                                                Swal.fire({
+                                                                    title: "Transfer Qty cannot be more than Stock Qty",
+                                                                    icon: "warning",
+                                                                });
+                                                            }
+                                                        }}
+
+
+                                                        placeHolder="0.000"
+                                                    />
+                                                </td>
+
+
+                                                <td className="w-12 border border-gray-300 text-right text-[11px] py-1 px-2 text-xs">
+                                                    <input
+                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={parseFloat(stock?.transferQty || "")}
+
+
+
+
+                                                        onKeyDown={(e) => {
+                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                                        }}
+                                                        onFocus={(e) => e.target.select()}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (!val) {
+                                                                handleInputChangeFromOrder(0, index, "transferQty");
+                                                                return
+                                                            }
                                                             if (parseFloat(val) <= parseFloat(stock?._sum?.qty).toFixed(3)) {
 
                                                                 handleInputChangeFromOrder(val, index, "transferQty", stock);
@@ -262,6 +292,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                             </tr>
                                         ))}
 
+                                    </tbody> */}
+                                    <tbody>
+                                        {stockItems?.map((item, index) => <TransferItems
+                                            item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}
+                                            readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
+                                            itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
+                                            stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
+                                        />)}
                                     </tbody>
                                 </table>
                             </div>

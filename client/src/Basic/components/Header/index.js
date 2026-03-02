@@ -24,6 +24,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { push } from "../../../redux/features/opentabs";
 import Swal from "sweetalert2";
+import NotificationBell from "../Notification";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -39,6 +40,7 @@ const Header = ({ profile, setProfile }) => {
     const navBatItemsStyle = hideNavBar ? "hidden" : "";
 
     const [allowedPages, setAllowedPages] = useState([]);
+    const [showStockAlertPopup, setStockAlertPopup] = useState(false);
 
 
 
@@ -178,7 +180,7 @@ const Header = ({ profile, setProfile }) => {
                     </div>
                 </div>
                 <div className="mr-3 bg-beige p-2 rounded-full ">
-                    <Bell size={17} />
+                    <NotificationBell />
                 </div>
 
                 <div className="relative text-left">

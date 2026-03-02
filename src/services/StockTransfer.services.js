@@ -50,9 +50,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
 
         const branchObj = await getTableRecordWithId(branchId, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/1`
+        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ST/1`
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/ST   /${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -111,7 +111,7 @@ const xprisma = prisma.$extends({
 })
 
 async function get(req) {
-    const { pagination, pageNumber, dataPerPage, branchId, finYearId, serachDocNo, fromOrderNo, toOrderNo, searchDelDate, searchDocDate, partyId,
+    const { pagination, pageNumber, storeId, branchId, finYearId, serachDocNo, fromOrderNo, toOrderNo, searchDelDate, searchDocDate, partyId,
 
     } = req.query
 
@@ -120,15 +120,29 @@ async function get(req) {
     let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime);
     let data = await xprisma.StockTransfer.findMany({
         where: {
-            // branchId: branchId ? parseInt(branchId) : undefined,
-            docId: Boolean(serachDocNo) ?
+            storeId: Boolean(storeId) ?
                 {
-                    contains: serachDocNo
+                    contains: storeId
                 }
-                : undefined,
+                : undefined, docId: Boolean(serachDocNo) ?
+                    {
+                        contains: serachDocNo
+                    }
+                    : undefined,
 
         },
-
+        include: {
+            FromLocation: {
+                select: {
+                    storeName: true
+                }
+            },
+            ToLocation: {
+                select: {
+                    storeName: true
+                }
+            }
+        },
 
         orderBy: {
             id: "desc",
@@ -160,8 +174,9 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-                FromLocationTransferItems : true,
-                ToLocationTransferTtems : true,
+            FromLocationTransferItems: true,
+            ToLocationTransferTtems: true,
+
         }
 
     })
@@ -346,6 +361,7 @@ async function createFromLocationStock(tx, branchId, storeId, item, transactionI
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             price: item["price"] ? parseFloat(item["price"]) : 0,
             qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
+            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
 
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
@@ -359,21 +375,47 @@ async function createToLocationStock(tx, branchId, storeId, item, transactionId,
 
 
 
-    await tx.stock.create({
-        data: {
-            inOrOut: "ToLocationTransferItems",
-            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+    if (storeId == 4) {
+        await tx.stock.create({
 
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            transactionId: transactionId ? transactionId : ''
 
-        }
-    })
+            data: {
+                inOrOut: "ToLocationTransferItems",
+                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+                price: item["discountPrice"] ? parseFloat(item["discountPrice"]) : 0,
+                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+
+                branchId: branchId ? parseInt(branchId) : undefined,
+                storeId: storeId ? parseInt(storeId) : undefined,
+                transactionId: transactionId ? transactionId : ''
+
+
+            }
+        })
+    } else {
+        await tx.stock.create({
+
+
+            data: {
+                inOrOut: "ToLocationTransferItems",
+                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+                price: item["price"] ? parseFloat(item["price"]) : 0,
+                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
+                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+
+                branchId: branchId ? parseInt(branchId) : undefined,
+                storeId: storeId ? parseInt(storeId) : undefined,
+                transactionId: transactionId ? transactionId : ''
+
+
+            }
+        })
+    }
 
 
 
@@ -440,6 +482,9 @@ async function createStocktransferItems(
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
                         stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
+                        price: item?.price ? String(item?.price) : undefined,
+                        discountPrice: item?.discountPrice ? String(item?.discountPrice) : undefined,
+
                     },
                 });
 

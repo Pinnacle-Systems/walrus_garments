@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { ACCESSORY_STOCK_API, STOCK_API } from "../../Api";
+import { STOCK_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -59,6 +59,19 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
+    getMinStockAlertReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getMinStockAlertReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
     getStockById: builder.query({
       query: ({ params }) => {
         const { productId, fromOrderId, salePrice, ...rest } = params;
@@ -104,7 +117,7 @@ const stockApi = createApi({
       }),
       invalidatesTags: ["Stock"],
     }),
-  
+
 
   }),
 });
@@ -117,6 +130,8 @@ export const {
   useDeleteStockMutation,
   useGetPcsStockQuery,
   useLazyGetStockReportQuery,
+
+  useGetMinStockAlertReportQuery,
 
 } = stockApi;
 

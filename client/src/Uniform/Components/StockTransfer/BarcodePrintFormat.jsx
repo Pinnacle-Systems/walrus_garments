@@ -38,12 +38,12 @@ const BarCodePrintFormat = ({
     console.log(data,"data")
 
   const allBarcodes = data?.flatMap((item) =>
-    Array.from({ length: parseInt(item?.qty || 0) }, () => ({
+    Array.from({ length: parseInt(item?.transferQty || 0) }, () => ({
       barCode: item.barCode,
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price : item.price
+      price : item.discountPrice
     }))
   );
 

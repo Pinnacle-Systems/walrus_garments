@@ -3,7 +3,7 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { findFromList, getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -32,6 +32,12 @@ const YarnPoItems = ({
 
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(poItems);
+        if (field == "itemId") {
+            const sectionId = findFromList(value, itemList?.data, "sectionId")
+            newBlend[index]["sectionId"] = sectionId;
+        }
+
+
         newBlend[index][field] = value;
 
         console.log(newBlend, "newBlend");

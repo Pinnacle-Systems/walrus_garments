@@ -3,18 +3,19 @@ import BranchIdSettings from './BranchIdSettings';
 import StockReport from './StockReport';
 
 const UserRoles = () => {
-    const [activeNavBar, setActiveNavBar] = useState("Id Card Settings");
+    const [activeNavBar, setActiveNavBar] = useState("Item");
 
     const subMenus = [
-        "Id Card Settings",
-        "Stock Report Settings"
+        // "Id Card Settings",
+        "Item",
+        "Stock Maintenance"
     ]
 
     const getShowSubMenu = () => {
         switch (activeNavBar) {
             case "Id Card Settings":
                 return <BranchIdSettings />
-            case "Stock Report Settings":
+            case "Stock Maintenance":
                 return <StockReport />
             default:
                 return ""
@@ -30,7 +31,7 @@ const UserRoles = () => {
                 <div className='border-2 bg-white'>
                     <div>
                         {subMenus.map((item, index) =>
-                            <div key={index} onClick={() => setActiveNavBar(item)} className={`${activeNavBar === item ? "sub-navbar-active" : "sub-navbar"} text-center cursor-pointer`}>{item}</div>
+                            <div key={index} onClick={() => setActiveNavBar(item)} className={`${activeNavBar === item ? "bg-gray-500" : "bg-white"} text-center cursor-pointer`}>{item}</div>
                         )}
                     </div>
                 </div>

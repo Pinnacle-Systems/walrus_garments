@@ -1,7 +1,7 @@
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
 import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
@@ -20,6 +20,9 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import Modal from "../../../UiComponents/Modal";
+import BarCodePrintFormat from "./BarcodePrintFormat";
 
 const StockTransferForm = ({
     docId, id, readOnly, setId, setForm,
@@ -32,8 +35,15 @@ const StockTransferForm = ({
 
 
 
+    const [searchItem, setSearchItem] = useState("")
+    const [searchColor, setSearchColor] = useState("")
+    const [searchSize, setSearchSize] = useState("")
+
+
     const [fromLocationId, setFromLocationId] = useState("")
     const [toLocationId, setToLocationId] = useState("")
+    const [orderToGeneral, setOrderToGeneral] = useState(false)
+    const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
 
 
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
@@ -42,6 +52,7 @@ const StockTransferForm = ({
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
 
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
 
@@ -52,20 +63,24 @@ const StockTransferForm = ({
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
 
 
-    const { data: allStockData, isLoading, isFetching } = useGetStockQuery({ params: { ...params, storeId: fromLocationId } });
-
-    console.log(allStockData, "allStockData  ")
-
-
-
-    const {
-        data: stockData, isFetching: stockFetching, isLoading: stockLoading, } = useGetStockByIdQuery(
-            { params: { storeId: toLocationId }, }, { skip: fromLocationId });
-
+    const { data: allStockData, isLoading, isFetching } = useGetStockQuery(
+        {
+            params: {
+                ...params,
+                storeId: fromLocationId,
+                searchItem,
+                searchColor,
+                searchSize
 
 
+            }
+        }, { skip: id });
 
-    const { data: singleOrderData, isLoading: isSingleOrderLoading, isFetching: isSingleOrderFetching } = useGetStockValidationByIdQuery(toOrderId, { skip: !toOrderId });
+
+
+
+
+
 
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
@@ -73,7 +88,8 @@ const StockTransferForm = ({
 
 
     const data = {
-        stockItems,  docId, 
+        stockItems: stockItems?.filter(i => i.itemId),
+        docId,
         toLocationId,
         fromLocationId,
         branchId,
@@ -94,9 +110,15 @@ const StockTransferForm = ({
 
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
-            setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : "")
+            setStockItems(data?.ToLocationTransferTtems ? data?.ToLocationTransferTtems : [])
 
-        } 
+        } else {
+
+            setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
+            setToLocationId(data?.toLocationId ? data?.toLocationId : "")
+            setStockItems(data?.ToLocationTransferTtems ? data?.ToLocationTransferTtems : [])
+
+        }
 
     }, [orderId, id]);
 
@@ -115,14 +137,6 @@ const StockTransferForm = ({
 
 
 
-
-    useEffect(() => {
-
-        if (singleOrderData?.data) {
-            syncFormWithDb(singleOrderData?.data)
-        }
-
-    }, [isSingleOrderFetching, isSingleOrderLoading, orderId, syncFormWithDb, singleOrderData]);
 
 
 
@@ -152,12 +166,17 @@ const StockTransferForm = ({
                 returnData = await callback(data).unwrap();
             }
 
+            invalidateTagsDispatch()
+
+
             if (returnData?.statusCode === 0) {
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
 
                 });
+
+
                 if (nextProcess == "new") {
                     syncFormWithDb(undefined);
                 }
@@ -182,50 +201,9 @@ const StockTransferForm = ({
 
 
 
-    function OrdergroupByYarnColor(arr) {
-        console.log(arr, "OrdergroupByYarnColor")
-        return arr.reduce((acc, item) => {
-            const key = `${item.yarnId}-${item.colorId}`;
-
-            if (!acc[key]) {
-                acc[key] = {
-                    yarnId: item.yarnId,
-                    colorId: item.colorId,
-                    Yarn: item?.Yarn?.name,
-                    Color: item?.Color.name,
-                    transferQty: 0
-                };
-            }
-
-            acc[key].transferQty += Number(item.transferQty || 0);
-            return acc;
-        }, {});
-    }
-
-    function StockgroupByYarnColor(arr) {
-        console.log(arr, "StockgroupByYarnColor")
-
-        return arr.reduce((acc, item) => {
-            const key = `${item.yarnId}-${item.colorId}`;
-
-            if (!acc[key]) {
-                acc[key] = {
-                    yarnId: item.yarnId,
-                    // Yarn: item?.Yarn?.name,
-                    // Color: item?.Color?.name,
-                    colorId: item.colorId,
-                    transferQty: 0
-
-                };
-            }
-
-            acc[key].transferQty += Number(item.transferQty || 0);
-            return acc;
-        }, {});
-    }
 
     const validateData = (data) => {
-        if (data.fromOrderId && data?.toOrderId && data.transferType) {
+        if (data?.fromLocationId && data?.toLocationId) {
             return true;
         }
 
@@ -234,44 +212,31 @@ const StockTransferForm = ({
     };
 
     const saveData = (nextProcess) => {
-        console.log(!validateQty(), "!validateQty()")
+        console.log(data, "data")
+        if (!validateData(data)) {
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "warning",
 
+            });
+            return
+        }
+        let mandatoryFields = ["transferQty"];
 
-
-
-        function validateQty() {
-            const g1 = OrdergroupByYarnColor(orderItems);
-            const g2 = StockgroupByYarnColor(stockItems);
-
-            for (const key of Object.keys(g1)) {
-                const item1 = g1[key];
-                const item2 = g2[key];
-
-                if (item1?.transferQty > item2?.transferQty) {
-                    Swal.fire({
-                        title: `Qty mismatch → Yarn  ${item1?.Yarn}, Color ${item1?.Color}, TransferQty: ${item1?.transferQty}, Issue Qty: ${item2?.transferQty}`,
-                        icon: "warning",
-                        width: "1000px",
-                    });
-                    return false;
-                }
-            }
-
-            return true;
+        if (!isGridDatasValid((data?.stockItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+            Swal.fire({
+                title: "Please fill Transfer Qty  ",
+                icon: "warning",
+            });
+            return;
         }
 
-        if (transferType != "OrderToGeneral") {
-            if (!validateQty()) {
-                return;
-            }
-        }
 
-        // 4️⃣ Confirm popup
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
 
-        // 5️⃣ Save logic
         if (nextProcess === "draft" && !id) {
             handleSubmitCustom(addData, { ...data, draftSave: true }, "Added", nextProcess);
         }
@@ -304,12 +269,24 @@ const StockTransferForm = ({
         []
 
 
-    if (isSingleOrderLoading || isSingleOrderFetching || stockFetching || stockLoading || isSingleDataLoading || isSingleDataFetching) return <Loader />
+    if (isSingleDataLoading || isSingleDataFetching) return <Loader />
 
 
     return (
         <>
-            <div className="w-full h-[84vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
+            <Modal
+                isOpen={barcodePrintOpen}
+                onClose={() => setBarcodePrintOpen(false)}
+                widthClass={"px-2 h-[90%] w-[90%]"}
+            >
+                <BarCodePrintFormat
+                    data={stockItems?.filter(i => i.itemId)}
+                    // barCodePerPage={barCodePerPage}
+                    sizeList={sizeList}
+                    itemList={itemList}
+                />
+            </Modal>
+            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
                     <div className="gpa-4">
@@ -373,6 +350,38 @@ const StockTransferForm = ({
                                         />
                                     </div>
 
+                                    <div className="ml-3 col-span-4 flex items-center justify-between">
+
+                                        <div className="text-center">
+                                            <p className="text-xs text-gray-400 uppercase">From</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {findFromList(fromLocationId, locationData?.data, "storeName")}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col items-center px-4">
+                                            <span className="text-gray-400 text-xl">➜</span>
+                                            <span className="text-xs text-gray-400">Transfer</span>
+                                        </div>
+
+                                        <div className="text-center">
+                                            <p className="text-xs text-gray-400 uppercase">To</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {findFromList(toLocationId, locationData?.data, "storeName")}
+                                            </p>
+                                        </div>
+
+
+
+                                    </div>
+                                    <div className="col-span-2">
+                                        <button
+                                            className="ml-4 px-4 py-2 mt-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                                            onClick={() => setOrderToGeneral(true)}
+                                        >
+                                            Fill Stock
+                                        </button>
+                                    </div>
 
 
 
@@ -387,14 +396,18 @@ const StockTransferForm = ({
                             </div>
                         </div>
 
+
                     </div>
-                    <div className="h-[55vh] overflow-y-auto">
+                    <div className="h-[400px]">
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
-                            colorList={colorList?.data}  tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
+                            colorList={colorList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
                             toOrderId={toOrderId} fromOrderId={fromOrderId} orderData={orderData?.data} transferType={transferType}
-                            fromLocation={fromLocationId} locationData={locationData} itemList={itemList?.data} uomList={uomList?.data}
-                            sizeList={sizeList?.data}
+                            fromLocationId={fromLocationId} locationData={locationData} itemList={itemList?.data} uomList={uomList?.data}
+                            sizeList={sizeList?.data} toLocationId={toLocationId} orderToGeneral={orderToGeneral} setOrderToGeneral={setOrderToGeneral}
+                            searchItem={searchItem} setSearchItem={setSearchItem}
+                            searchColor={searchColor} setSearchColor={setSearchColor}
+                            searchSize={searchSize} setSearchSize={setSearchSize}
                         />
                     </div>
                     <div className=" flex flex-col md:flex-row gap-2 justify-between mt-5">
@@ -421,16 +434,13 @@ const StockTransferForm = ({
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>
-                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                <FaWhatsapp className="w-4 h-4 mr-2" />
-                                WhatsApp
-                            </button>
                             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                            // onClick={() => setPrintModalOpen(true)}
+                                onClick={() => setBarcodePrintOpen(true)}
                             >
                                 <FiPrinter className="w-4 h-4 mr-2" />
-                                Print
+                                Barcode Generation
                             </button>
+
                         </div>
                     </div>
 

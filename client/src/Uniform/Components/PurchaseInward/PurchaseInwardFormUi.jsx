@@ -410,7 +410,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
           supplierId={partyId}
           inwardItems={directInwardReturnItems}
           setInwardItems={setDirectInwardReturnItems} poInwardOrDirectInward={poInwardOrDirectInward} />
-      </Modal>{console.log(barcodePrintOpen, "barcodePrintOpen")}
+      </Modal>
       <Modal
         isOpen={barcodePrintOpen}
         onClose={() => setBarcodePrintOpen(false)}

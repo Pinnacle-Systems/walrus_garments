@@ -35,6 +35,8 @@ async function getOne(id) {
                             name: true
                         }
                     },
+                    minStockQty: true,
+
                     Size: {
                         select: {
                             name: true
@@ -43,7 +45,8 @@ async function getOne(id) {
                     sizeId: true,
                     purchasePrice: true,
                     salesPrice: true,
-                    
+                    MinimumStockQty: true,
+
                 }
             }
         }
@@ -73,9 +76,9 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 async function create(body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active ,
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active,
         sectionId
-     } = body
+    } = body
     const data = await prisma.item.create({
         data: {
             styleId: styleId ? parseInt(styleId) : undefined,
@@ -93,12 +96,23 @@ async function create(body) {
 
             ItemPriceList: itemPriceList?.length > 0
                 ? {
-                    create: itemPriceList?.map((item) => ({
+                    create: itemPriceList.map((item) => ({
+                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                        sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+                        purchasePrice: item?.purchasePrice || undefined,
+                        salesPrice: item?.salesPrice || undefined,
+                        minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
 
-                        colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
-                        sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                        purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
-                        salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+                        MinimumStockQty: item?.MinimumStockQty?.length > 0
+                            ? {
+                                create: item?.MinimumStockQty?.filter(i => i.locationId)?.map((min) => ({
+                                    minStockQty: min?.minStockQty ? String(min?.minStockQty) : "0",
+                                    locationId: min?.locationId ? parseInt(min?.locationId) : undefined,
+
+
+                                })),
+                            }
+                            : undefined,
                     })),
                 }
                 : undefined,
@@ -113,48 +127,6 @@ async function create(body) {
 }
 
 // async function updateStylePanel(tx, sampleDetails, sampleData) {
-//     const parsedSampleDetails = typeof sampleDetails === "string"
-//         ? JSON.parse(sampleDetails)
-//         : sampleDetails;
-
-//     const removedItems = sampleData.ItemPanel.filter(oldItem => {
-//         return !parsedSampleDetails.some(newItem => newItem.panelId == oldItem.panelId);
-//     });
-
-//     const removedItemsId = removedItems.map(item => item.id);
-//     await tx.ItemPanel.deleteMany({
-//         where: {
-//             id: { in: removedItemsId }
-//         }
-//     });
-//     const promises = parsedSampleDetails.map(async (panelDetail) => {
-//         const ItemPanel = await tx.ItemPanel.upsert({
-//             where: { panelId_itemId: { panelId: panelDetail.panelId, itemId: sampleData.id } },
-//             update: {},
-//             create: {
-//                 panelId: panelDetail.panelId,
-//                 itemId: sampleData.id,
-//             }
-//         });
-
-//         await tx.ItemPanelProcess.deleteMany({
-//             where: { itemPanelId: ItemPanel.id }
-//         });
-
-//         const processPromises = panelDetail.selectedAddons.map(async (addonId) => {
-//             return await tx.ItemPanelProcess.create({
-//                 data: {
-//                     itemPanelId: ItemPanel.id,
-//                     processId: addonId
-//                 }
-//             });
-//         });
-
-//         return Promise.all(processPromises);
-//     });
-
-//     return Promise.all(promises);
-// }
 
 
 
@@ -237,7 +209,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         return true
     })
 
-    console.log(item, "item");
+    console.log(itemPriceList, "item");
 
     let removedItemsId = removedItems.map(item => parseInt(item.id))
 
@@ -257,11 +229,13 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                 },
 
                 data: {
-
+                    itemId: item?.itemId ? parseInt(item?.itemId) : undefined,
                     sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
                     purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
                     colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
                     salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+                    minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
+
 
                 }
             })
@@ -273,6 +247,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
                     colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
                     salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
+                    minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
 
 
                 }
@@ -286,7 +261,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 async function update(id, body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, salesTaxType, priceMethod, active,
 
-        itemPriceList ,sectionId
+        itemPriceList, sectionId
     } = body
 
 

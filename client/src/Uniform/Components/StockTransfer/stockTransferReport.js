@@ -1,21 +1,3 @@
-// import React from "react";
-// import { useEffect, useState } from "react";
-// import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
-// import { Loader } from "../../../Basic/components";
-// import {
-//   leadHeadings,
-//   leadHeadingsNew,
-//   showEntries,
-// } from "../../../Utils/DropdownData";
-// import secureLocalStorage from "react-secure-storage";
-// import {
-//   findFromList,
-//   getDateFromDateTimeToDisplay,
-//   pageNumberToReactPaginateIndex,
-//   reactPaginateIndexToPageNumber,
-// } from "../../../Utils/helper";
-// import ReactPaginate from "react-paginate";
-
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { reactPaginateIndexToPageNumber } from "../../../Utils/helper";
@@ -219,51 +201,19 @@ const StockTransferReport = ({
 
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                                         <div>Doc No</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+                                   
                                     </th>
                                     <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                                         <div>Doc Date</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+                                    
                                     </th>
                                     <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                                        <div>From Order</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+                                        <div>From Location</div>
+                                     
                                     </th>
                                     <th className="w-28  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                                        <div>To Order</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+                                        <div>To Location</div>
+                            
                                     </th>
                                     <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
@@ -360,9 +310,9 @@ const StockTransferReport = ({
                                                 </td>
                                                 <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
-                                                <td className="py-1.5 text-center"> {dataObj?.fromOrder?.docId || "General"}</td>
+                                                <td className="py-1.5 text-center"> {dataObj?.FromLocation?.storeName}</td>
 
-                                                <td className="py-1.5 text-center"> {dataObj?.toOrder?.docId}</td>
+                                                <td className="py-1.5 text-center"> {dataObj?.ToLocation?.storeName}</td>
                                                 {rowActions && (
                                                     <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                         <div className="flex">
@@ -395,7 +345,6 @@ const StockTransferReport = ({
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                                     </svg>
-                                                                    {/* <span className="text-xs">delete</span> */}
                                                                 </button>
                                                             )}
                                                         </div>

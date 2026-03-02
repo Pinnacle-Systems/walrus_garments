@@ -142,7 +142,9 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "MACHIE WISE PRODUCTION ENTRY": <MachineWiseProduction />,
     "ITEM MASTER": <ItmeMaster />,
     "OPENING STOCK": <OpeningStock />,
-    "SECTION MASTER": <SectionMaster />
+    "SECTION MASTER": <SectionMaster />,
+    "ESTIMATE / QUOTATION": <SectionMaster />
+
 
 
 
