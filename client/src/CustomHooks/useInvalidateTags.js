@@ -49,6 +49,10 @@ const useInvalidateTags = () => {
             type: `stock/invalidateTags`,
             payload: ["Stock"],
         },
+        {
+            type: `ItemControlPanel/invalidateTags`,
+            payload: ["ItemControlPanel"],
+        },
 
     ];
 

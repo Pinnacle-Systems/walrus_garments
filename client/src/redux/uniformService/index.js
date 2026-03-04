@@ -45,5 +45,6 @@ export { default as AccessoryCategoryMasterApi } from "./AccessoryCategoryMaster
 export { default as StockReportControlApi } from "./StockReportControl.Services"
 export { default as AccessoryStockTransferApi } from "./AcessoryStockTransferService"
 export { default as SectionMasterApi } from "./SectionMasterService"
+export { default as ItemControlPanelApi } from "./ItemControlPanelService"
 
 

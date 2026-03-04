@@ -115,4 +115,5 @@ export const ACCESSORT_STOCK_TRANSFER_API = "accessoryStockTransfer"
 export const ACCESSORY_STOCK_API = "accessoryStock"
 export const ACCESSORY_TEMPLATE_API = "accessoryTemplate"
 export const SECTION_API = "section"
+export const ITEM_CONTROL_PANEL_API = "itemControlPanel"
 

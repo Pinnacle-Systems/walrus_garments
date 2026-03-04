@@ -77,7 +77,7 @@ async function getSearch(req) {
 }
 async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active,
-        sectionId
+        sectionId, sectionType, sizeWise, sizeColor
     } = body
     const data = await prisma.item.create({
         data: {
@@ -88,10 +88,7 @@ async function create(body) {
             code: code ? code : undefined,
             sectionId: sectionId ? parseInt(sectionId) : undefined,
             priceMethod: priceMethod ? priceMethod : undefined,
-            // salesPrice: salesPrice ? salesPrice : undefined,
-            // purchasePrice: purchasePrice ? purchasePrice : undefined,
-            // purchaseTaxType: purchaseTaxType ? purchaseTaxType : undefined,
-            // salesTaxType: salesTaxType ? salesTaxType : undefined,
+      
             active: active ? active : undefined,
 
             ItemPriceList: itemPriceList?.length > 0
@@ -261,7 +258,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 async function update(id, body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, salesTaxType, priceMethod, active,
 
-        itemPriceList, sectionId
+        itemPriceList, sectionId, fields, 
     } = body
 
 
@@ -297,12 +294,14 @@ async function update(id, body) {
                 code: code ? code : undefined,
                 sectionId: sectionId ? parseInt(sectionId) : undefined,
                 priceMethod: priceMethod ? priceMethod : undefined,
-
-                // salesPrice: salesPrice ? salesPrice : undefined,
-                // purchasePrice: purchasePrice ? purchasePrice : undefined,
-                // purchaseTaxType: purchaseTaxType ? purchaseTaxType : undefined,
-                // salesTaxType: salesTaxType ? salesTaxType : undefined,
                 active: active ? active : undefined,
+            
+                field1: fields[0] ?? "",
+                field2: fields[1] ?? "",
+                field3: fields[2] ?? "",
+                field4: fields[3] ?? "",
+                field5: fields[4] ?? "",
+
             },
             include: {
                 ItemPriceList: true

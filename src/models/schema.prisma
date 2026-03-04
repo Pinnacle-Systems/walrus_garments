@@ -1867,14 +1867,18 @@ model Stock {
   createdAt                                 DateTime?                                @default(now())
   InwardLotDetails                          InwardLotDetails?                        @relation(fields: [inwardLotDetailsId], references: [id], onDelete: Cascade)
   inwardLotDetailsId                        Int?
+  AccessoryInwardItems                      AccessoryInwardItems?                    @relation(fields: [accessoryInwardItemsId], references: [id])
+  accessoryInwardItemsId                    Int?
+  transactionId                             Int?
+  Party                                     Party?                                   @relation(fields: [supplierId], references: [id])
+  supplierId                                Int?
+  category                                  String?
+  field1                                    String?
+  field2                                  String?
+  field3                                    String?
+  field4                                    String?
+  field5                                    String?
 
-  AccessoryInwardItems   AccessoryInwardItems? @relation(fields: [accessoryInwardItemsId], references: [id])
-  accessoryInwardItemsId Int?
-  transactionId          Int?
-  Party                  Party?                @relation(fields: [supplierId], references: [id])
-  supplierId             Int?
-
-  category String?
 }
 
 model AccessoryStock {
@@ -4802,8 +4806,16 @@ model TermsAndConditionsNew {
 
 model StockReportControl {
   id            Int      @id @default(autoincrement())
-  isStockReport String?  @db.LongText
-  active        Boolean? @default(false)
+  itemWise      Boolean? @default(false)
+  sizeWise      Boolean? @default(false)
+  sizeColorWise Boolean? @default(false)
+  field1        String? 
+  field2        String? 
+  field3        String? 
+  field4        String? 
+  field5        String? 
+
+  active Boolean? @default(false)
 }
 
 model AccessoryTemplate {
@@ -4850,8 +4862,12 @@ model Item {
   active          Boolean  @default(false)
   priceMethod     String?
   Section         Section? @relation(fields: [sectionId], references: [id])
-
-  sectionId Int?
+  sectionId       Int?
+  field1          String?
+  field2          String?
+  field3          String?
+  field4          String?
+  field5          String?
 
   DirectItems               DirectItems[]
   Stock                     Stock[]
@@ -4863,7 +4879,7 @@ model Item {
 
 model ItemPriceList {
   id              Int               @id @default(autoincrement())
-  item            Item?             @relation(fields: [itemId], references: [id],onDelete: Cascade)
+  item            Item?             @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId          Int?
   Color           Color?            @relation(fields: [colorId], references: [id])
   colorId         Int?
@@ -4877,7 +4893,7 @@ model ItemPriceList {
 
 model MinimumStockQty {
   id              Int            @id @default(autoincrement())
-  ItemPriceList   ItemPriceList? @relation(fields: [itemPriceListId], references: [id],onDelete: Cascade)
+  ItemPriceList   ItemPriceList? @relation(fields: [itemPriceListId], references: [id], onDelete: Cascade)
   itemPriceListId Int?
   Location        Location?      @relation(fields: [locationId], references: [id])
   locationId      Int?
@@ -4893,4 +4909,16 @@ model Section {
   stocks            Stock[]
   DirectItems       DirectItems[]
   DirectReturnItems DirectReturnItems[]
+}
+
+model ItemControlPanel {
+  id              Int     @id @default(autoincrement())
+  sectionType     Boolean @default(false)
+  sizeWise        Boolean @default(false)
+  size_color_wise Boolean @default(false)
+  field1          String?
+  field2          String?
+  field3          String?
+  field4          String?
+  field5          String?
 }

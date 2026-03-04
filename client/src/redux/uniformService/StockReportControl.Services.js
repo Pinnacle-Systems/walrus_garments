@@ -65,7 +65,7 @@ const StockReportControlApi = createApi({
             invalidatesTags: ["StockReportControl"],
         }),
         updateStockReportControl: builder.mutation({
-            query: ({ id, body }) => {
+            query: ({ id, ...body }) => {
                 return {
                     url: `${STOCK_REPORT_CONTROL}/${id}`,
                     method: "PUT",

@@ -20,6 +20,7 @@ import Swal from "sweetalert2";
 import BarCodePrintFormat from "./BarcodePrintFormat";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, supplierId, setSupplierId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, directInwardReturnItems, setDirectInwardReturnItems, partyId, setPartyId, onNew, branchList, locationData, supplierList,
   yarnList, colorList, uomList
@@ -64,13 +65,16 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     branchId, companyId
   };
 
-   const storeOptions = locationData ?
+  const storeOptions = locationData ?
     locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(branchId)) :
     [];
 
 
-  const { data: taxTypeList } =
-    useGetTaxTemplateQuery({ params: { ...params } });
+  const { data: storckReportControlData } =
+    useGetStockReportControlQuery({ params: { ...params } });
+
+  console.log(storckReportControlData?.data?.[0], "storckReportControlData");
+
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(supplierId, { skip: !supplierId });
@@ -160,7 +164,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
     payTermId,
     id, userId,
     storeId,
-    directInwardReturnItems : directInwardReturnItems?.filter(i => i.itemId),
+    directInwardReturnItems: directInwardReturnItems?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -233,35 +237,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
   console.log(data, "data")
 
 
-  // const handleSubmitCustom = async (callback, data, text) => {
-  //   try {
-  //     let returnData;
-  //     if (text === "Updated") {
-  //       returnData = await callback(data).unwrap();
-  //     } else {
-  //       returnData = await callback(data).unwrap();
-  //     }
-  //     if (returnData.statusCode === 1) {
-  //       toast.error(returnData.message);
-  //     } else {
-  //       // toast.success(text + "Successfully");
-  //       Swal.fire({
-  //         title: text + "Successfully",
-  //         icon: "success",
-  //         draggable: true,
-  //         timer: 1000,
-  //         showConfirmButton: false,
-  //         didOpen: () => {
-  //           Swal.showLoading();
-  //         }
-  //       });
-  //       setId("")
-  //       syncFormWithDb(undefined)
-  //     }
-  //   } catch (error) {
-  //     console.log("handle");
-  //   }
-  // };
+
 
 
 
@@ -300,29 +276,12 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
         } else {
           toast.error(returnData?.message);
         }
-        // setId()
-        // syncFormWithDb(undefined)
+   
       }
     } catch (error) {
       console.log("handle");
     }
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // const { data: locationData } = useGetLocationMasterQuery({ params: { branchId }, searchParams: searchValue });
-
-
 
   function removeItem(id) {
     setDirectInwardReturnItems(directInwardItems => {
@@ -338,7 +297,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
 
   const saveData = (nextProcess) => {
-            let mandatoryFields = ["itemId", "sizeId", "colorId","uomId","qty","price"];
+    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
 
     if (!validateData(data)) {
 
@@ -350,7 +309,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       });
       return
     }
-    if (!isGridDatasValid((data?.directInwardReturnItems)?.filter(i  => i.itemId), false, mandatoryFields)) {
+    if (!isGridDatasValid((data?.directInwardReturnItems)?.filter(i => i.itemId), false, mandatoryFields)) {
       Swal.fire({
         title: "Please fill all Po Items Mandatory fields...!",
         icon: "warning",
@@ -418,7 +377,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
       >
         <BarCodePrintFormat
           data={directInwardReturnItems}
-          // barCodePerPage={barCodePerPage}
           sizeList={sizeList}
           itemList={itemList}
         />
@@ -467,40 +425,18 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
                 ref={inwardTyperef}
               />
 
-              {/* <DropdownInput name="Po Type"
-                options={YarnMaterial}
-                value={transType}
-                setValue={setTransType}
-                required={true}
-                readOnly={readOnly}
-              /> */}
 
               <DropdownInput name="Branch"
                 options={branchList ? (dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")) : []}
                 value={branchId}
                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                 required={true}
-              // readOnly={ readOnly}
               />
               <DropdownInput name="Location"
                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
                 value={storeId} setValue={setStoreId} required={true}
-              // readOnly={id || readOnly}
               />
-              {/* {(!readOnly && poInwardOrDirectInward == "PurchaseInward" || poInwardOrDirectInward == "GeneralInward") &&
-                < div className="mt-5">
-                  <button className="p-1.5 text-xs bg-lime-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"
-                    onClick={() => {
-                      if (!partyId) {
-                        toast.info("Please Select Suppplier", { position: "top-center" })
-                        return
-                      }
-                      setInwardItemSelection(true)
-                    }}
-                  >Select Items
-                  </button>
-                </div>
-              } */}
+ 
             </div>
 
           </div>
@@ -512,18 +448,7 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
 
               <div className="col-span-2">
 
-                {/* <ReusableSearchableInput
-                  label="Supplier Id"
-                  component="PartyMaster"
-                  placeholder="Search Supplier Id..."
-                  optionList={supplierList?.data}
-                  // onDeleteItem={onDeleteItem}
-                  setSearchTerm={setPartyId}
-                  searchTerm={partyId}
-                  // ref={inputPartyRef}
-                  // nextRef={styleRef}
-                  show={"isSupplier"}
-                /> */}
+
                 <ReusableSearchableInput
                   label="Supplier Id"
                   component="PartyMaster"
@@ -538,7 +463,6 @@ const PurchaseInwardForm = ({ onClose, id, setId, docId, setDocId, date, setDate
               </div>
               <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
               <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
-              {/* <DropdownInput name="Pay Terms" options={dropDownListObject(payTermList ? payTermList?.data : [], "name", "id")} value={payTermId} setValue={(value) => { setPayTermId(value); }} required={true} readOnly={readOnly} /> */}
             </div>
 
           </div>

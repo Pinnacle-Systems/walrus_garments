@@ -51,7 +51,8 @@ import {
   AccessoryCategoryMasterApi,
   StockReportControlApi,
   AccessoryStockTransferApi,
-  SectionMasterApi
+  SectionMasterApi,
+  ItemControlPanelApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -191,6 +192,7 @@ const commonReducers = {
   accessorystock: AccessoryStockApi.reducer,
   accessoryTemplateMaster: AccessoryTemplateMasterApi.reducer,
   SectionMaster: SectionMasterApi.reducer,
+  ItemControlPanel: ItemControlPanelApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -304,7 +306,8 @@ StockReportControlApi.middleware,
 AccessoryStockTransferApi.middleware,
 AccessoryStockApi.middleware,
 AccessoryTemplateMasterApi.middleware,
-SectionMasterApi.middleware
+SectionMasterApi.middleware,
+ItemControlPanelApi.middleware
 ];
 
 

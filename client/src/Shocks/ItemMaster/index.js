@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import { Check, Power } from "lucide-react";
 import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
-import { ItemTypes, PriceMethod, statusDropdown } from "../../Utils/DropdownData";
+import { ItemTypes, statusDropdown } from "../../Utils/DropdownData";
 import { dropDownListObject, multiSelectOption } from "../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
@@ -17,6 +17,7 @@ import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMast
 import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
 
 import { TriangleAlert } from "lucide-react";
+import { useGetItemControlPanelMasterQuery } from "../../redux/uniformService/ItemControlPanelService";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -32,6 +33,8 @@ export default function Form() {
   const [code, setCode] = useState("");
   const [hsnId, setHsnId] = useState('')
   const [salesPrice, setSalesPrice] = useState("")
+  const [priceMethodTypes, setPriceMethodTypes] = useState([])
+
 
   const [purchasePrice, setPurchasePrice] = useState('')
   const [salesTaxType, setSalesTaxType] = useState("")
@@ -47,6 +50,7 @@ export default function Form() {
   const [minStockQty, setMinStockQty] = useState("")
   const [selectedItem, setSelectedItem] = useState({});
   const [gridIndex, setGridIndex] = useState();
+  const [fields, setFields] = useState({});
 
 
   const [contextMenu, setContextMenu] = useState(null);
@@ -109,7 +113,32 @@ export default function Form() {
 
 
 
-  console.log(itemPriceList, 'itemPriceList')
+  const {
+    data: itemControlData, isFetching: itemControlFetching, isLoading: itemControlLoading
+  } = useGetItemControlPanelMasterQuery({ params, searchParams: searchValue });
+
+
+  const AccessItemsColums = itemControlData?.data?.[0];
+
+
+
+  useEffect(() => {
+
+    const methods = [{ show: "STANDARD", value: "STANDARD" }];
+
+    if (AccessItemsColums?.sizeWise) {
+      methods.push({ show: "SIZE WISE", value: "SIZE" });
+    }
+
+    if (AccessItemsColums?.size_color_wise) {
+      methods.push({ show: "SIZE AND COLOR WISE", value: "SIZE_COLOR" });
+    }
+
+    setPriceMethodTypes(methods);
+
+  }, [AccessItemsColums]);
+  console.log(priceMethodTypes, "priceMethodTypes")
+
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -129,6 +158,7 @@ export default function Form() {
         setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
 
+
       } else {
         setName(data?.name ? data?.name : "")
         setCode(data?.code ? data?.code : "")
@@ -144,6 +174,22 @@ export default function Form() {
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
+
+        const initialState = {};
+        itemControlData?.data?.forEach((i) => {
+
+          Object.keys(i)?.filter(key => key.toLowerCase().includes("field") && key !== "id" && !!i[key])?.map(key => {
+            console.log(Object.keys(i), 'Object.keys(i)')
+            initialState[i[key]] = data?.[key];
+          })
+        })
+
+        setFields(initialState)
+
+
+
+
+
 
 
 
@@ -201,7 +247,8 @@ export default function Form() {
     active,
     priceMethod,
     itemPriceList: priceMethod === "STANDARD" && !id ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice, minStockQty }] : itemPriceList,
-    sectionId
+    sectionId,
+    fields: Object.values(fields)
 
   };
 
@@ -566,11 +613,27 @@ export default function Form() {
       firstInputFocus.current.focus();
     }
   }, [form]);
+  useEffect(() => {
+    if (!itemControlData?.data?.length) return;
 
+    const initialState = {};
+    itemControlData?.data?.forEach((i) => {
+      console.log(Object.keys(i)?.filter(key => key.toLowerCase().includes("field") && !!i[key]), "keys");
 
+      Object.keys(i)?.filter(key => key.toLowerCase().includes("field") && !!i[key])?.map(key => {
+        initialState[i[key]] = "";
 
-  console.log(itemPriceList, "itemPriceList");
+      })
+    })
+    // console.log(initialState, "initialState");
 
+    setFields(initialState);
+  }, [itemControlData, itemControlLoading, itemControlFetching]);
+
+  console.log(fields, "fields");
+  function capitalizeFirstLetter(string) {
+    return string?.charAt(0).toUpperCase() + string.slice(1);
+  }
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
@@ -696,7 +759,7 @@ export default function Form() {
 
                     <div className="col-span-2">
                       <TextInputNew1
-                        name="Prefix Code"
+                        name="Item Code"
                         value={code}
                         setValue={setCode}
                         readOnly={readOnly}
@@ -708,22 +771,6 @@ export default function Form() {
 
 
 
-
-                    <div className="col-span-2">
-                      <DropdownInput
-                        name="Section Type"
-                        options={dropDownListObject(
-                          id ? sectionData?.data : sectionData?.data?.filter(item => item.active),
-                          "name",
-                          "id"
-                        )}
-                        value={sectionId}
-                        setValue={setSectionId}
-                        required
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                      />
-                    </div>
 
                     <div className="col-span-1">
                       <DropdownInput
@@ -741,9 +788,55 @@ export default function Form() {
                       />
                     </div>
 
+                    {AccessItemsColums?.sectionType && (
+                      <>
+                        <div className="col-span-2">
+                          <DropdownInput
+                            name="Section Type"
+                            options={dropDownListObject(
+                              id ? sectionData?.data : sectionData?.data?.filter(item => item.active),
+                              "name",
+                              "id"
+                            )}
+                            value={sectionId}
+                            setValue={setSectionId}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                      </>
+                    )}
+
+
+                    {/* <div className="col-span-2">
+
+                    </div> */}
+
+                    {Object.keys(fields).map((key) => (
+                      <div
+                        key={key}
+                        className={`${key.toLowerCase() === "description"
+                          ? "col-span-4"
+                          : "col-span-2"
+                          }`}
+                      >
+                        <TextInputNew1
+                          name={capitalizeFirstLetter(key)}
+                          value={fields[key]}
+                          setValue={(val) =>
+                            setFields((prev) => ({
+                              ...prev,
+                              [key]: val,
+                            }))
+                          }
+                          width="w-full px-2"
+                        />
+                      </div>
+                    ))}
                     <div className="col-span-1 mt-5">
                       <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
                     </div>
 
 
@@ -758,7 +851,7 @@ export default function Form() {
                           <div className="col-span-3">
                             <DropdownInput
                               name="Price Method"
-                              options={PriceMethod}
+                              options={priceMethodTypes}
                               value={priceMethod}
                               setValue={(value) => {
                                 setPriceMethod(value)
@@ -862,7 +955,7 @@ export default function Form() {
                         {priceMethod != "STANDARD" && (
                           <>
                             <div className="grid grid-cols-12 gap-3 ">
-                              <div className="col-span-8 w-full h-[300px] ">
+                              <div className={`col-span-8 w-full ${Object.keys(fields).length > 1 ? " h-[220px]" : " h-[300px]"} `}>
                                 <div className={` relative overflow-y-auto py-1 h-full`}>
                                   <table className="w-full border-collapse table-fixed ">
                                     <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
@@ -1092,6 +1185,7 @@ export default function Form() {
 
 
                   </div>
+
                 </fieldset>
 
               </div>
@@ -1110,8 +1204,9 @@ export default function Form() {
 
 
           </div>
-        </Modal>
-      )}
-    </div>
+        </Modal >
+      )
+      }
+    </div >
   );
 }

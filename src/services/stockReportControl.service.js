@@ -5,7 +5,6 @@ async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.StockReportControl.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         }
     });
@@ -44,11 +43,19 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { isStockReport } = await body
+    const { itemWise, sizeWise, sizeColorWise, stockReports, id } = await body
     const data = await prisma.StockReportControl.create(
         {
             data: {
-                isStockReport
+                itemWise: itemWise ? Boolean(itemWise) : false,
+                sizeWise: sizeWise ? Boolean(sizeWise) : false,
+                sizeColorWise: sizeColorWise ? Boolean(sizeColorWise) : false,
+                field1: stockReports?.field1 ? stockReports?.field1 : "",
+                field2: stockReports?.field2 ? stockReports?.field2 : "",
+                field3: stockReports?.field3 ? stockReports?.field3 : "",
+                field4: stockReports?.field4 ? stockReports?.field4 : "",
+                field5: stockReports?.field5 ? stockReports?.field5 : "",
+
             }
         }
     )
@@ -56,7 +63,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { isStockReport } = await body
+    const { itemWise, sizeWise, sizeColorWise, stockReports } = await body
     const dataFound = await prisma.StockReportControl.findUnique({
         where: {
             id: parseInt(id)
@@ -69,7 +76,14 @@ async function update(id, body) {
         },
         data:
         {
-          isStockReport
+            itemWise: itemWise ? Boolean(itemWise) : false,
+            sizeWise: sizeWise ? Boolean(sizeWise) : false,
+            sizeColorWise: sizeColorWise ? Boolean(sizeColorWise) : false,
+            field1: stockReports?.field1 ? stockReports?.field1 : "",
+            field2: stockReports?.field2 ? stockReports?.field2 : "",
+            field3: stockReports?.field3 ? stockReports?.field3 : "",
+            field4: stockReports?.field4 ? stockReports?.field4 : "",
+            field5: stockReports?.field5 ? stockReports?.field5 : "",
         },
     })
     return { statusCode: 0, data };

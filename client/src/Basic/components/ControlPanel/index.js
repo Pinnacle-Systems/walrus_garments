@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import BranchIdSettings from './BranchIdSettings';
 import StockReport from './StockReport';
+import ItemSettings from './ItemSettings';
 
 const UserRoles = () => {
     const [activeNavBar, setActiveNavBar] = useState("Item");
@@ -17,6 +18,8 @@ const UserRoles = () => {
                 return <BranchIdSettings />
             case "Stock Maintenance":
                 return <StockReport />
+            case "Item":
+                return <ItemSettings />
             default:
                 return ""
         }
