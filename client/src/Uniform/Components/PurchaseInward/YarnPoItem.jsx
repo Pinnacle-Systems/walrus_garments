@@ -150,19 +150,14 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                     <input
                         readOnly
                         className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                    // onKeyDown={(e) => {
-                    //     if (e.key === "Enter") {
-                    //         e.preventDefault();
-                    //         addNewRow();
-                    //     }
-                    // }}
-
                     />
                 </td>
-
             </tr>
         </>
     )
 }
 
 export default PurchaseYarnPoItems;
+
+
+

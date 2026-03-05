@@ -4,9 +4,8 @@ import { useAddItemControlPanelMasterMutation, useDeleteItemControlPanelMasterMu
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
-import Loader from "../Loader";
 
-const ItemSettings = () => {
+const TransactionSettings = () => {
 
     const [id, setId] = useState("")
     const [sectionType, setSectionType] = useState(false)
@@ -127,15 +126,13 @@ const ItemSettings = () => {
 
     }
 
-    if (isLoading || isFetching || isSingleLoading || isSingleFetching ) return <Loader />
-
 
     return (
         <>
             <div className="bg-white">
                 <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-4 p-5 space-y-9 w-full  ">
-                        <h1 className="border-b border-gray-400 p-2">Item Settings </h1>
+                    {/* <div className="col-span-4 p-5 space-y-9 w-full  ">
+                        <h1 className="border-b border-gray-400 p-2">HEADER </h1>
                         <div className="flex flex-row gap-5 ">
                             <input
                                 className="border border-gray-500 py-1 px-1"
@@ -146,83 +143,20 @@ const ItemSettings = () => {
                             <span className="font-bold ">Section Type</span>
 
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold text-gray-600 mb-5  ">
-                                Price Method
-                            </p>
+                 
 
-                            <div className="space-y-3">
-                                <div className="flex flex-row gap-5 ">
-                                    <input
-                                        className="border border-gray-500 py-1 px-1"
-                                        type="checkbox"
-                                        onChange={(e) => setSizeWise(e.target.checked)}
-                                        checked={sizeWise}
-                                    />
-                                    <span className="font-bold ">Size Wise</span>
-
-                                </div>
-
-                                <div className="flex flex-row gap-5 ">
-                                    <input
-                                        className="border border-gray-500 py-1 px-1"
-                                        type="checkbox"
-                                        onChange={(e) => setSizeColor(e.target.checked)}
-                                        checked={sizeColor}
-                                    />
-                                    <span className="font-bold ">Size & color Wise</span>
-
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+                    </div> */}
                     <div className="col-span-4 p-5 space-y-9 w-full ">
-                        <h1 className="border-b border-gray-400 p-2">Item Custom Fields </h1>
+                        <h1 className="border-b border-gray-400 p-2">TABLE FIELDS</h1>
                         <div className="flex flex-row gap-5 ">
-                            <span className="font-bold mt-2">Field 1</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField1(e.target.value)}
-                                value={field1}
+                                type="checkbox"
+                                onChange={(e) => setSectionType(e.target.checked)}
+                                checked={sectionType}
                             />
-                        </div>
-                        <div className="flex flex-row gap-5">
-                            <span className="font-bold mt-2">Field 2</span>
-                            <input
-                                className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField2(e.target.value)}
-                                value={field2}
+                            <span className="font-bold ">Section Type</span>
 
-                            />
-                        </div>
-                        <div className="flex flex-row gap-5">
-                            <span className="font-bold mt-2">Field 3</span>
-                            <input
-                                className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField3(e.target.value)}
-                                value={field3}
-
-
-                            />
-                        </div>
-                        <div className="flex flex-row gap-5">
-                            <span className="font-bold mt-2">Field 4</span>
-                            <input
-                                className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField4(e.target.value)}
-                                value={field4}
-
-                            />
-                        </div>
-                        <div className="flex flex-row gap-5">
-                            <span className="font-bold mt-2">Field 5</span>
-                            <input
-                                className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField5(e.target.value)}
-                                value={field5}
-
-                            />
                         </div>
                     </div>
 
@@ -242,4 +176,4 @@ const ItemSettings = () => {
     )
 }
 
-export default ItemSettings;
+export default TransactionSettings;

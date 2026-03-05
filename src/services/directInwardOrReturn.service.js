@@ -1277,15 +1277,26 @@ async function createDirectInwardReturnItems(tx, directInwardOrReturnId, directI
 
 
 
-                gaugeId: item["gaugeId"] ? parseInt(item["gaugeId"]) : undefined,
-                loopLengthId: item["loopLengthId"] ? parseInt(item["loopLengthId"]) : undefined,
-                gsmId: item["gsmId"] ? parseInt(item["gsmId"]) : undefined,
-                kDiaId: item["kDiaId"] ? parseInt(item["kDiaId"]) : undefined,
-                fDiaId: item["fDiaId"] ? parseInt(item["fDiaId"]) : undefined,
+                field1: item["field1"] ? (item["field1"]) : undefined,
+                field2: item["field2"] ? (item["field2"]) : undefined,
+                field3: item["field3"] ? (item["field3"]) : undefined,
+                field4: item["field4"] ? (item["field4"]) : undefined,
+                field5: item["field5"] ? (item["field5"]) : undefined,
+                field6: item["field6"] ? (item["field6"]) : undefined,
+                field7: item["field7"] ? (item["field7"]) : undefined,
+                field8: item["field8"] ? (item["field8"]) : undefined,
+                field9: item["field9"] ? (item["field9"]) : undefined,
+                field10: item["field10"] ? (item["field10"]) : undefined,
+
+
+
                 noOfBags: item["noOfBags"] ? parseInt(item["noOfBags"]) : 0,
                 poItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                 poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
+
+
+
 
             }
         })
@@ -1437,7 +1448,16 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 price: item["price"] ? parseFloat(item["price"]) : 0,
                 sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
 
-
+                field1: item["field1"] ? (item["field1"]) : undefined,
+                field2: item["field2"] ? (item["field2"]) : undefined,
+                field3: item["field3"] ? (item["field3"]) : undefined,
+                field4: item["field4"] ? (item["field4"]) : undefined,
+                field5: item["field5"] ? (item["field5"]) : undefined,
+                field6: item["field6"] ? (item["field6"]) : undefined,
+                field7: item["field7"] ? (item["field7"]) : undefined,
+                field8: item["field8"] ? (item["field8"]) : undefined,
+                field9: item["field9"] ? (item["field9"]) : undefined,
+                field10: item["field10"] ? (item["field10"]) : undefined,
 
 
             }
@@ -1464,10 +1484,20 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 price: item["price"] ? parseFloat(item["price"]) : 0,
                 sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
 
+                field1: item["field1"] ? (item["field1"]) : undefined,
+                field2: item["field2"] ? (item["field2"]) : undefined,
+                field3: item["field3"] ? (item["field3"]) : undefined,
+                field4: item["field4"] ? (item["field4"]) : undefined,
+                field5: item["field5"] ? (item["field5"]) : undefined,
+                field6: item["field6"] ? (item["field6"]) : undefined,
+                field7: item["field7"] ? (item["field7"]) : undefined,
+                field8: item["field8"] ? (item["field8"]) : undefined,
+                field9: item["field9"] ? (item["field9"]) : undefined,
+                field10: item["field10"] ? (item["field10"]) : undefined,
             }
         })
 
-     await   createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
+        await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
         // await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id, partyId)
 
     }

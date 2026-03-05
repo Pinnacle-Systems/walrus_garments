@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `directinwardorreturn` ADD COLUMN `field1` VARCHAR(191) NULL,
+    ADD COLUMN `field2` VARCHAR(191) NULL,
+    ADD COLUMN `field3` VARCHAR(191) NULL,
+    ADD COLUMN `field4` VARCHAR(191) NULL,
+    ADD COLUMN `field5` VARCHAR(191) NULL;

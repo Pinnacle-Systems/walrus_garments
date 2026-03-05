@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 
 const YarnPoItems = ({
     id,
@@ -27,10 +28,17 @@ const YarnPoItems = ({
     itemList,
     sizeList
 }) => {
+
+
+    const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
+
+    console.log(allData?.data, "allData")
+
+
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
-    const [currentSelectedIndex, setCurrentSelectedIndex] = useState("")
 
     const handleInputChange = (value, index, field) => {
+        console.log(value, "value", index, "index", field, "field")
         const newBlend = structuredClone(poItems);
         if (field == "itemId") {
             const sectionId = findFromList(value, itemList?.data, "sectionId")
@@ -40,9 +48,11 @@ const YarnPoItems = ({
 
         newBlend[index][field] = value;
 
-        console.log(newBlend, "newBlend");
         setPoItems(newBlend);
     };
+
+    console.log(poItems, "poItems",);
+
 
     useEffect(() => {
         if (id) return
@@ -314,7 +324,21 @@ const YarnPoItems = ({
                                 >
                                     UOM
                                 </th>
-
+                                {allData?.data?.map(element => (
+                                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                                        <>
+                                            <th
+                                                key={i}
+                                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                {element?.[i]}
+                                            </th>
+                                            {console.log(element?.[i], 'element')}
+                                            {console.log(i, 'iiiiiiiiiiii')}
+                                        </>
+                                    ))
+                                ))}
 
                                 <th
 
@@ -336,6 +360,7 @@ const YarnPoItems = ({
                                 >
                                     Gross
                                 </th>
+
 
                                 <th
 
@@ -445,7 +470,36 @@ const YarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
-
+                                    {allData?.data?.map(element => (
+                                        // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                                        Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                                            <>
+                                                <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                                    <input
+                                                        onKeyDown={e => {
+                                                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                            if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
+                                                        }}
+                                                  
+                                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                        onFocus={(e) => e.target.select()}
+                                                        // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
+                                                        value={row[i]}
+                                                        // disabled={readOnly || !row.uomId}
+                                                        onChange={(e) =>
+                                                            handleInputChange(e.target.value, index, i)
+                                                        }
+                                                        onBlur={(e) => {
+                                                            handleInputChange(e.target.value.toFixed(3),index, i);
+                                                        }
+                                                        }
+                                                    />
+                                                </td>
+                                                {console.log(element?.[i], 'element')}
+                                                {console.log(i, 'iiiiiiiiiiii')}
+                                            </>
+                                        ))
+                                    ))}
 
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input

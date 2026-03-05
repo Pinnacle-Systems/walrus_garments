@@ -55,7 +55,11 @@ async function create(body) {
                 field3: stockReports?.field3 ? stockReports?.field3 : "",
                 field4: stockReports?.field4 ? stockReports?.field4 : "",
                 field5: stockReports?.field5 ? stockReports?.field5 : "",
-
+                field6: field6 ? field6 : "",
+                field7: field7 ? field7 : "",
+                field8: field8 ? field8 : "",
+                field9: field9 ? field9 : "",
+                field10: field10 ? field10 : "",
             }
         }
     )
@@ -84,6 +88,11 @@ async function update(id, body) {
             field3: stockReports?.field3 ? stockReports?.field3 : "",
             field4: stockReports?.field4 ? stockReports?.field4 : "",
             field5: stockReports?.field5 ? stockReports?.field5 : "",
+            field6: field6 ? field6 : "",
+            field7: field7 ? field7 : "",
+            field8: field8 ? field8 : "",
+            field9: field9 ? field9 : "",
+            field10: field10 ? field10 : "",
         },
     })
     return { statusCode: 0, data };

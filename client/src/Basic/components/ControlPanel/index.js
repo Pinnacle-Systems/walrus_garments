@@ -2,24 +2,27 @@ import React, { useState } from 'react'
 import BranchIdSettings from './BranchIdSettings';
 import StockReport from './StockReport';
 import ItemSettings from './ItemSettings';
+import TransactionSettings from './TransactionsSettings';
 
 const UserRoles = () => {
     const [activeNavBar, setActiveNavBar] = useState("Item");
 
     const subMenus = [
         // "Id Card Settings",
-        "Item",
-        "Stock Maintenance"
+        "ITEM",
+        "STOCK",
+
     ]
 
     const getShowSubMenu = () => {
         switch (activeNavBar) {
             case "Id Card Settings":
                 return <BranchIdSettings />
-            case "Stock Maintenance":
+            case "STOCK":
                 return <StockReport />
-            case "Item":
+            case "ITEM":
                 return <ItemSettings />
+    
             default:
                 return ""
         }

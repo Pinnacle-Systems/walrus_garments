@@ -90,7 +90,7 @@ async function update(id, body) {
             field2: field2 ? field2 : '',
             field3: field3 ? field3 : "",
             field4: field4 ? field4 : "",
-            field5: field5 ? field5 : ""
+            field5: field5 ? field5 : "",
 
         },
     })
