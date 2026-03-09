@@ -13,39 +13,19 @@ import { toast } from 'react-toastify';
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
 import YarnPoItem from './YarnPoItem';
 import Swal from 'sweetalert2';
+import { useGetStockReportControlQuery } from '../../../redux/uniformService/StockReportControl.Services';
 
 
 const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, id, deleteRow, handleEdit, contextMenu,
     handleDeleteRow, handleCloseContextMenu, handleDeleteAllRows, handleRightClick,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, yarnList, colorList, uomList, setSupplierId
+    branchdata, yarnList, colorList, uomList, params
 }) => {
-    // useEffect(() => {
-    //     if (directInwardReturnItems?.length >= 1) return
-    //     setDirectInwardReturnItems(prev => {
-    //         let newArray = Array.from({ length: 1 - prev.length }, () => {
-    //             return {
-    //                 yarnNeedleId: "", machineId: "", fiberContentId: "", description: "", socksMaterialId: "",
-    //                 measurements: "", sizeId: "", styleId: "", legcolorId: "", footcolorId: "",
-    //                 stripecolorId: "", noOfStripes: "0", qty: "0", socksTypeId: ""
-    //             }
-    //         })
-    //         return [...prev, ...newArray]
-    //     }
-    //     )
-    // }, [setDirectInwardReturnItems, directInwardReturnItems])
 
 
-    // const handleInputChange = (value, index, field) => {
-    //     const newBlend = structuredClone(directInwardReturnItems);
-    //     newBlend[index][field] = value;
-    //     if (field !== "inwardQty" && newBlend[index]["noOfBags"] && newBlend[index]["weightPerBag"]) {
-    //         let tempInwardQty = (parseFloat(newBlend[index]["noOfBags"]) * parseFloat(newBlend[index]["weightPerBag"])).toFixed(3)
-    //         newBlend[index]["inwardQty"] = tempInwardQty
-    //     }
-    //     setDirectInwardReturnItems(newBlend);
-    // };
+    const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
+
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined, poItemsId) => {
         console.log(poItem, "poItempoItem", poItemsId)
@@ -159,6 +139,21 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 >
                                     UOM
                                 </th>
+                                {allData?.data?.map(element => (
+                                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                                        <>
+                                            <th
+                                                key={i}
+                                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                {element?.[i]}
+                                            </th>
+                                            {console.log(element?.[i], 'element')}
+                                            {console.log(i, 'iiiiiiiiiiii')}
+                                        </>
+                                    ))
+                                ))}
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -216,7 +211,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 item={item} index={index} handleInputChange={handleInputChange}
                                 handleRightClick={handleRightClick} setDirectInwardReturnItems={setDirectInwardReturnItems}
                                 readOnly={readOnly}
-                                directInwardReturnItems={directInwardReturnItems}
+                                directInwardReturnItems={directInwardReturnItems} allData={allData}
                             />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                 <tr className='w-full font-bold h-8 border border-gray-400 table-row'>

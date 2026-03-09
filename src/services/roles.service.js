@@ -82,7 +82,7 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            name,purchasePrice,purchaseDepartment,
+            name,
             companyId: parseInt(companyId),
             active: active,
             RoleOnPage: {

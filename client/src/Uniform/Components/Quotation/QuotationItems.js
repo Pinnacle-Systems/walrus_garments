@@ -9,12 +9,13 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
-const YarnPoItems = ({
+const QuotationItems = ({
     id,
     transType,
-    poItems,
-    setPoItems,
+    quoteItems,
+    setQuoteItems,
     readOnly,
     params,
     isSupplierOutside,
@@ -30,16 +31,14 @@ const YarnPoItems = ({
 }) => {
 
 
-    const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
 
-    console.log(allData?.data, "allData")
 
 
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
 
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
-        const newBlend = structuredClone(poItems);
+        const newBlend = structuredClone(quoteItems);
         if (field == "itemId") {
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
@@ -48,16 +47,16 @@ const YarnPoItems = ({
 
         newBlend[index][field] = value;
 
-        setPoItems(newBlend);
+        setQuoteItems(newBlend);
     };
 
-    console.log(poItems, "poItems",);
+    console.log(quoteItems, "poItems",);
 
 
     useEffect(() => {
         if (id) return
-        if (poItems?.length >= 9) return;
-        setPoItems((prev) => {
+        if (quoteItems?.length >= 9) return;
+        setQuoteItems((prev) => {
             let newArray = Array.from({ length: 9 - prev.length }, (i) => {
                 return {
                     itemId: "",
@@ -76,7 +75,7 @@ const YarnPoItems = ({
             });
             return [...prev, ...newArray];
         });
-    }, [transType, setPoItems, poItems]);
+    }, [transType, setQuoteItems, quoteItems]);
 
     const addNewRow = () => {
         const newRow = {
@@ -91,15 +90,15 @@ const YarnPoItems = ({
             id: '',
             poItemsId: ""
         };
-        setPoItems([...poItems, newRow]);
+        setQuoteItems([...quoteItems, newRow]);
     };
     const handleDeleteRow = (id) => {
-        setPoItems((yarnBlend) =>
+        setQuoteItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
     };
     const handleDeleteAllRows = () => {
-        setPoItems((prevRows) => {
+        setQuoteItems((prevRows) => {
             if (prevRows.length <= 1) return prevRows;
             return [prevRows[0]];
         });
@@ -111,8 +110,7 @@ const YarnPoItems = ({
     const { data: yarnList } = useGetYarnMasterQuery({ params });
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
-    // const { data: itemList } = useGetItemMasterQuery({ params });
-    // const { data: sizeList } = useGetSizeMasterQuery({ params });
+    const { data: hsnList } = useGetHsnMasterQuery({ params });
 
 
     function findYarnTax(id) {
@@ -124,7 +122,7 @@ const YarnPoItems = ({
     }
 
     function getTotals(field) {
-        const total = poItems.reduce((accumulator, current) => {
+        const total = quoteItems.reduce((accumulator, current) => {
             return accumulator + parseFloat(current[field] ? current[field] : 0);
         }, 0);
         return parseFloat(total);
@@ -158,7 +156,7 @@ const YarnPoItems = ({
         }
     };
     const getFinalAmountAfterDiscount = () => {
-        return poItems.reduce((acc, row) => {
+        return quoteItems.reduce((acc, row) => {
             const price = parseFloat(row.price) || 0;
             const tax = parseFloat(row.tax) || 0;
             const qty = parseFloat(row.qty) || 0;
@@ -186,7 +184,7 @@ const YarnPoItems = ({
         dispatch(push({ name: masterName }));
     }
     function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
-        setPoItems(poItems => {
+        setQuoteItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"][lotIndex][field] = value;
@@ -217,7 +215,7 @@ const YarnPoItems = ({
         });
     }
     function addNewLotNo(index, weightPerBag) {
-        setPoItems(poItems => {
+        setQuoteItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]) return poItems
             if (newBlend[index]["lotDetails"]) {
@@ -231,15 +229,15 @@ const YarnPoItems = ({
         })
     }
     function removeLotNo(index, lotIndex) {
-        setPoItems(poItems => {
+        setQuoteItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"] = newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex)
             return newBlend
         })
     }
-    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? poItems[currentSelectedLotGrid] : ""
-    let taxItems = poItems?.map(item => {
+    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? quoteItems[currentSelectedLotGrid] : ""
+    let taxItems = quoteItems?.map(item => {
         let newItem = structuredClone(item)
         newItem["qty"] = sumArray(newItem.lotDetails, "qty")
         return newItem
@@ -260,10 +258,10 @@ const YarnPoItems = ({
 
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[330px]">
+            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[380px]">
                 <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-bold text-slate-700">List Of Inward Items</h2>
-                    {/* <button className="font-bold text-slate-700 "
+                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+                    <button className="font-bold text-slate-700 bord"
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
@@ -287,14 +285,14 @@ const YarnPoItems = ({
                             }
                         }}
                     >
-                        Fill Inward Items
-                    </button> */}
+                        {/* Fill  Items */}
+                    </button>
 
                 </div>
-                <div className={` relative w-full h-[250px] overflow-y-auto py-1`}>
+                <div className={` relative w-full h-[300px] overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky">
-                            <tr className="py-2">
+                            <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
@@ -320,24 +318,17 @@ const YarnPoItems = ({
                                 </th>
                                 <th
 
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Hsn
+                                </th>
+                                <th
+
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
                                 </th>
-                                {allData?.data?.map(element => (
-                                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
-                                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
-                                        <>
-                                            <th
-                                                key={i}
-                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
-                                            >
-                                                {capitalizeFirstLetter(element?.[i])}
-                                            </th>
 
-                                        </>
-                                    ))
-                                ))}
 
                                 <th
 
@@ -372,7 +363,7 @@ const YarnPoItems = ({
 
                         <tbody>
 
-                            {(poItems ? poItems : [])?.map((row, index) =>
+                            {(quoteItems ? quoteItems : [])?.map((row, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer "
                                     onContextMenu={(e) => {
                                         if (!readOnly) {
@@ -402,7 +393,7 @@ const YarnPoItems = ({
                                     </td>
                                     {/* {console.log(row,"row")} */}
 
-                                    <td className=" border border-gray-300 text-[11px] py-0.5">
+                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
                                             tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
@@ -446,6 +437,27 @@ const YarnPoItems = ({
                                     </td>
 
 
+                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                        <select
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
+                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
+                                            onBlur={(e) => {
+                                                handleInputChange((e.target.value), index, "colorId")
+                                            }
+                                            }
+                                            disabled={readOnly || !row.sizeId}
+
+                                        >
+                                            <option hidden>
+                                            </option>
+                                            {(id ? hsnList?.data : hsnList?.data)?.map((blend) =>
+                                                <option value={blend.id} key={blend.id}>
+                                                    {blend?.name}
+                                                </option>
+                                            )}
+                                        </select>
+                                    </td>
 
 
                                     <td className="w-40 border border-gray-300 text-[11px] py-0.5">
@@ -456,7 +468,7 @@ const YarnPoItems = ({
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
                                             }
-                                            disabled={readOnly}
+                                            disabled={readOnly || !row.colorId}
 
                                         >
 
@@ -469,36 +481,7 @@ const YarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
-                                    {allData?.data?.map(element => (
-                                        // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
-                                        Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
-                                            <>
-                                                <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
-                                                    <input
-                                                        onKeyDown={e => {
-                                                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                            if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
-                                                        }}
 
-                                                        className="text-right rounded py-1 px-1 w-full table-data-input"
-                                                        onFocus={(e) => e.target.select()}
-                                                        // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                                        value={row[i]}
-                                                        // disabled={readOnly || !row.uomId}
-                                                        onChange={(e) =>
-                                                            handleInputChange(e.target.value, index, i)
-                                                        }
-                                                        onBlur={(e) => {
-                                                            handleInputChange(e.target.value.toFixed(3), index, i);
-                                                        }
-                                                        }
-                                                    />
-                                                </td>
-                                                {console.log(element?.[i], 'element')}
-                                                {console.log(i, 'iiiiiiiiiiii')}
-                                            </>
-                                        ))
-                                    ))}
 
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input
@@ -620,4 +603,4 @@ const YarnPoItems = ({
     );
 };
 
-export default YarnPoItems;
+export default QuotationItems;

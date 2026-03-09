@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import YarnDirectItem from './YarnDirectItem';
+import { capitalizeFirstLetter } from '../../../Utils/helper';
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList,
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList,stockControlData ,storeId
 
 }) => {
 
@@ -52,7 +53,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
         )
     }, [setDirectInwardReturnItems, directInwardReturnItems])
 
- const addNewRow = () => {
+    const addNewRow = () => {
         const newRow = {
             itemId: "",
             qty: "",
@@ -72,7 +73,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
         <>
             <div className=" rounded-md shadow-sm h-full">
 
-                <div className={` w-full h-[310px]  overflow-auto py-1`}>
+                <div className={` w-full h-[310px]  overflow-auto overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed ">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky" >
                             <tr>
@@ -81,12 +82,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     S.No
                                 </th>
-                                <th
-
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Inward No
-                                </th>
+                   
                                 <th
 
                                     className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
@@ -111,6 +107,19 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     UOM
                                 </th>
+                                {stockControlData?.data?.map(element => (
+                                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                                        <>
+                                            <th
+                                                key={i}
+                                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                            >
+                                                {capitalizeFirstLetter(element?.[i])}
+                                            </th>
+                                         
+                                        </>
+                                    ))
+                                ))}
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -144,7 +153,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     Gross
                                 </th>
-                    
+
 
                             </tr>
                         </thead>
@@ -153,10 +162,10 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                             {(directInwardReturnItems || [])?.map((item, index) => <YarnDirectItem itemList={itemList} uomList={uomList}
                                 colorList={colorList} deleteRow={deleteRow}
                                 sizeList={sizeList}
-                                key={item.poItemsId}
+                                key={item.poItemsId} storeId={storeId}
                                 item={item} index={index} handleInputChange={handleInputChange}
                                 readOnly={readOnly}
-                                handleRightClick={handleRightClick} addNewRow={addNewRow}
+                                handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData}
                             />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                 <tr className='w-12 border border-gray-300 text-[11px]  h-8 text-center p-0.5'>

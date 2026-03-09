@@ -164,6 +164,7 @@ model Branch {
   AccessoryReturn                        AccessoryReturn[]
   AccessoryBillEntry                     AccessoryBillEntry[]
   AccessoryStock                         AccessoryStock[]
+  Quotation                              Quotation[]
 }
 
 model UserOnBranch {
@@ -296,6 +297,8 @@ model User {
   AccessoryBillEntryUpdateBy          AccessoryBillEntry[]         @relation(name: "updatedBy")
   AccessoyStockTransferCreatedBy      AccessoyStockTransfer[]      @relation(name: "createdBy")
   AccessoyStockTransferUpdateBy       AccessoyStockTransfer[]      @relation(name: "updatedBy")
+  QuotationCreatedBy                  Quotation[]                  @relation(name: "createdBy")
+  QuotationTransferUpdateBy           Quotation[]                  @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -487,10 +490,12 @@ model Currency {
 }
 
 model Party {
-  id                  Int       @id @default(autoincrement())
-  isSupplier          Boolean?  @default(false)
-  isClient            Boolean?  @default(false)
-  isBuyer             Boolean?  @default(false)
+  id         Int      @id @default(autoincrement())
+  isSupplier Boolean? @default(false)
+  isClient   Boolean? @default(false)
+  isBuyer    Boolean? @default(false)
+  isBranch   Boolean? @default(false)
+
   name                String
   aliasName           String?
   code                String?
@@ -603,6 +608,7 @@ model Party {
   AccessoryBillEntry       AccessoryBillEntry[]
   stocks                   Stock[]
   AccessoryStock           AccessoryStock[]
+  Quotation                Quotation[]
 }
 
 model PartyBranch {
@@ -757,6 +763,7 @@ model Hsn {
   Accessory        Accessory[]
   AccessoryPoItems AccessoryPoItems[]
   Item             Item[]
+  QuotationItems   QuotationItems[]
 }
 
 model YarnBlend {
@@ -1072,6 +1079,7 @@ model Color {
   ItemPriceList                 ItemPriceList[]
   FromLocationTransferItems     FromLocationTransferItems[]
   ToLocationTransferTtems       ToLocationTransferTtems[]
+  QuotationItems                QuotationItems[]
 }
 
 model UnitOfMeasurement {
@@ -1117,6 +1125,7 @@ model UnitOfMeasurement {
   AccessoryRaiseIndentItems                 AccessoryRaiseIndentItems[]
   AccessoryMaterialIssueItems               AccessoryMaterialIssueItems[]
   OrderAccessoryDetails                     OrderAccessoryDetails[]
+  QuotationItems                            QuotationItems[]
 }
 
 enum DeliveryType {
@@ -1791,6 +1800,7 @@ model Size {
   ItemPriceList                             ItemPriceList[]
   FromLocationTransferItems                 FromLocationTransferItems[]
   ToLocationTransferTtems                   ToLocationTransferTtems[]
+  QuotationItems                            QuotationItems[]
 }
 
 model SocksMaterial {
@@ -1887,11 +1897,11 @@ model Stock {
   field3                                    String?
   field4                                    String?
   field5                                    String?
-  field6        String?
-  field7        String?
-  field8        String?
-  field9        String?
-  field10       String?
+  field6                                    String?
+  field7                                    String?
+  field8                                    String?
+  field9                                    String?
+  field10                                   String?
 }
 
 model AccessoryStock {
@@ -4535,7 +4545,7 @@ model DirectReturnItems {
   field8                     String?
   field9                     String?
   field10                    String?
-  sectionId Int?
+  sectionId                  Int?
 }
 
 model AccessoryReturn {
@@ -4901,6 +4911,7 @@ model Item {
   DirectReturnItems         DirectReturnItems[]
   FromLocationTransferItems FromLocationTransferItems[]
   ToLocationTransferTtems   ToLocationTransferTtems[]
+  QuotationItems            QuotationItems[]
 }
 
 model ItemPriceList {
@@ -4947,4 +4958,40 @@ model ItemControlPanel {
   field3          String?
   field4          String?
   field5          String?
+}
+
+model Quotation {
+  id             Int              @id @default(autoincrement())
+  docId          String?
+  createdAt      DateTime?        @default(now())
+  updatedAt      DateTime?        @updatedAt
+  createdBy      User?            @relation("createdBy", fields: [createdById], references: [id])
+  createdById    Int?
+  updatedBy      User?            @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById    Int?
+  Branch         Branch?          @relation(fields: [branchId], references: [id])
+  branchId       Int?
+  Party          Party?           @relation(fields: [customerId], references: [id])
+  customerId     Int?
+  discountType   String?
+  discountValue  String?
+  QuotationItems QuotationItems[]
+}
+
+model QuotationItems {
+  id          Int                @id @default(autoincrement())
+  Quotation   Quotation?         @relation(fields: [quotationId], references: [id])
+  quotationId Int?
+  Item        Item?              @relation(fields: [itemId], references: [id])
+  itemId      Int?
+  Size        Size?              @relation(fields: [sizeId], references: [id])
+  sizeId      Int?
+  Color       Color?             @relation(fields: [colorId], references: [id])
+  colorId     Int?
+  Uom         UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId       Int?
+  Hsn         Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId       Int?
+  qty         String?
+  price       String?
 }

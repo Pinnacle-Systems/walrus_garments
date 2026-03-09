@@ -121,111 +121,21 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const [bankBranchName, setBankBranchName] = useState("");
   const [ifscCode, setIfscCode] = useState("");
 
-  const [branchModelOpen, setBranchModelOpen] = useState(false);
-  const [branchName, setBranchName] = useState("");
-  const [branchCode, setBranchCode] = useState("");
-  const [branchAddress, setBranchAddress] = useState("");
-  const [branchContact, setBranchContact] = useState("");
-  const [branchContactPerson, setBranchcontactPerson] = useState("");
-  const [branchEmail, setBranchEmail] = useState("");
-  const [openingHours, setopeningHours] = useState("")
-  const [branchWebsite, setBranchWebsite] = useState("")
-  const [branchAliasName, setBranchAliasName] = useState('');
-  const [branchActive, setBranchActive] = useState(true);
-  const [branchCity, setBranchCity] = useState('');
-  const [branchLandMark, setBranchLandMark] = useState('');
-  const [branchPincode, setBranchPincode] = useState('');
-  const [branchContactDesignation, setBranchcontactDesignation] = useState('');
-  const [branchContactDepartment, setBranchcontactDepartment] = useState('');
-  const [branchContactPersonContact, setBranchContactPersonContact] = useState('');
-  const [branchContactPersonAlterContact, setBranchContactPersonAlterContact] = useState('');
-  const [branchBankname, setBranchBankName] = useState('');
-  const [branchBankBranchName, setBranchBankBranchName] = useState('');
-  const [branchAccountNumber, setBranchAccountNumber] = useState('');
-  const [branchIfscCode, setBranchIfscCode] = useState('');
-  const [branchForm, setBranchForm] = useState(true)
+
+
   const [partyBranch, setPartyBranch] = useState([])
   const [rawMaterial, setRawMaterial] = useState(false)
   const [material, setMaterial] = useState("")
   const [materialActive, setMaterialActive] = useState(true);
-  const [materialId, setMaterialId] = useState("")
-  const [branchType, setBranchType] = useState("");
-  const [branchInfo, setBranchInfo] = useState([]);
-  const [partyMaterials, setPartyMaterials] = useState([]);
-  const [materialForm, setMaterialForm] = useState(false)
   const [view, setView] = useState("all");
-  const [tooltipVisible, setTooltipVisible] = useState(false);
-  const [isContactPerson, setIsContactPerson] = useState(false)
   const [designation, setDesignation] = useState("")
   const [department, setDepartment] = useState("")
   const [contactId, setContactId] = useState("")
   const [contactPersonEmail, setContactPersonEmail] = useState("")
-  const [tooltipVisibleForMaterial, setTooltipVisibleForMaterial] = useState("")
-  const [branchAlterContact, setBranchAlterContact] = useState("")
-  const [branchContactPersonEmail, setBranchContactPersonEmail] = useState("")
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageRemoved, setImageRemoved] = useState(false);
-  // const [readOnly, setReadOnly] = useState(false)
-  // const [id, setId] = useState("");
-  const [showImageTooltip, setShowImageTooltip] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
-  const branchState = {
-    branchModelOpen,
-    setBranchModelOpen,
-    branchName,
-    setBranchName,
 
-    branchAddress,
-    setBranchAddress,
-    branchContact,
-    setBranchContact,
-    branchContactPerson,
-    setBranchcontactPerson,
-    branchEmail,
-    setBranchEmail,
-    openingHours,
-    setopeningHours,
-    branchWebsite,
-    setBranchWebsite,
-    branchAlterContact,
-    setBranchAlterContact,
-    branchContactPersonEmail,
-    setBranchContactPersonEmail,
-    branchContactPersonContact,
-    setBranchContactPersonContact,
-    branchContactPersonAlterContact,
-    setBranchContactPersonAlterContact,
 
-    branchAliasName,
-    setBranchAliasName,
-    branchCode,
-    setBranchCode,
-    branchActive,
-    setBranchActive,
-    branchCity,
-    setBranchCity,
-    branchLandMark,
-    setBranchLandMark,
-    branchPincode,
-    setBranchPincode,
-    branchContactDesignation,
-    setBranchcontactDesignation,
-    branchContactDepartment,
-    setBranchcontactDepartment,
-    branchBankname,
-    setBranchBankName,
-    branchBankBranchName,
-    setBranchBankBranchName,
-    branchAccountNumber,
-    setBranchAccountNumber,
-    branchIfscCode,
-    setBranchIfscCode,
-    branchType,
-    setBranchType
-  };
 
 
 
@@ -248,9 +158,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   };
   const { data: cityList } = useGetCityQuery({ params });
 
-  const { data: payTermList } = useGetPaytermMasterQuery({ params });
-
-  const { data: currencyList } = useGetCurrencyMasterQuery({ params });
+ 
 
 
   const { data: branchTypeData } = useGetbranchTypeQuery({ params, searchParams: searchValue });
@@ -283,7 +191,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const {
     data: singleData,
-    refetch,
 
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
@@ -310,7 +217,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
   }
 
 
-  console.log(partyMaterials, "partyMaterials")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -367,14 +273,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
       setSupplier(data?.isSupplier || false);
       setClient(data?.isClient || true);
-      setBranchAddress(data?.branchAddress ? data?.branchAddress : "")
-      setBranchEmail(data?.branchEmail ? data?.branchEmail : "")
-      setBranchContact(data?.branchContact ? data?.branchContact : "")
-      setBranchName(data?.branchName ? data?.branchName : "")
-      setBranchCode(data?.branchCode ? data?.branchCode : "");
-      setBranchInfo(data?.partyBranch ? data?.partyBranch : [])
-      setBankName(data?.bankName ? data?.bankName : "")
-      setBankBranchName(data?.branchName ? data?.branchName : "")
       setAccountNumber(data?.accountNumber ? data?.accountNumber : "")
       setIfscCode(data?.ifscCode ? data?.ifscCode : "")
       setlandMark(data?.landMark ? data?.landMark : "")
@@ -385,8 +283,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setCurrency(data?.currencyId ? data?.currencyId : "");
       setPayTermDay(data?.payTermDay ? data?.payTermDay : "0");
       setAttachments(data?.PartyAttachments ? data?.PartyAttachments : []);
-      setBranchTypeId(data?.branchTypeId ?  data?.branchTypeId : "")
+      setBranchTypeId(data?.branchTypeId ? data?.branchTypeId : "")
       setIsBranch(data?.isBranch ? data?.isBranch : '')
+      setParentId(data?.parentId ? data?.parentId : "")
 
     },
 
@@ -462,12 +361,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
     partyBranch,
     attachments,
 
-
-
-
-
-
-    partyMaterials, material, materialActive, rawMaterial, branchTypeId
+     material, materialActive, rawMaterial, branchTypeId, parentId ,isBranch
 
 
 
@@ -475,11 +369,10 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  const {
-    data: processList,
-    isLoading: isProcessLoading,
-    isFetching: isProcessFetching,
-  } = useGetProcessMasterQuery({ params });
+
+
+  console.log(parentId, "parentId")
+
 
   const validateData = (data) => {
     if ((data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.gstNo && data?.address && data?.cityId && data?.pincode) {
@@ -645,6 +538,62 @@ export default function Form({ partyId, show, openModelForAddress }) {
       });
       return;
     }
+    if (!isClient && !isSupplier) {
+      Swal.fire({
+        title: 'Please Select Customer or Supplier',
+        icon: 'error',
+      });
+      return;
+    }
+
+
+    let foundItem;
+
+    if (isBranch) {
+      if (id) {
+        foundItem = allData?.data
+          ?.filter((i) => i.id != id)
+          ?.some((item) => item.branchTypeId == branchTypeId && item.parentId == parentId);
+      } else {
+        foundItem = allData?.data?.some((item) => item.branchTypeId == branchTypeId && item.parentId == parentId);
+      }
+    }
+    else {
+      if (id) {
+        foundItem = allData?.data
+          ?.filter((i) => i.id != id)
+          ?.some((item) => item.name == name && item.gstNo == gstNo);
+      } else {
+        foundItem = allData?.data?.some((item) => item.name == name && item.gstNo == gstNo);
+      }
+    }
+
+
+    if (isBranch) {
+      if (foundItem) {
+        Swal.fire({
+          text: `The Branch name  is already  exists `,
+          icon: "warning",
+          customClass: {
+            popup: 'swal-custom-height'
+          }
+        });
+        return false;
+      }
+    }
+    else {
+      if (foundItem) {
+        Swal.fire({
+          text: `The ${isSupplier ? "Supplier" : "Customer"} name is already  exists `,
+          icon: "warning",
+          customClass: {
+            popup: 'swal-custom-height'
+          }
+        });
+        return false;
+      }
+    }
+
 
 
     if (id) {

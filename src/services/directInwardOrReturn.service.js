@@ -222,7 +222,19 @@ async function getOne(id) {
                         select: {
                             qty: true
                         }
-                    }
+                    },
+                    field1: true,
+                    field2: true,
+                    field3: true,
+                    field4: true,
+                    field5: true,
+                    field6: true,
+                    field7: true,
+                    field8: true,
+                    field9: true,
+                    field10: true,
+
+
                 },
 
 
@@ -490,8 +502,9 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     console.log(substract(alreadyInwardedQty, alreadyReturnedQty), "allowedReturnQty")
 
-    let stockQty = parseFloat((await getStockQty(data?.DirectInwardOrReturn?.storeId, data?.DirectInwardOrReturn?.poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockQty || 0)
-    let stockRolls = parseInt((await getStockQty(data?.DirectInwardOrReturn?.storeId, data?.DirectInwardOrReturn?.poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
+
+    let stockQty = parseFloat((await getStockQty(storeId, data?.itemId, data?.sizeId, data?.colorId, data?.uomId))?.stockQty || 0)
+
 
 
 
@@ -533,28 +546,6 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
 
 
-    // const poItemObj = getStockObject(data?.DirectInwardOrReturn?.poType, data)
-    // let stockData;
-
-    //     stockData = await prisma.stock.groupBy({
-    //         where: {
-    //             ...poItemObj,
-    //             inOrOut: (data?.DirectInwardOrReturn?.poInwardOrDirectInward),
-    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
-    //             id: {
-    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
-    //             },
-
-    //         },
-    //         by: ["yarnId", "colorId", "uomId", "fabricId", "gaugeId", "loopLengthId", "designId", "gsmId", "kDiaId", "fDiaId", "sizeId", "storeId", "branchId"],
-    //         _sum: {
-    //             qty: true,
-    //             noOfBags: true,
-    //             noOfRolls: true
-    //         }
-    //     });
-
-
 
 
 
@@ -568,7 +559,6 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
             balanceQty,
             inwardQty,
             stockQty,
-            stockRolls,
             allowedReturnRolls,
             allowedReturnQty,
             alreadyInwardedQty,
@@ -582,30 +572,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
     };
 
 
-    async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId) {
-        let sql;
 
-
-        console.log("hitstock", itemType == "Accessory", colorId, uomId, sizeId, accessoryId, storeId)
-
-        if (itemType == "Accessory") {
-            sql = `select
-            sum(qty) as stockQty from stock
-            where colorId=${colorId} and uomId=${uomId} 
-           and sizeId=${sizeId} and 
-            accessoryId=${accessoryId} and  
-            storeId=${storeId} 
-                    `
-        }
-        else {
-
-            sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId} ;`
-        }
-
-        const stockData = await prisma.$queryRawUnsafe(sql);
-        return stockData[0]
-    }
 
 
 
@@ -667,55 +634,22 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
 
 
-    // const alreadyBillData = await prisma.billEntryItems.aggregate({
-    //     where: {
-    //         directItemsId: parseInt(id),
-    //         billEntryId: {
-    //             lt: JSON.parse(billEntryId) ? parseInt(billEntryId) : undefined
-    //         }
-    //     },
-    //     _sum: {
-    //         qty: true,
-    //     }
-    // });
 
-    // return {
-    //     statusCode: 0, data: {
-    //         ...data,
-    //         alreadyBillData,
-    //     }
-    // };
 }
 
 
-async function getStockQty(storeId, itemType, accessoryId, colorId, uomId, designId, gaugeId, loopLengthId, gsmId, sizeId, fabricId, kDiaId, fDiaId, yarnId) {
+async function getStockQty(storeId, itemId, sizeId, colorId, uomId) {
     let sql;
 
-    console.log("itemTypePOID", itemType == "Accessory", colorId, uomId, sizeId, accessoryId, storeId)
 
-    // if (itemType == "DyedFabric") {
-    //     sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-    //     where colorId=${colorId} and uomId=${uomId} and designId=${designId} and gaugeId=${gaugeId} and loopLengthId=${loopLengthId} and gsmId=${gsmId}  and fabricId=${fabricId} and   kDiaId=${kDiaId} and fDiaId=${fDiaId} and 
-    //     storeId=${storeId};
-    //             `
-    // }
 
-    if (itemType == "Accessory") {
+    sql = `select sum(qty) as stockQty from stock
+            where storeId = ${storeId} and itemId = ${itemId} and sizeId = ${sizeId} and  colorId=${colorId} and uomId=${uomId}  `
 
-        sql = `select sum(qty) as stockQty, sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId}  and sizeId=${sizeId} and accessoryId=${accessoryId} and  storeId=${storeId}; 
-                `
-    }
-    else {
-        sql = `select sum(qty) as stockQty,sum(noOfRolls) as stockRolls  from stock
-        where colorId=${colorId} and uomId=${uomId} ;`
-    }
+        console.log(sql,"sql for stockQty")
 
     const stockData = await prisma.$queryRawUnsafe(sql);
     return stockData[0]
-
-
-
 }
 
 async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
@@ -734,7 +668,6 @@ async function getAllDataPoItems(data, poType, poInwardOrDirectInward) {
 
 async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billEntryId, poType, poInwardOrDirectInward) {
 
-    console.log(id, "poItemsId")
 
     let data = await prisma.poItems.findUnique({
         where: {
@@ -889,23 +822,7 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
     });
 
 
-    async function getLotWiseDatas(inwardData) {
 
-
-        return {
-            lotNo: inwardData?.lotNo,
-            inwardNoOfRolls: inwardData?.noOfRolls,
-            inwardQty: inwardData?.qty,
-            qty: 0,
-            noOfRolls: 0,
-            alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotRolls,
-            alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty,
-            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId))?.stockQty || 0),
-
-            allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, id))?.lotQty || 0))
-        }
-
-    }
 
 
     const alreadyBillEntryData = await prisma?.billEntryItems?.aggregate({
@@ -946,70 +863,13 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
 
 
 
-    let stockQty = parseFloat((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId, data?.yarnId))?.stockQty || 0)
-    let stockRolls = parseInt((await getStockQty(storeId, poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockRolls || 0)
+    let stockQty = parseFloat((await getStockQty(storeId, data?.itemId, data?.sizeId, data?.colorId, data?.uomId))?.stockQty || 0)
     let alreadyBillEntryQty = alreadyBillEntryData?._sum?.qty ? parseInt(alreadyBillEntryData._sum.qty) : "0";
 
 
 
-    // let stockQty = substract(alreadyInwardedQty, alreadyReturnedQty)
-    // let stockRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
-    let alreadyInwardLotWiseData = [];
 
 
-
-    //     let inwardLotDetailsdata = `select lotNo, sum(inwardLotDetails.qty) as qty ,sum(inwardLotDetails.noOfRolls) as noOfRolls from poItems
-    //  left join directItems on directItems.poitemsid=poItems.id left join inwardLotDetails on inwardLotDetails.directItemsId=directItems.id
-    //  WHERE  poItems.ID=${id}
-    //  group By lotNo`
-
-    //     inwardLotDetailsdata = await prisma.$queryRawUnsafe(inwardLotDetailsdata);
-
-
-
-    //     for (let i = 0; i < inwardLotDetailsdata?.length; i++) {
-    //         let inwardData = inwardLotDetailsdata[i]
-    //         alreadyInwardLotWiseData.push(await getLotWiseDatas(inwardData))
-    //     }
-    //     const poItemObj = getStockObject(data.Po.transType, data)
-
-
-    // let stockData;
-    // if (data.Po.transType === "Accessory") {
-    //     stockData = await prisma.stock.aggregate({
-    //         where: {
-    //             ...poItemObj,
-    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
-    //             id: {
-    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
-    //             },
-
-    //         },
-    //         _sum: {
-    //             qty: true,
-    //             noOfBags: true,
-    //             noOfRolls: true
-    //         }
-    //     });
-    // } else {
-    //     stockData = await prisma.stock.groupBy({
-    //         where: {
-    //             ...poItemObj,
-    //             storeId: JSON.parse(storeId) ? parseInt(storeId) : undefined,
-    //             id: {
-    //                 lt: JSON.parse(stockId) ? parseInt(stockId) : undefined
-    //             },
-
-    //         },
-    //         by: ["yarnId", "colorId", "uomId", "fabricId", "gaugeId", "loopLengthId", "designId", "gsmId", "kDiaId", "fDiaId", "sizeId", "storeId", "branchId", "lotNo"],
-    //         _sum: {
-    //             qty: true,
-    //             noOfBags: true,
-    //             noOfRolls: true
-    //         }
-    //     });
-
-    // }
 
 
 
@@ -1023,14 +883,12 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
             cancelQty,
             poQty,
             stockQty,
-            stockRolls,
             allowedReturnRolls,
             allowedReturnQty,
             alreadyInwardedQty,
             alreadyReturnedQty,
             alreadyReturnedData,
             alreadyCancelData,
-            // stockData,
             alreadyBillEntryData,
             alreadyBillEntryQty,
 
@@ -1509,6 +1367,7 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
+
     const { poType, poInwardOrDirectInward,
         supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks, orderId, locationId, partyId,

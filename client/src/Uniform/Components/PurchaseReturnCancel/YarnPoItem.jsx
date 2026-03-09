@@ -13,7 +13,7 @@ const YarnPoItem = ({ yarnList, uomList,
     colorList, gaugeList, designList, deleteRow,
     loopLengthList, setInwardItems, storeId,
     diaList, index, handleInputChange, readOnly, id, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo,
-    handleRightClick, setDirectInwardReturnItems, directInwardReturnItems
+    handleRightClick, setDirectInwardReturnItems, allData
 
 }) => {
 
@@ -160,7 +160,20 @@ const YarnPoItem = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
-
+                {allData?.data?.map(element => (
+                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                        <>
+                            <th
+                                key={i}
+                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                            >
+                                {element?.[i]}
+                            </th>
+                         
+                        </>
+                    ))
+                ))}
 
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{parseFloat(item?.stockQty).toFixed(3)} </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>{getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty).toFixed(3) || 0}</td>

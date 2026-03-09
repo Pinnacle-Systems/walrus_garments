@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
+import { usePermissionForUsers } from "../HasPermission";
 
 const MODEL = "Country Master";
 
@@ -37,6 +38,8 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
 
   const childRecord = useRef(0);
+  const { hasPermission } = usePermissionForUsers()
+
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -273,6 +276,7 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
+              if (!hasPermission(saveData, "save")) return
               setForm(true);
               onNew();
             }}

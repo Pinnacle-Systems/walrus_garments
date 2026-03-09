@@ -6,11 +6,12 @@ import { getCommonParams } from '../../../Utils/helper';
 // import TableGridItems from './TableGridItems';
 import YarnDirectInwardItems from './YarnDirectInwardItems';
 import Swal from 'sweetalert2';
+import { useGetStockReportControlQuery } from '../../../redux/uniformService/StockReportControl.Services';
 
 export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDirectInward, storeId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, sizeList
+    branchdata, itemList, colorList, uomList, sizeList 
 
 }) {
     const { branchId, userId, finYearId } = getCommonParams();
@@ -24,6 +25,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
         branchId, userId, finYearId
     };
 
+    const { data: stockControlData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
 
 
 
@@ -176,7 +178,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
                             directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
                             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
-                            supplierId={supplierId}
+                            supplierId={supplierId} stockControlData={stockControlData}
                         />
 
 

@@ -43,7 +43,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { itemWise, sizeWise, sizeColorWise, stockReports, id } = await body
+    const { itemWise, sizeWise, sizeColorWise, stockReports, field6, field7, field8, field9, field10 } = await body
     const data = await prisma.StockReportControl.create(
         {
             data: {
@@ -67,7 +67,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { itemWise, sizeWise, sizeColorWise, stockReports } = await body
+    const { itemWise, sizeWise, sizeColorWise, stockReports, field6, field7, field8, field9, field10 } = await body
     const dataFound = await prisma.StockReportControl.findUnique({
         where: {
             id: parseInt(id)

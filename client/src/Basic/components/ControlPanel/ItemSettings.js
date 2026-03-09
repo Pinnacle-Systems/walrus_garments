@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Loader from "../Loader";
+import { uppercase } from "../../../Utils/helper";
 
 const ItemSettings = () => {
 
@@ -100,7 +101,7 @@ const ItemSettings = () => {
     const hasDuplicateFields = () => {
         const values = [field1, field2, field3, field4, field5]
             .map(v => v.trim().toLowerCase())
-            .filter(v => v !== ""); // remove empty fields
+            .filter(v => v !== ""); 
 
         return new Set(values).size !== values.length;
     };
@@ -183,7 +184,7 @@ const ItemSettings = () => {
                             <span className="font-bold mt-2">Field 1</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField1(e.target.value)}
+                                onChange={(e) => setField1(uppercase(e.target.value))}
                                 value={field1}
                             />
                         </div>
@@ -191,7 +192,7 @@ const ItemSettings = () => {
                             <span className="font-bold mt-2">Field 2</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField2(e.target.value)}
+                                onChange={(e) => setField2(uppercase(e.target.value))}
                                 value={field2}
 
                             />
@@ -200,7 +201,7 @@ const ItemSettings = () => {
                             <span className="font-bold mt-2">Field 3</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField3(e.target.value)}
+                                onChange={(e) => setField3(uppercase(e.target.value))}
                                 value={field3}
 
 
@@ -210,7 +211,7 @@ const ItemSettings = () => {
                             <span className="font-bold mt-2">Field 4</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField4(e.target.value)}
+                                onChange={(e) => setField4(uppercase(e.target.value))}
                                 value={field4}
 
                             />
@@ -219,7 +220,7 @@ const ItemSettings = () => {
                             <span className="font-bold mt-2">Field 5</span>
                             <input
                                 className="border border-gray-500 py-1 px-1"
-                                onChange={(e) => setField5(e.target.value)}
+                                onChange={(e) => setField5(uppercase(e.target.value))}
                                 value={field5}
 
                             />

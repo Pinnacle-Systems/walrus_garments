@@ -5,7 +5,7 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { ExcessToleranceQty, FiberContent, ItmeMaster, MaterialMaster, SectionMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, MachineWiseProduction, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, RequirementPlanningForm, StockReport, StockTransfer } from "../../../Uniform/Components";
+import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, MachineWiseProduction, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, Quotation, RequirementPlanningForm, StockReport, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 import { AccessoryTemplate } from "..";
@@ -143,7 +143,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "ITEM MASTER": <ItmeMaster />,
     "OPENING STOCK": <OpeningStock />,
     "SECTION MASTER": <SectionMaster />,
-    "ESTIMATE / QUOTATION": <SectionMaster />
+    "ESTIMATE / QUOTATION": <Quotation />
 
 
 

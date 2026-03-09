@@ -12,7 +12,7 @@ import { useGetStyleMasterQuery } from "../../redux/uniformService/StyleMasterSe
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
 import { useGetHsnMasterQuery } from "../../redux/services/HsnMasterServices";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
-import { findFromList } from "../../Utils/helper";
+import { capitalizeFirstLetter, findFromList } from "../../Utils/helper";
 import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
 import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
 
@@ -631,9 +631,7 @@ export default function Form() {
   }, [itemControlData, itemControlLoading, itemControlFetching]);
 
   console.log(fields, "fields");
-  function capitalizeFirstLetter(string) {
-    return string?.charAt(0).toUpperCase() + string.slice(1);
-  }
+
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">

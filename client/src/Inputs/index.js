@@ -15,6 +15,7 @@ import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
 import Select, { components } from "react-select";
 import Modal from "../UiComponents/Modal";
+import { usePermissionForUsers } from "../Basic/components/HasPermission";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -284,60 +285,60 @@ export const MultiSelectDropdownNew = ({
   disabled,
 }) => {
 
-const customStyles = {
-  control: (base) => ({
-    ...base,
-    minHeight: "30px",
-    height: "28px",
-    borderRadius: "6px",
-    fontSize: "13px",
-    borderColor: "#d1d5db",
-    padding: "0",
-  }),
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+    }),
 
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isFocused
-      ? "#f3f4f6"
-      : "#ffffff",
-    color: "#111827",
-    fontSize: "11px",
-    paddingTop: "4px",
-    paddingBottom: "4px",
-  }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused
+        ? "#f3f4f6"
+        : "#ffffff",
+      color: "#111827",
+      fontSize: "11px",
+      paddingTop: "4px",
+      paddingBottom: "4px",
+    }),
 
-  menu: (base) => ({
-    ...base,
-    zIndex: 9999,   // 🔥 important
-  }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 important
+    }),
 
-  menuPortal: (base) => ({
-    ...base,
-    zIndex: 9999,   // 🔥 for modals
-  }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 for modals
+    }),
 
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0 6px",
-    height: "28px",
-  }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      height: "28px",
+    }),
 
-  input: (base) => ({
-    ...base,
-    margin: "0",
-    padding: "0",
-  }),
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
 
-  multiValue: (base) => ({
-    ...base,
-    padding: "0 4px",
-  }),
+    multiValue: (base) => ({
+      ...base,
+      padding: "0 4px",
+    }),
 
-  indicatorsContainer: (base) => ({
-    ...base,
-    height: "28px",
-  }),
-};
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
   return (
     <div className={`block text-xs font-bold text-gray-600 mb-1 ${className} `}>
       <span className="mb-3">
@@ -354,7 +355,7 @@ const customStyles = {
           closeMenuOnSelect={false}
           hideSelectedOptions={false}
           placeholder=""
-          maxMenuHeight={200}   
+          maxMenuHeight={200}
           styles={customStyles}
 
 
@@ -1588,6 +1589,7 @@ export function isValidPAN(pan) {
 }
 
 
+
 export const ReusableTable = ({
   columns,
   data,
@@ -1605,7 +1607,10 @@ export const ReusableTable = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  console.log(data, "commonTable")
+
+  const { hasPermission } = usePermissionForUsers()
+
+  // console.log(hasPermission, "permission")
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -1752,7 +1757,7 @@ export const ReusableTable = ({
                             {onView && (
                               <button
                                 className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                onClick={() => onView(item.id)}
+                                onClick={() => hasPermission(() => onView(item.id), "read")}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -1763,7 +1768,7 @@ export const ReusableTable = ({
                             {onEdit && (
                               <button
                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                onClick={() => onEdit(item.id)}
+                                onClick={() => hasPermission(() => onEdit(item.id), "edit")}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -1773,7 +1778,7 @@ export const ReusableTable = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(item.id, item?._count)}
+                                onClick={() => hasPermission(() => onDelete(item.id, item?._count), "delete", item?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1804,6 +1809,7 @@ export const ReusableTable = ({
 
   );
 };
+
 
 
 // export function ReusableSearchableInput({
@@ -2093,7 +2099,6 @@ export const ReusableSearchableInput = forwardRef(
       label,
       placeholder,
       onDeleteItem,
-      optionList,
       component,
       setSearchTerm,
       searchTerm,
@@ -2102,7 +2107,8 @@ export const ReusableSearchableInput = forwardRef(
       required,
       show,
       name,
-      disabled
+      disabled,
+      optionList
     },
     ref
   ) => {
@@ -2121,7 +2127,10 @@ export const ReusableSearchableInput = forwardRef(
       data: partyList,
       isLoading: isPartyLoading,
       isFetching: isPartyFetching,
-    } = useGetPartyQuery({ params: { companyId, userId } });
+    } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true } });
+
+
+    console.log(partyList,"partyList")
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -2171,8 +2180,8 @@ export const ReusableSearchableInput = forwardRef(
       setFilteredPages(
         partyList?.data?.filter((page) => {
           return (
-            page?.code?.toLowerCase().includes(search.toLowerCase()) &&
-            page[show] // this makes sure only customer/supplier (based on props) are shown
+            page?.name?.toLowerCase().includes(search.toLowerCase()) &&
+            page[show]
           );
         })
       );
@@ -2227,6 +2236,7 @@ export const ReusableSearchableInput = forwardRef(
             editingItem={editingItem}
             onCloseForm={() => setOpenModel(false)}
             show={show}
+            // childId={childId}
           />
         </Modal>
 
@@ -2271,7 +2281,7 @@ export const ReusableSearchableInput = forwardRef(
                   hover:border-slate-400 text-gray-800"
                   ref={ref} // ✅ parent gets this ref
                   placeholder={placeholder}
-                  value={findFromList(searchTerm, optionList, "code")}
+                  value={findFromList(searchTerm, optionList, "name")}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -2319,7 +2329,7 @@ export const ReusableSearchableInput = forwardRef(
 
           {isDropdownOpen && (
             <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
-              {optionList?.length > 0 ? (
+              {partyList?.data?.length > 0 ? (
                 filteredPages?.map((item) => (
                   <div
                     key={item.id}
@@ -2336,7 +2346,6 @@ export const ReusableSearchableInput = forwardRef(
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        console.log("Enter handled here!!!!!")
                         setSearchTerm(item.id);
                         setSearch("");
                         setIsListShow(false);
@@ -2350,7 +2359,7 @@ export const ReusableSearchableInput = forwardRef(
                     }}
                   >
                     <div>
-                      <div className="font-medium">{item.code}</div>
+                      <div className="font-medium">{item.name}</div>
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
@@ -2627,3 +2636,356 @@ export const PriceInputWithTax = forwardRef(({
 
 
 
+export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
+  (
+    {
+      label,
+      placeholder,
+      onDeleteItem,
+      component,
+      setSearchTerm,   // selected value (partyId)
+      searchTerm,
+      readOnly,
+      nextRef,
+      required,
+      name,
+      disabled,
+      show,
+      id,
+    },
+
+    ref
+
+  ) => {
+    /* ---------------------------------- DATA ---------------------------------- */
+
+    const companyId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    );
+    const userId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userId"
+    );
+
+    const { data: partyList } = useGetPartyQuery({
+      params: { companyId, userId, isAddressCombined: true },
+    });
+
+    console.log(searchTerm, "searchTerm")
+
+    /* ---------------------------------- STATE --------------------------------- */
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [tooltipVisible, setTooltipVisible] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [openModel, setOpenModel] = useState(false);
+    const [childId, setChildId] = useState('')
+
+    const [search, setSearch] = useState("");           // 🔹 search text
+    const [filteredPages, setFilteredPages] = useState([]);
+    const [isListShow, setIsListShow] = useState(false);
+
+    const containerRef = useRef(null);
+    const modal = useModal();
+    const { openAddModal } = modal || {};
+
+
+
+
+    /* ---------------------------- OUTSIDE CLICK ---------------------------- */
+    // useEffect(() => {
+    //   if (id) return;
+    //   setIsDropdownOpen(true);
+    // }, []);
+
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (containerRef.current && !containerRef.current.contains(event.target)) {
+          setIsDropdownOpen(false);
+          setIsListShow(false)
+
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    /* ---------------------------- FILTER PARTIES ---------------------------- */
+
+    useEffect(() => {
+      if (!partyList?.data) return;
+
+      if (!search.trim()) {
+        setFilteredPages(partyList?.data);
+        return;
+      }
+
+      const filtered = partyList?.data?.filter((item) =>
+
+        item?.name?.toLowerCase().includes(search.toLowerCase())
+      );
+
+      setFilteredPages(filtered);
+    }, [search, partyList]);
+
+
+    /* ---------------------------- ARROW NAVIGATION --------------------------- */
+
+    useEffect(() => {
+      const pageSearch = document.getElementById("pageSearch");
+      if (!pageSearch) return;
+
+      const handler = (e) => {
+
+        const items = pageSearch.querySelectorAll('[tabindex="0"]');
+
+                    
+
+
+        const index = Array.from(items).indexOf(document.activeElement);
+
+        if (e.key === "ArrowDown") {
+          items[index + 1]?.focus();
+          e.preventDefault();
+        }
+
+        if (e.key === "ArrowUp") {
+          items[index - 1]?.focus();
+          e.preventDefault();
+        }
+      };
+
+      pageSearch.addEventListener("keydown", handler);
+      return () => pageSearch.removeEventListener("keydown", handler);
+    }, []);
+
+
+    /* ---------------------------------- HANDLERS ------------------------------ */
+
+    const handleEdit = (id, e, isChildid) => {
+      e.stopPropagation();
+      setEditingItem(id);
+      setIsDropdownOpen(false);
+      setIsListShow(false);
+      setOpenModel(true);
+      // setChildId(isChildid)
+
+    };
+
+    const handleDelete = (id, e) => {
+      onDeleteItem?.(id);
+    };
+
+    /* ---------------------------------- JSX ---------------------------------- */
+
+    return (
+      <>
+        {/* ----------------------------- MODAL ----------------------------- */}
+        <Modal
+          isOpen={openModel}
+          onClose={() => setOpenModel(false)}
+          widthClass="w-[90%] h-[99%]"
+        >
+          <DynamicRenderer
+            componentName={component}
+            editingItem={editingItem}
+            childId={childId}
+            onCloseForm={() => setOpenModel(false)}
+          />
+        </Modal>
+
+        {/* ----------------------------- INPUT ----------------------------- */}
+        <div
+          className="relative text-sm w-full"
+          id="pageSearch"
+          ref={containerRef}
+        >
+          {label && (
+            <label className="block text-xs font-bold text-gray-600 mb-1">
+              {required ? <RequiredLabel name={label || name} /> : label}
+            </label>
+          )}
+
+          <div className="flex gap-2">
+            <div className="relative flex-grow">
+              <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+
+              {isListShow ? (
+                /* ---------------- SEARCH INPUT ---------------- */
+                <input
+                  ref={ref}
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border rounded-md"
+                  placeholder={placeholder}
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    setIsListShow(true);
+                    setIsDropdownOpen(true);
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                />
+              ) : (
+                /* ---------------- SELECTED VALUE ---------------- */
+                <input
+                  ref={ref}
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border rounded-md"
+                  placeholder={placeholder}
+                  value={findFromList(
+                    searchTerm,
+                    partyList?.data,
+                    "name"
+                  )}
+                  onFocus={() => {
+                    setIsListShow(true);
+                    setIsDropdownOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && nextRef?.current) {
+                      nextRef.current.focus();
+                    }
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                />
+              )}
+            </div>
+
+            {/* ---------------- ADD BUTTON ---------------- */}
+            <div className="relative">
+              <button
+                className="h-full px-3 py-1.5 border border-green-500 rounded-md
+                hover:bg-green-500 text-green-600 hover:text-white"
+                disabled={disabled || readOnly}
+                onClick={() => {
+                  setEditingItem("new");
+                  setOpenModel(true);
+                }}
+                onMouseEnter={() => setTooltipVisible(true)}
+                onMouseLeave={() => setTooltipVisible(false)}
+              >
+                <FaPlus />
+              </button>
+
+              {tooltipVisible && (
+                <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2">
+                  <FaInfoCircle className="inline mr-1" />
+                  Click to add new party
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ---------------- DROPDOWN LIST ---------------- */}
+          {/* {isDropdownOpen && (
+            <div className="absolute w-full mt-1 max-h-40 overflow-y-auto  rounded bg-white z-20 border border-gray-200" ref={ref}>
+              {filteredPages.length > 0 ? (
+                filteredPages?.map((item) => (
+                  <div
+                    key={item.id}
+                    tabIndex={0}
+                    className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer flex justify-between group border rounded-sm border-gray-400"
+                    onClick={() => {
+                      setSearchTerm(item.id);
+                      setSearch("");
+                      setIsDropdownOpen(false);
+                      setIsListShow(false);
+                      nextRef?.current?.focus();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSearchTerm(item.id);
+                        setSearch("");
+                        setIsDropdownOpen(false);
+                        setIsListShow(false);
+                        nextRef?.current?.focus();
+                      }
+                    }}
+                  >
+                    <span className='0'>{item.name}</span>
+
+                  
+                  </div>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-xs text-gray-500">
+                  No party found
+                </div>
+              )}
+            </div>
+          )} */}
+          {isDropdownOpen && (
+            <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
+              {filteredPages?.length > 0 ? (
+                filteredPages?.map((item) => (
+                  <div
+                    key={item.id}
+                    tabIndex={0}
+                    className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
+                    onClick={() => {
+                      setSearchTerm(item.id);
+                      setIsDropdownOpen(false);
+                      setSearch("");
+                      setIsListShow(false);
+                      if (nextRef?.current) {
+                        nextRef?.current?.focus();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSearchTerm(item.id);
+                        setSearch("");
+                        setIsListShow(false);
+                        setIsDropdownOpen(false);
+                        if (nextRef?.current) {
+                          e.preventDefault();
+                          nextRef?.current?.focus();
+                        }
+
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                    </div>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        className="text-indigo-600 hover:text-indigo-800 p-1"
+                        // onClick={(e) => handleEdit(item?.parentId ? item?.parentId : item?.id, e, item?.parentId ? item.id : null)}
+                        onClick={(e) => handleEdit(item.id, e)}
+                        title="Edit Customer"
+                      >
+                        <FaEdit className="text-sm" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-800 p-1"
+                        onClick={(e) => handleDelete(item?.id, e, item?.parentId)}
+                        title="Delete Customer"
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-indigo-600 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setIsDropdownOpen(false);
+                    openAddModal();
+                  }}
+                >
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+);

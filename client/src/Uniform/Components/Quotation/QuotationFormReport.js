@@ -12,12 +12,13 @@ import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '
 import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
+import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
 
 
 
 
 
-const PurchaseInwardFormReport = ({
+const QuotationPrintFormat = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -25,8 +26,8 @@ const PurchaseInwardFormReport = ({
   onDelete,
   rowActions = true,
 }) => {
-
-
+  
+  
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
@@ -40,12 +41,8 @@ const PurchaseInwardFormReport = ({
 
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
-  const [searchProjectValue, setSearchProjectValue] = useState("");
-  const [searchFollowedBy, setSearchFollowedBy] = useState("");
 
-  const handleOnclick = (e) => {
-    setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-  };
+
   const searchFields = {
     serachDocNo,
     searchClientName,
@@ -65,17 +62,11 @@ const PurchaseInwardFormReport = ({
     searchMaterial,
   ]);
 
-  const companyId = secureLocalStorage.getItem(
-    sessionStorage.getItem("sessionId") + "userCompanyId"
-  );
-  const params = {
-    branchId,
-    companyId,
-  };
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetDirectInwardOrReturnQuery({
+
+  const { data: allData, isFetching, isLoading } = useGetQuotationMasterQuery({
     params: {
       branchId,
       ...searchFields,
@@ -105,7 +96,6 @@ const PurchaseInwardFormReport = ({
   const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
   const indexOfLastItem = currentPage * parseInt(10);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
   console.log(indexOfLastItem, "indexOfLastItem")
 
@@ -207,8 +197,8 @@ const PurchaseInwardFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Inward No</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                    <div>Quotaion No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -219,8 +209,8 @@ const PurchaseInwardFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Inward Date</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                    <div>Quotaion Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -231,8 +221,7 @@ const PurchaseInwardFormReport = ({
                                             }}
                                         /> */}
                   </th>
-       
-
+               
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
@@ -278,7 +267,7 @@ const PurchaseInwardFormReport = ({
                       }}
                     />
                   </th>
-        
+          
                   {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
@@ -335,15 +324,15 @@ const PurchaseInwardFormReport = ({
                         {index + 1}
                       </td>
 
-                      <td className="py-1.5 text-left">{dataObj.docId} </td>
+                      <td className="py-1.5 text-center">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-left">
+                      <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-               
+                   
 
-                      <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
+                      <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -371,7 +360,7 @@ const PurchaseInwardFormReport = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(dataObj.id, dataObj?._count)}
+                                onClick={() => onDelete(dataObj.id,dataObj?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -402,4 +391,4 @@ const PurchaseInwardFormReport = ({
   );
 };
 
-export default PurchaseInwardFormReport;
+export default QuotationPrintFormat;

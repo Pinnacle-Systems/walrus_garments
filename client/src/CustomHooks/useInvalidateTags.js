@@ -53,6 +53,10 @@ const useInvalidateTags = () => {
             type: `ItemControlPanel/invalidateTags`,
             payload: ["ItemControlPanel"],
         },
+        {
+            type: `pageMaster/invalidateTags`,
+            payload: ["Pages"],
+        },
 
     ];
 

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import { toast } from "react-toastify";
-import { DropdownInput, DateInput, TextInput, ReusableSearchableInput } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 // eslint-disable-next-line no-unused-vars
@@ -426,7 +426,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
                 <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -434,9 +434,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 Return Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Doc. Id." value={docId} required={true} readOnly
+                                <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
                                 />
-                                <DateInput name="Doc Date" value={date} type={"date"} required={true} readOnly={readOnly} />
+                                <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
 
 
 
@@ -444,11 +444,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                             </div>
                         </div>
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Location Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-3 gap-2">
                                 <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
@@ -466,7 +466,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                         </div>
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Supplier Details
                             </h2>
@@ -485,9 +485,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                         required={true}
                                         disabled={id}
                                     />                                </div>
-                                <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
 
                                 <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+                            
+                             */}
                             </div>
 
                         </div>
@@ -499,7 +501,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-
                         />
                     </div>
 

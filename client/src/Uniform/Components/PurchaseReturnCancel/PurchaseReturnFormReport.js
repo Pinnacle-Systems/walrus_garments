@@ -626,8 +626,8 @@ const PurchaseCancelFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Doc No</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Purchase Return No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -638,8 +638,8 @@ const PurchaseCancelFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Doc Date</div>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <div>Purchase Return Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -650,18 +650,7 @@ const PurchaseCancelFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>poType</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
-                  </th>
+         
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
@@ -707,17 +696,7 @@ const PurchaseCancelFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <input
-                      type="text"
-                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                      placeholder="Search"
-                      value={searchMaterial}
-                      onChange={(e) => {
-                        setSearchMaterial(e.target.value);
-                      }}
-                    />
-                  </th>
+        
                   <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
@@ -769,7 +748,6 @@ const PurchaseCancelFormReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                      <td className="py-1.5 text-center  ">{dataObj.poType} </td>
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (

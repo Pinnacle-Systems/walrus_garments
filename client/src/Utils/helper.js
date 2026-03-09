@@ -484,3 +484,19 @@ export function getUniqueArrayByColor(masterData, allData, key, itemId) {
     return allData
   }
 }
+
+
+export function uppercase(inputValue) {
+  if (!inputValue) return '';
+  return inputValue.toUpperCase();
+}
+
+
+export function capitalizeFirstLetter(string) {
+  if (!string) return '';
+  return string
+    .toLowerCase()
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

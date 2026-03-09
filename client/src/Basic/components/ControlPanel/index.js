@@ -5,10 +5,9 @@ import ItemSettings from './ItemSettings';
 import TransactionSettings from './TransactionsSettings';
 
 const UserRoles = () => {
-    const [activeNavBar, setActiveNavBar] = useState("Item");
+    const [activeNavBar, setActiveNavBar] = useState("ITEM");
 
     const subMenus = [
-        // "Id Card Settings",
         "ITEM",
         "STOCK",
 

@@ -5,7 +5,7 @@ import useTaxDetailsHook from '../../../CustomHooks/TaxHookDetails';
 const numberToText = require('number-to-text')
 
 
-const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountType, setDiscountType, discountValue, setDiscountValue, remarks, setRemarks }) => {
+const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountType, setDiscountType, discountValue, setDiscountValue, remarks, setRemarks, specialInstructions, setSpecialInstructions, vehicleNo, setVehicleNo }) => {
 
     const { isLoading: isTaxHookDetailsLoading, ...taxDetails } = useTaxDetailsHook({ poItems, taxTypeId, discountType, discountValue })
 
@@ -22,12 +22,42 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">Vehicle No</td>
+                        <td className="border border-gray-500" colSpan={2}
+                        >
+                            <input type="text" name='value' disabled={readOnly} className='h-7 w-full' value={vehicleNo}
+                                onKeyDown={e => {
+                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                    if (e.key === "Delete") { setVehicleNo("") }
+                                }}
+                                onChange={(e) => { setVehicleNo(e.target.value) }}
+                            />
+                        </td>
+                    </tr>
+                    <tr className='h-7'>
                         <td className="border border-gray-500">Remarks</td>
                         <td className="border border-gray-500" colSpan={2}
                         >
                             <input type="text" name='value' disabled={readOnly} className='h-7 w-full' value={remarks}
+                                onKeyDown={e => {
+                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                    if (e.key === "Delete") { setRemarks("") }
+                                }}
                                 onChange={(e) => { setRemarks(e.target.value) }}
+                            />
+                        </td>
+                    </tr>
+                    <tr className='h-7'>
+                        <td className="border border-gray-500">SpecialInstructions</td>
+                        <td className="border border-gray-500" colSpan={2}
+                        >
+                            <input type="text" name='value' disabled={readOnly} className='h-7 w-full' value={specialInstructions}
+                                onKeyDown={e => {
+                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                    if (e.key === "Delete") { setSpecialInstructions("") }
+                                }}
+                                onChange={(e) => { setSpecialInstructions(e.target.value) }}
                             />
                         </td>
                     </tr>
@@ -35,7 +65,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         <td className="border border-gray-500">Gross Amount</td>
                         <td className="border border-gray-500 text-right" colSpan={2}
                         >
-                            {parseFloat(taxDetails.grossAmount).toFixed(3)}
+                            {taxDetails.grossAmount}
                         </td>
                     </tr>
                     <tr>
@@ -80,7 +110,7 @@ const PoSummary = ({ poItems, readOnly, taxTypeId, isSupplierOutside, discountTy
                         >
                             <input disabled type="text" name='value' className='h-7 w-full text-right'
                                 value={
-                                    taxDetails.netAmount
+                                    parseFloat(taxDetails.netAmount).toFixed(2)
                                 }
                             />
                         </td>

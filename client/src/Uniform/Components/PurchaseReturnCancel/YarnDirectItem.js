@@ -13,7 +13,7 @@ import Swal from 'sweetalert2'
 const YarnDirectItem = ({ itemList, uomList,
     colorList, sizeList, designList, gsmList,
     loopLengthList, storeId,
-    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo ,addNewRow }) => {
+    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo, stockControlData }) => {
     const [lotGrid, setLotGrid] = useState(false)
 
 
@@ -68,13 +68,43 @@ const YarnDirectItem = ({ itemList, uomList,
                 }}
             >
                 <td className='py-0.5 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{item?.poNo}</td>
+                {/* <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{item?.poNo}</td> */}
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.itemId, itemList?.data, "name")} </td>
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
 
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
 
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                {stockControlData?.data?.map(element => (
+                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                        <>
+                            <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                <input
+                                    onKeyDown={e => {
+                                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                        if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
+                                    }}
+
+                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                    onFocus={(e) => e.target.select()}
+                                    // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
+                                    value={item[i]}
+                                    // disabled={readOnly || !row.uomId}
+                                    onChange={(e) =>
+                                        handleInputChange(e.target.value, index, i)
+                                    }
+                                    onBlur={(e) => {
+                                        handleInputChange(e.target.value.toFixed(3), index, i);
+                                    }
+                                    }
+                                />
+                            </td>
+                            {console.log(element?.[i], 'element')}
+                            {console.log(i, 'iiiiiiiiiiii')}
+                        </>
+                    ))
+                ))}
                 <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.stockQty || ''}</td>
                 <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.allowedReturnQty || ""}</td>
 
@@ -129,7 +159,7 @@ const YarnDirectItem = ({ itemList, uomList,
                         disabled={true}
                     />
                 </td>
-{/* 
+                {/* 
                 <td className="w-16 px-1 py-1 text-center  border border-gray-300">
                     <input
                         readOnly

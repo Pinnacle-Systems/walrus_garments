@@ -14,6 +14,7 @@ import { TextInput, CheckBox } from "../../../Inputs"
 import ReportTemplate from '../ReportTemplate';
 import { useGetPagesQuery } from '../../../redux/services/PageMasterService';
 import { TICK_ICON } from "../../../icons";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 const MODEL = "Role Master";
 
@@ -24,8 +25,8 @@ export default function RoleMaster() {
     const [id, setId] = useState("")
     const [name, setName] = useState("");
     const [active, setActive] = useState(true);
-    const [purchasePrice,setPurchasePrice] =useState(true);
-    const[purchaseDepartment,setPurchaseDepartment]=useState(true);
+    const [purchasePrice, setPurchasePrice] = useState(true);
+    const [purchaseDepartment, setPurchaseDepartment] = useState(true);
 
     const [pages, setPages] = useState([]);
     const childRecord = useRef(0);
@@ -38,6 +39,10 @@ export default function RoleMaster() {
     const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetRoleByIdQuery(id, { skip: !id });
 
     const { data: pagesData, isLoading: pagesLoading, isFetching: pagesFetching } = useGetPagesQuery(params);
+
+
+    const [invalidateTagsDispatch] = useInvalidateTags();
+
 
     useEffect(() => {
         if (pagesData?.data) setPages(pagesData.data.map((page) => {
@@ -95,7 +100,7 @@ export default function RoleMaster() {
 
 
     const data = {
-        name,purchasePrice,purchaseDepartment,
+        name, purchasePrice, purchaseDepartment,
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "tempCompanyId") ? secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "tempCompanyId") : secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
         active, pages, id
     }
@@ -112,6 +117,8 @@ export default function RoleMaster() {
             await callback(data);
             setId("")
             syncFormWithDb(undefined)
+            invalidateTagsDispatch()
+
             toast.success(text + "Successfully");
         } catch (error) {
             console.log("handle")
@@ -186,7 +193,7 @@ export default function RoleMaster() {
             setSearchValue={setSearchValue}
         />
     return (
-        <div onKeyDown={handleKeyDown} className='md:items-start md:justify-items-center grid h-full bg-theme'>{console.log(purchasePrice,"purchaseprice")}
+        <div onKeyDown={handleKeyDown} className='md:items-start md:justify-items-center grid h-full bg-theme'>{console.log(purchasePrice, "purchaseprice")}
             <div className='flex flex-col frame w-full h-full'>
                 <FormHeader childRecordValidationActions={["delete"]} onNew={onNew} onClose={() => { setForm(false); setSearchValue(""); }} model={MODEL} saveData={saveData} setReadOnly={setReadOnly} deleteData={deleteData} childRecord={childRecord.current} />
                 <div className='flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip'>

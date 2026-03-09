@@ -4,10 +4,11 @@ import { exclude, getRemovedItems } from '../utils/helper.js';
 import { parse } from 'path';
 
 async function get(req) {
-    const { companyId, active } = req.query
+    const { companyId, active, isAddressCombined } = req.query
 
 
-    const data = await prisma.party.findMany({
+    let data
+    data = await prisma.party.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -42,6 +43,15 @@ async function get(req) {
         }
 
     });
+
+    if (isAddressCombined) {
+        data = data?.map(i => ({
+            ...i,
+            name: `${i.name}${i?.BranchType?.name ? ` / ${i.BranchType.name}` : ""
+                }${i?.City?.name ? ` / ${i.City.name}` : ""}`
+
+        }))
+    }
 
     return { statusCode: 0, data };
 }
@@ -185,7 +195,7 @@ async function create(body) {
         branchName, branchCode, branchType, branchEmail, branchAddress, branchContactPerson, branchContact,
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
-        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments,
+        bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments, parentId,
         branchTypeId,
     } = await body
 
@@ -199,7 +209,10 @@ async function create(body) {
     data = await prisma.party.create(
         {
             data: {
-                isClient, isSupplier, isBuyer, name, aliasName, code: partyCode, active, displayName,
+                isClient, isSupplier,
+                isBranch: isBranch ? Boolean(isBranch) : false,
+
+                isBuyer, name, aliasName, code: partyCode, active, displayName,
                 isAcc, isGy, isDy,
 
                 address, landMark,
@@ -224,6 +237,7 @@ async function create(body) {
                 contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
                 contactPersonNumber: contactNumber ? contactNumber : null,
                 branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
+                parentId: parentId ? parentId : "",
 
 
                 PartyAttachments: {
@@ -311,7 +325,7 @@ async function update(id, body) {
         contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-        PartyContactDetails, contactId, attachments ,branchTypeId
+        PartyContactDetails, parentId, attachments, branchTypeId
     } = body;
 
 
@@ -321,11 +335,13 @@ async function update(id, body) {
         data: {
             isClient: isClient ? JSON.parse(isClient) : "",
             isSupplier: isSupplier ? JSON.parse(isSupplier) : "",
+            parentId : parentId  ? parseInt(parentId) : "",
             name,
             aliasName,
             code: partyCode,
             active: active ? JSON.parse(active) : "",
             displayName,
+            isBranch: isBranch ? Boolean(isBranch) : false,
 
             address,
             landMark,

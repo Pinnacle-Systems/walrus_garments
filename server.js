@@ -58,6 +58,7 @@ import {
   accessoryTemplate,
   section,
   itemControlPanel,
+  quotation,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -219,6 +220,7 @@ app.use("/accessoryStock", accessoryStock)
 app.use("/accessoryTemplate", accessoryTemplate)
 app.use("/section", section);
 app.use("/itemControlPanel", itemControlPanel);
+app.use("/quotation", quotation);
 
 
 
