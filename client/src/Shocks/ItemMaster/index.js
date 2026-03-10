@@ -37,6 +37,8 @@ export default function Form() {
 
 
   const [purchasePrice, setPurchasePrice] = useState('')
+  const [offerPrice, setOfferPrice] = useState('')
+
   const [salesTaxType, setSalesTaxType] = useState("")
   const [purchaseTaxType, setPurchaseTaxType] = useState("")
   const [itemType, setItemType] = useState('')
@@ -157,7 +159,7 @@ export default function Form() {
         setSectionId(data?.sectionId ? data?.sectionId : "")
         setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
-
+        setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
 
       } else {
         setName(data?.name ? data?.name : "")
@@ -194,7 +196,7 @@ export default function Form() {
 
 
         if (data?.priceMethod === "STANDARD") {
-          setPurchasePrice(data?.ItemPriceList?.[0]?.purchasePrice ? data?.ItemPriceList?.[0]?.purchasePrice : "")
+          setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
@@ -246,14 +248,14 @@ export default function Form() {
     hsnId,
     active,
     priceMethod,
-    itemPriceList: priceMethod === "STANDARD" && !id ? [{ sizeId: null, colorId: null, purchasePrice, salesPrice, minStockQty }] : itemPriceList,
+    itemPriceList: priceMethod === "STANDARD" && !id ? [{ sizeId: null, colorId: null, offerPrice, salesPrice, minStockQty }] : itemPriceList,
     sectionId,
     fields: Object.values(fields)
 
   };
 
   const validateData = (data) => {
-    if (data.name) {
+    if (data.name && data?.code && data?.hsnId && data?.priceMethod) {
       return true;
     }
     return false;
@@ -868,16 +870,7 @@ export default function Form() {
 
                           {priceMethod == "STANDARD" && (
                             <>
-                              <div className="col-span-2">
-                                <TextInputNew1
-                                  name="Purchase Price"
-                                  value={purchasePrice}
-                                  setValue={setPurchasePrice}
-                                  readOnly={readOnly}
-                                  disabled={childRecord.current > 0}
-                                  required={true}
-                                />
-                              </div>
+
                               <div className="col-span-2">
                                 <TextInputNew1
                                   name="Sales Price"
@@ -885,7 +878,17 @@ export default function Form() {
                                   setValue={setSalesPrice}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
-                                  required={true}
+                                // required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Offer Price"
+                                  value={offerPrice}
+                                  setValue={setOfferPrice}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                // required={true}
                                 />
                               </div>
                               <div className="col-span-2">
@@ -895,7 +898,6 @@ export default function Form() {
                                   setValue={setMinStockQty}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
-                                  required={true}
                                 />
                               </div>
                             </>
@@ -1046,7 +1048,7 @@ export default function Form() {
                                               rows={1}
                                               onFocus={e => e.target.select()}
                                               className="text-right rounded w-full px-1 py-1 text-xs "
-                                              value={item.salesPrice}
+                                              value={item.offerPrice}
                                               disabled={readOnly}
                                               onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
                                               onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}

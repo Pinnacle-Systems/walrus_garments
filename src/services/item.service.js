@@ -45,6 +45,7 @@ async function getOne(id) {
                     sizeId: true,
                     purchasePrice: true,
                     salesPrice: true,
+                    offerPrice: true,
                     MinimumStockQty: true,
 
                 }
@@ -88,7 +89,7 @@ async function create(body) {
             code: code ? code : undefined,
             sectionId: sectionId ? parseInt(sectionId) : undefined,
             priceMethod: priceMethod ? priceMethod : undefined,
-      
+
             active: active ? active : undefined,
 
             ItemPriceList: itemPriceList?.length > 0
@@ -96,7 +97,7 @@ async function create(body) {
                     create: itemPriceList.map((item) => ({
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
-                        purchasePrice: item?.purchasePrice || undefined,
+                        offerPrice: item?.offerPrice || undefined,
                         salesPrice: item?.salesPrice || undefined,
                         minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
 
@@ -228,7 +229,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                 data: {
                     itemId: item?.itemId ? parseInt(item?.itemId) : undefined,
                     sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
+                    offerPrice: item?.offerPrice ? item?.offerPrice : undefined,
                     colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
                     salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
                     minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
@@ -240,7 +241,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
             return await tx.ItemPriceList.create({
                 data: {
 
-                    purchasePrice: item?.purchasePrice ? item?.purchasePrice : undefined,
+                    offerPrice: item?.offerPrice ? item?.offerPrice : undefined,
                     sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
                     colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
                     salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
@@ -256,10 +257,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, salesTaxType, priceMethod, active,
-
-        itemPriceList, sectionId, fields, 
-    } = body
+    const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields } = body
 
 
 
@@ -295,7 +293,7 @@ async function update(id, body) {
                 sectionId: sectionId ? parseInt(sectionId) : undefined,
                 priceMethod: priceMethod ? priceMethod : undefined,
                 active: active ? active : undefined,
-            
+
                 field1: fields[0] ?? "",
                 field2: fields[1] ?? "",
                 field3: fields[2] ?? "",

@@ -26,7 +26,8 @@ const YarnPoItems = ({
     setInwardItemSelection,
     supplierId,
     itemList,
-    sizeList
+    sizeList,
+    headerOpen
 }) => {
 
 
@@ -35,7 +36,6 @@ const YarnPoItems = ({
     console.log(allData?.data, "allData")
 
 
-    const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
 
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
@@ -51,32 +51,34 @@ const YarnPoItems = ({
         setPoItems(newBlend);
     };
 
-    console.log(poItems, "poItems",);
+    console.log(headerOpen, "headerOpen",);
 
+useEffect(() => {
+  if (id) return;
 
-    useEffect(() => {
-        if (id) return
-        if (poItems?.length >= 9) return;
-        setPoItems((prev) => {
-            let newArray = Array.from({ length: 9 - prev.length }, (i) => {
-                return {
-                    itemId: "",
-                    qty: "0.00",
-                    tax: "0",
-                    colorId: "",
-                    uomId: "",
-                    price: "0.00",
-                    discountValue: "0.00",
-                    noOfBags: "0",
-                    discountType: "",
-                    weightPerBag: "0.00",
-                    id: '',
-                    poItemsId: ""
-                };
-            });
-            return [...prev, ...newArray];
-        });
-    }, [transType, setPoItems, poItems]);
+  const targetRows = headerOpen ? 9 : 15;
+
+  if (poItems?.length >= targetRows) return;
+
+  setPoItems((prev) => {
+    const newArray = Array.from({ length: targetRows - prev.length }, () => ({
+      itemId: "",
+      qty: "0.00",
+      tax: "0",
+      colorId: "",
+      uomId: "",
+      price: "0.00",
+      discountValue: "0.00",
+      noOfBags: "0",
+      discountType: "",
+      weightPerBag: "0.00",
+      id: "",
+      poItemsId: "",
+    }));
+    return [...prev, ...newArray];
+  });
+}, [transType, setPoItems, poItems, headerOpen]);
+
 
     const addNewRow = () => {
         const newRow = {
@@ -98,161 +100,30 @@ const YarnPoItems = ({
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
     };
+
+
     const handleDeleteAllRows = () => {
         setPoItems((prevRows) => {
             if (prevRows.length <= 1) return prevRows;
             return [prevRows[0]];
         });
     };
-    const activeTab = useSelector((state) =>
-        state.openTabs.tabs.find((tab) => tab.active).name
-    );
 
-    const { data: yarnList } = useGetYarnMasterQuery({ params });
+
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
-    // const { data: itemList } = useGetItemMasterQuery({ params });
-    // const { data: sizeList } = useGetSizeMasterQuery({ params });
 
 
-    function findYarnTax(id) {
-        if (!yarnList) return 0;
-        let yarnItem = yarnList.data.find(
-            (item) => parseInt(item.id) === parseInt(id)
-        );
-        return yarnItem ? yarnItem.taxPercent : 0;
-    }
 
-    function getTotals(field) {
-        const total = poItems.reduce((accumulator, current) => {
-            return accumulator + parseFloat(current[field] ? current[field] : 0);
-        }, 0);
-        return parseFloat(total);
-    }
 
-    const TotalAmount = (price, tax, qty) => {
-        const p = parseFloat(price) || 0;
-        const t = parseFloat(tax) || 0;
-        const q = parseFloat(qty) || 0;
 
-        const priceWithTax = p + (p * t) / 100;
-        return priceWithTax * q;
-    };
 
-    const getDiscountAmount = (row) => {
-        if (!row) return 0;
-        const price = parseFloat(row.price) || 0;
-        const tax = parseFloat(row.tax) || 0;
-        const qty = parseFloat(row.qty) || 0;
-        const discountValue = parseFloat(row.discountValue) || 0;
-        const discountType = (row.discountType || "").toLowerCase();
-        const total = TotalAmount(price, tax, qty);
 
-        if (discountType === "flat") {
-            return total - discountValue;
-        } else if (discountType === "percentage") {
-            const discount = (total * discountValue) / 100;
-            return total - discount;
-        } else {
-            return total;
-        }
-    };
-    const getFinalAmountAfterDiscount = () => {
-        return poItems.reduce((acc, row) => {
-            const price = parseFloat(row.price) || 0;
-            const tax = parseFloat(row.tax) || 0;
-            const qty = parseFloat(row.qty) || 0;
-            const discountValue = parseFloat(row.discountValue) || 0;
-            const discountType = (row.discountType || "").toLowerCase();
 
-            const total = TotalAmount(price, tax, qty);
 
-            let finalAmount = total;
 
-            if (discountType === "flat") {
-                finalAmount = total - discountValue;
-            } else if (discountType === "percentage") {
-                const discount = (total * discountValue) / 100;
-                finalAmount = total - discount;
-            }
 
-            return acc + finalAmount;
-        }, 0);
-    };
-    const dispatch = useDispatch();
-    const handleCreateNew = (masterName = "") => {
-        dispatch(setOpenPartyModal(true));
-        dispatch(setLastTab(activeTab));
-        dispatch(push({ name: masterName }));
-    }
-    function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
-        setPoItems(poItems => {
-            const newBlend = structuredClone(poItems);
-            if (!newBlend[index]["lotDetails"]) return poItems
-            newBlend[index]["lotDetails"][lotIndex][field] = value;
-            let totalQtyExcludeCurrentIndex = sumArray(newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex), "qty")
-            if ((field === "weightPerBag" || field === "noOfBags") && newBlend[index]["lotDetails"][lotIndex]["noOfBags"] && newBlend[index]["lotDetails"][lotIndex]["weightPerBag"]) {
-                let tempInwardQty = (parseFloat(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * parseFloat(newBlend[index]["lotDetails"][lotIndex]["weightPerBag"])).toFixed(3)
-                let currentOverAllQty = parseFloat(tempInwardQty) + parseFloat(totalQtyExcludeCurrentIndex)
-                // if (parseFloat(balanceQty) < parseFloat(currentOverAllQty)) {
-                //     toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
-                //     return poItems
-                // }
-                newBlend[index]["lotDetails"][lotIndex]["qty"] = tempInwardQty
-            }
-            if (field === "qty") {
-                // let currentOverAllQty = parseFloat(value) + parseFloat(totalQtyExcludeCurrentIndex)
-                // if (parseFloat(balanceQty) < parseFloat(currentOverAllQty)) {
-                //     toast.info("Inward Qty Can not be more than balance Qty", { position: 'top-center' })
-                //     return poItems
-                // }
-                let qty = parseInt(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * parseFloat(newBlend[index]["lotDetails"][lotIndex]["weightPerBag"])
-                let excessQty = parseInt(newBlend[index]["lotDetails"][lotIndex]["noOfBags"]) * 2
-                if ((qty + excessQty) < parseFloat(value)) {
-                    toast.info("Excess Qty Cannot be More than 2kg Per Bag", { position: 'top-center' })
-                    return poItems
-                }
-            }
-            return newBlend
-        });
-    }
-    function addNewLotNo(index, weightPerBag) {
-        setPoItems(poItems => {
-            const newBlend = structuredClone(poItems);
-            if (!newBlend[index]) return poItems
-            if (newBlend[index]["lotDetails"]) {
-                newBlend[index]["lotDetails"] = [
-                    ...newBlend[index]["lotDetails"],
-                    { lotNo: "", qty: "0.000", noOfBags: 0, weightPerBag }]
-            } else {
-                newBlend[index]["lotDetails"] = [{ lotNo: "", qty: "0.000", noOfBags: 0, weightPerBag }]
-            }
-            return newBlend
-        })
-    }
-    function removeLotNo(index, lotIndex) {
-        setPoItems(poItems => {
-            const newBlend = structuredClone(poItems);
-            if (!newBlend[index]["lotDetails"]) return poItems
-            newBlend[index]["lotDetails"] = newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex)
-            return newBlend
-        })
-    }
-    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? poItems[currentSelectedLotGrid] : ""
-    let taxItems = poItems?.map(item => {
-        let newItem = structuredClone(item)
-        newItem["qty"] = sumArray(newItem.lotDetails, "qty")
-        return newItem
-    })
-    let lotNoArr = selectedRow?.lotDetails ? selectedRow.lotDetails.map(item => item.lotNo) : []
-    let isLotNoUnique = new Set(lotNoArr).size == lotNoArr.length
-    function onClose() {
-        if (!isLotNoUnique) {
-            toast.info("Lot No Should be Unique", { position: "top-center" })
-            return
-        }
-        setCurrentSelectedLotGrid(false)
-    }
+
 
 
     return (
@@ -260,7 +131,7 @@ const YarnPoItems = ({
 
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[330px]">
+            <div className={`border border-slate-200 p-2 bg-white rounded-md shadow-sm ${headerOpen ? " max-h-[330px]" : " max-h-[550px]"}`}>
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">List Of Inward Items</h2>
                     {/* <button className="font-bold text-slate-700 "
@@ -291,7 +162,7 @@ const YarnPoItems = ({
                     </button> */}
 
                 </div>
-                <div className={` relative w-full h-[250px] overflow-y-auto py-1`}>
+                <div className={` relative w-full ${headerOpen ? " h-[250px]" : " h-[500px]"} overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky">
                             <tr className="py-2">
@@ -581,8 +452,8 @@ const YarnPoItems = ({
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 50}px`,
-                            left: `${contextMenu.mouseX - 30}px`,
+                            top: `${contextMenu.mouseY - 55}px`,
+                            left: `${contextMenu.mouseX - 40}px`,
 
                             // background: "gray",
                             boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",

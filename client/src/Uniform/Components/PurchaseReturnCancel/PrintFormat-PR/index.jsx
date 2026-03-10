@@ -248,7 +248,7 @@ const YarnPurchaseOrderReturnPrintFormat = ({
   deliveryTo,
   taxKey,
   taxGroupWise,
-  colorList, uomList, accessoryList, sizeList, term
+  colorList, uomList, accessoryList, sizeList, itemList,
 
 }) => {
 
@@ -422,12 +422,12 @@ const YarnPurchaseOrderReturnPrintFormat = ({
             <Text style={[styles.th, { flex: 0.7 }]}>S.No</Text>
             <Text style={[styles.th, { flex: 6 }]}>Item Name</Text>
 
-            <Text style={[styles.th, { flex: 3 }]}>Color</Text>
             <Text style={[styles.th, { flex: 1 }]}>Size</Text>
+            <Text style={[styles.th, { flex: 3 }]}>Color</Text>
             <Text style={[styles.th, { flex: 1 }]}>Uom</Text>
+            <Text style={[styles.th, { flex: 2 }]}>Price</Text>
             <Text style={[styles.th, { flex: 2 }]}>Qty</Text>
 
-            <Text style={[styles.th, { flex: 2 }]}>Price</Text>
             <Text style={[styles.th, { flex: 1.5 }]}>Tax(%)</Text>
 
             <Text style={[styles.th, { flex: 3 }]}>Gross</Text>
@@ -436,29 +436,19 @@ const YarnPurchaseOrderReturnPrintFormat = ({
           {filledPoItems?.map((val, index) => (
             <View key={index} style={{ flexDirection: "row", borderBottom: "1 solid #d1d5db" }}>
               <Text style={[styles.td, { flex: 0.7 }]}>{index + 1}</Text>
-              <Text style={[styles.td, { flex: 6 }]}>
-                {findFromList(val.accessoryId, accessoryList?.data, "aliasName")}
+              <Text style={[styles.td, { flex: 6 , textAlign: "left" }]}>
+                {findFromList(val.itemId, itemList?.data, "name")}
               </Text>
-              {/* <Text style={[styles.td, { flex: 4 }]}>
-                {findAccessoryName(val.accessoryId, accessoryList?.data, "accessoryItem")} </Text>
-              <Text style={[styles.td, { flex: 4 }]}>
-                {findAccessoryName(val.accessoryId, accessoryList?.data, "accessoryGroup")}
-              </Text> */}
-              <Text style={[styles.td, { flex: 3, textAlign: "right" }]}>
-                {findFromList(val.colorId, colorList?.data, "name")}
-              </Text>
-              <Text style={[styles.td, { flex: 1, textAlign: "right" }]}>
+              <Text style={[styles.td, { flex: 1, textAlign: "left" }]}>
                 {findFromList(val.sizeId, sizeList?.data, "name")}
 
               </Text>
-              <Text style={[styles.td, { flex: 1 }]}>
-                {findFromList(val.uomId, uomList?.data, "name")}
+              <Text style={[styles.td, { flex: 3, textAlign: "left" }]}>
+                {findFromList(val.colorId, colorList?.data, "name")}
               </Text>
 
-              <Text style={[styles.td, { flex: 2 }]}>
-                {val?.qty
-                  ? parseFloat(val.qty).toFixed(3)
-                  : ""}
+              <Text style={[styles.td, { flex: 1 }]}>
+                {findFromList(val.uomId, uomList?.data, "left")}
               </Text>
 
               <Text style={[styles.td, { flex: 2, textAlign: "right" }]}>
@@ -466,6 +456,12 @@ const YarnPurchaseOrderReturnPrintFormat = ({
                   ? parseFloat(val.price).toFixed(3)
                   : ""}
               </Text>
+              <Text style={[styles.td, { flex: 2 ,textAlign: "right" }]}>
+                {val?.qty
+                  ? parseFloat(val.qty).toFixed(3)
+                  : ""}
+              </Text>
+
 
               <Text style={[styles.td, { flex: 1.5, textAlign: "right" }]}>
                 {val?.taxPercent
@@ -514,33 +510,7 @@ const YarnPurchaseOrderReturnPrintFormat = ({
             </Text>
           </View>
 
-{/* 
-          <View
-            style={{
-              alignSelf: "flex-end",
-              border: "1 solid #9ca3af",
-              // marginTop: 4,
-              width: 100,
-            }}
-          >
-            <View style={{}}>
-              <Text style={{
-                fontSize: 8, fontWeight: "bold", textAlign: "center", padding: 2, backgroundColor: "#FE0002", color: "#FFFF"
-              }}>
-                TAX DETAILS
-              </Text>
-            </View>
-            <TaxDetails taxGroupWise={taxGroupWise} items={poItems} taxDetails={taxDetails} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} />
 
-
-
-            <View style={{ flexDirection: "row", borderTop: "1 solid #9ca3af", backgroundColor: "#FE0002", color: "#FFFF" }}>
-              <Text style={{ flex: 1, fontSize: 8, paddingTop: 3 }}>Net Amount</Text>
-              <Text style={{ flex: 1, textAlign: "right", fontSize: 8, padding: 3 }}>
-                {parseFloat(taxDetails.netAmount).toFixed(3)}
-              </Text>
-            </View>
-          </View> */}
 
 
           <View >

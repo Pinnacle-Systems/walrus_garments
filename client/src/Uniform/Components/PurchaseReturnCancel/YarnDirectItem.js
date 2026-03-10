@@ -90,7 +90,7 @@ const YarnDirectItem = ({ itemList, uomList,
                                     onFocus={(e) => e.target.select()}
                                     // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                     value={item[i]}
-                                    // disabled={readOnly || !row.uomId}
+                                    disabled={true}
                                     onChange={(e) =>
                                         handleInputChange(e.target.value, index, i)
                                     }
@@ -100,8 +100,7 @@ const YarnDirectItem = ({ itemList, uomList,
                                     }
                                 />
                             </td>
-                            {console.log(element?.[i], 'element')}
-                            {console.log(i, 'iiiiiiiiiiii')}
+                     
                         </>
                     ))
                 ))}
@@ -151,13 +150,8 @@ const YarnDirectItem = ({ itemList, uomList,
                     </div>
                 </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                    <input
-                        type="number"
-                        onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-16 table-data-input"
-                        value={(((item.price * item.returnQty).toFixed(2)) || "")}
-                        disabled={true}
-                    />
+                    {item.price * item.returnQty ? parseFloat(item.price * item.returnQty || 0).toFixed(2) : ""}
+
                 </td>
                 {/* 
                 <td className="w-16 px-1 py-1 text-center  border border-gray-300">

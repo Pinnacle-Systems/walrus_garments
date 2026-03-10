@@ -314,6 +314,8 @@ async function partyMaterial(partyMaterials, id) {
 
 
 async function update(id, body) {
+
+    console.log(body,"data for party update Query")
     const {
 
         companyId, active, userId, name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient,

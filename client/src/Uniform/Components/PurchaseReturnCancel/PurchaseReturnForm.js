@@ -140,7 +140,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         remarks,
         specialInstructions,
         vehicleNo,
-        finYearId,locationId
+        finYearId, locationId
     }
 
     function isSupplierOutside() {
@@ -155,7 +155,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
         return data.poType && data.supplierId && data.dcDate && data.dcNo
-            && data.directReturnItems.length !== 0 && data?.locationId  && data?.storeId
+            && data.directReturnItems.length !== 0 && data?.locationId && data?.storeId
 
     }
 
@@ -375,9 +375,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         poItems={directInwardReturnItems?.filter(item => item?.itemId)}
                         supplierDetails={supplierDetails ? supplierDetails?.data : null}
                         // deliveryType={deliveryType} deliveryToId={deliveryToId} taxTemplateId={taxTemplateId}
-                        yarnList={itemList} uomList={uomList} colorList={colorList}
+                        itemList={itemList} uomList={uomList} colorList={colorList}
                         payTermList={payTermList} termsAndCondition={termsAndCondition} taxDetails={taxDetails}
-                        deliveryTo={deliveryTo} taxGroupWise={taxGroupWise}
+                        deliveryTo={deliveryTo} taxGroupWise={taxGroupWise} sizeList={sizeList}
                     />
                 </PDFViewer>
             </Modal>
@@ -459,7 +459,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     setValue={(value) => { setLocationId(value); setStoreId("") }}
                                     required={true} readOnly={id || readOnly} />
                                 <DropdownInput name="Store"
-                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
+                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "WAREHOUSE"), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
                             </div>
@@ -484,10 +484,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                         show={"isSupplier"}
                                         required={true}
                                         disabled={id}
-                                    />                                </div>
-                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+                                    />
+                                </div>
 
-                                <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
+                                <DropdownInput name="Store"
+                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "WAREHOUSE"), "storeName", "id")}
+                                    value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
+
+                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required /> */}
+
+                                {/*   <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
                             
                              */}
                             </div>

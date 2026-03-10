@@ -158,7 +158,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   };
   const { data: cityList } = useGetCityQuery({ params });
 
- 
+
 
 
   const { data: branchTypeData } = useGetbranchTypeQuery({ params, searchParams: searchValue });
@@ -176,7 +176,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
     isFetching: singleBranchFetching,
     isLoading: singleBranchLoading,
   } = useGetPartyBranchByIdQuery(parentId, {
-    skip: id
+    skip: !parentId || id
   });
 
 
@@ -236,7 +236,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setCinNo(data?.cinNo || "");
       setFaxNo(data?.faxNo || "");
       setCinNo(data?.cinNo || "");
-      setGstNo(data?.gstNo || "");
+      setGstNo(data?.gstNo ? data?.gstNo : "");
       setCostCode(data?.costCode || "");
       setCstDate(
         data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
@@ -271,8 +271,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-      setSupplier(data?.isSupplier || false);
-      setClient(data?.isClient || true);
+
       setAccountNumber(data?.accountNumber ? data?.accountNumber : "")
       setIfscCode(data?.ifscCode ? data?.ifscCode : "")
       setlandMark(data?.landMark ? data?.landMark : "")
@@ -286,6 +285,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setBranchTypeId(data?.branchTypeId ? data?.branchTypeId : "")
       setIsBranch(data?.isBranch ? data?.isBranch : '')
       setParentId(data?.parentId ? data?.parentId : "")
+      setSupplier(data?.isSupplier ? data?.isSupplier : false);
+      setClient(data?.isClient ? data?.isClient : false);
 
     },
 
@@ -303,6 +304,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const syncFormWithDbNew = useCallback(
     (data) => {
+      if (id) return
       setPanNo(data?.panNo ? data?.panNo : "")
       setGstNo(data?.gstNo ? data?.gstNo : "")
       setMsmeNo(data?.msmeNo ? data?.msmeNo : "")
@@ -310,7 +312,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
     },
 
-    [id]
+    [parentId]
   );
 
 
@@ -359,9 +361,10 @@ export default function Form({ partyId, show, openModelForAddress }) {
     isGy,
     isDy,
     partyBranch,
-    attachments,
 
-     material, materialActive, rawMaterial, branchTypeId, parentId ,isBranch
+    material, materialActive, rawMaterial, branchTypeId, parentId, isBranch,
+
+    attachments: attachments?.filter(i => i.filePath || i.name)
 
 
 
@@ -371,7 +374,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  console.log(parentId, "parentId")
+  console.log(attachments?.filter(i => i.filePath || i.name), "parentId")
 
 
   const validateData = (data) => {
@@ -391,71 +394,36 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
     try {
-
       const formData = new FormData();
-
       for (let key in data) {
-        console.log("KEY:", key);
-        console.log("VALUE:", data[key]);
-        console.log("TYPE:", typeof data[key]);
-        if (key == 'attachments') {
-          formData.append(
-            key,
-            JSON.stringify(
-              data[key].map(i => ({
-                ...i,
-                filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath
-              }))
-            )
-          );
 
+        console.log(key, "key")
+        if (key === 'attachments') {
+          formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
           data[key].forEach(option => {
-
-
             if (option?.filePath instanceof File) {
-              formData.append('image', option.filePath);
+              formData.append('images', option.filePath);
             }
           });
-        }
-
-
-
-        // 🔥 FIX HERE: If value is an array or object, convert to JSON
-        else if (typeof data[key] == "object") {
-          formData.append(key, JSON.stringify(data[key]));
-        }
-
-        // Normal case
-        else {
+        } else {
           formData.append(key, data[key]);
         }
       }
 
+      console.log(formData, "formData")
 
       let returnData;
-      if (text === "Updated") {
+      if (text == "Updated") {
         returnData = await callback({ id, body: formData }).unwrap();
       } else {
-        try {
+        returnData = await callback(data).unwrap();
 
-          returnData = await callback(data).unwrap();
-          Swal.fire({
-            icon: 'success',
-            title: `${text || 'Saved'} Successfully`,
-            showConfirmButton: false,
-            timer: 2000
-          });
-        }
-        catch (error) {
-          console.error("Submission error:", error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Submission error',
-            text: error.data?.message || 'Something went wrong!',
-          });
-        }
       }
 
+      Swal.fire({
+        icon: 'success',
+        title: `${text} Successfully`,
+      });
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -562,7 +530,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       if (id) {
         foundItem = allData?.data
           ?.filter((i) => i.id != id)
-          ?.some((item) => item.name == name && item.gstNo == gstNo);
+          ?.some((item) => item.name == name && item.gstNo == gstNo && !item?.parentId);
       } else {
         foundItem = allData?.data?.some((item) => item.name == name && item.gstNo == gstNo);
       }
