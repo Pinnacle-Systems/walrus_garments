@@ -54,43 +54,51 @@ export function usePermissionForUsers() {
   };
 
 
-  // console.log(userRoleId,"userRoleId",currentPagePermissions)
+  console.log("currentPagePermissions", currentPagePermissions)
 
   const hasPermission = (callback, type, childRecord) => {
 
-    const childRecordValidationActions = [ "delete"]
+    const childRecordValidationActions = ["delete"]
+
+    console.log(childRecord, "childRecord")
 
 
-    if (childRecordValidationActions?.includes(type) && childRecordCount(childRecord)) {
-      Swal.fire({
-        title: `Child Record Exists`,
-        icon: "warning",
-      });
-      return;
-    }
-    if (IsSuperAdmin()) {
-      callback();
-    } else {
-      if (isCurrentFinYearActive()) {
-        if (IsDefaultAdmin()) {
-          callback();
-        } else if (currentPagePermissions?.data[type]) {
-          callback();
+    if (callback) {
+      if (IsSuperAdmin()) {
+        callback();
+      } else {
+        if (isCurrentFinYearActive()) {
+          if (IsDefaultAdmin()) {
+            callback();
+          } else if (currentPagePermissions?.data[type]) {
+            if (childRecordValidationActions?.includes(type) && childRecordCount(childRecord)) {
+              Swal.fire({
+                title: `Child Record Exists`,
+                icon: "warning",
+              });
+              return;
+            }
+
+            callback();
+
+
+          } else {
+
+            Swal.fire({
+              title: `No Permission to ${type == "save" ? "Add" : type}...!`,
+              icon: "warning",
+            });
+            return;
+          }
         } else {
-
           Swal.fire({
-            title: `No Permission to ${type == "save" ? "Add" : type}...!`,
+            title: `Past Fin Year Only can view!", { position: "top-center" }`,
             icon: "warning",
           });
-          return;
         }
-      } else {
-        Swal.fire({
-          title: `Past Fin Year Only can view!", { position: "top-center" }`,
-          icon: "warning",
-        });
       }
     }
+
   };
 
 

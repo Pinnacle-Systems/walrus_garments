@@ -54,4 +54,5 @@ export { default as AccessoryStockTransfer } from "./AccessoryStockTransfer";
 export { default as StockReport } from "./StockReport";
 export { default as MachineWiseProduction } from "./MachineWiseProductionEntry";
 export { default as Quotation } from "./Quotation";
+export { default as SaleOrder } from "./SaleOrder";
 

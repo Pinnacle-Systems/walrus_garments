@@ -26,6 +26,7 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndConditionsService";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { usePermissionForUsers } from "../../../Basic/components/HasPermission";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -33,24 +34,22 @@ const MODEL = "Purchase Return / Direct Return";
 export default function Form() {
 
 
-  const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-  const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-  const [selectedStatus, setSelectedStatus] = useState('all');
   const [showManufacturer, setShowManufacturer] = useState(false);
   const [id, setId] = useState("");
   const { branchId, userId, companyId, finYearId } = getCommonParams();
   const [readOnly, setReadOnly] = useState(false);
   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectReturn");
   const [supplierId, setSupplierId] = useState("");
+  const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
 
   const params = {
     branchId, userId, finYearId
   };
-  const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
   const { data: allData, isLoading, isFetching } = useGetDirectCancelOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
 
   const [removeData] = useDeleteDirectCancelOrReturnMutation();
 
+  const { hasPermission } = usePermissionForUsers()
 
 
 
@@ -136,15 +135,17 @@ export default function Form() {
 
   }
 
-  console.log(directInwardReturnItems, 'directInwardReturnItems')
-  return (
+  function handleCreatefunction() {
+    setShowManufacturer(true)
+    onNew()
+  } return (
     <>
       {showManufacturer ? (
         <PurchaseReturnForm isLoading={isLoading} isFetching={isFetching} poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} allData={allData} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
           onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} supplierId={supplierId} setSupplierId={setSupplierId}
           supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
           branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
-          termsAndCondition={termsAndCondition} sizeList={sizeList}
+          termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission}
         />
 
       ) : (
@@ -155,7 +156,8 @@ export default function Form() {
 
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1.5 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => { setShowManufacturer(true); onNew() }}
+              onClick={() => hasPermission(handleCreatefunction, "create")}
+
             >
               <FaPlus /> Create New
             </button>
@@ -170,8 +172,9 @@ export default function Form() {
               onDelete={handleDelete}
             />
           </div>
-        </div>
-      )}
+        </div >
+      )
+      }
     </>
   );
 

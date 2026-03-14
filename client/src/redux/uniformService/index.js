@@ -47,5 +47,8 @@ export { default as AccessoryStockTransferApi } from "./AcessoryStockTransferSer
 export { default as SectionMasterApi } from "./SectionMasterService"
 export { default as ItemControlPanelApi } from "./ItemControlPanelService"
 export { default as QuotataionApi } from "./quotationServices"
+export { default as LegacyStockApi } from "./LegacyStockService"
+export { default as saleOrderApi } from "./saleOrderServices"
+export { default as ItemCategoryMasterApi } from "./ItemCategoryMasterService"
 
 

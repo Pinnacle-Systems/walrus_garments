@@ -8,6 +8,13 @@ async function get(req) {
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
+        },
+        include : {
+            _count : {
+                select : {
+                    state : true
+                }
+            }
         }
     });
     return { statusCode: 0, data };

@@ -173,8 +173,27 @@ async function getAlreadyInwardDataWithoutLimit(poInwardOrDirectInward, poItemsI
 }
 
 
+async function getStockQtyLocationWise(storeId, itemId, sizeId, colorId, uomId) {
+    let sql;
 
-export async function getDirectInwardReturnItemsAlreadyData(directInwardOrReturnId, poInwardOrDirectInward, poType, directItems) {
+
+
+    sql = `select sum(qty) as stockQty from stock
+             where storeId = ${storeId} and itemId = ${itemId} and sizeId = ${sizeId} and  colorId=${colorId} and uomId=${uomId}  `
+
+    console.log(sql, "sql for stockQty")
+
+    const stockData = await prisma.$queryRawUnsafe(sql);
+    return stockData[0]
+
+
+}
+
+
+
+export async function getDirectInwardReturnItemsAlreadyData(storeId, poType, directItems, poInwardOrDirectInward) {
+
+    console.log(directItems, 'directItems  for stockQty')
     let directItemsData = [];
     for (let i = 0; i < directItems?.length; i++) {
 
@@ -184,6 +203,8 @@ export async function getDirectInwardReturnItemsAlreadyData(directInwardOrReturn
             alreadyInwardedQty: (await getAlreadyInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
             alreadyInwardedRolls: (await getAlreadyRetrunData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedRolls,
             alreadyReturnedQty: (await getAlreadyInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
+            stockQty: ((await getStockQtyLocationWise(storeId, directItem?.itemId, directItem?.sizeId, directItem?.colorId, directItem?.uomId))?.stockQty || 0)
+
         }
 
 
@@ -210,7 +231,7 @@ async function getAlreadyReturnData(poInwardOrDirectInward, directReturnItemsId,
         sql = `
         select  sum(qty) as alreadyReturnedQty,sum(noofrolls) as alreadyReturnedRolls from DirectReturnOrPoReturn left join directReturnItems
       on DirectReturnOrPoReturn.id=directReturnItems.directReturnOrPoReturnId
-      WHERE  DirectReturnOrPoReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directReturnItems.directItemsId = ${directItem?.directItemsId} AND directReturnItems.ID < ${directItem?.id}
+      WHERE  DirectReturnOrPoReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directReturnItems.directItemsId = ${directItem?.directItemsId} 
          `
     }
     else {
@@ -221,7 +242,7 @@ async function getAlreadyReturnData(poInwardOrDirectInward, directReturnItemsId,
          `
     }
 
-
+    console.log(sql, "sql for already returnQty")
     const alreadyReturnData = await prisma.$queryRawUnsafe(sql);
 
     return alreadyReturnData[0]
@@ -352,13 +373,19 @@ async function getStockQty(storeId, itemType, itemId, colorId, uomId, designId, 
     const stockData = await prisma.$queryRawUnsafe(sql);
     return stockData[0]
 
-
-
 }
+
+
+
+
 
 export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId, poInwardOrDirectInward, poType, directReturnItems, storeId, createdAt) {
     let directItemsData = [];
 
+
+    console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
+    console.log(poType, "poType")
+    console.log(storeId, "storeId")
 
     for (let i = 0; i < directReturnItems?.length; i++) {
 
@@ -368,29 +395,32 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         let alreadyInwardedQty = ((await getAlreadyInwardDataWithoutLimit(poInwardOrDirectInward, directItem?.poItemsId, directItem))?.alreadyInwardedQty || 0);
         let alreadyInwardedRolls = ((await getAlreadyInwardDataWithoutLimit(poInwardOrDirectInward, directItem?.poItemsId, directItem))?.alreadyInwardedRolls || 0);
         let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls);
-        let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty) + parseFloat(directItem?.qty)
+        let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
         // let returnLotDetails = (await getStockData(directItem, poInwardOrDirectInward, directItem?.returnLotDetails, directItem?.fabricId, directItem?.colorId, directItem?.gsmId, directItem?.designId, directItem?.uomId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.kDiaId, directItem?.fDiaId, storeId, directItem?.poItemsId, poType,))
         // console.log(directItem, "directItem")
         let stockQty = parseFloat((await getStockQty(storeId, poType, directItem?.itemId, directItem?.colorId, directItem?.uomId, directItem?.designId, directItem?.gaugeId, directItem?.loopLengthId, directItem?.gsmId, directItem?.sizeId, directItem?.fabricId, directItem?.kDiaId, directItem?.fDiaId, directItem?.yarnId))?.stockQty || 0)
-        if (directItem?.id) {
-            stockQty = stockQty + parseFloat(directItem?.qty || 0)
-        }
-        else {
-            stockQty = stockQty
-        }
+        // if (directItem?.id) {
+        //     stockQty = stockQty + parseFloat(directItem?.qty || 0)
+        // }
+        // else {
+        //     stockQty = stockQty
+        // }
+
+        allowedReturnQty = directItem?.qty  + allowedReturnQty
 
 
-        let obj = {
-            ...directItem,
-            alreadyReturnedQty,
-            alreadyReturnedRolls,
-            alreadyInwardedQty,
-            alreadyInwardedRolls,
-            allowedReturnRolls,
-            allowedReturnQty,
-            // returnLotDetails,
-            stockQty
-        }
+
+            let obj = {
+                ...directItem,
+                alreadyReturnedQty,
+                alreadyReturnedRolls,
+                alreadyInwardedQty,
+                alreadyInwardedRolls,
+                allowedReturnRolls,
+                allowedReturnQty,
+                // returnLotDetails,
+                stockQty
+            }
 
 
 

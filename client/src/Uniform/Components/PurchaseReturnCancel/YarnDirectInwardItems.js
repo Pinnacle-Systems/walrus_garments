@@ -4,7 +4,7 @@ import { capitalizeFirstLetter } from '../../../Utils/helper';
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList,stockControlData ,storeId
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId
 
 }) => {
 
@@ -36,9 +36,9 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
     };
 
     useEffect(() => {
-        if (directInwardReturnItems?.length >= 9) return
+        if (directInwardReturnItems?.length >= 12) return
         setDirectInwardReturnItems(prev => {
-            let newArray = Array?.from({ length: 9 - prev?.length }, () => {
+            let newArray = Array?.from({ length: 12 - prev?.length }, () => {
                 return {
                     itemId: "",
                     colorId: "",
@@ -71,9 +71,43 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
 
     return (
         <>
-            <div className=" rounded-md shadow-sm h-full">
+            <div className=" bg-white rounded-md shadow-sm h-[400px]">
+                <div className="flex justify-between items-center mb-2 ">
+                    <h2 className="font-bold text-slate-700">List Of Items</h2>
+                    <button className="font-bold text-slate-700 bord"
+                        // onKeyDown={(e) => {
+                        //     if (e.key === "Enter") {
+                        //         e.preventDefault();
+                        //         setInwardItemSelection(true)
 
-                <div className={` w-full h-[310px]  overflow-auto overflow-y-auto py-1`}>
+                        //     }
+                        // }}
+                        // onClick={() => {
+                        //     if (!supplierId) {
+                        //         Swal.fire({
+                        //             icon: 'warning',
+                        //             title: ` Choose Supplier`,
+                        //         });
+                        //         return
+                        //     }
+                        //     if (!purchaseInwardId) {
+                        //         Swal.fire({
+                        //             icon: 'warning',
+                        //             title: `Select Purchase Inward No`,
+                        //         });
+                        //         return
+                        //     }
+
+
+                        //     setInwardItemSelection(true)
+
+                        // }}
+                    >
+                        Fill Inward Items
+                    </button>
+                </div>
+
+                <div className={` w-full h-[400px]  overflow-auto overflow-y-auto  `}>
                     <table className="w-full border-collapse table-fixed ">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky" >
                             <tr>
@@ -82,7 +116,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     S.No
                                 </th>
-                   
+
                                 <th
 
                                     className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
@@ -116,21 +150,22 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                             >
                                                 {capitalizeFirstLetter(element?.[i])}
                                             </th>
-                                         
+
                                         </>
                                     ))
                                 ))}
-                                <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Stock Qty
-                                </th>
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     Allowed Return Qty
+                                </th>
+                                <th
+
+                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Stock Qty
                                 </th>
                                 <th
 

@@ -16,7 +16,7 @@ import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterS
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import QuotationItems from "./QuotationItems";
-import { useAddQuotationMasterMutation, useUpdateQuotationMasterMutation } from "../../../redux/uniformService/quotationServices";
+import { useAddQuotationMasterMutation, useAddQuotationMutation, useGetQuotationByIdQuery, useGetQuotationMasterByIdQuery, useUpdateQuotationMasterMutation, useUpdateQuotationMutation } from "../../../redux/uniformService/quotationServices";
 
 
 
@@ -55,7 +55,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const branchIdFromApi = useRef(branchId);
 
   const params = {
-    branchId, companyId ,userId, finYearId
+    branchId, companyId, userId, finYearId
   };
 
 
@@ -74,10 +74,10 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+  } = useGetQuotationByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddQuotationMasterMutation();
-  const [updateData] = useUpdateQuotationMasterMutation();
+  const [addData] = useAddQuotationMutation();
+  const [updateData] = useUpdateQuotationMutation();
 
 
 
@@ -100,27 +100,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     } else {
       setReadOnly(false);
     }
-    setTransType(data?.poType ? data.poType : "DyedYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
-    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setQuoteItems(data?.QuoteItems ? data.QuoteItems : []);
+    setQuoteItems(data?.QuotationItems ? data.QuotationItems : []);
+    setCustomerId(data?.customerId ? data?.customerId : "")
     if (data?.docId) {
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
-    // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-    setPayTermId(data?.payTermId ? data?.payTermId : "");
-    setCustomerId(data?.supplierId ? data?.supplierId : "");
-    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDcNo(data?.dcNo ? data.dcNo : "")
-    setLocationId(data?.branchId ? data?.branchId : "")
-    setStoreId(data?.storeId ? data.storeId : "")
-    setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
-    setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
-    setRemarks(data?.remarks ? data?.remarks : "")
-    if (data?.branchId) {
-      branchIdFromApi.current = data?.branchId
-    }
+
   }, [id]);
 
   useEffect(() => {
@@ -356,8 +342,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc. Id" readOnly value={docId} />
-              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <ReusableInput label="Quotation No" readOnly value={docId} />
+              <ReusableInput label="Quotation Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 
             </div>

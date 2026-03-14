@@ -53,7 +53,10 @@ import {
   AccessoryStockTransferApi,
   SectionMasterApi,
   ItemControlPanelApi,
-  QuotataionApi
+  QuotataionApi,
+  LegacyStockApi,
+  saleOrderApi,
+  ItemCategoryMasterApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -195,6 +198,9 @@ const commonReducers = {
   SectionMaster: SectionMasterApi.reducer,
   ItemControlPanel: ItemControlPanelApi.reducer,
   Quotationr: QuotataionApi.reducer,
+  LegacyStock: LegacyStockApi.reducer,
+  saleOrder: saleOrderApi.reducer,
+  ItemCategoryMaster: ItemCategoryMasterApi.reducer
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -310,7 +316,10 @@ AccessoryStockApi.middleware,
 AccessoryTemplateMasterApi.middleware,
 SectionMasterApi.middleware,
 ItemControlPanelApi.middleware,
-QuotataionApi.middleware
+QuotataionApi.middleware,
+LegacyStockApi.middleware,
+saleOrderApi.middleware,
+ItemCategoryMasterApi.middleware
 ];
 
 

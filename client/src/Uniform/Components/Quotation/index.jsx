@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
@@ -15,15 +17,14 @@ import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
+import { useDeleteQuotationMasterMutation, useDeleteQuotationMutation } from '../../../redux/uniformService/quotationServices';
 
 
 
 
 
 const Quotation = () => {
-    const [selectedPeriod, setSelectedPeriod] = useState('this-month');
-    const [selectedFinYear, setSelectedFinYear] = useState('2023-2024');
-    const [selectedStatus, setSelectedStatus] = useState('all');
+
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
     const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
@@ -44,6 +45,7 @@ const Quotation = () => {
     const [partyId, setPartyId] = useState('')
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const dispatch = useDispatch();
 
     const params = {
         branchId, userId, finYearId
@@ -54,7 +56,7 @@ const Quotation = () => {
     const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
 
-    const [removeData] = useDeleteDirectInwardOrReturnMutation();
+    const [removeData] = useDeleteQuotationMutation();
 
 
     const { data: yarnList } =
@@ -82,7 +84,18 @@ const Quotation = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (id,childRecord) => {
+    const handleConvertToSaleOrder = (dataObj) => {
+        toast.info(`Converting Quotation ${dataObj.docId} to Sale Order...`);
+        dispatch(push({ name: "SALE ORDER", id: dataObj.id }));
+    };
+
+    const handleConvertToInvoice = (dataObj) => {
+        toast.info(`Converting Quotation ${dataObj.docId} to Invoice...`);
+        // Logic to redirect or open Invoice form with pre-filled data
+        console.log("Convert to Invoice:", dataObj);
+    };
+
+    const handleDelete = async (id) => {
 
 
         // if (childRecordCount(childRecord)) {
@@ -98,8 +111,14 @@ const Quotation = () => {
                 return;
             }
             try {
-                await removeData(id)
-                setId("");
+                const deleteData = await removeData(id)
+                console.log(deleteData?.statusCode, "deleteData?.data")
+                if (deleteData?.statusCode === 0) {
+                    setId("");
+                } else {
+                    toast.error(deleteData?.message);
+                }
+
                 onNew();
                 // toast.success("Deleted Successfully");
                 Swal.fire({
@@ -165,6 +184,8 @@ const Quotation = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToSaleOrder={handleConvertToSaleOrder}
+                            onConvertToInvoice={handleConvertToInvoice}
                         />
                     </div>
                 </div>

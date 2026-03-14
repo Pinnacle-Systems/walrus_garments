@@ -10,7 +10,7 @@ const quotationApi = createApi({
     }),
     tagTypes: ["Quotationr"],
     endpoints: (builder) => ({
-        getQuotationMaster: builder.query({
+        getQuotation: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
@@ -33,7 +33,7 @@ const quotationApi = createApi({
             },
             providesTags: ["Quotationr"],
         }),
-        getQuotationMasterById: builder.query({
+        getQuotationById: builder.query({
             query: (id) => {
                 return {
                     url: `${QUOTAION_API}/${id}`,
@@ -45,7 +45,7 @@ const quotationApi = createApi({
             },
             providesTags: ["Quotationr"],
         }),
-        addQuotationMaster: builder.mutation({
+        addQuotation: builder.mutation({
             query: (payload) => ({
                 url: QUOTAION_API,
                 method: "POST",
@@ -56,7 +56,7 @@ const quotationApi = createApi({
             }),
             invalidatesTags: ["Quotationr"],
         }),
-        updateQuotationMaster: builder.mutation({
+        updateQuotation: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
@@ -67,7 +67,7 @@ const quotationApi = createApi({
             },
             invalidatesTags: ["Quotationr"],
         }),
-        deleteQuotationMaster: builder.mutation({
+        deleteQuotation: builder.mutation({
             query: (id) => ({
                 url: `${QUOTAION_API}/${id}`,
                 method: "DELETE",
@@ -78,11 +78,11 @@ const quotationApi = createApi({
 });
 
 export const {
-    useGetQuotationMasterQuery,
-    useGetQuotationMasterByIdQuery,
-    useAddQuotationMasterMutation,
-    useUpdateQuotationMasterMutation,
-    useDeleteQuotationMasterMutation,
+    useGetQuotationQuery,
+    useGetQuotationByIdQuery,
+    useAddQuotationMutation,
+    useUpdateQuotationMutation,
+    useDeleteQuotationMutation,
 } = quotationApi;
 
 export default quotationApi;

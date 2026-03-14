@@ -22,7 +22,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 
 const PurchaseInwardForm = ({
-  onClose, id, setId, docId, setDocId, date, setDate,
+  hasPermission, addData, onClose, id, setId, docId, setDocId, date, setDate,
   readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate,
   supplierId, setSupplierId, payTermId, setPayTermId,
@@ -33,7 +33,7 @@ const PurchaseInwardForm = ({
   partyId, setPartyId, onNew, branchList, locationData,
   supplierList, yarnList, colorList, uomList,
 }) => {
-  const [headerOpen, setHeaderOpen] = useState(true);   // ← single accordion state
+  const [headerOpen, setHeaderOpen] = useState(true);
   const [vehicleNo, setVehicleNo] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -64,7 +64,7 @@ const PurchaseInwardForm = ({
   const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } =
     useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddDirectInwardOrReturnMutation();
+  // const [addData] = useAddDirectInwardOrReturnMutation();
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
 
   useEffect(() => {
@@ -128,8 +128,13 @@ const PurchaseInwardForm = ({
       } else {
         Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
         if (returnData.statusCode === 0) {
-          if (nextProcess === "new" || nextProcess === "close") { syncFormWithDb(undefined); onNew(); }
-          else setId(returnData?.data?.id);
+          if (nextProcess === "new") {
+            syncFormWithDb(undefined)
+            onNew();
+          } else {
+            onClose()
+          }
+
         } else {
           toast.error(returnData?.message);
         }
@@ -203,8 +208,8 @@ const PurchaseInwardForm = ({
 
       <div className="flex flex-col h-full mt-2 gap-2">
 
-        {/* ── ONE accordion wrapping ALL header cards ─────────────────────── */}
-        <div className="border border-slate-200 bg-white rounded-md shadow-sm overflow-hidden">
+        {/* ── Accordion wrapping ALL header cards ── */}
+        <div className="border border-slate-200 bg-white rounded-md shadow-sm">
 
           {/* Accordion toggle bar */}
           <button
@@ -214,20 +219,20 @@ const PurchaseInwardForm = ({
           >
             <span className="font-medium text-slate-700 text-sm">Header Details</span>
             <FiChevronDown
-              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                headerOpen ? "rotate-180" : "rotate-0"
-              }`}
+              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${headerOpen ? "rotate-180" : "rotate-0"
+                }`}
             />
           </button>
 
-          {/* Collapsible content — all three cards inside */}
+          {/* ── FIX: overflow-visible when open so dropdowns are not clipped ── */}
           <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              headerOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
-            }`}
+            className={`transition-all duration-300 ease-in-out ${headerOpen
+              ? "max-h-[600px] opacity-100 overflow-visible"
+              : "max-h-0 opacity-0 overflow-hidden"
+              }`}
           >
-            <div className="px-2 pb-2">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+            <div className="px-2 pb-2 overflow-visible">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
                 {/* Basic Details */}
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
@@ -239,9 +244,9 @@ const PurchaseInwardForm = ({
                 </div>
 
                 {/* Inward Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                   <h2 className="font-medium text-slate-700 mb-2">Inward Details</h2>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <DropdownInput
                       name="Inward Type"
                       beforeChange={() => setDirectInwardReturnItems([])}
@@ -256,9 +261,9 @@ const PurchaseInwardForm = ({
                       options={
                         branchList
                           ? dropDownListObject(
-                              id ? branchList?.data : branchList?.data?.filter((item) => item.active),
-                              "branchName", "id"
-                            )
+                            id ? branchList?.data : branchList?.data?.filter((item) => item.active),
+                            "branchName", "id"
+                          )
                           : []
                       }
                       value={branchId}
@@ -280,11 +285,11 @@ const PurchaseInwardForm = ({
                   </div>
                 </div>
 
-                {/* Supplier Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
+                {/* Supplier Details — overflow-visible so the searchable dropdown escapes */}
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 overflow-visible">
                   <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="col-span-3">
+                  <div className="grid grid-cols-2 gap-2 overflow-visible">
+                    <div className="col-span-3 overflow-visible">
                       <ReusableSearchableInputNewCustomerwithBranches
                         label="Supplier Name"
                         component="PartyMaster"
@@ -307,10 +312,11 @@ const PurchaseInwardForm = ({
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="overflow-auto">
           <fieldset className="h-full">
             {poInwardOrDirectInward === "DirectInward" && (
               <YarnPoItems
+                id={id}
                 poItems={directInwardReturnItems}
                 setPoItems={setDirectInwardReturnItems}
                 setInwardItemSelection={setInwardItemSelection}
@@ -350,20 +356,28 @@ const PurchaseInwardForm = ({
           </fieldset>
         </div>
 
-        {/* ── Action buttons — unchanged ───────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+        <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
           <div className="flex gap-2 flex-wrap">
-            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <button
+              onClick={() => hasPermission(() => saveData("new"), "save")}
+
+              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
               Save & New
             </button>
-            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <button
+              onClick={() => hasPermission(() => saveData("close"), "save")}
+              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
             </button>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm" onClick={() => setReadOnly(false)}>
+            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+              // onClick={() => setReadOnly(false)}
+              onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+
+            >
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit
             </button>

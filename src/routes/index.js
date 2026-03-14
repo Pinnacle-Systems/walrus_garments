@@ -13,7 +13,7 @@ export { default as roles } from "./roles.route.js"
 export { default as finYear } from "./finYear.route.js"
 export { default as socksMaterial } from "./socksMaterial.route.js"
 export { default as employeeCategories } from "./employeeCategories.route.js";
-export { default as certificate} from "./certificate.route.js"
+export { default as certificate } from "./certificate.route.js"
 export { default as emailRoutes } from "./email.route.js";
 
 export { default as partyCategories } from "./partyCategory.route.js"
@@ -116,6 +116,10 @@ export { default as accessoryTemplate } from "./accessoryTemplate.route.js"
 export { default as section } from "./section.route.js"
 export { default as itemControlPanel } from "./itemControlPanel.route.js"
 export { default as quotation } from "./quotation.route.js"
+export { default as legacy } from "./legacyStock.route.js"
+export { default as saleOrder } from "./saleOrder.route.js"
+export { default as itemCategory } from "./itemCategory.route.js"
+export { default as salesDelivery } from "./salesDelivery.route.js"
 
 
 

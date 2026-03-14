@@ -79,7 +79,10 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-undef": "error"
+    }
   },
   "browserslist": {
     "production": [

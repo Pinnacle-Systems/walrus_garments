@@ -106,6 +106,16 @@ async function get(req) {
                 supplier: {
                     select: {
                         name: true,
+                        BranchType: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        City: {
+                            select: {
+                                name: true
+                            }
+                        }
 
                     }
                 }
@@ -618,10 +628,10 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
             supplierId: supplierId ? parseInt(supplierId) : undefined,
-            qty: item["returnQty"] ? 0 - parseFloat(item["returnQty"]) : 0,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            branchId: branchId ? parseFloat(branchId) : 0,
-            storeId: storeId ? parseFloat(storeId) : 0,
+            qty: item["qty"] ? 0 - parseFloat(item["qty"]) : undefined,
+            price: item["price"] ? parseFloat(item["price"]) : undefined,
+            branchId: branchId ? parseFloat(branchId) : undefined,
+            storeId: storeId ? parseFloat(storeId) : undefined,
 
 
 
@@ -647,16 +657,15 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                directItemsId: item["id"] ? parseInt(item["id"]) : undefined,
+                qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
+                price: item["price"] ? parseFloat(item["price"]) : undefined,
+                directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 poNo: item["poNo"] ? item["poNo"] : "",
-
 
             }
         })
         // return await createReturnLotGridItems(tx, data?.id, item?.returnLotDetails, item, poType, poInwardOrDirectInward, storeId, branchId)
-        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item)
+        await createYarnStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id, supplierId)
 
     }
     )
@@ -674,7 +683,7 @@ async function create(body) {
         supplierId, directReturnItems, dcNo, dcDate, storeId,
         payTermId,
         vehicleNo, specialInstructions, remarks,
-        branchId, active, userId, finYearId } = await body
+        branchId, active, userId, finYearId, purchaseInwardId } = await body
 
     let processValid = false;
 
@@ -699,7 +708,8 @@ async function create(body) {
                 active,
                 createdById: parseInt(userId),
                 vehicleNo, specialInstructions, remarks,
-                docId
+                docId,
+                purchaseInwardId: purchaseInwardId ? parseInt(purchaseInwardId) : undefined,
 
             },
         })
@@ -813,7 +823,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                     poQty: item["poQty"] ? parseFloat(item["poQty"]) : 0,
                     poNo: item["poNo"] ? item["poNo"] : undefined,
                     price: item["price"] ? parseFloat(item["price"]) : 0,
-                    directItemsId: item["id"] ? parseInt(item["id"]) : undefined,
+                    directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                     taxPercent: item["taxPercent"] ? parseFloat(item["taxPercent"]) : 0,
                     orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
                     orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
@@ -844,13 +854,10 @@ async function updateAllPInwardReturnItems(tx, directReturnItems, directReturnOr
 }
 
 async function update(id, body) {
-
-
-    let processValid = false;
     const { poType, poInwardOrDirectInward,
         supplierId, directReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks,
-        branchId, active, userId } = await body
+        branchId, active, userId, purchaseInwardId } = await body
 
 
     const dataFound = await prisma.directReturnOrPoReturn.findUnique({
@@ -886,6 +893,8 @@ async function update(id, body) {
                 vehicleNo, specialInstructions, remarks,
                 active,
                 updatedById: parseInt(userId),
+                purchaseInwardId: purchaseInwardId ? parseInt(purchaseInwardId) : undefined,
+
             },
         })
         await updateAllPInwardReturnItems(tx, directReturnItems, piData.id, poType, poInwardOrDirectInward, storeId, branchId)
@@ -901,18 +910,79 @@ async function update(id, body) {
 
 
 
+async function addStockForRemoverItems(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directReturnOrPoReturnId, supplierId) {
 
+    await tx.stock.create({
+        data: {
+            itemType: poType,
+            inOrOut: poInwardOrDirectInward,
+            transactionId: directReturnOrPoReturnId ? parseInt(directReturnOrPoReturnId) : undefined,
+            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+
+            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+            supplierId: supplierId ? parseInt(supplierId) : undefined,
+            qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
+            price: item["price"] ? parseFloat(item["price"]) : undefined,
+            branchId: branchId ? parseFloat(branchId) : undefined,
+            storeId: storeId ? parseFloat(storeId) : undefined,
+
+
+
+
+        }
+    })
+
+}
 
 
 
 
 async function remove(id) {
-    const data = await prisma.directReturnOrPoReturn.delete({
+
+   
+
+    let data
+    const returnData = await prisma.directReturnOrPoReturn.findUnique({
         where: {
             id: parseInt(id)
         },
+        include: {
+            directReturnItems: true
+        }
     })
-    return { statusCode: 0, data };
+
+    console.log(returnData,"returnData")
+
+    await prisma.$transaction(async (tx) => {
+
+        for (const item of returnData?.directReturnItems) {
+
+            await addStockForRemoverItems(
+                tx,
+                returnData.poType,                // or set constant if needed
+                returnData.poInwardOrDirectInward,
+                returnData?.branchId,
+                returnData?.storeId,
+                item,
+                item?.id,
+                returnData?.supplierId
+            );
+
+        }
+
+        data = await tx.directReturnOrPoReturn.delete({
+            where: {
+                id: parseInt(id)
+            },
+        });
+
+    });
+
+
+    return { statusCode: 0, data: data };
+
 }
 
 

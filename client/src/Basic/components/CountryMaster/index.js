@@ -276,7 +276,6 @@ export default function Form() {
         <div className="flex items-center">
           <button
             onClick={() => {
-              if (!hasPermission(saveData, "save")) return
               setForm(true);
               onNew();
             }}

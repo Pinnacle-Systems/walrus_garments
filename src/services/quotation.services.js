@@ -45,7 +45,7 @@ async function get(req) {
 
     console.log(companyId, active, "companyId, active ")
 
-    let data = await prisma.Quotation.findMany({
+    let data = await prisma.quotation.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -54,11 +54,15 @@ async function get(req) {
                 select: {
                     name: true
                 }
+            },
+            Saleorder: {
+                select: {
+                    id: true,
+                    docId: true
+                }
             }
         }
     });
-
-
 
     return { statusCode: 0, data };
 }
@@ -69,6 +73,9 @@ async function getOne(id) {
     const data = await prisma.Quotation.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            QuotationItems: true
         }
     })
     if (!data) return NoRecordFound("size");
@@ -95,7 +102,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, quotationItems, finYearId, branchId } = await body
+    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -103,25 +110,25 @@ async function create(body) {
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
 
-    const data = await prisma.Quotation.create(
+    const data = await prisma.quotation.create(
         {
             data: {
                 customerId: customerId ? parseInt(customerId) : undefined,
                 discountType: discountType ? discountType : "",
                 discountValue: discountValue ? discountValue : "",
-                branchId: branchId ? parseInt(branchId) : "",
+                branchId: branchId ? parseInt(branchId) : undefined,
                 docId: docId,
                 QuotationItems: {
-                    createMany: quotationItems?.length > 0 ? {
-                        data: quotationItems?.map((temp) => {
+                    createMany: quoteItems?.length > 0 ? {
+                        data: quoteItems?.filter(temp => temp.itemId).map((temp) => {
                             let newItem = {}
                             newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
                             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
                             newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
                             newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? temp["qty"] : null;
-                            newItem["price"] = temp["price"] ? temp["price"] : null;
+                            newItem["qty"] = temp["qty"] ? temp["qty"].toString() : null;
+                            newItem["price"] = temp["price"] ? temp["price"].toString() : null;
 
 
                             return newItem
@@ -139,7 +146,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
     if (item?.id) {
 
 
-        let updatedata = await tx.directItems.update({
+        let updatedata = await tx.quoteItems.update({
             where: {
                 id: parseInt(item.id)
             },
@@ -159,7 +166,6 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
             }
         })
 
-        await createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
 
 
 
@@ -168,7 +174,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
 
 
     else {
-        let data = await tx.directItems.create({
+        let data = await tx.quoteItems.create({
             data: {
                 quotationId: parseInt(quotationId),
                 itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
@@ -181,8 +187,6 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
             }
         })
 
-        await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, item?.id)
-        // await createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId, storeId, item, data?.id, partyId)
 
     }
 }
@@ -193,10 +197,9 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, quotationItems } = await body
+    const { customerId, discountType, discountValue, quoteItems, branchId } = await body
 
-
-    const dataFound = await prisma.Quotation.findUnique({
+    const dataFound = await prisma.quotation.findUnique({
         where: {
             id: parseInt(id)
         },
@@ -204,46 +207,75 @@ async function update(id, body) {
             QuotationItems: true
         }
     })
-    if (!dataFound) return NoRecordFound("directInwardOrReturn");
+    if (!dataFound) return NoRecordFound("Quotation");
+
+    let oldItemIds = dataFound?.QuotationItems.map(item => parseInt(item.id))
+    let currentItemIds = quoteItems.filter(i => i?.id)?.map(item => parseInt(item.id))
+
+    // Manual filtering for removed items if helper is not available/consistent
+    let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
+
     let piData;
 
-
-    let oldDirectInwardReturnIds = dataFound?.QuotationItems.map(item => parseInt(item.id))
-    let currentDirectInwardReturnIds = quotationItems.filter(i => i?.id)?.map(item => parseInt(item.id))
-    let removeItemsPurchaseInwardReturnIds = getRemovedItems(oldDirectInwardReturnIds, currentDirectInwardReturnIds);
-
-    console.log(removeItemsPurchaseInwardReturnIds, 'removeItemsPurchaseInwardReturnIds')
-
     await prisma.$transaction(async (tx) => {
+        // Delete removed items
+        if (removedItemIds.length > 0) {
+            await tx.quotationItems.deleteMany({
+                where: {
+                    id: { in: removedItemIds }
+                }
+            });
+        }
 
-        await deletePurchaseInwardReturnItems(tx, removeItemsPurchaseInwardReturnIds);
-        await deleteStockReturnItems(tx, removeItemsPurchaseInwardReturnIds);
-
-        piData = await tx.directInwardOrReturn.update({
+        // Update main record
+        piData = await tx.quotation.update({
             where: {
                 id: parseInt(id)
             },
             data: {
-                poType, poInwardOrDirectInward,
-                supplierId: parseInt(partyId),
-                branchId: parseInt(locationId),
-                storeId: parseInt(storeId),
-                dcNo,
-                dcDate: dcDate ? new Date(dcDate) : undefined,
-                vehicleNo, specialInstructions, remarks,
-                active,
-                updatedById: parseInt(userId),
-
-
+                customerId: customerId ? parseInt(customerId) : undefined,
+                discountType: discountType || "",
+                discountValue: discountValue || "",
+                branchId: branchId ? parseInt(branchId) : undefined,
             },
         })
-        await updateAllPInwardReturnItems(tx, directInwardReturnItems, piData.id, poType, poInwardOrDirectInward, storeId, branchId)
+
+        // Process items (Update or Create)
+        for (const item of (quoteItems || []).filter(i => i.itemId)) {
+            if (item.id) {
+                await tx.quotationItems.update({
+                    where: { id: parseInt(item.id) },
+                    data: {
+                        itemId: item.itemId ? parseInt(item.itemId) : null,
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        uomId: item.uomId ? parseInt(item.uomId) : null,
+                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                        qty: item.qty ? item.qty.toString() : "0",
+                        price: item.price ? item.price.toString() : "0",
+                    }
+                });
+            } else {
+                await tx.quotationItems.create({
+                    data: {
+                        quotationId: piData.id,
+                        itemId: item.itemId ? parseInt(item.itemId) : null,
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        uomId: item.uomId ? parseInt(item.uomId) : null,
+                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                        qty: item.qty ? item.qty.toString() : "0",
+                        price: item.price ? item.price.toString() : "0",
+                    }
+                });
+            }
+        }
     })
     return { statusCode: 0, data: piData };
 }
 
 async function remove(id) {
-    const data = await prisma.ItemControlPanel.delete({
+    const data = await prisma.quotation.delete({
         where: {
             id: parseInt(id)
         },

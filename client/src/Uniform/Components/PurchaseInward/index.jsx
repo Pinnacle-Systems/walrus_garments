@@ -4,7 +4,7 @@ import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
-import { useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
+import { useAddDirectInwardOrReturnMutation, useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import PurchaseInwardForm from './PurchaseInwardFormUi';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
@@ -16,6 +16,7 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { childRecordCount } from '../../../Inputs';
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
 
 
@@ -45,6 +46,11 @@ const PurchaseInward = () => {
     const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
     const [partyId, setPartyId] = useState('')
 
+    const { hasPermission } = usePermissionForUsers()
+
+    // const Iscreate = hasPermission(null, "create", null, true)
+
+    // console.log(Iscreate, "Iscreate")
 
     const params = {
         branchId, userId, finYearId
@@ -55,6 +61,8 @@ const PurchaseInward = () => {
     const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
     const { data: allData, isLoading, isFetching } = useGetDirectInwardOrReturnQuery({ params: { branchId, poInwardOrDirectInward } });
+    const [addData] = useAddDirectInwardOrReturnMutation();
+
     const [removeData] = useDeleteDirectInwardOrReturnMutation();
 
 
@@ -83,16 +91,16 @@ const PurchaseInward = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (id,childRecord) => {
+    const handleDelete = async (id, childRecord) => {
 
 
-        // if (childRecordCount(childRecord)) {
-        //     Swal.fire({
-        //         icon: 'error',
-        //         text: 'Child Record Exists',
-        //     });
-        //     return
-        // }
+        if (childRecordCount(childRecord)) {
+            Swal.fire({
+                icon: 'error',
+                text: 'Child Record Exists',
+            });
+            return
+        }
 
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
@@ -126,6 +134,12 @@ const PurchaseInward = () => {
         setPartyId('')
     }
 
+
+    function handleCreatefunction() {
+        setShowManufacturer(true)
+        onNew()
+    }
+
     return (
         <>
             {showManufacturer ? (
@@ -139,7 +153,7 @@ const PurchaseInward = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hasPermission={hasPermission} addData={addData}
 
 
 
@@ -153,7 +167,8 @@ const PurchaseInward = () => {
 
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setShowManufacturer(true); onNew() }}
+                            onClick={() => hasPermission(handleCreatefunction, "create")}
+
                         >
                             <FaPlus /> Create New
                         </button>
@@ -162,7 +177,7 @@ const PurchaseInward = () => {
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
 
                         <PurchaseInwardFormReport
-
+                            hasPermission={hasPermission}
                             data={allData?.data || []}
                             onView={handleView}
                             onEdit={handleEdit}

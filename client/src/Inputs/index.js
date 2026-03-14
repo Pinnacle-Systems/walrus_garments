@@ -786,7 +786,7 @@ export const DropdownInput = forwardRef(({
 
 
   return (
-    <div className={`mb-2 ${width}`}>
+    <div className={` ${width}`}>
       {name && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
@@ -1778,7 +1778,7 @@ export const ReusableTable = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => hasPermission(() => onDelete(item.id, item?._count), "delete", item?._count)}
+                                onClick={() => hasPermission(() => onDelete(item.id), "delete", item?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -2130,7 +2130,7 @@ export const ReusableSearchableInput = forwardRef(
     } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true } });
 
 
-    console.log(partyList,"partyList")
+    console.log(partyList, "partyList")
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -2236,7 +2236,7 @@ export const ReusableSearchableInput = forwardRef(
             editingItem={editingItem}
             onCloseForm={() => setOpenModel(false)}
             show={show}
-            // childId={childId}
+          // childId={childId}
           />
         </Modal>
 
@@ -2716,7 +2716,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       if (!partyList?.data) return;
 
       if (!search.trim()) {
-        setFilteredPages(partyList?.data);
+        setFilteredPages(partyList?.data?.filter(i => i[show]));
         return;
       }
 
@@ -2739,7 +2739,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
         const items = pageSearch.querySelectorAll('[tabindex="0"]');
 
-                    
+
 
 
         const index = Array.from(items).indexOf(document.activeElement);
@@ -2796,7 +2796,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
         {/* ----------------------------- INPUT ----------------------------- */}
         <div
-          className="relative text-sm w-full"
+          className="relative text-sm w-full overflow-visible"
           id="pageSearch"
           ref={containerRef}
         >
