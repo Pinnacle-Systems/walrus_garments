@@ -5,22 +5,22 @@ import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import { useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
-import SaleOrderForm from './SaleOrderForm';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
-import SaleOrderReport from './SaleOrderReport';
+import SalesDeliveryReport from './SalesDeliveryReport';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
+import SalesDeliveryForm from './SaleDeliveryForm';
 
 
 
 
 
-const SaleOrder = () => {
+const SalesDelivery = () => {
 
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
@@ -126,7 +126,7 @@ const SaleOrder = () => {
     return (
         <>
             {showManufacturer ? (
-                <SaleOrderForm
+                <SalesDeliveryForm
                     onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
                     docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
                     transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
@@ -171,4 +171,4 @@ const SaleOrder = () => {
     );
 };
 
-export default SaleOrder;
+export default SalesDelivery;

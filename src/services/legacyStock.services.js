@@ -107,7 +107,7 @@ async function create(body) {
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 qty: item["qty"] ? parseInt(item["qty"]) : undefined,
-                barcode: item["barcode"] ? item["barcode"] : undefined,
+                barcode: item["barcode_no"] ? item["barcode_no"] : undefined,
                 price: item["price"] ? parseFloat(item["price"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
 

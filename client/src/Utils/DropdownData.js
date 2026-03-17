@@ -349,3 +349,7 @@ export const PriceMethod = [
     { show: "SIZE AND COLOR WISE", value: "SIZE_COLOR" },
 ]
 
+export const adjTypeData = [
+    { show: "PLUS", value: "PLUS" },
+    { show: "MINUS", value: "MINUS" },
+];

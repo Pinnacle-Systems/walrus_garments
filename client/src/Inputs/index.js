@@ -1593,7 +1593,7 @@ export function isValidPAN(pan) {
 export const ReusableTable = ({
   columns,
   data,
-  itemsPerPage = 10,
+  itemsPerPage = 15,
   onView,
   onEdit,
   onDelete,
@@ -1748,7 +1748,7 @@ export const ReusableTable = ({
                           key={colIndex}
                           className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
                         >
-                          {column.accessor(item, index)}
+                          {column.accessor(item, indexOfFirstItem + index)}
                         </td>
                       ))}
                       {rowActions && (

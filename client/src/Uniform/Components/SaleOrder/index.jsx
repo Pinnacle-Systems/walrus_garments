@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
 import { FaPlus } from "react-icons/fa";
-import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { findFromList, getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
@@ -32,7 +32,8 @@ const SaleOrder = () => {
 
 
     const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState("")
+    const today = new Date()
+    const [date, setDate] = useState(getDateFromDateTime(today));
     const [readOnly, setReadOnly] = useState('')
     const [transType, setTransType] = useState("DyedYarn");
     const [dcNo, setDcNo] = useState("")

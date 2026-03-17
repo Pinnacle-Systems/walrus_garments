@@ -166,6 +166,7 @@ model Branch {
   AccessoryStock                         AccessoryStock[]
   Quotation                              Quotation[]
   Saleorder                              Saleorder[]
+  StockAdjustment                        StockAdjustment[]
 }
 
 model UserOnBranch {
@@ -302,6 +303,10 @@ model User {
   QuotationTransferUpdateBy           Quotation[]                  @relation(name: "updatedBy")
   SaleOrderCreatedBy                  Saleorder[]                  @relation(name: "createdBy")
   SaleOrderUpdateBy                   Saleorder[]                  @relation(name: "updatedBy")
+  StockAdjustmentCreatedBy            StockAdjustment[]            @relation(name: "createdBy")
+  StockAdjustmentUpdateBy             StockAdjustment[]            @relation(name: "updatedBy")
+  SalesDeliveryCreatedBy              SalesDelivery[]              @relation(name: "createdBy")
+  SalesDeliveryUpdateBy               SalesDelivery[]              @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -756,19 +761,21 @@ model YarnType {
 }
 
 model Hsn {
-  id               Int                @id @default(autoincrement())
-  name             String
-  Company          Company?           @relation(fields: [companyId], references: [id])
-  companyId        Int?
-  active           Boolean            @default(true)
-  tax              String?
-  Yarn             Yarn[]
-  PoItems          PoItems[]
-  Accessory        Accessory[]
-  AccessoryPoItems AccessoryPoItems[]
-  Item             Item[]
-  QuotationItems   QuotationItems[]
-  SaleOrderItems   SaleOrderItems[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  Company              Company?               @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  active               Boolean                @default(true)
+  tax                  String?
+  Yarn                 Yarn[]
+  PoItems              PoItems[]
+  Accessory            Accessory[]
+  AccessoryPoItems     AccessoryPoItems[]
+  Item                 Item[]
+  QuotationItems       QuotationItems[]
+  SaleOrderItems       SaleOrderItems[]
+  StockAdjustmentItems StockAdjustmentItems[]
+  SalesDeliveryItems   SalesDeliveryItems[]
 }
 
 model YarnBlend {
@@ -1087,6 +1094,8 @@ model Color {
   QuotationItems                QuotationItems[]
   LegacyStock                   LegacyStock[]
   SaleOrderItems                SaleOrderItems[]
+  StockAdjustmentItems          StockAdjustmentItems[]
+  SalesDeliveryItems            SalesDeliveryItems[]
 }
 
 model UnitOfMeasurement {
@@ -1135,6 +1144,8 @@ model UnitOfMeasurement {
   QuotationItems                            QuotationItems[]
   LegacyStock                               LegacyStock[]
   SaleOrderItems                            SaleOrderItems[]
+  StockAdjustmentItems                      StockAdjustmentItems[]
+  SalesDeliveryItems                        SalesDeliveryItems[]
 }
 
 enum DeliveryType {
@@ -1813,6 +1824,8 @@ model Size {
   QuotationItems                            QuotationItems[]
   LegacyStock                               LegacyStock[]
   SaleOrderItems                            SaleOrderItems[]
+  StockAdjustmentItems                      StockAdjustmentItems[]
+  SalesDeliveryItems                        SalesDeliveryItems[]
 }
 
 model SocksMaterial {
@@ -1914,6 +1927,7 @@ model Stock {
   field8                                    String?
   field9                                    String?
   field10                                   String?
+  barcode                                   String?
 }
 
 model AccessoryStock {
@@ -2000,6 +2014,7 @@ model Location {
   FromLocation               StockTransfer[]              @relation(name: "fromLocation")
   ToLocation                 StockTransfer[]              @relation(name: "toLocation")
   MinimumStockQty            MinimumStockQty[]
+  StockAdjustment            StockAdjustment[]
 }
 
 enum ProcessIO {
@@ -4930,6 +4945,8 @@ model Item {
   QuotationItems            QuotationItems[]
   LegacyStock               LegacyStock[]
   SaleOrderItems            SaleOrderItems[]
+  StockAdjustmentItems      StockAdjustmentItems[]
+  SalesDeliveryItems        SalesDeliveryItems[]
 }
 
 model ItemPriceList {
@@ -5000,7 +5017,7 @@ model Quotation {
 
 model QuotationItems {
   id          Int                @id @default(autoincrement())
-  Quotation   Quotation?         @relation(fields: [quotationId], references: [id])
+  Quotation   Quotation?         @relation(fields: [quotationId], references: [id], onDelete: Cascade)
   quotationId Int?
   Item        Item?              @relation(fields: [itemId], references: [id])
   itemId      Int?
@@ -5017,19 +5034,20 @@ model QuotationItems {
 }
 
 model LegacyStock {
-  id       Int                @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  Item     Item?              @relation(fields: [itemId], references: [id])
-  itemId   Int?
-  Size     Size?              @relation(fields: [sizeId], references: [id])
-  sizeId   Int?
-  Color    Color?             @relation(fields: [colorId], references: [id])
-  colorId  Int?
-  Uom      UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId    Int?
-  qty      Float?
-  price    Float?
-  barcode  String?
+  Item    Item?              @relation(fields: [itemId], references: [id])
+  itemId  Int?
+  Size    Size?              @relation(fields: [sizeId], references: [id])
+  sizeId  Int?
+  Color   Color?             @relation(fields: [colorId], references: [id])
+  colorId Int?
+  Uom     UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId   Int?
+  adjType String?
+  qty     Float?
+  price   Float?
+  barcode String?
 }
 
 model Saleorder {
@@ -5054,7 +5072,7 @@ model Saleorder {
 
 model SaleOrderItems {
   id          Int                @id @default(autoincrement())
-  Saleorder   Saleorder?         @relation(fields: [saleOrderId], references: [id])
+  Saleorder   Saleorder?         @relation(fields: [saleOrderId], references: [id], onDelete: Cascade)
   saleOrderId Int?
   Item        Item?              @relation(fields: [itemId], references: [id])
   itemId      Int?
@@ -5075,4 +5093,69 @@ model ItemCategory {
   name   String?
   code   String?
   active Boolean? @default(false)
+}
+
+model StockAdjustment {
+  id                   Int                    @id @default(autoincrement())
+  Branch               Branch?                @relation(fields: [branchId], references: [id])
+  branchId             Int?
+  Store                Location?              @relation(fields: [storeId], references: [id])
+  storeId              Int?
+  createdAt            DateTime?              @default(now())
+  updatedAt            DateTime?              @updatedAt
+  createdBy            User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById          Int?
+  updatedBy            User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById          Int?
+  StockAdjustmentItems StockAdjustmentItems[]
+}
+
+model StockAdjustmentItems {
+  id                Int                @id @default(autoincrement())
+  StockAdjustment   StockAdjustment?   @relation(fields: [stockAdjustmentId], references: [id], onDelete: Cascade)
+  stockAdjustmentId Int?
+  Item              Item?              @relation(fields: [itemId], references: [id])
+  itemId            Int?
+  Size              Size?              @relation(fields: [sizeId], references: [id])
+  sizeId            Int?
+  Color             Color?             @relation(fields: [colorId], references: [id])
+  colorId           Int?
+  Uom               UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId             Int?
+  Hsn               Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId             Int?
+  qty               String?
+  price             String?
+  barcode           String?
+  adjType           String?
+}
+
+model SalesDelivery {
+  id                 Int                  @id @default(autoincrement())
+  docId              String?
+  createdAt          DateTime?            @default(now())
+  updatedAt          DateTime?            @updatedAt
+  createdBy          User?                @relation("createdBy", fields: [createdById], references: [id])
+  createdById        Int?
+  updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  SalesDeliveryItems SalesDeliveryItems[]
+}
+
+model SalesDeliveryItems {
+  id              Int                @id @default(autoincrement())
+  SalesDelivery   SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
+  salesDeliveryId Int?
+  Item            Item?              @relation(fields: [itemId], references: [id])
+  itemId          Int?
+  Size            Size?              @relation(fields: [sizeId], references: [id])
+  sizeId          Int?
+  Color           Color?             @relation(fields: [colorId], references: [id])
+  colorId         Int?
+  Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId           Int?
+  Hsn             Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId           Int?
+  qty             String?
+  price           String?
 }

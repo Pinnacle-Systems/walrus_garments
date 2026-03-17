@@ -20,7 +20,7 @@ import { useAddQuotationMasterMutation, useUpdateQuotationMasterMutation } from 
 
 
 
-const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
+const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setQuoteItems, quoteItems,
   yarnList, colorList, uomList,
 
@@ -55,7 +55,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const branchIdFromApi = useRef(branchId);
 
   const params = {
-    branchId, companyId ,userId, finYearId
+    branchId, companyId, userId, finYearId
   };
 
 
@@ -453,4 +453,4 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   );
 }
 
-export default SaleOrderForm;
+export default SalesDeliveryForm;

@@ -46,10 +46,36 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
-    getStockReport: builder.query({
+    getUnifiedStock: builder.query({
       query: ({ params }) => {
         return {
-          url: STOCK_API + "/getStockReport",
+          url: STOCK_API + "/unified",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getUnifiedStockReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/unified-report",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getUnifiedStockByBarcode: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/unified-barcode",
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -132,6 +158,11 @@ export const {
   useLazyGetStockReportQuery,
 
   useGetMinStockAlertReportQuery,
+  useGetUnifiedStockQuery,
+  useGetUnifiedStockReportQuery,
+  useLazyGetUnifiedStockReportQuery,
+  useGetUnifiedStockByBarcodeQuery,
+  useLazyGetUnifiedStockByBarcodeQuery,
 
 } = stockApi;
 

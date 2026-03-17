@@ -10,7 +10,7 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
 
 
-    let lastObject = await prisma.saleorder.findFirst({
+    let lastObject = await prisma.SalesDelivery.findFirst({
         where: {
             branchId: parseInt(branchId),
             AND: [
@@ -32,9 +32,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
         }
     });
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${shortCode}/QUO/1`
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SD/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${shortCode}/QUO/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}/${shortCode}/SD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }
@@ -45,7 +45,7 @@ async function get(req) {
 
     console.log(companyId, active, "companyId, active ")
 
-    let data = await prisma.saleOrder.findMany({
+    let data = await prisma.SalesDelivery.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -66,7 +66,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.saleOrder.findUnique({
+    const data = await prisma.SalesDelivery.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -103,7 +103,7 @@ async function create(body) {
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
 
-    const data = await prisma.saleOrder.create(
+    const data = await prisma.SalesDelivery.create(
         {
             data: {
                 customerId: customerId ? parseInt(customerId) : undefined,
@@ -139,7 +139,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
     if (item?.id) {
 
 
-        let updatedata = await tx.saleOrderItems.update({
+        let updatedata = await tx.SalesDeliveryItems.update({
             where: {
                 id: parseInt(item.id)
             },
@@ -167,7 +167,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
 
 
     else {
-        let data = await tx.saleOrderItems.create({
+        let data = await tx.SalesDeliveryItems.create({
             data: {
                 quotationId: parseInt(quotationId),
                 itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
@@ -193,7 +193,7 @@ async function update(id, body) {
     const { customerId, discountType, discountValue, quotationItems } = await body
 
 
-    const dataFound = await prisma.saleOrder.findUnique({
+    const dataFound = await prisma.SalesDelivery.findUnique({
         where: {
             id: parseInt(id)
         },

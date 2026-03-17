@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FaPlus } from "react-icons/fa";
-import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { findFromList, getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
 import { useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
 import { toast } from 'react-toastify';
@@ -31,7 +31,8 @@ const Quotation = () => {
 
 
     const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState("")
+    const today = new Date()
+    const [date, setDate] = useState(getDateFromDateTime(today));
     const [readOnly, setReadOnly] = useState('')
     const [transType, setTransType] = useState("DyedYarn");
     const [dcNo, setDcNo] = useState("")
@@ -85,7 +86,7 @@ const Quotation = () => {
     };
 
     const handleConvertToSaleOrder = (dataObj) => {
-        toast.info(`Converting Quotation ${dataObj.docId} to Sale Order...`);
+        // toast.info(`Converting Quotation ${dataObj.docId} to Sale Order...`);
         dispatch(push({ name: "SALE ORDER", id: dataObj.id }));
     };
 

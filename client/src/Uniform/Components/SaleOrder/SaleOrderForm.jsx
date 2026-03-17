@@ -95,33 +95,21 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
-    if (convertQuotationId) return
+    console.log(convertQuotationId, "convertQuotationId")
+    if (convertQuotationId && !id) return
     if (id) {
       setReadOnly(true);
     } else {
       setReadOnly(false);
     }
-    setTransType(data?.poType ? data.poType : "DyedYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
-    // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-    setPayTermId(data?.payTermId ? data?.payTermId : "");
-    setCustomerId(data?.supplierId ? data?.supplierId : "");
-    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDcNo(data?.dcNo ? data.dcNo : "")
-    setLocationId(data?.branchId ? data?.branchId : "")
-    setStoreId(data?.storeId ? data.storeId : "")
-    setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
-    setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
-    setRemarks(data?.remarks ? data?.remarks : "")
-    if (data?.branchId) {
-      branchIdFromApi.current = data?.branchId
-    }
+    setCustomerId(data?.customerId ? data?.customerId : "");
+
   }, [id]);
 
   useEffect(() => {
@@ -159,36 +147,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
 
-
-
-
-  // const validateData = (data) => {
-  //   let mandatoryFields = ["uomId", "colorId", "price"];
-  //   let lotMandatoryFields = ["qty"]
-  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
-  //     mandatoryFields = [...mandatoryFields, "yarnId"]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
-  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
-  //   } else if (transType === "Accessory") {
-  //     mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-  //   }
-
-
-
-
-  //   return data.poType && data.supplierId && data.dcDate && data.payTermId && data.dcNo
-  //     &&
-  //     (
-  //       (data.poType === "Accessory")
-  //         ?
-  //         isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
-  //         :
-  //         data.directInwardReturnItems.every(item => item?.inwardLotDetails && isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
-  //     )
-  //     && isGridDatasValid(data.directInwardReturnItems, false, mandatoryFields)
-  //     && data.directInwardReturnItems.length !== 0
 
 
 
@@ -230,15 +188,16 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new" || nextProcess == "close") {
+          if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
-          }
-          else {
-            setId(returnData?.data?.id);
-
+          } else {
+            onClose()
           }
 
+          if (convertQuotationId) {
+            convertQuotationId = null
+          }
 
 
 
