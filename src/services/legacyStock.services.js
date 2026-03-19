@@ -135,7 +135,7 @@ async function create(body) {
             barcode: item?.barcode_no ? String(item.barcode_no) : undefined
         }));
 
-        // console.log(formattedData, "formattedData")
+        console.log(formattedData, "formattedData")
         if (isLegacy) {
             return data = await tx.legacyStock.createMany({ data: formattedData });
         } else {

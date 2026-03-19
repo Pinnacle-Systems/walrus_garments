@@ -275,7 +275,7 @@ const PurchaseInwardForm = ({
                       options={dropDownListObject(
                         id
                           ? storeOptions
-                          : storeOptions?.filter((item) => item.active && item?.storeName === "WAREHOUSE"),
+                          : storeOptions,
                         "storeName", "id"
                       )}
                       value={storeId}
