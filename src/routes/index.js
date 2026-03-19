@@ -121,6 +121,7 @@ export { default as saleOrder } from "./saleOrder.route.js"
 export { default as itemCategory } from "./itemCategory.route.js"
 export { default as salesDelivery } from "./salesDelivery.route.js"
 export { default as stockAdjustment } from "./stockAdjustment.route.js"
+export { default as priceTemplate } from "./priceTemplate.route.js"
 
 
 

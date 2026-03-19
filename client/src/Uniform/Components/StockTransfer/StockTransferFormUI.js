@@ -56,6 +56,8 @@ const StockTransferForm = ({
     const [invalidateTagsDispatch] = useInvalidateTags();
 
 
+    const [addData] = useAddStockTransferMutation();
+    const [updateData] = useUpdateStockTransferMutation();
 
 
 
@@ -77,7 +79,7 @@ const StockTransferForm = ({
             }
         }, { skip: id || !fromLocationId });
 
-    const [triggerBarcodeSearch] = useLazyGetUnifiedStockByBarcodeQuery();
+    const [triggerBarcodeSearch, { isLoading: isBarcodeLoading, isFetching: isBarcodeFetching }] = useLazyGetUnifiedStockByBarcodeQuery({ skip: !barcode });
 
     const handleBarcodeSearch = async (e) => {
         if (e.key === 'Enter' || e.type === 'blur') {
@@ -92,9 +94,12 @@ const StockTransferForm = ({
                 if (res.statusCode === 0 && res.data) {
                     const newItem = {
                         ...res.data,
-                        transferQty: 1,
-                        stockQty: res.data.availableQty
+                        // transferQty: 1,
+                        // stockQty: res.data.availableQty
                     };
+
+                    console.log(newItem, "newItem");
+
 
                     // Check if already in list
                     const exists = stockItems.find(i =>
@@ -104,13 +109,17 @@ const StockTransferForm = ({
                     );
 
                     if (exists) {
-                        setStockItems(stockItems.map(i =>
-                            (i.itemId === newItem.itemId && i.sizeId === newItem.sizeId && i.colorId === newItem.colorId)
-                                ? { ...i, transferQty: (parseFloat(i.transferQty) || 0) + 1 }
-                                : i
-                        ));
+
+                        return stockItems
                     } else {
-                        setStockItems([...stockItems, newItem]);
+                        const firstEmptyIndex = stockItems.findIndex(i => !i.itemId);
+                        if (firstEmptyIndex !== -1) {
+                            const updatedItems = [...stockItems];
+                            updatedItems[firstEmptyIndex] = newItem;
+                            setStockItems(updatedItems);
+                        } else {
+                            setStockItems([...stockItems, newItem]);
+                        }
                     }
                     setBarcode(""); // Clear barcode after successful scan
                 } else {
@@ -147,7 +156,7 @@ const StockTransferForm = ({
 
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
-            setStockItems(data?.ToLocationTransferTtems ? data?.ToLocationTransferTtems : [])
+            setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : [])
 
         } else {
 
@@ -306,7 +315,7 @@ const StockTransferForm = ({
         []
 
 
-    if (isSingleDataLoading || isSingleDataFetching) return <Loader />
+    if (isBarcodeFetching || isBarcodeLoading) return <Loader />
 
 
     return (
@@ -326,7 +335,7 @@ const StockTransferForm = ({
             <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
-                    <div className="gpa-4">
+                    <div className="gap-4">
                         {/* <button
                                         onClick={onClose}
                                         className="text-indigo-600 hover:text-indigo-700"
@@ -387,7 +396,7 @@ const StockTransferForm = ({
                                         />
                                     </div>
 
-                                    <div className="ml-3 col-span-4 flex items-center justify-between">
+                                    {/* <div className="ml-3 col-span-3 flex items-center justify-between">
 
                                         <div className="text-center">
                                             <p className="text-xs text-gray-400 uppercase">From</p>
@@ -410,8 +419,10 @@ const StockTransferForm = ({
 
 
 
-                                    </div>
-                                    <div className="col-span-1">
+                                    </div> */}
+                                    <div className="col-span-3">
+                                        <p className="block  font-bold text-slate-700 mb-1 text-xs">Barcode</p>
+
                                         <input
                                             name="Barcode"
                                             value={barcode}
@@ -422,14 +433,14 @@ const StockTransferForm = ({
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         />
                                     </div>
-                                    <div className="col-span-1">
+                                    {/* <div className="col-span-1">
                                         <button
                                             className="ml-4 px-4 py-2 mt-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
                                             onClick={() => setOrderToGeneral(true)}
                                         >
                                             Fill Stock
                                         </button>
-                                    </div>
+                                    </div> */}
 
 
 
@@ -446,7 +457,7 @@ const StockTransferForm = ({
 
 
                     </div>
-                    <div className="h-[400px]">
+                    <div className="h-[430px]">
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                             colorList={colorList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
@@ -484,6 +495,7 @@ const StockTransferForm = ({
                             </button>
                             <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
                                 onClick={() => setBarcodePrintOpen(true)}
+                                disabled={findFromList(toLocationId, locationData?.data, "storeName") != "DISCOUNT SECTION"}
                             >
                                 <FiPrinter className="w-4 h-4 mr-2" />
                                 Barcode Generation

@@ -1,19 +1,33 @@
 import React, { useState } from "react";
-import { TextInput } from "../../../Inputs";
-import { useAddSizeMasterMutation } from "../../../redux/uniformService/SizeMasterService";
-import { getCommonParams } from "../../../Utils/helper";
+import { TextInput } from "../../Inputs";
+import { useAddSizeMasterMutation, useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
+import { getCommonParams } from "../../Utils/helper";
 import { toast } from "react-toastify";
-import Modal from "../../../UiComponents/Modal";
+import Modal from "../../UiComponents/Modal";
 import { Check, X } from "lucide-react";
+import Swal from "sweetalert2";
 
 const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
   const params = getCommonParams();
   const [name, setName] = useState(sizeName || "");
   const [active, setActive] = useState(true);
 
+  const { data: allData, isLoading, isFetching } = useGetSizeMasterQuery({ params });
+
   const [addSize] = useAddSizeMasterMutation();
 
   const handleSave = async () => {
+
+    let foundItem = allData?.data?.some(item => item?.name?.trim() == name?.trim());
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The size name is already exists.",
+        icon: "warning",
+      });
+      return false;
+    }
     if (!name) {
       toast.info("Please fill size name");
       return;

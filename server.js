@@ -64,6 +64,7 @@ import {
   itemCategory,
   salesDelivery,
   stockAdjustment,
+  priceTemplate,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -231,7 +232,7 @@ app.use("/saleOrder", saleOrder);
 app.use("/itemCategory", itemCategory);
 app.use("/salesDelivery", salesDelivery)
 app.use("/stockAdjustment", stockAdjustment);
-// app.use("/priceTemplate", stockAdjustment);
+app.use("/priceTemplate", priceTemplate);
 
 
 

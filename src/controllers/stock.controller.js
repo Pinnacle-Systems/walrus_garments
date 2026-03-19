@@ -122,7 +122,6 @@ async function remove(req, res, next) {
 }
 
 async function getAccessory(req, res, next) {
-    console.log("rrrrrrrrrrrrr")
     try {
         res.json(await _getAccessory(req));
         console.log(res.statusCode);
@@ -147,7 +146,6 @@ async function getOneAccessory(req, res, next) {
 
 export const getStockQty = async (req, res) => {
 
-    console.log(req, 'req fro stcokQty')
 
     try {
         const { storeId, itemId, colorId, sizeId } = req.query;

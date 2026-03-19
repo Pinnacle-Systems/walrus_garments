@@ -9,70 +9,13 @@ import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
 
-// async function getOneBarcode(req) {
-//   const { barcode, styleId, sizeId } = req.query;
-//   const styleNum = styleId ? parseInt(styleId, 10) : null;
-//   const sizeNum = sizeId ? parseInt(sizeId, 10) : null;
-//   // Check if neither barcode nor style+size is provided
-//   if (!barcode && !(styleNum && sizeNum)) {
-//     return {
-//       statusCode: 0,
-//       data: [],
-//       totalCount: 0,
-//       totalQty: 0,
-//       message: "Please provide either a barcode or both styleId and sizeId",
-//     };
-//   }
 
-//   // Check for incomplete style/size combination
-//   if ((styleNum && !sizeNum) || (!styleNum && sizeNum)) {
-//     return {
-//       statusCode: 0,
-//       data: [],
-//       totalCount: 0,
-//       totalQty: 0,
-//       message: "Both styleId and sizeId must be provided together",
-//     };
-//   }
-
-//   const where = {};
-
-//   if (barcode) {
-//     where.barCode = barcode;
-//   }
-
-//   if (styleNum && sizeNum) {
-//     where.styleId = styleNum;
-//     where.sizeId = sizeNum;
-//   }
-
-//   // Run both queries in one transaction
-//   const [data, aggregate] = await prisma.$transaction([
-//     prisma.stock.findMany({ where }),
-//     prisma.stock.aggregate({
-//       _sum: { qty: true },
-//       where,
-//     }),
-//   ]);
-
-//   if (!data || data.length === 0) {
-//     return NoRecordFound("Barcode No");
-//   }
-
-//   return {
-//     statusCode: 0,
-//     data,
-//     totalCount: data.length,
-//     totalQty: aggregate._sum.qty ?? 0,
-//   };
-// }
 
 async function getOneBarcode(req) {
   const { barcode, styleId, sizeId } = req.query;
   const styleNum = styleId ? parseInt(styleId, 10) : null;
   const sizeNum = sizeId ? parseInt(sizeId, 10) : null;
 
-  // Validate inputs
   if (!barcode && !(styleNum && sizeNum)) {
     return {
       statusCode: 0,
@@ -120,85 +63,6 @@ async function getOneBarcode(req) {
   };
 }
 
-// async function getOneBarcode(req) {
-//   const { search } = req.query;
-
-//   if (!search) {
-//     return {
-//       statusCode: 0,
-//       data: [],
-//       totalCount: 0,
-//       totalQty: 0,
-//       message: "Please provide a search term",
-//     };
-//   }
-
-//   const normalizedSearch = String(search).trim().replace(/\+/g, " ");
-//   let data = [];
-//   let aggregate = { _sum: { qty: 0 } };
-
-//   // 1️⃣ Try exact barcode match
-//   let where = {
-//     OR: [
-//       { barCode: search },
-//       { barCode: normalizedSearch.replace(/\s+/g, "+") },
-//       { barCode: normalizedSearch },
-//     ],
-//   };
-
-//   [data, aggregate] = await prisma.$transaction([
-//     prisma.stock.findMany({
-//       where,
-//       include: { Style: true, Size: true },
-//     }),
-//     prisma.stock.aggregate({
-//       _sum: { qty: true },
-//       where,
-//     }),
-//   ]);
-
-//   // 2️⃣ If no barcode match → fallback to style+size
-//   if (!data.length) {
-//     const parts = normalizedSearch.split(/\s+/);
-//     if (parts.length >= 2) {
-//       const sizeName = parts.pop(); // last token = size
-//       const styleName = parts.join(" "); // rest = style
-
-//       where = {
-//         Style: { name: { equals: styleName, mode: "insensitive" } },
-//         Size: { name: { equals: sizeName, mode: "insensitive" } },
-//       };
-
-//       [data, aggregate] = await prisma.$transaction([
-//         prisma.stock.findMany({
-//           where,
-//           include: { Style: true, Size: true },
-//         }),
-//         prisma.stock.aggregate({
-//           _sum: { qty: true },
-//           where,
-//         }),
-//       ]);
-//     }
-//   }
-
-//   if (!data.length) {
-//     return {
-//       statusCode: 0,
-//       data: [],
-//       totalCount: 0,
-//       totalQty: 0,
-//       message: "No record found",
-//     };
-//   }
-
-//   return {
-//     statusCode: 1,
-//     data,
-//     totalCount: data.length,
-//     totalQty: aggregate._sum.qty ?? 0,
-//   };
-// }
 
 async function getNextDocId(
   branchId,
@@ -230,9 +94,8 @@ async function getNextDocId(
     )}/SA/1`;
 
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${
-        parseInt(lastObject.docId.split("/").at(-1)) + 1
-      }`;
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${parseInt(lastObject.docId.split("/").at(-1)) + 1
+        }`;
     }
 
     return newDocId;
@@ -263,9 +126,8 @@ async function getNextDocId(
       new Date()
     )}/SA/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${
-        parseInt(lastObject.docId.split("/").at(-1)) + 1
-      }`;
+      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${parseInt(lastObject.docId.split("/").at(-1)) + 1
+        }`;
     }
     return newDocId;
   }
@@ -300,22 +162,22 @@ async function get(req) {
       branchId: branchId ? parseInt(branchId) : undefined,
       AND: finYearDate
         ? [
-            {
-              createdAt: {
-                gte: finYearDate.startTime,
-              },
+          {
+            createdAt: {
+              gte: finYearDate.startTime,
             },
-            {
-              createdAt: {
-                lte: finYearDate.endTime,
-              },
+          },
+          {
+            createdAt: {
+              lte: finYearDate.endTime,
             },
-          ]
+          },
+        ]
         : undefined,
       docId: Boolean(serachDocNo)
         ? {
-            contains: serachDocNo,
-          }
+          contains: serachDocNo,
+        }
         : undefined,
       Store: {
         storeName: searchStore ? { contains: searchStore } : undefined,
@@ -340,12 +202,12 @@ async function get(req) {
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
     );
   }
-  if (pagination) {
-    data = data.slice(
-      (pageNumber - 1) * parseInt(dataPerPage),
-      pageNumber * dataPerPage
-    );
-  }
+  // if (pagination) {
+  //   data = data.slice(
+  //     (pageNumber - 1) * parseInt(dataPerPage),
+  //     pageNumber * dataPerPage
+  //   );
+  // }
   return {
     statusCode: 0,
     data,
@@ -365,108 +227,30 @@ async function getOne(id) {
           locationId: true,
         },
       },
-      StockAdjustmentItems: {
-        select: {
-          Stock: true,
-          id: true,
-          stockAdjustmentId: true,
-          barcode: true,
-          styleId: true,
-          sizeId: true,
-          stkQty: true,
-          adjType: true,
-          adjQty: true,
-          remarks: true,
-          fabricId: true,
-          styleNo: true,
-          styleItemId: true,
-          colorId: true,
-        },
-      },
+      StockAdjustmentItems: true
     },
   });
   if (!data) return NoRecordFound("stockAdjustment");
-  const itemWithSalesQty = await Promise.all(
-    data.StockAdjustmentItems.map(async (item) => {
-      const childRecordSales = await prisma.salesEntryItems.count({
-        where: {
-          styleId: item.styleId,
-          sizeId: item.sizeId,
-          colorId: item.colorId,
-          styleItemId: item.styleItemId,
-        },
-      });
-      return {
-        ...item,
-        salesQty: childRecordSales || 0,
-      };
-    })
-  );
-  const styleNos = data.StockAdjustmentItems.map((item) => item.styleNo).filter(
-    Boolean
-  );
-  const childRecordSales = await prisma.salesEntryItems.count({
-    where: {
-      styleNo: { in: styleNos },
-    },
-  });
+
   return {
     statusCode: 0,
     data: {
       ...data,
-      StockAdjustmentItems: itemWithSalesQty,
-      childRecordSales: childRecordSales,
     },
   };
 }
 
-async function create(body) {
-  const {
-    userId,
-    branchId,
-    storeId,
-    stockAdjustmentItems,
-    finYearId,
-    docDate,
-    draftSave,
-    locationId,
-  } = await body;
-  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(
-        finYearDate?.startDateStartTime,
-        finYearDate?.endDateEndTime
-      )
-    : "";
-  let newDocId = await getNextDocId(
-    branchId,
-    shortCode,
-    finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime,
-    draftSave
-  );
-  let data;
-  await prisma.$transaction(async (tx) => {
-    data = await tx.stockAdjustment.create({
-      data: {
-        docId: newDocId,
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        createdById: parseInt(userId),
-        docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
-      },
-    });
-    await createStockAdjustmentItems(
-      tx,
-      stockAdjustmentItems,
-      data,
-      userId,
-      branchId,
-      storeId
-    );
+
+
+async function isLegacyLocation(storeId) {
+  if (!storeId) return false;
+  const location = await prisma.location.findUnique({
+    where: { id: parseInt(storeId) }
   });
-  return { statusCode: 0, data };
+  if (location && (location.storeName.toLowerCase().includes('old'))) {
+    return true;
+  }
+  return false;
 }
 
 async function createStockAdjustmentItems(
@@ -481,56 +265,102 @@ async function createStockAdjustmentItems(
     const createdItem = await tx.stockAdjustmentItems.create({
       data: {
         stockAdjustmentId: parseInt(stockAdjustment.id),
+
         barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
-        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
+        itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        stkQty:
-          stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-            ? Math.round(parseFloat(stockDetail.stkQty))
-            : null,
+
+        uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+        hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
+        qty: stockDetail?.qty ? String(stockDetail.qty) : null,
+        price: stockDetail?.price ? String(stockDetail.price) : null,
+
+
         adjType: stockDetail?.adjType ? stockDetail?.adjType : undefined,
-        adjQty:
-          stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))
-            ? Math.round(parseFloat(stockDetail.adjQty))
-            : null,
-        remarks: stockDetail?.remarks ? stockDetail?.remarks : undefined,
-        styleNo: stockDetail?.styleNo ?? undefined,
-        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
-        styleItemId: stockDetail?.styleItemId
-          ? parseInt(stockDetail.styleItemId)
-          : null,
+
+
+
       },
     });
     let qty = null;
-    if (stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))) {
-      const adjQty = parseInt(stockDetail.adjQty);
-      qty = stockDetail.adjType === "MINUS" ? -adjQty : adjQty;
+    if (stockDetail?.adjType == "PLUS") {
+      qty = stockDetail?.qty;
+    } else {
+      qty = -stockDetail?.qty;
     }
-    await tx.stock.create({
-      data: {
-        inOrOut: "stockAdjustment",
-        createdById: parseInt(userId),
-        branchId: parseInt(branchId),
-        storeId: parseInt(storeId),
-        styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        qty,
-        stockAdjustmentId: createdItem.id,
-        barCode: stockDetail?.barcode ? stockDetail?.barcode : "",
-        styleNo: stockDetail?.styleNo ?? undefined,
-        fabricId: stockDetail?.fabricId ? parseInt(stockDetail.fabricId) : null,
-        styleItemId: stockDetail?.styleItemId
-          ? parseInt(stockDetail.styleItemId)
-          : null,
-      },
-    });
+
+    const isLegacy = await isLegacyLocation(storeId);
+
+
+
+
+    const baseData = {
+      inOrOut: "stockAdjustment",
+      // createdById: parseInt(userId),
+      branchId: parseInt(branchId),
+      storeId: parseInt(storeId),
+      barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
+      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
+      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+
+      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+      // hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
+
+      qty,
+
+    };
+
+
+    console.log(baseData, "baseData", isLegacy)
+
+    if (isLegacy) {
+      await tx.legacyStock.create({ data: { ...baseData, } });
+
+
+    } else {
+
+      await tx.stock.create({ data: { ...baseData, } });
+    }
+
     return createdItem;
   });
 
   return Promise.all(promises);
 }
+
+async function create(body) {
+  const {
+    userId,
+    branchId,
+    storeId,
+    stockAdjustmentItems,
+    finYearId,
+    docDate,
+    draftSave,
+    locationId,
+  } = await body;
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+  let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave);
+
+  let data;
+
+  await prisma.$transaction(async (tx) => {
+    data = await tx.StockAdjustment.create({
+      data: {
+        docId: newDocId,
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+      },
+    });
+    await createStockAdjustmentItems(tx, stockAdjustmentItems, data, userId, branchId, storeId);
+  });
+  return { statusCode: 0, data };
+}
+
+
 
 async function update(id, body) {
   const {
@@ -563,6 +393,15 @@ async function update(id, body) {
       await tx.stockAdjustmentItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
+      // Try deleting from stock where stockAdjustmentId matches
+      try { await tx.stock.deleteMany({ where: { stockAdjustmentId: { in: removeItemsIds } } }); } catch (e) { }
+      // Try deleting from legacyStock where docId matches and barcode is one of removed items
+      const removedBarcodes = removedItems.map(item => item.barcode).filter(Boolean);
+      try {
+        if (removedBarcodes.length > 0) {
+          await tx.legacyStock.deleteMany({ where: { docId: dataFound.docId, barcode: { in: removedBarcodes } } });
+        }
+      } catch (e) { }
     }
     data = await tx.stockAdjustment.update({
       where: {
@@ -570,10 +409,7 @@ async function update(id, body) {
       },
       data: {
         storeId: parseInt(storeId),
-        updatedById: parseInt(userId),
         branchId: parseInt(branchId),
-        docDate: docDate ? new Date(docDate) : null,
-        locationId: parseInt(locationId),
       },
     });
     await updateOpeningStockItems(
@@ -582,7 +418,8 @@ async function update(id, body) {
       data,
       userId,
       branchId,
-      storeId
+      storeId,
+      dataFound.docId
     );
   });
   return { statusCode: 0, data };
@@ -594,120 +431,35 @@ async function updateOpeningStockItems(
   stockAdjustment,
   userId,
   branchId,
-  storeId
+  storeId,
+  docId
 ) {
+  const isLegacy = await isLegacyLocation(storeId);
+
+
   const promises = stockAdjustmentItems.map(async (stockDetail) => {
-    if (stockDetail.id) {
-      const updatedItem = await tx.stockAdjustmentItems.update({
-        where: {
-          id: parseInt(stockDetail.id),
-        },
-        data: {
-          barcode: stockDetail?.barcode ? stockDetail.barCode : "",
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          stkQty:
-            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-              ? Math.round(parseFloat(stockDetail.stkQty))
-              : null,
-          adjType: stockDetail?.adjType || undefined,
-          adjQty:
-            stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))
-              ? Math.round(parseFloat(stockDetail.adjQty))
-              : null,
-          remarks: stockDetail?.remarks || undefined,
-          styleNo: stockDetail?.styleNo ?? undefined,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
-        },
-      });
-      let qty = null;
-      if (stockDetail?.adjQty && !isNaN(parseFloat(stockDetail?.adjQty))) {
-        const adjQty = parseInt(stockDetail.adjQty);
-        qty = stockDetail.adjType === "MINUS" ? -adjQty : adjQty;
-      }
-      await tx.stock.updateMany({
-        where: { stockAdjustmentId: parseInt(stockDetail.id) },
-        data: {
-          inOrOut: "stockAdjustment",
-          updatedById: parseInt(userId),
-          branchId: parseInt(branchId),
-          storeId: parseInt(storeId),
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
-          barCode: stockDetail?.barcode || "",
-          styleNo: stockDetail?.styleNo ?? undefined,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
-        },
-      });
-      return updatedItem;
-    } else {
-      const createdItem = await tx.stockAdjustmentItems.create({
-        data: {
-          stockAdjustmentId: parseInt(stockAdjustment.id),
-          barcode: stockDetail?.barcode || undefined,
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          stkQty:
-            stockDetail?.stkQty && !isNaN(parseFloat(stockDetail.stkQty))
-              ? Math.round(parseFloat(stockDetail.stkQty))
-              : null,
-          adjType: stockDetail?.adjType || undefined,
-          adjQty:
-            stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))
-              ? Math.round(parseFloat(stockDetail.adjQty))
-              : null,
-          remarks: stockDetail?.remarks || undefined,
-          styleNo: stockDetail?.styleNo ?? undefined,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
-        },
-      });
-      let qty = null;
-      if (stockDetail?.adjQty && !isNaN(parseFloat(stockDetail.adjQty))) {
-        const adjQty = parseInt(stockDetail.adjQty);
-        qty = stockDetail.adjType === "MINUS" ? -adjQty : adjQty;
-      }
-      await tx.stock.create({
-        data: {
-          inOrOut: "stockAdjustment",
-          createdById: parseInt(userId),
-          branchId: parseInt(branchId),
-          storeId: parseInt(storeId),
-          styleId: stockDetail?.styleId ? parseInt(stockDetail.styleId) : null,
-          sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-          colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-          qty,
-          stockAdjustmentId: createdItem.id,
-          barCode: stockDetail?.barcode || "",
-          styleNo: stockDetail?.styleNo ?? undefined,
-          fabricId: stockDetail?.fabricId
-            ? parseInt(stockDetail.fabricId)
-            : null,
-          styleItemId: stockDetail?.styleItemId
-            ? parseInt(stockDetail.styleItemId)
-            : null,
-        },
-      });
-      return createdItem;
+    let qty = null;
+    if (stockDetail?.adjType === "PLUS") {
+      qty = stockDetail?.qty ? parseFloat(stockDetail.qty) : null;
+    } else if (stockDetail?.adjType === "MINUS") {
+      qty = stockDetail?.qty ? parseFloat(0 - stockDetail.qty) : null;
     }
+
+    const baseData = {
+      inOrOut: "stockAdjustment",
+      branchId: parseInt(branchId),
+      storeId: parseInt(storeId),
+      barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
+      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
+      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+      qty,
+    };
+
+
+
+
   });
   return Promise.all(promises);
 }

@@ -4,7 +4,7 @@ import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
-import { ExcessToleranceQty, FiberContent, ItemCategroyMaster, ItmeMaster, MaterialMaster, SectionMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
+import { ExcessToleranceQty, FiberContent, ItemCategroyMaster, ItmeMaster, MaterialMaster, PriceTemplateMaster, SectionMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
 import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, GsmMaster, MachineWiseProduction, OpeningStock, PurchaseBillEntry, PurchaseCancel, PurchaseInward, Quotation, RequirementPlanningForm, SaleOrder, StockAdjustment, StockReport, StockTransfer } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
@@ -147,6 +147,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "SALE ORDER": <SaleOrder />,
     "ITEM CATEGROY": <ItemCategroyMaster />,
     "STOCK ADJUSTMENT": <StockAdjustment />,
+    "PRICE TEMPLATE": <PriceTemplateMaster />,
 
 
 

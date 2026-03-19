@@ -26,9 +26,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     console.log(stockItems, "stockItems")
 
     useEffect(() => {
-        if (stockItems?.length >= 11) return;
+        if (stockItems?.length >= 15) return;
         setStockItems((prev) => {
-            let newArray = Array.from({ length: 11 - prev.length }, (i) => {
+            let newArray = Array.from({ length: 15 - prev.length }, (i) => {
                 return {
                     itemId: "",
                     sizeId: "",
@@ -150,7 +150,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
 
 
-            <div className="border h-full border-slate-200 p-2 bg-white rounded-md shadow-sm ">
+            <div className="border h-full border-slate-200 p-2 bg-white rounded-md shadow-sm h-full">
                 <div className="flex justify-between items-center mb-2">
                     <h2 className="font-bold text-slate-700">Transfer Items</h2>
 
@@ -158,20 +158,19 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 </div>
 
 
-                <div className="flex flex-row gap-40 ">
-                    <div className="w-full flex flex-col">
-                        <div className="justify-end items-center ">
-                            <div className=" ">
+                <div className="flex flex-row gap-40 h-[380px] overflow-y-auto">
+                    <div className="w-full flex flex-col h-full">
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="relative">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-
+                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">BarCode</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
                                             <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
                                             <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
-                                            <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Sales Price</th>
                                             {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
                                                 <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Discount Price</th>
@@ -181,118 +180,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                         </tr>
                                     </thead>
 
-                                    {/* <tbody>
-                                        {stockItems?.map((stock, index) => (
-                                            <tr
-                                                key={index}
-                                                className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                                                    }`}
-                                                onContextMenu={(e) => {
-                                                    if (!readOnly) {
-                                                        handleRightClickFromOrder(e, index, "notes");
-                                                    }
-                                                }}
-                                            >
-                                                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
-                                                    {index + 1}
-                                                </td>
 
-                                                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
-                                                    {findFromList(stock?.itemId, itemList, "name")}
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
-                                                    {findFromList(stock?.sizeId, sizeList, "name")}
-
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
-                                                    {findFromList(stock?.colorId, colorList, "name")}
-                                                </td>
-                                                <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
-                                                    {stock?._sum?.qty ? parseFloat(stock?._sum?.qty).toFixed(2) : ""}
-
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-right">
-                                                    {stock?.price ? parseFloat(stock?.price).toFixed(2) : ""}
-                                                </td>
-                                                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
-                                                    <input
-                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value={parseFloat(stock?.discountPrice || "")}
-
-
-
-
-                                                        onKeyDown={(e) => {
-                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                        }}
-                                                        onFocus={(e) => e.target.select()}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (!val) {
-                                                                handleInputChangeFromOrder(0, index, "discountPrice");
-                                                                return
-                                                            }
-                                                            if (parseFloat(val) <= parseFloat(stock?._sum?.qty).toFixed(3)) {
-
-                                                                handleInputChangeFromOrder(val, index, "discountPrice", stock);
-                                                            } else {
-                                                                Swal.fire({
-                                                                    title: "Transfer Qty cannot be more than Stock Qty",
-                                                                    icon: "warning",
-                                                                });
-                                                            }
-                                                        }}
-
-
-                                                        placeHolder="0.000"
-                                                    />
-                                                </td>
-
-
-                                                <td className="w-12 border border-gray-300 text-right text-[11px] py-1 px-2 text-xs">
-                                                    <input
-                                                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value={parseFloat(stock?.transferQty || "")}
-
-
-
-
-                                                        onKeyDown={(e) => {
-                                                            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                                                        }}
-                                                        onFocus={(e) => e.target.select()}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            if (!val) {
-                                                                handleInputChangeFromOrder(0, index, "transferQty");
-                                                                return
-                                                            }
-                                                            if (parseFloat(val) <= parseFloat(stock?._sum?.qty).toFixed(3)) {
-
-                                                                handleInputChangeFromOrder(val, index, "transferQty", stock);
-                                                            } else {
-                                                                Swal.fire({
-                                                                    title: "Transfer Qty cannot be more than Stock Qty",
-                                                                    icon: "warning",
-                                                                });
-                                                            }
-                                                        }}
-
-
-                                                        placeHolder="0.000"
-                                                    />
-                                                </td>
-
-                                            </tr>
-                                        ))}
-
-                                    </tbody> */}
                                     <tbody>
                                         {stockItems?.map((item, index) => <TransferItems
                                             item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}

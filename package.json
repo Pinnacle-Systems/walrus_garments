@@ -8,6 +8,7 @@
     "dev:client": "cd client && npm run start",
     "dev:server": "nodemon --max-old-space-size=4096 server.js",
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
+    "migrate:deploy": "npx prisma migrate deploy --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
     "start": "node --max-old-space-size=4096 server.js",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
