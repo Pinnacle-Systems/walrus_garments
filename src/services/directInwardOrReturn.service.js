@@ -104,9 +104,24 @@ async function get(req) {
             include: {
                 supplier: {
                     select: {
-                        name: true
+                        name: true,
+                        BranchType: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        City: {
+                            select: {
+                                name: true
+                            }
+                        }
                     }
                 },
+                _count: {
+                    select: {
+                        DirectReturnOrPoReturn: true
+                    }
+                }
 
             }
         });
@@ -244,8 +259,9 @@ async function getOne(id) {
 
         },
     })
-    // data["DirectItems"] = await getDirectInwardReturnItemsLotBreakUp(data.id, data.poType)
-    data["directItems"] = await getDirectInwardReturnItemsAlreadyData(data.id, data.poInwardOrDirectInward, data?.poType, data?.directItems)
+
+
+    data["DirectItems"] = await getDirectInwardReturnItemsAlreadyData(data.storeId, data?.poType, data?.DirectItems)
     if (!data) return NoRecordFound("directInwardOrReturn");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
@@ -254,7 +270,7 @@ async function getOne(id) {
 export async function getDirectItems(req) {
     const { branchId, active, poInwardOrDirectInward, dataPerPage, storeId,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, isDirectInwardFilter, supplierId, poType, pagination, pageNumber,
-        isPurchaseCancelFilter = false, isPurchaseReturnFilter = false } = req.query
+        isPurchaseCancelFilter = false, isPurchaseReturnFilter = false, purchaseInwardId } = req.query
     let data;
     let totalCount;
     console.log(pagination, "pagination")
@@ -282,6 +298,7 @@ export async function getDirectItems(req) {
                     select: {
                         poInwardOrDirectInward: true,
                         poType: true,
+                        supplierId: true
                     }
                 },
                 DirectReturnItems: true,
@@ -343,11 +360,17 @@ export async function getDirectItems(req) {
         totalCount = data.length
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
         // data = await getAllDataPoItems(data)
+
+        if (purchaseInwardId) {
+            data = await data?.filter(val => val.directInwardOrReturnId == purchaseInwardId)
+        }
+
+        console.log(data, "datadata")
         data = await getAllDataDirectItems(data, storeId)
 
 
         if (isDirectInwardFilter) {
-            data = data?.filter(val => val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward")?.filter(item => balanceReturnQtyCalculation(item.qty, 0, item.alreadyInwardedQty, item.alreadyReturnedData._sum?.qty) > 0)
+            data = data?.filter(val => val.DirectInwardOrReturn?.poInwardOrDirectInward == "DirectInward" && val.directInwardOrReturnId == purchaseInwardId)?.filter(item => balanceReturnQtyCalculation(item.qty, 0, item.alreadyInwardedQty, item.alreadyReturnedData._sum?.qty) > 0)
         }
 
         if (isPurchaseCancelFilter) {
@@ -453,9 +476,9 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
             DirectReturnOrPoReturn: {
                 poInwardOrDirectInward: "DirectReturn"
             },
-            directReturnOrPoReturnId: {
-                lt: JSON.parse(directReturnOrPoReturnId) ? parseInt(directReturnOrPoReturnId) : undefined
-            }
+            // directReturnOrPoReturnId: {
+            //     lt: JSON.parse(directReturnOrPoReturnId) ? parseInt(directReturnOrPoReturnId) : undefined
+            // }
         },
         _sum: {
             qty: true,
@@ -464,7 +487,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
         }
     });
 
-    console.log(alreadyReturnedData, "alreadyReturnedData")
+    console.log(alreadyReturnedData, "alreadyReturnedData", id)
 
 
 
@@ -511,21 +534,7 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
 
 
-    async function getLotWiseDatas(inwardData) {
-        return {
-            lotNo: inwardData?.lotNo,
-            inwardNoOfRolls: inwardData?.noOfRolls,
-            inwardQty: inwardData?.qty,
-            qty: 0,
-            noOfRolls: 0,
-            alreadyReturnedRolls: (await getLotWiseReturnRolls(inwardData?.lotNo, inwardData?.directItemsID))?.lotRolls,
-            alreadyReturnedQty: (await getLotWiseReturnRolls(inwardData?.lotNo, inwardData?.directItemsID))?.lotQty,
-            // stockQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, inwardData?.directItemsID))?.lotQty || 0)),
-            stockQty: parseFloat((await getStockQtyByLot(inwardData?.lotNo, storeId, data?.DirectInwardOrReturn?.poType, data?.accessoryId, data?.colorId, data?.uomId, data?.designId, data?.gaugeId, data?.loopLengthId, data?.gsmId, data?.sizeId, data?.fabricId, data?.kDiaId, data?.fDiaId,))?.stockQty || 0),
-            allowedReturnQty: parseFloat(parseFloat(inwardData?.qty) - parseFloat((await getLotWiseReturnRolls(inwardData?.lotNo, inwardData?.directItemsID))?.lotQty || 0))
-        }
 
-    }
 
     async function getLotWiseReturnRolls(lotNo, directItemsID) {
 
@@ -646,7 +655,7 @@ async function getStockQty(storeId, itemId, sizeId, colorId, uomId) {
     sql = `select sum(qty) as stockQty from stock
             where storeId = ${storeId} and itemId = ${itemId} and sizeId = ${sizeId} and  colorId=${colorId} and uomId=${uomId}  `
 
-        console.log(sql,"sql for stockQty")
+    console.log(sql, "sql for stockQty")
 
     const stockData = await prisma.$queryRawUnsafe(sql);
     return stockData[0]
@@ -1275,9 +1284,9 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
             sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
             colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
             uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-            qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
+            qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
+            price: item["price"] ? parseFloat(item["price"]) : undefined,
+            sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : undefined,
 
         }
     })
@@ -1302,9 +1311,9 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
+                qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
+                price: item["price"] ? parseFloat(item["price"]) : undefined,
+                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : undefined,
 
                 field1: item["field1"] ? (item["field1"]) : undefined,
                 field2: item["field2"] ? (item["field2"]) : undefined,
@@ -1338,9 +1347,9 @@ async function updateOrCreate(tx, item, directInwardOrReturnId, poType, poInward
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                qty: item["qty"] ? parseFloat(item["qty"]) : 0,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : 0,
+                qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
+                price: item["price"] ? parseFloat(item["price"]) : undefined,
+                sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : undefined,
 
                 field1: item["field1"] ? (item["field1"]) : undefined,
                 field2: item["field2"] ? (item["field2"]) : undefined,
@@ -1423,10 +1432,6 @@ async function update(id, body) {
 
 
 
-function stockCheckingMethod(id) {
-
-
-}
 
 
 
@@ -1439,7 +1444,6 @@ function stockCheckingMethod(id) {
 async function remove(id) {
 
 
-    await stockCheckingMethod(id)
 
     const data = await prisma.directInwardOrReturn.delete({
         where: {

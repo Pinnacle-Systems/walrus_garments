@@ -8,7 +8,7 @@ import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPagi
 import { useGetDirectInwardOrReturnQuery, useGetDirectItemsQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 
 
-const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly }) => {
+const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly ,purchaseInwardId }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -28,7 +28,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetDirectItemsQuery({
         params: {
             branchId, supplierId, storeId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
-            isDirectInwardFilter: true
+            isDirectInwardFilter: true ,purchaseInwardId
         }
     })
 

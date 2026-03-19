@@ -1,13 +1,30 @@
 import React from "react";
 import { read, utils } from "xlsx";
-import { convertSpaceToUnderScore } from "../../../Utils/helper";
-import moment from 'moment'
-import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { convertSpaceToUnderScore, getCommonParams } from "../../../Utils/helper";
+import { useGetItemMasterQuery, useAddItemMasterMutation } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery, useAddSizeMasterMutation } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-const ExcelSelectionTable = ({ file, setFile, pres, setPres, params }) => {
+import { FiSave } from "react-icons/fi";
+import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { useGetUnitOfMeasurementMasterQuery, useAddUnitOfMeasurementMasterMutation } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import Select from "react-select";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 
-  console.log(pres, "pres")
+const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems, setStockItems }) => {
+  const { branchId, companyId, finYearId, userId } = getCommonParams();
+
+  const [selectedBranchId, setSelectedBranchId] = React.useState("");
+  const [selectedLocationId, setSelectedLocationId] = React.useState("");
+
+  React.useEffect(() => {
+    if (branchId) {
+      setSelectedBranchId(branchId);
+    }
+  }, [branchId]);
+
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -17,30 +34,174 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params }) => {
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: locationList } = useGetLocationMasterQuery({ params: { branchId: selectedBranchId } });
+
+  const branchOptions = branchList?.data?.map(b => ({ value: b.id, label: b.branchName })) || [];
+  const locationOptions = locationList?.data?.map(l => ({ value: l.id, label: l.storeName })) || [];
+
+
+  const [addData] = useAddLegacyStockMutation();
+  const [addItem] = useAddItemMasterMutation();
+  const [addSize] = useAddSizeMasterMutation();
+  const [addUom] = useAddUnitOfMeasurementMasterMutation();
+
+  const uomOptions = (uomList?.data || []).map(u => ({ value: u.id, label: u.name }));
+
+  const saveData = async () => {
+    if (!selectedBranchId) {
+      toast.warning("Please select a branch.");
+      return;
+    }
+    if (!selectedLocationId) {
+      toast.warning("Please select a location.");
+      return;
+    }
+
+    // --- Barcode Duplicate Check ---
+    const barcodeMap = {};
+    const barcodeConflicts = [];
+    stockItems.forEach((row) => {
+      const bc = row.barcode_no?.toString().trim();
+      if (!bc) return;
+      const identifier = `${row.item_name}|${row.size || ""}`.toLowerCase();
+      if (barcodeMap[bc] && barcodeMap[bc] !== identifier) {
+        barcodeConflicts.push(`Barcode "${bc}" is used for multiple items/sizes.`);
+      }
+      barcodeMap[bc] = identifier;
+    });
+    if (barcodeConflicts.length > 0) {
+      const uniqueConflicts = [...new Set(barcodeConflicts)];
+      Swal.fire({ icon: "error", title: "Barcode Conflict", text: uniqueConflicts[0], footer: "Same barcode cannot be assigned to different items or sizes." });
+      return;
+    }
+
+    // Identify missing items
+    const missingItems = [...new Set(
+      stockItems
+        .filter(r => r.item_name && !findFromList(r.item_name, itemList?.data, "id"))
+        .map(r => r.item_name)
+    )];
+
+    if (missingItems.length > 0) {
+      const result = await Swal.fire({
+        title: "Missing Item Masters",
+        html: `The following item names are not in the master:<br/><b>${missingItems.map(n => n.toUpperCase()).join(", ")}</b><br/><br/>Create them automatically and save?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, create & save",
+        cancelButtonText: "Cancel",
+      });
+      if (!result.isConfirmed) return;
+    } else {
+      if (!window.confirm("Are you sure you want to save these details?")) return;
+    }
+
+    try {
+      Swal.fire({
+        title: "Processing...",
+        text: "Please wait while we save master records and stock.",
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+      });
+
+      // --- Auto-create missing Sizes ---
+      const newSizeIdMap = {};
+      const missingSizes = [...new Set(
+        stockItems.filter(r => r.size && !findFromList(r.size, sizeList?.data, "id")).map(r => r.size)
+      )];
+      for (const s of missingSizes) {
+        const res = await addSize({ name: s.toUpperCase(), code: s.toUpperCase(), companyId, branchId, active: true }).unwrap();
+        if (res.data?.id) newSizeIdMap[s.toLowerCase().trim()] = res.data.id;
+      }
+
+      // --- Ensure PCS UOM exists; create if missing ---
+      let pcsId = findFromList("PCS", uomList?.data, "id");
+      if (!pcsId) {
+        const res = await addUom({ name: "PCS", code: "PCS", companyId, branchId, active: true }).unwrap();
+        if (res.data?.id) pcsId = res.data.id;
+      }
+
+      // --- Auto-create missing Item masters ---
+      const newItemIdMap = {};
+      for (const itm of missingItems) {
+        const res = await addItem({
+          name: itm.toUpperCase(),
+          active: true,
+          companyId,
+          branchId,
+          itemPriceList: [{ sizeId: null, colorId: null, offerPrice: 0, salesPrice: 0, minStockQty: 0 }]
+        }).unwrap();
+        if (res.data?.id) {
+          newItemIdMap[itm.toLowerCase().trim()] = res.data.id;
+        }
+      }
+
+      // --- Map all stock items with newly created IDs ---
+      const mappedStockItems = stockItems.map(row => {
+        const itemKey = (row.item_name || "").toString().trim().toLowerCase();
+        const sizeKey = (row.size || "").toString().trim().toLowerCase();
+        
+        const newlyCreatedItemId = newItemIdMap[itemKey];
+        const newlyCreatedSizeId = newSizeIdMap[sizeKey];
+
+        // Use overridden UOM from row if set, else from uomList; else default PCS
+        const resolvedUomId = row.uomId || row._uomId ||
+          findFromList(row.uom, uomList?.data, "id") ||
+          pcsId ||
+          null;
+
+        return {
+          ...row,
+          itemId: newlyCreatedItemId || row.itemId || findFromList(row.item_name, itemList?.data, "id"),
+          sizeId: newlyCreatedSizeId || row.sizeId || findFromList(row.size, sizeList?.data, "id") || null,
+          colorId: row.colorId || findFromList(row.color, colorList?.data, "id") || null,
+          uomId: resolvedUomId,
+        };
+      });
+
+      // Update state so the UI reflects the new IDs
+      setStockItems(mappedStockItems);
+
+      const payload = {
+        branchId: selectedBranchId,
+        locationId: selectedLocationId,
+        companyId,
+        finYearId,
+        userId,
+        stockItems: mappedStockItems.map(({ _rowId, item_name, size, color, uom, ...rest }) => rest)
+      };
+
+      const returnData = await addData(payload).unwrap();
+      if (returnData.statusCode === 1) {
+        toast.error(returnData.message);
+      } else if (returnData.statusCode === 0) {
+        Swal.fire({ icon: "success", title: "Stock Added Successfully", showConfirmButton: false });
+      } else {
+        toast.error(returnData?.message);
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to save: " + (err.data?.message || err.message), "error");
+    }
+  };
 
 
 
-  function excelDateToJSDate(serial) {
 
-    const utc_days = Math.floor(serial - 25569);
-    const utc_value = utc_days * 86400;
-    let date = new Date(utc_value * 1000);
-
-    // const excelEpoch = new Date(30, 11, 1899);
-    // let date = new Date(excelEpoch.getTime() + serial * 86400000);
-    date = moment(date).format("DD-MM-YYYY")
-    date = date.toString()
-    return date
-
-    // return date.toISOString().split('T')[0]; 
-  }
 
   function findFromList(name, list, property) {
     if (!list || !name) return ""
-    let data = list?.find(i => (i.name).toLowerCase() === (name).toLowerCase())
+    const trimmedName = name.toString().trim().toLowerCase();
+    let data = list?.find(i => (i.name || "").toString().trim().toLowerCase() === trimmedName)
     if (!data) return ""
     return data[property]
   }
+
+
+
+
 
 
   const uploadFile = () => {
@@ -72,26 +233,28 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params }) => {
       let transformedData = jsonData
         .filter(row => row.some(cell => cell !== undefined && cell !== null && cell.toString().trim() !== ""))
         .map((row) => {
-          const obj = {};
+          const obj = { _rowId: Date.now() + Math.random() };
           headerNames.forEach((header, index) => {
-            obj[convertSpaceToUnderScore(header)] = row[index];
-            console.log(findFromList(row[index], itemList?.data, "id"), "transformedData")
-
-            if (convertSpaceToUnderScore(header) == "item_name") {
-              obj["itemId"] = findFromList(row[index], itemList?.data, "id")
-            }
-            if (convertSpaceToUnderScore(header) == "size") {
-              obj["sizeId"] = findFromList(row[index], sizeList?.data, "id")
-            }
-            // if (convertSpaceToUnderScore(header) == "color") {
-            //   obj["colorId"] = findFromList(row[index], colorList?.data, "id")
-            // }
-            console.log(convertSpaceToUnderScore(header),"convertSpaceToUnderScore(header)")
+            const key = convertSpaceToUnderScore(header);
+            obj[key] = row[index];
           });
+
+          // Pre-populate IDs if they exist in master
+          const itemName = obj.item_name;
+          const sizeName = obj.size;
+          const colorName = obj.color;
+          const uomName = obj.uom;
+
+          obj.itemId = findFromList(itemName, itemList?.data, "id");
+          obj.sizeId = findFromList(sizeName, sizeList?.data, "id") || null;
+          obj.colorId = findFromList(colorName, colorList?.data, "id") || null;
+          obj.uomId = findFromList(uomName, uomList?.data, "id") || null;
+
           return obj;
         });
+      console.log(transformedData, "transformedData")
 
-      setPres(transformedData);
+      setStockItems(transformedData);
     };
 
 
@@ -113,45 +276,169 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params }) => {
   const header = [
     "Item Name",
     "Size",
-    "Color",
+    // "Color",
+    "Uom",
     "Barcode No",
+    "Price",
     "Qty"
   ]
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="w-full flex flex-col gap-5">
-        <div className="mt-3 flex flex-col justify-start items-start gap-10">
-          <div className="flex justify-center items-center gap-5">
-            <h1 className="text-sm font-bold">Upload File</h1>
-            <div className='flex items-center border border-lime-500 hover:bg-lime-500 transition rounded-md h-8 px-3'>
-              <input type="file" id="profileImage" className='hidden' onChange={handleFileChange} />
-              <label htmlFor="profileImage" className="text-xs w-full font-bold text-center">Browse</label>
+        <div className="mt-3 flex flex-col justify-start items-start gap-4">
+          <div className="w-full flex flex-row justify-between items-end">
+            <div className="flex flex-wrap items-end gap-5">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-gray-600">Select Branch</label>
+                <div className="w-72"
+
+                >
+                  <Select
+                    options={branchOptions}
+                    value={branchOptions.find(o => o.value === selectedBranchId)}
+                    onChange={o => { setSelectedBranchId(o?.value || ""); setSelectedLocationId(""); }}
+                    placeholder="Branch..."
+                    styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-gray-600">Select Location</label>
+                <div className="w-72">
+                  <Select
+                    options={locationOptions}
+                    value={locationOptions.find(o => o.value === selectedLocationId)}
+                    onChange={o => setSelectedLocationId(o?.value || "")}
+                    placeholder="Location..."
+                    isClearable
+                    styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-xs font-bold text-gray-600">Upload File</h1>
+                <div className='flex items-center border border-lime-500 hover:bg-lime-500 transition rounded-md h-8 px-3 cursor-pointer group'>
+                  <input type="file" id="profileImage" className='hidden' onChange={handleFileChange} />
+                  <label htmlFor="profileImage" className="text-xs w-full font-bold text-center cursor-pointer group-hover:text-white transition">Browse</label>
+                </div>
+              </div>
+              <button
+                onClick={uploadFile}
+                className="bg-lime-600 text-white px-4 py-1.5 rounded-md hover:bg-lime-700 text-xs font-bold h-8 transition-colors"
+              >
+                Upload
+              </button>
             </div>
-            <button onClick={uploadFile}>Upload</button>
+            <div>
+              <button
+                onClick={saveData}
+                className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm font-semibold shadow-sm transition-all"
+              >
+                <FiSave className="w-4 h-4 mr-2" />
+                Save Stock
+              </button>
+              <button
+                onClick={() => { setStockItems([]); setFile(null); }}
+                className="bg-red-500 text-white px-4 py-1.5 rounded-md hover:bg-red-600 flex items-center text-sm font-semibold shadow-sm transition-all ml-2"
+              >
+                New
+              </button>
+            </div>
           </div>
-          <div className="overflow-x-auto w-full">
+
+
+          <div className="overflow-x-auto w-full h-[500px] overflow-y-auto">
             <table className="min-w-full table-fixed ">
-              <thead className='bg-sky-200 sticky top-0'>
+              <thead className='bg-gray-200 sticky top-0'>
                 <tr>
-                  <th className="border border-gray-400 text-sm py-1 ">S.No</th>
+                  <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
                   {header.map((columnName, index) => (
-                    <th className="border border-gray-400 text-sm py-1 capitalize px-2" key={index}>{convertSpaceToUnderScore(columnName)}</th>
+                    <th className="border border-gray-400 text-sm py-1 capitalize px-2 text-left" key={index}>
+                      {columnName}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {pres?.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td className="border border-gray-400 text-sm py-1">{rowIndex + 1}</td>
-                    {header.map((columnName, columnIndex) => (
-                      <td className="border border-gray-400 text-xs py-1 px-1" key={columnIndex}>{row[convertSpaceToUnderScore(columnName)]}  </td>
-                    ))}
-                  </tr>
-                ))}
+                {(() => {
+                  const barcodeCounts = {};
+                  stockItems?.forEach(row => {
+                    const bc = row.barcode_no?.toString().trim().toLowerCase();
+                    if (!bc) return;
+                    const iden = `${row.item_name}|${row.size || ""}`.toLowerCase();
+                    if (!barcodeCounts[bc]) barcodeCounts[bc] = new Set();
+                    barcodeCounts[bc].add(iden);
+                  });
+
+                  return stockItems?.map((row, rowIndex) => {
+                    const itemId = row.itemId || findFromList(row.item_name, itemList?.data, "id");
+                    const sizeId = row.sizeId || findFromList(row.size, sizeList?.data, "id");
+                    const colorId = row.colorId || findFromList(row.color, colorList?.data, "id");
+                    const uomId = row.uomId || row._uomId || findFromList(row.uom, uomList?.data, "id");
+
+                    const bc = row.barcode_no?.toString().trim().toLowerCase();
+                    const isBarcodeConflict = bc && barcodeCounts[bc]?.size > 1;
+
+                    return (
+                      <tr key={row._rowId || rowIndex} className="border-b hover:bg-gray-50">
+                        <td className="border border-gray-400 text-center text-xs py-1">{rowIndex + 1}</td>
+                        {header.map((columnName, columnIndex) => {
+                          const key = convertSpaceToUnderScore(columnName);
+                          const val = row[key];
+                          const isEmpty = !val || val.toString().trim() === "";
+                          let isInvalid = false;
+                          if (key === "item_name" && isEmpty) isInvalid = true;
+                          if (key === "item_name" && !isEmpty && !itemId) isInvalid = true;
+                          if (key === "size" && isEmpty) isInvalid = true;
+                          if (key === "size" && !isEmpty && !sizeId) isInvalid = true;
+                          if (key === "uom" && isEmpty && !row._uomId) isInvalid = true;
+                          if (key === "uom" && !isEmpty && !uomId) isInvalid = true;
+                          if (key === "color" && !isEmpty && !colorId) isInvalid = true;
+                          if (key === "barcode_no" && isEmpty) isInvalid = true;
+
+                          // UOM column → inline select dropdown
+                          if (key === "uom") {
+                            const pcsDefaultId = findFromList("PCS", uomList?.data, "id") || "";
+                            const selectedUomId = row._uomId || findFromList(row.uom, uomList?.data, "id") || pcsDefaultId;
+                            return (
+                              <td key={columnIndex} className={`border border-gray-400 text-xs py-0.5 px-1 ${!selectedUomId ? "bg-red-100" : ""}`}>
+                                <select
+                                  value={selectedUomId}
+                                  onChange={(e) => {
+                                    setStockItems(prev => prev.map(r =>
+                                      r._rowId === row._rowId ? { ...r, _uomId: e.target.value } : r
+                                    ));
+                                  }}
+                                  className={`w-full text-xs py-0.5 rounded border-0 bg-transparent outline-none cursor-pointer ${!selectedUomId ? "text-red-700 font-semibold" : "text-gray-700"}`}
+                                >
+                                  <option value="">-- Select UOM --</option>
+                                  {uomOptions.map(o => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                  ))}
+                                </select>
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <td
+                              key={columnIndex}
+                              className={`border border-gray-400 text-xs py-1 px-2 ${isInvalid ? "bg-red-100 text-red-700 font-semibold" : ""}`}
+                            >
+                              {val}
+                            </td>
+                          );
+                        })}
+
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
+
+
 
         </div>
       </div>

@@ -18,6 +18,7 @@ import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/D
 
 
 const PurchaseInwardFormReport = ({
+  hasPermission,
   onClick,
   onView,
   itemsPerPage = 10,
@@ -25,6 +26,8 @@ const PurchaseInwardFormReport = ({
   onDelete,
   rowActions = true,
 }) => {
+
+
 
 
   const branchId = secureLocalStorage.getItem(
@@ -231,9 +234,9 @@ const PurchaseInwardFormReport = ({
                                             }}
                                         /> */}
                   </th>
-       
 
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+
+                  <th className="w-1/2  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
                                             type="text"
@@ -278,7 +281,7 @@ const PurchaseInwardFormReport = ({
                       }}
                     />
                   </th>
-        
+
                   {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
@@ -320,16 +323,16 @@ const PurchaseInwardFormReport = ({
                 <tbody className="border-2">
                   {(allData?.data ? allData?.data : []).map((dataObj, index) => (
                     <tr
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          onClick(dataObj.id);
-                        }
-                      }}
+                      // onKeyDown={(e) => {
+                      //   if (e.key === "Enter") {
+                      //     onClick(dataObj.id);
+                      //   }
+                      // }}
                       tabIndex={0}
                       key={dataObj.id}
                       className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                      onClick={() => onClick(dataObj.id)}
+                      // onClick={() => onClick(dataObj.id)}
                     >
                       <td className="text-center " >
                         {index + 1}
@@ -341,16 +344,23 @@ const PurchaseInwardFormReport = ({
                       <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-               
 
-                      <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
+
+                      <td className="py-1.5 text-left">
+                        {`${dataObj?.supplier?.name}${dataObj?.supplier?.BranchType?.name
+                          ? ` / ${dataObj?.supplier?.BranchType?.name}`
+                          : ""
+                          }${dataObj?.supplier?.City?.name ? ` / ${dataObj?.supplier?.City?.name}` : ""}`}
+                      </td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
                             {onView && (
                               <button
                                 className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                onClick={() => onView(dataObj.id)}
+                                // onClick={() => onView(dataObj.id)}
+                                onClick={() => hasPermission(() => onView(dataObj.id), "read")}
+
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -361,7 +371,9 @@ const PurchaseInwardFormReport = ({
                             {onEdit && (
                               <button
                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                onClick={() => onEdit(dataObj.id)}
+                                // onClick={() => onEdit(dataObj.id)}
+                                onClick={() => hasPermission(() => onEdit(dataObj.id), "edit")}
+
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -371,7 +383,9 @@ const PurchaseInwardFormReport = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(dataObj.id, dataObj?._count)}
+                                // onClick={() => onDelete(dataObj.id, dataObj?._count)}
+                                onClick={() => hasPermission(() => onDelete(dataObj.id,dataObj?._count), "delete")}
+
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />

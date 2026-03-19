@@ -11,7 +11,7 @@ import { useGetStockReportControlQuery } from '../../../redux/uniformService/Sto
 export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDirectInward, storeId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, sizeList 
+    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId
 
 }) {
     const { branchId, userId, finYearId } = getCommonParams();
@@ -39,7 +39,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
 
-        console.log(newBlend, 'newBlend',directInwardReturnItems,'directInwardReturnItems')
+        console.log(newBlend, 'newBlend', directInwardReturnItems, 'directInwardReturnItems')
 
 
         if (poItem) {
@@ -135,56 +135,25 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
 
     return (
         <>
-            <div className="p-2 bg-white rounded-md shadow-sm  max-h-[350px]">
-                <div className="flex justify-between items-center mb-2 ">
-                    <h2 className="font-bold text-slate-700">List Of Items</h2>
-                    <button className="font-bold text-slate-700 bord"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                setInwardItemSelection(true)
+            <div className="p-2 bg-white rounded-md">
+              
+                {
 
-                            }
-                        }}
-                        onClick={() => {
-                            if (!supplierId) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: ` Choose Supplier`,
-                                    showConfirmButton: false,
-                                    timer: 2000
-                                });
-                            }
-                            else {
-
-                                setInwardItemSelection(true)
-                            }
-                        }}
-                    >
-                        Fill Inward Items
-                    </button>
-                </div>
-                <fieldset className=' rounded-tr-lg rounded-bl-lg rounded-br-lg my-1  md:pb-5 flex  
-                     w-full h-full'>
-
-                    {
-
-                        poInwardOrDirectInward == "DirectReturn" &&
+                    poInwardOrDirectInward == "DirectReturn" &&
 
 
-                        <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
-                            handleInputChangeLotNo={handleInputChangeLotNo}
-                            storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
-                            directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
-                            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-                            branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
-                            supplierId={supplierId} stockControlData={stockControlData}
-                        />
+                    <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
+                        handleInputChangeLotNo={handleInputChangeLotNo}
+                        storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
+                        directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
+                        supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                        branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
+                        supplierId={supplierId} stockControlData={stockControlData}
+                    />
 
 
-                    }
+                }
 
-                </fieldset>
             </div>
         </>
 

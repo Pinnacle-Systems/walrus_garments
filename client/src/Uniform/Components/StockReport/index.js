@@ -4,7 +4,7 @@ import secureLocalStorage from "react-secure-storage";
 import moment from 'moment';
 import Modal from '../../../UiComponents/Modal';
 // import Parameter from './Parameter';
-import { useGetStockReportQuery, useLazyGetStockReportQuery } from '../../../redux/services/StockService';
+import { useGetStockReportQuery, useLazyGetStockReportQuery, useLazyGetUnifiedStockReportQuery } from '../../../redux/services/StockService';
 import { EMPTY_ICON, REFRESH_ICON } from '../../../icons';
 import ParameterButton from '../../ResuableComponent/ParameterButton';
 import Parameter from './Parameter';
@@ -59,7 +59,7 @@ const StockReport = () => {
 
 
 
-    const [fetchData, { data: stockData, refetch }] = useLazyGetStockReportQuery();
+    const [fetchData, { data: stockData, refetch }] = useLazyGetUnifiedStockReportQuery();
 
 
 

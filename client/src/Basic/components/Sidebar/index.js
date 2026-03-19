@@ -313,7 +313,8 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
                     type: page.page.type,
                     link: page.page.link,
                     id: page.page.id,
-                    pageGroupId: page.page.pageGroupId
+                    pageGroupId: page.page.pageGroupId,
+                    active: page.page.active
                   };
                 })
               );
@@ -348,7 +349,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
 
   const masters = allowedPages.filter((page) => page.type === "Masters")
   const mastersGroup = [...new Set(masters.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
-  const transactions = allowedPages.filter((page) => page.type === "Transactions" && page.active)
+  const transactions = allowedPages?.filter((page) => page.type === "Transactions" && page.active)
   console.log(transactions, "transactions")
   const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
   const reports = allowedPages.filter((page) => page.type === "Reports")
@@ -356,15 +357,12 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   console.log(transactionsGroup, "transactionsGroup")
 
 
+  console.log(allowedPages, "allowedPages")
+
   const order = [
     "PO",
     "STOCK",
     "SALES",
-    // "PRODUCTION",
-    // "PROCESS",
-    // "STOCK TRANSFER",
-    // "OPENING STOCK",
-    // "SAMPLE",
   ];
 
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))

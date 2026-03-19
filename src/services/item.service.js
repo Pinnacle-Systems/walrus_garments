@@ -104,7 +104,7 @@ async function create(body) {
                         MinimumStockQty: item?.MinimumStockQty?.length > 0
                             ? {
                                 create: item?.MinimumStockQty?.filter(i => i.locationId)?.map((min) => ({
-                                    minStockQty: min?.minStockQty ? String(min?.minStockQty) : "0",
+                                    minStockQty: min?.minStockQty ? String(min?.minStockQty) : "",
                                     locationId: min?.locationId ? parseInt(min?.locationId) : undefined,
 
 
@@ -219,20 +219,20 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         }
     })
 
-    const promises = itemPriceList.map(async (item) => {
-        if (item?.id) {
+    const promises = itemPriceList.map(async (priceItem) => {
+        if (priceItem?.id) {
             return await tx.ItemPriceList.update({
                 where: {
-                    id: parseInt(item.id)
+                    id: parseInt(priceItem.id)
                 },
 
                 data: {
-                    itemId: item?.itemId ? parseInt(item?.itemId) : undefined,
-                    sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    offerPrice: item?.offerPrice ? item?.offerPrice : undefined,
-                    colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
-                    salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
-                    minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
+                    itemId: priceItem?.itemId ? parseInt(priceItem?.itemId) : undefined,
+                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
+                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
+                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
+                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
 
 
                 }
@@ -240,14 +240,12 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         } else {
             return await tx.ItemPriceList.create({
                 data: {
-
-                    offerPrice: item?.offerPrice ? item?.offerPrice : undefined,
-                    sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
-                    colorId: item?.colorId ? parseInt(item?.colorId) : undefined,
-                    salesPrice: item?.salesPrice ? item?.salesPrice : undefined,
-                    minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
-
-
+                    itemId: parseInt(item?.id),
+                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
+                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
+                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
+                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
                 }
             })
         }
@@ -294,11 +292,11 @@ async function update(id, body) {
                 priceMethod: priceMethod ? priceMethod : undefined,
                 active: active ? active : undefined,
 
-                field1: fields[0] ?? "",
-                field2: fields[1] ?? "",
-                field3: fields[2] ?? "",
-                field4: fields[3] ?? "",
-                field5: fields[4] ?? "",
+                field1: fields?.[0] ?? "",
+                field2: fields?.[1] ?? "",
+                field3: fields?.[2] ?? "",
+                field4: fields?.[3] ?? "",
+                field5: fields?.[4] ?? "",
 
             },
             include: {

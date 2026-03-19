@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
-import { Check, Power } from "lucide-react";
+import { Check, Power, Plus } from "lucide-react";
 import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
 import { ItemTypes, statusDropdown } from "../../Utils/DropdownData";
@@ -18,6 +18,9 @@ import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMa
 
 import { TriangleAlert } from "lucide-react";
 import { useGetItemControlPanelMasterQuery } from "../../redux/uniformService/ItemControlPanelService";
+import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategoryMasterService";
+import QuickAddSizeModal from "./QuickAddSizeModal";
+import QuickAddColorModal from "./QuickAddColorModal";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -53,9 +56,13 @@ export default function Form() {
   const [selectedItem, setSelectedItem] = useState({});
   const [gridIndex, setGridIndex] = useState();
   const [fields, setFields] = useState({});
-
-
   const [contextMenu, setContextMenu] = useState(null);
+  const [mainCategory, setMainCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [showColorModal, setShowColorModal] = useState(false);
+
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -104,6 +111,11 @@ export default function Form() {
   const {
     data: sectionData,
   } = useGetSectionMasterQuery({ params, searchParams: searchValue });
+
+  const {
+    data: itemCategoryData,
+  } = useGetItemCategoryQuery({ params, searchParams: searchValue });
+
 
   const {
     data: locationData,
@@ -255,7 +267,7 @@ export default function Form() {
   };
 
   const validateData = (data) => {
-    if (data.name && data?.code && data?.hsnId && data?.priceMethod) {
+    if (data.name && data?.code && data?.priceMethod) {
       return true;
     }
     return false;
@@ -340,13 +352,13 @@ export default function Form() {
   };
 
   const handleDelete = async (id, childRecord) => {
-    if (childRecordCount(childRecord)) {
-      Swal.fire({
-        icon: "error",
-        title: "Child record Exists",
-      });
-      return;
-    }
+    // if (childRecordCount(childRecord)) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Child record Exists",
+    //   });
+    //   return;
+    // }
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
@@ -540,7 +552,7 @@ export default function Form() {
           ...prev,
           ...pushNewCombinations.map(item => ({
             ...item,
-            MinimumStock: [{ locationId: "", minStockQty: "" }]   // ✅ add new array here
+            MinimumStockQty: [{ locationId: "", minStockQty: "" }]   // ✅ add new array here
           }))
         ]);
       }
@@ -660,7 +672,7 @@ export default function Form() {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          itemsPerPage={10}
+          itemsPerPage={15}
         />
       </div>
       {form && (
@@ -782,7 +794,7 @@ export default function Form() {
                         )}
                         value={hsnId}
                         setValue={setHsnId}
-                        required
+                        // required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
                       />
@@ -808,6 +820,40 @@ export default function Form() {
 
                       </>
                     )}
+
+
+
+                    <div className="col-span-2">
+                      <DropdownInput
+                        name="Main Category"
+                        options={dropDownListObject(
+                          id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active),
+                          "name",
+                          "id"
+                        )}
+                        value={mainCategory}
+                        setValue={setMainCategory}
+                        required
+                        readOnly={readOnly}
+                        disabled={childRecord.current > 0}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <DropdownInput
+                        name="Sub Category"
+                        options={dropDownListObject(
+                          id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
+                          "name",
+                          "id"
+                        )}
+                        value={subCategory}
+                        setValue={setSubCategory}
+                        required
+                        readOnly={readOnly || !mainCategory}
+                        disabled={childRecord.current > 0}
+                      />
+                    </div>
+
 
 
                     {/* <div className="col-span-2">
@@ -908,34 +954,58 @@ export default function Form() {
                           {(priceMethod == "SIZE" || priceMethod == "SIZE_COLOR") && (
 
                             <div className="col-span-3">
-                              <MultiSelectDropdownNew
-                                name="Sizes"
-                                required={true}
-                                disabled={readOnly}
-                                options={multiSelectOption(sizeData?.data ? sizeData?.data : [], "name", "id")}
-                                selected={sizeList}
-                                setSelected={(value) => {
-                                  setSizeList(value)
+                              <div className="flex items-end gap-1">
+                                <div className="flex-1">
+                                  <MultiSelectDropdownNew
+                                    name="Sizes"
+                                    required={true}
+                                    disabled={readOnly}
+                                    options={multiSelectOption(sizeData?.data ? sizeData?.data : [], "name", "id")}
+                                    selected={sizeList}
+                                    setSelected={(value) => {
+                                      setSizeList(value)
 
-                                }}
-                              />
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSizeModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Size"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
                             </div>
                           )}
 
                           {(priceMethod == "SIZE_COLOR") && (
 
                             <div className="col-span-3">
-                              <MultiSelectDropdownNew
-                                name="Colors"
-                                required={true}
-                                disabled={readOnly}
-                                options={multiSelectOption(colorData?.data ? colorData?.data : [], "name", "id")}
-                                selected={colorList}
-                                setSelected={(value) => {
-                                  setColorList(value)
+                              <div className="flex items-end gap-1">
+                                <div className="flex-1">
+                                  <MultiSelectDropdownNew
+                                    name="Colors"
+                                    required={true}
+                                    disabled={readOnly}
+                                    options={multiSelectOption(colorData?.data ? colorData?.data : [], "name", "id")}
+                                    selected={colorList}
+                                    setSelected={(value) => {
+                                      setColorList(value)
 
-                                }}
-                              />
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowColorModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Color"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
                             </div>
                           )}
                           {(priceMethod == "SIZE" || priceMethod == "SIZE_COLOR") && (
@@ -1207,6 +1277,24 @@ export default function Form() {
         </Modal >
       )
       }
+      {showSizeModal && (
+        <QuickAddSizeModal
+          isOpen={showSizeModal}
+          onClose={() => setShowSizeModal(false)}
+          onCreated={(newSize) => {
+            setSizeList((prev) => [...prev, { value: newSize.id, label: newSize.name }]);
+          }}
+        />
+      )}
+      {showColorModal && (
+        <QuickAddColorModal
+          isOpen={showColorModal}
+          onClose={() => setShowColorModal(false)}
+          onCreated={(newColor) => {
+            setColorList((prev) => [...prev, { value: newColor.id, label: newColor.name }]);
+          }}
+        />
+      )}
     </div >
   );
 }

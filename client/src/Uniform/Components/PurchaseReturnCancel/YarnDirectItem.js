@@ -100,12 +100,12 @@ const YarnDirectItem = ({ itemList, uomList,
                                     }
                                 />
                             </td>
-                     
+
                         </>
                     ))
                 ))}
-                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.stockQty || ''}</td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.allowedReturnQty || ""}</td>
+                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.allowedReturnQty}</td>
+                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.stockQty}</td>
 
 
 
@@ -115,7 +115,7 @@ const YarnDirectItem = ({ itemList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                     <input
                         type="number"
-                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
+                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "qty") } }}
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 w-full px-1 table-data-input"
                         value={(!item.qty) ? "" : item.qty}
@@ -125,32 +125,39 @@ const YarnDirectItem = ({ itemList, uomList,
                                 handleInputChange(0, index, "qty");
                                 return
                             }
-                            if (isBetweenRange(0, getAllowableReturnQty(item.alreadyInwardedQty, item.alreadyReturnedQty, item.stockQty), event.target.value)) {
-                                handleInputChange(event.target.value.replace(/^0+/, ''), index, "qty")
-                            } else {
-                                // toast.info("Return Qty Cannot be more than allowable Qty", { position: 'top-center' })
+                            const stock = parseFloat(item?.stockQty)
+                            const value = parseFloat(event.target.value)
+                            const returnQty = parseFloat(item?.allowedReturnQty)
+
+                            if (value > stock) {
                                 Swal.fire({
-                                    title: "Return Qty Cannot be more than allowable Qty",
+                                    title: "Return Qty Cannot be more than Stock Qty",
                                     icon: "error",
                                 });
-
-                            }
-                        }}
-                        onBlur={(e) => {
-                            if (!e.target.value) {
-                                handleInputChange(0.000, index, "returnQty");
                                 return
                             }
-                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "returnQty")
-                        }
+                            else {
+                                handleInputChange((value), index, "qty")
+                            }
 
-                        }
+                            if (value > returnQty) {
+                                Swal.fire({
+                                    title: "Return Qty Cannot be more than Allowed Return Qty Qty",
+                                    icon: "error",
+                                });
+                                return
+                            } else {
+                                handleInputChange((value), index, "qty")
+                            }
+                        }}
+
+
                     />
                     <div className='text-center'>
                     </div>
                 </td>
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                    {item.price * item.returnQty ? parseFloat(item.price * item.returnQty || 0).toFixed(2) : ""}
+                    {item.price * item.qty ? parseFloat(item.price * item.qty || 0).toFixed(2) : ""}
 
                 </td>
                 {/* 

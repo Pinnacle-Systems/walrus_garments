@@ -2,13 +2,13 @@ import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
-import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput, TextInputNew1 } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
 import { useGetOrderByIdQuery, useGetStockValidationByIdQuery } from "../../../redux/uniformService/OrderService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import FormItems from "./FormItems";
-import { useAddStockMutation, useDeleteStockMutation, useGetStockByIdQuery, useGetStockQuery, useUpdateStockMutation } from "../../../redux/services/StockService";
+import { useAddStockMutation, useDeleteStockMutation, useGetStockByIdQuery, useGetStockQuery, useUpdateStockMutation, useGetUnifiedStockQuery, useLazyGetUnifiedStockByBarcodeQuery } from "../../../redux/services/StockService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
@@ -44,6 +44,7 @@ const StockTransferForm = ({
     const [toLocationId, setToLocationId] = useState("")
     const [orderToGeneral, setOrderToGeneral] = useState(false)
     const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+    const [barcode, setBarcode] = useState("");
 
 
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
@@ -63,7 +64,7 @@ const StockTransferForm = ({
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
 
 
-    const { data: allStockData, isLoading, isFetching } = useGetStockQuery(
+    const { data: allStockData, isLoading, isFetching } = useGetUnifiedStockQuery(
         {
             params: {
                 ...params,
@@ -74,17 +75,53 @@ const StockTransferForm = ({
 
 
             }
-        }, { skip: id });
+        }, { skip: id || !fromLocationId });
 
+    const [triggerBarcodeSearch] = useLazyGetUnifiedStockByBarcodeQuery();
 
+    const handleBarcodeSearch = async (e) => {
+        if (e.key === 'Enter' || e.type === 'blur') {
+            if (!barcode) return;
+            if (!fromLocationId) {
+                Swal.fire({ title: "Please select From Location first", icon: "warning" });
+                return;
+            }
 
+            try {
+                const res = await triggerBarcodeSearch({ params: { barcode, storeId: fromLocationId, branchId } }).unwrap();
+                if (res.statusCode === 0 && res.data) {
+                    const newItem = {
+                        ...res.data,
+                        transferQty: 1,
+                        stockQty: res.data.availableQty
+                    };
 
+                    // Check if already in list
+                    const exists = stockItems.find(i =>
+                        i.itemId === newItem.itemId &&
+                        i.sizeId === newItem.sizeId &&
+                        i.colorId === newItem.colorId
+                    );
 
+                    if (exists) {
+                        setStockItems(stockItems.map(i =>
+                            (i.itemId === newItem.itemId && i.sizeId === newItem.sizeId && i.colorId === newItem.colorId)
+                                ? { ...i, transferQty: (parseFloat(i.transferQty) || 0) + 1 }
+                                : i
+                        ));
+                    } else {
+                        setStockItems([...stockItems, newItem]);
+                    }
+                    setBarcode(""); // Clear barcode after successful scan
+                } else {
+                    Swal.fire({ title: res.message || "Stock not found", icon: "error" });
+                }
+            } catch (err) {
+                console.error("Barcode search error:", err);
+            }
+        }
+    };
 
-
-    const [addData] = useAddStockTransferMutation();
-    const [updateData] = useUpdateStockTransferMutation();
-    //   const [removeData] = useDeleteStockMutation();
 
 
     const data = {
@@ -374,7 +411,18 @@ const StockTransferForm = ({
 
 
                                     </div>
-                                    <div className="col-span-2">
+                                    <div className="col-span-1">
+                                        <input
+                                            name="Barcode"
+                                            value={barcode}
+                                            onChange={(e) => setBarcode(e.target.value)}
+                                            onKeyDown={handleBarcodeSearch}
+                                            // onBlur={handleBarcodeSearch}
+                                            placeholder="Scan..."
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
                                         <button
                                             className="ml-4 px-4 py-2 mt-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
                                             onClick={() => setOrderToGeneral(true)}

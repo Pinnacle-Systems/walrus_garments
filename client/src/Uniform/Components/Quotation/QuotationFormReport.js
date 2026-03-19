@@ -10,9 +10,9 @@ import {
 } from "../../../redux/uniformService/PoServices"
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
-import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
+import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 
 
 
@@ -24,10 +24,12 @@ const QuotationPrintFormat = ({
   itemsPerPage = 10,
   onEdit,
   onDelete,
+  onConvertToSaleOrder,
+  onConvertToInvoice,
   rowActions = true,
 }) => {
-  
-  
+
+
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
@@ -41,6 +43,7 @@ const QuotationPrintFormat = ({
 
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
 
   const searchFields = {
@@ -62,11 +65,19 @@ const QuotationPrintFormat = ({
     searchMaterial,
   ]);
 
+  useEffect(() => {
+    const handleClickOutside = () => setActiveActionMenuId(null);
+    if (activeActionMenuId) {
+      window.addEventListener('click', handleClickOutside);
+    }
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, [activeActionMenuId]);
 
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetQuotationMasterQuery({
+
+  const { data: allData, isFetching, isLoading } = useGetQuotationQuery({
     params: {
       branchId,
       ...searchFields,
@@ -221,22 +232,15 @@ const QuotationPrintFormat = ({
                                             }}
                                         /> */}
                   </th>
-               
+
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+                  </th>
+                  <th className="w-32 px-3 font-medium text-[13px] text-gray-900 text-center">
+                    <div>Status</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
-
                   </th>
 
                 </tr>
@@ -267,7 +271,7 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th>
-          
+
                   {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
@@ -290,10 +294,8 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th>
-
-                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
-
-                  </th>
+                  <th className="w-32 px-1 font-medium text-[13px] text-gray-900 text-center"></th>
+                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
 
                 </tr>
               </thead>
@@ -330,16 +332,26 @@ const QuotationPrintFormat = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                   
+
 
                       <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                      <td className="py-1.5 text-center">
+                        {dataObj?.Saleorder?.length > 0 ? (
+                          <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
+                            S.O Taken ({dataObj.Saleorder[0].docId.split('/').pop()})
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">Pending</span>
+                        )}
+                      </td>
                       {rowActions && (
-                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                          <div className="flex">
+                        <td className="border-gray-200 px-2 h-8">
+                          <div className="flex items-center justify-end gap-1">
                             {onView && (
                               <button
-                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                onClick={() => onView(dataObj.id)}
+                                className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
+                                title="View"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -349,8 +361,9 @@ const QuotationPrintFormat = ({
                             )}
                             {onEdit && (
                               <button
-                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                onClick={() => onEdit(dataObj.id)}
+                                className="text-green-600 flex items-center px-1 bg-green-50 rounded hover:bg-green-100 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); onEdit(dataObj.id); }}
+                                title="Edit"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -359,15 +372,56 @@ const QuotationPrintFormat = ({
                             )}
                             {onDelete && (
                               <button
-                                className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(dataObj.id,dataObj?._count)}
+                                className="text-red-800 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); onDelete(dataObj.id, dataObj?._count); }}
+                                title="Delete"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                 </svg>
-                                {/* <span className="text-xs">delete</span> */}
                               </button>
                             )}
+
+                            <div className="relative">
+                              <button
+                                className="text-gray-600 hover:text-indigo-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveActionMenuId(activeActionMenuId === dataObj.id ? null : dataObj.id);
+                                }}
+                                title="More Actions"
+                              >
+                                <FaEllipsisV className="h-3.5 w-3.5" />
+                              </button>
+
+                              {activeActionMenuId === dataObj.id && (
+                                <div
+                                  className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden animate-in fade-in zoom-in duration-200"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="py-1">
+                                    <button
+                                      className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
+                                      onClick={() => {
+                                        onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
+                                        setActiveActionMenuId(null);
+                                      }}
+                                    >
+                                      <span className="font-semibold text-lg">📦</span> Convert to Sale Order
+                                    </button>
+                                    <button
+                                      className="w-full text-left px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2"
+                                      onClick={() => {
+                                        onConvertToInvoice && onConvertToInvoice(dataObj);
+                                        setActiveActionMenuId(null);
+                                      }}
+                                    >
+                                      <span className="font-semibold text-lg">📄</span> Convert to Invoice
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       )}

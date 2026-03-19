@@ -9,7 +9,7 @@ import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnInwardItemSelection from './YarnInwardItemSelection';
 import AccessoryInwardItemSelection from './AccessoryInwardItemSelection';
 
-const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, storeId }) => {
+const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, storeId ,purchaseInwardId }) => {
 
 
 
@@ -88,7 +88,9 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
             <div className='h-full w-full flex flex-col'>
 
 
-                <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone} />
+                <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone}
+                purchaseInwardId={purchaseInwardId}
+                />
 
 
             </div>

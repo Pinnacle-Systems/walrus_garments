@@ -53,31 +53,31 @@ const YarnPoItems = ({
 
     console.log(headerOpen, "headerOpen",);
 
-useEffect(() => {
-  if (id) return;
+    useEffect(() => {
+        // if (id) return;
 
-  const targetRows = headerOpen ? 9 : 15;
+        const targetRows = headerOpen ? 9 : 15;
 
-  if (poItems?.length >= targetRows) return;
+        if (poItems?.length >= targetRows) return;
 
-  setPoItems((prev) => {
-    const newArray = Array.from({ length: targetRows - prev.length }, () => ({
-      itemId: "",
-      qty: "0.00",
-      tax: "0",
-      colorId: "",
-      uomId: "",
-      price: "0.00",
-      discountValue: "0.00",
-      noOfBags: "0",
-      discountType: "",
-      weightPerBag: "0.00",
-      id: "",
-      poItemsId: "",
-    }));
-    return [...prev, ...newArray];
-  });
-}, [transType, setPoItems, poItems, headerOpen]);
+        setPoItems((prev) => {
+            const newArray = Array.from({ length: targetRows - prev.length }, () => ({
+                itemId: "",
+                qty: "0.00",
+                tax: "0",
+                colorId: "",
+                uomId: "",
+                price: "0.00",
+                discountValue: "0.00",
+                noOfBags: "0",
+                discountType: "",
+                weightPerBag: "0.00",
+                id: "",
+                poItemsId: "",
+            }));
+            return [...prev, ...newArray];
+        });
+    }, [transType, setPoItems, poItems, headerOpen]);
 
 
     const addNewRow = () => {
@@ -162,7 +162,7 @@ useEffect(() => {
                     </button> */}
 
                 </div>
-                <div className={` relative w-full ${headerOpen ? " h-[250px]" : " h-[500px]"} overflow-y-auto py-1`}>
+                <div className={` relative w-full ${headerOpen ? " h-[250px]" : " h-[450px]"} overflow-y-auto py-1`}>
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky">
                             <tr className="py-2">
@@ -175,25 +175,25 @@ useEffect(() => {
 
                                     className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Item
+                                    Item  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Size
+                                    Size  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Color
+                                    Color  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    UOM
+                                    UOM  <span className="text-red-500">*</span>
                                 </th>
                                 {allData?.data?.map(element => (
                                     // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
@@ -203,24 +203,32 @@ useEffect(() => {
                                                 key={i}
                                                 className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
                                             >
-                                                {capitalizeFirstLetter(element?.[i])}
+                                                {capitalizeFirstLetter(element?.[i])}  <span className="text-red-500">*</span>
                                             </th>
 
                                         </>
                                     ))
                                 ))}
+                                {id && (
+                                    <th
+
+                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    >
+                                        Stock  Quantity  <span className="text-red-500">*</span>
+                                    </th>
+                                )}
 
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Quantity
+                                    Quantity  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
                                     className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
-                                    Price
+                                    Price  <span className="text-red-500">*</span>
                                 </th>
 
 
@@ -244,9 +252,9 @@ useEffect(() => {
                         <tbody>
 
                             {(poItems ? poItems : [])?.map((row, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer "
+                                <tr key={index} className="border border-blue-gray-200 cursor-pointer "
                                     onContextMenu={(e) => {
-                                        if (!readOnly) {
+                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty))) {
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
@@ -371,6 +379,12 @@ useEffect(() => {
                                         ))
                                     ))}
 
+                                    {id && (
+                                        <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
+                                            {row?.stockQty}
+                                        </td>
+                                    )}
+
                                     <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
                                         <input
                                             onKeyDown={e => {
@@ -383,10 +397,17 @@ useEffect(() => {
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={row?.qty}
-                                            disabled={readOnly || !row.uomId}
-                                            onChange={(e) =>
-                                                handleInputChange(e.target.value, index, "qty")
-                                            }
+                                            disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
+                                            onChange={(e) => {
+                                                if (id) {
+                                                    if (row?.stockQty)
+                                                        handleInputChange(e.target.value, index, "qty")
+                                                } else {
+                                                    handleInputChange(e.target.value, index, "qty")
+
+                                                }
+
+                                            }}
                                             onBlur={(e) => {
                                                 handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
                                             }

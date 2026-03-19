@@ -33,11 +33,13 @@ import tw from "../../../Utils/tailwind-react-pdf.js";
 import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
+import { useGetDirectInwardOrReturnQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices.js";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission
 
 }) => {
 
@@ -65,11 +67,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [specialInstructions, setSpecialInstructions] = useState("")
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const { branchId, companyId, finYearId, userId } = getCommonParams()
-    const [showExtraCharge, setShowExtraCharge] = useState(false)
-    const [showDiscount, setShowDiscount] = useState(false)
-    const [term, setTerm] = useState("");
-    const [notes, setNotes] = useState("");
-    const [approvedBy, setApprovedBy] = useState("")
+    const [purchaseInwardId, setPurchaseInwardId] = useState("")
 
     const [taxTemplateId, setTaxTemplateId] = useState("4");
 
@@ -77,7 +75,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    // const branchIdFromApi = useRef(branchId);
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const {
@@ -113,10 +111,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
         setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
         setRemarks(data?.remarks ? data?.remarks : "")
-        // if (data?.branchId) {
-        //     branchIdFromApi.current = data?.branchId
-        // }
+        setPurchaseInwardId(data?.purchaseInwardId ? data?.purchaseInwardId : "")
     }, [id]);
+
+
+    const { data: purchaseInwardData } = useGetDirectInwardOrReturnQuery({
+        params: {
+            branchId,
+
+        }
+    });
 
     useEffect(() => {
         if (id) {
@@ -140,7 +144,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         remarks,
         specialInstructions,
         vehicleNo,
-        finYearId, locationId
+        finYearId, locationId,
+        purchaseInwardId
     }
 
     function isSupplierOutside() {
@@ -151,40 +156,37 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     }
 
     const validateData = (data) => {
-        let mandatoryFields = ["uomId", "colorId", "price"];
 
 
-        return data.poType && data.supplierId && data.dcDate && data.dcNo
-            && data.directReturnItems.length !== 0 && data?.locationId && data?.storeId
+        return data.supplierId
+            && data.directReturnItems.length !== 0 && data?.locationId && data?.storeId && data?.purchaseInwardId
 
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+
+    const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
         try {
-            let returnData;
-            if (text === "Updated") {
-                returnData = await callback(data).unwrap();
-            } else {
-                returnData = await callback(data).unwrap();
-            }
+            const returnData = await callback(payload).unwrap();
             if (returnData.statusCode === 1) {
                 toast.error(returnData.message);
             } else {
-                // toast.success(text + "Successfully");
-                Swal.fire({
-                    icon: 'success',
-                    title: `${text || 'Saved'} Successfully`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
+                Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
+                if (returnData.statusCode === 0) {
+                    if (nextProcess === "new") {
+                        syncFormWithDb(undefined)
+                    } else {
+                        onClose()
+                    }
 
-                setId("")
-                syncFormWithDb(undefined)
+                } else {
+                    toast.error(returnData?.message);
+                }
             }
         } catch (error) {
-            console.log("handle");
+            console.log("handle", error);
         }
     };
+
 
 
     const saveData = () => {
@@ -208,44 +210,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         }
     }
 
-    const deleteData = async () => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                await removeData(id)
-                setId("");
-                onNew();
-                Swal.fire({
-                    icon: 'success',
-                    title: `Deleted Successfully`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
 
-            } catch (error) {
-                toast.error("something went wrong");
-            }
-        }
-    };
-
-    const handleKeyDown = (event) => {
-        let charCode = String.fromCharCode(event.which).toLowerCase();
-        if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-            event.preventDefault();
-            saveData();
-        }
-    };
-
-    const onNew = () => {
-        setId("");
-        setSearchValue("");
-        setReadOnly(false);
-        syncFormWithDb(undefined)
-        // getNextDocId()
-        setDocId("New")
-    };
 
 
     useEffect(() => {
@@ -255,33 +220,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    console.log(transType === "DyedYarn" || transType === "GreyYarn", "party")
-    function filterSupplier() {
-        let finalSupplier = []
-        // if (transType === "DyedYarn" ||  transType  === "GreyYarn") {
-        //     finalSupplier = supplierList?.data?.filter(s => (s.isDy || s.isGy))
-        // } 
-        //   if (transType === "Accessory") {
-        //     finalSupplier = supplierList?.data?.filter(s => (s.isAcc))
-        // }
-        // else {
-        //     finalSupplier = supplierList?.data?.filter(s => s.Acc > 0)
-        // }
-        finalSupplier = supplierList?.data?.filter(s => s.isSupplier)
-        return finalSupplier
-    }
-    let supplierListBasedOnSupply = filterSupplier()
 
-    function getTotalIssuedQty() {
-        if (transType === "Accessory") {
-            return directInwardReturnItems.reduce((total, current) => {
-                return total + parseFloat(current.qty)
-            }, 0)
-        }
-        return directInwardReturnItems.reduce((total, current) => {
-            return total + sumArray(current?.returnLotDetails ? current.returnLotDetails : [], "qty")
-        }, 0)
-    }
+
+
 
     useEffect(() => {
         if (id) return
@@ -302,19 +243,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         });
     }
 
-
-    // if (!branchList || !locationData) return <Loader />
-
-
-
-    async function onDeleteItem(itemId) {
-        await removeData(itemId).unwrap();
-    }
-
-    function getTotalQty() {
-        let qty = directInwardReturnItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-        return parseInt(qty)
-    }
 
 
 
@@ -350,7 +278,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             supplierId={supplierId}
                             storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
-                            setInwardItems={setDirectInwardReturnItems} />
+                            setInwardItems={setDirectInwardReturnItems} purchaseInwardId={purchaseInwardId}
+
+                        />
                 }
 
             </Modal>
@@ -383,12 +313,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             </Modal>
 
 
-            {/* <NewModal
-                isOpen={printModalOpen}
-                onClose={() => setPrintModalOpen(false)}
-                widthClass={"w-[60%] h-[90%]"}
-                
-            > */}
+
             <div className="hidden">
 
                 <PrintFormatGreyYarnPurchaseReturn
@@ -411,9 +336,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
             </div>
 
-            <div className="w-full h-[90vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
+            <div className="w-full h-[78vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchse Return</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
                     <button
                         onClick={onClose}
                         className="text-indigo-600 hover:text-indigo-700"
@@ -453,12 +378,12 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
-                                <DropdownInput name="Location"
+                                <DropdownInput name="Branch"
                                     options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
                                     value={locationId}
                                     setValue={(value) => { setLocationId(value); setStoreId("") }}
                                     required={true} readOnly={id || readOnly} />
-                                <DropdownInput name="Store"
+                                <DropdownInput name="Location"
                                     options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "WAREHOUSE"), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
@@ -470,7 +395,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <h2 className="font-medium text-slate-700 mb-2">
                                 Supplier Details
                             </h2>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-3 gap-2">
 
                                 <div className="col-span-2">
 
@@ -487,15 +412,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     />
                                 </div>
 
-                                <DropdownInput name="Store"
-                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "WAREHOUSE"), "storeName", "id")}
-                                    value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
-
-                                {/* <TextInput name={"Dc No."} value={dcNo} setValue={setDcNo} readOnly={readOnly} required /> */}
-
-                                {/*   <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required={true} readOnly={readOnly} />
-                            
-                             */}
+                                <DropdownInput name="Purchase Inward No"
+                                    options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
+                                    value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
                             </div>
 
                         </div>
@@ -507,52 +426,51 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
+                            purchaseInwardId={purchaseInwardId}
                         />
                     </div>
 
 
 
 
-                    <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-
-                        <div className="flex gap-2 flex-wrap">
-                            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <FiSave className="w-4 h-4 mr-2" />
-                                Save & New
-                            </button>
-                            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Save & Close
-                            </button>
-                            <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Draft Save
-                            </button>
-                        </div>
 
 
-                        <div className="flex gap-2 flex-wrap">
+                </div>
 
-                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                onClick={() => setReadOnly(false)}
-                            >
-                                <FiEdit2 className="w-4 h-4 mr-2" />
-                                Edit
-                            </button>
-                            <button className="bg-emerald-600 text-white px-4 py-1 rounded-md hover:bg-emerald-700 flex items-center text-sm">
-                                <FaWhatsapp className="w-4 h-4 mr-2" />
-                                WhatsApp
-                            </button>
-                            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                                onClick={() => {
-                                    setPrintModalOpen(true)
-                                    // handlePrint()
-                                }}
-                            >
-                                <FiPrinter className="w-4 h-4 mr-2" />
-                                Print
-                            </button>
-                        </div>
+                <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
+                    <div className="flex gap-2 flex-wrap">
+                        <button
+                            onClick={() => hasPermission(() => saveData("new"), "save")}
+
+                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                            <FiSave className="w-4 h-4 mr-2" />
+                            Save & New
+                        </button>
+                        <button
+                            onClick={() => hasPermission(() => saveData("close"), "save")}
+                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                            <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                            Save & Close
+                        </button>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                        <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                            // onClick={() => setReadOnly(false)}
+                            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+
+                        >
+                            <FiEdit2 className="w-4 h-4 mr-2" />
+                            Edit
+                        </button>
+                        <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                            onClick={() => {
+                                setPrintModalOpen(true)
+                                // handlePrint()
+                            }}
+                        >
+                            <FiPrinter className="w-4 h-4 mr-2" />
+                            Print
+                        </button>
                     </div>
                 </div>
             </div>

@@ -53,7 +53,12 @@ import {
   AccessoryStockTransferApi,
   SectionMasterApi,
   ItemControlPanelApi,
-  QuotataionApi
+  QuotataionApi,
+  LegacyStockApi,
+  saleOrderApi,
+  ItemCategoryMasterApi,
+  StockAdjustmentApi,
+  priceTemplateApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -106,7 +111,6 @@ const commonReducers = {
   stock: stockApi.reducer,
   salesBill: salesBillApi.reducer,
   purchaseReturn: purchaseReturnApi.reducer,
-  salesReturn: salesReturnApi.reducer,
   uomMaster: uomMasterApi.reducer,
   quotes: quotesApi.reducer,
   leadForm: leadFormApi.reducer,
@@ -195,6 +199,12 @@ const commonReducers = {
   SectionMaster: SectionMasterApi.reducer,
   ItemControlPanel: ItemControlPanelApi.reducer,
   Quotationr: QuotataionApi.reducer,
+  LegacyStock: LegacyStockApi.reducer,
+  saleOrder: saleOrderApi.reducer,
+  ItemCategoryMaster: ItemCategoryMasterApi.reducer,
+  salesReturn: salesReturnApi.reducer,
+  StockAdjustment: StockAdjustmentApi.reducer,
+  priceTemplate: priceTemplateApi.reducer
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -310,7 +320,13 @@ AccessoryStockApi.middleware,
 AccessoryTemplateMasterApi.middleware,
 SectionMasterApi.middleware,
 ItemControlPanelApi.middleware,
-QuotataionApi.middleware
+QuotataionApi.middleware,
+LegacyStockApi.middleware,
+saleOrderApi.middleware,
+ItemCategoryMasterApi.middleware,
+salesReturnApi.middleware,
+StockAdjustmentApi.middleware,
+priceTemplateApi.middleware
 ];
 
 

@@ -1,7 +1,6 @@
 import React from 'react';
 
-const Modal = ({ isOpen, onClose, children, widthClass  }) => {
-  // console.log(isSupplier,"isOpen")
+const Modal = ({ isOpen, onClose, children, widthClass }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
