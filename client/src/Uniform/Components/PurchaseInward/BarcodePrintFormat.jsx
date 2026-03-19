@@ -21,21 +21,13 @@ const BarCodePrintFormat = ({
   sizeList,
   itemList,
   labelConfig = {
-    labelWidth: 45, // mm
-    labelHeight: 30, // mm
+    labelWidth: 50,
+    labelHeight: 25,
     stickersPerRow: 2,
-    horizontalGap: 1, // mm
-    verticalGap: 1, // mm
+    horizontalGap: 1,
+    verticalGap: 1,
   },
 }) => {
-  const params = {
-    companyId: secureLocalStorage.getItem(
-      sessionStorage.getItem("sessionId") + "userCompanyId"
-    ),
-  };
-
-
-    console.log(data,"data")
 
   const allBarcodes = data?.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
@@ -43,7 +35,7 @@ const BarCodePrintFormat = ({
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price : item.price
+      price: item.price
     }))
   );
 
@@ -58,31 +50,31 @@ const BarCodePrintFormat = ({
   const labelWidthPt = mmToPt(labelWidth);
   const labelHeightPt = mmToPt(labelHeight);
   const gapX = mmToPt(horizontalGap);
-  const gapY = mmToPt(verticalGap);
 
+  // ✅ Page size (ONLY 1 ROW)
   const pageWidthPt =
     labelWidthPt * stickersPerRow + gapX * (stickersPerRow - 1);
+
   const pageHeightPt = labelHeightPt;
 
-  const rows = chunkArray(allBarcodes, stickersPerRow);
-  console.log(rows, "rows data")
+  // ✅ 2 stickers per page
+  const pages = chunkArray(allBarcodes, stickersPerRow);
 
   return (
     <PDFViewer style={tw("w-full h-full")}>
       <Document>
-        {rows.map((row, rowIndex) => (
+        {pages.map((page, pageIndex) => (
           <Page
-            key={rowIndex}
+            key={pageIndex}
             size={{ width: pageWidthPt, height: pageHeightPt }}
             style={{
               flexDirection: "row",
-              justifyContent: "flex-start",
               alignItems: "center",
-              padding: 0,
               gap: gapX,
+              padding: 0,
             }}
           >
-            {row.map((code, i) => (
+            {page.map((code, i) => (
               <View
                 key={i}
                 style={{
@@ -90,53 +82,29 @@ const BarCodePrintFormat = ({
                   height: labelHeightPt,
                   justifyContent: "center",
                   alignItems: "center",
+                  border: "1px solid #ccc", // debug
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "center",
-                  }}
-                >
+                <Text style={{ fontSize: 7, textAlign: "center" }}>
                   WALRUS
                 </Text>
 
-                {/* 🧾 Barcode */}
                 <BarcodeGenerator
                   value={`${code.code}${code.sizeName}`}
                   width={labelWidthPt * 0.85}
                   height={labelHeightPt * 0.45}
                 />
 
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  {code.code ? code.code : ""}{code.sizeName ? `${code.sizeName}` : ""}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "left",
-                  }}
-                >
-                  {code.itemName ? code.itemName : ""}
+                <Text style={{ fontSize: 7, textAlign: "center" }}>
+                  {code.code}{code.sizeName}
                 </Text>
 
-                {/* 📏 Size */}
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "left",
-                  }}
-                >
-                 Sale Price {code.price ? code?.price : ""}
+                <Text style={{ fontSize: 7 }}>
+                  {code.itemName}
+                </Text>
+
+                <Text style={{ fontSize: 7 }}>
+                  Sale Price {code.price}
                 </Text>
               </View>
             ))}
