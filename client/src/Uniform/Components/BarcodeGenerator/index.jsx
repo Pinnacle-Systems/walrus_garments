@@ -13,6 +13,8 @@ const BarcodeGenerator = ({ value, isUi = false, width = 100, height = 30 }) => 
       width: 1.5,
       height: 40,
       displayValue: false,
+      marginRight: 40,
+      marginLeft: 20,
       margin: 0,
     });
     setBarcode(canvas.toDataURL("image/png"));
