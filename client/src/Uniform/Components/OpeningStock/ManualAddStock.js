@@ -8,6 +8,8 @@ import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyS
 import { getCommonParams } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { FiPlus, FiTrash, FiSave, FiSettings } from "react-icons/fi";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { Check, X } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { TextInput, DropdownInput } from "../../../Inputs";
@@ -21,19 +23,10 @@ const ManualAddStock = ({ params }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
 
   // --- Main State ---
-  const [rows, setRows] = useState([
-    {
-      id: Date.now(),
-      itemId: "",
-      item_name: "",
-      sizeId: "",
-      size: "",
-      colorId: "",
-      color: "",
-      qty: 0,
-      barcode_no: "",
-    },
-  ]);
+  const [rows, setRows] = useState([]);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [selectedLocationId, setSelectedLocationId] = useState("");
+
 
   // --- Modal State ---
   const [modalState, setModalState] = useState({
@@ -51,10 +44,43 @@ const ManualAddStock = ({ params }) => {
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
+  const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+  const { data: locationList } = useGetLocationMasterQuery({ params: { branchId: selectedBranchId } });
+
+  const branchOptionsList = branchList?.data?.map((b) => ({ value: b.id, label: b.branchName })) || [];
+  const locationOptionsList = locationList?.data?.map((l) => ({ value: l.id, label: l.storeName })) || [];
+
+  React.useEffect(() => {
+    if (branchId) setSelectedBranchId(branchId);
+  }, [branchId]);
+
   const [addStock] = useAddLegacyStockMutation();
   const [addItem] = useAddItemMasterMutation();
   const [addSize] = useAddSizeMasterMutation();
   const [addColor] = useAddColorMasterMutation();
+
+
+  React.useEffect(() => {
+    if (uomList?.data && rows.length === 0) {
+      const pcsId = uomList?.data?.find(u => u.name?.toUpperCase() === 'PCS')?.id || "";
+      setRows([
+        {
+          id: Date.now(),
+          itemId: "",
+          item_name: "",
+          sizeId: "",
+          size: "",
+          colorId: "",
+          color: "",
+          qty: 0,
+          barcode: "",
+          uomId: pcsId,
+          uom: pcsId ? "PCS" : "",
+          price: ""
+        },
+      ]);
+    }
+  }, [uomList]);
 
   // --- Options Mapping ---
   const itemOptions = itemList?.data?.map((i) => ({ value: i.id, label: i.name })) || [];
@@ -64,7 +90,8 @@ const ManualAddStock = ({ params }) => {
 
   // --- Row Logic ---
   const addRow = () => {
-    setRows([...rows, { id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode_no: "" }]);
+    const pcsId = uomList?.data?.find(u => u.name?.toUpperCase() === 'PCS')?.id || "";
+    setRows([...rows, { id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", uomId: pcsId, uom: pcsId ? "PCS" : "", price: "" }]);
   };
 
   const removeRow = (id) => {
@@ -127,13 +154,21 @@ const ManualAddStock = ({ params }) => {
 
   // --- Save Logic (Batch Stock) ---
   const handleSaveStock = async () => {
-    const valid = rows.every((r) => r.itemId && r.qty && r.barcode);
-    if (!valid) { toast.warning("Fill Item and Qty and Barcode"); return; }
+    if (!selectedBranchId) { toast.warning("Please select a branch."); return; }
+    if (!selectedLocationId) { toast.warning("Please select a location."); return; }
+
+    const missingBarcodeIdx = rows.findIndex((r) => !r.barcode?.toString().trim());
+    if (missingBarcodeIdx !== -1) {
+      toast.warning(`Barcode is missing at row ${missingBarcodeIdx + 1}`);
+      return;
+    }
+    const valid = rows.every((r) => r.itemId && r.qty);
+    if (!valid) { toast.warning("Fill Item and Qty for all rows"); return; }
     if (!window.confirm("Save stock?")) return;
     try {
       const payload = {
 
-        branchId, companyId, finYearId, userId, stockItems: rows.map(({ id, ...rest }) => rest)
+        branchId: selectedBranchId, storeId: selectedLocationId, companyId, finYearId, userId, stockItems: rows.map(({ id, ...rest }) => rest)
 
       };
       const resp = await addStock(payload).unwrap();
@@ -156,41 +191,68 @@ const ManualAddStock = ({ params }) => {
 
   return (
     <div className="w-full bg-white rounded-md p-2">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 className="text-lg font-semibold text-gray-700">Manual Entry</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              if (window.confirm("Clear all rows?")) {
-                setRows([{ id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", price: "" }]);
-              }
-            }}
-            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm flex items-center gap-1 border border-gray-300 hover:bg-gray-200"
-          >
-            New
-          </button>
-          <button onClick={addRow} className="bg-green-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1"><FiPlus />Add Row</button>
-          <button onClick={handleSaveStock} className="bg-indigo-600 text-white px-4 py-1 rounded-md text-sm flex items-center gap-1"><FiSave />Save Stock</button>
+      <div className="flex flex-col gap-4 mb-4 border-b pb-4">
+        {/* Header Title and Actions */}
+        <div className="flex justify-between items-center ">
+          <h2 className="text-lg font-semibold text-gray-700">Manual Entry</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (window.confirm("Clear all rows?")) {
+                  setRows([{ id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", price: "" }]);
+                }
+              }}
+              className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm flex items-center gap-1 border border-gray-300 hover:bg-gray-200"
+            >
+              New
+            </button>
+            <button onClick={addRow} className="bg-green-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1"><FiPlus />Add Row</button>
+            <button onClick={handleSaveStock} className="bg-indigo-600 text-white px-4 py-1 rounded-md text-sm flex items-center gap-1"><FiSave />Save Stock</button>
+          </div>
+        </div>
+
+        {/* Branch and Location Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-gray-600">Select Branch</label>
+            <Select
+              options={branchOptionsList}
+              value={branchOptionsList.find((o) => o.value === selectedBranchId)}
+              onChange={(o) => { setSelectedBranchId(o?.value || ""); setSelectedLocationId(""); }}
+              placeholder="Branch..."
+              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-gray-600">Select Location</label>
+            <Select
+              options={locationOptionsList}
+              value={locationOptionsList.find((o) => o.value === selectedLocationId)}
+              onChange={(o) => setSelectedLocationId(o?.value || "")}
+              placeholder="Location..."
+              isClearable
+              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto h-[450px]">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100 sticky top-0 z-10">
-            <tr className="text-xs font-semibold text-gray-600">
-              <th className="border px-2 py-1.5 w-12">S.No</th>
-              <th className="border px-2 py-1.5 w-64 text-left">Item Name</th>
-              <th className="border px-2 py-1.5 w-32 text-left">Size</th>
-              {/* <th className="border px-2 py-1.5 w-32 text-left">Color</th> */}
-              <th className="border px-2 py-1.5 w-32 text-left">UOM</th>
+        <table className="min-w-full table-fixed">
+          <thead className="bg-gray-200 sticky top-0 z-10">
+            <tr>
+              <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
+              <th className="border border-gray-400 text-sm py-1 w-64 text-left px-2">Item Name</th>
+              <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">Size</th>
+              {/* <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">Color</th> */}
+              <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">UOM</th>
 
-              <th className="border px-2 py-1.5 w-40 text-left">Barcode</th>
-              <th className="border px-2 py-1.5 w-40 text-left">Price</th>
+              <th className="border border-gray-400 text-sm py-1 w-40 text-left px-2">Barcode</th>
+              <th className="border border-gray-400 text-sm py-1 w-40 text-left px-2">Price</th>
 
-              <th className="border px-2 py-1.5 w-24 text-right">Qty</th>
-              <th className="border px-2 py-1.5 w-12 text-center">Action</th>
+              <th className="border border-gray-400 text-sm py-1 w-24 text-right px-2">Qty</th>
+              <th className="border border-gray-400 text-sm py-1 w-12 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -199,13 +261,13 @@ const ManualAddStock = ({ params }) => {
               const validSizeIds = selectedItemData?.ItemPriceList?.map(p => p.sizeId) || [];
               const validColorIds = selectedItemData?.ItemPriceList?.map(p => p.colorId) || [];
 
-              const filteredSizeOptions = sizeOptions.filter(o => validSizeIds.includes(o.value));
-              const filteredColorOptions = colorOptions.filter(o => validColorIds.includes(o.value));
+              const filteredSizeOptions = validSizeIds.length > 0 ? sizeOptions.filter(o => validSizeIds.includes(o.value)) : sizeOptions;
+              const filteredColorOptions = validColorIds.length > 0 ? colorOptions.filter(o => validColorIds.includes(o.value)) : colorOptions;
 
               return (
                 <tr key={row.id} className="hover:bg-gray-50 border-b">
-                  <td className="border px-2 py-1 text-center text-xs">{idx + 1}</td>
-                  <td className="border px-2 py-1">
+                  <td className="border border-gray-400 px-2 py-1 text-center text-xs">{idx + 1}</td>
+                  <td className="border border-gray-400 px-1 py-0.5">
                     <div className="flex items-center gap-1">
                       <div className="flex-1 uppercase">
                         <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
@@ -235,29 +297,29 @@ const ManualAddStock = ({ params }) => {
                       )}
                     </div>
                   </td>
-                  <td className="border px-2 py-1">
+                  <td className="border border-gray-400 px-1 py-0.5">
                     <Select isClearable placeholder="Size..." options={filteredSizeOptions} value={filteredSizeOptions.find(o => o.value === row.sizeId)} styles={customSelectStyles}
                       onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
                     />
                   </td>
-                  {/* <td className="border px-2 py-1">
+                  {/* <td className="border border-gray-400 px-1 py-0.5">
                     <Select isClearable placeholder="Color..." options={filteredColorOptions} value={filteredColorOptions.find(o => o.value === row.colorId)} styles={customSelectStyles}
                       onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
                     />
                   </td> */}
-                  <td className="border px-2 py-1">
+                  <td className="border border-gray-400 px-1 py-0.5">
                     <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions.find(o => o.value === row.uomId)} styles={customSelectStyles}
                       onChange={o => updateRow(row.id, "uomId", o?.value || "", { uom: o?.label || "" })}
                     />
                   </td>
-                  <td className="border px-2 py-1">
+                  <td className="border border-gray-400 px-1 py-0.5">
                     <input type="text" className="w-full px-2 py-1 text-xs border rounded outline-none uppercase" value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
                   </td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
+                  <td className="border border-gray-400 px-1 py-0.5"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
                   </td>
-                  <td className="border px-2 py-1"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
+                  <td className="border border-gray-400 px-1 py-0.5"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
                   </td>
-                  <td className="border px-2 py-1 text-center">
+                  <td className="border border-gray-400 px-1 py-0.5 text-center">
                     <button onClick={() => removeRow(row.id)} className="text-red-500 hover:text-red-700"><FiTrash />
                     </button>
                   </td>

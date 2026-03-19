@@ -18,6 +18,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [selectedLocationId, setSelectedLocationId] = React.useState("");
+  const [editingCell, setEditingCell] = React.useState(null);
 
   React.useEffect(() => {
     if (branchId) {
@@ -56,6 +57,12 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
     }
     if (!selectedLocationId) {
       toast.warning("Please select a location.");
+      return;
+    }
+
+    const missingBarcodesRow = stockItems.findIndex(r => !r.barcode_no?.toString().trim());
+    if (missingBarcodesRow !== -1) {
+      toast.warning(`Barcode is missing at row ${missingBarcodesRow + 1}`);
       return;
     }
 
@@ -131,6 +138,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
           active: true,
           companyId,
           branchId,
+          storeId: selectedLocationId,
           itemPriceList: [{ sizeId: null, colorId: null, offerPrice: 0, salesPrice: 0, minStockQty: 0 }]
         }).unwrap();
         if (res.data?.id) {
@@ -142,7 +150,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
       const mappedStockItems = stockItems.map(row => {
         const itemKey = (row.item_name || "").toString().trim().toLowerCase();
         const sizeKey = (row.size || "").toString().trim().toLowerCase();
-        
+
         const newlyCreatedItemId = newItemIdMap[itemKey];
         const newlyCreatedSizeId = newSizeIdMap[sizeKey];
 
@@ -166,7 +174,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
       const payload = {
         branchId: selectedBranchId,
-        locationId: selectedLocationId,
+        storeId: selectedLocationId,
         companyId,
         finYearId,
         userId,
@@ -175,7 +183,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
       const returnData = await addData(payload).unwrap();
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        Swal.fire({ icon: "error", title: returnData?.message, showConfirmButton: false });
       } else if (returnData.statusCode === 0) {
         Swal.fire({ icon: "success", title: "Stock Added Successfully", showConfirmButton: false });
       } else {
@@ -249,6 +257,11 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
           obj.sizeId = findFromList(sizeName, sizeList?.data, "id") || null;
           obj.colorId = findFromList(colorName, colorList?.data, "id") || null;
           obj.uomId = findFromList(uomName, uomList?.data, "id") || null;
+          obj.branchId = branchId;
+          obj.storeId = selectedLocationId;
+          obj.companyId = companyId;
+          obj.finYearId = finYearId;
+          obj.userId = userId;
 
           return obj;
         });
@@ -330,7 +343,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                 Upload
               </button>
             </div>
-            <div>
+            <div className="flex flex-row w-52 mt-1">
               <button
                 onClick={saveData}
                 className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm font-semibold shadow-sm transition-all"
@@ -357,6 +370,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                     <th className="border border-gray-400 text-sm py-1 capitalize px-2 text-left" key={index}>
                       {columnName}</th>
                   ))}
+                  <th className="border border-gray-400 text-sm py-1 w-12 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -420,16 +434,46 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                             );
                           }
 
+                          const rowKey = row._rowId || rowIndex;
+
                           return (
                             <td
                               key={columnIndex}
-                              className={`border border-gray-400 text-xs py-1 px-2 ${isInvalid ? "bg-red-100 text-red-700 font-semibold" : ""}`}
+                              className={`border border-gray-400 text-xs py-0.5 px-1 ${isInvalid ? "bg-red-100 text-red-700 font-semibold" : ""}`}
+                              onDoubleClick={() => setEditingCell({ rowId: rowKey, key })}
                             >
-                              {val}
+                              {editingCell?.rowId === rowKey && editingCell?.key === key ? (
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={val || ""}
+                                  onChange={(e) => {
+                                    const newValue = e.target.value;
+                                    setStockItems(prev => prev.map((r, idx) =>
+                                      (r._rowId || idx) === rowKey ? { ...r, [key]: newValue } : r
+                                    ));
+                                  }}
+                                  onBlur={() => setEditingCell(null)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') setEditingCell(null); }}
+                                  className="w-full text-xs py-0.5 rounded outline-none border border-blue-400 px-1"
+                                />
+                              ) : (
+                                <div className="w-full min-h-[20px] flex items-center cursor-pointer">{val}</div>
+                              )}
                             </td>
                           );
                         })}
-
+                        <td className="border border-gray-400 text-center px-1">
+                          <button
+                            onClick={() => setStockItems(prev => prev.filter((r, idx) => (r._rowId || idx) !== (row._rowId || rowIndex)))}
+                            className="bg-red-500 text-white p-1 rounded hover:bg-red-600 inline-flex items-center justify-center"
+                            title="Delete Row"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
                       </tr>
                     );
                   });
@@ -443,6 +487,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
         </div>
       </div>
     </div>
+
   );
 };
 

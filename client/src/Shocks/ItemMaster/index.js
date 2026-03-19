@@ -442,6 +442,12 @@ export default function Form() {
       search: "Item Name",
     },
     {
+      header: "Item Code",
+      accessor: (item) => item.code,
+      className: "font-medium text-gray-900  w-[100px]  py-1  px-2",
+      search: "Item Code",
+    },
+    {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       className: "font-medium text-gray-900 text-center w-[10px] py-1",

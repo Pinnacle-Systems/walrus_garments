@@ -20,3 +20,4 @@ export { default as TermsandCondition } from "./TermsandConditionsMaster";
 export { default as ItmeMaster } from "./ItemMaster";
 export { default as SectionMaster } from "./SectionMaster";
 export { default as ItemCategroyMaster } from "./ItemCategroyMaster";
+export { default as PriceTemplateMaster } from "./PriceTemplateMaster";

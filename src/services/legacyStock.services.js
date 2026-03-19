@@ -94,27 +94,56 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 
+async function isLegacyLocation(storeId) {
+    if (!storeId) return false;
+    const location = await prisma.location.findUnique({
+        where: { id: parseInt(storeId) }
+    });
+    console.log(location, "location")
+    if (location && (location.storeName.toLowerCase().includes('old'))) {
+        return true;
+    }
+    return false;
+}
+
 async function create(body) {
-    const { customerId, discountType, discountValue, stockItems, finYearId, branchId } = await body
+    const { stockItems, storeId, branchId } = body;
+
+    const isLegacy = await isLegacyLocation(storeId);
+
+    console.log(isLegacy, "isLegacy")
+
+    let data
 
 
+    await prisma.$transaction(async (tx) => {
 
+        const formattedData = stockItems.map(item => ({
+            inOrOut: "OpeningStock",
 
-    const data = await prisma.legacyStock.createMany(
-        {
-            data: stockItems?.map(item => ({
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                qty: item["qty"] ? parseInt(item["qty"]) : undefined,
-                barcode: item["barcode_no"] ? item["barcode_no"] : undefined,
-                price: item["price"] ? parseFloat(item["price"]) : undefined,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+            itemId: item?.itemId ? parseInt(item.itemId) : undefined,
+            sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
 
-            }))
+            price: item?.price ? parseFloat(item.price) : undefined,
+            qty: item?.qty ? parseFloat(item.qty) : undefined,
+
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
+
+            barcode: item?.barcode_no ? String(item.barcode_no) : undefined
+        }));
+
+        // console.log(formattedData, "formattedData")
+        if (isLegacy) {
+            return data = await tx.legacyStock.createMany({ data: formattedData });
+        } else {
+            return data = await tx.stock.createMany({ data: formattedData });
         }
-    )
-    return { statusCode: 0, data };
+
+    });
+    return { statusCode: 0, data: data };
 }
 
 async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInward, storeId, branchId) {

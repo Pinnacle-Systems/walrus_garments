@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { useAddItemMasterMutation, useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
@@ -21,9 +21,10 @@ import { ReusableInput } from "../Order/CommonInput";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { HiOutlineRefresh } from "react-icons/hi";
-import { useAddStockAdjustmentMutation } from "../../../redux/uniformService/StockAdjustmentService";
+import { useAddStockAdjustmentMutation, useGetStockAdjustmentByIdQuery, useUpdateStockAdjustmentMutation } from "../../../redux/uniformService/StockAdjustmentService";
+import moment from "moment";
 
-const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
+const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, branchList, locationData, yarnList, hasPermission }) => {
 
   const [contextMenu, setContextMenu] = useState(false)
@@ -45,7 +46,8 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
     },
   ]);
 
-  // --- Modal State ---
+  console.log(rows, 'rowsrows')
+
   const [modalState, setModalState] = useState({
     item: { open: false, rowId: null, value: "", editItem: null },
     size: { open: false, rowId: null, value: "" },
@@ -62,12 +64,29 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
 
+  const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } =
+    useGetStockAdjustmentByIdQuery(id, { skip: !id });
 
+  const [addData] = useAddStockAdjustmentMutation();
+  const [updateData] = useUpdateStockAdjustmentMutation();
 
-  const [addData] = useAddLegacyStockMutation();
-  const [updateData] = useUpdateLegacyStockMutation();
+  const syncFormWithDb = useCallback((data) => {
+    const today = new Date();
+    if (id) setReadOnly(true);
+    else setReadOnly(false);
+    setDate(
+      data?.createdAt
+        ? moment.utc(data.createdAt).format("YYYY-MM-DD")
+        : moment.utc(today).format("YYYY-MM-DD")
+    );
+    setRows(data?.StockAdjustmentItems ? data?.StockAdjustmentItems : []);
+    setStoreId(data?.storeId ? data?.storeId : "")
+  }, [id]);
 
-  // const [addData] = useAddStockAdjustmentMutation();
+  useEffect(() => {
+    if (id) syncFormWithDb(singleData?.data);
+    else syncFormWithDb(undefined);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
 
 
@@ -82,7 +101,7 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
     if (id) return
     if (rows?.length >= 10) return;
     setRows((prev) => {
-      let newArray = Array.from({ length: 10 - prev.length }, (i) => {
+      let newArray = Array.from({ length: 10 - prev.length }, (_, i) => {
         return {
           itemId: "",
           qty: "0.00",
@@ -94,7 +113,7 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
           noOfBags: "0",
           discountType: "",
           weightPerBag: "0.00",
-          id: '',
+          id: Date.now() + i + Math.random(),
           poItemsId: ""
         };
       });
@@ -180,7 +199,7 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
       price: "",
       discountTypes: "",
       discountValue: "0.00",
-      id: '',
+      id: Date.now() + Math.random(),
       poItemsId: ""
     };
     setRows([...rows, newRow]);
@@ -214,7 +233,7 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
 
 
   const data = {
-    branchId, storeId, stockItems: rows?.filter((i) => i.itemId)
+    branchId, storeId, stockAdjustmentItems: rows?.filter((i) => i.itemId), id
   };
 
   const validateData = (d) =>
@@ -255,11 +274,11 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
       return;
     }
 
-    if (data?.adjustmentItems?.filter((i) => i.itemId)?.length === 0) {
+    if (data?.stockAdjustmentItems?.filter((i) => i.itemId)?.length === 0) {
       Swal.fire({ title: "Please fill all adjustment Items...!", icon: "warning" });
       return;
     }
-    if (!isGridDatasValid(data?.stockItems?.filter((i) => i.itemId), false, mandatoryFields)) {
+    if (!isGridDatasValid(data?.stockAdjustmentItems?.filter((i) => i.itemId), false, mandatoryFields)) {
       Swal.fire({ title: "Please fill all Po Items Mandatory fields...!", icon: "warning" });
       return;
     }
@@ -574,4 +593,4 @@ const ManualAddStock = ({ params, onClose, id, setId, docId, setDocId, date, set
   );
 };
 
-export default ManualAddStock;
+export default StockAdjustmentFrom;

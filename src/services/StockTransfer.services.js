@@ -81,7 +81,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
 
         const branchObj = await getTableRecordWithId(branchId ? branchId : 1, "branch")
         let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/1`
-        console.log(lastObject, "lastObject")
+        // console.log(lastObject, "lastObject")
 
         if (lastObject) {
             newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/${parseInt(lastObject?.docId?.split("/").at(-1)) + 1}`
@@ -174,17 +174,72 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            FromLocationTransferItems: true,
-            ToLocationTransferTtems: true,
-
+            FromLocationTransferItems: {
+                include: {
+                    Item: { select: { name: true } },
+                    Color: { select: { name: true } },
+                    Size: { select: { name: true } }
+                }
+            },
+            ToLocationTransferTtems: {
+                include: {
+                    Item: { select: { name: true } },
+                    Color: { select: { name: true } },
+                    Size: { select: { name: true } }
+                }
+            },
         }
-
     })
-    if (!data) return NoRecordFound("order");
 
+    if (!data) return NoRecordFound("Stock Transfer");
+
+    if (data.FromLocationTransferItems && data.FromLocationTransferItems.length > 0) {
+        data.FromLocationTransferItems = await Promise.all(
+            data.FromLocationTransferItems.map(async (item) => {
+                const stockResult = await prisma.stock.aggregate({
+                    where: {
+                        itemId: item.itemId,
+                        sizeId: item.sizeId,
+                        colorId: item.colorId,
+                        storeId: data.fromLocationId
+                    },
+                    _sum: {
+                        qty: true
+                    }
+                });
+                return {
+                    ...item,
+                    stockQty: stockResult._sum.qty + item?.qty || 0
+                };
+            })
+        );
+    }
+
+    if (data.ToLocationTransferTtems && data.ToLocationTransferTtems.length > 0) {
+        data.ToLocationTransferTtems = await Promise.all(
+            data.ToLocationTransferTtems.map(async (item) => {
+                const stockResult = await prisma.stock.aggregate({
+                    where: {
+                        itemId: item.itemId,
+                        sizeId: item.sizeId,
+                        colorId: item.colorId,
+                        storeId: data.toLocationId
+                    },
+                    _sum: {
+                        qty: true
+                    }
+                });
+                return {
+                    ...item,
+                    stockQty: stockResult._sum.qty || 0
+                };
+            })
+        );
+    }
 
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
+
 
 async function getStockValidationData(data) {
 
@@ -213,7 +268,7 @@ async function getStockValidationData(data) {
         });
     }
 
-    console.log(results, "results");
+    // console.log(results, "results");
 
     return results;
 }
@@ -351,77 +406,86 @@ async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, bran
     });
 }
 
-async function createFromLocationStock(tx, branchId, storeId, item, transactionId) {
-
-    await tx.stock.create({
-        data: {
-            inOrOut: "FromLocationTransferItems",
-            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-            price: item["price"] ? parseFloat(item["price"]) : 0,
-            qty: item["transferQty"] ? 0 - parseFloat(item["transferQty"]) : 0,
-            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            transactionId: transactionId ? transactionId : ''
-        }
-    })
-
-}
-
-async function createToLocationStock(tx, branchId, storeId, item, transactionId, transferType) {
-
-
-
-    if (storeId == 4) {
-        await tx.stock.create({
-
-
-            data: {
-                inOrOut: "ToLocationTransferItems",
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                price: item["discountPrice"] ? parseFloat(item["discountPrice"]) : 0,
-                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-
-                branchId: branchId ? parseInt(branchId) : undefined,
-                storeId: storeId ? parseInt(storeId) : undefined,
-                transactionId: transactionId ? transactionId : ''
-
-
-            }
-        })
-    } else {
-        await tx.stock.create({
-
-
-            data: {
-                inOrOut: "ToLocationTransferItems",
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                price: item["price"] ? parseFloat(item["price"]) : 0,
-                qty: item["transferQty"] ? parseFloat(item["transferQty"]) : 0,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-
-                branchId: branchId ? parseInt(branchId) : undefined,
-                storeId: storeId ? parseInt(storeId) : undefined,
-                transactionId: transactionId ? transactionId : ''
-
-
-            }
-        })
+async function isLegacyLocation(tx, storeId) {
+    if (!storeId) return false;
+    const location = await tx.location.findUnique({
+        where: { id: parseInt(storeId) }
+    });
+    if (location && (location.storeName.toLowerCase().includes('old'))) {
+        return true;
     }
-
-
-
-
+    return false;
 }
 
+async function createLocationTransferStock(
+    tx,
+    branchId,
+    fromStoreId,
+    toStoreId,
+    item,
+    transactionId
+) {
+    const isLegacyFrom = await isLegacyLocation(tx, fromStoreId);
+    const isLegacyTo = await isLegacyLocation(tx, toStoreId);
+
+    // ================= COMMON DATA =================
+    const baseData = {
+        itemId: item?.itemId ? Number(item.itemId) : null,
+        sizeId: item?.sizeId ? Number(item.sizeId) : null,
+        colorId: item?.colorId ? Number(item.colorId) : null,
+        uomId: item?.uomId ? Number(item.uomId) : null,
+        barcode: item?.barcode ? String(item.barcode) : null,
+        branchId: branchId ? Number(branchId) : null,
+        price: item?.discountPrice ? String(item?.discountPrice) : undefined,
+    };
+
+    // ================= FROM (OUTWARD) =================
+    const fromStockData = {
+        ...baseData,
+        inOrOut: "FromLocationTransferItems",
+        storeId: fromStoreId ? Number(fromStoreId) : null,
+        price: item?.price ? Number(item.price) : 0,
+        qty: item?.transferQty ? -Number(item.transferQty) : 0 // negative
+    };
+
+    // ================= TO (INWARD) =================
+    const toStockData = {
+        ...baseData,
+        inOrOut: "ToLocationTransferItems",
+        storeId: toStoreId ? Number(toStoreId) : null,
+        price:
+            toStoreId == 4 && item?.discountPrice
+                ? Number(item.discountPrice)
+                : item?.price
+                    ? Number(item.price)
+                    : 0,
+        qty: item?.transferQty ? Number(item.transferQty) : 0 // positive
+    };
+
+    // ================= LOGIC =================
+    if (isLegacyFrom) {
+        // FROM → legacy
+        await tx.legacyStock.create({ data: fromStockData });
+
+        // TO → stock
+        await tx.stock.create({ data: toStockData });
+
+    }
+    else if (isLegacyTo) {
+        // FROM → stock
+        await tx.stock.create({ data: fromStockData });
+
+        // TO → legacy
+        await tx.legacyStock.create({ data: toStockData });
+    }
+    else {
+        // FROM → stock
+        await tx.stock.create({ data: fromStockData });
+
+        // TO → stock
+        await tx.stock.create({ data: toStockData });
+    }
+}
 
 
 async function createStocktransferItems(
@@ -446,64 +510,25 @@ async function createStocktransferItems(
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
                         stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
-                    },
-                });
-
-
-                await createFromLocationStock(
-                    tx,
-                    branchId,
-                    fromLocationId,
-                    item,
-                    created.id
-                );
-
-
-                return created;
-            })
-        );
-
-        console.log(results, "ALL CREATED ITEMS");
-    }
-
-
-
-    if (stockItems?.length) {
-
-        const data = await Promise.all(
-            stockItems.map(async (item) => {
-
-                // Create and store the created row
-                const created = await tx.ToLocationTransferTtems.create({
-                    data: {
-                        stockTransferId: parseInt(stockTransferId),
-                        itemId: item?.itemId ? parseInt(item.itemId) : undefined,
-                        sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
-                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                        transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
-                        stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
-                        price: item?.price ? String(item?.price) : undefined,
+                        barcode: item?.barcode ? String(item?.barcode) : undefined,
                         discountPrice: item?.discountPrice ? String(item?.discountPrice) : undefined,
 
                     },
                 });
 
-                // Must use created.id
-                await createToLocationStock(
-                    tx,
-                    branchId,
-                    toLocationId,
-                    item,
-                    created.id,
-                );
+
+                await createLocationTransferStock(tx, branchId, fromLocationId, toLocationId, item, created.id)
 
 
                 return created;
             })
         );
 
-        console.log("Saved records:", data);
     }
+
+
+
+
 
 }
 
@@ -545,39 +570,57 @@ async function create(req) {
 
 
 
-async function UpdateFromLocationStock(tx, item, transactionId) {
+async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
+    const isLegacy = await isLegacyLocation(tx, storeId);
 
+    const updateData = {
+        qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
+    };
 
-
-    const data = await prisma.stock.updateMany({
-        where: {
-            transactionId: parseInt(transactionId),
-            inOrOut: "FromLocationTransferItems"
-        },
-        data:
-        {
-            qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
-        },
-    })
+    if (isLegacy) {
+        await tx.legacyStock.updateMany({
+            where: {
+                transactionId: parseInt(transactionId),
+                inOrOut: "FromLocationTransferItems"
+            },
+            data: updateData
+        });
+    } else {
+        await tx.stock.updateMany({
+            where: {
+                transactionId: parseInt(transactionId),
+                inOrOut: "FromLocationTransferItems"
+            },
+            data: updateData
+        });
+    }
 }
 
-async function UpdateToLocationStock(tx, item, transactionId) {
+async function UpdateToLocationStock(tx, item, transactionId, storeId) {
+    const isLegacy = await isLegacyLocation(tx, storeId);
 
+    const updateData = {
+        qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+    };
 
-    const data = await prisma.stock.updateMany({
-        where: {
-            transactionId: parseInt(transactionId),
-            inOrOut: "ToLocationTransferItems"
-        },
-        data:
-        {
-            qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
-        },
-    })
+    if (isLegacy) {
+        await tx.legacyStock.updateMany({
+            where: {
+                transactionId: parseInt(transactionId),
+                inOrOut: "ToLocationTransferItems"
+            },
+            data: updateData
+        });
+    } else {
+        await tx.stock.updateMany({
+            where: {
+                transactionId: parseInt(transactionId),
+                inOrOut: "ToLocationTransferItems"
+            },
+            data: updateData
+        });
+    }
 }
-
-
-
 
 async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
 
@@ -595,7 +638,7 @@ async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
             }
         })
 
-        await UpdateFromLocationStock(tx, item, item.id);
+        await UpdateFromLocationStock(tx, item, item.id, fromLocationId);
 
         return updatedata
     }
@@ -617,7 +660,7 @@ async function updateOrCreateTo(tx, item) {
             }
         })
 
-        await UpdateToLocationStock(tx, item, item.id);
+        await UpdateToLocationStock(tx, item, item.id, toLocationId);
 
         return updatedata
     }
@@ -662,7 +705,7 @@ const update = async (id, body) => {
 
         await updatFromLocationTransferItemsItems(tx, stockItems, fromLocationId, branchId)
 
-        await updatToLocationTransferItemsItems(tx, orderItems, toLocationId, branchId)
+        await updatToLocationTransferItemsItems(tx, stockItems, toLocationId, branchId)
 
     });
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
-    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId,id
+    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId, id
 }) {
 
 
@@ -25,9 +25,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
 
     const { data: allStockData, isLoading, isFetching } = useGetStockQuery(
         {
-             searchParams
+            searchParams
 
-        }, { skip: !fromLocationId  || !id}
+        }, { skip: !fromLocationId || !id }
     );
 
     console.log(allStockData, "allStockData", item?.itemId)
@@ -37,31 +37,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
     console.log(currentStockQty, "currentStockQty", allStockData?.data?.[0]?._sum?.qty)
 
 
-    // useEffect(() => {
-    //     const fetchStockForItems = async () => {
-    //         const updatedStock = {};
 
-    //         for (const row of stockItems) {
-    //             if (!row?.itemId || !fromLocationId) continue;
-
-    //             const response = await axios.get("/api/stock-qty", {
-    //                 params: {
-    //                     storeId: fromLocationId,
-    //                     itemId: row.itemId,
-    //                     colorId: row.colorId,
-    //                     sizeId: row.sizeId,
-    //                 },
-    //             });
-
-    //             const key = `${row.itemId}_${row.colorId}_${row.sizeId}`;
-    //             updatedStock[key] = response.data.qty;
-    //         }
-
-    //         setStockMap(updatedStock);
-    //     };
-
-    //     fetchStockForItems();
-    // }, [stockItems, fromLocationId]);
 
     return (
 
@@ -79,7 +55,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
                     {index + 1}
                 </td>
-
+                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-left">
+                    {item?.barcode ? item?.barcode : ""}
+                </td>
                 <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
                     {findFromList(item?.itemId, itemList, "name")}
                 </td>
@@ -91,11 +69,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     {findFromList(item?.colorId, colorList, "name")}
                 </td>
                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
-                    {id ? currentStockQty : item?._sum?.qty }
+                    {item?.stockQty}
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-right">
-                    {item?.price ? parseFloat(item?.price).toFixed(2) : ""}
-                </td>
+
                 {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
                     <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                         <input
@@ -118,15 +94,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                                     handleInputChangeFromOrder(0, index, "discountPrice");
                                     return
                                 }
-                                if (parseFloat(val) <= parseFloat(item?._sum?.qty).toFixed(3)) {
+                                handleInputChangeFromOrder(val, index, "discountPrice", item);
 
-                                    handleInputChangeFromOrder(val, index, "discountPrice", item);
-                                } else {
-                                    Swal.fire({
-                                        title: "Transfer Qty cannot be more than Stock Qty",
-                                        icon: "warning",
-                                    });
-                                }
+
                             }}
 
 
@@ -158,7 +128,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                                 handleInputChangeFromOrder(0, index, "transferQty");
                                 return
                             }
-                            if (parseFloat(val) <= parseFloat(item?._sum?.qty).toFixed(3)) {
+                            if (parseFloat(val) <= parseFloat(item?.stockQty).toFixed(3)) {
 
                                 handleInputChangeFromOrder(val, index, "transferQty", item);
                             } else {

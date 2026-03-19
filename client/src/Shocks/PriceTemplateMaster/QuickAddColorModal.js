@@ -1,19 +1,36 @@
 import React, { useState } from "react";
-import { TextInput } from "../../../Inputs";
-import { useAddColorMasterMutation } from "../../../redux/uniformService/ColorMasterService";
-import { getCommonParams } from "../../../Utils/helper";
+import { TextInput } from "../../Inputs";
+import { useAddColorMasterMutation, useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
+import { getCommonParams } from "../../Utils/helper";
 import { toast } from "react-toastify";
-import Modal from "../../../UiComponents/Modal";
+import Modal from "../../UiComponents/Modal";
 import { Check, X } from "lucide-react";
+import Swal from "sweetalert2";
 
 const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
   const params = getCommonParams();
   const [name, setName] = useState(colorName || "");
   const [active, setActive] = useState(true);
 
+
+  const { data: allData, isLoading, isFetching } = useGetColorMasterQuery({ params });
+
   const [addColor] = useAddColorMasterMutation();
 
   const handleSave = async () => {
+
+
+    let foundItem = allData?.data?.some(item => item.name === name);
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Color Name already exists.",
+        icon: "warning",
+      });
+      return false;
+    }
+
     if (!name) {
       toast.info("Please fill color name");
       return;

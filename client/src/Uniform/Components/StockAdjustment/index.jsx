@@ -18,8 +18,10 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeletesaleOrderMutation } from '../../../redux/uniformService/saleOrderServices';
-import ManualAddStock from './ManualAddStock';
+import StockAdjustmentFrom from './StockAdjustmentForm';
 import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
+import StockAdjustmentReport from './StockAdjutmentReport';
+import { useDeleteStockAdjustmentMutation } from '../../../redux/uniformService/StockAdjustmentService';
 
 
 
@@ -31,13 +33,15 @@ const StockAdjustment = () => {
   const [id, setId] = useState("");
   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
 
+  const today = new Date()
 
   const [docId, setDocId] = useState("New")
-  const [date, setDate] = useState("")
+
+  const [date, setDate] = useState(moment.utc(today).format("YYYY-MM-DD"))
   const [readOnly, setReadOnly] = useState('')
   const [transType, setTransType] = useState("DyedYarn");
   const [dcNo, setDcNo] = useState("")
-  const [dcDate, setDcDate] = useState('')
+  const [dcDate, setDcDate] = useState(moment.utc(today).format("YYYY-MM-DD"))
   const [customerId, setCustomerId] = useState('')
   const [payTermId, setPayTermId] = useState("");
   const [locationId, setLocationId] = useState('');
@@ -83,7 +87,7 @@ const StockAdjustment = () => {
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
 
-  const [removeData] = useDeletesaleOrderMutation();
+  const [removeData] = useDeleteStockAdjustmentMutation();
 
 
   const { data: yarnList } =
@@ -157,7 +161,7 @@ const StockAdjustment = () => {
   return (
     <>
       {showManufacturer ? (
-        <ManualAddStock
+        <StockAdjustmentFrom
           onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
           docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
           transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
@@ -187,14 +191,15 @@ const StockAdjustment = () => {
             </button>
           </div>
 
-          {/* <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
 
-            <SaleOrderReport
+            <StockAdjustmentReport
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              hasPermission={hasPermission}
             />
-          </div> */}
+          </div>
 
         </div>
       )}

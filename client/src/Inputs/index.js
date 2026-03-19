@@ -832,6 +832,85 @@ export const DropdownInput = forwardRef(({
   );
 });
 
+export const DropdownInputSearch = ({
+  name,
+  options,
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  placeholder = "Select",
+}) => {
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+      backgroundColor: readOnly || disabled ? "#f3f4f6" : "#ffffff",
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#f3f4f6" : "#ffffff",
+      color: "#111827",
+      fontSize: "11px",
+      paddingTop: "4px",
+      paddingBottom: "4px",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      height: "28px",
+    }),
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "11px",
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
+
+  const selectedOption = options?.find((opt) => String(opt.value) === String(value));
+
+  return (
+    <div className={`block text-xs font-bold text-gray-600 mb-1 ${className}`}>
+      <span className="mb-3">
+        {required ? <RequiredLabel name={name} /> : name}
+      </span>
+      <div className="mt-1">
+        <Select
+          options={options}
+          value={selectedOption}
+          onChange={(opt) => setValue(opt ? opt.value : "")}
+          getOptionLabel={(opt) => opt.show}
+          placeholder={placeholder}
+          isClearable
+          isSearchable
+          styles={customStyles}
+          isDisabled={readOnly || disabled}
+        />
+      </div>
+    </div>
+  );
+};
+
+
 
 export const DropdownInputForm = ({
   name,
