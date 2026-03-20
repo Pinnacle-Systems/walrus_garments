@@ -47,6 +47,10 @@ async function getOne(id) {
                     salesPrice: true,
                     offerPrice: true,
                     MinimumStockQty: true,
+                    sku: true,
+                    barcode: true,
+
+
 
                 }
             }
@@ -56,6 +60,24 @@ async function getOne(id) {
     if (!data) return NoRecordFound("item");
 
     return { statusCode: 0, data: { ...data, childRecord } };
+}
+
+
+export async function getItemPriceList(req) {
+    const { companyId, active } = req.query
+    const data = await prisma.itemPriceList.findMany({
+        where: {
+            item: {
+                active: active ? Boolean(active) : undefined,
+            }
+        },
+        include: {
+            item: true,
+            Color: true,
+            Size: true
+        }
+    });
+    return { statusCode: 0, data };
 }
 
 async function getSearch(req) {
@@ -78,7 +100,7 @@ async function getSearch(req) {
 }
 async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active,
-        sectionId, sectionType, sizeWise, sizeColor
+        sectionId, sectionType, subCategory, mainCategory
     } = body
     const data = await prisma.item.create({
         data: {
@@ -89,6 +111,8 @@ async function create(body) {
             code: code ? code : undefined,
             sectionId: sectionId ? parseInt(sectionId) : undefined,
             priceMethod: priceMethod ? priceMethod : undefined,
+            mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
+            subCategoryId: subCategory ? parseInt(subCategory) : undefined,
 
             active: active ? active : undefined,
 
@@ -100,6 +124,8 @@ async function create(body) {
                         offerPrice: item?.offerPrice || undefined,
                         salesPrice: item?.salesPrice || undefined,
                         minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
+                        sku: item?.sku ? item?.sku : undefined,
+                        barcode: item?.barcode ? item?.barcode : undefined,
 
                         MinimumStockQty: item?.MinimumStockQty?.length > 0
                             ? {
@@ -233,6 +259,8 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
                     salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
                     minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
+                    sku: priceItem?.sku ? priceItem?.sku : undefined,
+                    barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
 
 
                 }
@@ -246,6 +274,9 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
                     salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
                     minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
+                    sku: priceItem?.sku ? priceItem?.sku : undefined,
+                    barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
+
                 }
             })
         }
@@ -255,7 +286,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields } = body
+    const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields, mainCategory, subCategory } = body
 
 
 
@@ -291,7 +322,8 @@ async function update(id, body) {
                 sectionId: sectionId ? parseInt(sectionId) : undefined,
                 priceMethod: priceMethod ? priceMethod : undefined,
                 active: active ? active : undefined,
-
+                mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
+                subCategoryId: subCategory ? parseInt(subCategory) : undefined,
                 field1: fields?.[0] ?? "",
                 field2: fields?.[1] ?? "",
                 field3: fields?.[2] ?? "",

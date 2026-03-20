@@ -20,6 +20,7 @@ const BarCodePrintFormat = ({
   data,
   sizeList,
   itemList,
+  itemPriceList,
   labelConfig = {
     labelWidth: 50,
     labelHeight: 25,
@@ -29,9 +30,20 @@ const BarCodePrintFormat = ({
   },
 }) => {
 
+
+  const getBarcodeFromList = (itemId, sizeId, colorId) => {
+    if (!itemPriceList?.data || !itemId || !sizeId) return null;
+    return itemPriceList.data.find(item =>
+      String(item.itemId) === String(itemId) &&
+      String(item.sizeId) === String(sizeId) &&
+      (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
+    );
+  };
+
+
   const allBarcodes = data?.flatMap((item) =>
     Array.from({ length: parseInt(item?.qty || 0) }, () => ({
-      barCode: item.barCode,
+      barCode: getBarcodeFromList(item.itemId, item.sizeId, item.colorId),
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
@@ -59,6 +71,8 @@ const BarCodePrintFormat = ({
 
   // ✅ 2 stickers per page
   const pages = chunkArray(allBarcodes, stickersPerRow);
+
+  console.log(pages, "pages")
 
   return (
     <PDFViewer style={tw("w-full h-full")}>
@@ -90,13 +104,13 @@ const BarCodePrintFormat = ({
                 </Text>
 
                 <BarcodeGenerator
-                  value={`${code.code}${code.sizeName}`}
+                  value={`${code.barCode}`}
                   width={labelWidthPt * 0.85}
                   height={labelHeightPt * 0.45}
                 />
 
                 <Text style={{ fontSize: 7, textAlign: "center" }}>
-                  {code.code}{code.sizeName}
+                  {code.barCode}
                 </Text>
 
                 <Text style={{ fontSize: 7 }}>

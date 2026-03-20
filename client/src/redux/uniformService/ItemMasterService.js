@@ -45,6 +45,20 @@ const ItemMasterApi = createApi({
             },
             providesTags: ["ItemMaster"],
         }),
+        getItemPriceList: builder.query({
+            query: ({ params }) => {
+                return {
+                    url: `${ITEM_API}/getItemPriceList`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["DirectInwardOrReturn"],
+        }),
+
         addItemMaster: builder.mutation({
             query: (payload) => ({
                 url: ITEM_API,
@@ -80,6 +94,7 @@ const ItemMasterApi = createApi({
 export const {
     useGetItemMasterQuery,
     useGetItemMasterByIdQuery,
+    useGetItemPriceListQuery,
     useAddItemMasterMutation,
     useUpdateItemMasterMutation,
     useDeleteItemMasterMutation,

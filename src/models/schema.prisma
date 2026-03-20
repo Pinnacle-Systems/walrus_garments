@@ -1040,6 +1040,7 @@ model Color {
   companyId                                 Int?
   active                                    Boolean?                                    @default(true)
   isGrey                                    Boolean?                                    @default(false)
+  code                                      String?
   StyleOnColor                              StyleOnColor[]
   CuttingOrderDetails                       CuttingOrderDetails[]
   CuttingDeliveryDetails                    CuttingDeliveryDetails[]
@@ -4864,6 +4865,7 @@ model Item {
   sizeId                    Int?
   name                      String?
   code                      String?
+  sku                       String?
   itemType                  String?
   Hsn                       Hsn?                        @relation(fields: [hsnId], references: [id])
   hsnId                     Int?
@@ -4882,7 +4884,6 @@ model Item {
   field5                    String?
   mainCategoryId            Int?
   subCategoryId             Int?
-  sku                       String?
   DirectItems               DirectItems[]
   Stock                     Stock[]
   ItemPriceList             ItemPriceList[]
@@ -4910,6 +4911,8 @@ model ItemPriceList {
   salesPrice      String?
   offerPrice      String?
   minStockQty     String?
+  sku             String?
+  barcode         String?
   MinimumStockQty MinimumStockQty[]
 }
 
