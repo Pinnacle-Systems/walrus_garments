@@ -56,4 +56,6 @@ export { default as MachineWiseProduction } from "./MachineWiseProductionEntry";
 export { default as Quotation } from "./Quotation";
 export { default as SaleOrder } from "./SaleOrder";
 export { default as StockAdjustment } from "./StockAdjustment";
+export { default as SalesInvoice } from "./SalesInvoice";
+export { default as SalesDelivery } from "./SalesDelivery";
 

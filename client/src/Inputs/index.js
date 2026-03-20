@@ -2579,6 +2579,7 @@ export const TextInputNew1 = forwardRef(({
 });
 
 export function childRecordCount(count) {
+  if (!count) return false
   return Object.values(count).some(v => v > 0);
 
 }

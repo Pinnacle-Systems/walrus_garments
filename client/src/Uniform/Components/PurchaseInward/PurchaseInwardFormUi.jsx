@@ -277,7 +277,7 @@ const PurchaseInwardForm = ({
                       options={dropDownListObject(
                         id
                           ? storeOptions
-                          : storeOptions,
+                          : storeOptions?.filter(i => i.storeName.includes("NEW")),
                         "storeName", "id"
                       )}
                       value={storeId}
@@ -285,7 +285,7 @@ const PurchaseInwardForm = ({
                       required ref={locationRef}
                     />
                   </div>
-                </div>
+                </div>{console.log(storeOptions, 'storeOptions')}
 
                 {/* Supplier Details — overflow-visible so the searchable dropdown escapes */}
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 overflow-visible">

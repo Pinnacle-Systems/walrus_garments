@@ -234,7 +234,7 @@ const QuotationPrintFormat = ({
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Supplier</div>
+                    <div>Customer</div>
                   </th>
                   <th className="w-32 px-3 font-medium text-[13px] text-gray-900 text-center">
                     <div>Status</div>

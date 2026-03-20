@@ -3,14 +3,14 @@ import { Loader } from "../../../Basic/components";
 import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import secureLocalStorage from 'react-secure-storage';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
-import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
+import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
+import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
 
 
 
 
 
-const SaleOrderReport = ({
+const SaleInvoiceReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -58,7 +58,7 @@ const SaleOrderReport = ({
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetsaleOrderQuery({
+  const { data: allData, isFetching, isLoading } = useGetSalesInvoiceQuery({
     params: {
       branchId,
       ...searchFields,
@@ -215,7 +215,7 @@ const SaleOrderReport = ({
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Customer</div>
+                    <div>Supplier</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -383,4 +383,4 @@ const SaleOrderReport = ({
   );
 };
 
-export default SaleOrderReport;
+export default SaleInvoiceReport;

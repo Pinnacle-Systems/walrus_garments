@@ -15,19 +15,18 @@ import Swal from "sweetalert2";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
-import SaleOrderItems from "./SaleOrderItems";
-import { useAddsaleOrderMutation, useGetsaleOrderByIdQuery, useUpdatesaleOrderMutation } from "../../../redux/uniformService/saleOrderServices";
+import SalesDeliveryItems from "./SalesDeliveryItems";
+import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
-import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
 
 
-const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, convertQuotationId
+const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
+  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
+  yarnList, colorList, uomList, hsnList
 
 
 }) => {
@@ -75,17 +74,16 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
-  const { data: hsnList } = useGetHsnMasterQuery({ params });
 
 
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetsaleOrderByIdQuery(id, { skip: !id });
+  } = useGetSalesDeliveryByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddsaleOrderMutation();
-  const [updateData] = useUpdatesaleOrderMutation();
+  const [addData] = useAddSalesDeliveryMutation();
+  const [updateData] = useUpdateSalesDeliveryMutation();
 
 
 
@@ -101,22 +99,34 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
   const syncFormWithDb = useCallback((data) => {
+    console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
-    console.log(convertQuotationId, "convertQuotationId")
-    if (convertQuotationId && !id) return
     if (id) {
       setReadOnly(true);
     } else {
       setReadOnly(false);
     }
+    setTransType(data?.poType ? data.poType : "DyedYarn");
+    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
+    setDeliveryItems(data?.SalesDeliveryItems ? data.SalesDeliveryItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
+    // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
+    setPayTermId(data?.payTermId ? data?.payTermId : "");
     setCustomerId(data?.customerId ? data?.customerId : "");
-
+    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+    setDcNo(data?.dcNo ? data.dcNo : "")
+    setLocationId(data?.branchId ? data?.branchId : "")
+    setStoreId(data?.storeId ? data.storeId : "")
+    setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
+    setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
+    setRemarks(data?.remarks ? data?.remarks : "")
+    if (data?.branchId) {
+      branchIdFromApi.current = data?.branchId
+    }
   }, [id]);
 
   useEffect(() => {
@@ -135,7 +145,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     payTermId,
     id, userId,
     storeId,
-    saleOrderItems: saleOrderItems?.filter(i => i.itemId),
+    deliveryItems: deliveryItems?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -145,8 +155,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
-    customerId,
-    convertQuotationId
+    customerId
 
   }
 
@@ -154,6 +163,36 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
 
+
+
+
+  // const validateData = (data) => {
+  //   let mandatoryFields = ["uomId", "colorId", "price"];
+  //   let lotMandatoryFields = ["qty"]
+  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
+  //     mandatoryFields = [...mandatoryFields, "yarnId"]
+  //     lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
+  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
+  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
+  //     lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
+  //   } else if (transType === "Accessory") {
+  //     mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
+  //   }
+
+
+
+
+  //   return data.poType && data.supplierId && data.dcDate && data.payTermId && data.dcNo
+  //     &&
+  //     (
+  //       (data.poType === "Accessory")
+  //         ?
+  //         isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
+  //         :
+  //         data.directInwardReturnItems.every(item => item?.inwardLotDetails && isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
+  //     )
+  //     && isGridDatasValid(data.directInwardReturnItems, false, mandatoryFields)
+  //     && data.directInwardReturnItems.length !== 0
 
 
 
@@ -195,16 +234,15 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new") {
+          if (nextProcess == "new" || nextProcess == "close") {
             syncFormWithDb(undefined);
             onNew()
-          } else {
-            onClose()
+          }
+          else {
+            setId(returnData?.data?.id);
+
           }
 
-          if (convertQuotationId) {
-            convertQuotationId = null
-          }
 
 
 
@@ -219,7 +257,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   };
 
   function removeItem(id) {
-    setQuoteItems(directInwardItems => {
+    setDeliveryItems(directInwardItems => {
       let newItems = structuredClone(directInwardItems);
       newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
       return newItems
@@ -245,9 +283,9 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       });
       return
     }
-    if (!isGridDatasValid((data?.saleOrderItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!isGridDatasValid((data?.deliveryItems)?.filter(i => i.itemId), false, mandatoryFields)) {
       Swal.fire({
-        title: "Please fill all Sale Order Items Mandatory fields...!",
+        title: "Please fill all Delivery Items Mandatory fields...!",
         icon: "warning",
       });
       return;
@@ -273,7 +311,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   }
 
   function getTotalQty() {
-    let qty = quoteItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+    let qty = deliveryItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
     return parseInt(qty)
   }
   function isSupplierOutside() {
@@ -303,17 +341,18 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
-            title="SALE ORDER"
+            title="DELIVERY CHALLAN"
             docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
             customerData={supplierDetails?.data}
-            items={saleOrderItems?.filter(i => i.itemId)}
+            items={deliveryItems?.filter(i => i.itemId)}
             remarks={remarks}
             itemList={itemList?.data}
             sizeList={sizeList?.data}
             colorList={colorList?.data}
             uomList={uomList?.data}
+            hsnList={hsnList?.data}
           />
         </PDFViewer>
       </Modal>
@@ -321,12 +360,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <ThermalSalesPrintFormat
-            title="SALE ORDER"
+            title="DELIVERY CHALLAN"
             docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
             customerData={supplierDetails?.data}
-            items={saleOrderItems?.filter(i => i.itemId)}
+            items={deliveryItems?.filter(i => i.itemId)}
             remarks={remarks}
             itemList={itemList?.data}
             sizeList={sizeList?.data}
@@ -339,7 +378,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Sale Order</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Estimate / Quotation</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -359,8 +398,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Sale Order No" readOnly value={docId} />
-              <ReusableInput label="Sale Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <ReusableInput label="Doc. Id" readOnly value={docId} />
+              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 
             </div>
@@ -402,8 +441,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
 
-          <SaleOrderItems
-            saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+          <SalesDeliveryItems
+            deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
             handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
             itemList={itemList} sizeList={sizeList}
 
@@ -444,7 +483,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             <button
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               onClick={() => {
-                if (!saleOrderItems?.filter(i => i.itemId).length) {
+                if (!deliveryItems?.filter(i => i.itemId).length) {
                   toast.warning("Please add some items first");
                   return;
                 }
@@ -458,7 +497,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             <button
               className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
               onClick={() => {
-                if (!saleOrderItems?.filter(i => i.itemId).length) {
+                if (!deliveryItems?.filter(i => i.itemId).length) {
                   toast.warning("Please add some items first");
                   return;
                 }
@@ -479,4 +518,4 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   );
 }
 
-export default SaleOrderForm;
+export default SalesDeliveryForm;

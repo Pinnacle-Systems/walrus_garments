@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import YarnDirectItem from './YarnDirectItem';
 import { capitalizeFirstLetter } from '../../../Utils/helper';
+import Swal from 'sweetalert2';
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList
 
 }) => {
 
@@ -75,33 +76,33 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                 <div className="flex justify-between items-center mb-2 ">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <button className="font-bold text-slate-700 bord"
-                        // onKeyDown={(e) => {
-                        //     if (e.key === "Enter") {
-                        //         e.preventDefault();
-                        //         setInwardItemSelection(true)
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                setInwardItemSelection(true)
 
-                        //     }
-                        // }}
-                        // onClick={() => {
-                        //     if (!supplierId) {
-                        //         Swal.fire({
-                        //             icon: 'warning',
-                        //             title: ` Choose Supplier`,
-                        //         });
-                        //         return
-                        //     }
-                        //     if (!purchaseInwardId) {
-                        //         Swal.fire({
-                        //             icon: 'warning',
-                        //             title: `Select Purchase Inward No`,
-                        //         });
-                        //         return
-                        //     }
+                            }
+                        }}
+                        onClick={() => {
+                            if (!supplierId) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: ` Choose Supplier`,
+                                });
+                                return
+                            }
+                            if (!purchaseInwardId) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: `Select Purchase Inward No`,
+                                });
+                                return
+                            }
 
 
-                        //     setInwardItemSelection(true)
+                            setInwardItemSelection(true)
 
-                        // }}
+                        }}
                     >
                         Fill Inward Items
                     </button>
@@ -140,6 +141,12 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM
+                                </th>
+                                <th
+
+                                    className={`w-20 px-4 py-2 text-left font-medium text-[13px] `}
+                                >
+                                    Barcode
                                 </th>
                                 {stockControlData?.data?.map(element => (
                                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
@@ -204,7 +211,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                             />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
                                 <tr className='w-12 border border-gray-300 text-[11px]  h-8 text-center p-0.5'>
-                                    {Array.from({ length: 11 }).map(i =>
+                                    {Array.from({ length: 12 }).map(i =>
                                         <td className=" table-data "></td>
                                     )}
 

@@ -4,12 +4,13 @@ import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import secureLocalStorage from 'react-secure-storage';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
+import { useGetSalesDeliveryQuery } from "../../../redux/uniformService/salesDeliveryServices";
 
 
 
 
 
-const SaleOrderReport = ({
+const SalesDeliveryReport = ({
   onClick,
   onView,
   itemsPerPage = 10,
@@ -17,8 +18,8 @@ const SaleOrderReport = ({
   onDelete,
   rowActions = true,
 }) => {
-  
-  
+
+
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
@@ -57,7 +58,7 @@ const SaleOrderReport = ({
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetQuotationMasterQuery({
+  const { data: allData, isFetching, isLoading } = useGetSalesDeliveryQuery({
     params: {
       branchId,
       ...searchFields,
@@ -212,7 +213,7 @@ const SaleOrderReport = ({
                                             }}
                                         /> */}
                   </th>
-               
+
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
@@ -258,7 +259,7 @@ const SaleOrderReport = ({
                       }}
                     />
                   </th>
-          
+
                   {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
@@ -321,7 +322,7 @@ const SaleOrderReport = ({
                       <td className="py-1.5 text-center">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
-                   
+
 
                       <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                       {rowActions && (
@@ -351,7 +352,7 @@ const SaleOrderReport = ({
                             {onDelete && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(dataObj.id,dataObj?._count)}
+                                onClick={() => onDelete(dataObj.id, dataObj?._count)}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -382,4 +383,4 @@ const SaleOrderReport = ({
   );
 };
 
-export default SaleOrderReport;
+export default SalesDeliveryReport;

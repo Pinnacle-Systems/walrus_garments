@@ -632,6 +632,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             price: item["price"] ? parseFloat(item["price"]) : undefined,
             branchId: branchId ? parseFloat(branchId) : undefined,
             storeId: storeId ? parseFloat(storeId) : undefined,
+            barcode: item["barcode"] ? String(item["barcode"]) : undefined,
 
 
 
@@ -941,7 +942,7 @@ async function addStockForRemoverItems(tx, poType, poInwardOrDirectInward, branc
 
 async function remove(id) {
 
-   
+
 
     let data
     const returnData = await prisma.directReturnOrPoReturn.findUnique({
@@ -953,7 +954,7 @@ async function remove(id) {
         }
     })
 
-    console.log(returnData,"returnData")
+    console.log(returnData, "returnData")
 
     await prisma.$transaction(async (tx) => {
 

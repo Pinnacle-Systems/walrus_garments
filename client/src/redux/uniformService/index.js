@@ -53,5 +53,7 @@ export { default as ItemCategoryMasterApi } from "./ItemCategoryMasterService"
 export { default as salesReturnApi } from "./salesReturnServices"
 export { default as StockAdjustmentApi } from "./StockAdjustmentService"
 export { default as priceTemplateApi } from "./priceTemplateService"
+export { default as salesInvoiceApi } from "./salesInvoiceServices"
+export { default as salesDeliveryApi } from "./salesDeliveryServices"
 
 

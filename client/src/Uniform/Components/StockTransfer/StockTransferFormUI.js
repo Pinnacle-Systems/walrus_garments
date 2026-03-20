@@ -102,15 +102,23 @@ const StockTransferForm = ({
 
 
                     // Check if already in list
-                    const exists = stockItems.find(i =>
+                    const existsIndex = stockItems.findIndex(i =>
                         i.itemId === newItem.itemId &&
                         i.sizeId === newItem.sizeId &&
                         i.colorId === newItem.colorId
                     );
+                    if (existsIndex !== -1) {
+                        // ✅ UPDATE EXISTING ROW
+                        const updatedItems = [...stockItems];
 
-                    if (exists) {
+                        updatedItems[existsIndex] = {
+                            ...updatedItems[existsIndex],
+                            ...newItem,
+                            // Optional: increase qty instead of replace
+                            transferQty: (updatedItems[existsIndex].transferQty || 0) + 1,
+                        };
 
-                        return stockItems
+                        setStockItems(updatedItems);
                     } else {
                         const firstEmptyIndex = stockItems.findIndex(i => !i.itemId);
                         if (firstEmptyIndex !== -1) {

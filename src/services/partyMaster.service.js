@@ -315,7 +315,7 @@ async function partyMaterial(partyMaterials, id) {
 
 async function update(id, body) {
 
-    console.log(body,"data for party update Query")
+    console.log(body, "data for party update Query")
     const {
 
         companyId, active, userId, name, partyCode, aliasName, displayName, isSupplier, isBuyer, isClient,
@@ -337,7 +337,7 @@ async function update(id, body) {
         data: {
             isClient: isClient ? JSON.parse(isClient) : "",
             isSupplier: isSupplier ? JSON.parse(isSupplier) : "",
-            parentId : parentId  ? parseInt(parentId) : "",
+            parentId: parentId ? String(parentId) : null,
             name,
             aliasName,
             code: partyCode,

@@ -456,7 +456,6 @@ export function getUniqueArrayBySize(rowData, allData, key, itemId) {
 
   const item = rowData?.filter(i => i.id == itemId)?.[0]
 
-  console.log(item, "item", rowData)
 
 
   if (item?.priceMethod == "STANDARD") {

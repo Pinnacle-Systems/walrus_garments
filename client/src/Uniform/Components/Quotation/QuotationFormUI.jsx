@@ -17,6 +17,11 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import QuotationItems from "./QuotationItems";
 import { useAddQuotationMasterMutation, useAddQuotationMutation, useGetQuotationByIdQuery, useGetQuotationMasterByIdQuery, useUpdateQuotationMasterMutation, useUpdateQuotationMutation } from "../../../redux/uniformService/quotationServices";
+import Modal from "../../../UiComponents/Modal";
+import { PDFViewer } from "@react-pdf/renderer";
+import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
+import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
 
 
@@ -42,24 +47,20 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [discountValue, setDiscountValue] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
 
-  const [suppliers, setSuppliers] = useState([
-    "Supplier One",
-    "Supplier Two",
-    "Supplier Three",
-  ]);
 
-  const childRecord = useRef(0);
+
   const { branchId, companyId, userId, finYearId } = getCommonParams()
 
-  const branchIdFromApi = useRef(branchId);
 
   const params = {
     branchId, companyId, userId, finYearId
   };
 
 
-
+  console.log(quoteItems, "quoteItems")
 
 
 
@@ -68,6 +69,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: hsnList } = useGetHsnMasterQuery({ params });
 
 
   const {
@@ -318,7 +320,42 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   return (
     <>
+      <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
+        <PDFViewer style={{ width: "100%", height: "90vh" }}>
+          <PremiumSalesPrintFormat
+            title="QUOTATION"
+            docId={docId}
+            date={date}
+            branchData={findFromList(branchId, branchList?.data, "all")}
+            customerData={supplierDetails?.data}
+            items={quoteItems?.filter(i => i.itemId)}
+            remarks={remarks}
+            itemList={itemList?.data}
+            sizeList={sizeList?.data}
+            colorList={colorList?.data}
+            uomList={uomList?.data}
+          />
+        </PDFViewer>
+      </Modal>
 
+      <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
+        <PDFViewer style={{ width: "100%", height: "90vh" }}>
+          <ThermalSalesPrintFormat
+            title="QUOTATION"
+            docId={docId}
+            date={date}
+            branchData={findFromList(branchId, branchList?.data, "all")}
+            customerData={supplierDetails?.data}
+            items={quoteItems?.filter(i => i.itemId)}
+            remarks={remarks}
+            itemList={itemList?.data}
+            sizeList={sizeList?.data}
+            colorList={colorList?.data}
+            uomList={uomList?.data}
+            hsnList={hsnList?.data}
+          />
+        </PDFViewer>
+      </Modal>
 
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
@@ -424,9 +461,32 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               Edit
             </button>
 
-            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
+            <button
+              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+              onClick={() => {
+                if (!quoteItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setPrintOpen(true);
+              }}
+            >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
+            </button>
+
+            <button
+              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
+              onClick={() => {
+                if (!quoteItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setThermalPrintOpen(true);
+              }}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Thermal Print
             </button>
           </div>
         </div>

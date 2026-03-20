@@ -56,11 +56,11 @@ export function usePermissionForUsers() {
 
   console.log("currentPagePermissions", currentPagePermissions)
 
-  const hasPermission = (callback, type, childRecord) => {
+  const hasPermission = (callback, type, childRecord = 0) => {
 
     const childRecordValidationActions = ["delete"]
 
-    console.log(childRecord, "childRecord")
+    console.log(childRecord, "childRecord", childRecordCount(childRecord), childRecordValidationActions?.includes(type))
 
 
     if (callback) {
@@ -69,6 +69,14 @@ export function usePermissionForUsers() {
       } else {
         if (isCurrentFinYearActive()) {
           if (IsDefaultAdmin()) {
+            if (childRecordValidationActions?.includes(type) && childRecordCount(childRecord)) {
+              Swal.fire({
+                title: `Child Record Exists`,
+                icon: "warning",
+              });
+              return;
+            }
+
             callback();
           } else if (currentPagePermissions?.data[type]) {
             if (childRecordValidationActions?.includes(type) && childRecordCount(childRecord)) {

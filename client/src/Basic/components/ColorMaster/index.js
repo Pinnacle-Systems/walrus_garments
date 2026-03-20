@@ -54,6 +54,7 @@ export default function Form() {
         setPantone("");
         setIsGrey(false);
         setActive(id ? (data?.active) : true);
+        setCode(data?.code ? data?.code : "")
 
       } else {
         // setReadOnly(true);

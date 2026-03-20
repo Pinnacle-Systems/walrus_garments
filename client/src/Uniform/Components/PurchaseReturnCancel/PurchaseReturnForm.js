@@ -35,6 +35,7 @@ import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
 import { useGetDirectInwardOrReturnQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices.js";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
+import { useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
@@ -86,7 +87,13 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const [addData] = useAddDirectCancelOrReturnMutation();
     const [updateData] = useUpdateDirectCancelOrReturnMutation();
-    const [removeData] = useDeleteDirectCancelOrReturnMutation();
+
+    const { data: itemPriceList } = useGetItemPriceListQuery({
+        params: {
+            branchId,
+            companyId
+        }
+    });
 
     const syncFormWithDb = useCallback((data) => {
         const today = new Date()
@@ -384,7 +391,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     setValue={(value) => { setLocationId(value); setStoreId("") }}
                                     required={true} readOnly={id || readOnly} />
                                 <DropdownInput name="Location"
-                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "WAREHOUSE"), "storeName", "id")}
+                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "NEW WAREHOUSE"), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
                             </div>
@@ -426,7 +433,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                            purchaseInwardId={purchaseInwardId}
+                            purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList}
                         />
                     </div>
 

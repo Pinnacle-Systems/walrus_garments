@@ -704,7 +704,7 @@ export async function _getOneAccessory(id, req) {
 
 
 export async function getStockReport(req) {
-    const { itemId, sizeId, colorId, storeId, toDate } = req.query
+    const { itemId, sizeId, colorId, storeId, toDate, barcode } = req.query
 
 
     const DateFormatted = moment(toDate).format("YYYY-MM-DD");
@@ -713,6 +713,7 @@ export async function getStockReport(req) {
     let sql;
 
     let conditions = [];
+
 
     if (itemId) {
         conditions.push(`ST.itemId = '${itemId}'`);
@@ -855,8 +856,7 @@ export async function getUnifiedStockByBarcode(req) {
 
         if (
             location &&
-            (location.storeName?.toLowerCase().includes("old") ||
-                location.storeName?.toLowerCase().includes("warehouse"))
+            (location.storeName?.toLowerCase().includes("old"))
         ) {
             isLegacy = true;
         }
@@ -933,6 +933,8 @@ export async function getUnifiedStockByBarcode(req) {
         // ✅ SUM qty based on barcode
         console.log(records, "records")
         const totalQty = records.reduce((sum, r) => sum + (r.qty || 0), 0);
+        console.log(records, "records")
+
 
         const first = records[0];
 

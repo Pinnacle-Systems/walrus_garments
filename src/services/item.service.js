@@ -74,7 +74,8 @@ export async function getItemPriceList(req) {
         include: {
             item: true,
             Color: true,
-            Size: true
+            Size: true,
+
         }
     });
     return { statusCode: 0, data };

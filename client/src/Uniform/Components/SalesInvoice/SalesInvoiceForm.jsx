@@ -14,14 +14,19 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
-import SaleOrderItems from "./SaleOrderItems";
-import { useAddQuotationMasterMutation, useUpdateQuotationMasterMutation } from "../../../redux/uniformService/quotationServices";
+import { useAddQuotationMutation, useUpdateQuotationMutation } from "../../../redux/uniformService/quotationServices";
+import SalesInvoiceItems from "./SalesInvoiceItems";
+import { useAddSalesInvoiceMutation, useGetSalesInvoiceByIdQuery, useUpdateSalesInvoiceMutation } from "../../../redux/uniformService/salesInvoiceServices";
+import { PDFViewer } from "@react-pdf/renderer";
+import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
+import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
+import Modal from "../../../UiComponents/Modal";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
 
 
-const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setQuoteItems, quoteItems,
+const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
+  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
   yarnList, colorList, uomList,
 
 
@@ -42,6 +47,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [discountValue, setDiscountValue] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
 
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
@@ -68,16 +75,17 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: hsnList } = useGetHsnMasterQuery({ params });
 
 
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+  } = useGetSalesInvoiceByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddQuotationMasterMutation();
-  const [updateData] = useUpdateQuotationMasterMutation();
+  const [addData] = useAddSalesInvoiceMutation();
+  const [updateData] = useUpdateSalesInvoiceMutation();
 
 
 
@@ -103,14 +111,14 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setTransType(data?.poType ? data.poType : "DyedYarn");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setQuoteItems(data?.QuoteItems ? data.QuoteItems : []);
+    setInvoiceItems(data?.SalesInvoiceItems ? data.SalesInvoiceItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
     // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
     setPayTermId(data?.payTermId ? data?.payTermId : "");
-    setCustomerId(data?.supplierId ? data?.supplierId : "");
+    setCustomerId(data?.customerId ? data?.customerId : "");
     setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDcNo(data?.dcNo ? data.dcNo : "")
     setLocationId(data?.branchId ? data?.branchId : "")
@@ -139,7 +147,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     payTermId,
     id, userId,
     storeId,
-    quoteItems: quoteItems?.filter(i => i.itemId),
+    invoiceItems: invoiceItems?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -153,45 +161,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   }
 
-  console.log(data, "data")
-
-
-
-
-
-
-  // const validateData = (data) => {
-  //   let mandatoryFields = ["uomId", "colorId", "price"];
-  //   let lotMandatoryFields = ["qty"]
-  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
-  //     mandatoryFields = [...mandatoryFields, "yarnId"]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
-  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
-  //   } else if (transType === "Accessory") {
-  //     mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-  //   }
-
-
-
-
-  //   return data.poType && data.supplierId && data.dcDate && data.payTermId && data.dcNo
-  //     &&
-  //     (
-  //       (data.poType === "Accessory")
-  //         ?
-  //         isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
-  //         :
-  //         data.directInwardReturnItems.every(item => item?.inwardLotDetails && isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
-  //     )
-  //     && isGridDatasValid(data.directInwardReturnItems, false, mandatoryFields)
-  //     && data.directInwardReturnItems.length !== 0
-
-
-
-
-
 
   const validateData = (data) => {
 
@@ -201,7 +170,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     return false
   }
-  console.log(data, "data")
 
 
 
@@ -251,7 +219,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   };
 
   function removeItem(id) {
-    setQuoteItems(directInwardItems => {
+    setInvoiceItems(directInwardItems => {
       let newItems = structuredClone(directInwardItems);
       newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
       return newItems
@@ -277,7 +245,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return
     }
-    if (!isGridDatasValid((data?.quoteItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!isGridDatasValid((data?.invoiceItems)?.filter(i => i.itemId), false, mandatoryFields)) {
       Swal.fire({
         title: "Please fill all Quote Items Mandatory fields...!",
         icon: "warning",
@@ -305,7 +273,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   }
 
   function getTotalQty() {
-    let qty = quoteItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
+    let qty = invoiceItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
     return parseInt(qty)
   }
   function isSupplierOutside() {
@@ -333,10 +301,45 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   return (
     <>
 
+      <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
+        <PDFViewer style={{ width: "100%", height: "90vh" }}>
+          <PremiumSalesPrintFormat
+            title="SALES INVOICE"
+            docId={docId}
+            date={date}
+            branchData={findFromList(branchId, branchList?.data, "all")}
+            customerData={supplierDetails?.data}
+            items={invoiceItems?.filter(i => i.itemId)}
+            remarks={remarks}
+            itemList={itemList?.data}
+            sizeList={sizeList?.data}
+            colorList={colorList?.data}
+            uomList={uomList?.data}
+          />
+        </PDFViewer>
+      </Modal>
 
+      <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
+        <PDFViewer style={{ width: "100%", height: "90vh" }}>
+          <ThermalSalesPrintFormat
+            title="SALES INVOICE"
+            docId={docId}
+            date={date}
+            branchData={findFromList(branchId, branchList?.data, "all")}
+            customerData={supplierDetails?.data}
+            items={invoiceItems?.filter(i => i.itemId)}
+            remarks={remarks}
+            itemList={itemList?.data}
+            sizeList={sizeList?.data}
+            colorList={colorList?.data}
+            uomList={uomList?.data}
+            hsnList={hsnList?.data}
+          />
+        </PDFViewer>
+      </Modal>
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Estimate / Quotation</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Sales Invoice</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -356,8 +359,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc. Id" readOnly value={docId} />
-              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <ReusableInput label="Sales Invoice No" readOnly value={docId} />
+              <ReusableInput label="Sales Invoice Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 
             </div>
@@ -399,8 +402,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
 
-          <SaleOrderItems
-            quoteItems={quoteItems} setQuoteItems={setQuoteItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+          <SalesInvoiceItems
+            invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
             handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
             itemList={itemList} sizeList={sizeList}
 
@@ -437,10 +440,32 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit
             </button>
-
-            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm">
+            <button
+              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+              onClick={() => {
+                if (!invoiceItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setPrintOpen(true);
+              }}
+            >
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
+            </button>
+
+            <button
+              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
+              onClick={() => {
+                if (!invoiceItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setThermalPrintOpen(true);
+              }}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Thermal Print
             </button>
           </div>
         </div>
@@ -453,4 +478,4 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   );
 }
 
-export default SalesDeliveryForm;
+export default SalesInvoiceForm;

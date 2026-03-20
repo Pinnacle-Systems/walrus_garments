@@ -13,8 +13,8 @@ import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices"
 const SalesDeliveryItems = ({
     id,
     transType,
-    quoteItems,
-    setQuoteItems,
+    deliveryItems,
+    setDeliveryItems,
     readOnly,
     params,
     isSupplierOutside,
@@ -37,7 +37,7 @@ const SalesDeliveryItems = ({
 
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
-        const newBlend = structuredClone(quoteItems);
+        const newBlend = structuredClone(deliveryItems);
         if (field == "itemId") {
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
@@ -46,16 +46,16 @@ const SalesDeliveryItems = ({
 
         newBlend[index][field] = value;
 
-        setQuoteItems(newBlend);
+        setDeliveryItems(newBlend);
     };
 
-    console.log(quoteItems, "poItems",);
+    console.log(deliveryItems, "poItems",);
 
 
     useEffect(() => {
         if (id) return
-        if (quoteItems?.length >= 9) return;
-        setQuoteItems((prev) => {
+        if (deliveryItems?.length >= 9) return;
+        setDeliveryItems((prev) => {
             let newArray = Array.from({ length: 9 - prev.length }, (i) => {
                 return {
                     itemId: "",
@@ -74,7 +74,7 @@ const SalesDeliveryItems = ({
             });
             return [...prev, ...newArray];
         });
-    }, [transType, setQuoteItems, quoteItems]);
+    }, [transType, setDeliveryItems, deliveryItems]);
 
     const addNewRow = () => {
         const newRow = {
@@ -89,15 +89,15 @@ const SalesDeliveryItems = ({
             id: '',
             poItemsId: ""
         };
-        setQuoteItems([...quoteItems, newRow]);
+        setDeliveryItems([...deliveryItems, newRow]);
     };
     const handleDeleteRow = (id) => {
-        setQuoteItems((yarnBlend) =>
+        setDeliveryItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
     };
     const handleDeleteAllRows = () => {
-        setQuoteItems((prevRows) => {
+        setDeliveryItems((prevRows) => {
             if (prevRows.length <= 1) return prevRows;
             return [prevRows[0]];
         });
@@ -121,7 +121,7 @@ const SalesDeliveryItems = ({
     }
 
     function getTotals(field) {
-        const total = quoteItems.reduce((accumulator, current) => {
+        const total = deliveryItems.reduce((accumulator, current) => {
             return accumulator + parseFloat(current[field] ? current[field] : 0);
         }, 0);
         return parseFloat(total);
@@ -155,7 +155,7 @@ const SalesDeliveryItems = ({
         }
     };
     const getFinalAmountAfterDiscount = () => {
-        return quoteItems.reduce((acc, row) => {
+        return deliveryItems.reduce((acc, row) => {
             const price = parseFloat(row.price) || 0;
             const tax = parseFloat(row.tax) || 0;
             const qty = parseFloat(row.qty) || 0;
@@ -183,7 +183,7 @@ const SalesDeliveryItems = ({
         dispatch(push({ name: masterName }));
     }
     function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
-        setQuoteItems(poItems => {
+        setDeliveryItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"][lotIndex][field] = value;
@@ -214,7 +214,7 @@ const SalesDeliveryItems = ({
         });
     }
     function addNewLotNo(index, weightPerBag) {
-        setQuoteItems(poItems => {
+        setDeliveryItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]) return poItems
             if (newBlend[index]["lotDetails"]) {
@@ -228,15 +228,15 @@ const SalesDeliveryItems = ({
         })
     }
     function removeLotNo(index, lotIndex) {
-        setQuoteItems(poItems => {
+        setDeliveryItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"] = newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex)
             return newBlend
         })
     }
-    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? quoteItems[currentSelectedLotGrid] : ""
-    let taxItems = quoteItems?.map(item => {
+    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? deliveryItems[currentSelectedLotGrid] : ""
+    let taxItems = deliveryItems?.map(item => {
         let newItem = structuredClone(item)
         newItem["qty"] = sumArray(newItem.lotDetails, "qty")
         return newItem
@@ -362,7 +362,7 @@ const SalesDeliveryItems = ({
 
                         <tbody>
 
-                            {(quoteItems ? quoteItems : [])?.map((row, index) =>
+                            {(deliveryItems ? deliveryItems : [])?.map((row, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer "
                                     onContextMenu={(e) => {
                                         if (!readOnly) {
@@ -438,11 +438,11 @@ const SalesDeliveryItems = ({
 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "hsnId") } }}
+                                            className='text-left w-full rounded py-1 table-data-input' value={row.hsnId}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "hsnId")}
                                             onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "colorId")
+                                                handleInputChange((e.target.value), index, "hsnId")
                                             }
                                             }
                                             disabled={readOnly || !row.sizeId}

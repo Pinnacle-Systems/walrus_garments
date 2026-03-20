@@ -75,6 +75,9 @@ const YarnDirectItem = ({ itemList, uomList,
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
 
                 <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>
+
+                    {item?.barcode} </td>
                 {stockControlData?.data?.map(element => (
                     // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (

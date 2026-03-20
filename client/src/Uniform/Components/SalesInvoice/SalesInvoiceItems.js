@@ -10,11 +10,11 @@ import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 
-const SaleOrderItems = ({
+const SalesInvoiceItems = ({
     id,
     transType,
-    saleOrderItems,
-    setSaleOrderItems,
+    invoiceItems,
+    setInvoiceItems,
     readOnly,
     params,
     isSupplierOutside,
@@ -37,7 +37,7 @@ const SaleOrderItems = ({
 
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
-        const newBlend = structuredClone(saleOrderItems);
+        const newBlend = structuredClone(invoiceItems);
         if (field == "itemId") {
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
@@ -46,16 +46,16 @@ const SaleOrderItems = ({
 
         newBlend[index][field] = value;
 
-        setSaleOrderItems(newBlend);
+        setInvoiceItems(newBlend);
     };
 
-    console.log(saleOrderItems, "poItems",);
+    console.log(invoiceItems, "poItems",);
 
 
     useEffect(() => {
         if (id) return
-        if (saleOrderItems?.length >= 9) return;
-        setSaleOrderItems((prev) => {
+        if (invoiceItems?.length >= 9) return;
+        setInvoiceItems((prev) => {
             let newArray = Array.from({ length: 9 - prev.length }, (i) => {
                 return {
                     itemId: "",
@@ -74,7 +74,7 @@ const SaleOrderItems = ({
             });
             return [...prev, ...newArray];
         });
-    }, [transType, setSaleOrderItems, saleOrderItems]);
+    }, [transType, setInvoiceItems, invoiceItems]);
 
     const addNewRow = () => {
         const newRow = {
@@ -89,15 +89,15 @@ const SaleOrderItems = ({
             id: '',
             poItemsId: ""
         };
-        setSaleOrderItems([...saleOrderItems, newRow]);
+        setInvoiceItems([...invoiceItems, newRow]);
     };
     const handleDeleteRow = (id) => {
-        setSaleOrderItems((yarnBlend) =>
+        setInvoiceItems((yarnBlend) =>
             yarnBlend.filter((row, index) => index !== parseInt(id))
         );
     };
     const handleDeleteAllRows = () => {
-        setSaleOrderItems((prevRows) => {
+        setInvoiceItems((prevRows) => {
             if (prevRows.length <= 1) return prevRows;
             return [prevRows[0]];
         });
@@ -121,7 +121,7 @@ const SaleOrderItems = ({
     }
 
     function getTotals(field) {
-        const total = saleOrderItems.reduce((accumulator, current) => {
+        const total = invoiceItems.reduce((accumulator, current) => {
             return accumulator + parseFloat(current[field] ? current[field] : 0);
         }, 0);
         return parseFloat(total);
@@ -155,7 +155,7 @@ const SaleOrderItems = ({
         }
     };
     const getFinalAmountAfterDiscount = () => {
-        return saleOrderItems.reduce((acc, row) => {
+        return invoiceItems.reduce((acc, row) => {
             const price = parseFloat(row.price) || 0;
             const tax = parseFloat(row.tax) || 0;
             const qty = parseFloat(row.qty) || 0;
@@ -183,7 +183,7 @@ const SaleOrderItems = ({
         dispatch(push({ name: masterName }));
     }
     function handleInputChangeLotNo(value, index, lotIndex, field, balanceQty) {
-        setSaleOrderItems(poItems => {
+        setInvoiceItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"][lotIndex][field] = value;
@@ -214,7 +214,7 @@ const SaleOrderItems = ({
         });
     }
     function addNewLotNo(index, weightPerBag) {
-        setSaleOrderItems(poItems => {
+        setInvoiceItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]) return poItems
             if (newBlend[index]["lotDetails"]) {
@@ -228,15 +228,15 @@ const SaleOrderItems = ({
         })
     }
     function removeLotNo(index, lotIndex) {
-        setSaleOrderItems(poItems => {
+        setInvoiceItems(poItems => {
             const newBlend = structuredClone(poItems);
             if (!newBlend[index]["lotDetails"]) return poItems
             newBlend[index]["lotDetails"] = newBlend[index]["lotDetails"].filter((_, index) => index != lotIndex)
             return newBlend
         })
     }
-    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? saleOrderItems[currentSelectedLotGrid] : ""
-    let taxItems = saleOrderItems?.map(item => {
+    let selectedRow = Number.isInteger(currentSelectedLotGrid) ? invoiceItems[currentSelectedLotGrid] : ""
+    let taxItems = invoiceItems?.map(item => {
         let newItem = structuredClone(item)
         newItem["qty"] = sumArray(newItem.lotDetails, "qty")
         return newItem
@@ -362,7 +362,7 @@ const SaleOrderItems = ({
 
                         <tbody>
 
-                            {(saleOrderItems ? saleOrderItems : [])?.map((row, index) =>
+                            {(invoiceItems ? invoiceItems : [])?.map((row, index) =>
                                 <tr className="border border-blue-gray-200 cursor-pointer "
                                     onContextMenu={(e) => {
                                         if (!readOnly) {
@@ -602,4 +602,4 @@ const SaleOrderItems = ({
     );
 };
 
-export default SaleOrderItems;
+export default SalesInvoiceItems;

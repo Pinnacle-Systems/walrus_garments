@@ -43,8 +43,6 @@ async function get(req) {
 
     const { companyId, active } = req.query
 
-    console.log(companyId, active, "companyId, active ")
-
     let data = await prisma.quotation.findMany({
         where: {
             active: active ? Boolean(active) : undefined,

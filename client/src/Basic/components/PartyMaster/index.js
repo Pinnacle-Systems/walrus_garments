@@ -753,13 +753,20 @@ export default function Form({ partyId, show, openModelForAddress }) {
       className: 'text-gray-800 uppercase w-96'
 
     },
+
     {
       header: "Branch Type",
       accessor: (item) => item?.BranchType?.name || "-",
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-40 pl-2",
     },
+    {
+      header: 'Customer/Supplier',
+      accessor: (item) => item.isClient && item.isSupplier ? "Customer/Supplier" : item.isClient ? "Customer" : item.isSupplier ? "Supplier" : "",
+      cellClass: () => 'font-medium text-gray-900',
+      className: 'text-gray-800 uppercase w-40'
 
+    },
     {
       header: 'Address',
       accessor: (item) => item.address,

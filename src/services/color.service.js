@@ -6,6 +6,16 @@ async function get(req) {
     const data = await prisma.color.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    ItemPriceList: true,
+                    DirectItems: true,
+                    Stock: true,
+                    LegacyStock: true
+                }
+            }
         }
     });
     return { statusCode: 0, data };
@@ -43,7 +53,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, active, pantone, isGrey, companyId } = await body
+    const { name, active, pantone, isGrey, companyId, code } = await body
     const data = await prisma.color.create(
         {
             data: {

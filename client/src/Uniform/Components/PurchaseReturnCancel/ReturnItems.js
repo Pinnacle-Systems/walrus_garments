@@ -11,7 +11,7 @@ import { useGetStockReportControlQuery } from '../../../redux/uniformService/Sto
 export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDirectInward, storeId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId
+    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId, itemPriceList
 
 }) {
     const { branchId, userId, finYearId } = getCommonParams();
@@ -28,6 +28,17 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
     const { data: stockControlData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
 
 
+    const getBarcodeFromList = (itemId, sizeId, colorId) => {
+
+
+
+        if (!itemPriceList?.data || !itemId || !sizeId) return null;
+        return itemPriceList.data.find(item =>
+            String(item.itemId) === String(itemId) &&
+            String(item.sizeId) === String(sizeId) &&
+            (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
+        );
+    };
 
 
 
@@ -43,6 +54,10 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
 
 
         if (poItem) {
+
+
+            const foundPrice = getBarcodeFromList(poItem?.itemId, poItem?.sizeId, poItem?.colorId);
+
 
             newBlend[index]["poNo"] = poItem?.DirectInwardOrReturn?.docId
             newBlend[index]["itemId"] = poItem?.itemId
@@ -60,6 +75,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
             newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
             newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
+            newBlend[index]["barcode"] = foundPrice?.barcode
         } else {
             newBlend[index][field] = value
 
@@ -136,7 +152,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
     return (
         <>
             <div className="p-2 bg-white rounded-md">
-              
+
                 {
 
                     poInwardOrDirectInward == "DirectReturn" &&
@@ -144,11 +160,12 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
 
                     <YarnDirectInwardItems handleInputChange={handleInputChange} removeLotNo={removeLotNo} addNewLotNo={addNewLotNo}
                         handleInputChangeLotNo={handleInputChangeLotNo}
-                        storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={id} params={params}
+                        storeId={storeId} deleteRow={deleteRow} transType={transType} purchaseInwardId={purchaseInwardId} params={params}
                         directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} readOnly={readOnly} isSupplierOutside={isSupplierOutside()}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
-                        supplierId={supplierId} stockControlData={stockControlData}
+                        supplierId={supplierId} stockControlData={stockControlData} setInwardItemSelection={setInwardItemSelection}
+                        itemPriceList={itemPriceList}
                     />
 
 

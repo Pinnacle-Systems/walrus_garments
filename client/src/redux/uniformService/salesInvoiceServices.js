@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { SALES_DELIVERY_API } from "../../Api";
+import { SALES_INVOICE_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const salesDeliveryApi = createApi({
-    reducerPath: "salesDelivery",
+const salesInvoiceApi = createApi({
+    reducerPath: "salesInvoice",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["salesDelivery"],
+    tagTypes: ["salesInvoice"],
     endpoints: (builder) => ({
-        getSalesDelivery: builder.query({
+        getSalesInvoice: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: SALES_DELIVERY_API + "/search/" + searchParams,
+                        url: SALES_INVOICE_API + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const salesDeliveryApi = createApi({
                     };
                 }
                 return {
-                    url: SALES_DELIVERY_API,
+                    url: SALES_INVOICE_API,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -31,58 +31,58 @@ const salesDeliveryApi = createApi({
                     params
                 };
             },
-            providesTags: ["salesDelivery"],
+            providesTags: ["salesInvoice"],
         }),
-        getSalesDeliveryById: builder.query({
+        getSalesInvoiceById: builder.query({
             query: (id) => {
                 return {
-                    url: `${SALES_DELIVERY_API}/${id}`,
+                    url: `${SALES_INVOICE_API}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 };
             },
-            providesTags: ["salesDelivery"],
+            providesTags: ["salesInvoice"],
         }),
-        addSalesDelivery: builder.mutation({
+        addSalesInvoice: builder.mutation({
             query: (payload) => ({
-                url: SALES_DELIVERY_API,
+                url: SALES_INVOICE_API,
                 method: "POST",
                 body: payload,
                 headers: {
                     "Content-type": "application/json; charset=UTF-8",
                 },
             }),
-            invalidatesTags: ["salesDelivery"],
+            invalidatesTags: ["salesInvoice"],
         }),
-        updateSalesDelivery: builder.mutation({
+        updateSalesInvoice: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
-                    url: `${SALES_DELIVERY_API}/${id}`,
+                    url: `${SALES_INVOICE_API}/${id}`,
                     method: "PUT",
                     body,
                 };
             },
-            invalidatesTags: ["salesDelivery"],
+            invalidatesTags: ["salesInvoice"],
         }),
-        deleteSalesDelivery: builder.mutation({
+        deleteSalesInvoice: builder.mutation({
             query: (id) => ({
-                url: `${SALES_DELIVERY_API}/${id}`,
+                url: `${SALES_INVOICE_API}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["salesDelivery"],
+            invalidatesTags: ["salesInvoice"],
         }),
     }),
 });
 
 export const {
-    useGetSalesDeliveryQuery,
-    useGetSalesDeliveryByIdQuery,
-    useAddSalesDeliveryMutation,
-    useUpdateSalesDeliveryMutation,
-    useDeleteSalesDeliveryMutation,
-} = salesDeliveryApi;
+    useGetSalesInvoiceQuery,
+    useGetSalesInvoiceByIdQuery,
+    useAddSalesInvoiceMutation,
+    useUpdateSalesInvoiceMutation,
+    useDeleteSalesInvoiceMutation,
+} = salesInvoiceApi;
 
-export default salesDeliveryApi;
+export default salesInvoiceApi;

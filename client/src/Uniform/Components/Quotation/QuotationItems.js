@@ -439,11 +439,11 @@ const QuotationItems = ({
 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "hsnId") } }}
+                                            className='text-left w-full rounded py-1 table-data-input' value={row.hsnId}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "hsnId")}
                                             onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "colorId")
+                                                handleInputChange((e.target.value), index, "hsnId")
                                             }
                                             }
                                             disabled={readOnly || !row.sizeId}

@@ -1117,6 +1117,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             qty: (item.qty) ? parseFloat(item.qty) : undefined,
             price: item.price ? parseFloat(item.price) : undefined,
             sectionId: item?.sectionId ? parseInt(item?.sectionId) : undefined,
+            barcode: item?.barcode ? String(item?.barcode) : undefined,
 
 
 
