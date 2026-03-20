@@ -20,7 +20,7 @@ export default function Form() {
   const [pantone, setPantone] = useState("");
   const [active, setActive] = useState(true);
   const [isGrey, setIsGrey] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [code, setCode] = useState("");
 
 
   const [searchValue, setSearchValue] = useState("");
@@ -62,6 +62,7 @@ export default function Form() {
         setPantone(data?.pantone || "");
         setIsGrey(data?.isGrey || false);
         setActive(id ? (data?.active ?? false) : true);
+        setCode(data?.code ? data?.code : "")
       }
     },
     [id]
@@ -72,11 +73,11 @@ export default function Form() {
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
-    name, active, id
+    name, active, id, code
   }
 
   const validateData = (data) => {
-    if (data.name) {
+    if (data.name && data?.code) {
       return true;
     }
     return false;
@@ -337,16 +338,20 @@ export default function Form() {
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                        <div className="grid grid-cols-2  gap-3 ">
+                      <div className="grid grid-cols-2  gap-3 ">
 
-                            <TextInputNew1 name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} 
-                            ref={firstInputFocus}
-                            />
-                          <div className='mt-5'>
+                        <TextInputNew1 name="Color" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                          ref={firstInputFocus}
+                        />
 
-                            <ToggleButton name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-                          </div>
-                          <div>
+                        <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                          ref={firstInputFocus}
+                        />
+                        <div className='mt-5'>
+
+                          <ToggleButton name="Active" readOnly={readOnly} value={active} setValue={setActive} />
+                        </div>
+                        <div>
 
                         </div>
                       </div>

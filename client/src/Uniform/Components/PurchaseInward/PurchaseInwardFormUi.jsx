@@ -17,7 +17,7 @@ import YarnPoItems from "./YarnPoItems";
 import YarnInwardPoItems from "./YarnInwardItem";
 import Swal from "sweetalert2";
 import BarCodePrintFormat from "./BarcodePrintFormat";
-import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 
@@ -56,7 +56,7 @@ const PurchaseInwardForm = ({
     ? locationData?.data?.filter((item) => parseInt(item.locationId) === parseInt(branchId))
     : [];
 
-  const { data: storckReportControlData } = useGetStockReportControlQuery({ params: { ...params } });
+  const { data: itemPriceList } = useGetItemPriceListQuery({ params: { ...params } });
   const { data: supplierDetails } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -193,7 +193,9 @@ const PurchaseInwardForm = ({
         />
       </Modal>
       <Modal isOpen={barcodePrintOpen} onClose={() => setBarcodePrintOpen(false)} widthClass="px-2 h-[90%] w-[90%]">
-        <BarCodePrintFormat data={directInwardReturnItems} sizeList={sizeList} itemList={itemList} />
+        <BarCodePrintFormat data={directInwardReturnItems} sizeList={sizeList} itemList={itemList}
+          itemPriceList={itemPriceList}
+        />
       </Modal>
 
       {/* ── Page title bar ── */}
@@ -330,6 +332,7 @@ const PurchaseInwardForm = ({
                 itemList={itemList}
                 sizeList={sizeList}
                 headerOpen={headerOpen}
+                itemPriceList={itemPriceList}
               />
             )}
             {(poInwardOrDirectInward === "PurchaseInward" || poInwardOrDirectInward === "GeneralInward") && (

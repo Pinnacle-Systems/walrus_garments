@@ -27,19 +27,58 @@ const YarnPoItems = ({
     supplierId,
     itemList,
     sizeList,
-    headerOpen
+    headerOpen,
+    itemPriceList
 }) => {
 
 
     const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
 
-    console.log(allData?.data, "allData")
+    const getBarcodeFromList = (itemId, sizeId, colorId) => {
+        if (!itemPriceList?.data || !itemId || !sizeId) return null;
+        return itemPriceList.data.find(item =>
+            String(item.itemId) === String(itemId) &&
+            String(item.sizeId) === String(sizeId) &&
+            (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
+        );
+    };
+
 
 
 
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
         const newBlend = structuredClone(poItems);
+
+        if (field === "barcode") {
+            const foundPrice = itemPriceList?.data?.find(item => item.barcode === value);
+            if (foundPrice) {
+                newBlend[index]["itemId"] = foundPrice.itemId;
+                newBlend[index]["sizeId"] = foundPrice.sizeId;
+                newBlend[index]["colorId"] = foundPrice.colorId;
+                newBlend[index]["price"] = foundPrice.salesPrice;
+                const sectionId = findFromList(foundPrice.itemId, itemList?.data, "sectionId")
+                newBlend[index]["sectionId"] = sectionId;
+            }
+        }
+
+        if (field === "itemId" || field === "sizeId" || field === "colorId") {
+            const currentItem = field === "itemId" ? value : newBlend[index].itemId;
+            const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
+            const currentColor = field === "colorId" ? value : newBlend[index].colorId;
+
+            if (currentItem && currentSize) {
+                const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
+
+                if (foundPrice) {
+                    newBlend[index]["barcode"] = foundPrice.barcode;
+                    if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
+                        newBlend[index]["price"] = foundPrice.salesPrice;
+                    }
+                }
+            }
+        }
+
         if (field == "itemId") {
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
@@ -51,7 +90,6 @@ const YarnPoItems = ({
         setPoItems(newBlend);
     };
 
-    console.log(headerOpen, "headerOpen",);
 
     useEffect(() => {
         // if (id) return;
@@ -63,6 +101,7 @@ const YarnPoItems = ({
         setPoItems((prev) => {
             const newArray = Array.from({ length: targetRows - prev.length }, () => ({
                 itemId: "",
+                barcode: "",
                 qty: "0.00",
                 tax: "0",
                 colorId: "",
@@ -83,6 +122,7 @@ const YarnPoItems = ({
     const addNewRow = () => {
         const newRow = {
             itemId: "",
+            barcode: "",
             qty: "",
             tax: "0",
             colorId: "",
@@ -194,6 +234,12 @@ const YarnPoItems = ({
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
                                 >
                                     UOM  <span className="text-red-500">*</span>
+                                </th>
+                                <th
+
+                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Barcode  <span className="text-red-500">*</span>
                                 </th>
                                 {allData?.data?.map(element => (
                                     // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
@@ -348,6 +394,17 @@ const YarnPoItems = ({
                                             )}
                                         </select>
                                     </td>
+                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+                                        <input
+                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "barcode") } }}
+                                            className='text-right rounded py-1 w-full px-1 table-data-input'
+                                            value={row.barcode}
+                                            onChange={(e) => handleInputChange(e.target.value, index, "barcode")}
+                                            onFocus={(e) => e.target.select()}
+                                            disabled={readOnly}
+                                        />
+                                    </td>
+
                                     {allData?.data?.map(element => (
                                         // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                         Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (

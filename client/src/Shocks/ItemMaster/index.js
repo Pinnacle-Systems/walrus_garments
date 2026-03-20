@@ -61,6 +61,8 @@ export default function Form() {
   const [subCategory, setSubCategory] = useState("");
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
+  const [sku, setSku] = useState("");
+  const [barcode, setBarcode] = useState("");
 
 
   const params = {
@@ -178,7 +180,6 @@ export default function Form() {
         setCode(data?.code ? data?.code : "")
         setItemType(data?.itemType ? data?.itemType : "")
         setHsnId(data?.hsnId ? data?.hsnId : "")
-
         setPriceMethod(data?.priceMethod ? data?.priceMethod : "")
         setSizeId(data?.sizeId ? data?.sizeId : "")
         setPurchasePrice(data?.purchasePrice ? data?.purchasePrice : "")
@@ -188,6 +189,9 @@ export default function Form() {
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
+        setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
+        setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
+        setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
 
         const initialState = {};
         itemControlData?.data?.forEach((i) => {
@@ -211,6 +215,7 @@ export default function Form() {
           setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
+          setSku(data?.ItemPriceList?.[0]?.sku ? data?.ItemPriceList?.[0]?.sku : "")
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
 
         } else {
@@ -260,9 +265,13 @@ export default function Form() {
     hsnId,
     active,
     priceMethod,
-    itemPriceList: priceMethod === "STANDARD" && !id ? [{ sizeId: null, colorId: null, offerPrice, salesPrice, minStockQty }] : itemPriceList,
+    itemPriceList: priceMethod === "STANDARD" && !id ?
+      [{ sizeId: null, colorId: null, offerPrice, salesPrice, minStockQty, sku: sku }] :
+      itemPriceList,
     sectionId,
-    fields: Object.values(fields)
+    fields: Object.values(fields),
+    mainCategory,
+    subCategory
 
   };
 
@@ -444,7 +453,7 @@ export default function Form() {
     {
       header: "Item Code",
       accessor: (item) => item.code,
-      className: "font-medium text-gray-900  w-[100px]  py-1  px-2",
+      className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
     },
     {
@@ -468,31 +477,7 @@ export default function Form() {
   };
 
 
-  function findName(arr, id) {
-    if (!arr) return ""
-    let data = arr?.find(item => parseInt(item.id) === parseInt(id))
-    return data ? data.name : ""
-  }
-  useEffect(() => {
 
-    const style = findName(styleData?.data, styleId);
-    const size = findName(sizeData?.data, sizeId);
-
-
-    console.log(style, size, "size");
-    // if (!count || !content || !yarnType) {
-    //   setYarnName(""); // fallback if incomplete
-    //   return;
-    // }
-
-    if (style || size) {
-      setName(`${style}  ${size}`)
-    } else {
-      setName(""); // optional, if you want to clear when any value is missing
-    }
-  }, [
-    styleId, , sizeId
-  ]);
 
   function handleInputChange(value, index, field) {
     setItemPriceList(orderDetails => {
@@ -531,76 +516,92 @@ export default function Form() {
 
   console.log(itemPriceList, "itemPriceList");
 
+  const generateBarcodeValue = (code, sizeName, item) => {
+    const colorCode = findFromList(item?.colorId, colorData?.data, "code") ?? "00"
+    const shortName = code
+      ?.replace(/\s+/g, "")   // remove spaces
+      ?.toUpperCase()
+      ?.slice(0, 4) || "";
+
+    return `WR${shortName}${sizeName?.toUpperCase() || ""}${colorCode?.toUpperCase() || ""}`;
+  };
+
   function setItems() {
     if (!sizeList?.length) return;
 
-    if (id) {
-      const existingCombinations = itemPriceList.map(item => `${item.sizeId}-${item.colorId}`);
+    const newCombinations = colorList?.length
+      ? sizeList.flatMap(size =>
+        colorList.map(color => ({
+          sizeId: size.value === "null" ? null : parseInt(size.value) || size.value,
+          sizeName: size.label,
+          colorId: color.value === "null" ? null : parseInt(color.value) || color.value,
+          colorName: color.label
+        })))
+      : sizeList.map(size => ({
+        sizeId: size.value === "null" ? null : parseInt(size.value) || size.value,
+        sizeName: size.label,
+        colorId: null,
+        colorName: null
+      }));
 
-      const newCombinations = colorList?.length
-        ? sizeList.flatMap(size =>
-          colorList.map(color => `${size.value}-${color.value}`))
-        : sizeList.map(size => `${size.value}-null`);
-      const pushNewCombinations = newCombinations.filter(comb => !existingCombinations.includes(comb)).map(comb => {
-        const [sizeId, colorId] = comb.split("-");
-        return {
-          sizeId: sizeId === "null" ? null : parseInt(sizeId),
-          sizeName: findFromList(sizeId, sizeData?.data, "name"),
-          colorId: colorId === "null" ? null : parseInt(colorId),
-          colorName: findFromList(colorId, colorData?.data, "name"),
-          purchasePrice: 0,
-          salesPrice: 0
-        }
-      }
-      );
-      if (pushNewCombinations.length) {
-        setItemPriceList(prev => [
-          ...prev,
-          ...pushNewCombinations.map(item => ({
-            ...item,
-            MinimumStockQty: [{ locationId: "", minStockQty: "" }]   // ✅ add new array here
-          }))
-        ]);
-      }
-      const removedCombinations = existingCombinations.filter(comb => !newCombinations.includes(comb));
+    // For comparison, use string keys
+    const newCombinationKeys = newCombinations.map(c => `${c.sizeId}-${c.colorId}`);
+
+    if (id) {
+      const existingCombinationsKeys = itemPriceList.map(item => `${item.sizeId}-${item.colorId}`);
+      const removedCombinations = existingCombinationsKeys.filter(key => !newCombinationKeys.includes(key));
 
       if (removedCombinations.length) {
         if (!window.confirm("Changing size/color will remove existing price details for the removed combinations. Do you want to proceed?")) {
           return;
         }
-        setItemPriceList(prev => prev.filter(item => !removedCombinations.includes(`${item.sizeId}-${item.colorId}`)));
       }
-    } else {
-      const itemPriceArray =
-        colorList?.length
-          ? sizeList.flatMap(size =>
-            colorList.map(color => ({
-              sizeId: size.value,
-              sizeName: size.label,
-              colorId: color.value,
-              colorName: color.label,
-              purchasePrice: 0,
-              salesPrice: 0
-            }))
-          )
-          : sizeList.map(size => ({
-            sizeId: size.value,
-            sizeName: size.label,
-            colorId: null,
-            colorName: null,
+
+      const updatedList = newCombinations.map(combo => {
+        const existing = itemPriceList.find(item => String(item.sizeId) === String(combo.sizeId) && String(item.colorId) === String(combo.colorId));
+
+        if (existing) {
+          // Update barcode but keep prices and other data
+          return {
+            ...existing,
+            barcode: generateBarcodeValue(code, existing.sizeName, existing)
+          };
+        } else {
+          // New combination
+          const newItem = {
+            sizeId: combo.sizeId,
+            sizeName: combo.sizeName,
+            colorId: combo.colorId,
+            colorName: combo.colorName,
             purchasePrice: 0,
-            salesPrice: 0
-          }));
-
-
-      setItemPriceList(itemPriceArray?.map?.(i => ({
-        ...i,
-        MinimumStockQty: [{ locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }]
-
-      })));
+            salesPrice: 0,
+            MinimumStockQty: [{ locationId: "", minStockQty: "" }]
+          };
+          return {
+            ...newItem,
+            barcode: generateBarcodeValue(code, combo.sizeName, newItem)
+          };
+        }
+      });
+      setItemPriceList(updatedList);
+    } else {
+      const itemPriceArray = newCombinations.map(combo => {
+        const newItem = {
+          sizeId: combo.sizeId,
+          sizeName: combo.sizeName,
+          colorId: combo.colorId,
+          colorName: combo.colorName,
+          purchasePrice: 0,
+          salesPrice: 0,
+          MinimumStockQty: [{ locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }]
+        };
+        return {
+          ...newItem,
+          barcode: generateBarcodeValue(code, combo.sizeName, newItem)
+        };
+      });
+      setItemPriceList(itemPriceArray);
     }
-
-
   }
 
   const handleRightSubGridClick = (event, rowIndex, type) => {
@@ -649,8 +650,6 @@ export default function Form() {
 
     setFields(initialState);
   }, [itemControlData, itemControlLoading, itemControlFetching]);
-
-  console.log(fields, "fields");
 
 
   return (
@@ -790,6 +789,7 @@ export default function Form() {
 
 
 
+
                     <div className="col-span-1">
                       <DropdownInput
                         name="HSN"
@@ -848,7 +848,7 @@ export default function Form() {
                       <DropdownInput
                         name="Sub Category"
                         options={dropDownListObject(
-                          id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
+                          id ? itemCategoryData?.data?.filter(item => item.id != mainCategory) : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
                           "name",
                           "id"
                         )}
@@ -900,7 +900,7 @@ export default function Form() {
                       <div>
 
                         <div className="grid grid-cols-12 gap-4 mt-2 p-2 ">
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <DropdownInput
                               name="Price Method"
                               options={priceMethodTypes}
@@ -922,7 +922,26 @@ export default function Form() {
 
                           {priceMethod == "STANDARD" && (
                             <>
-
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Barcode"
+                                  value={barcode}
+                                  setValue={setBarcode}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Sku"
+                                  value={sku}
+                                  setValue={setSku}
+                                  readOnly={readOnly}
+                                  disabled={childRecord.current > 0}
+                                  required={true}
+                                />
+                              </div>
                               <div className="col-span-2">
                                 <TextInputNew1
                                   name="Sales Price"
@@ -1055,7 +1074,18 @@ export default function Form() {
                                             Color Name
                                           </th>
                                         )}
+                                        <th
 
+                                          className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          Barcode
+                                        </th>
+                                        <th
+
+                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                        >
+                                          Sku
+                                        </th>
 
                                         <th
 
@@ -1098,8 +1128,35 @@ export default function Form() {
                                               {findFromList(item?.colorId, colorData?.data, "name")}
                                             </td>
                                           )}
+                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
 
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              value={item.barcode}
+                                              disabled={readOnly}
+                                              onChange={e => handleInputChange(e.target.value, index, "barcode")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "barcode")}
+                                            />
+                                          </td>
 
+                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              value={item.sku}
+                                              disabled={readOnly}
+                                              onChange={e => handleInputChange(e.target.value, index, "sku")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "sku")}
+                                            />
+                                          </td>
 
 
                                           <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
@@ -1237,7 +1294,8 @@ export default function Form() {
                                                 disabled={readOnly}
                                                 onChange={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
                                                 onBlur={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
-                                              />                                        </td>
+                                              />
+                                            </td>
 
 
                                           </tr>

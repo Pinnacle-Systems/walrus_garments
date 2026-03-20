@@ -1,11 +1,13 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/item.controller.js';
+import { get, getOne, getSearch, create, update, remove, getItemPriceList } from '../controllers/item.controller.js';
 
 
 router.post('/', create);
 
 router.get('/', get);
+
+router.get('/getItemPriceList', getItemPriceList);
 
 router.get('/:id', getOne);
 

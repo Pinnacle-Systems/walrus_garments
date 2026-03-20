@@ -5,7 +5,7 @@ async function get(req) {
     const { companyId, active, isGrey } = req.query
     const data = await prisma.color.findMany({
         where: {
-            active: active ? Boolean(active) : undefined,   
+            active: active ? Boolean(active) : undefined,
         }
     });
     return { statusCode: 0, data };
@@ -43,14 +43,15 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, active ,pantone,isGrey,companyId} = await body
+    const { name, active, pantone, isGrey, companyId } = await body
     const data = await prisma.color.create(
         {
             data: {
                 name, active,
-                pantone : pantone ? pantone : null,
-                isGrey : isGrey ? isGrey : false,
-                companyId: parseInt(companyId) ? parseInt(companyId) : undefined,   
+                pantone: pantone ? pantone : null,
+                isGrey: isGrey ? isGrey : false,
+                code: code ? String(code) : null,
+                companyId: parseInt(companyId) ? parseInt(companyId) : undefined,
             }
         }
     )
@@ -58,7 +59,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, active } = await body
+    const { name, active, code } = await body
     const dataFound = await prisma.color.findUnique({
         where: {
             id: parseInt(id)
@@ -71,7 +72,7 @@ async function update(id, body) {
         },
         data:
         {
-            name, active
+            name, active, code
         },
     })
     return { statusCode: 0, data };
