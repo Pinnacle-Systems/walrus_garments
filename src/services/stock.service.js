@@ -929,11 +929,7 @@ export async function getUnifiedStockByBarcode(req) {
         if (!records.length) {
             return { statusCode: 1, message: "No stock found for this barcode" };
         }
-
-        // ✅ SUM qty based on barcode
-        console.log(records, "records")
         const totalQty = records.reduce((sum, r) => sum + (r.qty || 0), 0);
-        console.log(records, "records")
 
 
         const first = records[0];

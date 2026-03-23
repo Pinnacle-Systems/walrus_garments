@@ -25,6 +25,7 @@ import {
   TermsandCondtionsApi,
   HsnMasterApi,
   AccessoryStockApi,
+  paymentApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -60,7 +61,8 @@ import {
   StockAdjustmentApi,
   priceTemplateApi,
   salesInvoiceApi,
-  salesDeliveryApi
+  salesDeliveryApi,
+  pointOfSalesApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -208,7 +210,9 @@ const commonReducers = {
   StockAdjustment: StockAdjustmentApi.reducer,
   priceTemplate: priceTemplateApi.reducer,
   salesInvoice: salesInvoiceApi.reducer,
-  salesDelivery: salesDeliveryApi.reducer
+  salesDelivery: salesDeliveryApi.reducer,
+  payment: paymentApi.reducer,
+  pointOfSales: pointOfSalesApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -332,7 +336,9 @@ salesReturnApi.middleware,
 StockAdjustmentApi.middleware,
 priceTemplateApi.middleware,
 salesInvoiceApi.middleware,
-salesDeliveryApi.middleware
+salesDeliveryApi.middleware,
+paymentApi.middleware,
+pointOfSalesApi.middleware
 ];
 
 

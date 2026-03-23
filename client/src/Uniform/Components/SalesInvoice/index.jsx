@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
+import { useSelector, useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
@@ -15,6 +17,7 @@ import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import SalesInvoiceForm from './SalesInvoiceForm';
 import SaleInvoiceReport from './SalesInvoiceReport';
 import { useDeleteSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
+import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 
 
 
@@ -42,6 +45,32 @@ const SalesInvoice = () => {
     const [partyId, setPartyId] = useState('')
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
+
+    const dispatch = useDispatch();
+    const openTabsState = useSelector((state) => state.openTabs);
+    const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES INVOICE");
+    console.log(currentTab, "currentTab")
+    const convertSaleOrderId = currentTab?.id;
+
+    const { data: saleOrderToConvertData, isFetching: isSaleOrderFetching } =
+        useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
+
+    useEffect(() => {
+        if (saleOrderToConvertData?.data && convertSaleOrderId) {
+            const orderData = saleOrderToConvertData.data;
+            setId("");
+            setCustomerId(orderData.customerId);
+            setInvoiceItems(orderData.SaleOrderItems || []);
+            setPayTermId(orderData.payTermId || "");
+            setLocationId(orderData.branchId || "");
+            setStoreId(orderData.storeId || "");
+            setReadOnly(false);
+            setShowManufacturer(true);
+
+            // Important: Clear the conversion flag so it doesn't re-trigger
+            dispatch(push({ name: "SALES INVOICE", id: null }));
+        }
+    }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
     const params = {
         branchId, userId, finYearId
@@ -116,6 +145,11 @@ const SalesInvoice = () => {
         }
 
     };
+
+    const handleConvertToDelivery = (dataObj) => {
+        dispatch(push({ name: "SALES DELIVERY", id: dataObj.id }));
+    };
+
     const onNew = () => {
         setId("");
         setReadOnly(false);
@@ -136,7 +170,7 @@ const SalesInvoice = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId}
 
 
 
@@ -162,6 +196,7 @@ const SalesInvoice = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToDelivery={handleConvertToDelivery}
                         />
                     </div>
 

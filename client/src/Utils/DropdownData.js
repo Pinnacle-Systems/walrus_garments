@@ -353,3 +353,19 @@ export const adjTypeData = [
     { show: "PLUS", value: "PLUS" },
     { show: "MINUS", value: "MINUS" },
 ];
+
+export const PaymentFlow = [
+    { show: "Receipt", value: "Receipt" },
+    { show: "Payout", value: "Payout" },
+]
+
+export const PaymentType = [
+    { show: "Invoice Payment", value: "INVOICE" },
+    { show: "Advance Payment", value: "ADVANCE" },
+]
+
+export const TransactionAgainst = [
+    { show: "Quotation", value: "QUOTATION" },
+    { show: "Sale Order", value: "SALEORDER" },
+    { show: "Sales Invoice", value: "SALESINVOICE" },
+]

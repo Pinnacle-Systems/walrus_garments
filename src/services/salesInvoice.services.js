@@ -55,6 +55,9 @@ async function get(req) {
                     name: true
                 }
             }
+        },
+        orderBy: {
+            id: "desc"
         }
     });
 

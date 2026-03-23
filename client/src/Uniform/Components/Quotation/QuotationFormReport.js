@@ -26,6 +26,7 @@ const QuotationPrintFormat = ({
   onDelete,
   onConvertToSaleOrder,
   onConvertToInvoice,
+  onMakePayment,
   rowActions = true,
 }) => {
 
@@ -400,24 +401,31 @@ const QuotationPrintFormat = ({
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="py-1">
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
-                                      onClick={() => {
-                                        onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
-                                        setActiveActionMenuId(null);
-                                      }}
-                                    >
-                                      <span className="font-semibold text-lg">📦</span> Convert to Sale Order
-                                    </button>
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2"
-                                      onClick={() => {
-                                        onConvertToInvoice && onConvertToInvoice(dataObj);
-                                        setActiveActionMenuId(null);
-                                      }}
-                                    >
-                                      <span className="font-semibold text-lg">📄</span> Convert to Invoice
-                                    </button>
+                                    {dataObj.paymentData?.length > 0 ? (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={dataObj?.Saleorder?.length > 0}
+                                        title={dataObj?.Saleorder?.length > 0 ? "Already Converted to Sale Order" : "Convert to Sale Order"}
+                                        onClick={() => {
+                                          if(dataObj?.Saleorder?.length > 0) return;
+                                          onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">📦</span> Convert to Sale Order
+                                      </button>
+                                    ) : (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          onMakePayment && onMakePayment(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">💳</span> Make Payment
+                                      </button>
+                                    )}
+
                                   </div>
                                 </div>
                               )}

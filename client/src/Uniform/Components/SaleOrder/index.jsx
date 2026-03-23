@@ -111,6 +111,10 @@ const SaleOrder = () => {
         setReadOnly(false);
     };
 
+    const handleConvertToInvoice = (dataObj) => {
+        dispatch(push({ name: "SALES INVOICE", id: dataObj.id }));
+    };
+
     const handleDelete = async (id, childRecord) => {
 
 
@@ -193,6 +197,7 @@ const SaleOrder = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToInvoice={handleConvertToInvoice}
                         />
                     </div>
 

@@ -27,10 +27,10 @@ export const openTabs = createSlice({
         state.tabs[existingIndex] = {
           ...state.tabs[existingIndex],
           active: true,
-          projectId: action.payload.projectId, projectForm: action.payload.projectForm
+          projectId: action.payload.projectId, projectForm: action.payload.projectForm, transactionType: action.payload.transactionType, id: action.payload.id
         };
       } else {
-        state.tabs.push({ id: action.payload.id, name: action.payload.name, active: true, projectId: action.payload.projectId, projectForm: action.payload.projectForm });
+        state.tabs.push({ id: action.payload.id, name: action.payload.name, active: true, projectId: action.payload.projectId, projectForm: action.payload.projectForm, transactionType: action.payload.transactionType });
       }
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
@@ -65,5 +65,5 @@ export const openTabs = createSlice({
 // Action creators are generated for each case reducer function
 export const { push, remove } = openTabs.actions;
 
-export default openTabs.reducer;  
+export default openTabs.reducer;
 

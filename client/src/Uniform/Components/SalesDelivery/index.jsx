@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
+import { useSelector, useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import moment from 'moment';
@@ -15,6 +17,7 @@ import SalesDeliveryReport from './SalesDeliveryReport';
 import { useDeleteSalesDeliveryMutation } from '../../../redux/uniformService/salesDeliveryServices';
 import SalesDeliveryForm from './SalesDeliveryForm';
 import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices';
+import { useGetSalesInvoiceByIdQuery } from '../../../redux/uniformService/salesInvoiceServices';
 
 
 
@@ -42,6 +45,31 @@ const SalesDelivery = () => {
     const [partyId, setPartyId] = useState('')
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
+
+    const dispatch = useDispatch();
+    const openTabsState = useSelector((state) => state.openTabs);
+    const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES DELIVERY");
+    const convertSalesInvoiceId = currentTab?.id;
+
+    const { data: salesInvoiceToConvertData, isFetching: isSalesInvoiceFetching } =
+        useGetSalesInvoiceByIdQuery(convertSalesInvoiceId, { skip: !convertSalesInvoiceId });
+
+    useEffect(() => {
+        if (salesInvoiceToConvertData?.data && convertSalesInvoiceId) {
+            const invoiceData = salesInvoiceToConvertData.data;
+            setId("");
+            setCustomerId(invoiceData.customerId);
+            setDeliveryItems(invoiceData.SalesInvoiceItems);
+            setPayTermId(invoiceData.payTermId || "");
+            setLocationId(invoiceData.branchId || "");
+            setStoreId(invoiceData.storeId || "");
+            setReadOnly(false);
+            setShowManufacturer(true);
+
+            // Important: Clear the conversion flag so it doesn't re-trigger
+            dispatch(push({ name: "SALES DELIVERY", id: null }));
+        }
+    }, [salesInvoiceToConvertData, convertSalesInvoiceId, dispatch]);
 
     const params = {
         branchId, userId, finYearId
@@ -137,7 +165,7 @@ const SalesDelivery = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} convertSalesInvoiceId={convertSalesInvoiceId}
 
 
 

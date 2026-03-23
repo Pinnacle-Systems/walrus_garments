@@ -56,6 +56,9 @@ async function get(req) {
             //         docId: true
             //     }
             // }
+        },
+        orderBy: {
+            id: "desc"
         }
     });
     return { statusCode: 0, data };
@@ -120,6 +123,10 @@ async function create(body) {
                             newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
                             newItem["qty"] = temp["qty"] ? temp["qty"].toString() : "0";
                             newItem["price"] = temp["price"] ? temp["price"].toString() : "0";
+
+                            newItem["discountType"] = temp["discountType"];
+                            newItem["discountValue"] = temp["discountValue"] || "";
+                            newItem["taxPercent"] = temp["taxPercent"];
 
                             return newItem
                         })
@@ -186,6 +193,10 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+
+                        discountType: item["discountType"] ? item["discountType"] : "",
+                        discountValue: item["discountValue"] ? item["discountValue"] : "",
+                        taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
                     }
                 });
             } else {
@@ -199,6 +210,10 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+
+                        discountType: item["discountType"] ? item["discountType"] : "",
+                        discountValue: item["discountValue"] ? item["discountValue"] : "",
+                        taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
                     }
                 });
             }

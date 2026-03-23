@@ -362,14 +362,14 @@ const PurchaseInwardForm = ({
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => hasPermission(() => saveData("new"), "save")}
+              onClick={() => hasPermission(() => saveData("new"), "create")}
 
               className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
               Save & New
             </button>
             <button
-              onClick={() => hasPermission(() => saveData("close"), "save")}
+              onClick={() => hasPermission(() => saveData("close"), "create")}
               className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close

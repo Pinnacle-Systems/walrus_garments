@@ -363,6 +363,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     "PO",
     "STOCK",
     "SALES",
+    "PAYMENTS"
   ];
 
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))

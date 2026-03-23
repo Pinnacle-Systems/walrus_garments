@@ -22,12 +22,13 @@ import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintForm
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import Modal from "../../../UiComponents/Modal";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 
 
 
 const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
-  yarnList, colorList, uomList,
+  yarnList, colorList, uomList, convertSaleOrderId
 
 
 }) => {
@@ -42,6 +43,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const [vehicleNo, setVehicleNo] = useState("")
   const [specialInstructions, setSpecialInstructions] = useState('')
   const [remarks, setRemarks] = useState("")
+  const [terms, setTerms] = useState("")
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -103,6 +105,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
+    if (convertSaleOrderId || !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -126,6 +129,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
+    setTerms(data?.terms ? data?.terms : "")
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -157,8 +161,8 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
-    customerId
-
+    customerId,
+    terms
   }
 
 
@@ -273,9 +277,26 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   }
 
   function getTotalQty() {
-    let qty = invoiceItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-    return parseInt(qty)
+    let qty = invoiceItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    return parseFloat(qty || 0).toFixed(3)
   }
+
+  const calculateTotals = () => {
+    return invoiceItems?.reduce((acc, curr) => {
+      const price = parseFloat(curr.price || 0);
+      const qty = parseFloat(curr.qty || 0);
+      const taxPercent = parseFloat(curr.tax || 0);
+      const subtotal = price * qty;
+      const taxAmount = (subtotal * taxPercent) / 100;
+
+      acc.subtotal += subtotal;
+      acc.taxAmount += taxAmount;
+      acc.netAmount += (subtotal + taxAmount);
+      return acc;
+    }, { subtotal: 0, taxAmount: 0, netAmount: 0 }) || { subtotal: 0, taxAmount: 0, netAmount: 0 };
+  }
+
+  const { subtotal, taxAmount, netAmount } = calculateTotals();
   function isSupplierOutside() {
     if (supplierDetails) {
       return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
@@ -399,23 +420,23 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
         </div>
         <fieldset>
-
-
-
           <SalesInvoiceItems
             invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
             handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
             itemList={itemList} sizeList={sizeList}
-
-
           />
-
-
-
-
-
-
         </fieldset>
+
+        <CommonFormFooter
+          remarks={remarks}
+          setRemarks={setRemarks}
+          terms={terms}
+          setTerms={setTerms}
+          totalQty={getTotalQty()}
+          subtotal={subtotal}
+          taxAmount={taxAmount}
+          netAmount={netAmount}
+        />
 
 
 
@@ -473,9 +494,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
 
 
-
     </>
-  );
+  )
 }
-
 export default SalesInvoiceForm;

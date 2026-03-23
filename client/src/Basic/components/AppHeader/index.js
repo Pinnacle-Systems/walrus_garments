@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import axios from "axios";
 import secureLocalStorage from "react-secure-storage";
@@ -12,6 +13,7 @@ import { latestExpireDateWithinNDays } from "../../../Utils/helper";
 import { GLOBE_ICON } from "../../../icons";
 import { BELL_ICON } from "../../../icons";
 import { useGetPageGroupQuery } from "../../../redux/services/PageGroupMasterServices";
+import { push } from "../../../redux/features/opentabs";
 import MultiLevelDropDown from "../../../UiComponents/MultiSelectDropDown";
 
 import Sangeetha from "../../../assets/Sangeethatex.png"
@@ -21,7 +23,7 @@ import Modal from "../../../UiComponents/Modal";
 
 import NotificationReport from "./NotificationReport";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faCashRegister } from "@fortawesome/free-solid-svg-icons";
 import { useGetProjectQuery } from "../../../redux/services/ProjectService";
 import Swal from "sweetalert2";
 
@@ -29,6 +31,7 @@ import Swal from "sweetalert2";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
+  const dispatch = useDispatch();
   const [hideNavBar, sethideNavBar] = useState(true);
 
   const branchId = secureLocalStorage.getItem(
@@ -204,17 +207,27 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
             >
               <MultiLevelDropDown heading={"Reports"} groups={reportGroups} pages={reports} />
             </div>
-
-
           </div>
 
-          <div className="notification-icon text-xs mr-20 cursor-pointer" onClick={() => {
-            setFormReport(true)
-          }}>
-            <FontAwesomeIcon icon={faBell} size="2x" className="text-blue-400" />
-            {projectData?.data?.length > 0 && (
-              <span className="notification-badge text-xs">{projectData?.data?.length}</span>
-            )}
+          <div className="flex items-center ml-auto">
+            <div 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition shadow-lg shadow-indigo-100 mr-4"
+              onClick={() => {
+                dispatch(push({ name: "POINT OF SALES", active: true }));
+              }}
+            >
+              <FontAwesomeIcon icon={faCashRegister} />
+              <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">POS</span>
+            </div>
+
+            <div className="notification-icon text-xs mr-20 cursor-pointer" onClick={() => {
+              setFormReport(true)
+            }}>
+              <FontAwesomeIcon icon={faBell} size="2x" className="text-blue-400" />
+              {projectData?.data?.length > 0 && (
+                <span className="notification-badge text-xs">{projectData?.data?.length}</span>
+              )}
+            </div>
           </div>
 
 

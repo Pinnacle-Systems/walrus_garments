@@ -15,6 +15,7 @@ async function get(req) {
 
     let data = await prisma.priceTemplate.findMany({
         include: {
+            PriceTemplateDetails: true,
             Item: {
                 select: {
                     name: true
@@ -78,7 +79,9 @@ async function create(body) {
                         data: priceTemplate?.map((temp) => {
                             let newItem = {}
                             newItem["itemId"] = itemId ? parseInt(itemId) : null;
-                            newItem["qty"] = temp["qty"] ? String(temp["qty"]) : null;
+                            newItem["minQty"] = temp["minQty"] ? String(temp["minQty"]) : null;
+                            newItem["maxQty"] = temp["maxQty"] ? String(temp["maxQty"]) : null;
+
                             newItem["price"] = temp["price"] ? parseFloat(temp["price"]) : null;
 
 
@@ -94,18 +97,18 @@ async function create(body) {
 }
 
 
-async function updateItemPriceList(tx, itemPriceList, item) {
-    let removedItems = item?.ItemPriceList?.filter(oldItem => {
-        let result = itemPriceList.find(newItem => newItem.id === oldItem.id)
+async function updateItemPriceList(tx, priceTemplate, item, itemId) {
+    let removedItems = item?.PriceTemplateDetails?.filter(oldItem => {
+        let result = priceTemplate.find(newItem => newItem.id === oldItem.id)
         if (result) return false
         return true
     })
 
-    console.log(itemPriceList, "item");
+    console.log(priceTemplate, "priceTemplate");
 
     let removedItemsId = removedItems.map(item => parseInt(item.id))
 
-    await tx.ItemPriceList.deleteMany({
+    await tx.PriceTemplateDetails.deleteMany({
         where: {
             id: {
                 in: removedItemsId
@@ -113,33 +116,29 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         }
     })
 
-    const promises = itemPriceList.map(async (priceItem) => {
+    const promises = priceTemplate.map(async (priceItem) => {
         if (priceItem?.id) {
-            return await tx.ItemPriceList.update({
+            return await tx.PriceTemplateDetails.update({
                 where: {
                     id: parseInt(priceItem.id)
                 },
 
                 data: {
                     itemId: priceItem?.itemId ? parseInt(priceItem?.itemId) : undefined,
-                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
-                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
-                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
+                    minQty: priceItem?.minQty ? String(priceItem?.minQty) : undefined,
+                    maxQty: priceItem?.maxQty ? String(priceItem?.maxQty) : undefined,
+                    price: priceItem?.price ? parseFloat(priceItem?.price) : undefined,
 
 
                 }
             })
         } else {
-            return await tx.ItemPriceList.create({
+            return await tx.PriceTemplateDetails.create({
                 data: {
-                    itemId: parseInt(item?.id),
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
-                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
-                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
-                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
+                    itemId: itemId ? parseInt(itemId) : undefined,
+                    minQty: priceItem?.minQty ? String(priceItem?.minQty) : undefined,
+                    maxQty: priceItem?.maxQty ? String(priceItem?.maxQty) : undefined,
+                    price: priceItem?.price ? parseFloat(priceItem?.price) : undefined,
                 }
             })
         }
@@ -149,7 +148,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields } = body
+    const { itemId, priceTemplate } = body
 
 
 
@@ -171,30 +170,16 @@ async function update(id, body) {
 
     await prisma.$transaction(async (tx) => {
 
-        data = await tx.item.update({
+        data = await tx.priceTemplate.update({
             where: {
                 id: parseInt(id)
             },
 
             data: {
-                styleId: styleId ? parseInt(styleId) : undefined,
-                sizeId: sizeId ? parseInt(sizeId) : undefined,
-                name: name ? name : undefined,
-                hsnId: hsnId ? parseInt(hsnId) : undefined,
-                code: code ? code : undefined,
-                sectionId: sectionId ? parseInt(sectionId) : undefined,
-                priceMethod: priceMethod ? priceMethod : undefined,
-                active: active ? active : undefined,
-
-                field1: fields?.[0] ?? "",
-                field2: fields?.[1] ?? "",
-                field3: fields?.[2] ?? "",
-                field4: fields?.[3] ?? "",
-                field5: fields?.[4] ?? "",
-
+                itemId: itemId ? parseInt(itemId) : undefined,
             },
             include: {
-                ItemPriceList: true
+                PriceTemplateDetails: true
             }
 
 
@@ -203,14 +188,14 @@ async function update(id, body) {
 
         })
 
-        await updateItemPriceList(tx, itemPriceList, data)
+        await updateItemPriceList(tx, priceTemplate, data, itemId)
 
     })
     return { statusCode: 0, data: data };
 }
 
 async function remove(id) {
-    const data = await prisma.saleOrder.delete({
+    const data = await prisma.priceTemplate.delete({
         where: {
             id: parseInt(id)
         },

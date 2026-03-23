@@ -19,7 +19,7 @@ import {
   salesBill,
   purchaseReturn,
   salesReturn,
-  uom, quotes, lead,
+  uom, lead,
   project, invoice, projectPayment, orderImport, sample,
   color, fabricType, yarnBlend, yarn, yarnType, fabric, panel, processMaster, size, style, item, itemType, order,
   cuttingOrder, styleType, classMaster, po, taxTemplate, taxTerm, dia, gsm, accessory, accessoryItem, accessoryGroup, payTerm, looplength,
@@ -66,6 +66,7 @@ import {
   stockAdjustment,
   priceTemplate,
   salesInvoice,
+  payments,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -142,7 +143,6 @@ app.use("/salesBill", salesBill);
 app.use("/purchaseReturn", purchaseReturn)
 app.use("/salesReturn", salesReturn)
 app.use('/uom', uom),
-  app.use('/quotes', quotes),
   app.use('/lead', lead)
 app.use('/project', project),
   app.use('/invoice', invoice),
@@ -233,8 +233,11 @@ app.use("/saleOrder", saleOrder);
 app.use("/itemCategory", itemCategory);
 app.use("/salesDelivery", salesDelivery)
 app.use("/salesInvoice", salesInvoice)
+app.use("/salesReturn", salesReturn)
 app.use("/stockAdjustment", stockAdjustment);
 app.use("/priceTemplate", priceTemplate);
+app.use('/payment', payments)
+// app.use("/pointOfSales", pointOfSales)
 
 
 

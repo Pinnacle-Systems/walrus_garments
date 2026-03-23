@@ -40,8 +40,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-
-    const { companyId, active } = req.query
+    const { companyId, active } = req.query;
 
     let data = await prisma.quotation.findMany({
         where: {
@@ -49,20 +48,37 @@ async function get(req) {
         },
         include: {
             Party: {
-                select: {
-                    name: true
-                }
+                select: { name: true },
             },
             Saleorder: {
                 select: {
                     id: true,
-                    docId: true
-                }
-            }
+                    docId: true,
+                },
+            },
+        },
+        orderBy: {
+            id: "desc"
         }
     });
 
-    return { statusCode: 0, data };
+    const result = await Promise.all(
+        data.map(async (item) => {
+            const paymentData = await prisma.payment.findMany({
+                where: {
+                    transactionType: "QUOTATION",
+                    transactionId: item.id,
+                },
+            });
+
+            return {
+                ...item,
+                paymentData, // ✅ attach per item
+            };
+        })
+    );
+
+    return { statusCode: 0, data: result };
 }
 
 
@@ -100,7 +116,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId } = await body
+    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId, termId, remarks, termsAndCondition } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -116,18 +132,26 @@ async function create(body) {
                 discountValue: discountValue ? discountValue : "",
                 branchId: branchId ? parseInt(branchId) : undefined,
                 docId: docId,
+                termId: termId ? parseInt(termId) : undefined,
+                remarks: remarks ? remarks : undefined,
+                termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                 QuotationItems: {
                     createMany: quoteItems?.length > 0 ? {
                         data: quoteItems?.filter(temp => temp.itemId).map((temp) => {
                             let newItem = {}
-                            newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
-                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
-                            newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
-                            newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
-                            newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? temp["qty"].toString() : null;
-                            newItem["price"] = temp["price"] ? temp["price"].toString() : null;
+                            newItem["itemId"] = parseInt(temp["itemId"]);
+                            newItem["sizeId"] = parseInt(temp["sizeId"]);
+                            newItem["colorId"] = parseInt(temp["colorId"]);
+                            newItem["hsnId"] = parseInt(temp["hsnId"]);
+                            newItem["uomId"] = parseInt(temp["uomId"]);
+                            newItem["qty"] = String(temp["qty"]);
+                            newItem["price"] = String(temp["price"]);
 
+                            newItem["discountType"] = temp["discountType"];
+                            newItem["discountValue"] = String(temp["discountValue"] || "");
+                            newItem["taxPercent"] = String(temp["taxPercent"]);
+                            newItem["priceType"] = String(temp["priceType"]);
+                            // newItem["taxMethod"] = String(temp["taxMethod"]);
 
                             return newItem
                         })
@@ -153,11 +177,15 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
                 itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
+                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 qty: item["qty"] ? item["qty"] : 0,
                 price: item["price"] ? item["price"] : 0,
 
+                discountType: item["discountType"] ? item["discountType"] : "",
+                discountValue: item["discountValue"] ? item["discountValue"] : "",
+                taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
+                priceType: item["priceType"] ? item["priceType"] : "",
 
 
 
@@ -179,9 +207,15 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
-                qty: item["qty"] ? item["qty"] : 0,
-                price: item["price"] ? item["price"] : 0,
+                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : undefined,
+                qty: item["qty"] ? String(item["qty"]) : "",
+                price: item["price"] ? String(item["price"]) : "",
+
+                discountType: item["discountType"] ? String(item["discountType"]) : "",
+                discountValue: item["discountValue"] ? String(item["discountValue"]) : "",
+                taxPercent: item["taxPercent"] ? String(item["taxPercent"]) : "",
+                priceType: item["priceType"] ? item["priceType"] : "",
+
             }
         })
 

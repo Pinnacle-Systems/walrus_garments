@@ -401,7 +401,7 @@ export const inwardQtyCalculation = (poQty, cancelQty, inwardQty, returnQty) => 
 }
 
 export const billItemsFiltration = (inwardQty, returnQty) => {
-  console.log({inwardQty,returnQty},"billItemsFiltration")
+  console.log({ inwardQty, returnQty }, "billItemsFiltration")
   return substract(inwardQty, returnQty) > 0
 }
 
@@ -581,4 +581,27 @@ export async function classListData(data) {
     if (numA !== numB) return numA - numB;
     return suffixA.localeCompare(suffixB);
   });
+}
+
+
+
+export function attachCurrentTime(dateOnlyStr) {
+  console.log(dateOnlyStr, "dateOnlyStr");
+
+  // dateOnlyStr format: "YYYY-MM-DD"
+  const [year, month, day] = dateOnlyStr.split('-').map(Number);
+
+  const now = new Date();
+
+  const finalDate = new Date(
+    year,
+    month - 1,
+    day,
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds()
+  );
+
+  return finalDate; // ✅ Return Date object for Prisma
 }

@@ -58,4 +58,7 @@ export { default as SaleOrder } from "./SaleOrder";
 export { default as StockAdjustment } from "./StockAdjustment";
 export { default as SalesInvoice } from "./SalesInvoice";
 export { default as SalesDelivery } from "./SalesDelivery";
+export { default as PointOfSale } from "./PointOfSale";
+export { default as SalesReturn } from "./SalesReturn";
+export { default as Payment } from "./PaymentDetail";
 

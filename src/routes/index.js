@@ -34,7 +34,6 @@ export { default as stock } from "./stock.route.js"
 export { default as salesBill } from "./salesBill.route.js"
 export { default as salesReturn } from "./salesReturn.route.js"
 export { default as uom } from "./uom.route.js"
-export { default as quotes } from "./quotes.route.js"
 export { default as lead } from "./lead.route.js"
 export { default as project } from "./project.route.js"
 export { default as invoice } from "./invoice.route.js"
@@ -123,6 +122,7 @@ export { default as salesDelivery } from "./salesDelivery.route.js"
 export { default as salesInvoice } from "./salesInvoice.route.js"
 export { default as stockAdjustment } from "./stockAdjustment.route.js"
 export { default as priceTemplate } from "./priceTemplate.route.js"
+export { default as payments } from "./payments.route.js"
 
 
 

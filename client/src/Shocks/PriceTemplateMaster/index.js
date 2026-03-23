@@ -178,7 +178,7 @@ export default function Form() {
   const data = {
     id,
     itemId,
-    priceTemplate: priceTemplate?.filter(i => i.qty && i.price),
+    priceTemplate: priceTemplate?.filter(i => i.minQty && i.maxQty && i.price),
     branchId: params.branchId,
     companyId: params.companyId,
 
@@ -332,7 +332,12 @@ export default function Form() {
     setReadOnly(false);
     setSizeList([]);
     setColorList([]);
-    setItemPriceList([]);
+    setItemId("")
+    setPriceTemlate([{
+      minQty: "",
+      maxQty: "",
+      price: ""
+    }])
   };
 
   const ACTIVE = (
@@ -355,7 +360,7 @@ export default function Form() {
     },
     {
       header: "Item Name",
-      accessor: (item) => item.Item.name,
+      accessor: (item) => item?.Item?.name,
       className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
       search: "Item Name",
     },
@@ -380,15 +385,81 @@ export default function Form() {
     setReadOnly(false);
   };
 
-
-
   function handleInputChange(value, index, field) {
     setPriceTemlate(orderDetails => {
       const newBlend = structuredClone(orderDetails);
-      newBlend[index][field] = value;
-      return newBlend
+      if (typeof value === "string" && value.includes("& Above")) {
+        newBlend[index][field] = value;
+      } else {
+        newBlend[index][field] = value === "" ? "" : Number(value);
+      }
+      return newBlend;
+    });
+  }
+  function handleBlurValidation(index, field) {
+    setPriceTemlate(orderDetails => {
+      const newBlend = structuredClone(orderDetails);
+
+      // Enforce continuity through all rows
+      for (let i = 0; i < newBlend.length; i++) {
+        const row = newBlend[i];
+
+        // 1. Maintain continuity with PREVIOUS row
+        if (i > 0) {
+          const prev = newBlend[i - 1];
+          const isPrevInfinite = typeof prev.maxQty === "string" && prev.maxQty.includes("& Above");
+          
+          if (prev.maxQty !== "" && !isPrevInfinite) {
+            const expectedMin = Number(prev.maxQty) + 1;
+            // Force this row to start exactly after previous row ends
+            if (row.minQty !== expectedMin) {
+              row.minQty = expectedMin;
+            }
+          }
+        }
+
+        const isInfinite = typeof row.maxQty === "string" && row.maxQty.includes("& Above");
+        if (row.minQty !== "" && row.maxQty !== "" && !isInfinite && Number(row.maxQty) <= Number(row.minQty)) {
+          if (field === "maxQty" && i === index) {
+          }
+          row.maxQty = "";
+        }
+
+        // 3. Validate Price
+        if (row.price !== "" && Number(row.price) <= 0) {
+          if (field === "price" && i === index) {
+            alert(`Price must be greater than 0 at row ${i + 1}`);
+          }
+          row.price = "";
+        }
+      }
+
+      return newBlend;
+    });
+  }
+
+  const handleMinQtyFocus = (index) => {
+    if (index === 0) {
+      if (priceTemplate[index].minQty === "") {
+        handleInputChange(1, index, "minQty");
+      }
+      return;
     }
-    );
+    const prev = priceTemplate[index - 1];
+    if (prev && prev.maxQty !== "" && prev.price !== "") {
+      const isPrevInfinite = typeof prev.maxQty === "string" && prev.maxQty.includes("& Above");
+      if (isPrevInfinite) return;
+
+      const expectedMin = Number(prev.maxQty) + 1;
+      if (priceTemplate[index].minQty === "" || priceTemplate[index].minQty !== expectedMin) {
+        handleInputChange(expectedMin, index, "minQty");
+      }
+    }
+  };
+
+  const isRowComplete = (idx) => {
+    const row = priceTemplate[idx];
+    return row && row.minQty !== "" && row.maxQty !== "" && row.price !== "";
   };
 
 
@@ -396,15 +467,16 @@ export default function Form() {
 
 
 
-
   useEffect(() => {
-
+    const hasInfinity = priceTemplate?.some(item => typeof item.maxQty === "string" && item.maxQty.includes("& Above"));
+    if (hasInfinity) return;
 
     if (priceTemplate?.length >= 7) return;
 
     setPriceTemlate((prev) => {
       const newArray = Array.from({ length: 7 - prev.length }, () => ({
-        qty: "",
+        minQty: "",
+        maxQty: "",
         price: ""
       }));
       return [...prev, ...newArray];
@@ -427,8 +499,17 @@ export default function Form() {
     setContextMenu(null);
   };
   const handleDeleteRow = (id) => {
-    setItemPriceList((prevItemPriceList) => {
-      return prevItemPriceList?.filter((_, index) => index !== id);
+    setPriceTemlate((prev) => {
+      return prev?.filter((_, index) => index !== id);
+    });
+  };
+
+  const setAsInfinite = (rowIndex) => {
+    setPriceTemlate(prev => {
+      const newItems = structuredClone(prev);
+      newItems[rowIndex].maxQty = `${newItems[rowIndex].minQty} & Above`;
+      // Truncate any following rows since infinity is the cap
+      return newItems.slice(0, rowIndex + 1);
     });
   };
 
@@ -658,7 +739,13 @@ export default function Form() {
 
                                       className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
                                     >
-                                      Qty
+                                      Min Qty
+                                    </th>
+                                    <th
+
+                                      className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
+                                    >
+                                      Max Qty
                                     </th>
                                     <th
 
@@ -687,15 +774,14 @@ export default function Form() {
 
                                           min="0"
                                           rows={1}
-                                          onFocus={e => e.target.select()}
-                                          className="text-right rounded w-full px-1 py-1 text-xs "
-                                          value={item.qty}
-                                          disabled={readOnly}
-                                          onChange={e => handleInputChange(e.target.value, index, "qty")}
-                                          onBlur={e => handleInputChange(e.target.value, index, "qty")}
+                                          onFocus={e => { e.target.select(); handleMinQtyFocus(index); }}
+                                          className={`text-right rounded w-full px-1 py-1 text-xs ${index > 0 && !isRowComplete(index - 1) ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                                          value={item.minQty}
+                                          disabled={readOnly || (index > 0 && !isRowComplete(index - 1))}
+                                          onChange={e => handleInputChange(e.target.value, index, "minQty")}
+                                          onBlur={() => handleBlurValidation(index, "minQty")}
                                         />
                                       </td>
-
 
                                       <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
                                         <input
@@ -704,11 +790,25 @@ export default function Form() {
                                           min="0"
                                           rows={1}
                                           onFocus={e => e.target.select()}
-                                          className="text-right rounded w-full px-1 py-1 text-xs "
+                                          className={`text-right rounded w-full px-1 py-1 text-xs ${!item.minQty ? "bg-gray-100 cursor-not-allowed" : ""} ${item.maxQty === 999999 ? "font-bold text-indigo-600" : ""}`}
+                                          value={item.maxQty === 999999 ? "∞ And Above" : item.maxQty}
+                                          disabled={readOnly || !item.minQty || item.maxQty === 999999}
+                                          onChange={e => handleInputChange(e.target.value, index, "maxQty")}
+                                          onBlur={() => handleBlurValidation(index, "maxQty")}
+                                        />
+                                      </td>
+                                      <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                        <input
+                                          type="text"
+
+                                          min="0"
+                                          rows={1}
+                                          onFocus={e => e.target.select()}
+                                          className={`text-right rounded w-full px-1 py-1 text-xs ${!item.maxQty ? "bg-gray-100 cursor-not-allowed" : ""}`}
                                           value={item.price}
-                                          disabled={readOnly}
+                                          disabled={readOnly || !item.maxQty}
                                           onChange={e => handleInputChange(e.target.value, index, "price")}
-                                          onBlur={e => handleInputChange(e.target.value, index, "price")}
+                                          onBlur={() => handleBlurValidation(index, "price")}
                                         />
                                       </td>
                                     </tr>
@@ -740,7 +840,7 @@ export default function Form() {
                               style={{
                                 position: "absolute",
                                 top: `${contextMenu.mouseY - 40}px`,
-                                left: `${contextMenu.mouseX - 80}px`,
+                                left: `${contextMenu.mouseX - 480}px`,
 
                                 boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                 padding: "8px",
@@ -752,7 +852,16 @@ export default function Form() {
                             >
                               <div className="flex flex-col gap-1">
                                 <button
-                                  className=" text-black text-[12px] text-left rounded px-1"
+                                  className=" text-black text-[12px] text-left rounded px-1 hover:bg-gray-200"
+                                  onClick={() => {
+                                    setAsInfinite(contextMenu.rowId);
+                                    handleCloseContextMenu();
+                                  }}
+                                >
+                                  Set as Final (∞)
+                                </button>
+                                <button
+                                  className=" text-black text-[12px] text-left rounded px-1 hover:bg-gray-200"
                                   onClick={() => {
                                     handleDeleteRow(contextMenu.rowId);
                                     handleCloseContextMenu();

@@ -22,6 +22,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 
 
 
@@ -45,6 +46,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
+  const [terms, setTerms] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -103,7 +105,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
     console.log(convertQuotationId, "convertQuotationId")
-    if (convertQuotationId && !id) return
+    if (convertQuotationId || !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -115,7 +117,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
-    setCustomerId(data?.customerId ? data?.customerId : "");
+    setRemarks(data?.remarks || "");
+    setTerms(data?.terms || "");
 
   }, [id]);
 
@@ -146,8 +149,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    convertQuotationId
-
+    convertQuotationId,
+    terms
   }
 
   console.log(data, "data")
@@ -273,9 +276,26 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   }
 
   function getTotalQty() {
-    let qty = quoteItems?.reduce((acc, curr) => { return acc + parseInt(curr?.qty ? curr?.qty : 0) }, 0)
-    return parseInt(qty)
+    let qty = saleOrderItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    return parseFloat(qty || 0).toFixed(3)
   }
+
+  const calculateTotals = () => {
+    return saleOrderItems?.reduce((acc, curr) => {
+      const price = parseFloat(curr.price || 0);
+      const qty = parseFloat(curr.qty || 0);
+      const taxPercent = parseFloat(curr.tax || 0);
+      const subtotal = price * qty;
+      const taxAmount = (subtotal * taxPercent) / 100;
+
+      acc.subtotal += subtotal;
+      acc.taxAmount += taxAmount;
+      acc.netAmount += (subtotal + taxAmount);
+      return acc;
+    }, { subtotal: 0, taxAmount: 0, netAmount: 0 }) || { subtotal: 0, taxAmount: 0, netAmount: 0 };
+  }
+
+  const { subtotal, taxAmount, netAmount } = calculateTotals();
   function isSupplierOutside() {
     if (supplierDetails) {
       return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
@@ -399,23 +419,23 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
         </div>
         <fieldset>
-
-
-
           <SaleOrderItems
             saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
             handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
             itemList={itemList} sizeList={sizeList}
-
-
           />
-
-
-
-
-
-
         </fieldset>
+
+        <CommonFormFooter
+          remarks={remarks}
+          setRemarks={setRemarks}
+          terms={terms}
+          setTerms={setTerms}
+          totalQty={getTotalQty()}
+          subtotal={subtotal}
+          taxAmount={taxAmount}
+          netAmount={netAmount}
+        />
 
 
 
@@ -470,9 +490,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             </button>
           </div>
         </div>
+
       </div>
-
-
 
 
     </>

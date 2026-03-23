@@ -18,6 +18,7 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeleteQuotationMasterMutation, useDeleteQuotationMutation } from '../../../redux/uniformService/quotationServices';
+import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 
 
 
@@ -44,6 +45,7 @@ const Quotation = () => {
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const [quoteItems, setQuoteItems] = useState([]);
     const [partyId, setPartyId] = useState('')
+    const [term, setTerm] = useState("")
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const dispatch = useDispatch();
@@ -70,6 +72,9 @@ const Quotation = () => {
     const { data: uomList } =
         useGetUomQuery({ params });
 
+    const { data: termsData } =
+        useGetTermsandCondtionsQuery({ params: { ...params } });
+
 
 
     const handleView = (id) => {
@@ -94,6 +99,10 @@ const Quotation = () => {
         toast.info(`Converting Quotation ${dataObj.docId} to Invoice...`);
         // Logic to redirect or open Invoice form with pre-filled data
         console.log("Convert to Invoice:", dataObj);
+    };
+
+    const handleMakePayment = (dataObj) => {
+        dispatch(push({ name: "PAYMENTS", transactionType: "QUOTATION", id: dataObj.id }));
     };
 
     const handleDelete = async (id) => {
@@ -143,6 +152,8 @@ const Quotation = () => {
         setReadOnly(false);
         setCustomerId("")
         setPartyId('')
+        setDocId("New")
+        setQuoteItems([])
     }
 
     return (
@@ -158,7 +169,8 @@ const Quotation = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     quoteItems={quoteItems} setQuoteItems={setQuoteItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} termsData={termsData}
+                    term={term} setTerm={setTerm}
 
 
 
@@ -187,6 +199,7 @@ const Quotation = () => {
                             onDelete={handleDelete}
                             onConvertToSaleOrder={handleConvertToSaleOrder}
                             onConvertToInvoice={handleConvertToInvoice}
+                            onMakePayment={handleMakePayment}
                         />
                     </div>
                 </div>

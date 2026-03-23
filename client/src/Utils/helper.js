@@ -2,6 +2,7 @@ import moment from "moment";
 import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../Constants";
 import { useEffect, useRef } from "react";
+import { toWords } from "number-to-words";
 
 
 export function getImageUrlPath(fileName) {
@@ -498,4 +499,30 @@ export function capitalizeFirstLetter(string) {
     .split(" ")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+
+
+export function formatAmountIN(value = 0) {
+  const amount = Number(value) || 0;
+
+  return amount.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+export function amountInWords(amount) {
+  const rupees = Math.floor(amount);
+  const paise = Math.round((amount - rupees) * 100);
+
+  console.log(amount, "amount", rupees, "rupees", "paise", paise)
+
+  let words = `Rupees ${toWords(rupees)}`;
+
+  if (paise > 0) {
+    words += ` and Paise ${toWords(paise)}`;
+  }
+
+  return words + " Only";
 }

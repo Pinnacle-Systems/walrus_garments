@@ -518,6 +518,54 @@ export const LongTextInput = ({
   );
 };
 
+export const TextAreaNew = ({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  disabled = false,
+  rows = 2,
+  cols = 30,
+  tabIndex = null,
+  label = null,
+  inputClass = "",
+  onBlur = null,
+}) => {
+  return (
+    <div className=" w-full">
+      {name && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
+        </label>
+      )}
+
+      <textarea
+        id={name}
+        name={name}
+        rows={rows}
+        cols={cols}
+        // tabIndex={tabIndex ?? undefined}
+        disabled={disabled}
+        required={required}
+        readOnly={readOnly}
+        value={value}
+        onChange={(e) => handleOnChange(e, setValue)}
+        onBlur={onBlur}
+        placeholder={name}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm  resize-y
+
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${inputClass}`}
+      ></textarea>
+    </div>
+  );
+};
+
 export const DisabledInput = ({
   name,
   type,
