@@ -70,7 +70,7 @@ const SaleOrder = () => {
             setShowManufacturer(true);
 
             // Important: Clear the conversion flag so it doesn't re-trigger
-            dispatch(push({ name: "SALE ORDER", convertQuotationId: null }));
+            dispatch(push({ name: "SALE ORDER", id: null }));
         }
     }, [quotationToConvertData, convertQuotationId, dispatch]);
 

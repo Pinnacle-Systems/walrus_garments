@@ -72,10 +72,10 @@ import { MachineMaster } from "..";
 const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDropdownOpen, heading, setIsOpen }) => {
   const dispatch = useDispatch();
 
- 
+  console.log(groups, "groups")
 
 
-  
+
 
   const [search, setSearch] = useState("");
 
@@ -227,7 +227,7 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
               <li key={group?.id} className="space-y-1">
                 {search.length === 0 && (
                   <h3 className="text-sm font-semibold text-gray-700 pl-2 uppercase tracking-wide">
-                    {(group?.name + " Module").replace(/\b[a-z]/g, char => char.toUpperCase())}
+                    {`${`${group?.name} ${group?.type ? group?.type : ""}`.replace(/\b[a-z]/g, char => char.toUpperCase())}`}
                   </h3>
                 )}
 

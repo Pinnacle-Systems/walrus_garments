@@ -48,8 +48,19 @@ async function get(req) {
         include: {
             Party: {
                 select: {
-                    name: true
-                }
+                    name: true,
+                    // branchId: true,
+                    BranchType: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    City: {
+                        select: {
+                            name: true
+                        }
+                    }
+                },
             },
             // Quotation: {
             //     select: {
@@ -97,7 +108,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, saleOrderItems, finYearId, branchId, convertQuotationId } = await body
+    const { customerId, discountType, discountValue, saleOrderItems, finYearId, branchId, quoteId } = await body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -110,7 +121,7 @@ async function create(body) {
                 discountType: discountType || "",
                 discountValue: discountValue || "",
                 branchId: branchId ? parseInt(branchId) : undefined,
-                quotationId: convertQuotationId ? parseInt(convertQuotationId) : undefined,
+                quotationId: quoteId ? parseInt(quoteId) : undefined,
                 docId: docId,
                 SaleOrderItems: {
                     createMany: saleOrderItems?.length > 0 ? {

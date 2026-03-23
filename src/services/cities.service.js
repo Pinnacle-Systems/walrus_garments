@@ -23,8 +23,15 @@ async function get(req) {
                         }
                     }
                 }
+            },
+            _count: {
+                select: {
+                    doctorLocalCity: true,
+                    Party: true
+                }
             }
-        }
+        },
+
     });
     return { statusCode: 0, data };
 }

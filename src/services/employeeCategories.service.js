@@ -2,11 +2,18 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
-    const { branchId, active} = req.query
+    const { branchId, active } = req.query
     const data = await prisma.employeeCategory.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
             branchId: branchId ? parseInt(branchId) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    Employee: true
+                }
+            }
         }
     });
     return { statusCode: 0, data };
@@ -21,7 +28,7 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("Employee Category");
-    return { statusCode: 0, data: {...data, ...{childRecord}} };
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {

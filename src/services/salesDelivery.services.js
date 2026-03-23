@@ -52,8 +52,19 @@ async function get(req) {
         include: {
             Party: {
                 select: {
-                    name: true
-                }
+                    name: true,
+                    // branchId: true,
+                    BranchType: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    City: {
+                        select: {
+                            name: true
+                        }
+                    }
+                },
             }
         }
     });

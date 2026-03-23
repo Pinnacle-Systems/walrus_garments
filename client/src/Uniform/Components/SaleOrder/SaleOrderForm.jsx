@@ -149,7 +149,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    convertQuotationId,
+    quoteId: convertQuotationId,
     terms
   }
 

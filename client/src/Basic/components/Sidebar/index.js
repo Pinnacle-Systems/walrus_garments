@@ -348,12 +348,12 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
   }
 
   const masters = allowedPages.filter((page) => page.type === "Masters")
-  const mastersGroup = [...new Set(masters.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
+  const mastersGroup = [...new Set(masters.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data), type: "Master" } })
   const transactions = allowedPages?.filter((page) => page.type === "Transactions" && page.active)
   console.log(transactions, "transactions")
-  const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
+  const transactionsGroup = [...new Set(transactions.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data), type: "Module" } })
   const reports = allowedPages.filter((page) => page.type === "Reports")
-  const reportGroups = [...new Set(reports.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data) } })
+  const reportGroups = [...new Set(reports.map(page => page.pageGroupId))].map(pageId => { return { id: pageId, name: findElement(pageId, pageGroup?.data), } })
   console.log(transactionsGroup, "transactionsGroup")
 
 
@@ -377,13 +377,16 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
       heading: 'Masters',
       logo: <Table size={24} />,
       groups: mastersGroup,
-      pages: masters
+      pages: masters,
+      type: "Master"
+
     },
     {
       heading: 'Transactions',
       logo: <PanelLeftClose size={24} />,
       groups: sorted,
-      pages: transactions
+      pages: transactions,
+      type: "Module"
     },
     {
       heading: 'Reports',

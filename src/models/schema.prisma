@@ -5069,6 +5069,7 @@ model Saleorder {
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
   termId             Int?
   SaleOrderItems     SaleOrderItems[]
+  SalesInvoice       SalesInvoice[]
 }
 
 model SaleOrderItems {
@@ -5156,6 +5157,8 @@ model SalesDelivery {
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions?  @relation(fields: [termId], references: [id])
   termId             Int?
+  salesInvoiceId     Int?
+  SalesInvoice       SalesInvoice?        @relation(fields: [salesInvoiceId], references: [id])
   SalesDeliveryItems SalesDeliveryItems[]
 }
 
@@ -5201,7 +5204,10 @@ model SalesInvoice {
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
   termId             Int?
+  saleOrderId        Int?
+  Saleorder          Saleorder?          @relation(fields: [saleOrderId], references: [id])
   SalesInvoiceItems  SalesInvoiceItems[]
+  SalesDelivery      SalesDelivery[]
 }
 
 model SalesInvoiceItems {

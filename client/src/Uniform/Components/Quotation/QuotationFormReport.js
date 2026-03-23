@@ -284,7 +284,7 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th> */}
-                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-1/2  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -335,7 +335,11 @@ const QuotationPrintFormat = ({
                       </td>
 
 
-                      <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                      <td className="py-1.5 text-left">
+                        {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
+                          ? ` / ${dataObj?.Party?.BranchType?.name}`
+                          : ""
+                          }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                         </td>
                       <td className="py-1.5 text-center">
                         {dataObj?.Saleorder?.length > 0 ? (
                           <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
@@ -407,7 +411,7 @@ const QuotationPrintFormat = ({
                                         disabled={dataObj?.Saleorder?.length > 0}
                                         title={dataObj?.Saleorder?.length > 0 ? "Already Converted to Sale Order" : "Convert to Sale Order"}
                                         onClick={() => {
-                                          if(dataObj?.Saleorder?.length > 0) return;
+                                          if (dataObj?.Saleorder?.length > 0) return;
                                           onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
                                           setActiveActionMenuId(null);
                                         }}

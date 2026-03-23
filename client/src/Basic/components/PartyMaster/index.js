@@ -575,7 +575,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const deleteData = async (id, childRecord) => {
 
-    console.log(Object.values(childRecord), "childRecord for party", childRecordCount(childRecord))
 
     if (childRecordCount(childRecord)) {
       Swal.fire({

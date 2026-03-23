@@ -196,7 +196,6 @@ const PurchaseInwardFormReport = ({
 
   return (
     <div
-      //   id="registrationFormReport"
       className="flex flex-col w-full h-[78vh] overflow-auto"
     >
 
@@ -212,41 +211,17 @@ const PurchaseInwardFormReport = ({
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Purchase Inward No</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
                     <div>Purchase Inward Date</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+
                   </th>
 
 
                   <th className="w-1/2  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -332,7 +307,7 @@ const PurchaseInwardFormReport = ({
                       key={dataObj.id}
                       className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                      // onClick={() => onClick(dataObj.id)}
+                    // onClick={() => onClick(dataObj.id)}
                     >
                       <td className="text-center " >
                         {index + 1}
@@ -384,7 +359,7 @@ const PurchaseInwardFormReport = ({
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
                                 // onClick={() => onDelete(dataObj.id, dataObj?._count)}
-                                onClick={() => hasPermission(() => onDelete(dataObj.id,dataObj?._count), "delete")}
+                                onClick={() => hasPermission(() => onDelete(dataObj.id, dataObj?._count), "delete")}
 
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

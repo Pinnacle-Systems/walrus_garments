@@ -32,9 +32,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
         }
     });
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${shortCode}/SD/1`
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SIV/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${shortCode}/SD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}/${shortCode}/SIV/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }
@@ -52,8 +52,19 @@ async function get(req) {
         include: {
             Party: {
                 select: {
-                    name: true
-                }
+                    name: true,
+                    // branchId: true,
+                    BranchType: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    City: {
+                        select: {
+                            name: true
+                        }
+                    }
+                },
             }
         },
         orderBy: {

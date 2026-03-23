@@ -385,7 +385,7 @@ export default function Form() {
                                 required={true}
                                 readOnly={readOnly}
                                 ref={countryNameRef}
-
+                                disabled={childRecord.current > 0}
                               />
                             </div>
                             <div className="mb-3 ml-5 ">
@@ -396,6 +396,8 @@ export default function Form() {
                                 setValue={setCode}
                                 required={true}
                                 readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+
                               />
                             </div>
                           </div>

@@ -58,15 +58,24 @@ async function get(req) {
                     contains: searchDocId
                 }
                 : undefined,
-            supplier: {
-                name: Boolean(searchSupplierName) ? { contains: searchSupplierName } : undefined
-            }
+
         },
         include: {
-            SalesBill: {
+            Party: {
                 select: {
-                    docId: true
-                }
+                    name: true,
+                    // branchId: true,
+                    BranchType: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    City: {
+                        select: {
+                            name: true
+                        }
+                    }
+                },
             }
         }
     });

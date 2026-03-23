@@ -11,7 +11,12 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
         },
         include: {
-            country: true
+            country: true,
+            _count: {
+                select: {
+                    city: true
+                }
+            }
         }
     });
     return { statusCode: 0, data };
