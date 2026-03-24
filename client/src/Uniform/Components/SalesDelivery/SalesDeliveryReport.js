@@ -190,46 +190,28 @@ const SalesDeliveryReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Order No</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+                    <div>Sales Delivery No</div>
+               
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Order Date</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
+                    <div>Sales Delivery Date</div>
+
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Supplier</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchClientName}
-                                            onChange={(e) => {
-                                                setSearchClientName(e.target.value);
-                                            }}
-                                        /> */}
+                    <div>Customer</div>
+
                   </th>
+                  <th className="w-36   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                    <div>Actions</div>
+
+                  </th>
+
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
                   </th>
+
 
                 </tr>
                 <tr className="">
@@ -282,7 +264,9 @@ const SalesDeliveryReport = ({
                       }}
                     />
                   </th>
+                  <th className="w-36  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
+                  </th>
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
                   </th>
@@ -324,7 +308,20 @@ const SalesDeliveryReport = ({
                       </td>
 
 
-                      <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                      <td className="py-1.5 text-left">   {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
+                        ? ` / ${dataObj?.Party?.BranchType?.name}`
+                        : ""
+                        }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`} </td>
+
+                      <td className="py-1.5 text-center">
+                        {dataObj?.SalesReturn?.length > 0 ? (
+                          <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
+                            Sale Invoice Taken ({dataObj.SalesReturn[0].docId.split('/').pop()})
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">Pending</span>
+                        )}
+                      </td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -339,7 +336,7 @@ const SalesDeliveryReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onEdit && (
+                            {onEdit && !(dataObj?.SalesReturn?.length > 0) && (
                               <button
                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
                                 onClick={() => onEdit(dataObj.id)}
@@ -349,7 +346,7 @@ const SalesDeliveryReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onDelete && (
+                            {onDelete && !(dataObj?.SalesReturn?.length > 0) && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
                                 onClick={() => onDelete(dataObj.id, dataObj?._count)}

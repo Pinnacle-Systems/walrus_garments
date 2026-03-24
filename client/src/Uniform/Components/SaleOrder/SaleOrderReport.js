@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader } from "../../../Basic/components";
 import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import secureLocalStorage from 'react-secure-storage';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 
@@ -34,6 +34,7 @@ const SaleOrderReport = ({
 
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
 
   const searchFields = {
@@ -227,6 +228,10 @@ const SaleOrderReport = ({
                                             }}
                                         /> */}
                   </th>
+                  <th className="w-36   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+
+                    Status
+                  </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
@@ -284,6 +289,10 @@ const SaleOrderReport = ({
                     />
                   </th>
 
+                  <th className="w-20  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+
+                  </th>
+
                   <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
                   </th>
@@ -325,7 +334,20 @@ const SaleOrderReport = ({
                       </td>
 
 
-                      <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                      <td className="py-1.5 text-left">
+                        {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
+                          ? ` / ${dataObj?.Party?.BranchType?.name}`
+                          : ""
+                          }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                            </td>
+                      <td className="py-1.5 text-center">
+                        {dataObj?.SalesInvoice?.length > 0 ? (
+                          <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
+                            Sale Invoice Taken ({dataObj.SalesInvoice[0].docId.split('/').pop()})
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-[10px]">Pending</span>
+                        )}
+                      </td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -340,7 +362,7 @@ const SaleOrderReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onEdit && (
+                            {onEdit && !(dataObj?.SalesInvoice?.length > 0) && (
                               <button
                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
                                 onClick={() => onEdit(dataObj.id)}
@@ -350,7 +372,7 @@ const SaleOrderReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onDelete && (
+                            {onDelete && !(dataObj?.SalesInvoice?.length > 0) && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
                                 onClick={() => onDelete(dataObj.id, dataObj?._count)}
@@ -361,7 +383,7 @@ const SaleOrderReport = ({
                                 {/* <span className="text-xs">delete</span> */}
                               </button>
                             )}
-                            {onConvertToInvoice && (
+                            {/* {onConvertToInvoice && (
                               <button
                                 className="text-indigo-600 gap-1 px-1 bg-indigo-50 rounded"
                                 onClick={(e) => { e.stopPropagation(); onConvertToInvoice(dataObj); }}
@@ -375,7 +397,44 @@ const SaleOrderReport = ({
                                   <polyline points="10 9 9 9 8 9"></polyline>
                                 </svg>
                               </button>
-                            )}
+                            )} */}
+                            <div className="relative">
+                              <button
+                                className="text-gray-600 hover:text-indigo-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveActionMenuId(activeActionMenuId === dataObj.id ? null : dataObj.id);
+                                }}
+                                title="More Actions"
+                              >
+                                <FaEllipsisV className="h-3.5 w-3.5" />
+                              </button>
+
+                              {activeActionMenuId === dataObj.id && (
+                                <div
+                                  className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden animate-in fade-in zoom-in duration-200"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="py-1">
+
+                                    <button
+                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      disabled={dataObj?.SalesInvoice?.length > 0}
+                                      title={dataObj?.SalesInvoice?.length > 0 ? "Already Converted to Sale Invoice" : "Convert to Sale Invoice"}
+                                      onClick={() => {
+                                        if (dataObj?.SalesInvoice?.length > 0) return;
+                                        onConvertToInvoice(dataObj);
+                                        setActiveActionMenuId(null);
+                                      }}
+                                    >
+                                      <span className="font-semibold text-lg">💳</span> Convert To Sale Invoice
+                                    </button>
+
+
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       )}

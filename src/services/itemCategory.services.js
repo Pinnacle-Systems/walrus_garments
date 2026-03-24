@@ -4,10 +4,18 @@ import { prisma } from '../lib/prisma.js';
 async function get(req) {
     const { companyId, active } = req.query
 
-    const data = await prisma.ItemCategory.findMany({
+    const data = await prisma.itemCategory.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
+        include: {
+            _count: {
+                select: {
+                    MainCategory: true,
+                    SubCategory: true
+                }
+            }
+        }
 
     });
     return { statusCode: 0, data };
@@ -15,7 +23,7 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const data = await prisma.ItemCategory.findUnique({
+    const data = await prisma.itemCategory.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -27,7 +35,7 @@ async function getOne(id) {
 async function getSearch(req) {
     const { searchKey } = req.params
     const { companyId, active } = req.query
-    const data = await prisma.country.findMany({
+    const data = await prisma.itemCategory.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -50,7 +58,7 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, code, companyId, active } = await body
-    const data = await prisma.ItemCategory.create(
+    const data = await prisma.itemCategory.create(
         {
             data: {
                 name, code, active
@@ -62,13 +70,13 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, code, active } = await body
-    const dataFound = await prisma.ItemCategory.findUnique({
+    const dataFound = await prisma.itemCategory.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("Country");
-    const data = await prisma.ItemCategory.update({
+    const data = await prisma.itemCategory.update({
         where: {
             id: parseInt(id),
         },
@@ -81,7 +89,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.ItemCategory.delete({
+    const data = await prisma.itemCategory.delete({
         where: {
             id: parseInt(id)
         },

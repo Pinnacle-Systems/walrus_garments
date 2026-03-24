@@ -7,12 +7,12 @@ import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
-import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
+import { FiChevronDown, FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { useAddDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import moment from "moment";
 import Swal from "sweetalert2";
-import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import SaleOrderItems from "./SaleOrderItems";
@@ -23,12 +23,14 @@ import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintForm
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
+import { push } from "../../../redux/features/opentabs";
+import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 
 
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, convertQuotationId
+  yarnList, colorList, uomList, quoteId, termsData ,invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -43,34 +45,20 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [vehicleNo, setVehicleNo] = useState("")
   const [specialInstructions, setSpecialInstructions] = useState('')
   const [remarks, setRemarks] = useState("")
-  const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [terms, setTerms] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
-  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
+  const [term, setTerm] = useState("")
+  const [taxMethod, setTaxMethod] = useState("WithoutTax")
+  const [isHeaderOpen, setIsHeaderOpen] = useState(true);
 
-  const [suppliers, setSuppliers] = useState([
-    "Supplier One",
-    "Supplier Two",
-    "Supplier Three",
-  ]);
-
-  const childRecord = useRef(0);
   const { branchId, companyId, userId, finYearId } = getCommonParams()
-
-  const branchIdFromApi = useRef(branchId);
-
   const params = {
     branchId, companyId, userId, finYearId
   };
-
-
-
-
-
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
@@ -78,6 +66,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: hsnList } = useGetHsnMasterQuery({ params });
+  const { data: itemPriceList } = useGetItemPriceListQuery({ params });
+  const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
 
 
   const {
@@ -104,8 +94,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
-    console.log(convertQuotationId, "convertQuotationId")
-    if (convertQuotationId || !id) return
+    console.log(quoteId, "convertQuotationId")
+    if (quoteId || !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -113,6 +103,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
+    setCustomerId(data?.customerId ? data?.customerId : undefined)
     if (data?.docId) {
       setDocId(data?.docId)
     }
@@ -149,11 +140,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    quoteId: convertQuotationId,
+    quoteId,
     terms
   }
 
-  console.log(data, "data")
 
 
 
@@ -187,17 +177,20 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       } else {
         returnData = await callback(data).unwrap();
       }
+      dispatch(push({ name: "SALE ORDER", projectId: null }))
       if (returnData.statusCode === 1) {
         toast.error(returnData.message);
       } else {
-        Swal.fire({
-          icon: 'success',
-          title: `${text || 'Saved'} Successfully`,
-          showConfirmButton: false,
-          timer: 2000
-        });
+
 
         if (returnData.statusCode === 0) {
+          Swal.fire({
+            icon: 'success',
+            title: `${text || 'Saved'} Successfully`,
+
+          });
+            invalidateTagsDispatch()
+
           if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
@@ -205,8 +198,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             onClose()
           }
 
-          if (convertQuotationId) {
-            convertQuotationId = null
+          if (quoteId) {
+            quoteId = null
           }
 
 
@@ -221,13 +214,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   };
 
-  function removeItem(id) {
-    setQuoteItems(directInwardItems => {
-      let newItems = structuredClone(directInwardItems);
-      newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
-      return newItems
-    });
-  }
 
 
 
@@ -237,6 +223,14 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const saveData = (nextProcess) => {
 
     let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
+    if (!data?.quoteId) {
+      Swal.fire({
+        title: "QuoteId Missing",
+        icon: "success",
+      });
+      return
+
+    }
 
     if (!validateData(data)) {
 
@@ -275,25 +269,64 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   }
 
+
   function getTotalQty() {
     let qty = saleOrderItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
     return parseFloat(qty || 0).toFixed(3)
   }
-
   const calculateTotals = () => {
-    return saleOrderItems?.reduce((acc, curr) => {
-      const price = parseFloat(curr.price || 0);
-      const qty = parseFloat(curr.qty || 0);
-      const taxPercent = parseFloat(curr.tax || 0);
-      const subtotal = price * qty;
-      const taxAmount = (subtotal * taxPercent) / 100;
+    return (
+      saleOrderItems?.reduce(
+        (acc, curr) => {
+          const price = parseFloat(curr.price || 0);
+          const qty = parseFloat(curr.qty || 0);
+          const taxPercent = parseFloat(curr.taxPercent || 0);
+          const taxMethod = curr.taxMethod || "Inclusive";
 
-      acc.subtotal += subtotal;
-      acc.taxAmount += taxAmount;
-      acc.netAmount += (subtotal + taxAmount);
-      return acc;
-    }, { subtotal: 0, taxAmount: 0, netAmount: 0 }) || { subtotal: 0, taxAmount: 0, netAmount: 0 };
-  }
+          const discountType = curr.discountType; // "Percentage" | "Flat"
+          const discountValue = parseFloat(curr.discountValue || 0);
+
+          const gross = price * qty;
+
+          // ✅ Step 1: Apply Discount
+          let discountedAmount = gross;
+
+          if (discountType === "Percentage") {
+            discountedAmount =
+              gross - (gross * discountValue) / 100;
+          } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+          }
+
+          // Prevent negative
+          discountedAmount = Math.max(0, discountedAmount);
+
+          let subTotal = 0;
+          let taxAmount = 0;
+          let netAmount = 0;
+
+          // ✅ Step 2: Tax Calculation
+          if (taxMethod === "Inclusive" && taxPercent > 0) {
+            subTotal = discountedAmount / (1 + taxPercent / 100);
+            taxAmount = discountedAmount - subTotal;
+            netAmount = discountedAmount;
+          } else {
+            subTotal = discountedAmount;
+            taxAmount = subTotal * (taxPercent / 100);
+            netAmount = subTotal + taxAmount;
+          }
+
+          // ✅ Accumulate
+          acc.subtotal += subTotal;
+          acc.taxAmount += taxAmount;
+          acc.netAmount += netAmount;
+
+          return acc;
+        },
+        { subtotal: 0, taxAmount: 0, netAmount: 0 }
+      ) || { subtotal: 0, taxAmount: 0, netAmount: 0 }
+    );
+  };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   function isSupplierOutside() {
@@ -368,78 +401,165 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             <FaFileAlt className="w-5 h-5" />
           </button>
         </div>
-
       </div>
-      <div className="space-y-3 h-full mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
+      <div className="flex flex-col h-full mt-2 gap-2">
+        {/* ── Collapsible Header ── */}
+        <div className="border border-slate-200 bg-white rounded-md shadow-sm">
+          <button
+            type="button"
+            onClick={() => setIsHeaderOpen(o => !o)}
+            className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 transition-colors"
+          >
+            <span className="font-medium text-slate-700 text-sm">Header Details</span>
+            <FiChevronDown
+              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isHeaderOpen ? "rotate-180" : "rotate-0"}`}
+            />
+          </button>
 
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Basic Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Sale Order No" readOnly value={docId} />
-              <ReusableInput label="Sale Order Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+          <div className={`transition-all duration-300 ease-in-out ${isHeaderOpen ? "max-h-[600px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"}`}>
+            <div className="px-2 pb-2 overflow-visible">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                  <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
+                  <div className="grid grid-cols-2 gap-1">
+                    <ReusableInput label="Sale Order No" readOnly value={docId} />
+                    <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
+                  </div>
+                </div>
 
+                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2 overflow-visible">
+                  <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
+                  <div className="grid grid-cols-4 gap-1 overflow-visible">
+                    <div className="col-span-2 overflow-visible">
+                      <ReusableSearchableInput
+                        label="Customer Name"
+                        component="PartyMaster"
+                        placeholder="Search Customer Name..."
+                        optionList={supplierList?.data}
+                        setSearchTerm={(value) => { setCustomerId(value) }}
+                        searchTerm={customerId}
+                        show={"isClient"}
+                        required={true}
+                        disabled={id}
+                      />
+                    </div>
+                    <TextInput name="Phone Number" value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled required />
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Items Table ── */}
+        <SaleOrderItems
+          saleOrderItems={saleOrderItems}
+          setSaleOrderItems={setSaleOrderItems}
+          setInwardItemSelection={setInwardItemSelection}
+          supplierId={customerId}
+          handleRightClick={handleRightClick}
+          contextMenu={contextMenu}
+          handleCloseContextMenu={handleCloseContextMenu}
+          yarnList={yarnList}
+          colorList={colorList}
+          uomList={uomList}
+          itemList={itemList}
+          sizeList={sizeList}
+          readOnly={readOnly}
+          taxMethod={taxMethod}
+          setTaxMethod={setTaxMethod}
+          isHeaderOpen={isHeaderOpen}
+          itemPriceList={itemPriceList}
+          priceTemplateList={priceTemplateList}
+        />
 
 
-
+        <div className="grid grid-cols-12 gap-3">
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Customer Details
-            </h2>
-            <div className="grid grid-cols-4 gap-1">
 
-              <div className="col-span-2">
+            <div className="flex flex-col gap-2">
+              <h2 className="font-bold text-slate-700 mb-2 text-sm">Terms & Conditions</h2>
+
+              <select
+                value={term}
+                onChange={e => {
+                  setTerm(e.target.value)
+                }}
+                readOnly={readOnly}
+                className="text-left h-15  w-full rounded py-1 border-2 border-gray-200 text-[13px]"
+
+              >
+                <option value=""></option>
+                {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
+                  <option value={blend.id} key={blend.id}>
+                    {blend?.name}
+                  </option>
+                )}
+              </select>
+            </div>
+          </div>
 
 
-                <ReusableSearchableInput
-                  label="Customer Id"
-                  component="PartyMaster"
-                  placeholder="Search Customer Id..."
-                  optionList={supplierList?.data}
-                  setSearchTerm={(value) => { setCustomerId(value) }}
-                  searchTerm={customerId}
-                  show={"isClient"}
-                  required={true}
-                  disabled={id}
-                />
-              </div>
-              <TextInput name={"Phone Number"} value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled={true} required />
+
+
+
+          <div className="border border-slate-200 p-1 bg-white rounded-md shadow-sm col-span-4">
+            <textarea
+              disabled={readOnly}
+              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              value={terms}
+              onChange={e => setTerms(e.target.value)}
+              placeholder="Select or type Terms & Conditions..."
+            />
+          </div>
+
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm  col-span-3">
+            <h2 className="font-bold text-slate-700 mb-2 text-sm">Remarks</h2>
+            <textarea
+              readOnly={readOnly}
+              value={remarks}
+              onChange={(e) => {
+                setRemarks(e.target.value)
+              }}
+              className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+              placeholder="Additional notes..."
+            />
+          </div>
+
+          <div className=" p-2 bg-white rounded-md shadow-sm col-span-3">
+
+            <div className="flex justify-between py-1 text-sm">
+              <span className="text-slate-600">Total Qty</span>
+              <span className="font-medium">{parseFloat(getTotalQty()).toFixed(3)}</span>
+            </div>
+            <div className="flex justify-between py-1 text-sm">
+              <span className="text-slate-600">Before Tax Amount</span>
+              <span className="font-medium">Rs.{parseFloat(subtotal || 0).toFixed(2)} </span>
+            </div>
+            {/* <div className="flex justify-between py-1 text-sm">
+              <span className="text-slate-600">Tax Amount</span>
+              <span className="font-medium">Rs.{parseFloat(taxAmount || 0).toFixed(2)}</span>
+            </div> */}
+            <div className="flex justify-between py-1 text-sm">
+              <span className="text-slate-600">Net Amount</span>
+              <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
             </div>
 
+
           </div>
+
+
 
 
 
         </div>
-        <fieldset>
-          <SaleOrderItems
-            saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-            handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
-            itemList={itemList} sizeList={sizeList}
-          />
-        </fieldset>
-
-        <CommonFormFooter
-          remarks={remarks}
-          setRemarks={setRemarks}
-          terms={terms}
-          setTerms={setTerms}
-          totalQty={getTotalQty()}
-          subtotal={subtotal}
-          taxAmount={taxAmount}
-          netAmount={netAmount}
-        />
 
 
-
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
+        <div className="flex flex-col md:flex-row gap-2 justify-between mt-1">
           <div className="flex gap-2 flex-wrap">
             <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
@@ -465,7 +585,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
               onClick={() => {
                 if (!saleOrderItems?.filter(i => i.itemId).length) {
-                  toast.warning("Please add some items first");
+                  Swal.fire({
+                    icon: 'warning',
+                    title: `Please add some items first`,
+                  });
                   return;
                 }
                 setPrintOpen(true);
@@ -478,8 +601,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             <button
               className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
               onClick={() => {
-                if (!saleOrderItems?.filter(i => i.itemId).length) {
-                  toast.warning("Please add some items first");
+                if (saleOrderItems?.filter(i => i.itemId).length) {
+                  // toast.warning("Please add some items first");
+                  Swal.fire({
+                    icon: 'warning',
+                    title: `Please add some items first`,
+                  });
+
                   return;
                 }
                 setThermalPrintOpen(true);

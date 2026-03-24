@@ -4,11 +4,11 @@ import { QUOTAION_API } from "../../Api";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const quotationApi = createApi({
-    reducerPath: "Quotationr",
+    reducerPath: "Quotation",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["Quotationr"],
+    tagTypes: ["Quotation"],
     endpoints: (builder) => ({
         getQuotation: builder.query({
             query: ({ params, searchParams }) => {
@@ -31,7 +31,7 @@ const quotationApi = createApi({
                     params
                 };
             },
-            providesTags: ["Quotationr"],
+            providesTags: ["Quotation"],
         }),
         getQuotationById: builder.query({
             query: (id) => {
@@ -43,7 +43,7 @@ const quotationApi = createApi({
                     },
                 };
             },
-            providesTags: ["Quotationr"],
+            providesTags: ["Quotation"],
         }),
         addQuotation: builder.mutation({
             query: (payload) => ({
@@ -54,7 +54,7 @@ const quotationApi = createApi({
                     "Content-type": "application/json; charset=UTF-8",
                 },
             }),
-            invalidatesTags: ["Quotationr"],
+            invalidatesTags: ["Quotation"],
         }),
         updateQuotation: builder.mutation({
             query: (payload) => {
@@ -65,14 +65,14 @@ const quotationApi = createApi({
                     body,
                 };
             },
-            invalidatesTags: ["Quotationr"],
+            invalidatesTags: ["Quotation"],
         }),
         deleteQuotation: builder.mutation({
             query: (id) => ({
                 url: `${QUOTAION_API}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["Quotationr"],
+            invalidatesTags: ["Quotation"],
         }),
     }),
 });

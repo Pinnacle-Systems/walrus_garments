@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { useSelector, useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
-import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { findFromList, getCommonParams ,getDateFromDateTime } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
 import { useDeleteDirectInwardOrReturnMutation, useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
@@ -18,6 +18,7 @@ import SalesInvoiceForm from './SalesInvoiceForm';
 import SaleInvoiceReport from './SalesInvoiceReport';
 import { useDeleteSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 
 
@@ -31,8 +32,8 @@ const SalesInvoice = () => {
 
 
     const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState("")
-    const [readOnly, setReadOnly] = useState('')
+    const today = new Date()
+    const [date, setDate] = useState(getDateFromDateTime(today)); const [readOnly, setReadOnly] = useState('')
     const [transType, setTransType] = useState("DyedYarn");
     const [dcNo, setDcNo] = useState("")
     const [dcDate, setDcDate] = useState('')
@@ -50,7 +51,7 @@ const SalesInvoice = () => {
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES INVOICE");
     console.log(currentTab, "currentTab")
-    const convertSaleOrderId = currentTab?.id;
+    const convertSaleOrderId = currentTab?.projectId;
 
     const { data: saleOrderToConvertData, isFetching: isSaleOrderFetching } =
         useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
@@ -68,7 +69,7 @@ const SalesInvoice = () => {
             setShowManufacturer(true);
 
             // Important: Clear the conversion flag so it doesn't re-trigger
-            dispatch(push({ name: "SALES INVOICE", id: null }));
+            // dispatch(push({ name: "SALES INVOICE", id: null }));
         }
     }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
@@ -82,6 +83,7 @@ const SalesInvoice = () => {
 
 
     const [removeData] = useDeleteSalesInvoiceMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const { data: yarnList } =
@@ -128,17 +130,12 @@ const SalesInvoice = () => {
                 await removeData(id)
                 setId("");
                 onNew();
-                // toast.success("Deleted Successfully");
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
                 });
+                invalidateTagsDispatch()
+            
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -147,7 +144,7 @@ const SalesInvoice = () => {
     };
 
     const handleConvertToDelivery = (dataObj) => {
-        dispatch(push({ name: "SALES DELIVERY", id: dataObj.id }));
+        dispatch(push({ name: "SALES DELIVERY", projectId: dataObj.id }));
     };
 
     const onNew = () => {
@@ -170,7 +167,7 @@ const SalesInvoice = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId} invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
 
 
 

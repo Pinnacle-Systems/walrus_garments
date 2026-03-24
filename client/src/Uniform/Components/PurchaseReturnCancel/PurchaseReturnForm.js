@@ -337,23 +337,17 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     yarnList={itemList} uomList={uomList} colorList={colorList}
                 />
             </div>
-            <div>
 
-
-
-            </div>
-
-            <div className="w-full h-[78vh] bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
+            <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
                 <div className="flex justify-between items-center mb-1">
                     <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
-                    <button
-                        onClick={onClose}
-                        className="text-indigo-600 hover:text-indigo-700"
-                        title="Open Report"
-                    >
+                    <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
                         <FaFileAlt className="w-5 h-5" />
                     </button>
                 </div>
+            </div>
+            <div className="w-full h-[78vh]  mx-auto rounded-md shadow-md  py-2 ">
+
 
 
 
@@ -422,6 +416,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 <DropdownInput name="Purchase Inward No"
                                     options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
                                     value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
+
+
                             </div>
 
                         </div>

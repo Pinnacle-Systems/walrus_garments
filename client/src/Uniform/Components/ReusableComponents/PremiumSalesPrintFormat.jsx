@@ -5,69 +5,112 @@ import {
   Text,
   Image,
   Font,
-  StyleSheet,
 } from "@react-pdf/renderer";
-import tw from "../../../Utils/tailwind-react-pdf";
 import numberToText from "number-to-text";
 import moment from "moment";
 import WalrusLogo from "../../../assets/walrus.png";
 import { findFromList } from "../../../Utils/helper";
 
-// Register fonts if needed, or use default Helvetica
-Font.register({
-  family: "Inter",
-  src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGkyMZhrib2dgV9_Xno.ttf",
-  fontWeight: "normal",
-});
+// ─── Colour palette matching the screenshot ────────────────────────────────
+const PURPLE = "#7878c8";       // header band fill
+const PURPLE_DARK = "#5c5ca8";  // darker accent
+const WHITE = "#ffffff";
+const GRAY_BG = "#f5f5f5";
+const BORDER = "#d0d0e8";
+const TEXT_DARK = "#1a1a2e";
+const TEXT_MID = "#444466";
+const TEXT_LIGHT = "#888899";
 
-Font.register({
-  family: "Inter",
-  src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGkyMZhrib2dgV9_Xno.ttf",
-  fontWeight: "bold",
-});
+// ─── Tiny style helpers (no tailwind needed) ───────────────────────────────
+const s = {
+  page: {
+    fontFamily: "Helvetica",
+    fontSize: 8,
+    color: TEXT_DARK,
+    backgroundColor: WHITE,
+    padding: 24,
+  },
+  // Purple band heading row
+  bandRow: {
+    flexDirection: "row",
+    backgroundColor: PURPLE,
+  },
+  bandCell: {
+    color: WHITE,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 8,
+    padding: "4 6",
+  },
+  // Table cells
+  cell: {
+    padding: "3 5",
+    fontSize: 8,
+    color: TEXT_DARK,
+  },
+  cellBold: {
+    padding: "3 5",
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: TEXT_DARK,
+  },
+  // Borders
+  border: { border: `1 solid ${BORDER}` },
+  borderB: { borderBottom: `1 solid ${BORDER}` },
+  borderR: { borderRight: `1 solid ${BORDER}` },
+  borderT: { borderTop: `1 solid ${BORDER}` },
+  // Flex helpers
+  row: { flexDirection: "row" },
+  flex1: { flex: 1 },
+  // Summary row in totals box
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: "3 6",
+    borderBottom: `1 solid ${BORDER}`,
+  },
+  summaryLabel: { fontSize: 8, color: TEXT_MID },
+  summaryValue: { fontSize: 8, color: TEXT_DARK, fontFamily: "Helvetica-Bold" },
+};
 
+// ─── Component ─────────────────────────────────────────────────────────────
 const PremiumSalesPrintFormat = ({
-  title = "INVOICE",
+  title = "Sale",
   docId = "N/A",
   date = new Date(),
   branchData = {},
   customerData = {},
   items = [],
   totals = {},
-  remarks = "—",
-  terms = [],
-  taxMethod = "Without Tax",
+  remarks = "",
+  terms = "Thank you for doing business with us!",
+  taxMethod = "WithoutTax",
   isSupplierOutside = false,
-  // Module-specific lists for lookups
   itemList = [],
   sizeList = [],
   colorList = [],
   uomList = [],
   hsnList = [],
 }) => {
-  // Format dates
-  const formattedDate = moment(date).format("DD-MMM-YYYY");
+  const formattedDate = moment(date).format("DD-MM-YYYY");
+  const formattedTime = moment(date).format("hh:mm A");
 
-  // Calculate tax breakup
+  // ── Tax calculation ────────────────────────────────────────────────────
   const getTaxBreakup = () => {
     const breakup = {};
     items.forEach((item) => {
       const taxRate = parseFloat(item.tax || item.taxPercent || 0);
       const qty = parseFloat(item.qty || 0);
       const price = parseFloat(item.price || 0);
-      
       let taxableAmount = 0;
       let taxAmount = 0;
-
-      if (taxMethod === "With Tax") {
+      if (taxMethod === "inclusive") {
         const netTotal = price * qty;
-        taxableAmount = netTotal / (1 + (taxRate / 100));
+        taxableAmount = netTotal / (1 + taxRate / 100);
         taxAmount = netTotal - taxableAmount;
       } else {
         taxableAmount = price * qty;
         taxAmount = (taxableAmount * taxRate) / 100;
       }
-
       const rateKey = taxRate.toFixed(2);
       if (!breakup[rateKey]) {
         breakup[rateKey] = {
@@ -79,7 +122,6 @@ const PremiumSalesPrintFormat = ({
           totalTax: 0,
         };
       }
-
       breakup[rateKey].taxableAmount += taxableAmount;
       if (isSupplierOutside) {
         breakup[rateKey].igst += taxAmount;
@@ -93,262 +135,418 @@ const PremiumSalesPrintFormat = ({
   };
 
   const taxBreakup = getTaxBreakup();
-  const grossTotal = taxBreakup.reduce((acc, b) => acc + b.taxableAmount, 0);
+  const taxableAmount = taxBreakup.reduce((acc, b) => acc + b.taxableAmount, 0);
   const totalTax = taxBreakup.reduce((acc, b) => acc + b.totalTax, 0);
-  const netAmount = grossTotal + totalTax;
+  const cgstTotal = taxBreakup.reduce((acc, b) => acc + b.cgst, 0);
+  const sgstTotal = taxBreakup.reduce((acc, b) => acc + b.sgst, 0);
+  const igstTotal = taxBreakup.reduce((acc, b) => acc + b.igst, 0);
+  const netAmount = taxableAmount + totalTax;
 
-  // Fill table with empty rows for premium look
-  const MIN_ROWS = 12;
-  const tableData = [
-    ...items,
-    ...Array(Math.max(0, MIN_ROWS - items.length)).fill({ placeholder: true }),
-  ];
+  const fmt = (n, dec = 2) =>
+    parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: dec });
+
+  // ── Helper: row shading ────────────────────────────────────────────────
+  const rowBg = (idx) => ({ backgroundColor: idx % 2 === 0 ? WHITE : "#efeffa" });
+
+  // ── Column widths for item table ───────────────────────────────────────
+  const col = {
+    sno: "4%",
+    item: "26%",
+    hsn: "9%",
+    qty: "8%",
+    price: "10%",
+    disc: "8%",
+    cgst: "11%",
+    sgst: "11%",
+    amt: "13%",
+  };
 
   return (
     <Document title={`${title} - ${docId}`}>
-      <Page size="A4" style={[tw("p-8 bg-white"), { fontFamily: "Helvetica" }]}>
-        
-        {/* === HEADER === */}
-        <View style={tw("flex-row justify-between items-start mb-6")}>
-          <View style={tw("flex-row items-center")}>
-            <Image src={WalrusLogo} style={tw("w-14 h-14 mr-4")} />
-            <View>
-              <Text style={tw("text-xl font-bold text-slate-900 tracking-tight")}>{branchData?.branchName || "WALRUS GARMENTS"}</Text>
-              <Text style={tw("text-[10px] text-slate-500 max-w-[220px] mt-1 line-height-tight")}>
-                {branchData?.address || "Building No., Street Name, City, State, ZIP"}
-              </Text>
-              <Text style={tw("text-[9px] text-slate-500 mt-1.5")}>
-                GSTIN: <Text style={tw("font-bold text-slate-800")}>{branchData?.gstNo || "N/A"}</Text> | PAN: <Text style={tw("font-bold text-slate-800")}>{branchData?.panNo || "N/A"}</Text>
-              </Text>
-              <Text style={tw("text-[9px] text-slate-500 mt-0.5")}>
-                Email: {branchData?.contactEmail || "info@walrus.com"}
-              </Text>
-            </View>
-          </View>
-          
-          <View style={tw("items-end")}>
-            <View style={tw("bg-slate-900 px-5 py-2.5 rounded-sm mb-3")}>
-              <Text style={tw("text-white text-base font-bold tracking-[2px] uppercase")}>{title}</Text>
-            </View>
-            <View style={tw("flex-row gap-5 px-1")}>
-              <View style={tw("items-end")}>
-                <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-0.5")}>Document No.</Text>
-                <Text style={tw("text-xs font-bold text-slate-800")}>{docId}</Text>
-              </View>
-              <View style={tw("items-end")}>
-                <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-0.5")}>Date</Text>
-                <Text style={tw("text-xs font-bold text-slate-800")}>{formattedDate}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+      <Page size="A4" style={s.page}>
 
-        {/* === DETAILS GRID === */}
-        <View style={tw("flex-row mb-6 border-y border-slate-100 py-4")}>
-          <View style={tw("flex-1 pr-4 border-r border-slate-50")}>
-            <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-2 tracking-wider")}>Bill To</Text>
-            <Text style={tw("text-xs font-bold text-slate-800 uppercase mb-1")}>{customerData?.name || "Customer Name"}</Text>
-            <Text style={tw("text-[9px] text-slate-500 leading-tight")}>
-              {customerData?.address || "Customer Address Details"}
+        {/* ═══ TOP BAR: title centred, company right ═══════════════════ */}
+        <View
+          style={[
+            s.row,
+            {
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 6,
+              paddingBottom: 4,
+              borderBottom: `2 solid ${PURPLE}`,
+            },
+          ]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Image src={WalrusLogo} style={{ width: 36, height: 36, marginRight: 8 }} />
+            <Text style={{ fontSize: 9, color: TEXT_MID }}>
+              {branchData?.address || ""}
             </Text>
-            <View style={tw("mt-2 pt-2 border-t border-slate-50 flex-row gap-3")}>
-               <Text style={tw("text-[9px] text-slate-500")}>GSTIN: <Text style={tw("text-slate-800 font-bold")}>{customerData?.gstNo || "N/A"}</Text></Text>
-               <Text style={tw("text-[9px] text-slate-500")}>Phone: <Text style={tw("text-slate-800 font-bold")}>{customerData?.contactPersonNumber || "N/A"}</Text></Text>
-            </View>
           </View>
-          
-          <View style={tw("w-[160px] pl-6")}>
-            <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-3 tracking-wider")}>Reference Summary</Text>
-            <View style={tw("flex-row justify-between mb-2")}>
-              <Text style={tw("text-[9px] text-slate-500")}>Payment Terms</Text>
-              <Text style={tw("text-[9px] text-slate-800 font-bold")}>{customerData?.payTermName || "Immediate"}</Text>
-            </View>
-            <View style={tw("flex-row justify-between mb-2")}>
-              <Text style={tw("text-[9px] text-slate-500")}>Tax Method</Text>
-              <Text style={tw("text-[9px] text-slate-800 font-bold")}>{taxMethod}</Text>
-            </View>
-            <View style={tw("flex-row justify-between")}>
-              <Text style={tw("text-[9px] text-slate-500")}>Due Date</Text>
-              <Text style={tw("text-[9px] text-slate-800")}>{formattedDate}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* === ITEMS TABLE === */}
-        <View style={tw("min-h-[350px]")}>
-          {/* Table Header */}
-          <View style={tw("flex-row bg-slate-900 rounded-t-sm items-center py-2.5 px-3")}>
-            <Text style={[tw("text-[8px] text-white font-bold"), { width: "4%" }]}>#</Text>
-            <Text style={[tw("text-[8px] text-white font-bold"), { width: "40%" }]}>ITEM DESCRIPTION</Text>
-            <Text style={[tw("text-[8px] text-white font-bold text-center"), { width: "12%" }]}>HSN</Text>
-            <Text style={[tw("text-[8px] text-white font-bold text-right"), { width: "12%" }]}>QTY</Text>
-            <Text style={[tw("text-[8px] text-white font-bold text-right"), { width: "14%" }]}>RATE</Text>
-            <Text style={[tw("text-[8px] text-white font-bold text-right"), { width: "18%" }]}>AMOUNT</Text>
-          </View>
-
-          {/* Table Rows */}
-          {tableData.map((item, idx) => (
-            <View 
-              key={idx} 
-              style={[
-                tw("flex-row border-b border-slate-50 items-center py-3 px-3 min-h-[35px]"),
-                idx % 2 === 0 ? tw("bg-white") : tw("bg-slate-50/30")
-              ]}
-              wrap={false}
+          <View style={{ alignItems: "flex-end" }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Helvetica-Bold",
+                color: TEXT_DARK,
+              }}
             >
-              <Text style={[tw("text-[9px] text-slate-400"), { width: "4%" }]}>{idx + 1}</Text>
-              <View style={{ width: "40%" }}>
-                {item.placeholder ? null : (
-                  <>
-                    <Text style={tw("text-[9px] text-slate-800 font-bold")}>
-                      {findFromList(item.itemId, itemList, "name") || "—"}
-                    </Text>
-                    <Text style={tw("text-[7px] text-slate-400 mt-0.5 uppercase tracking-wide")}>
-                      {findFromList(item.sizeId, sizeList, "name") || "—"} | {findFromList(item.colorId, colorList, "name") || "—"}
-                    </Text>
-                  </>
-                )}
-              </View>
-              <Text style={[tw("text-[9px] text-slate-600 text-center"), { width: "12%" }]}>
-                {item.placeholder ? "" : (findFromList(item.hsnId || (itemList?.find(i => i.id === item.itemId)?.hsnId), hsnList, "name") || "—")}
-              </Text>
-              <Text style={[tw("text-[9px] text-slate-800 text-right"), { width: "12%" }]}>
-                {item.placeholder ? "" : parseFloat(item.qty || 0).toFixed(2)}
-              </Text>
-              <Text style={[tw("text-[9px] text-slate-800 text-right"), { width: "14%" }]}>
-                {item.placeholder ? "" : parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </Text>
-              <Text style={[tw("text-[9px] text-slate-800 text-right font-bold"), { width: "18%" }]}>
-                {item.placeholder ? "" : (parseFloat(item.qty || 0) * parseFloat(item.price || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* === TAX BREAKUP & TOTALS === */}
-        <View style={tw("mt-6")} wrap={false}>
-          <View style={tw("flex-row")}>
-            {/* Left Column: Tax Breakup Table */}
-            <View style={tw("flex-1 mr-8")}>
-              <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-2 tracking-wider")}>GST Breakup Details</Text>
-              <View style={tw("border border-slate-100 rounded-sm overflow-hidden")}>
-                <View style={tw("flex-row bg-slate-50 py-1.5 px-2 border-b border-slate-100")}>
-                  <Text style={[tw("text-[7px] font-bold text-slate-600"), { flex: 1 }]}>TAX %</Text>
-                  <Text style={[tw("text-[7px] font-bold text-slate-600 text-right"), { flex: 2 }]}>TAXABLE VAL</Text>
-                  {isSupplierOutside ? (
-                    <Text style={[tw("text-[7px] font-bold text-slate-600 text-right"), { flex: 2 }]}>IGST</Text>
-                  ) : (
-                    <>
-                      <Text style={[tw("text-[7px] font-bold text-slate-600 text-right"), { flex: 1.5 }]}>CGST</Text>
-                      <Text style={[tw("text-[7px] font-bold text-slate-600 text-right"), { flex: 1.5 }]}>SGST</Text>
-                    </>
-                  )}
-                  <Text style={[tw("text-[7px] font-bold text-slate-600 text-right"), { flex: 2 }]}>TOTAL TAX</Text>
-                </View>
-                {taxBreakup.map((b, i) => (
-                  <View key={i} style={tw("flex-row py-1.5 px-2 border-b border-slate-50 last:border-0")}>
-                    <Text style={[tw("text-[8px] text-slate-700"), { flex: 1 }]}>{b.taxRate}%</Text>
-                    <Text style={[tw("text-[8px] text-slate-700 text-right"), { flex: 2 }]}>{b.taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                    {isSupplierOutside ? (
-                      <Text style={[tw("text-[8px] text-slate-700 text-right"), { flex: 2 }]}>{b.igst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                    ) : (
-                      <>
-                        <Text style={[tw("text-[8px] text-slate-700 text-right"), { flex: 1.5 }]}>{b.cgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                        <Text style={[tw("text-[8px] text-slate-700 text-right"), { flex: 1.5 }]}>{b.sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                      </>
-                    )}
-                    <Text style={[tw("text-[8px] text-slate-900 font-bold text-right"), { flex: 2 }]}>{b.totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                  </View>
-                ))}
-              </View>
-              
-              <View style={tw("mt-4 pt-2 border-t border-slate-50")}>
-                 <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-1")}>Amount in Words</Text>
-                 <Text style={tw("text-[9px] font-bold text-slate-800 italic")}>
-                   {numberToText.convertToText(Math.round(netAmount), { language: "en-in", separator: "" })} Only
-                 </Text>
-              </View>
-            </View>
-
-            {/* Right Column: Totals Summary */}
-            <View style={tw("w-[180px]")}>
-               <View style={tw("bg-slate-900 rounded-sm p-4")}>
-                  <View style={tw("flex-row justify-between mb-3 border-b border-slate-800 pb-2")}>
-                    <Text style={tw("text-[8px] text-slate-400 font-bold uppercase")}>Gross Value</Text>
-                    <Text style={tw("text-[10px] text-white font-bold")}>{grossTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                  </View>
-                  
-                  {taxBreakup.map((b, i) => (
-                    <View key={i} style={tw("flex-row justify-between mb-1.5")}>
-                       <Text style={tw("text-[8px] text-slate-500")}>GST ({b.taxRate}%)</Text>
-                       <Text style={tw("text-[9px] text-slate-300 font-medium")}>{b.totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-                    </View>
-                  ))}
-
-                  <View style={tw("flex-row justify-between items-center mt-4 pt-4 border-t border-slate-750")}>
-                     <Text style={tw("text-[10px] text-white uppercase font-bold tracking-tight")}>Total Amount</Text>
-                     <Text style={tw("text-xl text-white font-bold")}>₹{netAmount.toLocaleString('en-IN', { minimumFractionDigits: 0 })}</Text>
-                  </View>
-               </View>
-            </View>
+              {branchData?.branchName || "WALRUS GARMENTS"}
+            </Text>
+            <Text style={{ fontSize: 8, color: TEXT_MID }}>
+              Ph. no.: {branchData?.contactPersonNumber || branchData?.phone || "—"}
+            </Text>
           </View>
         </View>
 
-        {/* === FOOTER (REMARKS & BANK) === */}
-        <View style={tw("mt-8 mb-4 flex-row gap-6")} wrap={false}>
-          <View style={tw("flex-1 bg-slate-50/50 p-4 rounded-sm border border-slate-100")}>
-            <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-2 tracking-wider")}>Bank Account Details</Text>
-            <View style={tw("flex-row mb-1.5")}>
-               <Text style={[tw("text-[8px] text-slate-500"), { width: "60px" }]}>Account Name</Text>
-               <Text style={tw("text-[8px] text-slate-800 font-bold")}>{branchData?.accountName || branchData?.branchName || "—"}</Text>
-            </View>
-            <View style={tw("flex-row mb-1.5")}>
-               <Text style={[tw("text-[8px] text-slate-500"), { width: "60px" }]}>Bank Name</Text>
-               <Text style={tw("text-[8px] text-slate-800 font-bold")}>{branchData?.bankName || "—"}</Text>
-            </View>
-            <View style={tw("flex-row mb-1.5")}>
-               <Text style={[tw("text-[8px] text-slate-500"), { width: "60px" }]}>Account No</Text>
-               <Text style={tw("text-[8px] text-slate-800 font-bold tracking-widest")}>{branchData?.accountNo || "—"}</Text>
-            </View>
-            <View style={tw("flex-row")}>
-               <Text style={[tw("text-[8px] text-slate-500"), { width: "60px" }]}>IFSC Code</Text>
-               <Text style={tw("text-[8px] text-slate-800 font-bold")}>{branchData?.ifscCode || "—"}</Text>
-            </View>
-          </View>
-
-          <View style={tw("flex-1 bg-slate-50/50 p-4 rounded-sm border border-slate-100")}>
-            <Text style={tw("text-[8px] text-slate-400 uppercase font-bold mb-2 tracking-wider")}>Notes & Remarks</Text>
-            <Text style={tw("text-[9px] text-slate-600 line-height-relaxed")}>{remarks || "No additional remarks."}</Text>
-          </View>
-        </View>
-
-        {/* === TERMS & SIGNATURE === */}
-        <View style={tw("mt-auto")} wrap={false}>
-          <View style={tw("flex-row justify-between pt-10")}>
-            <View style={tw("items-center")}>
-              <View style={tw("w-32 border-b border-slate-200 mb-2")} />
-              <Text style={tw("text-[8px] text-slate-400 uppercase font-bold")}>Receiver's Sign</Text>
-            </View>
-            
-            <View style={tw("items-center")}>
-              <Text style={[tw("text-[8px] text-slate-800 font-bold mb-10"), { opacity: 0.8 }]}>For {branchData?.branchName || "Walrus Garments"}</Text>
-              <View style={tw("w-40 border-b border-slate-300 mb-2")} />
-              <Text style={tw("text-[8px] text-slate-500 uppercase font-bold")}>Authorized Signatory</Text>
-            </View>
-          </View>
-          
-          <View style={tw("mt-6 py-3 border-t border-slate-50 flex-row justify-between items-center")}>
-             <View style={tw("flex-row gap-4")}>
-               <Text style={tw("text-[7px] text-slate-400")}>Regd Off: {branchData?.address || "—"}</Text>
-             </View>
-             <Text style={tw("text-[7px] text-slate-300")}>This is a computer generated document.</Text>
-          </View>
-        </View>
-
-        {/* Page Numbering */}
+        {/* ═══ DOCUMENT TITLE ═════════════════════════════════════════ */}
         <Text
-          style={tw("absolute bottom-4 right-10 text-[7px] text-slate-300")}
-          render={({ pageNumber, totalPages }) => `P-${pageNumber} / ${totalPages}`}
+          style={{
+            textAlign: "center",
+            fontFamily: "Helvetica-Bold",
+            fontSize: 11,
+            color: TEXT_DARK,
+            marginBottom: 6,
+          }}
+        >
+          {title}
+        </Text>
+
+        {/* ═══ BILL TO / SHIPPING TO / INVOICE DETAILS ════════════════ */}
+        <View style={[s.border, { marginBottom: 6 }]} wrap={false}>
+          {/* Purple band */}
+          <View style={s.bandRow}>
+            <Text style={[s.bandCell, { flex: 2, borderRight: `1 solid ${WHITE}` }]}>
+              Bill To:
+            </Text>
+            <Text style={[s.bandCell, { flex: 2, borderRight: `1 solid ${WHITE}` }]}>
+              Shipping To
+            </Text>
+            <Text style={[s.bandCell, { flex: 1.5, color: "#ffeeaa" }]}>
+              Invoice Details
+            </Text>
+          </View>
+          {/* Content row */}
+          <View style={[s.row, { minHeight: 60 }]}>
+            {/* Bill To */}
+            <View style={[s.flex1, s.borderR, { flex: 2, padding: 5 }]}>
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 2 }}>
+                {customerData?.name || "—"}
+              </Text>
+              <Text style={{ fontSize: 8, color: TEXT_MID, marginBottom: 2 }}>
+                {customerData?.address || ""}
+              </Text>
+              <Text style={{ fontSize: 8, color: TEXT_MID }}>
+                Contact No.: {customerData?.contactPersonNumber || "—"}
+              </Text>
+            </View>
+            {/* Shipping To */}
+            <View style={[s.flex1, s.borderR, { flex: 2, padding: 5 }]}>
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 2 }}>
+                {customerData?.name || "—"}
+              </Text>
+              <Text style={{ fontSize: 8, color: TEXT_MID }}>
+                {customerData?.address || ""}
+              </Text>
+            </View>
+            {/* Invoice Details */}
+            <View style={{ flex: 1.5, padding: 5 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                <Text style={{ fontSize: 8, color: TEXT_MID }}>Invoice No.:</Text>
+                <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: PURPLE_DARK }}>
+                  {docId}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                <Text style={{ fontSize: 8, color: TEXT_MID }}>Date:</Text>
+                <Text style={{ fontSize: 8, color: TEXT_DARK }}>{formattedDate}</Text>
+              </View>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                <Text style={{ fontSize: 8, color: TEXT_MID }}>Time:</Text>
+                <Text style={{ fontSize: 8, color: TEXT_DARK }}>{formattedTime}</Text>
+              </View>
+              {/* <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ fontSize: 8, color: TEXT_MID }}>Tax Method:</Text>
+                <Text style={{ fontSize: 8, color: TEXT_DARK }}>{taxMethod}</Text>
+              </View> */}
+            </View>
+          </View>
+        </View>
+
+        {/* ═══ ITEMS TABLE ════════════════════════════════════════════ */}
+        <View style={[s.border, { marginBottom: 0 }]}>
+          {/* Header */}
+          <View style={[s.bandRow, { borderBottom: `1 solid ${WHITE}` }]} fixed>
+            <Text style={[s.bandCell, { width: col.sno, textAlign: "center" }]}>#</Text>
+            <Text style={[s.bandCell, { width: col.item, borderLeft: `1 solid ${WHITE}` }]}>Item name</Text>
+            <Text style={[s.bandCell, { width: col.hsn, borderLeft: `1 solid ${WHITE}`, textAlign: "center" }]}>HSC/SAC</Text>
+            <Text style={[s.bandCell, { width: col.qty, borderLeft: `1 solid ${WHITE}`, textAlign: "center" }]}>Qty</Text>
+            <Text style={[s.bandCell, { width: col.price, borderLeft: `1 solid ${WHITE}`, textAlign: "right" }]}>Price/unit</Text>
+            <Text style={[s.bandCell, { width: col.disc, borderLeft: `1 solid ${WHITE}`, textAlign: "right" }]}>Discount</Text>
+            <Text style={[s.bandCell, { width: col.cgst, borderLeft: `1 solid ${WHITE}`, textAlign: "right" }]}>CGST</Text>
+            <Text style={[s.bandCell, { width: col.sgst, borderLeft: `1 solid ${WHITE}`, textAlign: "right" }]}>SGST</Text>
+            <Text style={[s.bandCell, { width: col.amt, borderLeft: `1 solid ${WHITE}`, textAlign: "right" }]}>Amount</Text>
+          </View>
+
+          {/* Item rows */}
+          {items.map((item, idx) => {
+            const qty = parseFloat(item.qty || 0);
+            const price = parseFloat(item.price || 0);
+            const taxRate = parseFloat(item.tax || item.taxPercent || 0);
+            let rowTaxable = price * qty;
+            let cgstAmt = 0, sgstAmt = 0;
+            if (taxMethod === "With Tax") {
+              rowTaxable = (price * qty) / (1 + taxRate / 100);
+            }
+            if (!isSupplierOutside) {
+              cgstAmt = (rowTaxable * taxRate) / 200;
+              sgstAmt = cgstAmt;
+            }
+            const lineAmount = price * qty;
+            const hsnCode = findFromList(
+              item.hsnId || itemList?.find((i) => i.id === item.itemId)?.hsnId,
+              hsnList,
+              "name"
+            );
+            return (
+              <View
+                key={idx}
+                style={[
+                  s.row,
+                  { borderTop: `1 solid ${BORDER}` },
+                  rowBg(idx),
+                ]}
+                wrap={false}
+              >
+                <Text style={[s.cell, { width: col.sno, textAlign: "center" }]}>{idx + 1}</Text>
+                <View style={{ width: col.item, borderLeft: `1 solid ${BORDER}` }}>
+                  <Text style={[s.cellBold, { paddingBottom: 0 }]}>
+                    {findFromList(item.itemId, itemList, "name") || "—"}
+                  </Text>
+                  <Text style={{ fontSize: 7, color: TEXT_LIGHT, paddingLeft: 5, paddingBottom: 3 }}>
+                    {[
+                      findFromList(item.sizeId, sizeList, "name"),
+                      findFromList(item.colorId, colorList, "name"),
+                    ]
+                      .filter(Boolean)
+                      .join(" | ")}
+                  </Text>
+                </View>
+                <Text style={[s.cell, { width: col.hsn, borderLeft: `1 solid ${BORDER}`, textAlign: "center" }]}>
+                  {hsnCode || "—"}
+                </Text>
+                <Text style={[s.cell, { width: col.qty, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  {qty.toFixed(2)}
+                </Text>
+                <Text style={[s.cell, { width: col.price, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  Rs. {fmt(price)}
+                </Text>
+                <Text style={[s.cell, { width: col.disc, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  {"—"}
+                </Text>
+                <Text style={[s.cell, { width: col.cgst, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  {cgstAmt > 0 ? `Rs. ${fmt(cgstAmt)} (${taxRate / 2}%)` : "—"}
+                </Text>
+                <Text style={[s.cell, { width: col.sgst, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  {sgstAmt > 0 ? `Rs. ${fmt(sgstAmt)} (${taxRate / 2}%)` : "—"}
+                </Text>
+                <Text style={[s.cellBold, { width: col.amt, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+                  Rs. {fmt(lineAmount)}
+                </Text>
+              </View>
+            );
+          })}
+
+          {/* Totals row */}
+          <View
+            style={[
+              s.row,
+              {
+                borderTop: `1 solid ${BORDER}`,
+                backgroundColor: GRAY_BG,
+              },
+            ]}
+            wrap={false}
+          >
+            <Text style={[s.cellBold, { width: col.sno, textAlign: "center" }]} />
+            <Text style={[s.cellBold, { width: col.item, borderLeft: `1 solid ${BORDER}` }]}>Total</Text>
+            <Text style={[s.cellBold, { width: col.hsn, borderLeft: `1 solid ${BORDER}` }]} />
+            <Text style={[s.cellBold, { width: col.qty, borderLeft: `1 solid ${BORDER}`, textAlign: "center" }]}>
+              {items.reduce((a, i) => a + parseFloat(i.qty || 0), 0).toFixed(2)}
+            </Text>
+            <Text style={[s.cellBold, { width: col.price, borderLeft: `1 solid ${BORDER}` }]} />
+            <Text style={[s.cellBold, { width: col.disc, borderLeft: `1 solid ${BORDER}` }]} />
+            <Text style={[s.cellBold, { width: col.cgst, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+              Rs. {fmt(taxBreakup.reduce((a, b) => a + b.cgst, 0))}
+            </Text>
+            <Text style={[s.cellBold, { width: col.sgst, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+              Rs. {fmt(taxBreakup.reduce((a, b) => a + b.sgst, 0))}
+            </Text>
+            <Text style={[s.cellBold, { width: col.amt, borderLeft: `1 solid ${BORDER}`, textAlign: "right" }]}>
+              Rs. {fmt(netAmount)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[s.row, { marginTop: 6, marginBottom: 6, justifyContent: "flex-end" }]} wrap={false}>
+          {/* Totals summary */}
+          <View style={[s.border, { width: 180 }]}>
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Sub Total</Text>
+              <Text style={s.summaryValue}>Rs. {fmt(taxableAmount)}</Text>
+            </View>
+
+            {isSupplierOutside ? (
+              igstTotal > 0 && (
+                <View style={s.summaryRow}>
+                  <Text style={s.summaryLabel}>IGST</Text>
+                  <Text style={s.summaryValue}>Rs. {fmt(igstTotal)}</Text>
+                </View>
+              )
+            ) : (
+              <>
+                {cgstTotal > 0 && (
+                  <View style={s.summaryRow}>
+                    <Text style={s.summaryLabel}>CGST</Text>
+                    <Text style={s.summaryValue}>Rs. {fmt(cgstTotal)}</Text>
+                  </View>
+                )}
+                {sgstTotal > 0 && (
+                  <View style={s.summaryRow}>
+                    <Text style={s.summaryLabel}>SGST</Text>
+                    <Text style={s.summaryValue}>Rs. {fmt(sgstTotal)}</Text>
+                  </View>
+                )}
+              </>
+            )}
+
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Tax Amount</Text>
+              <Text style={s.summaryValue}>Rs. {fmt(totalTax)}</Text>
+            </View>
+
+            <View
+              style={[
+                s.summaryRow,
+                { backgroundColor: PURPLE, borderTop: `2 solid ${PURPLE_DARK}` },
+              ]}
+            >
+              <Text style={[s.summaryLabel, { color: WHITE, fontFamily: "Helvetica-Bold" }]}>
+                Total
+              </Text>
+              <Text style={[s.summaryValue, { color: WHITE, fontSize: 10 }]}>
+                Rs. {fmt(netAmount)}
+              </Text>
+            </View>
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Received</Text>
+              <Text style={s.summaryValue}>Rs. {fmt(totals?.received || 0)}</Text>
+            </View>
+            <View style={s.summaryRow}>
+              <Text style={s.summaryLabel}>Balance</Text>
+              <Text style={s.summaryValue}>Rs. {fmt((netAmount || 0) - (totals?.received || 0))}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ═══ AMOUNT IN WORDS  +  DESCRIPTION ═══════════════════════ */}
+        <View style={[s.row, { marginBottom: 6, border: `1 solid ${BORDER}` }]} wrap={false}>
+          <View style={[s.flex1, s.borderR]}>
+            <View style={[s.bandRow]}>
+              <Text style={s.bandCell}>Invoice Amount in Words</Text>
+            </View>
+            <Text style={{ fontSize: 8, padding: 6, color: TEXT_DARK, fontFamily: "Helvetica-Bold" }}>
+              {numberToText.convertToText(Math.round(netAmount), {
+                language: "en-in",
+                separator: "",
+              })}{" "}
+              Only
+            </Text>
+          </View>
+          <View style={s.flex1}>
+            <View style={s.bandRow}>
+              <Text style={s.bandCell}>Description</Text>
+            </View>
+            <Text style={{ fontSize: 8, padding: 6, color: TEXT_MID }}>
+              {remarks || "Sale Description"}
+            </Text>
+          </View>
+        </View>
+
+        {/* ═══ BANK DETAILS  +  TERMS  +  SIGNATURE ══════════════════ */}
+        <View style={[s.row, { border: `1 solid ${BORDER}` }]} wrap={false}>
+          {/* Bank Details */}
+          <View style={[{ flex: 1.2 }, s.borderR]}>
+            <View style={s.bandRow}>
+              <Text style={s.bandCell}>Bank Details</Text>
+            </View>
+            <View style={{ padding: 6 }}>
+              <View style={[s.row, { marginBottom: 3 }]}>
+                <Text style={{ width: 80, fontSize: 8, color: TEXT_MID }}>Bank Name:</Text>
+                <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold" }}>
+                  {branchData?.bankName || "—"}
+                </Text>
+              </View>
+              <View style={[s.row, { marginBottom: 3 }]}>
+                <Text style={{ width: 80, fontSize: 8, color: TEXT_MID }}>Bank Account No.:</Text>
+                <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold" }}>
+                  {branchData?.accountNo || "—"}
+                </Text>
+              </View>
+              <View style={s.row}>
+                <Text style={{ width: 80, fontSize: 8, color: TEXT_MID }}>Bank IFSC code:</Text>
+                <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold" }}>
+                  {branchData?.ifscCode || "—"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Terms & Conditions */}
+          <View style={[{ flex: 1.2 }, s.borderR]}>
+            <View style={s.bandRow}>
+              <Text style={s.bandCell}>Terms and conditions</Text>
+            </View>
+            <Text style={{ fontSize: 8, padding: 6, color: TEXT_MID }}>
+              {Array.isArray(terms) ? terms.join("\n") : terms || "—"}
+            </Text>
+          </View>
+
+          {/* Authorized Signatory */}
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", padding: 6 }}>
+            <Text style={{ fontSize: 8, color: TEXT_MID, marginBottom: 4 }}>
+              For : {branchData?.branchName || "Walrus Garments"}
+            </Text>
+            <View
+              style={{
+                width: 60,
+                height: 40,
+                border: `1 solid ${BORDER}`,
+                backgroundColor: GRAY_BG,
+                marginBottom: 4,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontSize: 7, color: TEXT_LIGHT }}>Seal</Text>
+            </View>
+            <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: TEXT_DARK }}>
+              Authorized Signatory
+            </Text>
+          </View>
+        </View>
+
+        {/* ═══ Page Number ════════════════════════════════════════════ */}
+        <Text
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 24,
+            fontSize: 7,
+            color: TEXT_LIGHT,
+          }}
+          render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}
           fixed
         />
 

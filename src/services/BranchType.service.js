@@ -8,7 +8,14 @@ async function get(req) {
         where: {
             active: active ? Boolean(active) : undefined,
         },
-  
+        include: {
+            _count: {
+                select: {
+                    Party: true
+                }
+            }
+        }
+
     });
     return { statusCode: 0, data };
 }
@@ -18,7 +25,7 @@ async function getOne(id) {
         where: {
             id: parseInt(id)
         },
-       
+
     })
     if (!data) return NoRecordFound("Branch");
     return { statusCode: 0, data };
@@ -52,7 +59,7 @@ async function create(body) {
     const { name, code, contactEmail, contactName, contactMobile, companyId, active } = await body
     const data = await prisma.branchType.create({
         data: {
-             name,active,
+            name, active,
             //   branchCode: code,
             //    contactEmail, contactName, contactMobile: parseInt(contactMobile), address,
             // company: {
@@ -77,7 +84,7 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            name , active
+            name, active
         },
     })
     return { statusCode: 0, data };

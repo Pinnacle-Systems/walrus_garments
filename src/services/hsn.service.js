@@ -7,6 +7,20 @@ async function get(req) {
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    // DirectItems: true,
+                    // DirectReturnItems: true,
+                    // LegacyStock: true,
+                    QuotationItems: true,
+                    SaleOrderItems: true,
+                    SalesInvoiceItems: true,
+                    SalesDeliveryItems: true,
+                    SalesReturnItems: true,
+                }
+            }
         }
     });
     return { statusCode: 0, data };
@@ -21,7 +35,7 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("hsn");
-    return { statusCode: 0, data: {...data, ...{childRecord}} };
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
@@ -49,7 +63,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, companyId, active ,tax } = await body
+    const { name, code, companyId, active, tax } = await body
     const data = await prisma.hsn.create(
         {
             data: {
@@ -61,7 +75,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, active , tax } = await body
+    const { name, code, active, tax } = await body
     const dataFound = await prisma.hsn.findUnique({
         where: {
             id: parseInt(id)
@@ -74,7 +88,7 @@ async function update(id, body) {
         },
         data:
         {
-            name, code, active , tax
+            name, code, active, tax
         },
     })
     return { statusCode: 0, data };

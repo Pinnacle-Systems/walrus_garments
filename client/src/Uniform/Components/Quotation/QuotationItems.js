@@ -42,8 +42,9 @@ const QuotationItems = ({
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
+        console.log(itemPriceList, "itemPriceList")
         if (!itemPriceList?.data || !itemId || !sizeId) return null;
-        return itemPriceList.data.find(item =>
+        return itemPriceList?.data?.find(item =>
             String(item.itemId) === String(itemId) &&
             String(item.sizeId) === String(sizeId) &&
             (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
@@ -107,6 +108,7 @@ const QuotationItems = ({
                 } else if (currentSize) {
                     // 2. Standard Price Master Logic
                     const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
+                    console.log(foundPrice, "foundPrice")
                     if (foundPrice) {
                         const numericQty = parseFloat(currentQty || 0);
                         if (numericQty > 6 && foundPrice.offerPrice) {

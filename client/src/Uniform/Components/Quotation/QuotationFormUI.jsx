@@ -24,6 +24,7 @@ import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintForm
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 
 
@@ -87,16 +88,17 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const [addData] = useAddQuotationMutation();
   const [updateData] = useUpdateQuotationMutation();
+  const [invalidateTagsDispatch] = useInvalidateTags();
 
 
 
 
-  const inwardTyperef = useRef(null);
+  const FirstInputFocus = useRef(null);
 
 
   useEffect(() => {
-    if (inwardTyperef.current && !id) {
-      inwardTyperef.current.focus();
+    if (FirstInputFocus.current && !id) {
+      FirstInputFocus.current.focus();
     }
   }, []);
 
@@ -218,12 +220,14 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       if (returnData.statusCode === 1) {
         toast.error(returnData.message);
       } else {
-        Swal.fire({
-          icon: 'success',
-          title: `${text || 'Saved'} Successfully`,
-        });
 
         if (returnData.statusCode === 0) {
+          Swal.fire({
+            icon: 'success',
+            title: `${text || 'Saved'} Successfully`,
+          });
+          invalidateTagsDispatch()
+
           if (nextProcess == "new" || nextProcess == "close") {
             syncFormWithDb(undefined);
             onNew()
@@ -386,6 +390,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   };
 
 
+
+
   return (
     <>
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
@@ -487,15 +493,17 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
                   <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
                   <div className="grid grid-cols-7 gap-1 overflow-visible">
                     <div className="col-span-3 overflow-visible">
+
                       <ReusableSearchableInput
-                        label="Customer Id"
+                        label="Customer Name"
                         component="PartyMaster"
-                        placeholder="Search Customer Id..."
+                        placeholder="Search Customer Name..."
                         optionList={supplierList?.data}
-                        setSearchTerm={(value) => setCustomerId(value)}
+                        setSearchTerm={(value) => { setCustomerId(value) }}
                         searchTerm={customerId}
-                        show="isClient"
-                        required disabled={id}
+                        show={"isClient"}
+                        required={true}
+                        disabled={id}
                       />
                     </div>
                     <TextInput name="Phone Number" value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled required />

@@ -92,7 +92,7 @@ const Quotation = () => {
 
     const handleConvertToSaleOrder = (dataObj) => {
         // toast.info(`Converting Quotation ${dataObj.docId} to Sale Order...`);
-        dispatch(push({ name: "SALE ORDER", id: dataObj.id }));
+        dispatch(push({ name: "SALE ORDER", projectId: dataObj.id }));
     };
 
     const handleConvertToInvoice = (dataObj) => {

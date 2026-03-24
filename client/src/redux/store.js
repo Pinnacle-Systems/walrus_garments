@@ -202,7 +202,7 @@ const commonReducers = {
   accessoryTemplateMaster: AccessoryTemplateMasterApi.reducer,
   SectionMaster: SectionMasterApi.reducer,
   ItemControlPanel: ItemControlPanelApi.reducer,
-  Quotationr: QuotataionApi.reducer,
+  Quotation: QuotataionApi.reducer,
   LegacyStock: LegacyStockApi.reducer,
   saleOrder: saleOrderApi.reducer,
   ItemCategoryMaster: ItemCategoryMasterApi.reducer,

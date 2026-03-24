@@ -72,7 +72,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
 
     return (
         <>
-            <div className=" bg-white rounded-md shadow-sm h-[400px]">
+            <div className=" bg-white rounded-md shadow-sm h-[390px]">
                 <div className="flex justify-between items-center mb-2 ">
                     <h2 className="font-bold text-slate-700">List Of Items</h2>
                     <button className="font-bold text-slate-700 bord"
@@ -108,7 +108,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                     </button>
                 </div>
 
-                <div className={` w-full h-[400px]  overflow-auto overflow-y-auto  `}>
+                <div className={` w-full h-[350px]  overflow-auto overflow-y-auto  `}>
                     <table className="w-full border-collapse table-fixed ">
                         <thead className="bg-gray-200 text-gray-800 top-0 sticky" >
                             <tr>
@@ -218,6 +218,22 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 </tr>)
                             }
                         </tbody>
+                        <tfoot className="bg-gray-300 font-bold sticky bottom-0 z-10 border-t-2 border-gray-300">
+                            <tr>
+                                <td
+                                    colSpan={6 + (stockControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0) || 0) + 3}
+                                    className="px-4 py-1 text-right text-[12px]"
+                                >
+                                    Total:
+                                </td>
+                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
+                                </td>
+                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(3)}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 {contextMenu && (

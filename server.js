@@ -67,6 +67,7 @@ import {
   priceTemplate,
   salesInvoice,
   payments,
+  pointOfSales,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -237,7 +238,7 @@ app.use("/salesReturn", salesReturn)
 app.use("/stockAdjustment", stockAdjustment);
 app.use("/priceTemplate", priceTemplate);
 app.use('/payment', payments)
-// app.use("/pointOfSales", pointOfSales)
+app.use("/pointOfSales", pointOfSales)
 
 
 

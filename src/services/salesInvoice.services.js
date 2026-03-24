@@ -65,6 +65,17 @@ async function get(req) {
                         }
                     }
                 },
+            },
+            SalesDelivery: {
+                select: {
+                    id: true,
+                    docId: true
+                }
+            },
+            _count: {
+                select: {
+                    SalesDelivery: true,
+                }
             }
         },
         orderBy: {
@@ -112,7 +123,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, invoiceItems, finYearId, branchId } = await body
+    const { customerId, discountType, discountValue, invoiceItems, finYearId, branchId, saleOrderId } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -127,6 +138,7 @@ async function create(body) {
                 // discountType: discountType ? discountType : "",
                 // discountValue: discountValue ? discountValue : "",
                 // branchId: branchId ? parseInt(branchId) : "",
+                saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
                 docId: docId,
                 SalesInvoiceItems: {
                     createMany: invoiceItems?.length > 0 ? {

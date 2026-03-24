@@ -7,7 +7,7 @@ async function get(req) {
 
     console.log(companyId, active, "companyId, active ")
 
-    let data = await prisma.Section.findMany({
+    let data = await prisma.section.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         }
@@ -21,7 +21,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.Section.findUnique({
+    const data = await prisma.section.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -54,7 +54,7 @@ async function create(body) {
     const data = await prisma.Section.create(
         {
             data: {
-                name,  active
+                name, active
             }
         }
     )
@@ -75,7 +75,7 @@ async function update(id, body) {
         },
         data:
         {
-            name,  active
+            name, active
 
         },
     })

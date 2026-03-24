@@ -57,6 +57,26 @@ const useInvalidateTags = () => {
             type: `pageMaster/invalidateTags`,
             payload: ["Pages"],
         },
+        {
+            type: `Quotation/invalidateTags`,
+            payload: ["Quotation"],
+        },
+        {
+            type: `saleOrder/invalidateTags`,
+            payload: ["saleOrder"],
+        },
+        {
+            type: `salesInvoice/invalidateTags`,
+            payload: ["salesInvoice"],
+        },
+        {
+            type: `salesDelivery/invalidateTags`,
+            payload: ["salesDelivery"],
+        },
+               {
+            type: `salesReturn/invalidateTags`,
+            payload: ["salesReturn"],
+        },
 
     ];
 

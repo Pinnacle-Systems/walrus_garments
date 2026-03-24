@@ -7,6 +7,21 @@ async function get(req) {
     const data = await prisma.unitOfMeasurement.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    DirectItems: true,
+                    DirectReturnItems: true,
+                    LegacyStock: true,
+                    Stock: true,
+                    QuotationItems: true,
+                    SaleOrderItems: true,
+                    SalesInvoiceItems: true,
+                    SalesDeliveryItems: true,
+                    SalesReturnItems: true,
+                }
+            }
         }
     });
     return { statusCode: 0, data };
@@ -20,7 +35,7 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("unitOfMeasurement");
-    return { statusCode: 0, data: data};
+    return { statusCode: 0, data: data };
 
 }
 

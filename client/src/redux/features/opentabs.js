@@ -27,10 +27,20 @@ export const openTabs = createSlice({
         state.tabs[existingIndex] = {
           ...state.tabs[existingIndex],
           active: true,
-          projectId: action.payload.projectId, projectForm: action.payload.projectForm, transactionType: action.payload.transactionType, id: action.payload.id
+          id: action.payload.id,
+          projectId: action.payload.projectId,
+          projectForm: action.payload.projectForm,
+          transactionType: action.payload.transactionType,
         };
       } else {
-        state.tabs.push({ id: action.payload.id, name: action.payload.name, active: true, projectId: action.payload.projectId, projectForm: action.payload.projectForm, transactionType: action.payload.transactionType });
+        state.tabs.push({
+          id: action.payload.id,
+          name: action.payload.name,
+          active: true,
+          projectId: action.payload.projectId,
+          projectForm: action.payload.projectForm,
+          transactionType: action.payload.transactionType
+        });
       }
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },

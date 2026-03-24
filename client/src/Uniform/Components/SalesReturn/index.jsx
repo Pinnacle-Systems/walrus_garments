@@ -40,7 +40,7 @@ const SalesDelivery = () => {
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const [deliveryItems, setDeliveryItems] = useState([]);
     const [partyId, setPartyId] = useState('')
-
+    const [salesDeliveryId, setSalesDeliveryId] = useState('')
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
     const params = {
@@ -137,7 +137,7 @@ const SalesDelivery = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId}
 
 
 
@@ -147,7 +147,7 @@ const SalesDelivery = () => {
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
-                        <h1 className="text-2xl font-bold text-gray-800">Sales Delivery</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">Sales Return</h1>
 
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"

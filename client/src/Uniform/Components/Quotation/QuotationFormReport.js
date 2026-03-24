@@ -237,7 +237,7 @@ const QuotationPrintFormat = ({
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
                   </th>
-                  <th className="w-32 px-3 font-medium text-[13px] text-gray-900 text-center">
+                  <th className="w-36 px-3 font-medium text-[13px] text-gray-900 text-center">
                     <div>Status</div>
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
@@ -343,7 +343,7 @@ const QuotationPrintFormat = ({
                       <td className="py-1.5 text-center">
                         {dataObj?.Saleorder?.length > 0 ? (
                           <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
-                            S.O Taken ({dataObj.Saleorder[0].docId.split('/').pop()})
+                            Sale Order Taken ({dataObj.Saleorder[0].docId.split('/').pop()})
                           </span>
                         ) : (
                           <span className="text-gray-400 text-[10px]">Pending</span>
@@ -364,7 +364,7 @@ const QuotationPrintFormat = ({
                                 </svg>
                               </button>
                             )}
-                            {onEdit && (
+                            {onEdit && !(dataObj?.Saleorder?.length > 0) && (
                               <button
                                 className="text-green-600 flex items-center px-1 bg-green-50 rounded hover:bg-green-100 transition-colors"
                                 onClick={(e) => { e.stopPropagation(); onEdit(dataObj.id); }}
@@ -375,7 +375,7 @@ const QuotationPrintFormat = ({
                                 </svg>
                               </button>
                             )}
-                            {onDelete && (
+                            {onDelete && !(dataObj?.Saleorder?.length > 0) && (
                               <button
                                 className="text-red-800 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
                                 onClick={(e) => { e.stopPropagation(); onDelete(dataObj.id, dataObj?._count); }}

@@ -43,14 +43,16 @@ async function get(req) {
         }
 
     });
+    if (Boolean(isAddressCombined)) {
 
-    if (isAddressCombined) {
-        data = data?.map(i => ({
+        data = await data?.map(i => ({
             ...i,
             name: `${i.name}${i?.BranchType?.name ? ` / ${i.BranchType.name}` : ""
                 }${i?.City?.name ? ` / ${i.City.name}` : ""}`
 
         }))
+        console.log(data, "datadata")
+
     }
 
     return { statusCode: 0, data };

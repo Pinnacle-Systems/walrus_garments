@@ -4908,7 +4908,9 @@ model Item {
   field3                    String?
   field4                    String?
   field5                    String?
+  MainCategory              ItemCategory?               @relation("MainCategory", fields: [mainCategoryId], references: [id])
   mainCategoryId            Int?
+  SubCategory               ItemCategory?               @relation("SubCategory", fields: [subCategoryId], references: [id])
   subCategoryId             Int?
   DirectItems               DirectItems[]
   Stock                     Stock[]
@@ -5096,10 +5098,12 @@ model SaleOrderItems {
 }
 
 model ItemCategory {
-  id     Int      @id @default(autoincrement())
-  name   String?
-  code   String?
-  active Boolean? @default(false)
+  id           Int      @id @default(autoincrement())
+  name         String?
+  code         String?
+  active       Boolean? @default(false)
+  MainCategory Item[]   @relation("MainCategory")
+  SubCategory  Item[]   @relation("SubCategory")
 }
 
 model StockAdjustment {
@@ -5160,6 +5164,7 @@ model SalesDelivery {
   salesInvoiceId     Int?
   SalesInvoice       SalesInvoice?        @relation(fields: [salesInvoiceId], references: [id])
   SalesDeliveryItems SalesDeliveryItems[]
+  SalesReturn        SalesReturn[]
 }
 
 model SalesDeliveryItems {
@@ -5248,6 +5253,8 @@ model SalesReturn {
   updatedBy        User?              @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById      Int?
   taxType          String?
+  salesDeliveryId  Int?
+  SalesDelivery    SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id])
   SalesReturnItems SalesReturnItems[]
 }
 

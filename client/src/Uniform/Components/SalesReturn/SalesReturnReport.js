@@ -191,7 +191,7 @@ const SalesReturnReport = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Order No</div>
+                    <div>Sale Return No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -203,7 +203,7 @@ const SalesReturnReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Order Date</div>
+                    <div>Sale Return Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -216,7 +216,7 @@ const SalesReturnReport = ({
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Supplier</div>
+                    <div>Customer</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"

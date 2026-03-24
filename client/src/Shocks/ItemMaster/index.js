@@ -751,14 +751,14 @@ export default function Form() {
             </div>
 
             <div className="flex-1 overflow-auto p-3">
-              <div className="bg-gray-50 p-4 rounded-lg h-full space-y-4">
+              <div className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
 
-                <fieldset className="border border-gray-300 rounded-lg p-4 bg-white h-full">
+                <fieldset className="border border-gray-300 rounded-lg p-2 bg-white h-full">
                   <legend className="px-2 text-sm font-semibold text-gray-700">
                     Item Information
                   </legend>
 
-                  <div className="grid grid-cols-12 gap-4 mt-2">
+                  <div className="grid grid-cols-12 gap-4 ">
 
 
 
@@ -892,14 +892,14 @@ export default function Form() {
                     </div>
 
 
-                    <fieldset className="col-span-12 border border-gray-300 rounded-lg h-full">
+                    <fieldset className="col-span-12 border border-gray-300 rounded-lg h-[380px]">
                       <legend className="px-2 text-sm font-semibold text-gray-700">
                         Pricing Information
                       </legend>
 
                       <div>
 
-                        <div className="grid grid-cols-12 gap-4 mt-2 p-2 ">
+                        <div className="grid grid-cols-12 gap-4 px-2">
                           <div className="col-span-2">
                             <DropdownInput
                               name="Price Method"
@@ -1050,7 +1050,7 @@ export default function Form() {
                         {priceMethod != "STANDARD" && (
                           <>
                             <div className="grid grid-cols-12 gap-3 ">
-                              <div className={`col-span-8 w-full ${Object.keys(fields).length > 1 ? " h-[220px]" : " h-[300px]"} `}>
+                              <div className={`col-span-10 w-full ${Object.keys(fields).length > 1 ? " h-[280px]" : " h-[280px]"} `}>
                                 <div className={` relative overflow-y-auto py-1 h-full`}>
                                   <table className="w-full border-collapse table-fixed ">
                                     <thead className="bg-gray-200 text-gray-900 sticky top-0 header">

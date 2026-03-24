@@ -47,52 +47,88 @@ const ThermalSalesPrintFormat = ({
   colorList = [],
   uomList = [],
   hsnList = [],
-  taxDetails = {} // Placeholder for tax calculations
+  taxMethod = "WithoutTax",
+  isSupplierOutside = false,
+  taxDetails = {}
 }) => {
-
   const findFromList = (id, list, key) => {
     if (!id || !list) return "";
     const item = list.find(l => parseInt(l.id) === parseInt(id));
     return item ? item[key] : "";
   };
 
-  const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+  const getTaxBreakup = () => {
+    const breakup = {};
+    items.forEach((item) => {
+      const taxRate = parseFloat(item.tax || item.taxPercent || 0);
+      const qty = parseFloat(item.qty || 0);
+      const price = parseFloat(item.price || 0);
+      let taxableAmount = 0;
+      let taxAmount = 0;
+      if (taxMethod === "inclusive" || taxMethod === "With Tax") {
+        const netTotal = price * qty;
+        taxableAmount = netTotal / (1 + taxRate / 100);
+        taxAmount = netTotal - taxableAmount;
+      } else {
+        taxableAmount = price * qty;
+        taxAmount = (taxableAmount * taxRate) / 100;
+      }
+      const rateKey = taxRate.toFixed(2);
+      if (!breakup[rateKey]) {
+        breakup[rateKey] = {
+          taxRate,
+          taxableAmount: 0,
+          cgst: 0,
+          sgst: 0,
+          igst: 0,
+          totalTax: 0,
+        };
+      }
+      breakup[rateKey].taxableAmount += taxableAmount;
+      if (isSupplierOutside) {
+        breakup[rateKey].igst += taxAmount;
+      } else {
+        breakup[rateKey].cgst += taxAmount / 2;
+        breakup[rateKey].sgst += taxAmount / 2;
+      }
+      breakup[rateKey].totalTax += taxAmount;
+    });
+    return Object.values(breakup);
   };
 
-  const calculateTotalQty = () => {
-    return items.reduce((sum, item) => sum + parseFloat(item.qty || 0), 0);
-  };
-
-  const grandTotal = calculateTotal();
-  const cgst = grandTotal * 0.025; // Example 2.5%
-  const sgst = grandTotal * 0.025; // Example 2.5%
-  const finalTotal = Math.round(grandTotal + cgst + sgst);
+  const taxBreakup = getTaxBreakup();
+  const taxableAmount = taxBreakup.reduce((acc, b) => acc + b.taxableAmount, 0);
+  const totalTax = taxBreakup.reduce((acc, b) => acc + b.totalTax, 0);
+  const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const cgstTotal = taxBreakup.reduce((acc, b) => acc + b.cgst, 0);
+  const sgstTotal = taxBreakup.reduce((acc, b) => acc + b.sgst, 0);
+  const igstTotal = taxBreakup.reduce((acc, b) => acc + b.igst, 0);
+  const netAmount = Math.round(taxableAmount + totalTax);
 
   return (
     <Document title={`${title}_${docId}`}>
-      <Page size={[200, 800]} style={tw('p-2 bg-white flex flex-col')}>
+      <Page size={[216, 800]} style={tw('p-1 bg-white flex flex-col')}>
         {/* Header */}
-        <View style={tw('flex flex-col items-center mb-2')}>
-          <Text style={tw('font-bold text-lg')}>{branchData?.name || "WALRUS"}</Text>
+        <View style={tw('flex flex-col items-center mb-1')}>
+          <Text style={tw('font-bold text-xs')}>{branchData?.branchName || "WALRUS"}</Text>
           <Text style={tw('text-xxs')}>{branchData?.address || "State: 33-Tamil Nadu"}</Text>
-          <Text style={tw('text-xxs')}>Ph No.: {branchData?.contactNumber || "9159477722"}</Text>
+          <Text style={tw('text-xxs')}>Ph No.: {branchData?.contactPersonNumber || branchData?.phone || "9159477722"}</Text>
         </View>
 
-        <View style={tw('flex flex-col items-center mb-2')}>
-          <Text style={tw('font-bold text-xs underline')}>{title}</Text>
+        <View style={tw('flex flex-col items-center mb-1')}>
+          <Text style={tw('font-bold text-xxs underline')}>{title}</Text>
         </View>
 
         {/* Customer & Info */}
         <View style={tw('flex flex-row justify-between mb-1')}>
-          <Text style={tw('text-xs font-bold w-1/2')}>{customerData?.name?.toUpperCase() || "CASH"}</Text>
+          <Text style={tw('text-xxs font-bold w-1/2')}>{customerData?.name?.toUpperCase() || "CASH"}</Text>
           <View style={tw('flex flex-col items-end w-1/2')}>
             <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
             <Text style={tw('text-xxs')}>Time: {moment().format('HH:mm A')}</Text>
           </View>
         </View>
 
-        <View style={tw('flex flex-col mb-2')}>
+        <View style={tw('flex flex-col mb-1')}>
           <Text style={tw('text-xxs')}>Order No: {docId}</Text>
           <Text style={tw('text-xxs')}>PO No.: {remarks || ""}</Text>
         </View>
@@ -121,7 +157,7 @@ const ThermalSalesPrintFormat = ({
               <View style={tw('flex flex-row justify-between')}>
                 <Text style={tw('text-xxs w-[10%]')}>{index + 1}</Text>
                 <Text style={tw('text-xxs w-[45%]')}>{itemName} {sizeName} {colorName}</Text>
-                <Text style={tw('text-xxs w-[15%] text-right')}>{item.qty}</Text>
+                <Text style={tw('text-xxs w-[15%] text-right')}>{parseFloat(item.qty || 0).toFixed(2)}</Text>
                 <Text style={tw('text-xxs w-[15%] text-right')}>{parseFloat(item.price || 0).toFixed(2)}</Text>
                 <Text style={tw('text-xxs w-[15%] text-right')}>{amount.toFixed(2)}</Text>
               </View>
@@ -134,41 +170,55 @@ const ThermalSalesPrintFormat = ({
 
         {/* Totals */}
         <View style={tw('flex flex-row justify-between mb-1')}>
-          <Text style={tw('text-xs font-bold w-1/4')}>Total</Text>
-          <Text style={tw('text-xs font-bold w-1/12 text-right')}>{calculateTotalQty()}</Text>
-          <Text style={tw('text-xs font-bold w-1/2 text-right')}>{grandTotal.toFixed(2)}</Text>
+          <Text style={tw('text-xxs font-bold w-1/4')}>Total Qty:</Text>
+          <Text style={tw('text-xxs font-bold w-1/12 text-right')}>{totalQty.toFixed(2)}</Text>
+          <Text style={tw('text-xxs font-bold w-1/2 text-right')}>Rs. {taxableAmount.toFixed(2)}</Text>
         </View>
 
         <View style={tw('flex flex-col items-end py-1 space-y-0.5')}>
-          <View style={tw('flex flex-row w-full justify-end')}>
-            <Text style={tw('text-xxs w-2/3 text-right')}>Sub Total :</Text>
-            <Text style={tw('text-xxs w-1/3 text-right')}>{grandTotal.toFixed(2)}</Text>
+          <View style={tw('flex flex-row w-full justify-between')}>
+            <Text style={tw('text-xxs')}>Sub Total :</Text>
+            <Text style={tw('text-xxs')}>{taxableAmount.toFixed(2)}</Text>
           </View>
-          <View style={tw('flex flex-row w-full justify-end')}>
-            <Text style={tw('text-xxs w-2/3 text-right')}>SGST @ 2.5% :</Text>
-            <Text style={tw('text-xxs w-1/3 text-right')}>{sgst.toFixed(2)}</Text>
-          </View>
-          <View style={tw('flex flex-row w-full justify-end')}>
-            <Text style={tw('text-xxs w-2/3 text-right')}>CGST @ 2.5% :</Text>
-            <Text style={tw('text-xxs w-1/3 text-right')}>{cgst.toFixed(2)}</Text>
-          </View>
-          <View style={tw('flex flex-row w-full justify-end')}>
-            <Text style={tw('text-xxs w-2/3 text-right')}>Round off :</Text>
-            <Text style={tw('text-xxs w-1/3 text-right')}>{(finalTotal - (grandTotal + sgst + cgst)).toFixed(2)}</Text>
-          </View>
-          <View style={tw('flex flex-row w-full justify-end py-1')}>
-            <Text style={tw('text-xs font-bold w-2/3 text-right')}>Total :</Text>
-            <Text style={tw('text-xs font-bold w-1/3 text-right')}>{finalTotal.toFixed(2)}</Text>
-          </View>
-        </View>
+          
+          {isSupplierOutside ? (
+            igstTotal > 0 && (
+              <View style={tw('flex flex-row w-full justify-between')}>
+                <Text style={tw('text-xxs')}>IGST :</Text>
+                <Text style={tw('text-xxs')}>{igstTotal.toFixed(2)}</Text>
+              </View>
+            )
+          ) : (
+            <>
+              {cgstTotal > 0 && (
+                <View style={tw('flex flex-row w-full justify-between')}>
+                  <Text style={tw('text-xxs')}>CGST :</Text>
+                  <Text style={tw('text-xxs')}>{cgstTotal.toFixed(2)}</Text>
+                </View>
+              )}
+              {sgstTotal > 0 && (
+                <View style={tw('flex flex-row w-full justify-between')}>
+                  <Text style={tw('text-xxs')}>SGST :</Text>
+                  <Text style={tw('text-xxs')}>{sgstTotal.toFixed(2)}</Text>
+                </View>
+              )}
+            </>
+          )}
 
-        <View style={styles.dottedLine} />
+          <View style={tw('flex flex-row w-full justify-between')}>
+            <Text style={tw('text-xxs')}>Tax Amount :</Text>
+            <Text style={tw('text-xxs')}>{totalTax.toFixed(2)}</Text>
+          </View>
 
-        {/* Tax Details Breakdown */}
-        <View style={tw('mb-2')}>
-           <Text style={tw('text-xxs font-bold mb-1')}>Tax Details</Text>
-           <Text style={tw('text-xxs')}>SGST @ 2.5% on {grandTotal.toFixed(2)} : {sgst.toFixed(2)}</Text>
-           <Text style={tw('text-xxs')}>CGST @ 2.5% on {grandTotal.toFixed(2)} : {cgst.toFixed(2)}</Text>
+          <View style={tw('flex flex-row w-full justify-between')}>
+            <Text style={tw('text-xxs')}>Round off :</Text>
+            <Text style={tw('text-xxs')}>{(netAmount - (taxableAmount + totalTax)).toFixed(2)}</Text>
+          </View>
+
+          <View style={tw('flex flex-row w-full justify-between py-1 border-t border-black border-dashed mt-1')}>
+            <Text style={tw('text-xs font-bold')}>NET TOTAL :</Text>
+            <Text style={tw('text-xs font-bold')}>Rs. {netAmount.toFixed(2)}</Text>
+          </View>
         </View>
 
         <View style={styles.dottedLine} />

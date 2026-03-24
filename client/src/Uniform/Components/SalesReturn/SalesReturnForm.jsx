@@ -17,19 +17,19 @@ import Swal from "sweetalert2";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
-import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
+import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useGetSalesDeliveryQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import SalesReturnItems from "./SalesReturnItems";
-import { useAddSalesReturnMutation, useGetSalesReturnByIdQuery, useUpdateSalesReturnMutation } from "../../../redux/uniformService/salesReturnServices";
+import { useAddSalesReturnMutation, useGetSalesReturnByIdQuery, useGetSalesReturnQuery, useUpdateSalesReturnMutation } from "../../../redux/uniformService/salesReturnServices";
 
 
 
 const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
-  yarnList, colorList, uomList, hsnList
+  yarnList, colorList, uomList, hsnList, setSalesDeliveryId, salesDeliveryId
 
 
 }) => {
@@ -66,7 +66,11 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
 
+  const { data: salesDeliveryData } =
+    useGetSalesDeliveryQuery({ params: { ...params } });
 
+  const { data: singleSalesDeliveryData } =
+    useGetSalesDeliveryByIdQuery(salesDeliveryId, { skip: !salesDeliveryId });
 
 
   const { data: supplierDetails } =
@@ -397,7 +401,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
       <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Estimate / Quotation</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Sales Return</h1>
           <button
             onClick={onClose}
             className="text-indigo-600 hover:text-indigo-700"
@@ -417,8 +421,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-1">
-              <ReusableInput label="Doc. Id" readOnly value={docId} />
-              <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <ReusableInput label="Sales Return No" readOnly value={docId} />
+              <ReusableInput label="Sales Return Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
 
             </div>
@@ -437,9 +441,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
                 <ReusableSearchableInput
-                  label="Customer Id"
+                  label="Customer Name"
                   component="PartyMaster"
-                  placeholder="Search Customer Id..."
+                  placeholder="Search Customer Name..."
                   optionList={supplierList?.data}
                   setSearchTerm={(value) => { setCustomerId(value) }}
                   searchTerm={customerId}
@@ -450,6 +454,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
               </div>
               <TextInput name={"Phone Number"} value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled={true} required />
             </div>
+            <DropdownInput name="Sales Order No"
+              options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
+              value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
 
           </div>
 

@@ -524,6 +524,24 @@ const YarnPoItems = ({
                                 </tr>
                             )}
                         </tbody>
+                        <tfoot className="bg-gray-300 font-bold sticky bottom-0 z-10 border-t-2 border-gray-300">
+                            <tr>
+                                <td
+                                    colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
+                                    className="px-4 py-1 text-right text-[12px]"
+                                >
+                                    Total:
+                                </td>
+                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    {(poItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
+                                </td>
+                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300"></td>
+                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    {(poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(3)}
+                                </td>
+                                <td className="px-1 py-1 bg-gray-100"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 {contextMenu && (

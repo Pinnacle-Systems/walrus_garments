@@ -150,7 +150,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "PRICE TEMPLATE": <PriceTemplateMaster />,
     "SALES INVOICE": <SalesInvoice />,
     "SALES DELIVERY": <SalesDelivery />,
-    "POINT OF SALE": <PointOfSale />,
+    "POINT OF SALES": <PointOfSale />,
     "SALES RETURN": <SalesReturn />,
     "PAYMENTS": <Payment />,
 

@@ -62,11 +62,18 @@ async function get(req) {
                     }
                 },
             },
-            // Quotation: {
-            //     select: {
-            //         docId: true
-            //     }
-            // }
+            SalesInvoice: {
+                select: {
+                    id: true,
+                    docId: true
+                }
+            },
+            _count: {
+                select: {
+                    SalesInvoice: true,
+                }
+            }
+
         },
         orderBy: {
             id: "desc"

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { useSelector, useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
-import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { findFromList, getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
@@ -18,6 +18,7 @@ import { useDeleteSalesDeliveryMutation } from '../../../redux/uniformService/sa
 import SalesDeliveryForm from './SalesDeliveryForm';
 import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices';
 import { useGetSalesInvoiceByIdQuery } from '../../../redux/uniformService/salesInvoiceServices';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 
 
@@ -31,8 +32,8 @@ const SalesDelivery = () => {
 
 
     const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState("")
-    const [readOnly, setReadOnly] = useState('')
+    const today = new Date()
+    const [date, setDate] = useState(getDateFromDateTime(today)); const [readOnly, setReadOnly] = useState('')
     const [transType, setTransType] = useState("DyedYarn");
     const [dcNo, setDcNo] = useState("")
     const [dcDate, setDcDate] = useState('')
@@ -49,14 +50,16 @@ const SalesDelivery = () => {
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES DELIVERY");
-    const convertSalesInvoiceId = currentTab?.id;
+    const convertSalesInvoiceId = currentTab?.projectId;
 
-    const { data: salesInvoiceToConvertData, isFetching: isSalesInvoiceFetching } =
+    console.log(currentTab,"currentTab")
+
+    const { data: salesInvoiceToConvertData } =
         useGetSalesInvoiceByIdQuery(convertSalesInvoiceId, { skip: !convertSalesInvoiceId });
 
     useEffect(() => {
         if (salesInvoiceToConvertData?.data && convertSalesInvoiceId) {
-            const invoiceData = salesInvoiceToConvertData.data;
+            const invoiceData = salesInvoiceToConvertData?.data;
             setId("");
             setCustomerId(invoiceData.customerId);
             setDeliveryItems(invoiceData.SalesInvoiceItems);
@@ -67,7 +70,7 @@ const SalesDelivery = () => {
             setShowManufacturer(true);
 
             // Important: Clear the conversion flag so it doesn't re-trigger
-            dispatch(push({ name: "SALES DELIVERY", id: null }));
+            // dispatch(push({ name: "SALES DELIVERY", id: null }));
         }
     }, [salesInvoiceToConvertData, convertSalesInvoiceId, dispatch]);
 
@@ -81,6 +84,7 @@ const SalesDelivery = () => {
 
 
     const [removeData] = useDeleteSalesDeliveryMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const { data: yarnList } =
@@ -110,17 +114,7 @@ const SalesDelivery = () => {
     };
 
     const handleDelete = async (id, childRecord) => {
-
-
-        // if (childRecordCount(childRecord)) {
-        //     Swal.fire({
-        //         icon: 'error',
-        //         text: 'Child Record Exists',
-        //     });
-        //     return
-        // }
-
-        if (id) {
+       if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
@@ -132,13 +126,9 @@ const SalesDelivery = () => {
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+
                 });
+                invalidateTagsDispatch()
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -165,10 +155,8 @@ const SalesDelivery = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} convertSalesInvoiceId={convertSalesInvoiceId}
-
-
-
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} 
+                    invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} convertSalesInvoiceId={convertSalesInvoiceId} 
                 />
 
             ) : (

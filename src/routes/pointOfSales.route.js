@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/payments.controller.js';
+import { get, getOne, getSearch, create, update, remove } from '../controllers/pointOfSales.controller.js';
 
 
 router.post('/', create);

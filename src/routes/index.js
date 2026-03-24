@@ -123,6 +123,7 @@ export { default as salesInvoice } from "./salesInvoice.route.js"
 export { default as stockAdjustment } from "./stockAdjustment.route.js"
 export { default as priceTemplate } from "./priceTemplate.route.js"
 export { default as payments } from "./payments.route.js"
+export { default as pointOfSales } from "./pointOfSales.route.js"
 
 
 

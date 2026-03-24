@@ -45,7 +45,7 @@ async function get(req) {
 
     console.log(companyId, active, "companyId, active ")
 
-    let data = await prisma.SalesDelivery.findMany({
+    let data = await prisma.salesDelivery.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -65,7 +65,12 @@ async function get(req) {
                         }
                     }
                 },
-            }
+            },
+            // _count: {
+            //     select: {
+            //         SalesInvoice: true,
+            //     }
+            // }
         }
     });
 
@@ -109,7 +114,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, deliveryItems, finYearId, branchId } = await body
+    const { customerId, discountType, discountValue, deliveryItems, finYearId, branchId, salesInvoiceId } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -124,6 +129,7 @@ async function create(body) {
                 // discountType: discountType ? discountType : "",
                 // discountValue: discountValue ? discountValue : "",
                 branchId: branchId ? parseInt(branchId) : "",
+                salesInvoiceId: salesInvoiceId ? parseInt(salesInvoiceId) : undefined,
                 docId: docId,
                 SalesDeliveryItems: {
                     createMany: deliveryItems?.length > 0 ? {

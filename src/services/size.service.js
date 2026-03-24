@@ -11,6 +11,22 @@ async function get(req) {
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    DirectItems: true,
+                    DirectReturnItems: true,
+                    LegacyStock: true,
+                    Stock: true,
+                    SaleOrderItems: true,
+                    SalesDeliveryItems: true,
+                    QuotationItems: true,
+                }
+
+            }
+
+
         }
     });
 

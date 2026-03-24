@@ -17,6 +17,8 @@ import { useAddPaymentMutation, useDeletePaymentMutation, useGetPaymentByIdQuery
 import { useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
 import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { push } from "../../../redux/features/opentabs";
 
 const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransactionId,
 
@@ -81,7 +83,9 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         isLoading: isSingleLoading,
     } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-    console.log(PartyData, "partyData")
+      const [invalidateTagsDispatch] = useInvalidateTags    ();
+
+
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -148,7 +152,6 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         totalBillAmount,
         totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0),
         paymentFlow,
-        transactionType,
         transactionId
 
     }
@@ -162,14 +165,16 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
             if (returnData.statusCode === 0) {
                 setId("")
                 syncFormWithDb(undefined)
-                Swal.fire({
-                    icon: 'success',
-                    title: `${text || 'Saved'} Successfully`,
-                    // showConfirmButton: false,
-                    // timer: 2000
-                });
-
+                
                 if (returnData.statusCode === 0) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: `${text || 'Saved'} Successfully`,
+                        // showConfirmButton: false,
+                        // timer: 2000
+                    });
+                          invalidateTagsDispatch()
+
                     if (initialTransactionType && initialTransactionId) {
                         dispatch(push({ name: "PAYMENT DETAIL", transactionType: null, id: null }));
                     }

@@ -19,6 +19,7 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeletesaleOrderMutation } from '../../../redux/uniformService/saleOrderServices';
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 
 
@@ -50,12 +51,14 @@ const SaleOrder = () => {
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALE ORDER");
-    const convertQuotationId = currentTab?.id;
+    const convertQuotationId = currentTab?.projectId;
 
-    console.log(currentTab, "currentTab")
 
     const { data: quotationToConvertData, isFetching: isQuotationFetching } =
         useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
+
+
+
 
     useEffect(() => {
         if (quotationToConvertData?.data && convertQuotationId) {
@@ -70,9 +73,11 @@ const SaleOrder = () => {
             setShowManufacturer(true);
 
             // Important: Clear the conversion flag so it doesn't re-trigger
-            dispatch(push({ name: "SALE ORDER", id: null }));
+            // dispatch(push({ name: "SALE ORDER", id: null }));
         }
     }, [quotationToConvertData, convertQuotationId, dispatch]);
+
+    console.log(convertQuotationId, "convertQuotationId")
 
     const params = {
         branchId, userId, finYearId
@@ -84,6 +89,7 @@ const SaleOrder = () => {
 
 
     const [removeData] = useDeletesaleOrderMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const { data: yarnList } =
@@ -112,7 +118,7 @@ const SaleOrder = () => {
     };
 
     const handleConvertToInvoice = (dataObj) => {
-        dispatch(push({ name: "SALES INVOICE", id: dataObj.id }));
+        dispatch(push({ name: "SALES INVOICE", projectId: dataObj.id }));
     };
 
     const handleDelete = async (id, childRecord) => {
@@ -145,6 +151,7 @@ const SaleOrder = () => {
                         Swal.showLoading();
                     }
                 });
+                invalidateTagsDispatch()
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -171,7 +178,8 @@ const SaleOrder = () => {
                     inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                     saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertQuotationId={convertQuotationId}
+                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} quoteId={convertQuotationId}
+                    invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
 
 
 
