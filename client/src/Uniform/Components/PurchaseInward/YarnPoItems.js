@@ -9,6 +9,7 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import { FaPlus, FaTrashAlt } from "react-icons/fa";
 
 const YarnPoItems = ({
     id,
@@ -506,17 +507,26 @@ const YarnPoItems = ({
 
 
                                     <td className="w-16 px-1 py-1 text-center">
-                                        <input
-                                            readOnly
-                                            className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    addNewRow();
-                                                }
-                                            }}
-
-                                        />
+                                        {!readOnly && (
+                                            <div className="flex items-center justify-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={addNewRow}
+                                                    className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                                                    title="Add New Row"
+                                                >
+                                                    <FaPlus className="w-3 h-3 mx-auto" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteRow(index)}
+                                                    className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                    title="Delete Row"
+                                                >
+                                                    <FaTrashAlt className="w-3 h-3 mx-auto" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </td>
 
 

@@ -346,7 +346,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     </button>
                 </div>
             </div>
-            <div className="w-full h-[78vh]  mx-auto rounded-md shadow-md  py-2 ">
+            <div className="w-full h-[75vh]    py-2 ">
 
 
 
@@ -440,7 +440,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
+                <div className="flex flex-col md:flex-row gap-2 justify-between">
                     <div className="flex gap-2 flex-wrap">
                         <button
                             onClick={() => hasPermission(() => saveData("new"), "create")}

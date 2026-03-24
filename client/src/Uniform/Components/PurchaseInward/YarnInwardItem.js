@@ -14,7 +14,7 @@ import { useGetgsmQuery } from "../../../redux/uniformService/GsmMasterServices"
 import { useGetLoopLengthQuery } from "../../../redux/uniformService/LoopLengthMasterServices";
 import { useGetDiaQuery } from "../../../redux/uniformService/DiaMasterServices";
 import PurchaseYarnPoItems from "./YarnPoItem";
-import { HiPlus } from "react-icons/hi";
+import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import { useGetPoQuery } from "../../../redux/uniformService/PoServices";
 import Swal from "sweetalert2";
 
@@ -318,11 +318,18 @@ const YarnInwardPoItems = ({
                                 >
                                     Gross
                                 </th>
-                                <th
-
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
-                                >
-                                    Actions
+                                <th className="w-16 px-1 py-1 text-center font-medium text-[13px]">
+                                    <div className="flex flex-col items-center">
+                                        <span>Actions</span>
+                                        <button
+                                            type="button"
+                                            onClick={addNewRow}
+                                            className="text-blue-600 hover:text-blue-800 transition-colors p-1"
+                                            title="Add New Row"
+                                        >
+                                            <FaPlus className="w-4 h-4 mx-auto" />
+                                        </button>
+                                    </div>
                                 </th>
                             </tr>
                         </thead>{console.log(inwardItems, "inwardItemsinIndividual")}

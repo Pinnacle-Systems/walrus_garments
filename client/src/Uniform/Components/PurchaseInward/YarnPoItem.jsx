@@ -6,7 +6,7 @@ import { findFromList, substract, sumArray } from '../../../Utils/helper'
 import Modal from '../../../UiComponents/Modal'
 import { FabricLotGrid } from './LotGrid'
 import { toast } from 'react-toastify'
-import { HiPencil, HiTrash } from 'react-icons/hi'
+import { FaPlus, FaTrashAlt } from 'react-icons/fa'
 
 const PurchaseYarnPoItems = ({ yarnList, uomList,
     colorList, gaugeList, designList, poList,
@@ -146,11 +146,27 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
 
 
 
-                <td className="py-0.5 border border-gray-300 text-[11px]">
-                    <input
-                        readOnly
-                        className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                    />
+                <td className="py-0.5 border border-gray-300 text-[11px] text-center">
+                    {!readOnly && (
+                        <div className="flex items-center justify-center gap-1">
+                            <button
+                                type="button"
+                                onClick={addNewRow}
+                                className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                                title="Add New Row"
+                            >
+                                <FaPlus className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => deleteRow(index)}
+                                className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                title="Delete Row"
+                            >
+                                <FaTrashAlt className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    )}
                 </td>
             </tr>
         </>

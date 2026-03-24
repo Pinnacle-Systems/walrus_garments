@@ -7,7 +7,7 @@ import Modal from '../../../UiComponents/Modal'
 import { FabricLotGrid, YarnLotGrid } from './LotGrid'
 import { toast } from 'react-toastify'
 import { useGetDirectItemByIdQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices'
-import { HiPencil, HiTrash } from 'react-icons/hi'
+import { FaPlus, FaTrashAlt } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 
 const YarnDirectItem = ({ itemList, uomList,
@@ -163,20 +163,29 @@ const YarnDirectItem = ({ itemList, uomList,
                     {item.price * item.qty ? parseFloat(item.price * item.qty || 0).toFixed(2) : ""}
 
                 </td>
-                {/* 
-                <td className="w-16 px-1 py-1 text-center  border border-gray-300">
-                    <input
-                        readOnly
-                        className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                addNewRow();
-                            }
-                        }}
 
-                    />
-                </td> */}
+                <td className="w-16 px-1 py-1 text-center border border-gray-300">
+                    {!readOnly && (
+                        <div className="flex items-center justify-center gap-1">
+                            <button
+                                type="button"
+                                onClick={addNewRow}
+                                className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                                title="Add New Row"
+                            >
+                                <FaPlus className="w-3 h-3 mx-auto" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => deleteRow(index)}
+                                className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                title="Delete Row"
+                            >
+                                <FaTrashAlt className="w-3 h-3 mx-auto" />
+                            </button>
+                        </div>
+                    )}
+                </td>
 
 
 
