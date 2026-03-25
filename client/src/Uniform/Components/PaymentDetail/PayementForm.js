@@ -21,7 +21,7 @@ import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvo
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { push } from "../../../redux/features/opentabs";
 
-const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransactionId,
+const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
 
     transactionId,
     transactionType,
@@ -164,6 +164,12 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [syncFormWithDb, singleData])
+
+    useEffect(() => {
+        if (id) {
+            setReadOnly(initialReadOnly);
+        }
+    }, [id, initialReadOnly]);
 
     useEffect(() => {
         if (!id && initialTransactionType === "QUOTATION" && initialTransactionId) {
@@ -645,7 +651,10 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                     type="number"
                                     value={paidAmount}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500"
+                                    readOnly={readOnly}
+                                    disabled={readOnly}
+                                    className={`w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
+                                        }`}
                                     placeholder="0"
                                 />
                             </div>
