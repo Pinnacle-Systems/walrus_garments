@@ -168,6 +168,7 @@ const SalesInvoice = () => {
                     invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                     supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId} invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
+                    sourceSaleOrderDocId={saleOrderToConvertData?.data?.docId || ""}
 
 
 

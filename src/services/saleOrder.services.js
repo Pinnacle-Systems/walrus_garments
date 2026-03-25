@@ -88,7 +88,12 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            SaleOrderItems: true
+            SaleOrderItems: true,
+            Quotation: {
+                select: {
+                    docId: true,
+                }
+            }
         }
     })
     if (!data) return NoRecordFound("Sale Order");

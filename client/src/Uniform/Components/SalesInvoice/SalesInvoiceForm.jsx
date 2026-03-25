@@ -30,7 +30,7 @@ import { push } from "../../../redux/features/opentabs";
 
 const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
-  yarnList, colorList, uomList, convertSaleOrderId, termsData, invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, termsData, invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -91,6 +91,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetSalesInvoiceByIdQuery(id, { skip: !id });
+  const saleOrderDocId = singleData?.data?.Saleorder?.docId || sourceSaleOrderDocId || "";
 
   const [addData] = useAddSalesInvoiceMutation();
   const [updateData] = useUpdateSalesInvoiceMutation();
@@ -425,9 +426,18 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                   <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                  <div className="grid grid-cols-2 gap-1">
-                    <ReusableInput label="Sales Invoice No" readOnly value={docId} />
-                    <ReusableInput label="Sales Invoice Date" value={date} type="date" required readOnly disabled />
+                  <div className={`grid gap-1 ${saleOrderDocId ? "grid-cols-12" : "grid-cols-2"}`}>
+                    <div className={saleOrderDocId ? "col-span-4" : ""}>
+                      <ReusableInput label="Sales Invoice No" readOnly value={docId} />
+                    </div>
+                    <div className={saleOrderDocId ? "col-span-4" : ""}>
+                      <ReusableInput label="Sales Invoice Date" value={date} type="date" required readOnly disabled />
+                    </div>
+                    {saleOrderDocId && (
+                      <div className="col-span-4">
+                        <ReusableInput label="Sale Order No" readOnly value={saleOrderDocId} />
+                      </div>
+                    )}
                   </div>
                 </div>
 

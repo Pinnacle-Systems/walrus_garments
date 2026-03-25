@@ -30,7 +30,7 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, quoteId, termsData ,invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, termsData ,invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -75,6 +75,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetsaleOrderByIdQuery(id, { skip: !id });
+  const estimateDocId = singleData?.data?.Quotation?.docId || sourceQuotationDocId || "";
 
   const [addData] = useAddsaleOrderMutation();
   const [updateData] = useUpdatesaleOrderMutation();
@@ -423,9 +424,18 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
                 <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
                   <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                  <div className="grid grid-cols-2 gap-1">
-                    <ReusableInput label="Sale Order No" readOnly value={docId} />
-                    <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
+                  <div className={`grid gap-1 ${estimateDocId ? "grid-cols-12" : "grid-cols-2"}`}>
+                    <div className={estimateDocId ? "col-span-4" : ""}>
+                      <ReusableInput label="Sale Order No" readOnly value={docId} />
+                    </div>
+                    <div className={estimateDocId ? "col-span-4" : ""}>
+                      <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
+                    </div>
+                    {estimateDocId && (
+                      <div className="col-span-4">
+                        <ReusableInput label="Estimate No" readOnly value={estimateDocId} />
+                      </div>
+                    )}
                   </div>
                 </div>
 
