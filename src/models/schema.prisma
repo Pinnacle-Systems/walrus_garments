@@ -171,6 +171,7 @@ model Branch {
   SalesInvoice                           SalesInvoice[]
   SalesReturn                            SalesReturn[]
   Payment                                Payment[]
+  Pos                                    Pos[]
 }
 
 model UserOnBranch {
@@ -317,6 +318,8 @@ model User {
   SalesReturnUpdateBy                 SalesReturn[]                @relation(name: "updatedBy")
   PaymentCreatedBy                    Payment[]                    @relation(name: "createdBy")
   PaymentUpdateBy                     Payment[]                    @relation(name: "updatedBy")
+  PosCreatedBy                        Pos[]                        @relation(name: "createdBy")
+  PosUpdateBy                         Pos[]                        @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -572,6 +575,9 @@ model Party {
   BranchType                 BranchType?                  @relation(fields: [branchTypeId], references: [id])
   branchTypeId               Int?
   parentId                   String?
+  isB2B                      Boolean?                     @default(false)
+  isB2C                      Boolean?                     @default(false)
+  Pos                        Pos[]
   PoSupplier                 Po[]                         @relation(name: "supplier")
   PoDelivery                 Po[]                         @relation(name: "deliveryTo")
   PInwardOrReturn            PInwardOrReturn[]
@@ -792,6 +798,7 @@ model Hsn {
   SalesInvoiceItems    SalesInvoiceItems[]
   SalesReturnItems     SalesReturnItems[]
   PriceTemplateDetails PriceTemplateDetails[]
+  PosItems             PosItems[]
 }
 
 model YarnBlend {
@@ -1115,6 +1122,7 @@ model Color {
   SalesDeliveryItems            SalesDeliveryItems[]
   SalesInvoiceItems             SalesInvoiceItems[]
   SalesReturnItems              SalesReturnItems[]
+  PosItems                      PosItems[]
 }
 
 model UnitOfMeasurement {
@@ -1167,6 +1175,7 @@ model UnitOfMeasurement {
   SalesDeliveryItems                        SalesDeliveryItems[]
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
+  PosItems                                  PosItems[]
 }
 
 enum DeliveryType {
@@ -1848,6 +1857,7 @@ model Size {
   SalesDeliveryItems                        SalesDeliveryItems[]
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
+  PosItems                                  PosItems[]
 }
 
 model SocksMaterial {
@@ -4927,6 +4937,7 @@ model Item {
   PriceTemplateDetails      PriceTemplateDetails[]
   SalesInvoiceItems         SalesInvoiceItems[]
   SalesReturnItems          SalesReturnItems[]
+  PosItems                  PosItems[]
 }
 
 model ItemPriceList {
@@ -5336,4 +5347,44 @@ model Payment {
   refDocId        String?
   transaction     String?
   transactionId   Int?
+}
+
+model Pos {
+  id          Int        @id @default(autoincrement())
+  docId       String?
+  date        DateTime?
+  Branch      Branch?    @relation(fields: [branchId], references: [id])
+  branchId    Int?
+  Party       Party?     @relation(fields: [customerId], references: [id])
+  customerId  Int?
+  createdAt   DateTime?  @default(now())
+  updatedAt   DateTime?  @updatedAt
+  createdBy   User?      @relation("createdBy", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById Int?
+  PosItems    PosItems[]
+}
+
+model PosItems {
+  id            Int                @id @default(autoincrement())
+  Pos           Pos?               @relation(fields: [PosId], references: [id], onDelete: Cascade)
+  PosId         Int?
+  Item          Item?              @relation(fields: [itemId], references: [id])
+  itemId        Int?
+  Size          Size?              @relation(fields: [sizeId], references: [id])
+  sizeId        Int?
+  Color         Color?             @relation(fields: [colorId], references: [id])
+  colorId       Int?
+  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId         Int?
+  Hsn           Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId         Int?
+  qty           String?
+  price         String?
+  discountType  String?
+  discountValue String?
+  taxPercent    String?
+  taxMethod     String?
+  priceType     String?
 }

@@ -220,7 +220,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const syncFormWithDb = useCallback(
     (data) => {
-
+      if (!id) return
 
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
@@ -364,7 +364,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
     material, materialActive, rawMaterial, branchTypeId, parentId, isBranch,
 
-    attachments
+    attachments: attachments?.filter(i => i.name && i.filePath)
 
 
 
@@ -792,11 +792,15 @@ export default function Form({ partyId, show, openModelForAddress }) {
   console.log(singleData, "singleData")
 
   useEffect(() => {
-    console.log(show == "isClient", 'showshow', show == 'isSupplier');
-
     setClient(show == "isClient")
     setSupplier(show == 'isSupplier')
   }, [show]);
+
+  useEffect(() => {
+    if (id) return
+    setClient(true)
+    setSupplier(false)
+  }, [id])
 
   if (isLoading || isFetching) return <Loader />
 

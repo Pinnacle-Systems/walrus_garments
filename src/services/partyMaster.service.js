@@ -199,7 +199,7 @@ async function create(body) {
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments, parentId,
-        branchTypeId,
+        branchTypeId, isB2B, isB2C
     } = await body
 
 
@@ -219,7 +219,6 @@ async function create(body) {
                 isBuyer, name, aliasName, code: partyCode,
                 active: active ? JSON.parse(active) : false,
                 displayName,
-                isAcc, isGy, isDy,
 
                 address, landMark,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
@@ -244,6 +243,9 @@ async function create(body) {
                 contactPersonNumber: contactNumber ? contactNumber : null,
                 branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
                 parentId: parentId ? parentId : "",
+
+                isB2C: isB2C ? JSON.parse(isB2C) : false,
+                isB2B: isB2B ? JSON.parse(isB2B) : false,
 
 
                 PartyAttachments: {

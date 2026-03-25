@@ -76,7 +76,9 @@ const PointOfSale = () => {
     const [getStockByBarcode] = useLazyGetUnifiedStockByBarcodeQuery();
 
     const items = itemsData?.data || [];
-    const customers = customerData?.data || [];
+    const customers = (customerData?.data || []).filter(c => c.isB2C);
+
+    console.log(customers, "customers")
     const locations = locationsData?.data || [];
 
     // Identify Retail Location
@@ -208,8 +210,13 @@ const PointOfSale = () => {
     };
 
     const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 0), 0);
-    const taxRate = 0.18; // 18% GST mock
-    const tax = Math.round((subtotal - discount) * taxRate);
+
+    const tax = Math.round(cart.reduce((sum, item) => {
+        const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
+        const itemAmount = (parseFloat(item.rate) || 0) * (parseFloat(item.quantity) || 0);
+        const itemDiscount = subtotal > 0 ? (itemAmount / subtotal) * discount : 0;
+        return sum + ((itemAmount - itemDiscount) * (itemTaxPercent / 100));
+    }, 0));
     const total = subtotal - discount + tax;
 
     const handleCheckout = async () => {
@@ -333,11 +340,14 @@ const PointOfSale = () => {
     const handleCustomerSelect = (value) => {
         setCustomerQuery(value);
         const searchVal = value.toLowerCase();
-        const found = customers.find(c =>
-            c.contact === value ||
-            c.contactPersonNumber === value ||
-            c.name?.toLowerCase().includes(searchVal)
-        );
+        const cleanPhone = value.replace(/\D/g, '');
+
+        const found = customers.find(c => {
+            if (cleanPhone.length >= 10 && c.contact?.replace(/\D/g, '').includes(cleanPhone)) return true;
+            if (c.contact === value || c.contactPersonNumber === value) return true;
+            if (searchVal.length > 2 && c.name?.toLowerCase().includes(searchVal)) return true;
+            return false;
+        });
 
         if (found) {
             setSelectedCustomer(found);
@@ -401,33 +411,35 @@ const PointOfSale = () => {
                 <main className="flex-1 min-w-0 bg-white flex flex-col relative">
                     <div className="flex-1 overflow-auto bg-[#f8fafc]/30">
                         <table className="w-full text-left border-separate border-spacing-0">
-                            <thead className="sticky top-0 z-20 bg-white">
+                            <thead className="sticky top-0 z-20 bg-white shadow-sm border-b border-slate-200">
                                 <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                    <th className="px-4 py-4 w-12 text-center border-b border-slate-100 uppercase">#</th>
-                                    <th className="px-4 py-4 min-w-[250px] border-b border-slate-100">Item Detail</th>
-                                    <th className="px-2 py-4 w-20 text-center border-b border-slate-100">Qty</th>
-                                    <th className="px-4 py-4 w-32 text-right border-b border-slate-100">Rate (₹)</th>
-                                    <th className="px-4 py-4 w-24 text-right border-b border-slate-100">Tax</th>
-                                    <th className="px-4 py-4 w-24 text-center border-b border-slate-100">Size</th>
-                                    <th className="px-4 py-4 w-36 text-right border-b border-slate-100 bg-slate-50/50">Total (₹)</th>
+                                    <th className="px-4 py-4 w-12 text-center border-r border-slate-200 uppercase">#</th>
+                                    <th className="px-4 py-4 min-w-[250px] border-r border-slate-200">Item Detail</th>
+                                    <th className="px-4 py-4 w-24 text-center border-r border-slate-200">Color</th>
+                                    <th className="px-4 py-4 w-24 text-center border-r border-slate-200">Size</th>
+                                    <th className="px-2 py-4 w-20 text-center border-r border-slate-200">Qty</th>
+                                    <th className="px-4 py-4 w-32 text-right border-r border-slate-200">Rate (₹)</th>
+                                    <th className="px-4 py-4 w-24 text-right border-r border-slate-200">Tax</th>
+                                    <th className="px-4 py-4 w-36 text-right bg-slate-50/50">Total (₹)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {cart.map((item, index) => {
-                                    const itemTax = Math.round((item.rate * item.quantity) * 0.18);
+                                    const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
+                                    const itemTax = Math.round((item.rate * item.quantity) * (itemTaxPercent / 100));
                                     const rowTotal = (item.rate * item.quantity) + itemTax;
                                     return (
                                         <tr key={`${item.id}-${item.sizeId}-${item.colorId}`} className="group hover:bg-indigo-50/30 transition-colors border-b border-slate-50">
-                                            <td className="px-4 py-3 text-center text-[10px] font-bold text-slate-300 border-b border-slate-50/50">{index + 1}</td>
-                                            <td className="px-4 py-3 border-b border-slate-50/50">
+                                            <td className="px-4 py-3 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
+                                            <td className="px-4 py-3 border-r border-slate-200">
                                                 <div className="text-[13px] font-black text-slate-800 uppercase leading-none truncate max-w-[300px]">{item.itemName}</div>
                                                 <div className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-2">
                                                     <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">{item.barcode || item.itemCode}</span>
-                                                    <span className="h-1 w-1 bg-slate-300 rounded-full" />
-                                                    <span className="uppercase text-slate-500">{item.colorName || 'No Color'}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-2 py-1.5 border-b border-slate-50/50">
+                                            <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item.colorName || '-'}</td>
+                                            <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item.sizeName || '-'}</td>
+                                            <td className="px-2 py-1.5 border-r border-slate-200">
                                                 <input
                                                     type="number"
                                                     value={item.quantity}
@@ -436,7 +448,7 @@ const PointOfSale = () => {
                                                     onFocus={(e) => e.target.select()}
                                                 />
                                             </td>
-                                            <td className="px-4 py-1.5 border-b border-slate-50/50">
+                                            <td className="px-4 py-1.5 border-r border-slate-200">
                                                 <input
                                                     type="number"
                                                     value={item.rate}
@@ -445,9 +457,8 @@ const PointOfSale = () => {
                                                     onFocus={(e) => e.target.select()}
                                                 />
                                             </td>
-                                            <td className="px-4 py-3 text-right text-[11px] text-slate-400 font-bold border-b border-slate-50/50">{itemTax.toLocaleString()}</td>
-                                            <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-b border-slate-50/50 uppercase">{item.sizeName || '-'}</td>
-                                            <td className="px-4 py-3 text-right border-b border-slate-50/50 bg-slate-50/50 relative font-serif">
+                                            <td className="px-4 py-3 text-right text-[11px] text-slate-400 font-bold border-r border-slate-200">{itemTax.toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-right bg-slate-50/50 relative font-serif">
                                                 <span className="text-[14px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
                                                 <button onClick={() => removeFromCart(`${item.id}-${item.sizeId}-${item.colorId}`)} className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 text-red-200 hover:text-red-500 transition-all"><Trash2 size={13} /></button>
                                             </td>
@@ -456,7 +467,14 @@ const PointOfSale = () => {
                                 })}
                                 {[...Array(Math.max(0, 15 - cart.length))].map((_, i) => (
                                     <tr key={`empty-${i}`} className="h-14 border-b border-slate-50/30">
-                                        <td colSpan={7} className="border-b border-slate-50/10"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="border-r border-slate-200"></td>
+                                        <td className="bg-slate-50/50"></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -465,114 +483,164 @@ const PointOfSale = () => {
                 </main>
 
                 {/* B. Fixed Sidebar Interface (Standard Width) */}
-                <aside className="w-[360px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-x-hidden">
-                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden">
+                    <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
 
-                        {/* Summary: Total Banner */}
-                        <div className="bg-slate-900 rounded-2xl p-6 text-white text-center shadow-indigo-200/50 shadow-2xl mb-2 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform"><ShoppingCart size={64} /></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] relative z-10">Grand Total Amount</span>
-                            <div className="text-[44px] font-black tracking-tighter mt-1 relative z-10 leading-none">
-                                <span className="text-xl mr-1 font-serif opacity-40">₹</span>{total.toLocaleString()}
+                        <div className="max-h-[300px] flex flex-col gap-4 overflow-y-auto no-scrollbar shrink-0">
+                            {/* Module 1: Customer (Dual Logic) */}
+                            <div className="space-y-3 shrink-0">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <User size={12} /> Profile Management
+                                </h3>
+                                <div className="relative group">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Phone or Name [F11]"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-sm"
+                                        value={customerQuery}
+                                        onChange={(e) => handleCustomerSelect(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Dual Save Option UI */}
+                                {isAddingNewCustomer && (
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
+                                        <div className="space-y-3">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-indigo-400 uppercase ml-1">Member Name</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter Full Name"
+                                                    className="w-full px-3 py-2 text-xs font-bold bg-white border border-indigo-200 rounded-lg outline-none focus:border-indigo-500 shadow-sm"
+                                                    value={guestName}
+                                                    onChange={(e) => setGuestName(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-indigo-400 uppercase ml-1">Member Mobile</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-3 py-2 text-xs font-bold bg-white/50 border border-indigo-100 rounded-lg text-indigo-700 font-mono"
+                                                    value={guestMobile}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setGuestMobile(val);
+                                                        const cleanVal = val.replace(/\D/g, '');
+                                                        if (cleanVal.length >= 10) {
+                                                            const existing = customers.find(c => c.contact?.replace(/\D/g, '').includes(cleanVal));
+                                                            if (existing) {
+                                                                setSelectedCustomer(existing);
+                                                                setIsAddingNewCustomer(false);
+                                                                setIsGuestCustomer(false);
+                                                                setCustomerQuery(existing.contact);
+                                                                toast.info("Existing customer selected!");
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                const newParty = {
+                                                    name: guestName || 'Register User',
+                                                    contact: guestMobile,
+                                                    partyType: 'Customer',
+                                                    branchId,
+                                                    companyId,
+                                                    isB2C: true,
+                                                    isClient: true
+                                                };
+                                                try { await addParty(newParty).unwrap(); toast.success('Customer Registered!'); setIsAddingNewCustomer(false); } catch (e) { toast.error('Check fields'); }
+                                            }}
+                                            className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[11px] font-black shadow-lg shadow-indigo-200 uppercase tracking-widest hover:bg-indigo-700 active:scale-[0.98] transition-all"
+                                        >
+                                            Register & Save Member
+                                        </button>
+                                    </div>
+                                )}
+
+                                {selectedCustomer && (
+                                    <div className="flex items-center p-3 bg-emerald-50 border border-emerald-100 rounded-2xl gap-3 group">
+                                        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-100">
+                                            <Package size={20} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-[12px] font-black text-slate-800 uppercase leading-none truncate">{selectedCustomer.name}</div>
+                                            <div className="text-[10px] text-emerald-600 font-black mt-1.5 font-mono tracking-tighter">{selectedCustomer.contact}</div>
+                                        </div>
+                                        <button onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); }} className="p-2 text-slate-300 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm group-hover:bg-red-50"><Trash2 size={14} /></button>
+                                    </div>
+                                )}
                             </div>
-                        </div>
 
-                        {/* Module 1: Customer (Dual Logic) */}
-                        <div className="space-y-4">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <User size={12} /> Profile Management
-                            </h3>
-                            <div className="relative group">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400" size={16} />
-                                <input
-                                    type="text"
-                                    placeholder="Enter Phone or Name [F11]"
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-sm"
-                                    value={customerQuery}
-                                    onChange={(e) => handleCustomerSelect(e.target.value)}
-                                />
-                            </div>
-
-                            {/* Dual Save Option UI */}
-                            {isAddingNewCustomer && (
-                                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
-                                    <div className="space-y-3">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-indigo-400 uppercase ml-1">Member Name</label>
+                            {/* Module 2: Sale Summary */}
+                            <div className="space-y-3 shrink-0">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <ShoppingCart size={12} /> Sale Summary
+                                </h3>
+                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-600 space-y-2.5 shadow-sm">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal</span>
+                                        <span>₹{subtotal.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-emerald-500">
+                                        <span className="text-[11px] uppercase tracking-wider">Discount</span>
+                                        <div className="flex items-center gap-1">
+                                            <span>-₹</span>
                                             <input
-                                                type="text"
-                                                placeholder="Enter Full Name"
-                                                className="w-full px-3 py-2 text-xs font-bold bg-white border border-indigo-200 rounded-lg outline-none focus:border-indigo-500 shadow-sm"
-                                                value={guestName}
-                                                onChange={(e) => setGuestName(e.target.value)}
+                                                type="number"
+                                                value={discount}
+                                                onChange={(e) => setDiscount(Number(e.target.value))}
+                                                className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors"
+                                                onFocus={(e) => e.target.select()}
                                             />
                                         </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-indigo-400 uppercase ml-1">Member Mobile</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-3 py-2 text-xs font-bold bg-white/50 border border-indigo-100 rounded-lg text-indigo-700 font-mono"
-                                                value={guestMobile}
-                                                onChange={(e) => setGuestMobile(e.target.value)}
-                                            />
-                                        </div>
                                     </div>
-                                    <button
-                                        onClick={async () => {
-                                            const newParty = { name: guestName || 'Register User', contact: guestMobile, partyType: 'Customer', branchId, companyId };
-                                            try { await addParty(newParty).unwrap(); toast.success('Customer Registered!'); setIsAddingNewCustomer(false); } catch (e) { toast.error('Check fields'); }
-                                        }}
-                                        className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[11px] font-black shadow-lg shadow-indigo-200 uppercase tracking-widest hover:bg-indigo-700 active:scale-[0.98] transition-all"
-                                    >
-                                        Register & Save Member
-                                    </button>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax</span>
+                                        <span>₹{tax.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center font-black text-lg text-indigo-700 pt-2.5 border-t border-slate-200 mt-2">
+                                        <span className="text-[12px] uppercase tracking-widest text-indigo-400">Total</span>
+                                        <span>₹{total.toLocaleString()}</span>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
 
-                            {selectedCustomer && (
-                                <div className="flex items-center p-3 bg-emerald-50 border border-emerald-100 rounded-2xl gap-3 group">
-                                    <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-emerald-100">
-                                        <Package size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="text-[12px] font-black text-slate-800 uppercase leading-none truncate">{selectedCustomer.name}</div>
-                                        <div className="text-[10px] text-emerald-600 font-black mt-1.5 font-mono tracking-tighter">{selectedCustomer.contact}</div>
-                                    </div>
-                                    <button onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); }} className="p-2 text-slate-300 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm group-hover:bg-red-50"><Trash2 size={14} /></button>
-                                </div>
-                            )}
                         </div>
 
-                        {/* Module 2: Settlement */}
-                        <div className="space-y-4 pt-2">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        {/* Module 3: Settlement */}
+                        <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col shadow-inner">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
                                 <Banknote size={12} /> Payment Details
                             </h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3 mb-auto">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Method</label>
                                     <select
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5 text-[11px] font-black outline-none focus:border-indigo-400 shadow-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] font-black outline-none focus:border-indigo-400 shadow-sm"
                                         value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
                                     >
-                                        <option value="Cash">Cash Handover</option>
-                                        <option value="UPI">UPI / QR Scan</option>
-                                        <option value="Card">Bank Card</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Card">Card</option>
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Received (₹)</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm font-black text-slate-800 outline-none focus:border-indigo-400 text-right shadow-sm"
+                                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-black text-slate-800 outline-none focus:border-indigo-400 text-right shadow-sm"
                                         value={amountReceived}
                                         onChange={(e) => setAmountReceived(Number(e.target.value))}
                                         onFocus={(e) => e.target.select()}
                                     />
                                 </div>
                             </div>
-                            <div className="bg-indigo-600 rounded-2xl p-4 flex items-center justify-between text-white shadow-xl shadow-indigo-100">
+                            <div className="bg-indigo-600 rounded-xl p-4 flex items-center justify-between text-white shadow-lg mt-4">
                                 <span className="text-[10px] font-black uppercase opacity-60">Balance Change</span>
                                 <span className="text-xl font-black">₹{changeToReturn.toLocaleString()}</span>
                             </div>
