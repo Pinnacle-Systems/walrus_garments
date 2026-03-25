@@ -85,6 +85,7 @@ async function getOne(id) {
             partyBranch: true,
             PartyContactDetails: true,
             BranchContactDetails: true,
+            PartyAttachments: true,
 
 
 
@@ -211,10 +212,13 @@ async function create(body) {
     data = await prisma.party.create(
         {
             data: {
-                isClient, isSupplier,
-                isBranch: isBranch ? Boolean(isBranch) : false,
+                isClient: isClient ? JSON.parse(isClient) : false,
+                isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
+                isBranch: isBranch ? JSON.parse(isBranch) : false,
 
-                isBuyer, name, aliasName, code: partyCode, active, displayName,
+                isBuyer, name, aliasName, code: partyCode,
+                active: active ? JSON.parse(active) : false,
+                displayName,
                 isAcc, isGy, isDy,
 
                 address, landMark,
@@ -244,7 +248,7 @@ async function create(body) {
 
                 PartyAttachments: {
                     createMany: attachments?.length > 0 ? {
-                        data: attachments?.map((temp) => {
+                        data: JSON.parse(attachments)?.map((temp) => {
                             let newItem = {}
                             // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
                             newItem["name"] = temp["name"] ? temp["name"] : null;
@@ -337,15 +341,18 @@ async function update(id, body) {
     data = await prisma.party.update({
         where: { id: parseInt(id) },
         data: {
-            isClient: isClient ? JSON.parse(isClient) : "",
-            isSupplier: isSupplier ? JSON.parse(isSupplier) : "",
+            isClient: isClient ? JSON.parse(isClient) : false,
+            isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
             parentId: parentId ? String(parentId) : null,
             name,
             aliasName,
             code: partyCode,
-            active: active ? JSON.parse(active) : "",
+            active: active ? JSON.parse(active) : false,
             displayName,
-            isBranch: isBranch ? Boolean(isBranch) : false,
+            isBranch: isBranch ? JSON.parse(isBranch) : false,
+            isAcc: isAcc ? JSON.parse(isAcc) : false,
+            isGy: isGy ? JSON.parse(isGy) : false,
+            isDy: isDy ? JSON.parse(isDy) : false,
 
             address,
             landMark,

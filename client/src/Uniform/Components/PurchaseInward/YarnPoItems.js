@@ -501,32 +501,24 @@ const YarnPoItems = ({
 
 
                                     <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                        {(parseFloat(row?.price) * parseFloat(row?.qty)).toFixed(3) || 0}</td>
+                                        {(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0).toFixed(3)}</td>
 
 
 
 
                                     <td className="w-16 px-1 py-1 text-center">
-                                        {!readOnly && (
-                                            <div className="flex items-center justify-center gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={addNewRow}
-                                                    className="text-blue-500 hover:text-blue-700 transition-colors p-1"
-                                                    title="Add New Row"
-                                                >
-                                                    <FaPlus className="w-3 h-3 mx-auto" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteRow(index)}
-                                                    className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                                    title="Delete Row"
-                                                >
-                                                    <FaTrashAlt className="w-3 h-3 mx-auto" />
-                                                </button>
-                                            </div>
-                                        )}
+                                        <button
+                                            onClick={() => addNewRow(index)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    addNewRow(index);
+                                                }
+                                            }}
+                                            className="bg-blue-50 rounded py-0.5"
+                                        >
+                                            +
+                                        </button>
                                     </td>
 
 

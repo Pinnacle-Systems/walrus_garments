@@ -196,7 +196,12 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                     Gross
                                 </th>
 
+                                {/* <th
 
+                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                >
+                                    Actions
+                                </th> */}
                             </tr>
                         </thead>
 

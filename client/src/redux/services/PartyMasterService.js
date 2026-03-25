@@ -45,7 +45,7 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
-     getPartyMaterialById: builder.query({
+    getPartyMaterialById: builder.query({
       query: (id) => {
         return {
           url: `${PARTY_API}/${id}/materialId`,
@@ -57,7 +57,7 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
-        getPartyContactById: builder.query({
+    getPartyContactById: builder.query({
       query: (id) => {
         return {
           url: `${PARTY_API}/${id}/contactId`,
@@ -118,7 +118,7 @@ const partyMasterApi = createApi({
       },
       invalidatesTags: ["Party"],
     }),
-        updatePartyMaterial: builder.mutation({
+    updatePartyMaterial: builder.mutation({
       query: ({ materialId, body }) => {
         return {
           url: `${PARTY_API}/${materialId}/materialId`,
@@ -128,8 +128,9 @@ const partyMasterApi = createApi({
       },
       invalidatesTags: ["Party"],
     }),
-      updatePartyContact: builder.mutation({
+    updatePartyContact: builder.mutation({
       query: ({ id, body }) => {
+        console.log(body, "body")
         return {
           url: `${PARTY_API}/${id}/contactId`,
           method: "PUT",
@@ -152,14 +153,14 @@ const partyMasterApi = createApi({
       }),
       invalidatesTags: ["Party"],
     }),
-      deletePartyMaterial: builder.mutation({
+    deletePartyMaterial: builder.mutation({
       query: (materialId) => ({
         url: `${PARTY_API}/${materialId}/material`,
         method: "DELETE",
       }),
       invalidatesTags: ["Party"],
     }),
-       deletePartyContact: builder.mutation({
+    deletePartyContact: builder.mutation({
       query: (id) => ({
         url: `${PARTY_API}/${id}/contactId`,
         method: "DELETE",

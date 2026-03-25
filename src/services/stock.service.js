@@ -849,6 +849,7 @@ export async function getUnifiedStockByBarcode(req) {
 
     let isLegacy = false;
 
+
     if (storeId) {
         const location = await prisma.location.findUnique({
             where: { id: Number(storeId) }
@@ -911,6 +912,7 @@ export async function getUnifiedStockByBarcode(req) {
 
     // ================= NORMAL STOCK =================
     else {
+        console.log(isLegacy, "isLegacy")
 
         const records = await prisma.stock.findMany({
             where: {
@@ -952,6 +954,8 @@ export async function getUnifiedStockByBarcode(req) {
             }
         };
     }
+
+
 }
 
 

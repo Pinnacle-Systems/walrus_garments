@@ -127,7 +127,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const [rawMaterial, setRawMaterial] = useState(false)
   const [material, setMaterial] = useState("")
   const [materialActive, setMaterialActive] = useState(true);
-  const [view, setView] = useState("all");
+  const [view, setView] = useState("All");
   const [designation, setDesignation] = useState("")
   const [department, setDepartment] = useState("")
   const [contactId, setContactId] = useState("")
@@ -212,7 +212,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   if (view === "Supplier") {
     filterParty = allData?.data?.filter(item => item.isSupplier)
   }
-  if (view == "all") {
+  if (view == "All") {
     filterParty = allData?.data
   }
 
@@ -364,7 +364,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
     material, materialActive, rawMaterial, branchTypeId, parentId, isBranch,
 
-    attachments: attachments?.filter(i => i.filePath || i.name)
+    attachments
 
 
 
@@ -374,7 +374,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  console.log(attachments?.filter(i => i.filePath || i.name), "parentId")
+  console.log(data, "datadatadata")
 
 
   const validateData = (data) => {
@@ -398,26 +398,28 @@ export default function Form({ partyId, show, openModelForAddress }) {
       for (let key in data) {
 
         console.log(key, "key")
-        if (key === 'attachments') {
+        console.log(data, "data")
+
+        if (key == 'attachments') {
           formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
           data[key].forEach(option => {
             if (option?.filePath instanceof File) {
-              formData.append('images', option.filePath);
+              formData.append('image', option.filePath);
             }
           });
         } else {
+          console.log(data[key], "data[key]")
           formData.append(key, data[key]);
         }
       }
-
       console.log(formData, "formData")
+
 
       let returnData;
       if (text == "Updated") {
         returnData = await callback({ id, body: formData }).unwrap();
       } else {
-        returnData = await callback(data).unwrap();
-
+        returnData = await callback(formData).unwrap();
       }
 
       Swal.fire({
@@ -1570,8 +1572,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
             </button>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setView("Customer/Supplier Name") }}
-                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "all"
+                onClick={() => { setView("All") }}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "All"
                   ? "bg-indigo-100 text-indigo-600"
                   : "text-gray-600 hover:bg-gray-100"
                   }`}

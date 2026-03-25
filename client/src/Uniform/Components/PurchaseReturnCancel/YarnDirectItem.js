@@ -164,28 +164,21 @@ const YarnDirectItem = ({ itemList, uomList,
 
                 </td>
 
-                <td className="w-16 px-1 py-1 text-center border border-gray-300">
+                {/* <td className="w-16 px-1 py-1 text-center border border-gray-300">
                     {!readOnly && (
                         <div className="flex items-center justify-center gap-1">
                             <button
                                 type="button"
-                                onClick={addNewRow}
+                                // onClick={addNewRow}
                                 className="text-blue-500 hover:text-blue-700 transition-colors p-1"
                                 title="Add New Row"
                             >
                                 <FaPlus className="w-3 h-3 mx-auto" />
                             </button>
-                            <button
-                                type="button"
-                                onClick={() => deleteRow(index)}
-                                className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                title="Delete Row"
-                            >
-                                <FaTrashAlt className="w-3 h-3 mx-auto" />
-                            </button>
+
                         </div>
                     )}
-                </td>
+                </td> */}
 
 
 
