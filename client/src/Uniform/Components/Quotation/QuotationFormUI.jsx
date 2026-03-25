@@ -45,6 +45,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [vehicleNo, setVehicleNo] = useState("")
   const [specialInstructions, setSpecialInstructions] = useState('')
   const [remarks, setRemarks] = useState("")
+  const [minimumAdvancePayment, setMinimumAdvancePayment] = useState("");
+  const [isMinimumAdvanceManuallyEdited, setIsMinimumAdvanceManuallyEdited] = useState(false);
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -105,7 +107,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
-    const today = new Date()
     if (id) {
       setReadOnly(true);
     } else {
@@ -117,8 +118,16 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
+    setTerm(data?.termId ? String(data.termId) : "");
     setRemarks(data?.remarks || "");
-    setTerms(data?.terms || "");
+    setTerms(data?.termsAndCondition || "");
+    if (data?.minimumAdvancePayment) {
+      setMinimumAdvancePayment(String(data.minimumAdvancePayment));
+      setIsMinimumAdvanceManuallyEdited(true);
+    } else {
+      setMinimumAdvancePayment("");
+      setIsMinimumAdvanceManuallyEdited(false);
+    }
 
   }, [id]);
 
@@ -143,13 +152,15 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     discountValue,
     dcNo,
     remarks,
+    minimumAdvancePayment,
     specialInstructions,
     vehicleNo,
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    terms,
+    termId: term ? parseInt(term) : undefined,
+    termsAndCondition: terms,
     taxMethod
   }
 
@@ -363,9 +374,16 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const defaultMinimumAdvancePayment = (parseFloat(netAmount || 0) * 0.25).toFixed(2);
 
 
   console.log(netAmount, "netAmount", taxAmount, 'taxAmount')
+
+  useEffect(() => {
+    if (!isMinimumAdvanceManuallyEdited) {
+      setMinimumAdvancePayment(defaultMinimumAdvancePayment);
+    }
+  }, [defaultMinimumAdvancePayment, isMinimumAdvanceManuallyEdited]);
 
 
   function isSupplierOutside() {
@@ -617,11 +635,21 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
 
           </div>
+        </div>
 
-
-
-
-
+        <div className="grid grid-cols-12 gap-3">
+          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-12 md:col-span-4">
+            <TextInput
+              name="Minimum Advance Payment Required"
+              type="number"
+              value={minimumAdvancePayment}
+              setValue={(value) => {
+                setMinimumAdvancePayment(value);
+                setIsMinimumAdvanceManuallyEdited(true);
+              }}
+              readOnly={readOnly}
+            />
+          </div>
         </div>
 
 

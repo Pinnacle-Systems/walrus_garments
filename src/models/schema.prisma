@@ -5005,6 +5005,7 @@ model Quotation {
   discountType       String?
   discountValue      String?
   taxType            String?
+  minimumAdvancePayment String?
   remarks            String?
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
