@@ -14,6 +14,7 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { FaFileAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useAddPaymentMutation, useDeletePaymentMutation, useGetPaymentByIdQuery, useUpdatePaymentMutation } from "../../../redux/services/PaymentService";
+import { useGetPaymentQuery } from "../../../redux/services/PaymentService";
 import { useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
 import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
@@ -363,9 +364,18 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     }, []);
 
     // Fetch transaction lists
+    const { data: paymentList } = useGetPaymentQuery({ params: { branchId, finYearId } });
     const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "QUOTATION" });
     const { data: saleOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALEORDER" });
     const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALESINVOICE" });
+
+    const paymentHistory = (paymentList?.data || [])
+        .filter((payment) =>
+            String(payment?.transactionType || "") === String(transactionType || "")
+            && String(payment?.transactionId || "") === String(transactionId || "")
+            && payment?.paymentFlow === "Receipt"
+        )
+        .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
 
     const getDocIdOptions = () => {
         let list = [];
@@ -666,6 +676,50 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                             </p>
                         </div>
                     </div>
+
+                    {transactionId && (
+                        <div className="w-full mt-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <div className="px-4 py-3 border-b border-gray-200 bg-slate-50">
+                                <h2 className="text-sm font-bold text-slate-700">Payment History</h2>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-xs">
+                                    <thead className="bg-slate-100 text-slate-700">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left font-semibold">Payment No</th>
+                                            <th className="px-4 py-2 text-left font-semibold">Payment Date</th>
+                                            <th className="px-4 py-2 text-left font-semibold">Mode</th>
+                                            <th className="px-4 py-2 text-left font-semibold">Reference No</th>
+                                            <th className="px-4 py-2 text-right font-semibold">Received Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paymentHistory.length > 0 ? (
+                                            paymentHistory.map((payment) => (
+                                                <tr key={payment.id} className="border-t border-gray-100">
+                                                    <td className="px-4 py-2">{payment.docId}</td>
+                                                    <td className="px-4 py-2">
+                                                        {payment.cvv ? moment.utc(payment.cvv).format("DD-MM-YYYY") : ""}
+                                                    </td>
+                                                    <td className="px-4 py-2">{payment.paymentMode}</td>
+                                                    <td className="px-4 py-2">{payment.paymentRefNo || "-"}</td>
+                                                    <td className="px-4 py-2 text-right font-medium text-emerald-700">
+                                                        {formatAmountIN((Number(payment.paidAmount || 0)).toFixed(2))}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-4 py-4 text-center text-slate-500">
+                                                    No payment history found for this document.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
 
 
                 </div>
