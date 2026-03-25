@@ -62,6 +62,7 @@ async function get(req) {
                     }
                 },
             },
+            QuotationItems: true,
             Saleorder: {
                 select: {
                     id: true,

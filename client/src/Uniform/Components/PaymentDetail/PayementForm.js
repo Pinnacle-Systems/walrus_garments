@@ -28,6 +28,47 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     setTransactionType
 }) => {
 
+    const calculateQuotationNetAmount = (quotationItems = []) => {
+        return quotationItems.reduce((acc, curr) => {
+            const price = parseFloat(curr?.price || 0);
+            const qty = parseFloat(curr?.qty || 0);
+            const taxPercent = parseFloat(curr?.taxPercent || 0);
+            const taxMethod = curr?.taxMethod || "Inclusive";
+            const discountType = curr?.discountType;
+            const discountValue = parseFloat(curr?.discountValue || 0);
+
+            const gross = price * qty;
+            let discountedAmount = gross;
+
+            if (discountType === "Percentage") {
+                discountedAmount = gross - (gross * discountValue) / 100;
+            } else if (discountType === "Flat") {
+                discountedAmount = gross - discountValue;
+            }
+
+            discountedAmount = Math.max(0, discountedAmount);
+
+            if (taxMethod === "Inclusive" && taxPercent > 0) {
+                return acc + discountedAmount;
+            }
+
+            return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+        }, 0);
+    };
+
+    const getQuotationOutstandingAmount = (quotation) => {
+        if (!quotation) return 0;
+
+        const quotationNetAmount = calculateQuotationNetAmount(quotation?.QuotationItems);
+
+        const receivedAmount = (quotation?.paymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        return Math.max(0, quotationNetAmount - receivedAmount);
+    };
+
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -42,7 +83,12 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     const [paymentMode, setPaymentMode] = useState('');
     const [paymentRefNo, setPaymentRefNo] = useState('');
     const [partyId, setPartyId] = useState("");
-    const [paymentType, setPaymentType] = useState("INVOICE");
+    const [paymentType, setPaymentType] = useState(
+        initialTransactionType === "QUOTATION" ? "ADVANCE" : "INVOICE"
+    );
+    const [lockPrefilledTransactionFields, setLockPrefilledTransactionFields] = useState(
+        Boolean(initialTransactionType === "QUOTATION" && initialTransactionId)
+    );
     const [paidAmount, setPaidAmount] = useState('');
     const [discount, setDiscount] = useState('')
     const [balanceAmount, setBalanceAmount] = useState('');
@@ -118,14 +164,25 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         syncFormWithDb(singleData?.data);
     }, [syncFormWithDb, singleData])
 
+    useEffect(() => {
+        if (!id && initialTransactionType === "QUOTATION" && initialTransactionId) {
+            setLockPrefilledTransactionFields(true);
+            setPaymentType("ADVANCE");
+        } else if (!id && !initialTransactionType && !initialTransactionId) {
+            setLockPrefilledTransactionFields(false);
+        }
+    }, [id, initialTransactionType, initialTransactionId]);
+
 
     useEffect(() => {
         if (!id) {
-
+            if (transactionType && transactionId) {
+                return;
+            }
 
             setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
         }
-    }, [paymentType, PartyData]);
+    }, [paymentType, PartyData, id, transactionType, transactionId]);
 
     const [addData] = useAddPaymentMutation();
     const [updateData] = useUpdatePaymentMutation();
@@ -176,7 +233,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                           invalidateTagsDispatch()
 
                     if (initialTransactionType && initialTransactionId) {
-                        dispatch(push({ name: "PAYMENT DETAIL", transactionType: null, id: null }));
+                        dispatch(push({ name: "PAYMENTS", transactionType: null, id: null }));
                     }
 
                     if (nextProcess === "new") {
@@ -261,6 +318,24 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         setReadOnly(false);
         setForm(true);
         setSearchValue("")
+        setDocId("New");
+        setCvv(moment.utc(new Date()).format("YYYY-MM-DD"));
+        setPaymentMode('');
+        setPaymentRefNo('');
+        setPartyId("");
+        setPaidAmount('');
+        setDiscount('');
+        setBalanceAmount('');
+        setTotalPayAmount('');
+        setSupplierId("");
+        setLockPrefilledTransactionFields(false);
+        setPaymentType("INVOICE");
+        setPaymentFlow("Receipt");
+        setTransactionType("");
+        setTransactionId("");
+        setRefDocId("");
+        setRefId("");
+        setTotalBillAmount("");
         syncFormWithDb(undefined);
 
     }
@@ -305,6 +380,39 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
 
         return list.map(item => ({ show: item.docId, value: item.id }));
     };
+
+    useEffect(() => {
+        if (id) return;
+
+        if (!transactionType || !transactionId) {
+            setTotalBillAmount('');
+            setRefDocId('');
+            setRefId('');
+            return;
+        }
+
+        let transactionList = [];
+        if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
+        else if (transactionType === "SALEORDER") transactionList = saleOrderList?.data || [];
+        else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
+
+        const selectedTransaction = transactionList.find(
+            (item) => String(item.id) === String(transactionId)
+        );
+
+        if (!selectedTransaction) return;
+
+        setRefId(selectedTransaction.id);
+        setRefDocId(selectedTransaction.docId || "");
+
+        if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
+            setSupplierId(selectedTransaction.customerId);
+        }
+
+        if (transactionType === "QUOTATION") {
+            setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+        }
+    }, [id, transactionId, transactionType, quotationList, saleOrderList, salesInvoiceList]);
 
 
 
@@ -436,6 +544,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <select
                                     value={paymentType}
                                     onChange={(e) => setPaymentType(e.target.value)}
+                                    disabled={lockPrefilledTransactionFields}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a payment type</option>
@@ -453,6 +562,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <select
                                     value={transactionType}
                                     onChange={(e) => setTransactionType(e.target.value)}
+                                    disabled={lockPrefilledTransactionFields}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a transaction</option>
@@ -471,6 +581,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                     className="block text-gray-600 font-medium mb-2"
                                     options={getDocIdOptions()}
                                     value={transactionId}
+                                    readOnly={lockPrefilledTransactionFields}
                                     setValue={(val) => {
                                         setTransactionId(val);
                                         const options = getDocIdOptions();
@@ -511,7 +622,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <input
                                     type="text"
 
-                                    value={formatAmountIN((Number(totalBillAmount || 0) - Number(PartyData?.data?.totalDiscount || 0)).toFixed(2))}
+                                    value={formatAmountIN((Number(totalBillAmount || 0)).toFixed(2))}
                                     onChange={(e) => setTotalBillAmount(e.target.value)}
                                     className="w-full px-3 py-1 border border-gray-300 bg-slate-100 text-red-500 font-semibold rounded-lg focus:outline-none focus:ring-emerald-500"
                                     placeholder="0"
@@ -532,7 +643,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
                                 <input
                                     type="text"
-                                    value={formatAmountIN(((Number(totalBillAmount) - Number(paidAmount) - Number(discount) - (Number(PartyData?.data?.totalDiscount) || 0)) || 0).toFixed(2))}
+                                    value={formatAmountIN(((Number(totalBillAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
                                     onChange={(e) => setBalanceAmount(e.target.value)}
                                     className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(totalBillAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
                                         } focus:outline-none focus:ring-emerald-500 font-semibold`}
