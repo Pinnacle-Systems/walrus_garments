@@ -105,6 +105,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
 
     const [searchValue, setSearchValue] = useState("");
     const [supplierId, setSupplierId] = useState("");
+    const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
 
     const childRecord = useRef(0);
 
@@ -382,6 +383,11 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
             && payment?.paymentFlow === "Receipt"
         )
         .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
+    const historyItemsPerPage = 10;
+    const totalHistoryPages = Math.ceil(paymentHistory.length / historyItemsPerPage);
+    const historyIndexOfLastItem = currentHistoryPage * historyItemsPerPage;
+    const historyIndexOfFirstItem = historyIndexOfLastItem - historyItemsPerPage;
+    const currentHistoryItems = paymentHistory.slice(historyIndexOfFirstItem, historyIndexOfLastItem);
 
     const getDocIdOptions = () => {
         let list = [];
@@ -451,6 +457,93 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
             }
         }
     }, [initialTransactionId, initialTransactionType, quotationList, saleOrderList, salesInvoiceList, id]);
+
+    useEffect(() => {
+        setCurrentHistoryPage(1);
+    }, [transactionId, transactionType]);
+
+    const handleHistoryPageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalHistoryPages) {
+            setCurrentHistoryPage(newPage);
+        }
+    };
+
+    const HistoryPagination = () => {
+        if (paymentHistory.length <= historyItemsPerPage) return null;
+
+        return (
+            <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                    Showing {historyIndexOfFirstItem + 1} to {Math.min(historyIndexOfLastItem, paymentHistory.length)} of {paymentHistory.length} entries
+                </div>
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => handleHistoryPageChange(currentHistoryPage - 1)}
+                        disabled={currentHistoryPage === 1}
+                        className={`px-3 py-1 rounded-md ${currentHistoryPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronLeft className="inline" />
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalHistoryPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalHistoryPages <= 5) {
+                            pageNum = i + 1;
+                        } else if (currentHistoryPage <= 3) {
+                            pageNum = i + 1;
+                        } else if (currentHistoryPage >= totalHistoryPages - 2) {
+                            pageNum = totalHistoryPages - 4 + i;
+                        } else {
+                            pageNum = currentHistoryPage - 2 + i;
+                        }
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handleHistoryPageChange(pageNum)}
+                                className={`px-3 py-1 rounded-md ${currentHistoryPage === pageNum
+                                    ? 'bg-indigo-800 text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    {totalHistoryPages > 5 && currentHistoryPage < totalHistoryPages - 2 && (
+                        <span className="px-3 py-1">...</span>
+                    )}
+
+                    {totalHistoryPages > 5 && currentHistoryPage < totalHistoryPages - 2 && (
+                        <button
+                            onClick={() => handleHistoryPageChange(totalHistoryPages)}
+                            className={`px-3 py-1 rounded-md ${currentHistoryPage === totalHistoryPages
+                                ? 'bg-indigo-800 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {totalHistoryPages}
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => handleHistoryPageChange(currentHistoryPage + 1)}
+                        disabled={currentHistoryPage === totalHistoryPages}
+                        className={`px-3 py-1 rounded-md ${currentHistoryPage === totalHistoryPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronRight className="inline" />
+                    </button>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <>
@@ -687,39 +780,57 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                     </div>
 
                     {transactionId && (
-                        <div className="w-full mt-4 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                            <div className="px-4 py-3 border-b border-gray-200 bg-slate-50">
-                                <h2 className="text-sm font-bold text-slate-700">Payment History</h2>
+                        <div className="inline-block mt-4 rounded-lg bg-[#F1F1F0] shadow-sm overflow-hidden">
+                            <div className="px-4 py-3 border-b border-gray-200 bg-white">
+                                <h2 className="text-sm font-bold text-gray-800">Payment History</h2>
                             </div>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full text-xs">
-                                    <thead className="bg-slate-100 text-slate-700">
+                            <div className="mt-2 max-h-[28vh] overflow-auto">
+                                <table className="table-fixed">
+                                    <thead className="bg-gray-200 text-gray-800">
                                         <tr>
-                                            <th className="px-4 py-2 text-left font-semibold">Payment No</th>
-                                            <th className="px-4 py-2 text-left font-semibold">Payment Date</th>
-                                            <th className="px-4 py-2 text-left font-semibold">Mode</th>
-                                            <th className="px-4 py-2 text-left font-semibold">Reference No</th>
-                                            <th className="px-4 py-2 text-right font-semibold">Received Amount</th>
+                                            <th className="px-2 py-1.5 font-medium text-[13px] text-gray-900 text-center w-12">
+                                                <div>S No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-40">
+                                                <div>Payment No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-28">
+                                                <div>Payment Date</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-24">
+                                                <div>Mode</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-32">
+                                                <div>Reference No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-right w-32">
+                                                <div>Received Amount</div>
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="border-2">
                                         {paymentHistory.length > 0 ? (
-                                            paymentHistory.map((payment) => (
-                                                <tr key={payment.id} className="border-t border-gray-100">
-                                                    <td className="px-4 py-2">{payment.docId}</td>
-                                                    <td className="px-4 py-2">
+                                            currentHistoryItems.map((payment, index) => (
+                                                <tr
+                                                    key={payment.id}
+                                                    className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${(historyIndexOfFirstItem + index) % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                        }`}
+                                                >
+                                                    <td className="text-center">{historyIndexOfFirstItem + index + 1}</td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.docId}</td>
+                                                    <td className="px-3 py-1.5 text-left">
                                                         {payment.cvv ? moment.utc(payment.cvv).format("DD-MM-YYYY") : ""}
                                                     </td>
-                                                    <td className="px-4 py-2">{payment.paymentMode}</td>
-                                                    <td className="px-4 py-2">{payment.paymentRefNo || "-"}</td>
-                                                    <td className="px-4 py-2 text-right font-medium text-emerald-700">
-                                                        {formatAmountIN((Number(payment.paidAmount || 0)).toFixed(2))}
+                                                    <td className="px-3 py-1.5 text-left">{payment.paymentMode}</td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.paymentRefNo || "-"}</td>
+                                                    <td className="px-3 py-1.5 text-right font-medium text-emerald-700">
+                                                        Rs.{formatAmountIN((Number(payment.paidAmount || 0)).toFixed(2))}
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="px-4 py-4 text-center text-slate-500">
+                                                <td colSpan="6" className="px-4 py-4 text-center text-slate-500 bg-white">
                                                     No payment history found for this document.
                                                 </td>
                                             </tr>
@@ -727,6 +838,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                     </tbody>
                                 </table>
                             </div>
+                            <HistoryPagination />
                         </div>
                     )}
 
