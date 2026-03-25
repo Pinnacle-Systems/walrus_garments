@@ -16,7 +16,6 @@ import Swal from "sweetalert2";
 import { useAddPaymentMutation, useDeletePaymentMutation, useGetPaymentByIdQuery, useUpdatePaymentMutation } from "../../../redux/services/PaymentService";
 import { useGetPaymentQuery } from "../../../redux/services/PaymentService";
 import { useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
-import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { push } from "../../../redux/features/opentabs";
@@ -373,7 +372,6 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     // Fetch transaction lists
     const { data: paymentList } = useGetPaymentQuery({ params: { branchId, finYearId } });
     const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "QUOTATION" });
-    const { data: saleOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALEORDER" });
     const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALESINVOICE" });
 
     const paymentHistory = (paymentList?.data || [])
@@ -392,7 +390,6 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     const getDocIdOptions = () => {
         let list = [];
         if (transactionType === "QUOTATION") list = quotationList?.data || [];
-        else if (transactionType === "SALEORDER") list = saleOrderList?.data || [];
         else if (transactionType === "SALESINVOICE") list = salesInvoiceList?.data || [];
 
         // Filter by selected party if supplierId exists
@@ -415,7 +412,6 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
 
         let transactionList = [];
         if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
-        else if (transactionType === "SALEORDER") transactionList = saleOrderList?.data || [];
         else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
 
         const selectedTransaction = transactionList.find(
@@ -434,7 +430,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         if (transactionType === "QUOTATION") {
             setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
         }
-    }, [id, transactionId, transactionType, quotationList, saleOrderList, salesInvoiceList]);
+    }, [id, transactionId, transactionType, quotationList, salesInvoiceList]);
 
 
 
@@ -447,7 +443,6 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                 // If the list is loaded, we can also auto-fill the customer details based on the selected document
                 let obj = [];
                 if (initialTransactionType === "QUOTATION") obj = quotationList?.data;
-                else if (initialTransactionType === "SALEORDER") obj = saleOrderList?.data;
                 else if (initialTransactionType === "SALESINVOICE") obj = salesInvoiceList?.data;
 
                 const matchingDoc = obj?.find(d => String(d.id) === String(initialTransactionId));
@@ -456,7 +451,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                 }
             }
         }
-    }, [initialTransactionId, initialTransactionType, quotationList, saleOrderList, salesInvoiceList, id]);
+    }, [initialTransactionId, initialTransactionType, quotationList, salesInvoiceList, id]);
 
     useEffect(() => {
         setCurrentHistoryPage(1);

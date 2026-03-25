@@ -366,6 +366,5 @@ export const PaymentType = [
 
 export const TransactionAgainst = [
     { show: "Quotation", value: "QUOTATION" },
-    { show: "Sale Order", value: "SALEORDER" },
     { show: "Sales Invoice", value: "SALESINVOICE" },
 ]
