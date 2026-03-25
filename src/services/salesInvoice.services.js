@@ -149,8 +149,8 @@ async function create(body) {
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
                             newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
                             newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? temp["qty"] : null;
-                            newItem["price"] = temp["price"] ? temp["price"] : null;
+                            newItem["qty"] = temp["qty"] ? String(temp["qty"]) : null;
+                            newItem["price"] = temp["price"] ? String(temp["price"]) : null;
 
 
                             return newItem

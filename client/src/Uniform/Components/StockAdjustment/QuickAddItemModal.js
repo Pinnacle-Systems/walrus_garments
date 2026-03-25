@@ -141,7 +141,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
 
       if (response.statusCode === 0) {
         toast.success(itemToEdit ? "Item updated successfully" : "Item created successfully");
-        onCreated(response.data || payload);
+        onCreated(response.data?.data || response.data || payload);
         onClose();
       } else {
         toast.error(response.message || "Failed to save item");

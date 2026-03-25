@@ -141,13 +141,15 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
           storeId: selectedLocationId,
           itemPriceList: [{ sizeId: null, colorId: null, offerPrice: 0, salesPrice: 0, minStockQty: 0 }]
         }).unwrap();
-        if (res.data?.id) {
-          newItemIdMap[itm.toLowerCase().trim()] = res.data.id;
+        if (res.data?.data?.id || res.data?.id) {
+          newItemIdMap[itm.toLowerCase().trim()] = res.data?.data?.id || res.data?.id;
         }
       }
 
+      console.log(newItemIdMap, "newItemIdMap")
+
       // --- Map all stock items with newly created IDs ---
-      const mappedStockItems = stockItems.map(row => {
+      const mappedStockItems = await stockItems.map(row => {
         const itemKey = (row.item_name || "").toString().trim().toLowerCase();
         const sizeKey = (row.size || "").toString().trim().toLowerCase();
 

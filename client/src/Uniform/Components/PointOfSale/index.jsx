@@ -27,6 +27,8 @@ import { useGetLocationMasterQuery } from '../../../redux/uniformService/Locatio
 import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
 import { getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
+import { useGetPointOfSalesQuery, useAddPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import PosReports from './PosReports';
 
 // Child components can be defined in separate files later or kept here for now for speed
 // I'll define them in-line for now since I'm building the "Page" as requested.
@@ -47,6 +49,7 @@ const PointOfSale = () => {
     const [isGuestCustomer, setIsGuestCustomer] = useState(true);
     const [guestName, setGuestName] = useState('Walk-in Customer');
     const [guestMobile, setGuestMobile] = useState('');
+    const [showReports, setShowReports] = useState(false);
     const [addParty] = useAddPartyMutation();
     const scannerRef = useRef(null);
 
@@ -72,10 +75,14 @@ const PointOfSale = () => {
     const { data: locationsData } = useGetLocationMasterQuery({
         params: { branchId, companyId }
     });
-    const [addSalesInvoice] = useAddSalesInvoiceMutation();
+    const [addPointOfSales] = useAddPointOfSalesMutation();
     const [getStockByBarcode] = useLazyGetUnifiedStockByBarcodeQuery();
+    const { data: posData } = useGetPointOfSalesQuery({
+        params: { branchId, companyId, finYearId }
+    });
 
     const items = itemsData?.data || [];
+    const recentSales = posData?.data?.slice(0, 50) || [];
     const customers = (customerData?.data || []).filter(c => c.isB2C);
 
     console.log(customers, "customers")
@@ -83,9 +90,7 @@ const PointOfSale = () => {
 
     // Identify Retail Location
     const retailLocation = locations.find(l =>
-        l.storeName?.toLowerCase().includes('retail') ||
-        l.name?.toLowerCase().includes('retail')
-    );
+        l.storeName?.toLowerCase().includes('retail'));
     const retailStoreId = retailLocation?.id;
 
     // Filter items
@@ -228,14 +233,14 @@ const PointOfSale = () => {
             toast.error("All items must have a quantity greater than 0");
             return;
         }
-        if (!selectedCustomer && !isGuestCustomer) {
-            toast.error("Please select a customer or mark as Guest");
-            return;
-        }
-        if (isGuestCustomer && !guestMobile) {
-            toast.error("Please enter guest mobile number");
-            return;
-        }
+        // if (!selectedCustomer && !isGuestCustomer) {
+        //     toast.error("Please select a customer or mark as Guest");
+        //     return;
+        // }
+        // if (isGuestCustomer && !guestMobile) {
+        //     toast.error("Please enter guest mobile number");
+        //     return;
+        // }
 
         const result = await Swal.fire({
             title: 'Confirm Sale',
@@ -271,7 +276,7 @@ const PointOfSale = () => {
                             partyCode: 'WALK-' + guestMobile.slice(-4) + '-' + Math.floor(Math.random() * 1000),
                             active: true,
                             address: 'Walk-in Store',
-                            cityId: customers.length > 0 ? (customers[0].City?.id || customers[0].cityId || 1) : 1,
+                            // cityId: customers.length > 0 ? (customers[0].City?.id || customers[0].cityId || 1) : 1,
                             pincode: '000000',
                             gstNo: 'N/A'
                         };
@@ -295,13 +300,14 @@ const PointOfSale = () => {
                     companyId,
                     finYearId,
                     paymentMethod,
+                    storeId: retailStoreId,
                     poType: "General",
                     poInwardOrDirectInward: "DirectInward",
                     netAmount: total,
                     taxAmount: tax,
                     discountValue: discount,
                     discountType: "Flat",
-                    invoiceItems: cart.map(item => ({
+                    posItems: cart.map(item => ({
                         itemId: item.id,
                         qty: item.quantity,
                         rate: item.rate,
@@ -312,7 +318,7 @@ const PointOfSale = () => {
                     }))
                 };
 
-                await addSalesInvoice(invoicePayload).unwrap();
+                await addPointOfSales(invoicePayload).unwrap();
 
                 Swal.fire({
                     title: 'Payment Successful!',
@@ -334,36 +340,56 @@ const PointOfSale = () => {
         }
     };
 
-    // Customer Add/Search Logic
     const [isAddingNewCustomer, setIsAddingNewCustomer] = useState(false);
+    const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
 
     const handleCustomerSelect = (value) => {
         setCustomerQuery(value);
-        const searchVal = value.toLowerCase();
+        setShowCustomerSuggestions(true);
+        setSelectedCustomer(null);
+
         const cleanPhone = value.replace(/\D/g, '');
-
-        const found = customers.find(c => {
-            if (cleanPhone.length >= 10 && c.contact?.replace(/\D/g, '').includes(cleanPhone)) return true;
-            if (c.contact === value || c.contactPersonNumber === value) return true;
-            if (searchVal.length > 2 && c.name?.toLowerCase().includes(searchVal)) return true;
-            return false;
-        });
-
-        if (found) {
-            setSelectedCustomer(found);
-            setIsAddingNewCustomer(false);
-            setIsGuestCustomer(false);
-        } else {
-            setSelectedCustomer(null);
-            // If it's a 10-digit number, suggest adding
-            if (value.length >= 10 && /^\d+$/.test(value)) {
+        if (!selectedCustomer && value.length >= 10 && /^\d+$/.test(value)) {
+            // Prompt add if no match occurs, but users can see suggestions instead
+            const exactMatch = customers.find(c => c.contact?.replace(/\D/g, '') === cleanPhone);
+            if (!exactMatch) {
                 setIsAddingNewCustomer(true);
                 setGuestMobile(value);
-                setGuestName(''); // Clear for manual entry
+                setGuestName('');
             } else {
                 setIsAddingNewCustomer(false);
             }
+        } else {
+            setIsAddingNewCustomer(false);
         }
+    }
+
+    // 1. Pre-process query once
+    const searchVal = (customerQuery || '').toLowerCase();
+    const cleanPhoneQuery = searchVal.replace(/\D/g, '');
+    const isPhoneSearch = cleanPhoneQuery.length >= 3;
+    const isNameSearch = searchVal.length >= 3;
+
+    const filteredCustomerSuggestions = isNameSearch || isPhoneSearch
+        ? customers.filter(c => {
+            // Phone Match
+            if (isPhoneSearch && c.contact?.toString().replace(/\D/g, '').includes(cleanPhoneQuery)) {
+                return true;
+            }
+            // Name Match
+            if (isNameSearch && c.name?.toLowerCase().includes(searchVal)) {
+                return true;
+            }
+            return false;
+        }).slice(0, 8)
+        : [];
+
+    const selectSuggestedCustomer = (c) => {
+        setSelectedCustomer(c);
+        setIsGuestCustomer(false);
+        setCustomerQuery('');
+        setShowCustomerSuggestions(false);
+        setIsAddingNewCustomer(false);
     }
 
     const [amountReceived, setAmountReceived] = useState(0);
@@ -391,6 +417,9 @@ const PointOfSale = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-6 ml-4">
+                    <button onClick={() => setShowReports(true)} className="flex items-center gap-2 text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-black hover:bg-indigo-100 hover:scale-105 active:scale-95 transition-all outline-none">
+                        <Clock size={16} /> <span className="hidden sm:inline">POS Reports</span>
+                    </button>
                     <div className="hidden lg:flex flex-col items-end leading-none">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Store</span>
                         <span className="text-xs font-bold text-slate-700 mt-0.5">{retailLocation?.storeName || 'Main Terminal'}</span>
@@ -488,19 +517,37 @@ const PointOfSale = () => {
 
                         <div className="max-h-[300px] flex flex-col gap-4 overflow-y-auto no-scrollbar shrink-0">
                             {/* Module 1: Customer (Dual Logic) */}
-                            <div className="space-y-3 shrink-0">
+                            <div className="space-y-3 shrink-0 relative">
                                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <User size={12} /> Profile Management
                                 </h3>
-                                <div className="relative group">
+                                <div className="relative group z-30">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400" size={16} />
                                     <input
                                         type="text"
                                         placeholder="Enter Phone or Name [F11]"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all shadow-sm relative z-20"
                                         value={customerQuery}
                                         onChange={(e) => handleCustomerSelect(e.target.value)}
+                                        onFocus={() => setShowCustomerSuggestions(true)}
                                     />
+                                    {showCustomerSuggestions && filteredCustomerSuggestions.length > 0 && !selectedCustomer && (
+                                        <div className="absolute top-0 left-0 right-0 mt-12 bg-white border border-slate-200 shadow-xl rounded-xl z-50 overflow-hidden break-words max-h-48 overflow-y-auto">
+                                            {filteredCustomerSuggestions.map(c => (
+                                                <div
+                                                    key={c.id}
+                                                    onClick={() => selectSuggestedCustomer(c)}
+                                                    className="flex items-center justify-between p-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 transition-colors"
+                                                >
+                                                    <div>
+                                                        <div className="text-[11px] font-black text-slate-800 uppercase leading-none">{c.name}</div>
+                                                        <div className="text-[10px] text-indigo-600 font-mono font-bold mt-1">{c.contact}</div>
+                                                    </div>
+                                                    <ChevronRight size={14} className="text-slate-300" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Dual Save Option UI */}
@@ -665,6 +712,9 @@ const PointOfSale = () => {
                     </div>
                 </aside>
             </div>
+
+            {/* POS Reports Modal */}
+            <PosReports showReports={showReports} setShowReports={setShowReports} recentSales={recentSales} />
 
             {/* 3. Shortcuts Bar (Compact Fixed) */}
             <footer className="h-14 bg-white border-t border-slate-200 px-4 flex items-center gap-6 shrink-0 z-30">

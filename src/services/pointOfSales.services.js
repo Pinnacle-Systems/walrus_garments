@@ -10,7 +10,7 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
 
 
-    let lastObject = await prisma.salesInvoice.findFirst({
+    let lastObject = await prisma.pos.findFirst({
         where: {
             branchId: parseInt(branchId),
             AND: [
@@ -32,9 +32,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
         }
     });
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${shortCode}/SIV/1`
+    let newDocId = `${branchObj.branchCode}/${shortCode}/POS/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${shortCode}/SIV/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}/${shortCode}/POS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }
@@ -45,34 +45,11 @@ async function get(req) {
 
     console.log(companyId, active, "companyId, active ")
 
-    let data = await prisma.salesInvoice.findMany({
+    let data = await prisma.pos.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
-        include: {
-            Party: {
-                select: {
-                    name: true,
-                    // branchId: true,
-                    BranchType: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    City: {
-                        select: {
-                            name: true
-                        }
-                    }
-                },
-            },
-            SalesDelivery : {
-                select : {
-                    id : true ,
-                    docId : true
-                }
-            }
-        },
+
         orderBy: {
             id: "desc"
         }
@@ -86,12 +63,12 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = 0;
-    const data = await prisma.salesInvoice.findUnique({
+    const data = await prisma.pos.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
-            SalesInvoiceItems: true
+            PosItems: true
         }
     })
     if (!data) return NoRecordFound("size");
@@ -118,7 +95,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, invoiceItems, finYearId, branchId ,saleOrderId } = await body
+    const { customerId, discountType, discountValue, posItems, finYearId, branchId, saleOrderId } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -126,26 +103,26 @@ async function create(body) {
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
 
-    const data = await prisma.salesInvoice.create(
+    const data = await prisma.pos.create(
         {
             data: {
                 customerId: customerId ? parseInt(customerId) : undefined,
                 // discountType: discountType ? discountType : "",
                 // discountValue: discountValue ? discountValue : "",
                 // branchId: branchId ? parseInt(branchId) : "",
-                saleOrderId : saleOrderId ? parseInt(saleOrderId) : undefined,
+                saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
                 docId: docId,
-                SalesInvoiceItems: {
-                    createMany: invoiceItems?.length > 0 ? {
-                        data: invoiceItems?.map((temp) => {
+                PosItems: {
+                    createMany: posItems?.length > 0 ? {
+                        data: posItems?.map((temp) => {
                             let newItem = {}
                             newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
                             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
                             newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
                             newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? temp["qty"] : null;
-                            newItem["price"] = temp["price"] ? temp["price"] : null;
+                            newItem["qty"] = temp["qty"] ? String(temp["qty"]) : "";
+                            newItem["price"] = temp["price"] ? String(temp["price"]) : "";
 
 
                             return newItem
@@ -174,8 +151,8 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
                 uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
                 hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
-                qty: item["qty"] ? item["qty"] : 0,
-                price: item["price"] ? item["price"] : 0,
+                qty: item["qty"] ? String(item["qty"]) : "",
+                price: item["price"] ? String(item["price"]) : "",
 
 
 
