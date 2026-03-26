@@ -64,6 +64,13 @@ export default function Form() {
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
 
+  const isStandardPriceMethod = priceMethod === "STANDARD";
+  const standardBarcode = barcode?.trim() || "";
+  const standardSku = sku?.trim() || "";
+  const standardSalesPrice = salesPrice?.trim() || "";
+  const isStandardRequiredFieldMissing =
+    isStandardPriceMethod && (!standardBarcode || !standardSku || !standardSalesPrice);
+
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -174,6 +181,8 @@ export default function Form() {
         setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
+        setSku("")
+        setBarcode("")
 
       } else {
         setName(data?.name ? data?.name : "")
@@ -216,6 +225,7 @@ export default function Form() {
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
           setSku(data?.ItemPriceList?.[0]?.sku ? data?.ItemPriceList?.[0]?.sku : "")
+          setBarcode(data?.ItemPriceList?.[0]?.barcode ? data?.ItemPriceList?.[0]?.barcode : "")
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
 
         } else {
@@ -265,8 +275,18 @@ export default function Form() {
     hsnId,
     active,
     priceMethod,
-    itemPriceList: priceMethod === "STANDARD" && !id ?
-      [{ sizeId: null, colorId: null, offerPrice, salesPrice, minStockQty, sku: sku }] :
+    itemPriceList: priceMethod === "STANDARD" ?
+      [{
+        id: itemPriceList?.[0]?.id,
+        itemId: itemPriceList?.[0]?.itemId,
+        sizeId: null,
+        colorId: null,
+        offerPrice,
+        salesPrice,
+        minStockQty,
+        sku: standardSku,
+        barcode: standardBarcode
+      }] :
       itemPriceList,
     sectionId,
     fields: Object.values(fields),
@@ -276,6 +296,17 @@ export default function Form() {
   };
 
   const validateData = (data) => {
+    if (!data.name || !data?.code || !data?.priceMethod) {
+      return false;
+    }
+
+    if (data?.priceMethod === "STANDARD") {
+      const standardPrice = data?.itemPriceList?.[0];
+      if (!standardPrice?.barcode?.trim() || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
+        return false;
+      }
+    }
+
     if (data.name && data?.code && data?.priceMethod) {
       return true;
     }
@@ -289,6 +320,13 @@ export default function Form() {
         returnData = await callback(data).unwrap();
       } else {
         returnData = await callback(data).unwrap();
+      }
+      if (returnData?.statusCode === 1) {
+        Swal.fire({
+          icon: "warning",
+          title: returnData?.message || "Unable to save item",
+        });
+        return;
       }
       setId(returnData.data.id);
       Swal.fire({
@@ -344,8 +382,10 @@ export default function Form() {
     }
     if (!validateData(data)) {
       Swal.fire({
-        title: "Please fill all required fields...!",
-        icon: "success",
+        title: isStandardPriceMethod
+          ? "Barcode, SKU, and Sales Price are required for standard price method."
+          : "Please fill all required fields...!",
+        icon: "warning",
         timer: 1000,
       });
       return;
@@ -723,8 +763,9 @@ export default function Form() {
                       onClick={() => {
                         saveData("close")
                       }}
+                      disabled={isStandardRequiredFieldMissing}
                       className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs"
+                  border border-blue-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600"
                     >
                       <Check size={14} />
                       {id ? "Update" : "Save & close"}
@@ -738,9 +779,10 @@ export default function Form() {
                       onClick={() => {
                         saveData("new")
                       }}
+                      disabled={isStandardRequiredFieldMissing}
 
                       className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"
+                  border border-green-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-green-600"
                     >
                       <Check size={14} />
                       {"Save & New"}
@@ -949,7 +991,7 @@ export default function Form() {
                                   setValue={setSalesPrice}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
-                                // required={true}
+                                  required={true}
                                 />
                               </div>
                               <div className="col-span-2">
@@ -972,6 +1014,14 @@ export default function Form() {
                                 />
                               </div>
                             </>
+                          )}
+
+                          {priceMethod == "STANDARD" && (
+                            <div className="col-span-12 min-h-[20px] text-xs text-red-600">
+                              {isStandardRequiredFieldMissing
+                                ? "Barcode, SKU, and Sales Price are required when Price Method is STANDARD."
+                                : ""}
+                            </div>
                           )}
 
 

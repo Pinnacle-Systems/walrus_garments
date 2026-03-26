@@ -191,8 +191,8 @@ const YarnInwardPoItems = ({
         <>
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
-                <div className="flex justify-between items-center mb-2">
+            <div className="relative flex h-full min-h-0 flex-col rounded-md border border-slate-200 bg-white p-2 shadow-sm">
+                <div className="mb-2 flex shrink-0 items-center justify-between">
                     <h2 className="font-medium text-slate-700">List Of Items</h2>
                     <div className="flex gap-2 items-center">
 
@@ -223,7 +223,7 @@ const YarnInwardPoItems = ({
                     </div>
 
                 </div>
-                <div className={` relative w-full overflow-y-auto py-1`}>
+                <div className="relative min-h-0 flex-1 overflow-auto py-1">
                     <table className="w-full border-collapse table-fixed">
                         <thead className="bg-gray-200 text-gray-800">
                             <tr>

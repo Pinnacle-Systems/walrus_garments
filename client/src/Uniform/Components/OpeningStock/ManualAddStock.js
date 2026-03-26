@@ -137,6 +137,13 @@ const ManualAddStock = ({ params }) => {
     );
   };
 
+  const getStandardBarcodeMissingRowIndex = () =>
+    rows.findIndex((row) => {
+      if (!row.itemId) return false;
+      const selectedItem = itemList?.data?.find((item) => item.id === row.itemId);
+      return selectedItem?.priceMethod === "STANDARD" && !row.barcode?.toString().trim();
+    });
+
   // --- Modal Logic ---
   const openQuickAdd = (type, value, rowId, editItem = null) => {
     setModalState((prev) => ({ ...prev, [type]: { open: true, rowId, value, editItem } }));
@@ -157,9 +164,9 @@ const ManualAddStock = ({ params }) => {
     if (!selectedBranchId) { toast.warning("Please select a branch."); return; }
     if (!selectedLocationId) { toast.warning("Please select a location."); return; }
 
-    const missingBarcodeIdx = rows.findIndex((r) => !r.barcode?.toString().trim());
+    const missingBarcodeIdx = getStandardBarcodeMissingRowIndex();
     if (missingBarcodeIdx !== -1) {
-      toast.warning(`Barcode is missing at row ${missingBarcodeIdx + 1}`);
+      toast.warning(`Barcode is required for standard pricing item at row ${missingBarcodeIdx + 1}`);
       return;
     }
     const valid = rows.every((r) => r.itemId && r.qty);

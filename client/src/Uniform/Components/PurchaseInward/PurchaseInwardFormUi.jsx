@@ -150,8 +150,17 @@ const PurchaseInwardForm = ({
     );
   }
 
+  const branchName =
+    branchList?.data?.find((item) => String(item.id) === String(branchId))?.branchName || "";
+  const locationName =
+    storeOptions?.find((item) => String(item.id) === String(storeId))?.storeName || "";
+  const supplierName =
+    supplierList?.data?.find((item) => String(item.id) === String(partyId))?.aliasName ||
+    supplierList?.data?.find((item) => String(item.id) === String(partyId))?.name ||
+    "";
+
   const saveData = (nextProcess) => {
-    const mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
+    const mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "barcode", "qty", "price"];
     if (!validateData(data)) {
       Swal.fire({ title: "Please fill all required fields...!", icon: "warning" });
       return;
@@ -198,208 +207,239 @@ const PurchaseInwardForm = ({
         />
       </Modal>
 
-      {/* ── Page title bar ── */}
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
-          <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-            <FaFileAlt className="w-5 h-5" />
-          </button>
+      <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+        <div className="w-full shrink-0 rounded-md bg-[#f1f1f0] px-2 py-1 shadow-md">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
+            <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
+              <FaFileAlt className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col h-full mt-2 gap-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          <div className="shrink-0 rounded-md border border-slate-200 bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => setHeaderOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-slate-50"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="text-sm font-medium text-slate-700">Header Details</span>
+                {!headerOpen && (
+                  <div className="hidden min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 md:flex">
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">No</span>
+                      <span className="font-medium text-slate-700">{docId || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Date</span>
+                      <span className="font-medium text-slate-700">{date || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Type</span>
+                      <span className="font-medium text-slate-700">{poInwardOrDirectInward || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Branch</span>
+                      <span className="font-medium text-slate-700">{branchName || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Location</span>
+                      <span className="font-medium text-slate-700">{locationName || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Supplier</span>
+                      <span className="font-medium text-slate-700">{supplierName || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">DC No</span>
+                      <span className="font-medium text-slate-700">{dcNo || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">DC Date</span>
+                      <span className="font-medium text-slate-700">{dcDate || "-"}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <FiChevronDown
+                className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${headerOpen ? "rotate-180" : "rotate-0"}`}
+              />
+            </button>
 
-        {/* ── Accordion wrapping ALL header cards ── */}
-        <div className="border border-slate-200 bg-white rounded-md shadow-sm">
-
-          {/* Accordion toggle bar */}
-          <button
-            type="button"
-            onClick={() => setHeaderOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 transition-colors"
-          >
-            <span className="font-medium text-slate-700 text-sm">Header Details</span>
-            <FiChevronDown
-              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${headerOpen ? "rotate-180" : "rotate-0"
+            <div
+              className={`transition-all duration-300 ease-in-out ${headerOpen
+                ? "max-h-[320px] opacity-100 overflow-visible"
+                : "max-h-0 opacity-0 overflow-hidden"
                 }`}
-            />
-          </button>
-
-          {/* ── FIX: overflow-visible when open so dropdowns are not clipped ── */}
-          <div
-            className={`transition-all duration-300 ease-in-out ${headerOpen
-              ? "max-h-[600px] opacity-100 overflow-visible"
-              : "max-h-0 opacity-0 overflow-hidden"
-              }`}
-          >
-            <div className="px-2 pb-2 overflow-visible">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
-
-                {/* Basic Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                  <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                  <div className="grid grid-cols-2 gap-1">
-                    <ReusableInput label="Purchase Inward No" readOnly value={docId} />
-                    <ReusableInput label="Purchase Inward Date" value={date} type="date" required readOnly disabled />
+            >
+              <div className="px-3 pb-3 overflow-visible">
+                <div className="grid grid-cols-1 gap-2 overflow-visible md:grid-cols-3">
+                  <div className="relative mt-2 rounded-md border border-slate-200 bg-white px-2 pb-2 pt-4 shadow-sm">
+                    <h2 className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-slate-700">Basic Details</h2>
+                    <div className="grid grid-cols-2 gap-1">
+                      <ReusableInput label="Purchase Inward No" readOnly value={docId} />
+                      <ReusableInput label="Purchase Inward Date" value={date} type="date" required readOnly disabled />
+                    </div>
                   </div>
-                </div>
 
-                {/* Inward Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                  <h2 className="font-medium text-slate-700 mb-2">Inward Details</h2>
-                  <div className="grid grid-cols-2 gap-2">
-                    <DropdownInput
-                      name="Inward Type"
-                      beforeChange={() => setDirectInwardReturnItems([])}
-                      options={directOrPo}
-                      value={poInwardOrDirectInward}
-                      setValue={setPoInwardOrDirectInward}
-                      required readOnly={readOnly}
-                      ref={inwardTyperef}
-                    />
-                    <DropdownInput
-                      name="Branch"
-                      options={
-                        branchList
-                          ? dropDownListObject(
-                            id ? branchList?.data : branchList?.data?.filter((item) => item.active),
-                            "branchName", "id"
-                          )
-                          : []
-                      }
-                      value={branchId}
-                      setValue={(value) => { setLocationId(value); setStoreId(""); }}
-                      required ref={branchRef}
-                    />
-                    <DropdownInput
-                      name="Location"
-                      options={dropDownListObject(
-                        id
-                          ? storeOptions
-                          : storeOptions?.filter(i => i.storeName.includes("NEW")),
-                        "storeName", "id"
-                      )}
-                      value={storeId}
-                      setValue={setStoreId}
-                      required ref={locationRef}
-                    />
-                  </div>
-                </div>{console.log(storeOptions, 'storeOptions')}
-
-                {/* Supplier Details — overflow-visible so the searchable dropdown escapes */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1 overflow-visible">
-                  <h2 className="font-medium text-slate-700 mb-2">Supplier Details</h2>
-                  <div className="grid grid-cols-2 gap-2 overflow-visible">
-                    <div className="col-span-3 overflow-visible">
-                      <ReusableSearchableInputNewCustomerwithBranches
-                        label="Supplier Name"
-                        component="PartyMaster"
-                        placeholder="Search Supplier Name..."
-                        optionList={supplierList?.data}
-                        setSearchTerm={(value) => setPartyId(value)}
-                        searchTerm={partyId}
-                        show="isSupplier"
-                        required disabled={id}
-                        ref={partyRef}
+                  <div className="relative mt-2 rounded-md border border-slate-200 bg-white px-2 pb-2 pt-4 shadow-sm">
+                    <h2 className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-slate-700">Inward Details</h2>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <DropdownInput
+                        name="Inward Type"
+                        beforeChange={() => setDirectInwardReturnItems([])}
+                        options={directOrPo}
+                        value={poInwardOrDirectInward}
+                        setValue={setPoInwardOrDirectInward}
+                        required
+                        readOnly={readOnly}
+                        ref={inwardTyperef}
+                      />
+                      <DropdownInput
+                        name="Branch"
+                        options={
+                          branchList
+                            ? dropDownListObject(
+                              id ? branchList?.data : branchList?.data?.filter((item) => item.active),
+                              "branchName", "id"
+                            )
+                            : []
+                        }
+                        value={branchId}
+                        setValue={(value) => { setLocationId(value); setStoreId(""); }}
+                        required
+                        ref={branchRef}
+                      />
+                      <DropdownInput
+                        name="Location"
+                        options={dropDownListObject(
+                          id
+                            ? storeOptions
+                            : storeOptions?.filter((item) => item.storeName.includes("NEW")),
+                          "storeName", "id"
+                        )}
+                        value={storeId}
+                        setValue={setStoreId}
+                        required
+                        ref={locationRef}
                       />
                     </div>
-                    <TextInput name="Dc No." value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
-                    <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required readOnly={readOnly} />
+                  </div>
+
+                  <div className="relative mt-2 overflow-visible rounded-md border border-slate-200 bg-white px-2 pb-2 pt-4 shadow-sm">
+                    <h2 className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-slate-700">Supplier Details</h2>
+                    <div className="grid grid-cols-2 gap-1.5 overflow-visible">
+                      <div className="col-span-2 overflow-visible">
+                        <ReusableSearchableInputNewCustomerwithBranches
+                          label="Supplier Name"
+                          component="PartyMaster"
+                          placeholder="Search Supplier Name..."
+                          optionList={supplierList?.data}
+                          setSearchTerm={(value) => setPartyId(value)}
+                          searchTerm={partyId}
+                          show="isSupplier"
+                          required
+                          disabled={id}
+                          ref={partyRef}
+                        />
+                      </div>
+                      <TextInput name="Dc No." value={dcNo} setValue={setDcNo} readOnly={readOnly} required />
+                      <DateInput name="Dc Date" value={dcDate} setValue={setDcDate} required readOnly={readOnly} />
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
 
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <fieldset className="h-full min-h-0">
+              {poInwardOrDirectInward === "DirectInward" && (
+                <YarnPoItems
+                  id={id}
+                  poItems={directInwardReturnItems}
+                  setPoItems={setDirectInwardReturnItems}
+                  setInwardItemSelection={setInwardItemSelection}
+                  supplierId={partyId}
+                  handleRightClick={handleRightClick}
+                  contextMenu={contextMenu}
+                  handleCloseContextMenu={handleCloseContextMenu}
+                  yarnList={yarnList}
+                  colorList={colorList}
+                  uomList={uomList}
+                  itemList={itemList}
+                  sizeList={sizeList}
+                  headerOpen={headerOpen}
+                  itemPriceList={itemPriceList}
+                />
+              )}
+              {(poInwardOrDirectInward === "PurchaseInward" || poInwardOrDirectInward === "GeneralInward") && (
+                <YarnInwardPoItems
+                  inwardItems={directInwardReturnItems}
+                  setInwardItems={setDirectInwardReturnItems}
+                  removeItem={removeItem}
+                  transType={transType}
+                  purchaseInwardId={id}
+                  params={params}
+                  supplierId={partyId}
+                  readOnly={readOnly}
+                  isSupplierOutside={isSupplierOutside()}
+                  setInwardItemSelection={setInwardItemSelection}
+                  id={id}
+                  handleRightClick={handleRightClick}
+                  contextMenu={contextMenu}
+                  handleCloseContextMenu={handleCloseContextMenu}
+                  yarnList={yarnList}
+                  colorList={colorList}
+                  uomList={uomList}
+                />
+              )}
+            </fieldset>
+          </div>
+
+          <div className="shrink-0 rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <div className="flex flex-col justify-between gap-2 md:flex-row">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => hasPermission(() => saveData("new"), "create")}
+                  className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600">
+                  <FiSave className="mr-2 h-4 w-4" />
+                  Save & New
+                </button>
+                <button
+                  onClick={() => hasPermission(() => saveData("close"), "create")}
+                  className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600">
+                  <HiOutlineRefresh className="mr-2 h-4 w-4" />
+                  Save & Close
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
+                  onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+                >
+                  <FiEdit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
+                  onClick={() => {
+                    if (directInwardReturnItems?.filter((i) => i.itemId)?.length === 0) {
+                      Swal.fire({ icon: "warning", title: "Please Fill At Least One Inward Item" });
+                      return;
+                    }
+                    setBarcodePrintOpen(true);
+                  }}
+                >
+                  <FiPrinter className="mr-2 h-4 w-4" />
+                  Barcode
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="overflow-auto">
-          <fieldset className="h-full">
-            {poInwardOrDirectInward === "DirectInward" && (
-              <YarnPoItems
-                id={id}
-                poItems={directInwardReturnItems}
-                setPoItems={setDirectInwardReturnItems}
-                setInwardItemSelection={setInwardItemSelection}
-                supplierId={partyId}
-                handleRightClick={handleRightClick}
-                contextMenu={contextMenu}
-                handleCloseContextMenu={handleCloseContextMenu}
-                yarnList={yarnList}
-                colorList={colorList}
-                uomList={uomList}
-                itemList={itemList}
-                sizeList={sizeList}
-                headerOpen={headerOpen}
-                itemPriceList={itemPriceList}
-              />
-            )}
-            {(poInwardOrDirectInward === "PurchaseInward" || poInwardOrDirectInward === "GeneralInward") && (
-              <YarnInwardPoItems
-                inwardItems={directInwardReturnItems}
-                setInwardItems={setDirectInwardReturnItems}
-                removeItem={removeItem}
-                transType={transType}
-                purchaseInwardId={id}
-                params={params}
-                supplierId={partyId}
-                readOnly={readOnly}
-                isSupplierOutside={isSupplierOutside()}
-                setInwardItemSelection={setInwardItemSelection}
-                id={id}
-                handleRightClick={handleRightClick}
-                contextMenu={contextMenu}
-                handleCloseContextMenu={handleCloseContextMenu}
-                yarnList={yarnList}
-                colorList={colorList}
-                uomList={uomList}
-              />
-            )}
-          </fieldset>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => hasPermission(() => saveData("new"), "create")}
-
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
-              onClick={() => hasPermission(() => saveData("close"), "create")}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              // onClick={() => setReadOnly(false)}
-              onClick={() => hasPermission(() => setReadOnly(false), "edit")}
-
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button
-              className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 flex items-center text-sm"
-              onClick={() => {
-                if (directInwardReturnItems?.filter((i) => i.itemId)?.length === 0) {
-                  Swal.fire({ icon: "warning", title: "Please Fill At Least One Inward Item" });
-                  return;
-                }
-                setBarcodePrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Barcode
-            </button>
-          </div>
-        </div>
-
       </div>
     </>
   );
