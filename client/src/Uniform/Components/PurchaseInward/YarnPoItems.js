@@ -10,6 +10,7 @@ import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel
 import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { FaPlus, FaTrashAlt } from "react-icons/fa";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 
 const YarnPoItems = ({
     id,
@@ -32,6 +33,16 @@ const YarnPoItems = ({
     itemPriceList
 }) => {
 
+    const formatThreeDecimals = (value) => {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed.toFixed(3) : "0.000";
+    };
+
+    const formatTwoDecimals = (value) => {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed.toFixed(2) : "0.00";
+    };
+
 
     const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
 
@@ -50,6 +61,37 @@ const YarnPoItems = ({
     const handleInputChange = (value, index, field) => {
         console.log(value, "value", index, "index", field, "field")
         const newBlend = structuredClone(poItems);
+        const currentItemId = field === "itemId" ? value : newBlend[index].itemId;
+        const selectedItem = itemList?.data?.find(item => String(item.id) === String(currentItemId));
+        const isStandardPriceItem = selectedItem?.priceMethod === "STANDARD";
+
+        if (field === "itemId") {
+            newBlend[index]["sizeId"] = "";
+            newBlend[index]["colorId"] = "";
+            newBlend[index]["barcode"] = "";
+
+            const standardPrice = selectedItem?.priceMethod === "STANDARD"
+                ? selectedItem?.ItemPriceList?.[0]
+                : null;
+
+            if (standardPrice?.barcode) {
+                newBlend[index]["barcode"] = standardPrice.barcode;
+                if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
+                    newBlend[index]["price"] = standardPrice.salesPrice || "0.00";
+                }
+            }
+        }
+
+        if (field === "sizeId") {
+            newBlend[index]["colorId"] = "";
+            if (!isStandardPriceItem) {
+                newBlend[index]["barcode"] = "";
+            }
+        }
+
+        if (field === "colorId" && !isStandardPriceItem) {
+            newBlend[index]["barcode"] = "";
+        }
 
         if (field === "barcode") {
             const foundPrice = itemPriceList?.data?.find(item => item.barcode === value);
@@ -154,6 +196,60 @@ const YarnPoItems = ({
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
 
+    const itemOptions = (itemList?.data || []).map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const getSizeOptions = (row) => {
+        const availableSizeIds = [...new Set(
+            (itemPriceList?.data || [])
+                .filter((item) => String(item.itemId) === String(row?.itemId) && item?.sizeId)
+                .map((item) => String(item.sizeId))
+        )];
+
+        const source =
+            availableSizeIds.length > 0
+                ? (sizeList?.data || []).filter((item) => availableSizeIds.includes(String(item.id)))
+                : (id
+                    ? sizeList?.data
+                    : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId));
+
+        return (source || []).map((item) => ({
+            value: item.id,
+            label: item?.name || "",
+        }));
+    };
+
+    const getColorOptions = (row) => {
+        const availableColorIds = [...new Set(
+            (itemPriceList?.data || [])
+                .filter((item) =>
+                    String(item.itemId) === String(row?.itemId) &&
+                    String(item.sizeId) === String(row?.sizeId) &&
+                    item?.colorId
+                )
+                .map((item) => String(item.colorId))
+        )];
+
+        const source =
+            availableColorIds.length > 0
+                ? (colorList?.data || []).filter((item) => availableColorIds.includes(String(item.id)))
+                : (id
+                    ? colorList?.data
+                    : getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId));
+
+        return (source || []).map((item) => ({
+            value: item.id,
+            label: item?.name || "",
+        }));
+    };
+
+    const uomOptions = ((id ? uomList?.data : uomList?.data?.filter(item => item.active)) || []).map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
 
 
 
@@ -172,8 +268,8 @@ const YarnPoItems = ({
 
 
 
-            <div className={`border border-slate-200 p-2 bg-white rounded-md shadow-sm ${headerOpen ? " max-h-[330px]" : " max-h-[550px]"}`}>
-                <div className="flex justify-between items-center mb-2">
+            <div className="flex h-full min-h-0 flex-col rounded-md border border-slate-200 bg-white p-2 shadow-sm">
+                <div className="mb-1 flex shrink-0 items-center justify-between">
                     <h2 className="font-bold text-slate-700">List Of Inward Items</h2>
                     {/* <button className="font-bold text-slate-700 "
                         onKeyDown={(e) => {
@@ -203,42 +299,43 @@ const YarnPoItems = ({
                     </button> */}
 
                 </div>
-                <div className={` relative w-full ${headerOpen ? " h-[250px]" : " h-[450px]"} overflow-y-auto py-1`}>
+                <div className="relative min-h-0 flex-1 overflow-hidden rounded-md border border-slate-200">
+                    <div className="h-full overflow-x-auto overflow-y-auto">
                     <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800 top-0 sticky">
+                        <thead className="sticky top-0 z-20 bg-gray-200 text-gray-800 shadow-sm">
                             <tr className="py-2">
                                 <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     S.No
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Item  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Size  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Color  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     UOM  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Barcode  <span className="text-red-500">*</span>
                                 </th>
@@ -248,7 +345,7 @@ const YarnPoItems = ({
                                         <>
                                             <th
                                                 key={i}
-                                                className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                             >
                                                 {capitalizeFirstLetter(element?.[i])}  <span className="text-red-500">*</span>
                                             </th>
@@ -259,7 +356,7 @@ const YarnPoItems = ({
                                 {id && (
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Stock  Quantity  <span className="text-red-500">*</span>
                                     </th>
@@ -267,13 +364,13 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Quantity  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Price  <span className="text-red-500">*</span>
                                 </th>
@@ -281,7 +378,7 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Gross
                                 </th>
@@ -289,7 +386,7 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-7 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`w-7 bg-gray-200 px-0 py-1 text-center font-medium text-[12px] `}
                                 >
 
                                 </th>
@@ -306,118 +403,64 @@ const YarnPoItems = ({
                                         }
                                     }}
                                 >
-                                    <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
-                                        <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                    <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
+                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
                                             value={row.itemId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
-                                            onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "itemId")
-                                            }
-                                            }
-                                        >
-                                            <option >
-                                            </option>
-                                            {(id ? itemList?.data : itemList?.data)?.map((blend) =>
-                                                <option value={blend.id} key={blend.id}>
-                                                    {blend?.name}
-                                                </option>)}
-                                        </select>
+                                            options={itemOptions}
+                                            disabled={readOnly}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                        />
                                     </td>
                                     {/* {console.log(row,"row")} */}
 
-                                    <td className=" border border-gray-300 text-[11px] py-0.5">
-                                        <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                            tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
+                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
                                             value={row.sizeId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
-                                            onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "sizeId")
-                                            }
-                                            }
+                                            options={getSizeOptions(row)}
                                             disabled={readOnly || !row.itemId}
-                                        >
-                                            <option >
-                                            </option>
-                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
-                                                <option value={blend.id} key={blend.id}>
-                                                    {blend?.name}
-                                                </option>)}
-                                        </select>
-                                    </td>
-
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
-                                        <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                            onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "colorId")
-                                            }
-                                            }
-                                            disabled={readOnly || !row.sizeId}
-
-                                        >
-                                            <option hidden>
-                                            </option>
-                                            {(id ? colorList?.data : (getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId)))?.map((blend) =>
-                                                <option value={blend.id} key={blend.id}>
-                                                    {blend?.name}
-                                                </option>
-                                            )}
-                                        </select>
-                                    </td>
-
-
-
-
-                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
-                                        <select
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
-                                            onBlur={(e) => {
-                                                handleInputChange((e.target.value), index, "uomId")
-                                            }
-                                            }
-                                            disabled={readOnly}
-
-                                        >
-
-                                            <option hidden>
-                                            </option>
-                                            {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map((blend) =>
-                                                <option value={blend.id} key={blend.id}>
-                                                    {blend.name}
-                                                </option>
-                                            )}
-                                        </select>
-                                    </td>
-                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
-                                        <input
-                                            onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "barcode") } }}
-                                            className='text-right rounded py-1 w-full px-1 table-data-input'
-                                            value={row.barcode}
-                                            onChange={(e) => handleInputChange(e.target.value, index, "barcode")}
-                                            onFocus={(e) => e.target.select()}
-                                            disabled={readOnly}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                         />
+                                    </td>
+
+                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.colorId}
+                                            options={getColorOptions(row)}
+                                            disabled={readOnly || !row.sizeId}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                        />
+                                    </td>
+
+
+
+
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.uomId}
+                                            options={uomOptions}
+                                            disabled={readOnly}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                        />
+                                    </td>
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right">
+                                        <div className="flex h-full min-h-[22px] items-center justify-end px-1">
+                                            {row.barcode || ""}
+                                        </div>
                                     </td>
 
                                     {allData?.data?.map(element => (
                                         // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                         Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                                             <>
-                                                <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                                <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                                     <input
                                                         onKeyDown={e => {
                                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
                                                             if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
                                                         }}
 
-                                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                        className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                                         onFocus={(e) => e.target.select()}
                                                         // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                         value={row[i]}
@@ -438,12 +481,12 @@ const YarnPoItems = ({
                                     ))}
 
                                     {id && (
-                                        <td className=" py-0.5 border border-gray-300 text-[11px] text-right">
-                                            {row?.stockQty}
+                                        <td className="border border-gray-300 p-0 text-[11px] text-right">
+                                            {formatThreeDecimals(row?.stockQty)}
                                         </td>
                                     )}
 
-                                    <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -451,10 +494,10 @@ const YarnPoItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                            value={row?.qty}
+                                            value={formatThreeDecimals(row?.qty)}
                                             disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
                                             onChange={(e) => {
                                                 if (id) {
@@ -473,7 +516,7 @@ const YarnPoItems = ({
                                         />
                                     </td>
 
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -481,9 +524,9 @@ const YarnPoItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="text-right rounded py-1 w-full px-1 table-data-input"
+                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
-                                            value={(!row.price) ? 0 : row.price}
+                                            value={formatTwoDecimals(row?.price)}
                                             disabled={readOnly || !row.qty}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")
@@ -500,13 +543,13 @@ const YarnPoItems = ({
 
 
 
-                                    <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                        {(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0).toFixed(3)}</td>
+                                    <td className='border border-gray-300 p-0 text-[11px] text-right'>
+                                        {formatTwoDecimals(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0)}</td>
 
 
 
 
-                                    <td className="w-16 px-1 py-1 text-center">
+                                    <td className="w-16 border border-gray-300 p-0 text-center">
                                         <button
                                             onClick={() => addNewRow(index)}
                                             onKeyDown={(e) => {
@@ -515,7 +558,7 @@ const YarnPoItems = ({
                                                     addNewRow(index);
                                                 }
                                             }}
-                                            className="bg-blue-50 rounded py-0.5"
+                                            className="h-full w-full rounded-none bg-blue-50 py-0"
                                         >
                                             +
                                         </button>
@@ -526,11 +569,11 @@ const YarnPoItems = ({
                                 </tr>
                             )}
                         </tbody>
-                        <tfoot className="bg-gray-300 font-bold sticky bottom-0 z-10 border-t-2 border-gray-300">
+                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 bg-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
                                     colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
-                                    className="px-4 py-1 text-right text-[12px]"
+                                    className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                     Total:
                                 </td>
@@ -539,12 +582,13 @@ const YarnPoItems = ({
                                 </td>
                                 <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300"></td>
                                 <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
-                                    {(poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(3)}
+                                    {formatTwoDecimals((poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0))}
                                 </td>
                                 <td className="px-1 py-1 bg-gray-100"></td>
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 </div>
                 {contextMenu && (
                     <div

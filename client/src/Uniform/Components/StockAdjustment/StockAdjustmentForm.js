@@ -239,6 +239,13 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   const validateData = (d) =>
     !!(d?.branchId && d?.storeId);
 
+  const getStandardBarcodeMissingRowIndex = (items = []) =>
+    items.findIndex((row) => {
+      if (!row.itemId) return false;
+      const selectedItem = itemList?.data?.find((item) => item.id === row.itemId);
+      return selectedItem?.priceMethod === "STANDARD" && !row.barcode?.toString().trim();
+    });
+
   const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
     try {
       const returnData = await callback(payload).unwrap();
@@ -276,6 +283,14 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
     if (data?.stockAdjustmentItems?.filter((i) => i.itemId)?.length === 0) {
       Swal.fire({ title: "Please fill all adjustment Items...!", icon: "warning" });
+      return;
+    }
+    const missingBarcodeIdx = getStandardBarcodeMissingRowIndex(data?.stockAdjustmentItems?.filter((i) => i.itemId));
+    if (missingBarcodeIdx !== -1) {
+      Swal.fire({
+        title: `Barcode is required for standard pricing item at row ${missingBarcodeIdx + 1}`,
+        icon: "warning"
+      });
       return;
     }
     if (!isGridDatasValid(data?.stockAdjustmentItems?.filter((i) => i.itemId), false, mandatoryFields)) {
