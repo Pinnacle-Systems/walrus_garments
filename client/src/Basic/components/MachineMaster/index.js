@@ -35,6 +35,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
 
   const childRecord = useRef(0);
+  const formRef = useRef(null);
 
   const params = { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }
   const { data: allData, isLoading, isFetching } = useGetMachineQuery({ params, searchParams: searchValue });
@@ -80,6 +81,13 @@ export default function Form() {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData])
 
+  useEffect(() => {
+    if (form && formRef.current) {
+      const firstInput = formRef.current.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+  }, [form]);
+
   console.log(secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), "companyId")
 
   const data = {
@@ -93,7 +101,9 @@ export default function Form() {
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
@@ -101,16 +111,21 @@ export default function Form() {
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
-   
-      });
 
+      });
+      if (nextProcess === "new") {
+        syncFormWithDb(undefined);
+        onNew();
+      } else {
+        setForm(false);
+      }
 
     } catch (error) {
       console.log("handle")
     }
   }
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (!validateData(data)) {
       // toast.error("Please fill all required fields...!", { position: "top-center" })
       Swal.fire({
@@ -124,9 +139,9 @@ export default function Form() {
       return
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated")
+      handleSubmitCustom(updateData, data, "Updated", nextProcess)
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   }
 
@@ -221,138 +236,6 @@ export default function Form() {
 
 
   return (
-    // <div onKeyDown={handleKeyDown} className='px-5'>
-    //   <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-    //     <h5 className='my-1 text-xl'>Machine Master</h5>
-    //     <div className="flex items-center gap-4">
-    //       <button
-    //         onClick={() => {
-    //           setForm(true);
-    //           onNew();
-    //         }}
-    //         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-    //       >
-    //         <Plus size={16} />
-    //         Add Machine Master
-    //       </button>
-
-    //     </div>
-    //   </div>
-    //   <div className='w-full flex items-start'>
-
-    //     <Mastertable
-    //       header={'Machine Details'}
-    //       searchValue={searchValue}
-    //       setSearchValue={setSearchValue}
-    //       onDataClick={onDataClick}
-    //       // setOpenTable={setOpenTable}
-    //       tableHeaders={tableHeaders}
-    //       setReadOnly={setReadOnly}
-    //       deleteData={deleteData}
-    //       tableDataNames={tableDataNames}
-    //       data={allData?.data}
-    //     // loading={
-    //     //   isLoading || isFetching
-    //     // }
-    //     />
-
-
-
-    //     {form && (
-    //       <Modal
-    //         isOpen={form}
-    //         form={form}
-    //         widthClass={"w-[35%] max-w-6xl h-[50vh]"}
-    //         onClose={() => {
-    //           setForm(false);
-    //           setErrors({});
-    //         }}
-    //       >
-    //         <div className="h-full flex flex-col bg-[f1f1f0]">
-    //           <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
-    //             <div className="flex items-center gap-2">
-    //               <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-    //                 {id ? (!readOnly ? "Edit Machine" : "Machine Master ") : "Add New Machine"}
-    //               </h2>
-
-    //             </div>
-    //             <div className="flex gap-2">
-    //               <div>
-    //                 {readOnly && (
-    //                   <button
-    //                     type="button"
-    //                     onClick={() => {
-    //                       setForm(false);
-    //                       setSearchValue("");
-    //                       setId(false);
-    //                     }}
-    //                     className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-    //                   >
-    //                     Cancel
-    //                   </button>
-    //                 )}
-    //               </div>
-    //               <div className="flex gap-2">
-    //                 {!readOnly && (
-    //                   <button
-    //                     type="button"
-    //                     onClick={saveData}
-    //                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-    //                                                     border border-green-600 flex items-center gap-1 text-xs"
-    //                   >
-    //                     <Check size={14} />
-    //                     {id ? "Update" : "Save"}
-    //                   </button>
-    //                 )}
-    //               </div>
-    //             </div>
-    //           </div>
-
-    //           <div className="flex-1 overflow-auto p-3">
-    //             <div className="grid grid-cols-2  gap-3  h-full">
-
-    // <div>
-
-    //   <div className=' '>
-    //     <TextInput name="Machine Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
-    //   </div>
-
-    //   <div className=' '>
-    //     <TextInput name="Production Time" type="text" value={time} setValue={setTime} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-    //   </div>
-    //   <div className=''>
-    //     <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-    //   </div>
-
-
-    //   <div className='mt-2'>
-    //     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-
-    //   </div>
-    // </div>
-
-
-
-
-    //             </div>
-    //           </div>
-    //         </div>
-
-
-
-
-
-
-
-
-
-
-    //       </Modal>
-    //     )}
-    //     <div />
-    //   </div>
-    // </div>
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold text-gray-800">Machine Master</h5>
@@ -422,15 +305,21 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                                    border border-green-600 flex items-center gap-1 text-xs"
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
+                                                    border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
                       </button>
                     )}
                   </div>
+                  {(!readOnly && !id) && (
+                    <button type="button" onClick={() => saveData("new")}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                      <Check size={14} />Save & New
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -439,11 +328,11 @@ export default function Form() {
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
+                        <div className="grid grid-cols-2  gap-3  h-full" ref={formRef}>
                           <div>
 
                             <div className=' '>
-                              <TextInput name="Machine Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                              <TextInput name="Machine Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                             </div>
 

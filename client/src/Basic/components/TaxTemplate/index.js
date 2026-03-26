@@ -34,6 +34,7 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
 
     const childRecord = useRef(0);
+    const formRef = useRef(null);
     const dispatch = useDispatch();
 
     const companyId = secureLocalStorage.getItem(
@@ -74,6 +75,13 @@ export default function Form() {
         }
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
     const data = {
         name, active, companyId, id, userId,
         taxTemplateDetails: taxTemplateDetails.filter(temp => temp.taxTermId)
@@ -83,7 +91,9 @@ export default function Form() {
         return data.taxTemplateDetails && data.name
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -91,9 +101,6 @@ export default function Form() {
             } else {
                 returnData = await callback(data).unwrap();
             }
-            setId("")
-            syncFormWithDb(undefined)
-            setForm(false)
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -107,13 +114,19 @@ export default function Form() {
                 type: `TaxTermMaster/invalidateTags`,
                 payload: ['Taxe Name'],
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -131,9 +144,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -236,56 +249,6 @@ export default function Form() {
 
 
     return (
-        // <div
-        //     onKeyDown={handleKeyDown}
-        //     className="md:items-start md:justify-items-center grid h-full bg-theme"
-        // >
-        //     <div className="flex flex-col frame w-full h-full">
-        //         <FormHeader
-        //             onNew={onNew}
-        //             onClose={() => {
-        //                 setForm(false);
-        //                 setSearchValue("");
-        //             }}
-        //             model={MODEL}
-        //             saveData={saveData}
-        //             setReadOnly={setReadOnly}
-        //             deleteData={deleteData}
-        //         // childRecord={childRecord.current}
-        //         />
-        //         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-        //             <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-        //                 <div className='col-span-3 mr-1 md:ml-5'>
-        //                     <fieldset className='frame my-1 rounded-tr-lg rounded-bl-lg rounded-br-lg border border-gray-600'>
-        //                         <legend className='sub-heading'>Tax Template Info</legend>
-        //                         <div className='grid grid-cols-1 my-2'>
-        //                             <TextInput name="Template Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-        //                             <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-        //                         </div>
-        //                     </fieldset>
-        //                     <fieldset className='frame rounded-tr-lg rounded-bl-lg rounded-br-lg my-5 w-full flex h-[400px] overflow-auto border border-gray-600'>
-        //                         <legend className='sub-heading'>Tax Template Details</legend>
-        //                         <TaxTemplateGrid params={params} taxTemplateItems={taxTemplateDetails} setTaxTemplateItems={setTaxTemplateDetails} readOnly={readOnly} />
-        //                     </fieldset>
-        //                 </div>
-        //             </div>
-        //             <div className="frame overflow-x-hidden">
-        //                 <FormReport
-        //                     searchValue={searchValue}
-        //                     setSearchValue={setSearchValue}
-        //                     setId={setId}
-        //                     tableHeaders={tableHeaders}
-        //                     tableDataNames={tableDataNames}
-        //                     data={allData?.data}
-        //                     loading={
-        //                         isLoading || isFetching
-        //                     }
-        //                 />
-        //             </div>
-        //         </div>
-        //     </div>
-
-        // </div>
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Tax Template Master</h5>
@@ -356,15 +319,21 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                          border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
+                                          border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
                                             </button>
                                         )}
                                     </div>
+                                    {(!readOnly && !id) && (
+                                        <button type="button" onClick={() => saveData("new")}
+                                            className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                            <Check size={14} />Save & New
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -375,8 +344,8 @@ export default function Form() {
                                             <div className="space-y-4 ">
                                                 <fieldset className=' my-1 rounded-tr-lg rounded-bl-lg rounded-br-lg border border-gray-200'>
                                                     <legend className=''>Tax Template Info</legend>
-                                                    <div className='grid grid-cols-4 my-2 p-2'>
-                                                        <TextInput name="Template Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                    <div className='grid grid-cols-4 my-2 p-2' ref={formRef}>
+                                                        <TextInput name="Template Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                     </div>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </fieldset>

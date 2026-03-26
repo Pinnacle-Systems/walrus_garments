@@ -24,8 +24,16 @@ export default function Form() {
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState({});
 
+  const formRef = useRef(null);
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+
+  useEffect(() => {
+    if (form && formRef.current) {
+      const firstInput = formRef.current.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+  }, [form]);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -74,7 +82,9 @@ export default function Form() {
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleReasonChange = (val) => setReason(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
@@ -89,13 +99,18 @@ export default function Form() {
         //   Swal.showLoading();
         // }
       });
-      setForm(false)
+      if (nextProcess === "new") {
+        syncFormWithDb(undefined);
+        onNew();
+      } else {
+        setForm(false);
+      }
     } catch (error) {
       console.log("handle");
     }
   };
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     if (!validateData(data)) {
       toast.error("Please fill all required fields...!", {
         position: "top-center",
@@ -106,9 +121,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   };
 
@@ -146,7 +161,7 @@ export default function Form() {
     let charCode = String.fromCharCode(event.which).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
       event.preventDefault();
-      saveData();
+      saveData("close");
     }
   };
 
@@ -279,7 +294,7 @@ export default function Form() {
     //                 <button
     //                   type="button"
     //                   onClick={saveData}
-    //                   className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+    //                   className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
     //               border border-green-600 flex items-center gap-1 text-xs"
     //                 >
     //                   <Check size={14} />
@@ -310,12 +325,6 @@ export default function Form() {
 
 
     //             </div>
-
-
-
-
-
-
 
 
 
@@ -400,12 +409,22 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                                     border border-green-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                    {(!readOnly && !id) && (
+                      <button
+                        type="button"
+                        onClick={() => saveData("new")}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        Save & New
                       </button>
                     )}
                   </div>
@@ -418,9 +437,9 @@ export default function Form() {
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
                         <div className="grid grid-cols-2  gap-3  h-full">
-                          <fieldset className=' rounded mt-2'>
+                          <fieldset className=' rounded mt-2' ref={formRef}>
                             <div className='mb-5 '>
-                              <TextInput name="Reason" type="text" value={reason} setValue={setReason} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                              <TextInput name="Reason" type="text" value={reason} setValue={handleReasonChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                             </div>
                             <div className='mb-5'>
                               <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />

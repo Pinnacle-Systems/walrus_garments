@@ -31,6 +31,8 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
     setFile(e.target.files[0]);
   };
 
+  console.log(file, "file for Invoice")
+
 
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -215,6 +217,10 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
 
   const uploadFile = () => {
+    if (!file) {
+      toast.warning("Please select a file first.");
+      return;
+    }
 
     const reader = new FileReader();
 
@@ -354,7 +360,12 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                 Save Stock
               </button>
               <button
-                onClick={() => { setStockItems([]); setFile(null); }}
+                onClick={() => {
+                  setStockItems([]);
+                  setFile(null);
+                  const input = document.getElementById("profileImage");
+                  if (input) input.value = "";
+                }}
                 className="bg-red-500 text-white px-4 py-1.5 rounded-md hover:bg-red-600 flex items-center text-sm font-semibold shadow-sm transition-all ml-2"
               >
                 New
@@ -369,7 +380,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                 <tr>
                   <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
                   {header.map((columnName, index) => (
-                    <th className="border border-gray-400 text-sm py-1 capitalize px-2 text-left" key={index}>
+                    <th className="border border-gray-400 text-sm py-1 capitalize px-2 text-center" key={index}>
                       {columnName}</th>
                   ))}
                   <th className="border border-gray-400 text-sm py-1 w-12 text-center">Action</th>

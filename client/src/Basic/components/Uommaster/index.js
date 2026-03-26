@@ -27,7 +27,9 @@ export default function Form() {
 
 
   const [searchValue, setSearchValue] = useState("");
+  const nameRef = useRef(null);
   const childRecord = useRef(0);
+  const formRef = useRef(null);
 
 
   const params = {
@@ -51,9 +53,17 @@ export default function Form() {
 
   const syncFormWithDb = useCallback(
     (data) => {
-      // if (id) setReadOnly(true);
-      setName(data?.name ? data.name : "");
-      setActive(id ? (data?.active ? data.active : false) : true);
+      if (!id) {
+        setName("");
+        setActive(true);
+        childRecord.current = 0;
+
+      } else {
+        // if (id) setReadOnly(true);
+        setName(data?.name ? data.name : "");
+        setActive(id ? (data?.active ? data.active : false) : true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
+      }
     },
     [id]
   );
@@ -77,60 +87,66 @@ export default function Form() {
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
-      let returnData = await callback(data).unwrap();
-
-      Swal.fire({
+      await callback(data).unwrap();
+      setId("");
+      syncFormWithDb(undefined);
+      await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
       });
       if (nextProcess == "new") {
-        syncFormWithDb(undefined)
         onNew()
       } else {
         setForm(false)
       }
 
     } catch (error) {
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
     }
   };
 
   const saveData = (nextProcess) => {
-    if (!validateData(data)) {
-      // toast.info("Please fill all required fields...!", {
-      //   position: "top-center",
-      // });
+    const upperName = name.toUpperCase();
+    const finalData = {
+      ...data,
+      name: upperName
+    };
+
+    if (!validateData(finalData)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
-
+        icon: "error",
       });
+      nameRef.current?.focus();
       return;
     }
     let foundItem;
     if (id) {
-      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
     } else {
-      foundItem = allData?.data?.some(item => item.name === name);
+      foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
     }
-
-
     if (foundItem) {
       Swal.fire({
         text: "The Uom Name already exists.",
         icon: "warning",
-        showConfirmButton: false,
       });
+      nameRef.current?.focus();
       return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
@@ -140,16 +156,18 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id)
+        await removeData(id).unwrap()
         setId("");
-        // toast.success("Deleted Successfully");
-        Swal.fire({
-          title: "Deleted" + "  " + "Successfully",
+        await Swal.fire({
+          title: "Deleted Successfully",
           icon: "success",
-
         });
       } catch (error) {
-        toast.error("something went wrong");
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
       }
     }
   };
@@ -168,6 +186,9 @@ export default function Form() {
     setSearchValue("");
     syncFormWithDb(undefined)
     setReadOnly(false);
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
   function onDataClick(id) {
@@ -222,13 +243,13 @@ export default function Form() {
   ];
 
 
-  const firstInputFocus = useRef(null);
-
   useEffect(() => {
-    if (form && firstInputFocus.current) {
-      firstInputFocus.current.focus();
+    if (form && nameRef.current) {
+      nameRef.current.focus();
     }
   }, [form]);
+
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
   return (
 
     <div onKeyDown={handleKeyDown} className="p-1">
@@ -333,17 +354,24 @@ export default function Form() {
               <div className="flex-1 overflow-auto p-3 ">
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="lg:col-span-2 space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full" ref={formRef}>
                       <div className="space-y-4 ">
                         <div className="grid grid-cols-2  gap-3  h-full">
                           <fieldset className=''>
                             <div className="mb-5">
-                              <TextInputNew1 name="Uom Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
-                                ref={firstInputFocus}
+                              <TextInputNew1
+                                name="Uom Name"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={(childRecord.current > 0)}
+                                ref={nameRef}
                               />
                             </div>
                             <div>
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                             </div>
 
 

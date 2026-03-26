@@ -43,16 +43,6 @@ export default function FormReport({
   return (
     <div className="flex flex-col md:justify-items-center h-[450px] overflow-auto">
       <div className="md:text-center md:gap-8">
-        <input
-          type="text"
-          className="text-sm bg-gray-100 focus:outline-none border w-full"
-          id="id"
-          placeholder="Search"
-          value={searchValue}
-          onChange={(e) => {
-            setSearchValue(e.target.value);
-          }}
-        />
       </div>
       {loading ? (
         <Loader />

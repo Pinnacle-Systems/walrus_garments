@@ -40,6 +40,7 @@ export default function Form() {
     const [excessType, setExcessType] = useState("")
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
+    const formRef = useRef(null);
     const [toleranceItems, setToleranceItems] = useState([])
 
 
@@ -103,6 +104,13 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
     const data = {
         id, materialId,
         excessType, toleranceItems
@@ -119,7 +127,7 @@ export default function Form() {
     //     return false;
     // }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -134,14 +142,19 @@ export default function Form() {
                     Swal.showLoading();
                 }
             });
-            setForm(false);
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
 
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         // if (!validateData(data)) {
         //     toast.error("Please fill all required fields...!", {
         //         position: "top-center",
@@ -162,9 +175,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -471,12 +484,18 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                   border border-green-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                        {(!readOnly && !id) && (
+                                            <button type="button" onClick={() => saveData("new")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                                <Check size={14} />Save & New
                                             </button>
                                         )}
                                     </div>
@@ -485,7 +504,7 @@ export default function Form() {
 
 
                             <div className='flex-1 overflow-auto p-3 space-y-3 '>
-                                <div className='grid grid-cols-8 gap-3 bg-white px-2'>
+                                <div className='grid grid-cols-8 gap-3 bg-white px-2' ref={formRef}>
                                     <div className='mb-3'>
                                         <DropdownWithSearch
                                             label="Material"

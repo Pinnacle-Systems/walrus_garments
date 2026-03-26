@@ -20,8 +20,9 @@ export default function Form() {
     const [tax, setTax] = useState("");
 
 
-    const [searchValue, setSearchValue] = useState("");
+    const nameRef = useRef(null);
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
 
     const params = {
@@ -29,7 +30,7 @@ export default function Form() {
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
-    const { data: allData, isLoading, isFetching } = useGetHsnMasterQuery({ params, searchParams: searchValue });
+    const { data: allData, isLoading, isFetching } = useGetHsnMasterQuery({ params });
     const {
         data: singleData,
         isFetching: isSingleFetching,
@@ -43,10 +44,19 @@ export default function Form() {
 
     const syncFormWithDb = useCallback(
         (data) => {
-            if (id) setReadOnly(true);
-            setName(data?.name ? data.name : "");
-            setActive(id ? (data?.active ? data.active : false) : true);
-            setTax(data?.tax ? data?.tax : "")
+            if (!id) {
+                setName("");
+                setActive(true);
+                setTax("");
+                childRecord.current = 0;
+
+            } else {
+                // if (id) setReadOnly(true);
+                setName(data?.name ? data.name : "");
+                setActive(id ? (data?.active ? data.active : false) : true);
+                setTax(data?.tax ? data?.tax : "");
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
+            }
         },
         [id]
     );
@@ -68,58 +78,67 @@ export default function Form() {
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
-            await callback(data)
+            await callback(data).unwrap();
             setId("")
             syncFormWithDb(undefined)
-            Swal.fire({
-                title: `${text}  Successfullty`,
+            await Swal.fire({
+                title: text + "  " + "Successfully",
                 icon: "success",
-
             });
             if (nextProcess == "new") {
-                syncFormWithDb(undefined)
                 onNew()
             } else {
                 setForm(false)
             }
         } catch (error) {
-            console.log("handle");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            nameRef.current?.focus();
         }
     };
 
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
+        const upperName = name.toUpperCase();
+
+        const finalData = {
+            ...data,
+            name: upperName,
+        };
+
+        if (!validateData(finalData)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
-                icon: "success",
-
+                icon: "error",
             });
+            nameRef.current?.focus();
             return;
         }
+
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
         } else {
-            foundItem = allData?.data?.some(item => item.name === name);
+            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
         }
-
-
         if (foundItem) {
             Swal.fire({
-                text: "The Hsn  already exists.",
+                text: "The HSN Code already exists.",
                 icon: "warning",
-                showConfirmButton: false,
             });
+            nameRef.current?.focus();
             return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+            handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added", nextProcess);
+            handleSubmitCustom(addData, finalData, "Added", nextProcess);
         }
     };
 
@@ -129,15 +148,19 @@ export default function Form() {
                 return;
             }
             try {
-                await removeData(id)
+                await removeData(id).unwrap()
                 setId("");
-                Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                await Swal.fire({
+                    title: "Deleted Successfully",
                     icon: "success",
-
                 });
+                setId("");
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
             }
         }
     };
@@ -153,11 +176,12 @@ export default function Form() {
     const onNew = () => {
         setId("");
         setForm(true);
-        setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
         setTax("")
-
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -215,20 +239,20 @@ export default function Form() {
         console.log("Edit");
     };
 
-    const firstInputFocus = useRef(null);
-
     useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
+        if (form && nameRef.current) {
+            nameRef.current.focus();
         }
     }, [form]);
+
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
             <div className="w-full flex bg-white p-1 justify-between  items-center">
                 <h5 className="text-2xl font-bold text-gray-800">Hsn Master</h5>
-                <div className="flex items-center">
+                <div className="flex items-center text-xs">
                     <button
                         onClick={() => {
                             setForm(true);
@@ -331,10 +355,18 @@ export default function Form() {
                                             <div className="space-y-4 ">
                                                 <fieldset className=' rounded mt-2'>
 
-                                                    <div className='grid grid-cols-3 my-2 gap-5'>
-                                                        <TextInputNew1 name="HSN Code" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} ref={firstInputFocus} />
+                                                    <div className='grid grid-cols-3 my-2 gap-5' ref={formRef}>
+                                                        <TextInputNew1
+                                                            name="HSN Code"
+                                                            type="text"
+                                                            value={name}
+                                                            setValue={setName}
+                                                            required={true}
+                                                            readOnly={readOnly}
+                                                            disabled={(childRecord.current > 0)}
+                                                            ref={nameRef}
+                                                        />
                                                         <TextInputNew1 name="Tax Percentage" type="text" max={"100"} value={tax} setValue={setTax} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-
                                                     </div>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </fieldset>

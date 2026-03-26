@@ -249,10 +249,10 @@ const SidebarComponent = ({ logo, groups, pages, isMainDropdownOpen, setIsMainDr
                         className="bg-gray-100 hover:bg-gray-200 rounded-lg p-2 text-xs text-center cursor-pointer transition-all duration-150"
                       >
                         <div className="flex flex-col items-center justify-center">
-                          <div className="mb-1">
+                          <div className="mb-1 text-[10px]">
                             {iconMapping[page?.name] || <span className="text-gray-400">🔘</span>}
                           </div>
-                          <div className="text-[10px] leading-tight">
+                          <div className="text-[10.5px] leading-tight">
                             {page?.name
                               .replace(/\bMASTER\b/g, "")
                               .trim()

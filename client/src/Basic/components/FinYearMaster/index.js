@@ -35,6 +35,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const [code, setCode] = useState();
   const childRecord = useRef(0);
+  const formRef = useRef(null);
   const [errors, setErrors] = useState({});
 
   console.log(from)
@@ -53,17 +54,23 @@ export default function Form() {
         setReadOnly(false);
         setTo(data?.to || "");
         setFrom(data?.from || "");
-        setActive(id ? (data?.active) : true);
+        setActive(true);
+        childRecord.current = 0;
 
-        setCode("")
+        setCode("");
       } else {
         // setReadOnly(true);
-        setTo(data?.to ? moment?.utc(data.to).format('YYYY-MM-DD') : "");
-        setFrom(data?.from ? moment?.utc(data.from).format('YYYY-MM-DD') : "");
+        setTo(data?.to ? moment?.utc(data.to).format("YYYY-MM-DD") : "");
+        setFrom(data?.from ? moment?.utc(data.from).format("YYYY-MM-DD") : "");
         setActive(id ? (data?.active ?? false) : true);
-        setCode((data?.from) && (data?.to) ? getYearShortCode(data?.from, data?.to) : "")
+        setCode(
+          data?.from && data?.to ? getYearShortCode(data?.from, data?.to) : ""
+        );
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
-    }, [id])
+    },
+    [id]
+  );
 
 
   useEffect(() => {
@@ -336,7 +343,7 @@ export default function Form() {
               <div className="flex-1 overflow-auto p-3 ">
                 <div className="lg:col-span-2 h-full">
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3" ref={formRef}>
 
 
                       <DateInputNew type={"date"} name="From" value={from} setValue={setFrom} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
@@ -352,7 +359,7 @@ export default function Form() {
                       </div>
                       <div className='mt-2'>
 
-                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                       </div>
 
 

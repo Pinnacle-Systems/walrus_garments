@@ -40,6 +40,8 @@ export default function Form() {
   const [gstNo, setGstNo] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
+  const nameRef = useRef(null);
+  const formRef = useRef(null);
 
   const childRecord = useRef(0);
   const dispatch = useDispatch();
@@ -100,7 +102,7 @@ export default function Form() {
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      Swal.fire({
+      await Swal.fire({
         title: text + "Successfully",
         icon: "success",
       });
@@ -116,20 +118,33 @@ export default function Form() {
       });
 
     } catch (error) {
-      console.log(error)
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
     }
   };
 
   const saveData = (nextProcess) => {
     if (readOnly) return toast.info("Turn On Edit Mode !..")
-    if (!validateData(data)) {
 
+    const upperName = name.toUpperCase();
+    const upperCode = code.toUpperCase();
+
+    const finalData = {
+      ...data,
+      name: upperName,
+      code: upperCode
+    };
+
+    if (!validateData(finalData)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
-
+        icon: "error",
       });
+      nameRef.current?.focus();
       return;
     }
 
@@ -138,15 +153,16 @@ export default function Form() {
     if (id) {
       foundItem = allData?.data
         ?.filter((i) => i.id != id)
-        ?.some((item) => item.name == name && item.countryId == country);
+        ?.some((item) => item.name.toUpperCase() == upperName && item.countryId == country);
     } else {
-      foundItem = allData?.data?.some((item) => item.name == name && item.countryId == country);
+      foundItem = allData?.data?.some((item) => item.name.toUpperCase() == upperName && item.countryId == country);
     }
     if (foundItem) {
       Swal.fire({
         text: "The State Name already exists.",
         icon: "warning",
       });
+      nameRef.current?.focus();
       return false;
     }
 
@@ -156,9 +172,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
@@ -175,15 +191,18 @@ export default function Form() {
           type: `countryMaster/invalidateTags`,
           payload: ['Countries'],
         });
-        // toast.success("Deleted Successfully");
-        Swal.fire({
+        await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
-
         });
-        setForm(false)
+        setForm(false);
       } catch (error) {
-        toast.error("something went wrong");
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
+        setForm(false);
       }
     }
   };
@@ -201,6 +220,9 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
 
@@ -258,8 +280,8 @@ export default function Form() {
   const countryNameRef = useRef(null);
 
   useEffect(() => {
-    if (form && countryNameRef.current) {
-      countryNameRef.current.focus();
+    if (form && nameRef.current) {
+      nameRef.current.focus();
     }
   }, [form]);
 
@@ -365,7 +387,7 @@ export default function Form() {
               <div className="flex-1 overflow-auto p-3 ">
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                    <fieldset className="grid grid-cols-2 gap-2 rounded mt-2">
+                    <fieldset className="grid grid-cols-2 gap-2 rounded mt-2" ref={formRef}>
                       <div className=" ">
                         <TextInputNew1
                           name="State Name"
@@ -374,7 +396,7 @@ export default function Form() {
                           setValue={setName}
                           required={true}
                           readOnly={readOnly}
-                          ref={countryNameRef}
+                          ref={nameRef}
                           disabled={(childRecord.current > 0)}
 
                         />

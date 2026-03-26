@@ -90,6 +90,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const [parentId, setParentId] = useState("")
   const [isBranch, setIsBranch] = useState(false);
   const [branchTypeId, setBranchTypeId] = useState("");
+  const [aadharNo, setAadharNo] = useState("")
 
 
 
@@ -220,8 +221,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const syncFormWithDb = useCallback(
     (data) => {
-      if (!id) return
-
+      // if(!id) 
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
       setAliasName(data?.aliasName || "");
@@ -235,21 +235,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setIsAcc(data?.isAcc || false);
       setCinNo(data?.cinNo || "");
       setFaxNo(data?.faxNo || "");
-      setCinNo(data?.cinNo || "");
-      setGstNo(data?.gstNo ? data?.gstNo : "");
+      setGstNo(data?.gstNo ? data.gstNo : "");
       setCostCode(data?.costCode || "");
       setCstDate(
-        data?.cstDate ? moment.utc(data?.cstDate).format("YYYY-MM-DD") : ""
+        data?.cstDate ? moment.utc(data.cstDate).format("YYYY-MM-DD") : ""
       );
-      setPayTermDay(data?.payTermDay || "");
+      setPayTermDay(data?.payTermDay || "0");
       setCode(data?.code || "");
       setPincode(data?.pincode || "");
       setWebsite(data?.website || "");
       setEmail(data?.email || "");
       setCity(data?.City?.id || "");
-      setActive(id ? data?.active : true);
-
-
+      setActive(id ? (data?.active ?? true) : true);
       setAccessoryGroup(data?.accessoryGroup || false);
       setAccessoryItemList(
         data?.PartyOnAccessoryItems
@@ -259,35 +256,36 @@ export default function Form({ partyId, show, openModelForAddress }) {
           : []
       );
       setPriceTemplateId(data?.priceTemplateId || "");
-      setShippingAddress(data?.ShippingAddress ? data?.ShippingAddress : []);
-      setContactDetails(data?.ContactDetails ? data.ContactDetails : "");
-
-      setContactPersonName(data?.contactPersonName ? data?.contactPersonName : "")
-      setContactPersonEmail(data?.contactPersonEmail ? data?.contactPersonEmail : "")
-      setContactNumber(data?.contactPersonNumber ? data?.contactPersonNumber : "")
-      setAlterContactNumber(data?.alterContactNumber ? data?.alterContactNumber : "")
-      setDesignation(data?.designation ? data?.designation : "")
-      setDepartment(data?.department ? data?.department : "")
-
-
-
-
-      setAccountNumber(data?.accountNumber ? data?.accountNumber : "")
-      setIfscCode(data?.ifscCode ? data?.ifscCode : "")
-      setlandMark(data?.landMark ? data?.landMark : "")
-      setPartyCode(data?.code ? data?.code : "")
-      setMsmeNo(data?.msmeNo ? data?.msmeNo : "")
-      setContact(data?.contact ? data?.contact : "")
-      setAlterContactNumber(data?.alterContactNumber ? data?.alterContactNumber : "")
-      setCurrency(data?.currencyId ? data?.currencyId : "");
-      setPayTermDay(data?.payTermDay ? data?.payTermDay : "0");
-      setAttachments(data?.PartyAttachments ? data?.PartyAttachments : []);
-      setBranchTypeId(data?.branchTypeId ? data?.branchTypeId : "")
-      setIsBranch(data?.isBranch ? data?.isBranch : '')
-      setParentId(data?.parentId ? data?.parentId : "")
-      setSupplier(data?.isSupplier ? data?.isSupplier : false);
-      setClient(data?.isClient ? data?.isClient : false);
-
+      setShippingAddress(data?.ShippingAddress ? data.ShippingAddress : []);
+      setContactDetails(data?.ContactDetails ? data.ContactDetails : []);
+      setContactPersonName(data?.contactPersonName ? data.contactPersonName : "");
+      setContactPersonEmail(data?.contactPersonEmail ? data.contactPersonEmail : "");
+      setContactNumber(data?.contactPersonNumber ? data.contactPersonNumber : "");
+      setAlterContactNumber(data?.alterContactNumber ? data.alterContactNumber : "");
+      setDesignation(data?.designation ? data.designation : "");
+      setDepartment(data?.department ? data.department : "");
+      setAccountNumber(data?.accountNumber ? data.accountNumber : "");
+      setIfscCode(data?.ifscCode ? data.ifscCode : "");
+      setlandMark(data?.landMark ? data.landMark : "");
+      setPartyCode(data?.code ? data.code : "");
+      setMsmeNo(data?.msmeNo ? data.msmeNo : "");
+      setContact(data?.contact ? data.contact : "");
+      setCurrency(data?.currencyId ? data.currencyId : "");
+      setAttachments(data?.PartyAttachments ? data.PartyAttachments : []);
+      setBranchTypeId(data?.branchTypeId ? data.branchTypeId : "");
+      setIsBranch(data?.isBranch ? data.isBranch : false);
+      setParentId(data?.parentId ? data.parentId : "");
+      setSupplier(id ? (data?.isSupplier ?? false) : false);
+      setClient(id ? (data?.isClient ?? false) : true);
+      setBankName(data?.bankname || "");
+      setBankBranchName(data?.bankBranchName || "");
+      setIgst(data?.igst || false);
+      setRawMaterial(data?.rawMaterial || false);
+      setMaterial(data?.material || "");
+      setMaterialActive(data?.materialActive ?? true);
+      setProcessDetails(data?.processDetails || []);
+      setAadharNo(data?.aadharNo || "");
+      setStep(1);
     },
 
     [id]
@@ -335,7 +333,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
     currencyId: currency, payTermDay, panNo, gstNo,
 
-    bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
+    bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, aadharNo,
 
 
     tinNo,
@@ -378,15 +376,17 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
   const validateData = (data) => {
-    if ((data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.gstNo && data?.address && data?.cityId && data?.pincode) {
-      return true;
-    }
     if (isBranch) {
-      return data?.parentId && data?.branchTypeId
+      return data?.parentId && data?.branchTypeId;
     }
 
+    const baseFields = (data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.address && data?.cityId && data?.pincode;
 
-    return false;
+    if (!baseFields) return false;
+
+    // Check for at least one identifying number
+
+    return true;
   };
 
 
@@ -422,7 +422,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
         returnData = await callback(formData).unwrap();
       }
 
-      Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: `${text} Successfully`,
       });
@@ -458,8 +458,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
         dispatch(setOpenPartyModal(false));
       }
-      //  setForm(false);
-      //  setRawMaterial(false)
+
 
     } catch (error) {
       console.error("Submission error:", error);
@@ -496,18 +495,32 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
   const saveData = () => {
+    const upperName = name.toUpperCase();
+    const upperCode = partyCode.toUpperCase();
+    const upperGst = (gstNo || "").toUpperCase();
+    const upperPan = (panNo || "").toUpperCase();
+    const upperAadhar = (aadharNo || "").toUpperCase();
 
+    const finalData = {
+      ...data,
+      name: upperName,
+      partyCode: upperCode,
+      gstNo: upperGst,
+      panNo: upperPan,
+      aadharNo: upperAadhar,
+    };
 
-    if (!validateData(data)) {
-
+    if (!validateData(finalData)) {
       Swal.fire({
         icon: 'warning',
         title: `Please fill all required fields...!`,
         showConfirmButton: false,
         timer: 3000
       });
+      nameRef.current?.focus();
       return;
     }
+
     if (!isClient && !isSupplier) {
       Swal.fire({
         title: 'Please Select Customer or Supplier',
@@ -515,7 +528,14 @@ export default function Form({ partyId, show, openModelForAddress }) {
       });
       return;
     }
-
+    if (!data?.gstNo?.trim() && !data?.panNo?.trim() && !data?.aadharNo?.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Required Field Missing',
+        text: 'Please fill in at least one: GST, PAN, or Aadhar number.',
+      });
+      return false;
+    }
 
     let foundItem;
 
@@ -532,52 +552,48 @@ export default function Form({ partyId, show, openModelForAddress }) {
       if (id) {
         foundItem = allData?.data
           ?.filter((i) => i.id != id)
-          ?.some((item) => item.name == name && item.gstNo == gstNo && !item?.parentId);
+          ?.some((item) => item.name.toUpperCase() == upperName && item.gstNo.toUpperCase() == upperGst && !item?.parentId);
       } else {
-        foundItem = allData?.data?.some((item) => item.name == name && item.gstNo == gstNo);
+        foundItem = allData?.data?.some((item) => item.name.toUpperCase() == upperName && item.gstNo.toUpperCase() == upperGst);
       }
     }
-
 
     if (isBranch) {
       if (foundItem) {
         Swal.fire({
-          text: `The Branch name  is already  exists `,
+          text: `The Branch name is already exists`,
           icon: "warning",
           customClass: {
             popup: 'swal-custom-height'
           }
         });
+        nameRef.current?.focus();
         return false;
       }
     }
     else {
       if (foundItem) {
         Swal.fire({
-          text: `The ${isSupplier ? "Supplier" : "Customer"} name is already  exists `,
+          text: `The ${isSupplier ? "Supplier" : "Customer"} name is already exists`,
           icon: "warning",
           customClass: {
             popup: 'swal-custom-height'
           }
         });
+        nameRef.current?.focus();
         return false;
       }
     }
 
-
-
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, finalData, "Updated");
     } else {
-      console.log("hit");
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, finalData, "Added");
     }
   };
 
 
   const deleteData = async (id, childRecord) => {
-
-
     if (childRecordCount(childRecord)) {
       Swal.fire({
         icon: 'error',
@@ -609,7 +625,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
         payload: ["Currency"],
       });
       syncFormWithDb(undefined);
-      Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: `Deleted Successfully`,
         showConfirmButton: false,
@@ -617,13 +633,12 @@ export default function Form({ partyId, show, openModelForAddress }) {
       });
       setForm(false);
     } catch (error) {
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
       });
     }
-
   };
 
 
@@ -645,6 +660,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
     setSearchValue("");
     setId("");
     syncFormWithDb(undefined);
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
 
@@ -781,26 +799,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  const countryNameRef = useRef(null);
+  const nameRef = useRef(null);
 
   useEffect(() => {
-    if (form && countryNameRef.current) {
-      countryNameRef.current.focus();
+    if (form && nameRef.current) {
+      nameRef.current.focus();
     }
   }, [form]);
 
   console.log(singleData, "singleData")
 
-  useEffect(() => {
-    setClient(show == "isClient")
-    setSupplier(show == 'isSupplier')
-  }, [show]);
 
-  useEffect(() => {
-    if (id) return
-    setClient(true)
-    setSupplier(false)
-  }, [id])
+
 
   if (isLoading || isFetching) return <Loader />
 
@@ -1605,7 +1615,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                 <LayoutGrid size={16} />
                 Supplier
               </button>
-
+            </div>
+            <div className="flex items-center">
             </div>
           </div>
         </div>
@@ -1772,9 +1783,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           name="Customer/supplier"
                           options={dropDownListObject(
                             id
-                              ? allData?.data?.filter(i => i.id != id && !i.parentId)
+                              ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
                               : allData?.data?.filter(
-                                (item) => item.active && item.id != id && !item.parentId
+                                (item) => item.active && item.id != id && !item.parentId && item.gstNo
                               ),
                             "name",
                             "id"
@@ -1823,11 +1834,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                         <div className="col-span-2">
                           <TextInputNew1
-                            name={`${isSupplier ? "Supplier Name" : "Customer Name"}`}
+                            name={`${isSupplier && isClient ? "Customer / Supplier Name" : isSupplier ? "Supplier Name" : "Customer Name"}`}
                             type="text"
                             value={name}
                             inputClass="h-8"
-                            ref={countryNameRef}
+                            ref={nameRef}
                             setValue={setName}
                             required={true}
                             readOnly={readOnly}
@@ -1985,7 +1996,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="">
+                        <div className="col-span-2">
 
                           <TextInputNew1
                             name="Contact Person Name"
@@ -2019,8 +2030,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           // disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
-                        <div className='col-span-1'>
-
+                        <div className='col-span-2'>
 
                           <TextInputNew1
                             name="Email"
@@ -2032,6 +2042,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             // disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
+
                         </div>
                         <div className='col-span-2'>
 
@@ -2045,18 +2056,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>
-                        {/* <div className='col-span-1'>
-                                                        <TextInputNew
-                                                            name="Alternative Contact Number"
-                                                            type="number"
-                                                            value={alterContactNumber}
-                                                            setValue={setAlterContactNumber}
 
-                                                            // readOnly={readOnly}
-                                                            // disabled={childRecord.current > 0}
-                                                            className="focus:ring-2 focus:ring-blue-100 w-10"
-                                                        />
-                                                    </div> */}
 
 
 
@@ -2081,49 +2081,26 @@ export default function Form({ partyId, show, openModelForAddress }) {
                       <div className="grid grid-cols-2 gap-2">
 
 
-                        {/* <DropdownInput
-                                                    name="Currency"
-                                                    options={dropDownListObject(
-                                                        id
-                                                            ? currencyList?.data ?? []
-                                                            : currencyList?.data?.filter(
-                                                                (item) => item.active
-                                                            ) ?? [],
-                                                        "name",
-                                                        "id"
-                                                    )}
-                                                    // lastTab={activeTab}
-                                                    masterName="CURRENCY MASTER"
-                                                    value={currency}
-                                                    setValue={setCurrency}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                    className="focus:ring-2 focus:ring-blue-100"
-                                                /> */}
 
-                        {/* <DropdownInput
-                                                    name="PayTerm"
-                                                    options={dropDownListObject(
-                                                        id
-                                                            ? payTermList?.data
-                                                            : payTermList?.data?.filter((item) => item.active),
-                                                        "name",
-                                                        "id"
-                                                    )}
-                                                    value={payTermDay}
-                                                    setValue={setPayTermDay}
-                                                    // required={true}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                    className="focus:ring-2 focus:ring-blue-100"
-                                                /> */}
+
                         <TextInput
                           name="Pan No"
                           type="pan_no"
                           value={panNo}
                           setValue={setPanNo}
-                          readOnly={readOnly}
-                          // disabled={childRecord.current > 0}
+                          readOnly={readOnly || parentId || isBranch}
+                          disabled={childRecord.current > 0}
+                          className="focus:ring-2 focus:ring-blue-100"
+                        />
+                        <TextInput
+                          name="Aadhar No"
+                          type="text"
+                          value={aadharNo}
+                          setValue={setAadharNo}
+                          readOnly={readOnly || parentId || isBranch}
+                          // required={true}
+                          disabled={parentId || isBranch}
+
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput
@@ -2132,7 +2109,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           value={gstNo}
                           setValue={setGstNo}
                           readOnly={readOnly || parentId || isBranch}
-                          required={true}
+                          // required={true}
                           disabled={parentId || isBranch}
 
                           className="focus:ring-2 focus:ring-blue-100"

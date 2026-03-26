@@ -49,11 +49,11 @@ export default function Form() {
   const [salesTaxType, setSalesTaxType] = useState("")
   const [purchaseTaxType, setPurchaseTaxType] = useState("")
   const [itemType, setItemType] = useState('')
-  const [searchValue, setSearchValue] = useState("");
   const [sizeList, setSizeList] = useState([])
   const [colorList, setColorList] = useState([])
   const [priceMethod, setPriceMethod] = useState("STANDARD")
   const childRecord = useRef(0);
+  const itemSelectRef = useRef(null);
   const [itemPriceList, setItemPriceList] = useState([])
   const [sectionId, setSectionId] = useState('')
   const [minStockQty, setMinStockQty] = useState("")
@@ -84,7 +84,7 @@ export default function Form() {
     data: allData,
     isLoading,
     isFetching,
-  } = useGetpriceTemplateQuery({ params, searchParams: searchValue });
+  } = useGetpriceTemplateQuery({ params });
 
 
   const {
@@ -103,7 +103,7 @@ export default function Form() {
 
 
 
-  const { data: itemList, } = useGetItemMasterQuery({ params, searchParams: searchValue });
+  const { data: itemList, } = useGetItemMasterQuery({ params });
 
 
 
@@ -114,7 +114,7 @@ export default function Form() {
 
   const {
     data: itemControlData, isFetching: itemControlFetching, isLoading: itemControlLoading
-  } = useGetItemControlPanelMasterQuery({ params, searchParams: searchValue });
+  } = useGetItemControlPanelMasterQuery({ params });
 
 
 
@@ -193,32 +193,25 @@ export default function Form() {
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
-      let returnData;
-      if (text === "Updated") {
-        returnData = await callback(data).unwrap();
-      } else {
-        returnData = await callback(data).unwrap();
-      }
-      setId(returnData.data.id);
-      Swal.fire({
+      await callback(data).unwrap();
+      setId("");
+      syncFormWithDb(undefined);
+      await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
-        draggable: true,
-        timer: 1000,
-        showConfirmButton: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
       });
-      console.log(nextProcess, 'nextProcess')
       if (nextProcess == "new") {
-        syncFormWithDb(undefined)
         onNew()
       } else {
         setForm(false)
       }
     } catch (error) {
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      itemSelectRef.current?.focus();
     }
   };
 
@@ -254,9 +247,9 @@ export default function Form() {
     if (!validateData(data)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
-        timer: 1000,
+        icon: "error",
       });
+      itemSelectRef.current?.focus();
       return;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
@@ -281,37 +274,28 @@ export default function Form() {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      if (data?.data?.childRecord > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "Child record Exists",
-          text: "Data cannot be deleted!",
-        });
-      } else {
-        try {
-          let deldata = await removeData(id).unwrap();
-          if (deldata?.statusCode == 1) {
-            Swal.fire({
-              icon: "error",
-              title: deldata?.message || "Data cannot be deleted!",
-            });
-            return;
-          }
-          setId("");
-          Swal.fire({
-            title: "Deleted Successfully",
-            icon: "success",
-            timer: 1000,
-          });
-          setForm(false);
-        } catch (error) {
-          Swal.fire({
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
+          await Swal.fire({
             icon: "error",
-            title: "Submission error",
-            text: error.data?.message || "Something went wrong!",
+            title: deldata?.message || "Data cannot be deleted!",
           });
-          setForm(false);
+          return;
         }
+        setId("");
+        await Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
+        setForm(false);
+        setForm(false);
+      } catch (error) {
+        await Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
       }
     }
   };
@@ -327,7 +311,6 @@ export default function Form() {
   const onNew = () => {
     setId("");
     setForm(true);
-    setSearchValue("");
     syncFormWithDb(undefined);
     setReadOnly(false);
     setSizeList([]);
@@ -338,6 +321,9 @@ export default function Form() {
       maxQty: "",
       price: ""
     }])
+    setTimeout(() => {
+      itemSelectRef.current?.focus();
+    }, 100);
   };
 
   const ACTIVE = (
@@ -408,7 +394,7 @@ export default function Form() {
         if (i > 0) {
           const prev = newBlend[i - 1];
           const isPrevInfinite = typeof prev.maxQty === "string" && prev.maxQty.includes("& Above");
-          
+
           if (prev.maxQty !== "" && !isPrevInfinite) {
             const expectedMin = Number(prev.maxQty) + 1;
             // Force this row to start exactly after previous row ends
@@ -514,13 +500,13 @@ export default function Form() {
   };
 
 
-  const firstInputFocus = useRef(null);
-
   useEffect(() => {
-    if (form && firstInputFocus.current) {
-      firstInputFocus.current.focus();
+    if (form && itemSelectRef.current) {
+      itemSelectRef.current.focus();
     }
   }, [form]);
+
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
   const itemOptions = itemList?.data?.map((i) => ({ value: i.id, label: i.name })) || [];
 
@@ -561,6 +547,7 @@ export default function Form() {
       zIndex: 9999
     })
   };
+  const formRef = useRef(null);
 
   console.log(priceTemplate, "priceTemplate")
 
@@ -664,7 +651,7 @@ export default function Form() {
             </div>
 
             <div className="flex-1 overflow-auto p-3">
-              <div className="bg-gray-50 p-4 rounded-lg h-full space-y-4">
+              <div ref={formRef} className="bg-gray-50 p-4 rounded-lg h-full space-y-4">
 
                 <fieldset className="border border-gray-300 rounded-lg p-4 bg-white h-full">
                   <legend className="px-2 text-sm font-semibold text-gray-700">
@@ -680,6 +667,7 @@ export default function Form() {
                         Item <span className="text-red-600">*</span>
                       </label>
                       <CreatableSelect
+                        ref={itemSelectRef}
                         isClearable
                         placeholder="Search Item..."
                         options={itemOptions}

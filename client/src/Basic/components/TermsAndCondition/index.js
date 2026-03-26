@@ -28,6 +28,7 @@ export default function Form() {
     const [isPurchaseOrder, setIsPurchaseOrder] = useState(true);
     const [itemType, setItemType] = useState("GreyYarn");
     const [description, setDescription] = useState("");
+    const descriptionRef = useRef(null);
 
 
     const [searchValue, setSearchValue] = useState("");
@@ -85,6 +86,11 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && descriptionRef.current) {
+            descriptionRef.current.focus();
+        }
+    }, [form]);
 
     const validateData = (data) => {
         if (data.itemType && data.description) {
@@ -95,32 +101,45 @@ export default function Form() {
 
     const handleSubmitCustom = async (callback, data, text) => {
         try {
-            let returnData = await callback(data).unwrap();
+            await callback(data).unwrap();
             setId("")
             syncFormWithDb(undefined)
-            toast.success(text + "Successfully");
-
-
+            await Swal.fire({
+                title: text + "  " + "Successfully",
+                icon: "success",
+            });
+            onNew();
         } catch (error) {
-            console.log("handle");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            descriptionRef.current?.focus();
         }
     };
 
     const saveData = () => {
-        if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
+        const finalData = {
+            ...data,
+            description: description.toUpperCase()
+        };
+
+        if (!validateData(finalData)) {
+            Swal.fire({
+                title: "Please fill all required fields...!",
+                icon: "error",
             });
+            descriptionRef.current?.focus();
             return;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
-
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, finalData, "Updated");
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, finalData, "Added");
         }
     };
 
@@ -132,9 +151,17 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
-                toast.success("Deleted Successfully");
+                await Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                });
+                setForm(false);
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
             }
         }
     };
@@ -152,6 +179,9 @@ export default function Form() {
         setReadOnly(false);
         setForm(true);
         setSearchValue("");
+        setTimeout(() => {
+            descriptionRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -202,7 +232,17 @@ export default function Form() {
                                 <fieldset className='frame my-1'>
                                     <legend className='sub-heading'>Terms And Condition Info</legend>
                                     <div className='grid grid-cols-1 my-2'>
-                                        <TextArea value={description} readOnly={readOnly} setValue={setDescription} name="Terms And Condition" rows="8" required={true} class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Write your Terms here..."></TextArea>
+                                        <TextArea
+                                            ref={descriptionRef}
+                                            value={description}
+                                            readOnly={readOnly}
+                                            setValue={(val) => setDescription(val.toUpperCase())}
+                                            name="Terms And Condition"
+                                            rows="8"
+                                            required={true}
+                                            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            placeholder="Write your Terms here..."
+                                        ></TextArea>
                                         <DropdownInput name="Po Type" options={poTypes} value={itemType} setValue={setItemType} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                         <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
                                         <CheckBox name="isPurchaseOrder" readOnly={readOnly} value={isPurchaseOrder} setValue={setIsPurchaseOrder} />

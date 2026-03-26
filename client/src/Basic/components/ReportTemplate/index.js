@@ -33,22 +33,13 @@ const Report = ({
   onClick,
   onNew,
   onClose = null,
-  isLead,saveData
+  isLead, saveData
 }) => {
   return (
     <div className="flex flex-col w-full h-[95%] overflow-auto">
       <div className="md:flex md:items-center md:justify-between page-heading">
         <div className="heading text-center md:mx-10">{heading}</div>
         <div className="flex sub-heading justify-center md:justify-start items-center">
-          <input
-            type="text"
-            className="text-black h-6 focus:outline-none border md:ml-3"
-            placeholder="Search"
-            value={searchValue}
-            onChange={(e) => {
-              setSearchValue(e.target.value);
-            }}
-          />
           <AddNewButton onClick={onNew} />
           {(onClose && isLead) ?
             <CloseButton onClick={onClose} />

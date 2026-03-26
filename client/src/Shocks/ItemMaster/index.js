@@ -628,12 +628,16 @@ export default function Form() {
 
 
   const firstInputFocus = useRef(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
-    if (form && firstInputFocus.current) {
-      firstInputFocus.current.focus();
+    if (form && formRef.current) {
+      const firstInput = formRef.current.querySelector('input');
+      if (firstInput) firstInput.focus();
     }
   }, [form]);
+
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
   useEffect(() => {
     if (!itemControlData?.data?.length) return;
 
@@ -751,7 +755,7 @@ export default function Form() {
             </div>
 
             <div className="flex-1 overflow-auto p-3">
-              <div className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
+              <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
 
                 <fieldset className="border border-gray-300 rounded-lg p-2 bg-white h-full">
                   <legend className="px-2 text-sm font-semibold text-gray-700">
@@ -766,7 +770,7 @@ export default function Form() {
                       <TextInputNew1
                         name="Item Name"
                         value={name}
-                        setValue={setName}
+                        setValue={handleNameChange}
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}

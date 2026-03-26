@@ -25,6 +25,8 @@ export default function Form() {
   const [form, setForm] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
+  const searchRef = useRef(null);
+  const nameRef = useRef(null);
 
   console.log(readOnly, "readOnly")
   const params = {
@@ -83,7 +85,7 @@ export default function Form() {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
       // toast.success(text + "Successfully");
-      Swal.fire({
+      await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
       });
@@ -95,7 +97,12 @@ export default function Form() {
         setForm(false)
       }
     } catch (error) {
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
       setForm(false);
 
     }
@@ -104,41 +111,47 @@ export default function Form() {
   const saveData = (nextProcess) => {
     if (readOnly) return toast.info("Turn On Edit Mode !..")
 
-    if (!validateData(data)) {
-      // toast.error("Please fill all required fields...!", {
-      //   position: "top-center",
-      // });
+    const upperName = name.toUpperCase();
+    const upperCode = code.toUpperCase();
+
+    const finalData = {
+      ...data,
+      name: upperName,
+      code: upperCode
+    };
+
+    if (!validateData(finalData)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
+        icon: "error",
       });
-
+      nameRef.current?.focus();
       return;
     }
     let foundItem;
     if (id) {
-      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
     } else {
-      foundItem = allData?.data?.some(item => item.name === name);
+      foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
     }
 
 
     if (foundItem) {
       Swal.fire({
-        text: "The Branch Type  already exists.",
+        text: "The Branch Type already exists.",
         icon: "warning",
-        showConfirmButton: false,
       });
+      nameRef.current?.focus();
       return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
@@ -153,21 +166,29 @@ export default function Form() {
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
-          toast.error(deldata?.message)
+          await Swal.fire({
+            icon: 'error',
+            title: 'Submission error',
+            text: deldata?.message || 'Something went wrong!',
+          });
           setForm(false)
           return
         }
         setId("");
-        // toast.success("Deleted Successfully");
-        Swal.fire({
-          title: "Deleted" + "  " + "Successfully",
+        await Swal.fire({
+          title: "Deleted Successfully",
           icon: "success",
-
         });
-        setForm(false)
+        setForm(false);
+        setTimeout(() => searchRef.current?.focus(), 100);
       } catch (error) {
-        toast.error("something went wrong");
-        setForm(false)
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
+        setForm(false);
+        setTimeout(() => searchRef.current?.focus(), 100);
       }
     }
   };
@@ -185,6 +206,9 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
   function onDataClick(id) {
@@ -239,13 +263,13 @@ export default function Form() {
 
   ];
 
-  const firstInputFocus = useRef(null);
-
   useEffect(() => {
-    if (form && firstInputFocus.current) {
-      firstInputFocus.current.focus();
+    if (form && nameRef.current) {
+      nameRef.current.focus();
     }
   }, [form]);
+
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
 
   return (
@@ -253,7 +277,16 @@ export default function Form() {
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold text-gray-800">BranchType Master</h5>
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Search..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value.toUpperCase())}
+            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-600 shadow-sm"
+            autoFocus
+          />
           <button
             onClick={() => {
               setForm(true);
@@ -354,7 +387,7 @@ export default function Form() {
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
+                        <div ref={formRef} className="grid grid-cols-2  gap-3  h-full">
                           <fieldset className=' rounded mt-2'>
 
                             <TextInputNew1
@@ -365,7 +398,7 @@ export default function Form() {
                               required={true}
                               readOnly={readOnly}
                               disabled={childRecord?.current > 0}
-                              ref={firstInputFocus}
+                              ref={nameRef}
 
                             />
 

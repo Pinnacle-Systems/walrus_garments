@@ -39,6 +39,7 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
 
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -71,14 +72,22 @@ export default function Form() {
     const [removeData] = useDeleteFabricMasterMutation();
 
     const syncFormWithDb = useCallback((data) => {
-        if (id) setReadOnly(true);
-        setAliasName(data?.aliasName ? data?.aliasName : "");
-        // setYarnBlendDetails(data?.FabricOnYarnBlend ? data?.FabricOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
-        // setFabricTypeId(data?.fabricTypeId ? data?.fabricTypeId : "");
-        // setHsn(data?.hsn ? data?.hsn : "");
-        // setName(data?.name ? data.name : "");
-        setActive(id ? (data?.active ? data.active : false) : true);
-        // setOrganic(data?.organic ? data.organic : false);
+        if (!id) {
+            setReadOnly(false);
+            setAliasName("");
+            setActive(true);
+            childRecord.current = 0;
+            return;
+        } else {
+            // setReadOnly(true);
+            setAliasName(data?.aliasName ? data?.aliasName : "");
+            // setYarnBlendDetails(data?.FabricOnYarnBlend ? data?.FabricOnYarnBlend : [{ yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }, { yarnBlendId: "", percentage: "" }]);
+            // setFabricTypeId(data?.fabricTypeId ? data?.fabricTypeId : "");
+            // setHsn(data?.hsn ? data?.hsn : "");
+            // setName(data?.name ? data.name : "");
+            setActive(id ? (data?.active ? data.active : false) : true);
+            childRecord.current = data?.childRecord ? data?.childRecord : 0;
+        }
     }, [id]);
 
     useEffect(() => {
@@ -123,6 +132,13 @@ export default function Form() {
         setAliasName(calculateYarnName())
     }, [calculateYarnName()])
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
 
     const validateData = (data) => {
         if (data?.aliasName) {
@@ -132,7 +148,9 @@ export default function Form() {
 
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleNameChange = (val) => setAliasName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
             if (text == "Updated") {
@@ -142,13 +160,19 @@ export default function Form() {
             }
             setId(returnData.data.id)
             toast.success(text + "Successfully");
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
 
         if (!validateData(data)) {
             toast.info("Please fill all required fields...!", { position: "top-center" })
@@ -159,9 +183,9 @@ export default function Form() {
         //     return
         // }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -336,24 +360,30 @@ export default function Form() {
                                                 {!readOnly && (
                                                 <button
                                                     type="button"
-                                                    onClick={saveData}
-                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                    onClick={() => saveData("close")}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                                 border border-green-600 flex items-center gap-1 text-xs"
                                                 >
                                                     <Check size={14} />
-                                                    {id ? "Update" : "Save"}
+                                                    {id ? "Update" : "Save & close"}
                                                 </button>
+                                                )}
+                                                {(!readOnly && !id) && (
+                                                    <button type="button" onClick={() => saveData("new")}
+                                                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                                        <Check size={14} />Save & New
+                                                    </button>
                                                 )}
                                             </div>
                                             </div>
                                         </div>
 
                                         <div className="flex-1 overflow-auto p-3">
-                                            <div className="grid grid-cols-1  gap-3  h-full">
+                                            <div ref={formRef} className="grid grid-cols-1  gap-3  h-full">
                                     <fieldset className=' my-1'>
                                      <div className='flex flex-col justify-start gap-3 flex-1'>
                                         <div className="grid grid-cols-2">
-                                             <TextInput name="FabricName" type="text" value={aliasName} setValue={setAliasName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                             <TextInput name="FabricName" type="text" value={aliasName} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                                          </div>
                                           <div className='mb-5'>

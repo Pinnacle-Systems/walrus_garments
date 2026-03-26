@@ -151,7 +151,7 @@ const Mastertable = ({
                                                                 <button
                                                                     onClick={() => {
                                                                         onDataClick(dataObj?.id)
-                                                                        setReadOnly(true);                                                                    
+                                                                        setReadOnly(true);
                                                                     }}
                                                                     className="text-blue-800 flex items-center gap-1 px-2 mx-2 py-1.5 bg-blue-50 rounded"
                                                                 >

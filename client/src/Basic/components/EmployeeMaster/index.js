@@ -103,6 +103,7 @@ export default function Form() {
   const [canRejoin, setCanRejoin] = useState("");
   const [rejoinReason, setRejoinReason] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const nameRef = useRef(null);
   const [image, setImage] = useState(null);
   const [newForm, setNewForm] = useState(false);
   const [formHeading, setFormHeading] = "";
@@ -304,7 +305,7 @@ export default function Form() {
     canRejoin,
     rejoinReason,
     regNo,
-   employeeCategory ,department 
+    employeeCategory, department
   };
 
 
@@ -327,11 +328,11 @@ export default function Form() {
         returnData = await callback(formData).unwrap();
       }
       setId(returnData.data.id);
-      Swal.fire({
-        title: text + "Successfully",
+      await Swal.fire({
+        title: text + " Successfully",
         icon: "success",
-
-      }); setSearchValue("");
+      });
+      setSearchValue("");
       setStep(1);
       dispatch({
         type: `EmployeeCategoryMaster/invalidateTags`,
@@ -345,43 +346,50 @@ export default function Form() {
         type: `CityMaster/invalidateTags`,
         payload: ["City/State Name"],
       });
+      setNewForm(false);
     } catch (error) {
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
     }
   };
 
-  console.log(data,"dataaaaaaaaaaa")
+  console.log(data, "dataaaaaaaaaaa")
 
   const validateData = (data) => {
-    if (data.name && data.gender &&  data.dob   &&  data.employeeCategory && data.department &&  data.joiningDate && data.fatherName  &&  data.panNo  &&   data.mobile   &&  data.localAddress  &&  data.permCity   && data.permPincode) {
+    if (data.name && data.gender && data.dob && data.employeeCategory && data.department && data.joiningDate && data.fatherName && data.panNo && data.mobile && data.localAddress && data.permCity && data.permPincode) {
       return true;
     }
     return false;
   }
 
   const saveData = () => {
-    if (!validateData(data)) {
-      // toast.error("Please fill all required fields...!", { position: "top-center" })
+    const upperName = name.toUpperCase();
+    const finalData = {
+      ...data,
+      name: upperName
+    };
+
+    if (!validateData(finalData)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "success",
-
+        icon: "error",
       });
+      nameRef.current?.focus();
       return
     }
-    
+
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
-    // if (!JSON.parse(active)) {
-    //   setLeavingForm(true);
-    // } else {
-      if (id) {
-        handleSubmitCustom(updateData, data, "Updated");
-      } else {
-        handleSubmitCustom(addData, data, "Added");
-      }
-    // }
+    if (id) {
+      handleSubmitCustom(updateData, finalData, "Updated");
+    } else {
+      handleSubmitCustom(addData, finalData, "Added");
+    }
   };
   const deleteData = async (id) => {
     if (id) {
@@ -390,7 +398,7 @@ export default function Form() {
         return;
       }
       try {
-        await removeData(id);
+        await removeData(id).unwrap();
         setId("");
         dispatch({
           type: `EmployeeCategoryMaster/invalidateTags`,
@@ -404,15 +412,20 @@ export default function Form() {
           type: `cityMaster/invalidateTags`,
           payload: ["City/State Name"],
         });
-        Swal.fire({
+        await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
-
-        }); setForm(false);
+        });
+        setForm(false);
         setSearchValue("");
         setStep(1);
+        setTimeout(() => searchRef.current?.focus(), 100);
       } catch (error) {
-        toast.error("something went wrong");
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
       }
     }
   };
@@ -438,6 +451,9 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
   function onDataClick(id) {
@@ -550,7 +566,12 @@ export default function Form() {
     },
 
   ];
-  console.log(data, "data")
+  useEffect(() => {
+    if (form && nameRef.current) {
+      nameRef.current.focus();
+    }
+  }, [form]);
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1 ">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
@@ -591,8 +612,8 @@ export default function Form() {
               Cards
             </button>
           </div>
+          </div>
         </div>
-      </div>
 
       <div className="bg-gray-100  rounded-xl shadow overflow-hidden">
         <div className="pt-2">
@@ -753,7 +774,7 @@ export default function Form() {
 
                     <div className="space-y-2">
                       <TextInput
-                        ref={input1Ref}
+                        ref={nameRef}
                         name="Full Name"
                         value={name}
                         setValue={setName}
@@ -785,7 +806,7 @@ export default function Form() {
                             options={bloodList}
                             value={bloodGroup}
                             setValue={setBloodGroup}
-                            
+
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                           />
@@ -807,7 +828,7 @@ export default function Form() {
 
                   <div className="bg-white p-3 rounded-md border border-gray-200">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
-                    <div className="space-y-2">{console.log(active,"active")}
+                    <div className="space-y-2">{console.log(active, "active")}
                       <ToggleButton
                         name="Status"
                         options={statusDropdown}
@@ -925,7 +946,7 @@ export default function Form() {
                           options={maritalStatusList}
                           value={maritalStatus}
                           setValue={setMaritalStatus}
-                          
+
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
@@ -949,7 +970,7 @@ export default function Form() {
                           name="Degree"
                           value={degree}
                           setValue={setDegree}
-                          
+
                           readOnly={readOnly}
                         />
                         {errors.degree && <span className="text-red-500 text-xs ml-1">{errors.degree}</span>}
@@ -960,7 +981,7 @@ export default function Form() {
                           name="Specialization"
                           value={specialization}
                           setValue={setSpecialization}
-                          
+
                           readOnly={readOnly}
                         />
                         {errors.specialization && <span className="text-red-500 text-xs ml-1">{errors.specialization}</span>}

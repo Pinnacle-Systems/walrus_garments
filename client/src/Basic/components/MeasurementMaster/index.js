@@ -31,6 +31,7 @@ export default function Form() {
 
 
     const [searchValue, setSearchValue] = useState("");
+    const nameRef = useRef(null);
     const childRecord = useRef(0);
 
 
@@ -64,13 +65,15 @@ export default function Form() {
                 setReadOnly(false);
                 setName("");
                 // setAccessory(data?.isAccessory || false);
-                setActive(id ? (data?.active) : true);
+                setActive(true);
+                childRecord.current = 0;
 
             } else {
                 // setReadOnly(true);
                 setName(data?.name || "");
                 // setAccessory(data?.isAccessory || false);
                 setActive(id ? (data?.active ?? false) : true);
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
             }
         },
         [id]
@@ -91,55 +94,69 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
-            // toast.success(text + "Successfully");
-            Swal.fire({
+            await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
 
         } catch (error) {
-            console.log("handle");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            nameRef.current?.focus();
         }
     };
 
-    const saveData = () => {
-        if (!validateData(data)) {
-            // toast.error("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
+    const saveData = (nextProcess) => {
+        const upperName = name.toUpperCase();
+
+        const finalData = {
+            ...data,
+            name: upperName,
+        };
+
+        if (!validateData(finalData)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
-                icon: "success",
-
+                icon: "error",
             });
+            nameRef.current?.focus();
             return;
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName.trim());
         } else {
-            foundItem = allData?.data?.some(item => item.name ===  name.trim());
+            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName.trim());
 
         }
         if (foundItem) {
             Swal.fire({
-                text: "The Measurement  Name already exists.",
+                text: "The Measurement Name already exists.",
                 icon: "warning",
             });
+            nameRef.current?.focus();
             return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, finalData, "Added", nextProcess);
         }
     };
 
@@ -151,20 +168,26 @@ export default function Form() {
             try {
                 let deldata = await removeData(id).unwrap();
                 if (deldata?.statusCode == 1) {
-                    toast.error(deldata?.message)
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Submission error',
+                        text: deldata?.message || 'Something went wrong!',
+                    });
                     return
                 }
                 setId("");
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                await Swal.fire({
+                    title: "Deleted Successfully",
                     icon: "success",
-
                 });
-                setForm(false)
-                setForm(false)
+                setForm(false);
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
+                setForm(false);
             }
         }
     };
@@ -184,6 +207,9 @@ export default function Form() {
         setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -219,6 +245,14 @@ export default function Form() {
             <Power size={10} />
         </div>
     );
+    useEffect(() => {
+        if (form && nameRef.current) {
+            nameRef.current.focus();
+        }
+    }, [form]);
+
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
     const columns = [
         {
             header: "S.No",
@@ -477,28 +511,45 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
                                             </button>
                                         )}
                                     </div>
+                                    {(!readOnly && !id) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => saveData("new")}
+                                            className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs"
+                                        >
+                                            <Check size={14} />Save & New
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="flex-1 overflow-auto p-3 ">
                                 <div className="grid grid-cols-1  gap-3  h-full ">
                                     <div className="lg:col-span-2 space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full" ref={formRef}>
                                             <div className="space-y-4 ">
                                                 <div className="grid grid-cols-2  gap-3  h-full">
 
                                                     <fieldset className=' rounded mt-2'>
                                                         <div className='mb-3 '>
-                                                            <TextArea name="Measurement" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                            <TextArea
+                                                                name="Measurement"
+                                                                type="text"
+                                                                value={name}
+                                                                setValue={setName}
+                                                                required={true}
+                                                                readOnly={readOnly}
+                                                                disabled={(childRecord.current > 0)}
+                                                                ref={nameRef}
+                                                            />
                                                         </div>
 
 

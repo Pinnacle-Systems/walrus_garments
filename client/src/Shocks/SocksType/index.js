@@ -42,6 +42,7 @@ export default function Form() {
     const [active, setActive] = useState(true);
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
 
     const [errors, setErrors] = useState({});
@@ -82,6 +83,13 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
     const data = {
         id, name,
         // accessory,
@@ -95,16 +103,21 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId("")
-            syncFormWithDb(undefined)
+            setId(returnData?.data?.id)
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-         
+
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
         } catch (error) {
             console.log("handle");
         }
@@ -115,7 +128,9 @@ export default function Form() {
 
 
 
-    const saveData = () => {
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -124,14 +139,14 @@ export default function Form() {
             });
             return;
         }
-    
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -440,12 +455,18 @@ export default function Form() {
                                             {!readOnly && (
                                                 <button
                                                     type="button"
-                                                    onClick={saveData}
-                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                    onClick={() => saveData("close")}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                                                 border border-green-600 flex items-center gap-1 text-xs"
                                                 >
                                                     <Check size={14} />
-                                                    {id ? "Update" : "Save"}
+                                                    {id ? "Update" : "Save & close"}
+                                                </button>
+                                            )}
+                                            {(!readOnly && !id) && (
+                                                <button type="button" onClick={() => saveData("new")}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                                    <Check size={14} />Save & New
                                                 </button>
                                             )}
                                         </div>
@@ -458,9 +479,9 @@ export default function Form() {
                                             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                                 <div className="space-y-4 ">
                                                     <div className="grid grid-cols-2  gap-3  h-full">
-                                                        <fieldset className=' rounded mt-2'>
+                                                        <fieldset ref={formRef} className=' rounded mt-2'>
                                                             <div className='mb-5'>
-                                                                <TextInput name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                                <TextInput name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             </div>
 
 

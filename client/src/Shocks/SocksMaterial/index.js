@@ -38,6 +38,7 @@ export default function Form() {
     const openPartyModal = useSelector((state) => state.party.openPartyModal);
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
     const dispatch = useDispatch();
     const lastTapName = useSelector((state) => state.party.lastTab)
@@ -72,6 +73,13 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
     const data = {
         id, name,
         // accessory,
@@ -85,11 +93,10 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData?.data?.id)
-            syncFormWithDb(undefined)
             // toast.success(text + "Successfully");
             Swal.fire({
                 title: text + "  " + "Successfully",
@@ -101,28 +108,20 @@ export default function Form() {
                 //     Swal.showLoading();
                 // }
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveExitData = () => {
-        if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
-            });
-            return;
-        }
-        if (id) {
-            handleSubmitCustom(updateData, data, "Updated", true);
-        } else {
-            console.log("hit");
-            handleSubmitCustom(addData, data, "Added", true);
-        }
-    };
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
-
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -131,14 +130,14 @@ export default function Form() {
             });
             return;
         }
-           
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -466,12 +465,18 @@ export default function Form() {
                                             {!readOnly && (
                                                 <button
                                                     type="button"
-                                                    onClick={saveData}
-                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                    onClick={() => saveData("close")}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                                 border border-green-600 flex items-center gap-1 text-xs"
                                                 >
                                                     <Check size={14} />
-                                                    {id ? "Update" : "Save"}
+                                                    {id ? "Update" : "Save & close"}
+                                                </button>
+                                            )}
+                                            {(!readOnly && !id) && (
+                                                <button type="button" onClick={() => saveData("new")}
+                                                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                                    <Check size={14} />Save & New
                                                 </button>
                                             )}
                                         </div>
@@ -484,10 +489,10 @@ export default function Form() {
                                             <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                                 <div className="space-y-4 ">
                                                     <div className="grid grid-cols-2  gap-3  h-full">
-                                                        <fieldset className=' rounded mt-2'>
+                                                        <fieldset ref={formRef} className=' rounded mt-2'>
 
                                                             <div className="mb-3">
-                                                                <TextInput name="Shocks Material" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                                <TextInput name="Shocks Material" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                                                             </div>
 

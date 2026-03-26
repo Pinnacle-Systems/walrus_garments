@@ -31,6 +31,8 @@ export default function Form() {
     const [aliasName, setAliasName] = useState("")
 
     const [searchValue, setSearchValue] = useState("");
+    const nameRef = useRef(null);
+    const formRef = useRef(null);
     const childRecord = useRef(0);
 
 
@@ -56,7 +58,8 @@ export default function Form() {
             if (!id) {
                 setName("");
                 setdays("");
-                setActive(id ? (data?.active) : true);
+                setActive(true);
+                childRecord.current = 0;
 
                 return
             } else {
@@ -65,6 +68,7 @@ export default function Form() {
                 setdays(data?.days ? data.days : "");
                 setActive(id ? (data?.active ?? false) : true);
                 setAliasName(data?.aliasName ? data?.aliasName : "")
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
             }
         },
         [id]
@@ -85,37 +89,54 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData?.data?.id)
-            Swal.fire({
+            await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-
             });
-            // toast.success(text + "Successfully");
-            setForm(false);
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
 
         } catch (error) {
-            console.log("handle");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            nameRef.current?.focus();
         }
     };
 
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
+        const upperName = name.toUpperCase();
+        const upperAlias = aliasName.toUpperCase();
+
+        const finalData = {
+            ...data,
+            name: upperName,
+            aliasName: upperAlias
+        };
+
+        if (!validateData(finalData)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
-                icon: "success",
-
+                icon: "error",
             });
+            nameRef.current?.focus();
             return;
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.aliasName?.trim() == aliasName?.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.aliasName?.trim().toUpperCase() == upperAlias.trim());
         } else {
-            foundItem = allData?.data?.some(item => item?.aliasName?.trim() == aliasName?.trim());
+            foundItem = allData?.data?.some(item => item?.aliasName?.trim().toUpperCase() == upperAlias.trim());
 
         }
         if (foundItem) {
@@ -123,15 +144,16 @@ export default function Form() {
                 text: "The PayTerm already exists.",
                 icon: "warning",
             });
+            nameRef.current?.focus();
             return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+            handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added", nextProcess);
+            handleSubmitCustom(addData, finalData, "Added", nextProcess);
         }
     };
 
@@ -146,19 +168,26 @@ export default function Form() {
                 let deldata = await removeData(id).unwrap();
 
                 if (deldata?.statusCode == 1) {
-                    toast.error(deldata?.message)
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Submission error',
+                        text: deldata?.message || 'Something went wrong!',
+                    });
                     return
                 }
                 setId("");
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                await Swal.fire({
+                    title: "Deleted Successfully",
                     icon: "success",
-
                 });
                 setForm(false);
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
+                setForm(false);
             }
         }
     };
@@ -177,6 +206,9 @@ export default function Form() {
         setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -244,11 +276,9 @@ export default function Form() {
     ];
 
 
-    const firstInputFocus = useRef(null);
-
     useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
+        if (form && nameRef.current) {
+            nameRef.current.focus();
         }
     }, [form]);
 
@@ -357,14 +387,14 @@ export default function Form() {
                             <div className="flex-1 overflow-auto p-3 ">
                                 <div className="grid grid-cols-1  gap-3  h-full ">
                                     <div className="lg:col-span-2 ">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full" ref={formRef}>
                                             <div className="">
                                                 <div className="grid grid-cols-2  gap-3 ">
 
                                                     <div className='mb-3'>
-                                                        <TextInputNew1 name="Days" type="number" required={true} value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)} 
-                                                            ref={firstInputFocus}
-                                                            />
+                                                        <TextInputNew1 name="Days" type="number" required={true} value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                            ref={nameRef}
+                                                        />
                                                     </div>
                                                     <div className='mb-3 '>
                                                         <TextInputNew1 name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />

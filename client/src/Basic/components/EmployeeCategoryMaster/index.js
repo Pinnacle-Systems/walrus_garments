@@ -29,7 +29,9 @@ export default function Form() {
 
 
     const [searchValue, setSearchValue] = useState("");
+    const nameRef = useRef(null);
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
 
     const params = {
@@ -54,12 +56,15 @@ export default function Form() {
             if (!id) {
                 setName("");
                 setCode("");
-                setActive(id ? (data?.active ?? true) : true);
+                setActive(true);
+                childRecord.current = 0;
+
             } else {
                 // setReadOnly(true);
                 setName(data?.name || "");
                 setCode(data?.code || "");
                 setActive(id ? (data?.active ?? false) : true);
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
             }
         },
         [id]
@@ -74,7 +79,7 @@ export default function Form() {
     }
 
     const validateData = (data) => {
-        if (data.name ) {
+        if (data.name) {
             return true;
         }
         return false;
@@ -85,37 +90,49 @@ export default function Form() {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             syncFormWithDb(undefined)
-            // toast.success(text + "Successfully");
-            Swal.fire({
+            await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-
             });
             if (nextProcess == "new") {
-                syncFormWithDb(undefined)
                 onNew()
             } else {
                 setForm(false)
             }
         } catch (error) {
-            console.log("handle");
-            setForm(false);
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            nameRef.current?.focus();
         }
     };
 
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
+        const upperName = name.toUpperCase();
+        const upperCode = code.toUpperCase();
+
+        const finalData = {
+            ...data,
+            name: upperName,
+            code: upperCode,
+        };
+
+        if (!validateData(finalData)) {
             Swal.fire({
-                text: "Please fill all required fields...!",
-                icon: "warning",
+                title: "Please fill all required fields...!",
+                icon: "error",
             });
+            nameRef.current?.focus();
             return;
         }
+
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
         } else {
-            foundItem = allData?.data?.some(item => item.name === name);
+            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
         }
         if (foundItem) {
@@ -123,15 +140,16 @@ export default function Form() {
                 text: "The Employee Category Name already exists.",
                 icon: "warning",
             });
+            nameRef.current?.focus();
             return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+            handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added", nextProcess);
+            handleSubmitCustom(addData, finalData, "Added", nextProcess);
         }
     };
 
@@ -143,20 +161,25 @@ export default function Form() {
             try {
                 const deldata = await removeData(id).unwrap();
                 if (deldata?.statusCode == 1) {
-                    toast.error(deldata?.message)
-                    setForm(false)
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Submission error',
+                        text: deldata?.message || 'Something went wrong!',
+                    });
                     return
                 }
                 setId("");
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                await Swal.fire({
+                    title: "Deleted Successfully",
                     icon: "success",
-
                 });
-                setForm(false)
+                setForm(false);
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
                 setForm(false);
             }
         }
@@ -175,6 +198,9 @@ export default function Form() {
         setReadOnly(false);
         setForm(true);
         setSearchValue("");
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -233,11 +259,9 @@ export default function Form() {
 
     ];
 
-    const firstInputFocus = useRef(null);
-
     useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
+        if (form && nameRef.current) {
+            nameRef.current.focus();
         }
     }, [form]);
 
@@ -345,7 +369,7 @@ export default function Form() {
                                 <div className="grid grid-cols-1  gap-3  h-full ">
                                     <div className="lg:col-span-2 space-y-3">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="grid grid-cols-2  gap-3 ">
+                                            <div className="grid grid-cols-2  gap-3 " ref={formRef}>
 
 
 
@@ -357,7 +381,7 @@ export default function Form() {
                                                     required={true}
                                                     readOnly={readOnly}
                                                     disabled={childRecord.current > 0}
-                                                    ref={firstInputFocus}
+                                                    ref={nameRef}
                                                 />
 
                                                 <TextInputNew

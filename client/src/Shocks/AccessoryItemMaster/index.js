@@ -33,6 +33,7 @@ export default function Form() {
     const [searchValue, setSearchValue] = useState("");
     const [errors, setErrors] = useState({});
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
     const dispatch = useDispatch()
     const openPartyModal = useSelector((state) => state.party.openPartyModal);
@@ -49,6 +50,13 @@ export default function Form() {
             setForm(true);
         }
     }, [openPartyModal]);
+
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
     const companyId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "userCompanyId"
     )
@@ -108,7 +116,7 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text, exit = false) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
@@ -122,10 +130,13 @@ export default function Form() {
                 icon: "success",
 
             });
-            if (exit) {
-                setForm(false)
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
             }
-            if (exit) {
+            if (nextProcess !== "new") {
                 if (openPartyModal === true && lastTapName) {
                     dispatch(push({ name: lastTapName }));
                 }
@@ -137,7 +148,9 @@ export default function Form() {
         }
     };
 
-    const saveData = () => {
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -150,23 +163,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
-        }
-    };
-    const saveExitData = () => {
-        if (!validateData(data)) {
-            toast.error("Please fill all required fields...!", {
-                position: "top-center",
-            });
-            return;
-        }
-        if (id) {
-            handleSubmitCustom(updateData, data, "Updated", true);
-        } else {
-            console.log("hit");
-            handleSubmitCustom(addData, data, "Added", true);
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -330,12 +329,18 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                         border border-green-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                        {(!readOnly && !id) && (
+                                            <button type="button" onClick={() => saveData("new")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                                <Check size={14} />Save & New
                                             </button>
                                         )}
                                     </div>
@@ -347,10 +352,10 @@ export default function Form() {
                                     <div className="lg:col-span-2 space-y-3">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                             <div className="space-y-4 ">
-                                                <fieldset className='grid grid-cols-2 my-1  gap-3  h-full   '>
+                                                <fieldset ref={formRef} className='grid grid-cols-2 my-1  gap-3  h-full   '>
 
                                                     <div className='mb-3'>
-                                                        <TextInputNew className={"text-sm"} name="Accessory Category Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} handleChange={true} />
+                                                        <TextInputNew className={"text-sm"} name="Accessory Category Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} handleChange={true} />
 
                                                         <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
 

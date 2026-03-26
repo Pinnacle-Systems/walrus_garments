@@ -55,27 +55,113 @@ const PointOfSale = () => {
     const [showReports, setShowReports] = useState(true);
     const [addParty] = useAddPartyMutation();
     const scannerRef = useRef(null);
+    const discountRef = useRef(null);
+    const qtyInputRefs = useRef({});
+    const [activeRowIndex, setActiveRowIndex] = useState(0);
     const [printData, setPrintData] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [docId, setDocId] = useState("")
 
-    // Auto-focus scanner input
+    // Key Map — POS Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'f') {
+            const tag = document.activeElement?.tagName?.toLowerCase();
+            const isTyping = tag === 'input' || tag === 'textarea';
+
+            // F10 — Focus barcode scanner
+            if (e.key === 'F10') {
                 e.preventDefault();
                 scannerRef.current?.focus();
+                return;
             }
+
+            // F8 — Open payment modal
             if (e.key === 'F8') {
                 e.preventDefault();
                 if (cart.length > 0 && !isProcessing) {
                     setShowPaymentModal(true);
                 }
+                return;
+            }
+
+            // F2 — Focus Qty of active cart row
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (cart.length > 0) {
+                    const idx = Math.min(activeRowIndex, cart.length - 1);
+                    const item = cart[idx];
+                    const key = `${item.id}-${item.sizeId}-${item.colorId}`;
+                    qtyInputRefs.current[key]?.focus();
+                    qtyInputRefs.current[key]?.select();
+                }
+                return;
+            }
+
+            // F3 — Focus Discount input
+            if (e.key === 'F3') {
+                e.preventDefault();
+                discountRef.current?.focus();
+                discountRef.current?.select();
+                return;
+            }
+
+            // F4 — Void (clear cart)
+            if (e.key === 'F4') {
+                e.preventDefault();
+                if (cart.length > 0) {
+                    Swal.fire({
+                        title: 'Void All Items?',
+                        text: 'This will clear all items from the cart.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#94a3b8',
+                        confirmButtonText: 'Void All'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            setCart([]);
+                            setDiscount(0);
+                            setActiveRowIndex(0);
+                            toast.info('Cart cleared', { autoClose: 1000, position: 'bottom-right' });
+                        }
+                    });
+                }
+                return;
+            }
+
+            // F12 — Toggle POS Reports menu
+            if (e.key === 'F12') {
+                e.preventDefault();
+                setShowReports(prev => !prev);
+                return;
+            }
+
+            // Arrow Up/Down — Navigate cart rows (only when not typing)
+            if (!isTyping) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setActiveRowIndex(prev => Math.min(prev + 1, cart.length - 1));
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setActiveRowIndex(prev => Math.max(prev - 1, 0));
+                    return;
+                }
+                // Delete — remove active row
+                if (e.key === 'Delete' && cart.length > 0) {
+                    e.preventDefault();
+                    const idx = Math.min(activeRowIndex, cart.length - 1);
+                    const item = cart[idx];
+                    removeFromCart(`${item.id}-${item.sizeId}-${item.colorId}`);
+                    setActiveRowIndex(prev => Math.max(prev - 1, 0));
+                    return;
+                }
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart.length, isProcessing]);
+    }, [cart, activeRowIndex, isProcessing]);
 
     // Queries
     const { data: itemsData, isLoading: itemsLoading } = useGetItemMasterQuery({
@@ -156,6 +242,18 @@ const PointOfSale = () => {
         }
     };
 
+    // Price calculation utility
+    const calculateEffectivePrice = (item, qty) => {
+        const numericQty = parseFloat(qty || 0);
+        const salesPrice = parseFloat(item.salesPrice || item.price || 0);
+        const offerPrice = parseFloat(item.offerPrice || 0);
+
+        if (numericQty >= 6 && offerPrice > 0) {
+            return { price: offerPrice, priceType: 'offerPrice' };
+        }
+        return { price: salesPrice, priceType: 'SalesPrice' };
+    };
+
     // Cart actions
     const addToCart = (product) => {
         // Guard: Initial Stock Check
@@ -181,17 +279,25 @@ const PointOfSale = () => {
                     return prev;
                 }
 
-                return prev.map(item =>
-                    (item.id === prodId &&
+                return prev.map(item => {
+                    if (item.id === prodId &&
                         item.sizeId === product.sizeId &&
-                        item.colorId === product.colorId)
-                        ? { ...item, qty: currentQty + 1 } : item
-                );
+                        item.colorId === product.colorId) {
+                        const newQty = currentQty + 1;
+                        const { price, priceType } = calculateEffectivePrice(item, newQty);
+                        return { ...item, qty: newQty, price, rate: price, priceType };
+                    }
+                    return item;
+                });
             }
             // Populate all data from product (stockData) + UI fields
+            const { price, priceType } = calculateEffectivePrice(product, 1);
             return [...prev, {
                 ...product,
                 qty: 1,
+                price: price,
+                rate: price,
+                priceType: priceType,
                 taxPercent: product?.Item?.Hsn?.tax || 5
             }];
         });
@@ -202,6 +308,13 @@ const PointOfSale = () => {
             icon: <CheckCircle2 className="text-green-500" size={18} />
         });
     };
+
+    // Sync active row to last item when cart grows
+    useEffect(() => {
+        if (cart.length > 0) {
+            setActiveRowIndex(cart.length - 1);
+        }
+    }, [cart.length]);
 
     console.log(cart, "cartt")
 
@@ -227,7 +340,8 @@ const PointOfSale = () => {
                     newQty = stockLimit;
                 }
 
-                return { ...item, qty: newQty };
+                const { price, priceType } = calculateEffectivePrice(item, newQty);
+                return { ...item, qty: newQty, price, rate: price, priceType };
             }
             return item;
         }));
@@ -590,17 +704,28 @@ const PointOfSale = () => {
                                     </thead>
                                     <tbody>
                                         {cart.map((item, index) => {
+                                            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
                                             const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
                                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                                             const taxableValue = rowTotal / (1 + (itemTaxPercent / 100));
                                             const itemTax = Math.round(rowTotal - taxableValue);
+                                            const isActiveRow = index === activeRowIndex;
                                             return (
-                                                <tr key={`${item.id}-${item.sizeId}-${item.colorId}`} className="group hover:bg-indigo-50/30 transition-colors border-b border-slate-50">
+                                                <tr
+                                                    key={cartKey}
+                                                    onClick={() => setActiveRowIndex(index)}
+                                                    className={`group transition-colors border-b border-slate-50 cursor-pointer ${isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : 'hover:bg-indigo-50/30'}`}
+                                                >
                                                     <td className="px-4 py-3 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
                                                     <td className="px-4 py-3 border-r border-slate-200">
                                                         <div className="text-[13px] font-black text-slate-800 uppercase leading-none truncate max-w-[300px]">{item?.Item?.name}</div>
                                                         <div className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-2">
                                                             <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">{item.barcode}</span>
+                                                            {item.priceType && (
+                                                                <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase tracking-tighter ${item.priceType === 'offerPrice' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-50 text-blue-600'}`}>
+                                                                    {item.priceType}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Color?.name || '-'}</td>
@@ -608,11 +733,12 @@ const PointOfSale = () => {
                                                     <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.stockQty || '-'}</td>
                                                     <td className="px-2 py-1.5 border-r border-slate-200">
                                                         <input
+                                                            ref={(el) => { qtyInputRefs.current[cartKey] = el; }}
                                                             type="number"
                                                             value={item.qty}
                                                             onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
                                                             className="w-full py-1.5 text-center bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none"
-                                                            onFocus={(e) => e.target.select()}
+                                                            onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
                                                         />
                                                     </td>
                                                     <td className="px-4 py-1.5 border-r border-slate-200">
@@ -629,7 +755,7 @@ const PointOfSale = () => {
                                                         <span className="text-[14px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
                                                     </td>
                                                     <td className="px-3 py-3 text-center bg-slate-50/50">
-                                                        <button onClick={() => removeFromCart(`${item.id}-${item.sizeId}-${item.colorId}`)} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
+                                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
                                                     </td>
                                                 </tr>
                                             );
@@ -710,6 +836,7 @@ const PointOfSale = () => {
                                             <div className="flex items-center gap-1">
                                                 <span>-₹</span>
                                                 <input
+                                                    ref={discountRef}
                                                     type="number"
                                                     value={discount}
                                                     onChange={(e) => setDiscount(Number(e.target.value))}
@@ -760,15 +887,66 @@ const PointOfSale = () => {
                         </div>
                         <div className="flex items-center gap-3 no-scrollbar overflow-x-auto ml-4">
                             {[
-                                { key: 'F2', label: 'Qty' },
-                                { key: 'F3', label: 'Disc' },
-                                { key: 'F4', label: 'Void' },
-                                { key: 'F6', label: 'UoM' },
-                                { key: 'F8', label: 'Pay' },
-                                { key: 'F10', label: 'Scan' },
-                                { key: 'F12', label: 'Menu' },
+                                {
+                                    key: 'F2', label: 'Qty', action: () => {
+                                        if (cart.length > 0) {
+                                            const idx = Math.min(activeRowIndex, cart.length - 1);
+                                            const item = cart[idx];
+                                            const key = `${item.id}-${item.sizeId}-${item.colorId}`;
+                                            qtyInputRefs.current[key]?.focus();
+                                            qtyInputRefs.current[key]?.select();
+                                        }
+                                    }
+                                },
+                                {
+                                    key: 'F3', label: 'Disc', action: () => {
+                                        discountRef.current?.focus();
+                                        discountRef.current?.select();
+                                    }
+                                },
+                                {
+                                    key: 'F4', label: 'Void', action: () => {
+                                        if (cart.length > 0) {
+                                            Swal.fire({
+                                                title: 'Void All Items?',
+                                                text: 'This will clear all items from the cart.',
+                                                icon: 'warning',
+                                                showCancelButton: true,
+                                                confirmButtonColor: '#ef4444',
+                                                cancelButtonColor: '#94a3b8',
+                                                confirmButtonText: 'Void All'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    setCart([]);
+                                                    setDiscount(0);
+                                                    setActiveRowIndex(0);
+                                                    toast.info('Cart cleared', { autoClose: 1000, position: 'bottom-right' });
+                                                }
+                                            });
+                                        }
+                                    }
+                                },
+                                { key: 'F6', label: 'UoM', action: null },
+                                {
+                                    key: 'F8', label: 'Pay', action: () => {
+                                        if (cart.length > 0 && !isProcessing) setShowPaymentModal(true);
+                                    }
+                                },
+                                {
+                                    key: 'F10', label: 'Scan', action: () => {
+                                        scannerRef.current?.focus();
+                                    }
+                                },
+                                {
+                                    key: 'F12', label: 'Menu', action: () => setShowReports(prev => !prev)
+                                },
                             ].map((btn) => (
-                                <button key={btn.key} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-white transiton-all group shrink-0 outline-none">
+                                <button
+                                    key={btn.key}
+                                    onClick={btn.action || undefined}
+                                    disabled={!btn.action}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hover:bg-white transition-all group shrink-0 outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
                                     <span className="text-[10px] font-black text-indigo-600 group-hover:scale-110 transition-transform">{btn.key}</span>
                                     <span className="text-[9px] font-bold text-slate-400 uppercase">{btn.label}</span>
                                 </button>

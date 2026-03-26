@@ -32,10 +32,11 @@ export default function Form() {
   const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(true);
   const [errors, setErrors] = useState({});
 
   const [searchValue, setSearchValue] = useState("");
+  const formRef = useRef(null);
 
   const childRecord = useRef(0);
   const { hasPermission } = usePermissionForUsers()
@@ -80,7 +81,9 @@ export default function Form() {
   console.log(childRecord.current, "childRecord");
 
   useEffect(() => {
-    syncFormWithDb(singleData?.data);
+    if (singleData?.data) {
+      syncFormWithDb(singleData.data);
+    }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
@@ -104,10 +107,9 @@ export default function Form() {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id);
-      Swal.fire({
+      await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
-
       });
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
@@ -116,32 +118,40 @@ export default function Form() {
         setForm(false)
       }
     } catch (error) {
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
       });
+      countryNameRef.current?.focus();
     }
   };
 
   const saveData = (nextProcess) => {
     console.log("saveData hit");
-    if (!validateData(data)) {
-      // toast.error("Please fill all required fields...!", {
-      //   position: "top-center",
-      // });
+    const upperName = name.toUpperCase();
+    const upperCode = code.toUpperCase();
+
+    const finalData = {
+      ...data,
+      name: upperName,
+      code: upperCode
+    };
+
+    if (!validateData(finalData)) {
       Swal.fire({
         title: 'Please fill all required fields...!',
         icon: 'error',
       });
+      countryNameRef.current?.focus();
       return;
     }
     let foundItem;
-    if (id) {
-      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
-    } else {
-      foundItem = allData?.data?.some(item => item.name === name);
 
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
+    } else {
+      foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
     }
 
 
@@ -150,16 +160,17 @@ export default function Form() {
         text: "The Country Name already exists.",
         icon: "warning",
       });
+      countryNameRef.current?.focus();
       return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
       console.log("updateData hit");
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
@@ -171,7 +182,7 @@ export default function Form() {
       try {
         let deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
-          Swal.fire({
+          await Swal.fire({
             icon: 'error',
             title: 'Submission error',
             text: deldata.data?.message || 'Something went wrong!',
@@ -179,14 +190,13 @@ export default function Form() {
           return;
         }
         setId("");
-        Swal.fire({
+        await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
-
         });
         setForm(false);
       } catch (error) {
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Submission error',
           text: error.data?.message || 'Something went wrong!',
@@ -209,6 +219,9 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    setTimeout(() => {
+      countryNameRef.current?.focus();
+    }, 100);
   };
   const handleView = (id) => {
     setId(id);
@@ -374,7 +387,7 @@ export default function Form() {
                   <div className="lg:col-span- space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
-                        <div className="p-2">
+                        <div className="p-2" ref={formRef}>
                           <div className="flex">
                             <div className="mb-3 w-[60%]">
                               <TextInputNew1

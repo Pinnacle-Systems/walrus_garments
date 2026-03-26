@@ -98,7 +98,7 @@ export default function Form() {
         return data.templateItems && data.name
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
             if (text === "Updated") {
@@ -108,7 +108,6 @@ export default function Form() {
             }
             setId("")
             syncFormWithDb(undefined)
-            setForm(false)
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -122,13 +121,19 @@ export default function Form() {
                 type: `TaxTermMaster/invalidateTags`,
                 payload: ['Taxe Name'],
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined)
+                onNew()
+            } else {
+                setForm(false)
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -146,9 +151,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -183,6 +188,17 @@ export default function Form() {
     };
 
     console.log(readOnly, "readOnly")
+
+    const formRef = useRef(null);
+
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();
@@ -371,15 +387,21 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                                          border border-green-600 flex items-center gap-1 text-xs"
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
+                                          border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
                                             </button>
                                         )}
                                     </div>
+                                    {(!readOnly && !id) && (
+                                        <button type="button" onClick={() => saveData("new")}
+                                            className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                            <Check size={14} />Save & New
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -388,10 +410,10 @@ export default function Form() {
                                     <div className="lg:col-span- space-y-3">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                             <div className="space-y-4 ">
-                                                <fieldset className=' my-1 rounded-tr-lg rounded-bl-lg rounded-br-lg border border-gray-200'>
+                                                <fieldset ref={formRef} className=' my-1 rounded-tr-lg rounded-bl-lg rounded-br-lg border border-gray-200'>
                                                     <legend className=''>Accessory Template Info</legend>
                                                     <div className='grid grid-cols-4 my-2 p-2'>
-                                                        <TextInput name="Template Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        <TextInput name="Template Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                     </div>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </fieldset>

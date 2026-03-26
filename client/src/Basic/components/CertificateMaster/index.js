@@ -13,7 +13,7 @@ import { TextInput, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import Modal from '../../../UiComponents/Modal';
 import Mastertable from '../MasterTable/Mastertable';
-import MasterForm from '../MastersForm/MastersForm';
+import { Check, Plus } from 'lucide-react';
 const MODEL = "Certificate Master";
 
 export default function Form() {
@@ -29,6 +29,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
 
   const childRecord = useRef(0);
+  const formRef = useRef(null);
 
   const params = { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }
   const { data: allData, isLoading, isFetching } = useGetCertificateQuery({ params, searchParams: searchValue });
@@ -48,11 +49,12 @@ export default function Form() {
 
       setName("");
       setCode("");
-      setActive(id ? (data?.active ) : true);
+      setActive(true);
+      childRecord.current = 0;
 
       return;
     } else {
-      setReadOnly(true)
+      // setReadOnly(true)
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(id ? (data?.active ?? false) : true);
@@ -65,6 +67,14 @@ export default function Form() {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData])
 
+  useEffect(() => {
+    if (form && formRef.current) {
+      const firstInput = formRef.current.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+  }, [form]);
+
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
   const data = {
     name, code, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), active, id
@@ -77,27 +87,23 @@ export default function Form() {
     return false;
   }
 
-  const handleSubmitCustom = async (callback, data, text, exit = false) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
       toast.success(text + "Successfully");
-  if (exit) {
+      if (nextProcess === "new") {
+        syncFormWithDb(undefined);
+        onNew();
+      } else {
         setForm(false);
       }
-      // if (exit) {
-      //   if (openPartyModal === true && lastTapName) {
-      //     dispatch(push({ name: lastTapName }));
-      //   }
-
-      //   dispatch(setOpenPartyModal(false));
-      // }
     } catch (error) {
       console.log("handle")
     }
   }
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     console.log("saveData hit")
     if (!validateData(data)) {
       toast.error("Please fill all required fields...!", { position: "top-center" })
@@ -107,26 +113,12 @@ export default function Form() {
       return
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated")
+      handleSubmitCustom(updateData, data, "Updated", nextProcess)
       console.log("updateData hit")
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   }
-    const saveExitData = () => {
-      if (!validateData(data)) {
-        toast.error("Please fill all required fields...!", {
-          position: "top-center",
-        });
-        return;
-      }
-      if (id) {
-        handleSubmitCustom(updateData, data, "Updated", true);
-      } else {
-        console.log("hit");
-        handleSubmitCustom(addData, data, "Added", true);
-      }
-    };
 
   const deleteData = async () => {
     if (id) {
@@ -179,64 +171,105 @@ export default function Form() {
     <div onKeyDown={handleKeyDown} className='px-5'>
       <div className='w-full flex justify-between mb-2 items-center px-0.5'>
         <h5 className='my-1 text-xl'>Certificate Master</h5>
-        <div className='flex items-center'>
-          <button onClick={() => { setForm(true); onNew() }} className='bg-green-500 text-white px-3 py-1 button rounded shadow-md'>+ New</button>
+        <div className='flex items-center gap-4'>
+          <button
+            onClick={() => { setForm(true); onNew() }}
+            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Add New Certificate
+          </button>
         </div>
       </div>
       <div className='w-full flex items-start'>
-
         <Mastertable
-          header={'Countries list'}
+          header={'Certificate list'}
           searchValue={searchValue}
           setSearchValue={setSearchValue}
           onDataClick={onDataClick}
-          // setOpenTable={setOpenTable}
           tableHeaders={tableHeaders}
           tableDataNames={tableDataNames}
           data={allData?.data}
-          loading={
-            isLoading || isFetching
-          } />
-
-        <div>
-          {form === true && <Modal isOpen={form} form={form} widthClass={"w-[40%] h-[45%]"} onClose={() => { setForm(false); setErrors({}); }}>
-              <MasterForm
-              onNew={onNew}
-              onClose={() => {
-                setForm(false);
-                setSearchValue("");
-                setId(false);
-              }}
-              model={MODEL}
-              childRecord={childRecord.current}
-              saveExitData = {saveExitData}
-              saveData={saveData}
-              setReadOnly={setReadOnly}
-              deleteData={deleteData}
-              readOnly={readOnly}
-              emptyErrors={() => setErrors({})}
-            >
-
-              <fieldset className=' rounded '>
-
-                <div className='p-2'>
-                  <div className='flex'>
-                    <div className='mb-3 w-[48%] p-1'>
-                      <TextInput name="Certificate Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
-
-                    </div>
-                    <div className='mb-3 ml-5 w-[20%]'>
-                      <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} />
-                    </div>
-                  </div>
-                  <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                </div>
-              </fieldset>
-            </MasterForm>
-          </Modal>}
-
-        </div>
+          loading={isLoading || isFetching}
+        />
       </div>
+      {form && (
+        <Modal
+          isOpen={form}
+          form={form}
+          widthClass={"w-[30%] max-w-6xl h-[50vh]"}
+          onClose={() => { setForm(false); setErrors({}); }}
+        >
+          <div className="h-full flex flex-col bg-gray-200">
+            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Certificate Master" : "Certificate Master") : "Add New Certificate"}
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => saveData("close")}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
+                  border border-green-600 flex items-center gap-1 text-xs"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save & close"}
+                    </button>
+                  )}
+                  {(!readOnly && !id) && (
+                    <button type="button" onClick={() => saveData("new")}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                      <Check size={14} />Save & New
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3">
+              <div className="grid grid-cols-1 gap-3 h-full">
+                <div className="lg:col-span- space-y-3">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+
+                    <div className="flex flex-wrap" ref={formRef}>
+                      <div className='mb-3 w-[48%] p-1'>
+                        <TextInput name="Certificate Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                      </div>
+                      <div className='mb-3 ml-5 w-[20%]'>
+                        <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                      </div>
+                      <div className='mb-5 w-full'>
+                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

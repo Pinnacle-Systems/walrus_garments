@@ -548,9 +548,11 @@ model Party {
   ifscCode            String?
   createdById         Int?
 
-  image                      Bytes?                       @db.LongBlob
-  tinNo                      String?
-  cstNo                      String?
+  image    Bytes?  @db.LongBlob
+  tinNo    String?
+  cstNo    String?
+  aadharNo String?
+
   cstDate                    DateTime?                    @db.Date
   faxNo                      String?
   costCode                   String?
@@ -4992,28 +4994,28 @@ model ItemControlPanel {
 }
 
 model Quotation {
-  id                 Int                 @id @default(autoincrement())
-  docId              String?
-  createdAt          DateTime?           @default(now())
-  updatedAt          DateTime?           @updatedAt
-  createdBy          User?               @relation("createdBy", fields: [createdById], references: [id])
-  createdById        Int?
-  updatedBy          User?               @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById        Int?
-  Branch             Branch?             @relation(fields: [branchId], references: [id])
-  branchId           Int?
-  Party              Party?              @relation(fields: [customerId], references: [id])
-  customerId         Int?
-  discountType       String?
-  discountValue      String?
-  taxType            String?
+  id                    Int                 @id @default(autoincrement())
+  docId                 String?
+  createdAt             DateTime?           @default(now())
+  updatedAt             DateTime?           @updatedAt
+  createdBy             User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdById           Int?
+  updatedBy             User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById           Int?
+  Branch                Branch?             @relation(fields: [branchId], references: [id])
+  branchId              Int?
+  Party                 Party?              @relation(fields: [customerId], references: [id])
+  customerId            Int?
+  discountType          String?
+  discountValue         String?
+  taxType               String?
   minimumAdvancePayment String?
-  remarks            String?
-  termsAndCondition  String?
-  TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
-  termId             Int?
-  QuotationItems     QuotationItems[]
-  Saleorder          Saleorder[]
+  remarks               String?
+  termsAndCondition     String?
+  TermsAndConditions    TermsAndConditions? @relation(fields: [termId], references: [id])
+  termId                Int?
+  QuotationItems        QuotationItems[]
+  Saleorder             Saleorder[]
 }
 
 model QuotationItems {

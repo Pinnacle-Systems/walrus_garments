@@ -229,12 +229,16 @@ export default function Form() {
 
 
     const firstInputFocus = useRef(null);
+    const formRef = useRef(null);
 
     useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
         }
     }, [form]);
+
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
 
     return (
@@ -339,14 +343,14 @@ export default function Form() {
                             </div>
 
                             <div className="flex-1 overflow-auto p-3 ">
-                                <div className="grid grid-cols-1  gap-3  h-full ">
+                                <div ref={formRef} className="grid grid-cols-1  gap-3  h-full ">
                                     <div className="lg:col-span-2 space-y-3">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                             <div className="space-y-4 ">
                                                 <div className="grid grid-cols-2  gap-3  h-full">
                                                     <fieldset className=' rounded mt-2'>
                                                         <div className='mb-3'>
-                                                            <TextInputNew1 name="Section Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                            <TextInputNew1 name="Section Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
                                                                 ref={firstInputFocus}
                                                             />
                                                         </div>

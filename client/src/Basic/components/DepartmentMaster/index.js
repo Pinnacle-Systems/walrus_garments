@@ -29,7 +29,9 @@ export default function Form() {
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const nameRef = useRef(null);
   const childRecord = useRef(0);
+  const formRef = useRef(null);
 
   console.log(readOnly, "readOnly")
   const params = {
@@ -55,13 +57,16 @@ export default function Form() {
       // setReadOnly(false);
       setName("");
       setCode("");
-      setActive(id ? (data?.active ?? true) : true);
+      setActive(true);
+      childRecord.current = 0;
+
     } else {
       // setReadOnly(true);
 
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(id ? (data?.active ?? false) : true);
+      childRecord.current = data?.childRecord ? data?.childRecord : 0;
     }
 
   },
@@ -88,11 +93,9 @@ export default function Form() {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
-      // toast.success(text + "Successfully");
-      Swal.fire({
+      await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
-
       });
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
@@ -101,77 +104,87 @@ export default function Form() {
         setForm(false)
       }
     } catch (error) {
-      console.log("handle");
-      setForm(false);
-
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
     }
   };
 
   const saveData = (nextProcess) => {
-    if (readOnly) return toast.info("Turn On Edit Mode !..")
+    const upperName = name.toUpperCase();
+    const upperCode = code.toUpperCase();
 
-    if (!validateData(data)) {
-      // toast.error("Please fill all required fields...!", {
-      //   position: "top-center",
-      // });
+    const finalData = {
+      ...data,
+      name: upperName,
+      code: upperCode,
+    }
+
+    if (!validateData(finalData)) {
       Swal.fire({
-        text: "Please fill all required fields...!",
-        icon: "warning",
+        title: "Please fill all required fields...!",
+        icon: "error",
       });
+      nameRef.current?.focus();
       return;
     }
 
     let foundItem;
     if (id) {
-      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name === name);
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
     } else {
-      foundItem = allData?.data?.some(item => item.name === name);
+      foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
     }
     if (foundItem) {
       Swal.fire({
-        text: "The Department  Name already exists.",
+        text: "The Department Name already exists.",
         icon: "warning",
       });
+      nameRef.current?.focus();
       return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
   const deleteData = async (id) => {
-
     if (id) {
-      setForm(false)
       if (!window.confirm("Are you sure to delete...?")) {
-
         return false;
       }
       try {
         const deldata = await removeData(id).unwrap();
         if (deldata?.statusCode == 1) {
-          toast.error(deldata?.message)
-          setForm(false)
+          await Swal.fire({
+            icon: 'error',
+            title: 'Submission error',
+            text: deldata?.message || 'Something went wrong!',
+          });
           return
         }
         setId("");
-        // toast.success("Deleted Successfully");
-        Swal.fire({
-          title: "Deleted" + "  " + "Successfully",
+        await Swal.fire({
+          title: "Deleted Successfully",
           icon: "success",
-
-
         });
-        setForm(false)
+        setForm(false);
       } catch (error) {
-        toast.error("something went wrong");
-        setForm(false)
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
+        setForm(false);
       }
     }
   };
@@ -189,6 +202,9 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
 
@@ -240,11 +256,9 @@ export default function Form() {
 
   ];
 
-  const FisrtInputFocus = useRef(null);
-
   useEffect(() => {
-    if (form && FisrtInputFocus.current) {
-      FisrtInputFocus.current.focus();
+    if (form && nameRef.current) {
+      nameRef.current.focus();
     }
   }, [form]);
 
@@ -352,7 +366,7 @@ export default function Form() {
                 <div className="grid grid-cols-1  gap-3  h-full ">
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                      <div className="grid grid-cols-2  gap-3  ">
+                      <div className="grid grid-cols-2  gap-3  " ref={formRef}>
 
                         <TextInputNew1
                           name="Department Name"
@@ -362,15 +376,22 @@ export default function Form() {
                           required={true}
                           readOnly={readOnly}
                           disabled={childRecord?.current > 0}
-                          ref={FisrtInputFocus}
+                          ref={nameRef}
                         />
 
 
                         <div className="">
-                          <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} readOnly={readOnly} disabled={childRecord.current > 0} />
+                          <TextInputNew1
+                            name="Code"
+                            type="text"
+                            value={code}
+                            setValue={setCode}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
                         </div>
                         <div className="mt-3">
-                          <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} disabled={childRecord.current > 0} />
+                          <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
                         </div>
 
                       </div>

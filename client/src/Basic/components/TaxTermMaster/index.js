@@ -28,6 +28,7 @@ export default function Form() {
 
     const [searchValue, setSearchValue] = useState("");
     const childRecord = useRef(0);
+    const formRef = useRef(null);
 
 
     const params = {
@@ -49,10 +50,19 @@ export default function Form() {
 
     const syncFormWithDb = useCallback(
         (data) => {
-            if (id) setReadOnly(true);
-            setName(data?.name ? data.name : "");
-            setIsPowise(id ? (data?.isPoWise ? data.isPoWise : false) : false)
-            setActive(id ? (data?.active ? data.active : false) : true);
+            if (!id) {
+                setReadOnly(false);
+                setName("");
+                setIsPowise(false)
+                setActive(true);
+                childRecord.current = 0;
+            } else {
+                // setReadOnly(true);
+                setName(data?.name ? data.name : "");
+                setIsPowise(id ? (data?.isPoWise ? data.isPoWise : false) : false)
+                setActive(id ? (data?.active ? data.active : false) : true);
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
+            }
         },
         [id]
     );
@@ -60,6 +70,13 @@ export default function Form() {
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
 
     const data = {
         id, name, isPoWise, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
@@ -72,11 +89,11 @@ export default function Form() {
         return false;
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId("")
-            syncFormWithDb(undefined)
             Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -87,12 +104,18 @@ export default function Form() {
                 //     Swal.showLoading();
                 // }
             });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
             toast.info("Please fill all required fields...!", {
                 position: "top-center",
@@ -108,9 +131,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -203,14 +226,6 @@ export default function Form() {
         setReadOnly(false);
         console.log("Edit");
     };
-    const firstInputFocus = useRef(null);
-
-    useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
-        }
-    }, [form]);
-
 
     return (
 
@@ -286,7 +301,7 @@ export default function Form() {
                                                 onClick={() => {
                                                     saveData("close")
                                                 }}
-                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
                   border border-blue-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
@@ -302,7 +317,7 @@ export default function Form() {
                                                     saveData("new")
                                                 }}
 
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                   border border-green-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
@@ -319,12 +334,10 @@ export default function Form() {
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                                             <div className="space-y-4 ">
                                                 <fieldset className=' rounded mt-2'>
-                                                    <div className='grid grid-cols-2 my-2'>
+                                                    <div className='grid grid-cols-2 my-2' ref={formRef}>
                                                         <div className="w-[50%">
 
-                                                            <TextInputNew1 name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
-                                                                ref={firstInputFocus}
-                                                            />
+                                                            <TextInputNew1 name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                         </div>
                                                     </div>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />

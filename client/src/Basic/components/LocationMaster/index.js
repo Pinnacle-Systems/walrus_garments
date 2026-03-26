@@ -29,7 +29,9 @@ export default function Form() {
     const [errors, setErrors] = useState({});
 
     const [searchValue, setSearchValue] = useState("");
+    const nameRef = useRef(null);
     const childRecord = useRef(0);
+    const formRef = useRef(null);
     // const dispatch = useDispatch();
 
 
@@ -60,7 +62,8 @@ export default function Form() {
                 setIsFabric(false);
                 setIsYarn(false);
                 setIsGarments(false);
-                setActive(id ? (data?.active) : true);
+                setActive(true);
+                childRecord.current = 0;
 
             } else {
                 // setReadOnly(true);
@@ -71,6 +74,7 @@ export default function Form() {
                 setIsYarn(data?.isYarn || false);
                 setIsGarments(data?.isGarments || false);
                 setActive(id ? (data?.active ?? false) : true);
+                childRecord.current = data?.childRecord ? data?.childRecord : 0;
             }
         },
         [id]
@@ -97,10 +101,9 @@ export default function Form() {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
             // toast.success(text + "Successfully");
-            Swal.fire({
+            await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
-
             });
 
             if (nextProcess == "new") {
@@ -110,28 +113,37 @@ export default function Form() {
                 setForm(false)
             }
         } catch (error) {
-            console.log("handle");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Submission error',
+                text: error.data?.message || 'Something went wrong!',
+            });
+            nameRef.current?.focus();
         }
     };
 
     const saveData = (nextProcess) => {
-        if (!validateData(data)) {
-            // toast.error("Please fill all required fields...!", {
-            //     position: "top-center",
-            // });
+        const upperStoreName = storeName.toUpperCase();
+
+        const finalData = {
+            ...data,
+            storeName: upperStoreName,
+        };
+
+        if (!validateData(finalData)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
-                icon: "success",
-
+                icon: "error",
             });
+            nameRef.current?.focus();
             return;
         }
 
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.storeName?.trim() == storeName?.trim() && item?.locationId == locationId)
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.storeName?.trim().toUpperCase() == upperStoreName.trim() && item?.locationId == locationId)
         } else {
-            foundItem = allData?.data?.some(item => item?.storeName?.trim() == storeName?.trim() && item?.locationId == locationId);
+            foundItem = allData?.data?.some(item => item?.storeName?.trim().toUpperCase() == upperStoreName.trim() && item?.locationId == locationId);
 
         }
         if (foundItem) {
@@ -139,15 +151,16 @@ export default function Form() {
                 text: "The location and store name already exist",
                 icon: "warning",
             });
+            nameRef.current?.focus();
             return false;
         }
         if (!window.confirm("Are you sure save the details ...?")) {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+            handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added", nextProcess);
+            handleSubmitCustom(addData, finalData, "Added", nextProcess);
         }
     };
 
@@ -159,19 +172,18 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
-                // dispatch({
-                //     type: `LocationMaster/invalidateTags`,
-                //     payload: ['Location'],
-                //   }); 
-                // toast.success("Deleted Successfully");
-                Swal.fire({
-                    title: "Deleted" + "  " + "Successfully",
+                await Swal.fire({
+                    title: "Deleted Successfully",
                     icon: "success",
-
                 });
-                setForm(false)
+                setForm(false);
             } catch (error) {
-                toast.error("something went wrong");
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
+                setForm(false);
             }
         }
     };
@@ -190,6 +202,9 @@ export default function Form() {
         setSearchValue("");
         syncFormWithDb(undefined)
         setReadOnly(false);
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -243,11 +258,9 @@ export default function Form() {
 
     ];
 
-    const firstInputFocus = useRef(null);
-
     useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
+        if (form && nameRef.current) {
+            nameRef.current.focus();
         }
     }, [form]);
 
@@ -358,7 +371,7 @@ export default function Form() {
                                     <div className="lg:col-span-2 ">
                                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
 
-                                            <div className="grid grid-cols-2  gap-3  ">
+                                            <div className="grid grid-cols-2  gap-3  " ref={formRef}>
 
                                                 <div className=' '>
                                                     <DropdownInput
@@ -369,7 +382,7 @@ export default function Form() {
                                                         required={true}
                                                         readOnly={readOnly}
                                                         disabled={childRecord.current > 0}
-                                                        ref={firstInputFocus}
+                                                        ref={nameRef}
                                                     />
                                                 </div>
                                                 <div className=''>

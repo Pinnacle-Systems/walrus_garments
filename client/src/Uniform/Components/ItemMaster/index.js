@@ -33,6 +33,7 @@ export default function Form() {
   const [panelId, setPanelId] = useState([]);
 
   const [searchValue, setSearchValue] = useState("");
+  const nameRef = useRef(null);
   const childRecord = useRef(0);
 
   const params = {
@@ -98,30 +99,63 @@ export default function Form() {
 
   const handleSubmitCustom = async (callback, data, text) => {
     try {
-      let returnData = await callback(data).unwrap();
+      await callback(data).unwrap();
       setId("");
       syncFormWithDb(undefined);
       setReadOnly(false);
-      toast.success(text + "Successfully");
+      await Swal.fire({
+        title: text + "  " + "Successfully",
+        icon: "success",
+      });
+      onNew();
     } catch (error) {
-      console.log("handle");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+      });
+      nameRef.current?.focus();
     }
   };
 
   const saveData = () => {
-    if (!validateData(data)) {
-      toast.info("Please fill all required fields...!", {
-        position: "top-center",
+    const upperName = name.toUpperCase();
+    const finalData = {
+      ...data,
+      name: upperName
+    };
+
+    if (!validateData(finalData)) {
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "error",
       });
+      nameRef.current?.focus();
       return;
     }
+
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
+    } else {
+      foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
+    }
+    if (foundItem) {
+      Swal.fire({
+        text: "The Item Name already exists.",
+        icon: "warning",
+      });
+      nameRef.current?.focus();
+      return false;
+    }
+
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, finalData, "Updated");
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, finalData, "Added");
     }
   };
 
@@ -158,15 +192,28 @@ export default function Form() {
         return;
       }
       try {
-        let returnData = await removeData(id);
-        if (returnData?.data?.statusCode === 1) {
-          return toast.error(returnData?.data?.message);
+        let returnData = await removeData(id).unwrap();
+        if (returnData?.statusCode === 1) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Submission error',
+            text: returnData?.message || 'Something went wrong!',
+          });
+          return;
         } else {
           setId("");
-          toast.success("Deleted Successfully");
+          await Swal.fire({
+            title: "Deleted Successfully",
+            icon: "success",
+          });
+          setForm(false);
         }
       } catch (error) {
-        toast.error("something went wrong");
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
       }
     }
   };
@@ -185,6 +232,9 @@ export default function Form() {
     setSearchValue("");
     syncFormWithDb(undefined);
     setReadOnly(false);
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 100);
   };
 
   function onDataClick(id) {
@@ -280,6 +330,7 @@ export default function Form() {
                       required={true}
                       readOnly={readOnly}
                       disabled={childRecord.current > 0}
+                      ref={nameRef}
                     />
                   </div>
                   <div className="col-span-2">

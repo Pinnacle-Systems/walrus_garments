@@ -246,12 +246,22 @@ export default function Form() {
     };
 
     const firstInputFocus = useRef(null);
+    const formRef = useRef(null);
 
     useEffect(() => {
         if (form && firstInputFocus.current) {
             firstInputFocus.current.focus();
         }
     }, [form]);
+
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
     return (
 
@@ -359,11 +369,11 @@ export default function Form() {
                             <div className="flex-1 overflow-auto p-3">
                                 <div className="grid grid-cols-1   h-full">
                                     <div className="lg:col-span-1 space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full grid grid-cols-2">
+                                        <div ref={formRef} className="bg-white p-3 rounded-md border border-gray-200 h-full grid grid-cols-2">
 
 
                                             <div className="">
-                                                <TextInputNew1 name="Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} ref={firstInputFocus} />
+                                                <TextInputNew1 name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} ref={firstInputFocus} />
 
                                             </div>
                                             <div className='  flex   col-span-2 flex-col'>

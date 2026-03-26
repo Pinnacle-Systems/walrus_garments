@@ -44,6 +44,7 @@ export default function Form() {
   const [yarnName, setYarnName] = useState("");
 
   const childRecord = useRef(0);
+  const formRef = useRef(null);
 
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -119,6 +120,13 @@ export default function Form() {
       setForm(true);
     }
   }, [openPartyModal]);
+
+  useEffect(() => {
+    if (form && formRef.current) {
+      const firstInput = formRef.current.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+  }, [form]);
 
 
   useEffect(() => {
@@ -200,7 +208,9 @@ export default function Form() {
     return data?.contentId && data?.countsId && data?.hsn
   }
 
-  const handleSubmitCustom = async (callback, data, text, exit = false) => {
+  const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+  const handleSubmitCustom = async (callback, data, text, exit = false, nextProcess) => {
     try {
       let returnData;
       if (text === "Updated") {
@@ -209,15 +219,17 @@ export default function Form() {
         returnData = await callback(data).unwrap();
       }
       setId("")
-      onNew()
       // toast.success(text + "Successfully");
       Swal.fire({
         title: text + "Successfully",
         icon: "success",
 
       });
-      setForm(false)
-      if (exit) {
+      if (nextProcess === "new") {
+        syncFormWithDb(undefined);
+        onNew();
+      } else {
+        setForm(false);
       }
       if (exit) {
         if (openPartyModal === true && lastTapName) {
@@ -232,7 +244,7 @@ export default function Form() {
   };
 
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     // if (!validatePercentage()) {
     //   const yarnBlendPercentage = yarnBlendDetails?.filter(blend => blend.yarnBlendId).reduce((accumulator, currentValue) => {
     //     return accumulator + parseInt(currentValue.percentage)
@@ -287,9 +299,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated");
+      handleSubmitCustom(updateData, data, "Updated", false, nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added");
+      handleSubmitCustom(addData, data, "Added", false, nextProcess);
     }
   }
 
@@ -492,12 +504,18 @@ export default function Form() {
                     {!readOnly && (
                       <button
                         type="button"
-                        onClick={saveData}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                 border border-green-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
-                        {id ? "Update" : "Save"}
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                    {(!readOnly && !id) && (
+                      <button type="button" onClick={() => saveData("new")}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                        <Check size={14} />Save & New
                       </button>
                     )}
                   </div>
@@ -509,7 +527,7 @@ export default function Form() {
                   <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                       <div className="space-y-4 ">
-                        <div className="grid grid-cols-2  gap-3  h-full">
+                        <div ref={formRef} className="grid grid-cols-2  gap-3  h-full">
 
                           <fieldset className=' rounded mt-2 mb-5'>
                             <div className='grid grid-cols-2 gap-4'>
@@ -530,9 +548,9 @@ export default function Form() {
                             <div className='mt-3'>
 
                               <LongTextInput name="Yarn Name" className={'focus:outline-none  md:col-span-2 h-6 w-[500px] border border-gray-500 rounded'} type="text"
-                                value={name} setValue={setName}
-                                disabled={(childRecord.current > 0)} 
-                                
+                                value={name} setValue={handleNameChange}
+                                disabled={(childRecord.current > 0)}
+
                                 />
 
                             </div>

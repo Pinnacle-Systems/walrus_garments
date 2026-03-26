@@ -199,7 +199,7 @@ async function create(body) {
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments, parentId,
-        branchTypeId, isB2B, isB2C
+        branchTypeId, isB2B, isB2C, aadharNo
     } = await body
 
 
@@ -226,7 +226,7 @@ async function create(body) {
 
 
 
-                currencyId: currencyId ? parseInt(currencyId) : undefined, payTermDay, panNo, gstNo,
+                currencyId: currencyId ? parseInt(currencyId) : undefined, payTermDay, panNo, gstNo, aadharNo,
 
 
                 bankName: bankname, branchName: bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
@@ -335,7 +335,7 @@ async function update(id, body) {
         contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-        PartyContactDetails, parentId, attachments, branchTypeId
+        PartyContactDetails, parentId, attachments, branchTypeId, aadharNo
     } = body;
 
 
@@ -375,6 +375,7 @@ async function update(id, body) {
             createdById: userId ? parseInt(userId) : undefined,
             companyId: parseInt(companyId),
             branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
+            aadharNo,
 
             contactPersonName: contactPersonName ? contactPersonName : null,
             designation: designation ? designation : null,

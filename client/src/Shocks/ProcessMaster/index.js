@@ -35,6 +35,7 @@ export default function Form() {
     const [errors, setErrors] = useState({});
     const [hsn, setHsn] = useState("")
     const [tax, setTax] = useState("")
+    const formRef = useRef(null);
 
     const params = {
         companyId: secureLocalStorage.getItem(
@@ -75,20 +76,29 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    useEffect(() => {
+        if (form && formRef.current) {
+            const firstInput = formRef.current.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }
+    }, [form]);
+
     const data = {
         id, name, io, code, active, hsn, tax, isCutting, isPacking, isPcsStage, isIroning, isPrintingJobWork, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
-        return data.name && data.code 
+        return data.name && data.code
     }
 
-    const handleSubmitCustom = async (callback, data, text) => {
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
+    const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
-               Swal.fire({
-                title: text + "Successfully",
+            setId(returnData.data.id);
+            Swal.fire({
+                title: text + "  Successfully",
                 icon: "success",
                 // draggable: true,
                 // timer: 1000,
@@ -97,14 +107,19 @@ export default function Form() {
                 //     Swal.showLoading();
                 // }
             });
-            setForm(false)
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
+            } else {
+                setForm(false);
+            }
 
         } catch (error) {
             console.log("handle");
         }
     };
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
         if (!validateData(data)) {
 
             Swal.fire({
@@ -123,9 +138,9 @@ export default function Form() {
             return;
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     };
 
@@ -170,7 +185,7 @@ export default function Form() {
         let charCode = String.fromCharCode(event.which).toLowerCase();
         if ((event.ctrlKey || event.metaKey) && charCode === "s") {
             event.preventDefault();
-            saveData();
+            saveData("close");
         }
     };
 
@@ -315,12 +330,22 @@ export default function Form() {
                                         {!readOnly && (
                                             <button
                                                 type="button"
-                                                onClick={saveData}
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                 border border-green-600 flex items-center gap-1 text-xs"
                                             >
                                                 <Check size={14} />
-                                                {id ? "Update" : "Save"}
+                                                {id ? "Update" : "Save & close"}
+                                            </button>
+                                        )}
+                                        {(!readOnly && !id) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => saveData("new")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs"
+                                            >
+                                                <Check size={14} />
+                                                Save & New
                                             </button>
                                         )}
                                     </div>
@@ -334,8 +359,8 @@ export default function Form() {
                                             <div className="space-y-4 ">
                                                 <div className="grid grid-cols-2  gap-3  h-full">
 
-                                                    <fieldset className=' rounded mt-2 mb-5'>
-                                                            <TextInput name="Process name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                    <fieldset className=' rounded mt-2 mb-5' ref={formRef}>
+                                                            <TextInput name="Process name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                             {/* <DropdownInput name="IO" options={ProcessIOOptions} value={io} setValue={setIo} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} /> */}
                                                             <TextInput name="Hsn" type="text" value={hsn} setValue={setHsn}  readOnly={readOnly} disabled={(childRecord.current > 0)} />
@@ -368,5 +393,6 @@ export default function Form() {
         </div>
     )
 }
+
 
 

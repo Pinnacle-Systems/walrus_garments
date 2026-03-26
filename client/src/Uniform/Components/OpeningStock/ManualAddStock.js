@@ -220,7 +220,8 @@ const ManualAddStock = ({ params }) => {
               value={branchOptionsList.find((o) => o.value === selectedBranchId)}
               onChange={(o) => { setSelectedBranchId(o?.value || ""); setSelectedLocationId(""); }}
               placeholder="Branch..."
-              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+              menuPortalTarget={document.body}
+              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }), menuPortal: (b) => ({ ...b, zIndex: 9999 }) }}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -231,7 +232,8 @@ const ManualAddStock = ({ params }) => {
               onChange={(o) => setSelectedLocationId(o?.value || "")}
               placeholder="Location..."
               isClearable
-              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }) }}
+              menuPortalTarget={document.body}
+              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }), menuPortal: (b) => ({ ...b, zIndex: 9999 }) }}
             />
           </div>
         </div>
@@ -243,15 +245,15 @@ const ManualAddStock = ({ params }) => {
           <thead className="bg-gray-200 sticky top-0 z-10">
             <tr>
               <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
-              <th className="border border-gray-400 text-sm py-1 w-64 text-left px-2">Item Name</th>
-              <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">Size</th>
+              <th className="border border-gray-400 text-sm py-1 w-64 text-center px-2">Item Name</th>
+              <th className="border border-gray-400 text-sm py-1 w-32 text-center px-2">Size</th>
               {/* <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">Color</th> */}
-              <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">UOM</th>
+              <th className="border border-gray-400 text-sm py-1 w-32 text-center px-2">UOM</th>
 
-              <th className="border border-gray-400 text-sm py-1 w-40 text-left px-2">Barcode</th>
-              <th className="border border-gray-400 text-sm py-1 w-40 text-left px-2">Price</th>
+              <th className="border border-gray-400 text-sm py-1 w-40 text-center px-2">Barcode</th>
+              <th className="border border-gray-400 text-sm py-1 w-40 text-center px-2">Price</th>
 
-              <th className="border border-gray-400 text-sm py-1 w-24 text-right px-2">Qty</th>
+              <th className="border border-gray-400 text-sm py-1 w-24 text-center px-2">Qty</th>
               <th className="border border-gray-400 text-sm py-1 w-12 text-center">Action</th>
             </tr>
           </thead>

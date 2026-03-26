@@ -93,6 +93,8 @@ const StyleMaster = () => {
     }
 
 
+    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData;
@@ -106,14 +108,12 @@ const StyleMaster = () => {
                 icon: "success",
 
             });
-            if (nextProcess == "new") {
+            if (nextProcess === "new") {
                 syncFormWithDb(undefined)
                 onNew()
             } else {
                 setForm(false)
             }
-
-            setForm(false)
         } catch (error) {
             console.log("handle");
         }
@@ -384,7 +384,7 @@ const StyleMaster = () => {
                                             <div className="grid grid-cols-3  gap-3">
 
                                                 <div className=" col-span-3">
-                                                    <TextInputNew1 name="Style Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} ref={firstInputFocus} />
+                                                    <TextInputNew1 name="Style Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} ref={firstInputFocus} />
 
                                                 </div>
                                                 <div className="mb-3 col-span-1"  >
