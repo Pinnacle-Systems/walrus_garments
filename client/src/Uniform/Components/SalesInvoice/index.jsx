@@ -147,6 +147,10 @@ const SalesInvoice = () => {
         dispatch(push({ name: "SALES DELIVERY", projectId: dataObj.id }));
     };
 
+    const handleMakePayment = (dataObj) => {
+        dispatch(push({ name: "PAYMENTS", transactionType: "SALESINVOICE", id: dataObj.id }));
+    };
+
     const onNew = () => {
         setId("");
         setReadOnly(false);
@@ -168,6 +172,8 @@ const SalesInvoice = () => {
                     invoiceItems={invoiceItems} setInvoiceItems={setInvoiceItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                     supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId} invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
+                    sourceSaleOrderDocId={saleOrderToConvertData?.data?.docId || ""}
+                    sourceAdvanceReceived={(saleOrderToConvertData?.data?.Quotation?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
 
 
 
@@ -194,6 +200,7 @@ const SalesInvoice = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onConvertToDelivery={handleConvertToDelivery}
+                            onMakePayment={handleMakePayment}
                         />
                     </div>
 

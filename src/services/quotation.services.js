@@ -62,6 +62,7 @@ async function get(req) {
                     }
                 },
             },
+            QuotationItems: true,
             Saleorder: {
                 select: {
                     id: true,
@@ -134,7 +135,7 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId, termId, remarks, termsAndCondition } = await body
+    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId, termId, remarks, termsAndCondition, minimumAdvancePayment } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -151,6 +152,7 @@ async function create(body) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 docId: docId,
                 termId: termId ? parseInt(termId) : undefined,
+                minimumAdvancePayment: minimumAdvancePayment ? String(minimumAdvancePayment) : undefined,
                 remarks: remarks ? remarks : undefined,
                 termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                 QuotationItems: {
@@ -247,7 +249,7 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, quoteItems, branchId } = await body
+    const { customerId, discountType, discountValue, quoteItems, branchId, termId, remarks, termsAndCondition, minimumAdvancePayment } = await body
 
     const dataFound = await prisma.quotation.findUnique({
         where: {
@@ -287,6 +289,10 @@ async function update(id, body) {
                 discountType: discountType || "",
                 discountValue: discountValue || "",
                 branchId: branchId ? parseInt(branchId) : undefined,
+                termId: termId ? parseInt(termId) : null,
+                minimumAdvancePayment: minimumAdvancePayment ? String(minimumAdvancePayment) : null,
+                remarks: remarks || null,
+                termsAndCondition: termsAndCondition || null,
             },
         })
 

@@ -179,6 +179,8 @@ const SaleOrder = () => {
                     saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                     supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} quoteId={convertQuotationId}
+                    sourceQuotationDocId={quotationToConvertData?.data?.docId || ""}
+                    sourceQuotationAdvanceReceived={(quotationToConvertData?.data?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
                     invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
 
 

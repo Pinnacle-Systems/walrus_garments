@@ -17,8 +17,62 @@ const SaleInvoiceReport = ({
   onEdit,
   onDelete,
   onConvertToDelivery,
+  onMakePayment,
   rowActions = true,
 }) => {
+
+  const calculateInvoiceNetAmount = (invoiceItems = []) => {
+    return invoiceItems.reduce((acc, curr) => {
+      const price = parseFloat(curr?.price || 0);
+      const qty = parseFloat(curr?.qty || 0);
+      const taxPercent = parseFloat(curr?.taxPercent || 0);
+      const taxMethod = curr?.taxMethod || "Inclusive";
+      const discountType = curr?.discountType;
+      const discountValue = parseFloat(curr?.discountValue || 0);
+
+      const gross = price * qty;
+      let discountedAmount = gross;
+
+      if (discountType === "Percentage") {
+        discountedAmount = gross - (gross * discountValue) / 100;
+      } else if (discountType === "Flat") {
+        discountedAmount = gross - discountValue;
+      }
+
+      discountedAmount = Math.max(0, discountedAmount);
+
+      if (taxMethod === "Inclusive" && taxPercent > 0) {
+        return acc + discountedAmount;
+      }
+
+      return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+  };
+
+  const getPaidAmount = (paymentData = []) => {
+    return paymentData.reduce(
+      (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+      0
+    );
+  };
+
+  const getTotalReceivedAmount = (dataObj) => {
+    const invoicePaidAmount = getPaidAmount(dataObj?.paymentData || []);
+    const advancePaidAmount = getPaidAmount(dataObj?.advancePaymentData || []);
+    return invoicePaidAmount + advancePaidAmount;
+  };
+
+  const shouldShowPostPayment = (dataObj) => {
+    const invoiceAmount = calculateInvoiceNetAmount(dataObj?.SalesInvoiceItems || []);
+    const paidAmount = getTotalReceivedAmount(dataObj);
+    return paidAmount < invoiceAmount;
+  };
+
+  const shouldShowConvertToDelivery = (dataObj) => {
+    const invoiceAmount = calculateInvoiceNetAmount(dataObj?.SalesInvoiceItems || []);
+    const paidAmount = getTotalReceivedAmount(dataObj);
+    return paidAmount >= invoiceAmount;
+  };
 
 
   const branchId = secureLocalStorage.getItem(
@@ -410,19 +464,29 @@ const SaleInvoiceReport = ({
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="py-1">
+                                    {shouldShowPostPayment(dataObj) && (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          onMakePayment && onMakePayment(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">💳</span> Post Payment
+                                      </button>
+                                    )}
 
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      disabled={dataObj?.SalesDelivery?.length > 0}
-                                      title={dataObj?.SalesDelivery?.length > 0 ? "Already Converted to Sales Delivery" : "Convert to Sales Delivery"}
-                                      onClick={() => {
-                                        if (dataObj?.SalesDelivery?.length > 0) return;
-                                        onConvertToDelivery(dataObj);
-                                        setActiveActionMenuId(null);
-                                      }}
-                                    >
-                                      <span className="font-semibold text-lg">💳</span> Convert To Sales Delivery
-                                    </button>
+                                    {shouldShowConvertToDelivery(dataObj) && !(dataObj?.SalesDelivery?.length > 0) && (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          onConvertToDelivery(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">💳</span> Convert To Sales Delivery
+                                      </button>
+                                    )}
 
 
                                   </div>

@@ -45,6 +45,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [vehicleNo, setVehicleNo] = useState("")
   const [specialInstructions, setSpecialInstructions] = useState('')
   const [remarks, setRemarks] = useState("")
+  const [minimumAdvancePayment, setMinimumAdvancePayment] = useState("");
+  const [isMinimumAdvanceManuallyEdited, setIsMinimumAdvanceManuallyEdited] = useState(false);
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -105,8 +107,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
-    const today = new Date()
     if (id) {
+      if (!data) return;
       setReadOnly(true);
     } else {
       setReadOnly(false);
@@ -117,15 +119,23 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
+    setTerm(data?.termId ? String(data.termId) : "");
     setRemarks(data?.remarks || "");
-    setTerms(data?.terms || "");
+    setTerms(data?.termsAndCondition || "");
+    if (data?.minimumAdvancePayment !== null && data?.minimumAdvancePayment !== undefined && data?.minimumAdvancePayment !== "") {
+      setMinimumAdvancePayment(String(data.minimumAdvancePayment));
+      setIsMinimumAdvanceManuallyEdited(true);
+    } else {
+      setMinimumAdvancePayment("");
+      setIsMinimumAdvanceManuallyEdited(false);
+    }
 
   }, [id]);
 
   useEffect(() => {
-    if (id) {
+    if (id && singleData?.data) {
       syncFormWithDb(singleData?.data);
-    } else {
+    } else if (!id) {
       syncFormWithDb(undefined);
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
@@ -143,13 +153,15 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     discountValue,
     dcNo,
     remarks,
+    minimumAdvancePayment,
     specialInstructions,
     vehicleNo,
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    terms,
+    termId: term ? parseInt(term) : undefined,
+    termsAndCondition: terms,
     taxMethod
   }
 
@@ -363,9 +375,20 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const defaultMinimumAdvancePayment = (parseFloat(netAmount || 0) * 0.25).toFixed(2);
+  const displayedMinimumAdvancePayment =
+    id && readOnly && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== ""
+      ? String(singleData.data.minimumAdvancePayment)
+      : minimumAdvancePayment;
 
 
   console.log(netAmount, "netAmount", taxAmount, 'taxAmount')
+
+  useEffect(() => {
+    if (!isMinimumAdvanceManuallyEdited) {
+      setMinimumAdvancePayment(defaultMinimumAdvancePayment);
+    }
+  }, [defaultMinimumAdvancePayment, isMinimumAdvanceManuallyEdited]);
 
 
   function isSupplierOutside() {
@@ -614,14 +637,21 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               <span className="text-slate-600">Net Amount</span>
               <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
             </div>
-
-
+            <div className="flex items-center justify-between gap-2 py-1 text-sm">
+              <span className="text-slate-600">Minimum Advance</span>
+              <input
+                type="number"
+                value={displayedMinimumAdvancePayment}
+                onChange={(e) => {
+                  setMinimumAdvancePayment(e.target.value);
+                  setIsMinimumAdvanceManuallyEdited(true);
+                }}
+                readOnly={readOnly}
+                className={`w-32 rounded border border-slate-300 px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"
+                  }`}
+              />
+            </div>
           </div>
-
-
-
-
-
         </div>
 
 
@@ -641,7 +671,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           <div className="flex gap-2 flex-wrap">
 
             <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
+              onClick={() => {
+                if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
+                  setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
+                  setIsMinimumAdvanceManuallyEdited(true);
+                }
+                setReadOnly(false);
+              }}
             >
               <FiEdit2 className="w-4 h-4 mr-2" />
               Edit

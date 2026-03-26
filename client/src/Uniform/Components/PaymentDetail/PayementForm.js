@@ -14,19 +14,78 @@ import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { FaFileAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useAddPaymentMutation, useDeletePaymentMutation, useGetPaymentByIdQuery, useUpdatePaymentMutation } from "../../../redux/services/PaymentService";
+import { useGetPaymentQuery } from "../../../redux/services/PaymentService";
 import { useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
-import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { push } from "../../../redux/features/opentabs";
 
-const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransactionId,
+const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
 
     transactionId,
     transactionType,
     setTransactionId,
     setTransactionType
 }) => {
+
+    const calculateQuotationNetAmount = (quotationItems = []) => {
+        return quotationItems.reduce((acc, curr) => {
+            const price = parseFloat(curr?.price || 0);
+            const qty = parseFloat(curr?.qty || 0);
+            const taxPercent = parseFloat(curr?.taxPercent || 0);
+            const taxMethod = curr?.taxMethod || "Inclusive";
+            const discountType = curr?.discountType;
+            const discountValue = parseFloat(curr?.discountValue || 0);
+
+            const gross = price * qty;
+            let discountedAmount = gross;
+
+            if (discountType === "Percentage") {
+                discountedAmount = gross - (gross * discountValue) / 100;
+            } else if (discountType === "Flat") {
+                discountedAmount = gross - discountValue;
+            }
+
+            discountedAmount = Math.max(0, discountedAmount);
+
+            if (taxMethod === "Inclusive" && taxPercent > 0) {
+                return acc + discountedAmount;
+            }
+
+            return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+        }, 0);
+    };
+
+    const getQuotationOutstandingAmount = (quotation) => {
+        if (!quotation) return 0;
+
+        const quotationNetAmount = calculateQuotationNetAmount(quotation?.QuotationItems);
+
+        const receivedAmount = (quotation?.paymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        return Math.max(0, quotationNetAmount - receivedAmount);
+    };
+
+    const getSalesInvoiceOutstandingAmount = (salesInvoice) => {
+        if (!salesInvoice) return 0;
+
+        const salesInvoiceNetAmount = calculateQuotationNetAmount(salesInvoice?.SalesInvoiceItems);
+
+        const receivedAmount = (salesInvoice?.paymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const advanceReceivedAmount = (salesInvoice?.advancePaymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        return Math.max(0, salesInvoiceNetAmount - receivedAmount - advanceReceivedAmount);
+    };
 
 
     const today = new Date().toISOString().split('T')[0];
@@ -42,7 +101,12 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     const [paymentMode, setPaymentMode] = useState('');
     const [paymentRefNo, setPaymentRefNo] = useState('');
     const [partyId, setPartyId] = useState("");
-    const [paymentType, setPaymentType] = useState("INVOICE");
+    const [paymentType, setPaymentType] = useState(
+        initialTransactionType === "QUOTATION" ? "ADVANCE" : "INVOICE"
+    );
+    const [lockPrefilledTransactionFields, setLockPrefilledTransactionFields] = useState(
+        Boolean(initialTransactionType === "QUOTATION" && initialTransactionId)
+    );
     const [paidAmount, setPaidAmount] = useState('');
     const [discount, setDiscount] = useState('')
     const [balanceAmount, setBalanceAmount] = useState('');
@@ -58,6 +122,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
 
     const [searchValue, setSearchValue] = useState("");
     const [supplierId, setSupplierId] = useState("");
+    const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
 
     const childRecord = useRef(0);
 
@@ -118,14 +183,31 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         syncFormWithDb(singleData?.data);
     }, [syncFormWithDb, singleData])
 
+    useEffect(() => {
+        if (id) {
+            setReadOnly(initialReadOnly);
+        }
+    }, [id, initialReadOnly]);
+
+    useEffect(() => {
+        if (!id && initialTransactionType === "QUOTATION" && initialTransactionId) {
+            setLockPrefilledTransactionFields(true);
+            setPaymentType("ADVANCE");
+        } else if (!id && !initialTransactionType && !initialTransactionId) {
+            setLockPrefilledTransactionFields(false);
+        }
+    }, [id, initialTransactionType, initialTransactionId]);
+
 
     useEffect(() => {
         if (!id) {
-
+            if (transactionType && transactionId) {
+                return;
+            }
 
             setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
         }
-    }, [paymentType, PartyData]);
+    }, [paymentType, PartyData, id, transactionType, transactionId]);
 
     const [addData] = useAddPaymentMutation();
     const [updateData] = useUpdatePaymentMutation();
@@ -176,7 +258,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                           invalidateTagsDispatch()
 
                     if (initialTransactionType && initialTransactionId) {
-                        dispatch(push({ name: "PAYMENT DETAIL", transactionType: null, id: null }));
+                        dispatch(push({ name: "PAYMENTS", transactionType: null, id: null }));
                     }
 
                     if (nextProcess === "new") {
@@ -261,6 +343,24 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
         setReadOnly(false);
         setForm(true);
         setSearchValue("")
+        setDocId("New");
+        setCvv(moment.utc(new Date()).format("YYYY-MM-DD"));
+        setPaymentMode('');
+        setPaymentRefNo('');
+        setPartyId("");
+        setPaidAmount('');
+        setDiscount('');
+        setBalanceAmount('');
+        setTotalPayAmount('');
+        setSupplierId("");
+        setLockPrefilledTransactionFields(false);
+        setPaymentType("INVOICE");
+        setPaymentFlow("Receipt");
+        setTransactionType("");
+        setTransactionId("");
+        setRefDocId("");
+        setRefId("");
+        setTotalBillAmount("");
         syncFormWithDb(undefined);
 
     }
@@ -288,14 +388,26 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
     }, []);
 
     // Fetch transaction lists
+    const { data: paymentList } = useGetPaymentQuery({ params: { branchId, finYearId } });
     const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "QUOTATION" });
-    const { data: saleOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALEORDER" });
     const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALESINVOICE" });
+
+    const paymentHistory = (paymentList?.data || [])
+        .filter((payment) =>
+            String(payment?.transactionType || "") === String(transactionType || "")
+            && String(payment?.transactionId || "") === String(transactionId || "")
+            && payment?.paymentFlow === "Receipt"
+        )
+        .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
+    const historyItemsPerPage = 10;
+    const totalHistoryPages = Math.ceil(paymentHistory.length / historyItemsPerPage);
+    const historyIndexOfLastItem = currentHistoryPage * historyItemsPerPage;
+    const historyIndexOfFirstItem = historyIndexOfLastItem - historyItemsPerPage;
+    const currentHistoryItems = paymentHistory.slice(historyIndexOfFirstItem, historyIndexOfLastItem);
 
     const getDocIdOptions = () => {
         let list = [];
         if (transactionType === "QUOTATION") list = quotationList?.data || [];
-        else if (transactionType === "SALEORDER") list = saleOrderList?.data || [];
         else if (transactionType === "SALESINVOICE") list = salesInvoiceList?.data || [];
 
         // Filter by selected party if supplierId exists
@@ -305,6 +417,40 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
 
         return list.map(item => ({ show: item.docId, value: item.id }));
     };
+
+    useEffect(() => {
+        if (id) return;
+
+        if (!transactionType || !transactionId) {
+            setTotalBillAmount('');
+            setRefDocId('');
+            setRefId('');
+            return;
+        }
+
+        let transactionList = [];
+        if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
+        else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
+
+        const selectedTransaction = transactionList.find(
+            (item) => String(item.id) === String(transactionId)
+        );
+
+        if (!selectedTransaction) return;
+
+        setRefId(selectedTransaction.id);
+        setRefDocId(selectedTransaction.docId || "");
+
+        if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
+            setSupplierId(selectedTransaction.customerId);
+        }
+
+        if (transactionType === "QUOTATION") {
+            setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+        } else if (transactionType === "SALESINVOICE") {
+            setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+        }
+    }, [id, transactionId, transactionType, quotationList, salesInvoiceList]);
 
 
 
@@ -317,7 +463,6 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                 // If the list is loaded, we can also auto-fill the customer details based on the selected document
                 let obj = [];
                 if (initialTransactionType === "QUOTATION") obj = quotationList?.data;
-                else if (initialTransactionType === "SALEORDER") obj = saleOrderList?.data;
                 else if (initialTransactionType === "SALESINVOICE") obj = salesInvoiceList?.data;
 
                 const matchingDoc = obj?.find(d => String(d.id) === String(initialTransactionId));
@@ -326,7 +471,94 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                 }
             }
         }
-    }, [initialTransactionId, initialTransactionType, quotationList, saleOrderList, salesInvoiceList, id]);
+    }, [initialTransactionId, initialTransactionType, quotationList, salesInvoiceList, id]);
+
+    useEffect(() => {
+        setCurrentHistoryPage(1);
+    }, [transactionId, transactionType]);
+
+    const handleHistoryPageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalHistoryPages) {
+            setCurrentHistoryPage(newPage);
+        }
+    };
+
+    const HistoryPagination = () => {
+        if (paymentHistory.length <= historyItemsPerPage) return null;
+
+        return (
+            <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                    Showing {historyIndexOfFirstItem + 1} to {Math.min(historyIndexOfLastItem, paymentHistory.length)} of {paymentHistory.length} entries
+                </div>
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => handleHistoryPageChange(currentHistoryPage - 1)}
+                        disabled={currentHistoryPage === 1}
+                        className={`px-3 py-1 rounded-md ${currentHistoryPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronLeft className="inline" />
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalHistoryPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalHistoryPages <= 5) {
+                            pageNum = i + 1;
+                        } else if (currentHistoryPage <= 3) {
+                            pageNum = i + 1;
+                        } else if (currentHistoryPage >= totalHistoryPages - 2) {
+                            pageNum = totalHistoryPages - 4 + i;
+                        } else {
+                            pageNum = currentHistoryPage - 2 + i;
+                        }
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handleHistoryPageChange(pageNum)}
+                                className={`px-3 py-1 rounded-md ${currentHistoryPage === pageNum
+                                    ? 'bg-indigo-800 text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    {totalHistoryPages > 5 && currentHistoryPage < totalHistoryPages - 2 && (
+                        <span className="px-3 py-1">...</span>
+                    )}
+
+                    {totalHistoryPages > 5 && currentHistoryPage < totalHistoryPages - 2 && (
+                        <button
+                            onClick={() => handleHistoryPageChange(totalHistoryPages)}
+                            className={`px-3 py-1 rounded-md ${currentHistoryPage === totalHistoryPages
+                                ? 'bg-indigo-800 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {totalHistoryPages}
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => handleHistoryPageChange(currentHistoryPage + 1)}
+                        disabled={currentHistoryPage === totalHistoryPages}
+                        className={`px-3 py-1 rounded-md ${currentHistoryPage === totalHistoryPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronRight className="inline" />
+                    </button>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <>
@@ -436,6 +668,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <select
                                     value={paymentType}
                                     onChange={(e) => setPaymentType(e.target.value)}
+                                    disabled={lockPrefilledTransactionFields}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a payment type</option>
@@ -453,6 +686,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <select
                                     value={transactionType}
                                     onChange={(e) => setTransactionType(e.target.value)}
+                                    disabled={lockPrefilledTransactionFields}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a transaction</option>
@@ -471,6 +705,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                     className="block text-gray-600 font-medium mb-2"
                                     options={getDocIdOptions()}
                                     value={transactionId}
+                                    readOnly={lockPrefilledTransactionFields}
                                     setValue={(val) => {
                                         setTransactionId(val);
                                         const options = getDocIdOptions();
@@ -511,7 +746,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <input
                                     type="text"
 
-                                    value={formatAmountIN((Number(totalBillAmount || 0) - Number(PartyData?.data?.totalDiscount || 0)).toFixed(2))}
+                                    value={formatAmountIN((Number(totalBillAmount || 0)).toFixed(2))}
                                     onChange={(e) => setTotalBillAmount(e.target.value)}
                                     className="w-full px-3 py-1 border border-gray-300 bg-slate-100 text-red-500 font-semibold rounded-lg focus:outline-none focus:ring-emerald-500"
                                     placeholder="0"
@@ -524,7 +759,10 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                     type="number"
                                     value={paidAmount}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500"
+                                    readOnly={readOnly}
+                                    disabled={readOnly}
+                                    className={`w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
+                                        }`}
                                     placeholder="0"
                                 />
                             </div>
@@ -532,7 +770,7 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
                                 <input
                                     type="text"
-                                    value={formatAmountIN(((Number(totalBillAmount) - Number(paidAmount) - Number(discount) - (Number(PartyData?.data?.totalDiscount) || 0)) || 0).toFixed(2))}
+                                    value={formatAmountIN(((Number(totalBillAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
                                     onChange={(e) => setBalanceAmount(e.target.value)}
                                     className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(totalBillAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
                                         } focus:outline-none focus:ring-emerald-500 font-semibold`}
@@ -555,6 +793,69 @@ const PaymentForm = ({ id, setId, onClose, initialTransactionType, initialTransa
                             </p>
                         </div>
                     </div>
+
+                    {transactionId && (
+                        <div className="inline-block mt-4 rounded-lg bg-[#F1F1F0] shadow-sm overflow-hidden">
+                            <div className="px-4 py-3 border-b border-gray-200 bg-white">
+                                <h2 className="text-sm font-bold text-gray-800">Payment History</h2>
+                            </div>
+                            <div className="mt-2 max-h-[28vh] overflow-auto">
+                                <table className="table-fixed">
+                                    <thead className="bg-gray-200 text-gray-800">
+                                        <tr>
+                                            <th className="px-2 py-1.5 font-medium text-[13px] text-gray-900 text-center w-12">
+                                                <div>S No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-40">
+                                                <div>Payment No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-28">
+                                                <div>Payment Date</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-24">
+                                                <div>Mode</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-32">
+                                                <div>Reference No</div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-right w-32">
+                                                <div>Received Amount</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="border-2">
+                                        {paymentHistory.length > 0 ? (
+                                            currentHistoryItems.map((payment, index) => (
+                                                <tr
+                                                    key={payment.id}
+                                                    className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${(historyIndexOfFirstItem + index) % 2 === 0 ? "bg-white" : "bg-gray-100"
+                                                        }`}
+                                                >
+                                                    <td className="text-center">{historyIndexOfFirstItem + index + 1}</td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.docId}</td>
+                                                    <td className="px-3 py-1.5 text-left">
+                                                        {payment.cvv ? moment.utc(payment.cvv).format("DD-MM-YYYY") : ""}
+                                                    </td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.paymentMode}</td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.paymentRefNo || "-"}</td>
+                                                    <td className="px-3 py-1.5 text-right font-medium text-emerald-700">
+                                                        Rs.{formatAmountIN((Number(payment.paidAmount || 0)).toFixed(2))}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="6" className="px-4 py-4 text-center text-slate-500 bg-white">
+                                                    No payment history found for this document.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <HistoryPagination />
+                        </div>
+                    )}
 
 
                 </div>

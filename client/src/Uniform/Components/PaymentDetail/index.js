@@ -56,6 +56,7 @@ export default function Form() {
 
   const [transactionType, setTransactionType] = useState("");
   const [transactionId, setTransactionId] = useState("");
+  const [formReadOnly, setFormReadOnly] = useState(false);
 
   const childRecord = useRef(0);
 
@@ -279,10 +280,12 @@ export default function Form() {
     setId(id)
     setPurchaseOrderForm(true)
     setReadOnly(true);
+    setFormReadOnly(true);
   };
 
   const handleEdit = (id) => {
     setReadOnly(false);
+    setFormReadOnly(false);
     setId(id)
     setPurchaseOrderForm(true)
   };
@@ -329,6 +332,7 @@ export default function Form() {
           id={id}
           setId={setId}
           onClose={() => setPurchaseOrderForm(false)}
+          initialReadOnly={formReadOnly}
           initialTransactionType={currentTab?.transactionType}
           initialTransactionId={currentTab?.id}
           transactionId={transactionId}
@@ -343,7 +347,7 @@ export default function Form() {
             <h1 className="text-2xl font-bold text-gray-800  shadow-2xl">Payment</h1>
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-              onClick={() => { setPurchaseOrderForm(true); onNew() }}
+              onClick={() => { setFormReadOnly(false); setPurchaseOrderForm(true); onNew() }}
             >
               <FaPlus /> Create New
             </button>

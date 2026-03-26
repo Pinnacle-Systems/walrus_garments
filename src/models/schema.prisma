@@ -2815,6 +2815,8 @@ model Ledger {
   updatedAt         DateTime         @updatedAt
   CreditDebitNote   CreditDebitNote? @relation(fields: [creditDebitNoteId], references: [id], onDelete: Cascade)
   creditDebitNoteId Int?             @unique
+  SalesInvoice      SalesInvoice?    @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
+  salesInvoiceId    Int?             @unique
 }
 
 model ProcessDeliveryReturn {
@@ -5005,6 +5007,7 @@ model Quotation {
   discountType       String?
   discountValue      String?
   taxType            String?
+  minimumAdvancePayment String?
   remarks            String?
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
@@ -5224,6 +5227,7 @@ model SalesInvoice {
   Saleorder          Saleorder?          @relation(fields: [saleOrderId], references: [id])
   SalesInvoiceItems  SalesInvoiceItems[]
   SalesDelivery      SalesDelivery[]
+  Ledger             Ledger?
 }
 
 model SalesInvoiceItems {

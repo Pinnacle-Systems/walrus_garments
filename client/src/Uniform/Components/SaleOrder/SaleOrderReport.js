@@ -417,18 +417,17 @@ const SaleOrderReport = ({
                                 >
                                   <div className="py-1">
 
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      disabled={dataObj?.SalesInvoice?.length > 0}
-                                      title={dataObj?.SalesInvoice?.length > 0 ? "Already Converted to Sale Invoice" : "Convert to Sale Invoice"}
-                                      onClick={() => {
-                                        if (dataObj?.SalesInvoice?.length > 0) return;
-                                        onConvertToInvoice(dataObj);
-                                        setActiveActionMenuId(null);
-                                      }}
-                                    >
-                                      <span className="font-semibold text-lg">💳</span> Convert To Sale Invoice
-                                    </button>
+                                    {!(dataObj?.SalesInvoice?.length > 0) && (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          onConvertToInvoice(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">💳</span> Convert To Sale Invoice
+                                      </button>
+                                    )}
 
 
                                   </div>

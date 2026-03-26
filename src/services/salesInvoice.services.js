@@ -4,6 +4,46 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
+function calculateInvoiceNetAmount(invoiceItems = []) {
+    return (invoiceItems || []).reduce((acc, curr) => {
+        const price = parseFloat(curr?.price || 0);
+        const qty = parseFloat(curr?.qty || 0);
+        const taxPercent = parseFloat(curr?.taxPercent || 0);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const lineDiscountType = curr?.discountType;
+        const lineDiscountValue = parseFloat(curr?.discountValue || 0);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (lineDiscountType === "Percentage") {
+            discountedAmount = gross - (gross * lineDiscountValue) / 100;
+        } else if (lineDiscountType === "Flat") {
+            discountedAmount = gross - lineDiscountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+}
+
+function getSalesInvoiceLedgerData({ customerId, amount, docId }) {
+    return {
+        EntryType: "Sales",
+        LedgerType: "Customer",
+        creditOrDebit: "Debit",
+        partyId: parseInt(customerId),
+        amount,
+        partyBillNo: docId,
+        partyBillDate: new Date(),
+    };
+}
+
 
 
 
@@ -50,6 +90,7 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
         },
         include: {
+            SalesInvoiceItems: true,
             Party: {
                 select: {
                     name: true,
@@ -72,6 +113,11 @@ async function get(req) {
                     docId: true
                 }
             },
+            Saleorder: {
+                select: {
+                    quotationId: true,
+                }
+            },
             _count: {
                 select: {
                     SalesDelivery: true,
@@ -83,9 +129,33 @@ async function get(req) {
         }
     });
 
+    const result = await Promise.all(
+        data.map(async (item) => {
+            const paymentData = await prisma.payment.findMany({
+                where: {
+                    transactionType: "SALESINVOICE",
+                    transactionId: item.id,
+                },
+            });
 
+            const advancePaymentData = item?.Saleorder?.quotationId
+                ? await prisma.payment.findMany({
+                    where: {
+                        transactionType: "QUOTATION",
+                        transactionId: item.Saleorder.quotationId,
+                    },
+                })
+                : [];
 
-    return { statusCode: 0, data };
+            return {
+                ...item,
+                paymentData,
+                advancePaymentData,
+            };
+        })
+    );
+
+    return { statusCode: 0, data: result };
 }
 
 
@@ -96,11 +166,41 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            SalesInvoiceItems: true
+            SalesInvoiceItems: true,
+            Saleorder: {
+                select: {
+                    docId: true,
+                    quotationId: true,
+                    Quotation: {
+                        select: {
+                            id: true,
+                        }
+                    }
+                }
+            }
         }
     })
     if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+
+    let saleOrderWithQuotationPayments = data?.Saleorder;
+    if (data?.Saleorder?.Quotation?.id) {
+        const paymentData = await prisma.payment.findMany({
+            where: {
+                transactionType: "QUOTATION",
+                transactionId: data.Saleorder.Quotation.id,
+            },
+        });
+
+        saleOrderWithQuotationPayments = {
+            ...data.Saleorder,
+            Quotation: {
+                ...data.Saleorder.Quotation,
+                paymentData,
+            }
+        };
+    }
+
+    return { statusCode: 0, data: { ...data, Saleorder: saleOrderWithQuotationPayments, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
@@ -129,6 +229,7 @@ async function create(body) {
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+    const netAmount = calculateInvoiceNetAmount(invoiceItems);
 
 
     const data = await prisma.salesInvoice.create(
@@ -156,7 +257,14 @@ async function create(body) {
                             return newItem
                         })
                     } : undefined
-                }
+                },
+                Ledger: customerId ? {
+                    create: getSalesInvoiceLedgerData({
+                        customerId,
+                        amount: netAmount,
+                        docId,
+                    })
+                } : undefined
             }
         }
     )
@@ -226,7 +334,8 @@ async function update(id, body) {
             id: parseInt(id)
         },
         include: {
-            SalesInvoiceItems: true
+            SalesInvoiceItems: true,
+            Ledger: true,
         }
     })
     if (!dataFound) return NoRecordFound("Sale Order");
@@ -234,6 +343,7 @@ async function update(id, body) {
     let oldItemIds = dataFound?.SalesInvoiceItems.map(item => parseInt(item.id))
     let currentItemIds = invoiceItems.filter(i => i?.id)?.map(item => parseInt(item.id))
     let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
+    const netAmount = calculateInvoiceNetAmount(invoiceItems);
 
     let salesInvoiceData;
 
@@ -256,6 +366,20 @@ async function update(id, body) {
                 customerId: customerId ? parseInt(customerId) : undefined,
 
                 branchId: branchId ? parseInt(branchId) : undefined,
+                Ledger: customerId ? {
+                    upsert: {
+                        create: getSalesInvoiceLedgerData({
+                            customerId,
+                            amount: netAmount,
+                            docId: dataFound.docId,
+                        }),
+                        update: getSalesInvoiceLedgerData({
+                            customerId,
+                            amount: netAmount,
+                            docId: dataFound.docId,
+                        }),
+                    }
+                } : undefined,
             },
         })
 

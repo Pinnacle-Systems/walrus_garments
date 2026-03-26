@@ -30,6 +30,56 @@ const QuotationPrintFormat = ({
   rowActions = true,
 }) => {
 
+  const calculateQuotationNetAmount = (quotationItems = []) => {
+    return quotationItems.reduce((acc, curr) => {
+      const price = parseFloat(curr?.price || 0);
+      const qty = parseFloat(curr?.qty || 0);
+      const taxPercent = parseFloat(curr?.taxPercent || 0);
+      const taxMethod = curr?.taxMethod || "Inclusive";
+      const discountType = curr?.discountType;
+      const discountValue = parseFloat(curr?.discountValue || 0);
+
+      const gross = price * qty;
+      let discountedAmount = gross;
+
+      if (discountType === "Percentage") {
+        discountedAmount = gross - (gross * discountValue) / 100;
+      } else if (discountType === "Flat") {
+        discountedAmount = gross - discountValue;
+      }
+
+      discountedAmount = Math.max(0, discountedAmount);
+
+      if (taxMethod === "Inclusive" && taxPercent > 0) {
+        return acc + discountedAmount;
+      }
+
+      return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+  };
+
+  const getPaidAmount = (paymentData = []) => {
+    return paymentData.reduce(
+      (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+      0
+    );
+  };
+
+  const getRequiredAdvanceAmount = (dataObj) => {
+    const minimumAdvanceAmount = parseFloat(dataObj?.minimumAdvancePayment || 0);
+    if (minimumAdvanceAmount > 0) {
+      return minimumAdvanceAmount;
+    }
+
+    return calculateQuotationNetAmount(dataObj?.QuotationItems) * 0.25;
+  };
+
+  const shouldShowAdvanceReceipt = (dataObj) => {
+    const paidAmount = getPaidAmount(dataObj?.paymentData);
+    const requiredAdvanceAmount = getRequiredAdvanceAmount(dataObj);
+    return paidAmount < requiredAdvanceAmount;
+  };
+
 
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
@@ -405,20 +455,7 @@ const QuotationPrintFormat = ({
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="py-1">
-                                    {dataObj.paymentData?.length > 0 ? (
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={dataObj?.Saleorder?.length > 0}
-                                        title={dataObj?.Saleorder?.length > 0 ? "Already Converted to Sale Order" : "Convert to Sale Order"}
-                                        onClick={() => {
-                                          if (dataObj?.Saleorder?.length > 0) return;
-                                          onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
-                                          setActiveActionMenuId(null);
-                                        }}
-                                      >
-                                        <span className="font-semibold text-lg">📦</span> Convert to Sale Order
-                                      </button>
-                                    ) : (
+                                    {shouldShowAdvanceReceipt(dataObj) ? (
                                       <button
                                         className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
                                         onClick={() => {
@@ -426,9 +463,19 @@ const QuotationPrintFormat = ({
                                           setActiveActionMenuId(null);
                                         }}
                                       >
-                                        <span className="font-semibold text-lg">💳</span> Make Payment
+                                        <span className="font-semibold text-lg">💳</span> Advance Receipt
                                       </button>
-                                    )}
+                                    ) : !(dataObj?.Saleorder?.length > 0) ? (
+                                      <button
+                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
+                                        onClick={() => {
+                                          onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                      >
+                                        <span className="font-semibold text-lg">📦</span> Convert to Sale Order
+                                      </button>
+                                    ) : null}
 
                                   </div>
                                 </div>
