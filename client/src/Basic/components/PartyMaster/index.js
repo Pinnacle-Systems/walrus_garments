@@ -608,7 +608,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
     try {
       let deldata = await removeData(id).unwrap();
       if (deldata?.statusCode == 1) {
-        toast.error(deldata?.message);
+        // toast.error(deldata?.message);
+        Swal.fire({
+          icon: 'error',
+          text: deldata?.message,
+        });
         return;
       }
       dispatch({

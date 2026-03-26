@@ -32,11 +32,12 @@ async function get(req) {
             PartyContactDetails: true,
             _count: {
                 select: {
-                    Order: true,
-                    PoSupplier: true,
-                    PurchaseCancel: true,
                     DirectInwardOrReturn: true,
-                    DirectReturnOrPoReturn: true
+                    DirectReturnOrPoReturn: true,
+                    Quotation: true,
+                    Saleorder: true,
+                    SalesDelivery: true,
+                    SalesReturn: true
 
                 }
             }

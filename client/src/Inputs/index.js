@@ -2651,67 +2651,173 @@ export const DropdownInputNew = forwardRef(({
   width = "full",
   country,
   openOnFocus = false,
-  show   // new prop
+  show,
+  searchable = false,
 }, ref) => {
 
-
-  const handleOnChange = (e) => {
-    setValue(e.target.value);
-  };
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef(null);
+  const searchRef = useRef(null);
 
   const isDisabled = readOnly || disabled;
+
+  // Close on outside click (searchable mode)
+  useEffect(() => {
+    if (!searchable) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [searchable]);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (ref?.current && openOnFocus) {
       ref.current.focus();
-
     }
   }, [openOnFocus]);
 
+  // Native select (non-searchable)
+  if (!searchable) {
+    const handleOnChange = (e) => {
+      setValue(e.target.value);
+    };
+    return (
+      <div className={`mb-1 ${width}`}>
+        {name && (
+          <label className="block text-xs font-bold text-slate-700 mb-1">
+            {required ? <RequiredLabel name={name} /> : name}
+          </label>
+        )}
+        <select
+          ref={ref}
+          onBlur={onBlur}
+          autoFocus={autoFocus}
+          tabIndex={tabIndex ?? undefined}
+          defaultValue={defaultValue}
+          required={required}
+          className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+            ${className}`}
+          value={value}
+          onChange={(e) => {
+            beforeChange();
+            handleOnChange(e);
+          }}
+          onFocus={(e) => {
+            if (openOnFocus) {
+              e.target.click();
+            }
+          }}
+          disabled={isDisabled}
+        >
+          <option value="" hidden={!clear} className="text-gray-800">
+            Select
+          </option>
+          {options?.map((option, index) => (
+            <option
+              key={index}
+              value={option.value}
+              className="text-xs py-1 text-gray-800"
+            >
+              {option.show}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  // Searchable custom dropdown
+  const selectedLabel = options?.find((o) => String(o.value) === String(value))?.show || "";
+  const filtered = (options || []).filter((o) =>
+    String(o.show).toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (optionValue) => {
+    beforeChange();
+    setValue(optionValue);
+    setIsOpen(false);
+    setSearch("");
+    if (onBlur) onBlur();
+  };
 
   return (
-    <div className={`mb-1 ${width}`}>
+    <div className={`mb-1 ${width} relative`} ref={containerRef}>
       {name && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
-      <select
-        ref={ref}
-        onBlur={onBlur}
-        autoFocus={autoFocus}
-        tabIndex={tabIndex ?? undefined}
-        defaultValue={defaultValue}
-        required={required}
-        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
-          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
-          ${className}`}
-        value={value}
-        onChange={(e) => {
-          beforeChange();
-          handleOnChange(e);
-        }}
-        onFocus={(e) => {
-          if (openOnFocus) {
-            e.target.click();
-          }
-        }}
+      <button
+        type="button"
         disabled={isDisabled}
+        tabIndex={tabIndex ?? undefined}
+        onClick={() => { if (!isDisabled) setIsOpen((o) => !o); }}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-left
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm flex justify-between items-center
+          ${isDisabled ? "bg-slate-100 cursor-not-allowed" : "bg-white cursor-pointer"}
+          ${className}`}
       >
-        <option value="" hidden={!clear} className="text-gray-800">
-          Select
-        </option>
-        {options?.map((option, index) => (
-          <option
-            key={index}
-            value={option.value}
-            className="text-xs py-1 text-gray-800"
-          >
-            {option.show}
-          </option>
-        ))}
-      </select>
+        <span className={selectedLabel ? "text-gray-800" : "text-gray-400"}>
+          {selectedLabel || "Select"}
+        </span>
+        <svg className={`w-3 h-3 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className="p-1.5 border-b border-gray-200">
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <ul className="max-h-48 overflow-y-auto py-1">
+            {clear && (
+              <li
+                onClick={() => handleSelect("")}
+                className="px-3 py-1.5 text-xs text-gray-400 hover:bg-blue-50 cursor-pointer"
+              >
+                Select
+              </li>
+            )}
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-xs text-gray-400 text-center">No results</li>
+            ) : (
+              filtered.map((option, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleSelect(option.value)}
+                  className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-blue-50
+                    ${String(option.value) === String(value) ? "bg-blue-100 font-semibold text-blue-700" : "text-gray-800"}`}
+                >
+                  {option.show}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 });

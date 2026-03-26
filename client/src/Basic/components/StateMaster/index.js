@@ -7,7 +7,7 @@ import {
   useUpdateStateMutation,
   useDeleteStateMutation,
 } from "../../../redux/services/StateMasterService";
-import { useGetCountriesQuery } from "../../../redux/services/CountryMasterService";
+import { useGetCountriesQuery, useAddCountryMutation } from "../../../redux/services/CountryMasterService";
 
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
@@ -39,6 +39,10 @@ export default function Form() {
   const [country, setCountry] = useState("");
   const [gstNo, setGstNo] = useState("");
 
+  const [showCreateCountry, setShowCreateCountry] = useState(false);
+  const [newCountryName, setNewCountryName] = useState("");
+  const [newCountryCode, setNewCountryCode] = useState("");
+
   const [searchValue, setSearchValue] = useState("");
   const nameRef = useRef(null);
   const formRef = useRef(null);
@@ -69,6 +73,7 @@ export default function Form() {
   const [addData] = useAddStateMutation();
   const [updateData] = useUpdateStateMutation();
   const [removeData] = useDeleteStateMutation();
+  const [addCountry, { isLoading: isAddingCountry }] = useAddCountryMutation();
 
   const syncFormWithDb = useCallback((data) => {
 
@@ -204,6 +209,16 @@ export default function Form() {
         });
         setForm(false);
       }
+    }
+  };
+
+  const handleCountryChange = (val) => {
+    if (val === "__create_country__") {
+      setNewCountryName("");
+      setNewCountryCode("");
+      setShowCreateCountry(true);
+    } else {
+      setCountry(val);
     }
   };
 
@@ -404,17 +419,20 @@ export default function Form() {
                       <div className="">
                         <DropdownInputNew
                           name="Country"
-                          options={dropDownListObject(
-                            id
-                              ? countriesList?.data
-                              : countriesList?.data?.filter(
-                                (item) => item?.active
-                              ),
-                            "name",
-                            "id"
-                          )}
+                          options={[
+                            { show: "+ Create Country", value: "__create_country__" },
+                            ...dropDownListObject(
+                              id
+                                ? countriesList?.data
+                                : countriesList?.data?.filter(
+                                  (item) => item?.active
+                                ),
+                              "name",
+                              "id"
+                            )
+                          ]}
                           value={country}
-                          setValue={setCountry}
+                          setValue={handleCountryChange}
                           required={true}
                           readOnly={readOnly}
                           className={`w-[150px]`}
@@ -465,6 +483,60 @@ export default function Form() {
           </Modal>
         )}
       </div>
+
+      {showCreateCountry && (
+        <Modal
+          isOpen={showCreateCountry}
+          widthClass={"w-[30%] h-[300px]"}
+          onClose={() => setShowCreateCountry(false)}
+        >
+          <div className="h-full flex flex-col bg-gray-200">
+            <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center bg-white">
+              <h2 className="text-lg font-semibold text-gray-800">Create Country</h2>
+              <button
+                onClick={async () => {
+                  if (!newCountryName || !newCountryCode) {
+                    return toast.error("Name and Code are required");
+                  }
+                  try {
+                    const res = await addCountry({
+                      name: newCountryName.toUpperCase(),
+                      code: newCountryCode.toUpperCase(),
+                      active: true,
+                      companyId: params.companyId,
+                    }).unwrap();
+                    setCountry(res.data.id);
+                    setShowCreateCountry(false);
+                    toast.success("Country created successfully");
+                  } catch (err) {
+                    toast.error(err.data?.message || "Failed to create country");
+                  }
+                }}
+                disabled={isAddingCountry}
+                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+              >
+                <Check size={14} />
+                Save
+              </button>
+            </div>
+            <div className="p-4 flex flex-col gap-3 bg-white mx-3 mt-3 rounded">
+              <TextInputNew1
+                name="Country Name"
+                value={newCountryName}
+                setValue={setNewCountryName}
+                required={true}
+                autoFocus
+              />
+              <TextInputNew1
+                name="Code"
+                value={newCountryCode}
+                setValue={setNewCountryCode}
+                required={true}
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
     </div >
   )
 }
