@@ -104,9 +104,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     const [paymentType, setPaymentType] = useState(
         initialTransactionType === "QUOTATION" ? "ADVANCE" : "INVOICE"
     );
-    const [lockPrefilledTransactionFields, setLockPrefilledTransactionFields] = useState(
-        Boolean(initialTransactionType === "QUOTATION" && initialTransactionId)
-    );
+    const [lockPrefilledTransactionFields, setLockPrefilledTransactionFields] = useState(false);
+    const [linkedPaymentOverrideEnabled, setLinkedPaymentOverrideEnabled] = useState(false);
     const [paidAmount, setPaidAmount] = useState('');
     const [discount, setDiscount] = useState('')
     const [balanceAmount, setBalanceAmount] = useState('');
@@ -125,6 +124,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
 
     const childRecord = useRef(0);
+    const hasLinkedTransaction = Boolean(transactionType && transactionId);
+    const areLinkedFieldsLocked = readOnly || lockPrefilledTransactionFields;
 
 
     const dispatch = useDispatch()
@@ -175,6 +176,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
             setCvv(data?.cvv ? moment.utc(data?.cvv).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"))
             setPaymentFlow(data?.paymentFlow ? data?.paymentFlow : "Receipt")
             childRecord.current = data?.childRecord ? data?.childRecord : 0;
+            setLinkedPaymentOverrideEnabled(false);
+            setLockPrefilledTransactionFields(Boolean(data?.transactionType && data?.transactionId));
 
         }, [id])
 
@@ -190,13 +193,25 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     }, [id, initialReadOnly]);
 
     useEffect(() => {
-        if (!id && initialTransactionType === "QUOTATION" && initialTransactionId) {
+        if (!id && initialTransactionType && initialTransactionId) {
             setLockPrefilledTransactionFields(true);
-            setPaymentType("ADVANCE");
+            if (initialTransactionType === "QUOTATION") {
+                setPaymentType("ADVANCE");
+            }
+            setLinkedPaymentOverrideEnabled(false);
         } else if (!id && !initialTransactionType && !initialTransactionId) {
             setLockPrefilledTransactionFields(false);
+            setLinkedPaymentOverrideEnabled(false);
         }
     }, [id, initialTransactionType, initialTransactionId]);
+
+    const enableLinkedPaymentOverride = () => {
+        if (!window.confirm("Unlock the protected fields for this linked payment so you can make changes?")) {
+            return;
+        }
+        setLockPrefilledTransactionFields(false);
+        setLinkedPaymentOverrideEnabled(true);
+    };
 
 
     useEffect(() => {
@@ -354,6 +369,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         setTotalPayAmount('');
         setSupplierId("");
         setLockPrefilledTransactionFields(false);
+        setLinkedPaymentOverrideEnabled(false);
         setPaymentType("INVOICE");
         setPaymentFlow("Receipt");
         setTransactionType("");
@@ -587,8 +603,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
 
                     </div>
 
-                    <div className="w-full p-11 mt-3 bg-gray-100 border border-gray-200">
-                        <div className="grid grid-cols-6 gap-6">
+                    <div className="w-full px-11 pt-6 pb-4 mt-3 bg-gray-100 border border-gray-200">
+                        <div className="grid grid-cols-6 gap-x-6 gap-y-3">
                             <div className="">
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Payment No</label>
                                 <input
@@ -614,6 +630,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 <select
                                     value={paymentFlow}
                                     onChange={(e) => setPaymentFlow(e.target.value)}
+                                    disabled={areLinkedFieldsLocked}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a payment Flow</option>
@@ -650,13 +667,13 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 <div className="col-span-3 overflow-visible">
                                     <ReusableSearchableInputNewCustomerwithBranches
                                         label={`${paymentFlow == "Receipt" ? "Customer" : "Supplier"}`}
-                                        component={`${paymentFlow == "Receipt" ? "CustomerMaster" : "SupplierMaster"}`}
+                                        component="PartyMaster"
                                         placeholder={`Search ${paymentFlow == "Receipt" ? "Customer" : "Supplier"} Name...`}
                                         optionList={supplierData}
                                         setSearchTerm={(value) => setSupplierId(value)}
                                         searchTerm={supplierId}
                                         show={`${paymentFlow == "Receipt" ? "isClient" : "isSupplier"}`}
-                                        required disabled={id}
+                                        required disabled={areLinkedFieldsLocked}
                                     // ref={partyRef}
                                     />
                                 </div>
@@ -668,7 +685,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 <select
                                     value={paymentType}
                                     onChange={(e) => setPaymentType(e.target.value)}
-                                    disabled={lockPrefilledTransactionFields}
+                                    disabled={areLinkedFieldsLocked}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a payment type</option>
@@ -686,7 +703,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 <select
                                     value={transactionType}
                                     onChange={(e) => setTransactionType(e.target.value)}
-                                    disabled={lockPrefilledTransactionFields}
+                                    disabled={areLinkedFieldsLocked}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
                                     <option value="" disabled>Select a transaction</option>
@@ -705,7 +722,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                     className="block text-gray-600 font-medium mb-2"
                                     options={getDocIdOptions()}
                                     value={transactionId}
-                                    readOnly={lockPrefilledTransactionFields}
+                                    readOnly={areLinkedFieldsLocked}
                                     setValue={(val) => {
                                         setTransactionId(val);
                                         const options = getDocIdOptions();
@@ -792,6 +809,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 </span>
                             </p>
                         </div>
+
                     </div>
 
                     {transactionId && (
@@ -880,15 +898,35 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                         </div>
 
                         {/* Right Buttons */}
-                        <div className="flex gap-2 flex-wrap mr-2">
+                        <div className="flex flex-col items-start gap-1 mr-2 md:items-end">
+                            <div className="flex gap-2 flex-wrap">
+                                {hasLinkedTransaction && !readOnly && (
+                                    <button
+                                        type="button"
+                                        onClick={enableLinkedPaymentOverride}
+                                        disabled={!areLinkedFieldsLocked}
+                                        className={`rounded-md px-4 py-1 text-sm font-semibold text-white flex items-center ${areLinkedFieldsLocked
+                                            ? "bg-red-600 hover:bg-red-700"
+                                            : "bg-red-300 cursor-not-allowed"
+                                            }`}
+                                    >
+                                        Edit Protected Fields
+                                    </button>
+                                )}
 
-                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                                onClick={() => setReadOnly(false)}
-                            >
-                                <FiEdit2 className="w-4 h-4 mr-2" />
-                                Edit
-                            </button>
+                                <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                                    onClick={() => setReadOnly(false)}
+                                >
+                                    <FiEdit2 className="w-4 h-4 mr-2" />
+                                    Edit
+                                </button>
+                            </div>
 
+                            {linkedPaymentOverrideEnabled && !readOnly && (
+                                <div className="text-[11px] text-amber-700 whitespace-nowrap md:text-right">
+                                    Protected fields are unlocked for editing. Save after updating the required values.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
