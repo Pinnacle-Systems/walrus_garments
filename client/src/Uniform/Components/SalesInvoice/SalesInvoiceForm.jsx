@@ -92,16 +92,16 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     isLoading: isSingleLoading,
   } = useGetSalesInvoiceByIdQuery(id, { skip: !id });
   const saleOrderDocId = singleData?.data?.Saleorder?.docId || sourceSaleOrderDocId || "";
-  const advanceReceivedAmount = id
+  const paymentReceivedAmount = id
     ? (singleData?.data?.Saleorder?.Quotation?.paymentData || []).reduce(
+      (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+      0
+    ) + (singleData?.data?.paymentData || []).reduce(
       (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
       0
     )
     : sourceAdvanceReceived;
-  const hasSourceEstimate = id
-    ? Boolean(singleData?.data?.Saleorder?.Quotation?.paymentData)
-    : Boolean(sourceSaleOrderDocId);
-  const shouldShowAdvanceReceived = hasSourceEstimate && parseFloat(advanceReceivedAmount || 0) > 0;
+  const shouldShowPaymentReceived = parseFloat(paymentReceivedAmount || 0) > 0;
 
   const [addData] = useAddSalesInvoiceMutation();
   const [updateData] = useUpdateSalesInvoiceMutation();
@@ -568,10 +568,10 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
               <span className="text-slate-600">Net Amount</span>
               <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
             </div>
-            {shouldShowAdvanceReceived && (
+            {shouldShowPaymentReceived && (
               <div className="flex justify-between py-1 text-sm">
-                <span className="text-slate-600">Advance Received</span>
-                <span className="font-medium">Rs.{parseFloat(advanceReceivedAmount || 0).toFixed(2)}</span>
+                <span className="text-slate-600">Payment Received</span>
+                <span className="font-medium">Rs.{parseFloat(paymentReceivedAmount || 0).toFixed(2)}</span>
               </div>
             )}
 

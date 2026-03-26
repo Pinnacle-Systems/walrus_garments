@@ -182,6 +182,13 @@ async function getOne(id) {
     })
     if (!data) return NoRecordFound("size");
 
+    const salesInvoicePaymentData = await prisma.payment.findMany({
+        where: {
+            transactionType: "SALESINVOICE",
+            transactionId: parseInt(id),
+        },
+    });
+
     let saleOrderWithQuotationPayments = data?.Saleorder;
     if (data?.Saleorder?.Quotation?.id) {
         const paymentData = await prisma.payment.findMany({
@@ -200,7 +207,15 @@ async function getOne(id) {
         };
     }
 
-    return { statusCode: 0, data: { ...data, Saleorder: saleOrderWithQuotationPayments, ...{ childRecord } } };
+    return {
+        statusCode: 0,
+        data: {
+            ...data,
+            paymentData: salesInvoicePaymentData,
+            Saleorder: saleOrderWithQuotationPayments,
+            ...{ childRecord }
+        }
+    };
 }
 
 async function getSearch(req) {
