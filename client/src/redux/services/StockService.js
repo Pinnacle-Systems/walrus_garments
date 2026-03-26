@@ -85,6 +85,19 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
+    getUnifiedStockWithLegacyByBarcode: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/unified-with-legacy-barcode",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
     getMinStockAlertReport: builder.query({
       query: ({ params }) => {
         return {
@@ -163,6 +176,8 @@ export const {
   useLazyGetUnifiedStockReportQuery,
   useGetUnifiedStockByBarcodeQuery,
   useLazyGetUnifiedStockByBarcodeQuery,
+  useGetUnifiedStockWithLegacyByBarcodeQuery,
+  useLazyGetUnifiedStockWithLegacyByBarcodeQuery,
 
 } = stockApi;
 

@@ -8,7 +8,7 @@ import {
     _getOneAccessory, getStockReport as _getStockReport,
     getUnifiedStock as _getUnifiedStock,
     getUnifiedStockReport as _getUnifiedStockReport,
-    getUnifiedStockByBarcode as _getUnifiedStockByBarcode
+    getUnifiedStockWithLegacyByBarcode as _getUnifiedStockWithLegacyByBarcode
 } from '../services/stock.service.js';
 
 async function get(req, res, next) {
@@ -199,9 +199,9 @@ export async function getUnifiedStockReport(req, res, next) {
     }
 }
 
-export async function getUnifiedStockByBarcode(req, res, next) {
+export async function getUnifiedStockWithLegacyByBarcode(req, res, next) {
     try {
-        res.json(await _getUnifiedStockByBarcode(req));
+        res.json(await _getUnifiedStockWithLegacyByBarcode(req));
     } catch (err) {
         console.error(`Error `, err.message);
     }

@@ -840,148 +840,80 @@ export async function getUnifiedStockReport(req) {
     }
 }
 
-export async function getUnifiedStockByBarcode(req) {
-    const { barcode, storeId, branchId } = req.query;
+export async function getUnifiedStockWithLegacyByBarcode(req) {
+    const { barcode, branchId } = req.query;
 
     if (!barcode) {
         return { statusCode: 1, message: "Barcode is required" };
     }
 
-    let isLegacy = false;
-
-
-    if (storeId) {
-        const location = await prisma.location.findUnique({
-            where: { id: Number(storeId) }
-        });
-
-        if (
-            location &&
-            (location.storeName?.toLowerCase().includes("old"))
-        ) {
-            isLegacy = true;
-        }
-    }
-
-    // ================= LEGACY =================
-    if (isLegacy) {
-
-        const records = await prisma.legacyStock.findMany({
-            where: {
-                barcode: String(barcode),
-                storeId: storeId ? Number(storeId) : undefined,
-                branchId: branchId ? Number(branchId) : undefined
+    // 1. Fetch from regular Stock
+    const stockRecords = await prisma.stock.findMany({
+        where: {
+            barcode: String(barcode),
+            branchId: branchId ? Number(branchId) : undefined
+        },
+        include: {
+            Item: {
+                include: { Hsn: true }
             },
-            include: {
-                Item: true,
-                Size: true,
-                Color: true,
-                Uom: true
-            }
-        });
-
-        if (!records.length) {
-            return {
-                statusCode: 1,
-                message: "No stock found for this barcode in Old Warehouse"
-            };
+            Size: true,
+            Color: true,
+            Uom: true
         }
+    });
 
-        // ✅ SUM qty based on barcode
-        const totalQty = records.reduce((sum, r) => sum + (r.qty || 0), 0);
-
-        const first = records[0]; // for display info
-
-        return {
-            statusCode: 0,
-            data: {
-                itemId: first.itemId,
-                barcode: first.barcode,
-                sizeId: first.sizeId,
-                colorId: first.colorId,
-                uomId: first.uomId,
-                item_name: first.Item?.name,
-                size: first.Size?.name,
-                color: first.Color?.name,
-                uom: first.Uom?.name,
-                price: first.price,
-                stockQty: totalQty
-            }
-        };
-    }
-
-    // ================= NORMAL STOCK =================
-    else {
-        console.log(isLegacy, "isLegacy")
-
-        const records = await prisma.stock.findMany({
-            where: {
-                barcode: String(barcode),
-                storeId: storeId ? Number(storeId) : undefined,
-                branchId: branchId ? Number(branchId) : undefined
+    // 2. Fetch from LegacyStock
+    const legacyRecords = await prisma.legacyStock.findMany({
+        where: {
+            barcode: String(barcode),
+            branchId: branchId ? Number(branchId) : undefined
+        },
+        include: {
+            Item: {
+                include: { Hsn: true }
             },
-            include: {
-                Item: true,
-                Size: true,
-                Color: true,
-                Uom: true
-            }
-        });
-
-        if (!records.length) {
-            return { statusCode: 1, message: "No stock found for this barcode" };
+            Size: true,
+            Color: true,
+            Uom: true
         }
-        const totalQty = records.reduce((sum, r) => sum + (r.qty || 0), 0);
+    });
 
-
-        const first = records[0];
-
-        return {
-            statusCode: 0,
-            data: {
-                itemId: first.itemId,
-                barcode: first.barcode,
-                sizeId: first.sizeId,
-                colorId: first.colorId,
-                uomId: first.uomId,
-                sectionId: first.sectionId,
-                item_name: first.Item?.name,
-                size: first.Size?.name,
-                color: first.Color?.name,
-                uom: first.Uom?.name,
-                price: first.price,
-                stockQty: totalQty
-            }
-        };
+    if (!stockRecords.length && !legacyRecords.length) {
+        return { statusCode: 1, message: "No stock found in regular or legacy tables" };
     }
+    console.log(stockRecords, "stockRecords")
 
+    // Calculate total quantities
+    const stockQty = stockRecords.reduce((sum, r) => sum + (r.qty || 0), 0);
+    const legacyQty = legacyRecords.reduce((sum, r) => sum + (r.qty || 0), 0);
+    const totalQty = stockQty + legacyQty;
 
+    // Use metadata from stockRecords if available, otherwise fallback to legacyRecords
+    const first = stockRecords.length > 0 ? stockRecords[0] : legacyRecords[0];
+
+    return {
+        statusCode: 0,
+        data: {
+            ...first,
+            itemId: first.itemId,
+            sizeId: first.sizeId,
+            colorId: first.colorId,
+            uomId: first.uomId,
+            barcode: first.barcode,
+            item_name: first.Item?.name,
+            size: first.Size?.name,
+            color: first.Color?.name,
+            uom: first.Uom?.name,
+            price: first.price,
+            stockQty: totalQty,
+            source: stockRecords.length > 0 ? (legacyRecords.length > 0 ? 'combined' : 'stock') : 'legacy'
+        }
+    };
 }
 
 
-async function getMinStockData(itemPriceListData) {
-    let directItemsData = [];
-    for (let i = 0; i < itemPriceListData?.length; i++) {
 
-        let directItem = itemPriceListData[i]
-
-        if (directItem?.minStockQty) {
-            return minStockQty
-        } else {
-            let sql =
-                ` select * from MinimumStockQty where    `
-
-
-            // console.log(sql, "sql")
-
-            data = await prisma.$queryRawUnsafe(sql);
-        }
-
-
-
-
-    }
-}
 
 
 export async function getMinStockAlertReport(req) {

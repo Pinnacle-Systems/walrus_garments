@@ -49,7 +49,13 @@ async function get(req) {
         where: {
             active: active ? Boolean(active) : undefined,
         },
-
+        include: {
+            Party: {
+                select: {
+                    name: true
+                }
+            }
+        },
         orderBy: {
             id: "desc"
         }
@@ -94,45 +100,76 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 
+
 async function create(body) {
-    const { customerId, discountType, discountValue, posItems, finYearId, branchId, saleOrderId } = await body
+    try {
+        const { customerId, posItems, finYearId, branchId, saleOrderId } = await body;
 
+        let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+        const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
-    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+        const result = await prisma.$transaction(async (tx) => {
 
-
-    const data = await prisma.pos.create(
-        {
-            data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
-                // discountType: discountType ? discountType : "",
-                // discountValue: discountValue ? discountValue : "",
-                // branchId: branchId ? parseInt(branchId) : "",
-                saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
-                docId: docId,
-                PosItems: {
-                    createMany: posItems?.length > 0 ? {
-                        data: posItems?.map((temp) => {
-                            let newItem = {}
-                            newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
-                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
-                            newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
-                            newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
-                            newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? String(temp["qty"]) : "";
-                            newItem["price"] = temp["price"] ? String(temp["price"]) : "";
-
-
-                            return newItem
-                        })
-                    } : undefined
+            // 1. Create the Main POS Record
+            const posRecord = await tx.pos.create({
+                data: {
+                    customerId: customerId ? parseInt(customerId) : undefined,
+                    // saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
+                    docId: docId,
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    createdById: body.userId ? parseInt(body.userId) : undefined,
+                    // totalAmount: parseFloat(body.netAmount || 0),
+                    // taxAmount: parseFloat(body.taxAmount || 0),
+                    // discountValue: parseFloat(body.discountValue || 0),
+                    // paidCash: parseFloat(body.paidCash || 0),
+                    // paidUPI: parseFloat(body.paidUPI || 0),
+                    // paidCard: parseFloat(body.paidCard || 0),
+                    // receivedAmount: parseFloat(body.receivedAmount || 0),
+                    // balanceReturn: parseFloat(body.balanceReturn || 0),
+                    // paymentMethod: body.paymentMethod,
+                    PosItems: {
+                        createMany: {
+                            data: posItems.map((item) => ({
+                                itemId: parseInt(item.itemId || item.id),
+                                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                                colorId: item.colorId ? parseInt(item.colorId) : null,
+                                uomId: item.uomId ? parseInt(item.uomId) : null,
+                                qty: String(item.qty),
+                                price: String(item.price),
+                            }))
+                        }
+                    }
                 }
-            }
-        }
-    )
-    return { statusCode: 0, data };
+            });
+
+            const stockEntries = posItems.map((item) => ({
+                itemId: parseInt(item.itemId || item.id),
+                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                colorId: item.colorId ? parseInt(item.colorId) : null,
+                uomId: item.uomId ? parseInt(item.uomId) : null,
+                qty: item.qty ? parseFloat(item.qty) : null,
+                price: item.price ? parseFloat(item.price) : null,
+                storeId: item.storeId ? parseInt(item.storeId) : null,
+                barcode: item.barcode,
+                branchId: parseInt(item.branchId || branchId),
+                inOrOut: "POS",
+                transactionId: posRecord.id,
+            }));
+
+            await tx.stock.createMany({
+                data: stockEntries
+            });
+
+            return posRecord;
+        });
+
+        return { statusCode: 0, data: result };
+
+    } catch (error) {
+        console.error("POS Creation Error:", error);
+        return { statusCode: 1, message: "Failed to process sale: " + error.message };
+    }
 }
 
 async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInward, storeId, branchId) {
