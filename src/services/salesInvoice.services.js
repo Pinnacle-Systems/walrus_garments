@@ -90,6 +90,7 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
         },
         include: {
+            SalesInvoiceItems: true,
             Party: {
                 select: {
                     name: true,
@@ -112,6 +113,11 @@ async function get(req) {
                     docId: true
                 }
             },
+            Saleorder: {
+                select: {
+                    quotationId: true,
+                }
+            },
             _count: {
                 select: {
                     SalesDelivery: true,
@@ -123,9 +129,33 @@ async function get(req) {
         }
     });
 
+    const result = await Promise.all(
+        data.map(async (item) => {
+            const paymentData = await prisma.payment.findMany({
+                where: {
+                    transactionType: "SALESINVOICE",
+                    transactionId: item.id,
+                },
+            });
 
+            const advancePaymentData = item?.Saleorder?.quotationId
+                ? await prisma.payment.findMany({
+                    where: {
+                        transactionType: "QUOTATION",
+                        transactionId: item.Saleorder.quotationId,
+                    },
+                })
+                : [];
 
-    return { statusCode: 0, data };
+            return {
+                ...item,
+                paymentData,
+                advancePaymentData,
+            };
+        })
+    );
+
+    return { statusCode: 0, data: result };
 }
 
 
@@ -140,12 +170,37 @@ async function getOne(id) {
             Saleorder: {
                 select: {
                     docId: true,
+                    quotationId: true,
+                    Quotation: {
+                        select: {
+                            id: true,
+                        }
+                    }
                 }
             }
         }
     })
     if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+
+    let saleOrderWithQuotationPayments = data?.Saleorder;
+    if (data?.Saleorder?.Quotation?.id) {
+        const paymentData = await prisma.payment.findMany({
+            where: {
+                transactionType: "QUOTATION",
+                transactionId: data.Saleorder.Quotation.id,
+            },
+        });
+
+        saleOrderWithQuotationPayments = {
+            ...data.Saleorder,
+            Quotation: {
+                ...data.Saleorder.Quotation,
+                paymentData,
+            }
+        };
+    }
+
+    return { statusCode: 0, data: { ...data, Saleorder: saleOrderWithQuotationPayments, ...{ childRecord } } };
 }
 
 async function getSearch(req) {

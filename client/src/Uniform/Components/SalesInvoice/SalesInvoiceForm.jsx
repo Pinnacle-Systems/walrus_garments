@@ -30,7 +30,7 @@ import { push } from "../../../redux/features/opentabs";
 
 const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
-  yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, termsData, invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, sourceAdvanceReceived = 0, termsData, invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -92,6 +92,16 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     isLoading: isSingleLoading,
   } = useGetSalesInvoiceByIdQuery(id, { skip: !id });
   const saleOrderDocId = singleData?.data?.Saleorder?.docId || sourceSaleOrderDocId || "";
+  const advanceReceivedAmount = id
+    ? (singleData?.data?.Saleorder?.Quotation?.paymentData || []).reduce(
+      (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+      0
+    )
+    : sourceAdvanceReceived;
+  const hasSourceEstimate = id
+    ? Boolean(singleData?.data?.Saleorder?.Quotation?.paymentData)
+    : Boolean(sourceSaleOrderDocId);
+  const shouldShowAdvanceReceived = hasSourceEstimate && parseFloat(advanceReceivedAmount || 0) > 0;
 
   const [addData] = useAddSalesInvoiceMutation();
   const [updateData] = useUpdateSalesInvoiceMutation();
@@ -112,7 +122,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
-    if (convertSaleOrderId || !id) return
+    if (convertSaleOrderId && !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -558,6 +568,12 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
               <span className="text-slate-600">Net Amount</span>
               <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
             </div>
+            {shouldShowAdvanceReceived && (
+              <div className="flex justify-between py-1 text-sm">
+                <span className="text-slate-600">Advance Received</span>
+                <span className="font-medium">Rs.{parseFloat(advanceReceivedAmount || 0).toFixed(2)}</span>
+              </div>
+            )}
 
 
           </div>

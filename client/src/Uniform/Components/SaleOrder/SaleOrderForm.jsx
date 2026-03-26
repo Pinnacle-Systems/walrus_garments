@@ -30,7 +30,7 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, termsData ,invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, termsData ,invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -76,6 +76,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     isLoading: isSingleLoading,
   } = useGetsaleOrderByIdQuery(id, { skip: !id });
   const estimateDocId = singleData?.data?.Quotation?.docId || sourceQuotationDocId || "";
+  const advanceReceivedAmount = id
+    ? (singleData?.data?.Quotation?.paymentData || []).reduce(
+      (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+      0
+    )
+    : sourceQuotationAdvanceReceived;
+  const shouldShowAdvanceReceived = Boolean(estimateDocId) && parseFloat(advanceReceivedAmount || 0) > 0;
 
   const [addData] = useAddsaleOrderMutation();
   const [updateData] = useUpdatesaleOrderMutation();
@@ -96,7 +103,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
     console.log(quoteId, "convertQuotationId")
-    if (quoteId || !id) return
+    if (quoteId && !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -558,6 +565,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               <span className="text-slate-600">Net Amount</span>
               <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
             </div>
+            {shouldShowAdvanceReceived && (
+              <div className="flex justify-between py-1 text-sm">
+                <span className="text-slate-600">Advance Received</span>
+                <span className="font-medium">Rs.{parseFloat(advanceReceivedAmount || 0).toFixed(2)}</span>
+              </div>
+            )}
 
 
           </div>

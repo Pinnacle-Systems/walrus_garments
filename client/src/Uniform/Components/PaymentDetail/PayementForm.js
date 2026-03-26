@@ -69,6 +69,24 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         return Math.max(0, quotationNetAmount - receivedAmount);
     };
 
+    const getSalesInvoiceOutstandingAmount = (salesInvoice) => {
+        if (!salesInvoice) return 0;
+
+        const salesInvoiceNetAmount = calculateQuotationNetAmount(salesInvoice?.SalesInvoiceItems);
+
+        const receivedAmount = (salesInvoice?.paymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const advanceReceivedAmount = (salesInvoice?.advancePaymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        return Math.max(0, salesInvoiceNetAmount - receivedAmount - advanceReceivedAmount);
+    };
+
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -429,6 +447,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
 
         if (transactionType === "QUOTATION") {
             setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+        } else if (transactionType === "SALESINVOICE") {
+            setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
         }
     }, [id, transactionId, transactionType, quotationList, salesInvoiceList]);
 

@@ -92,12 +92,29 @@ async function getOne(id) {
             Quotation: {
                 select: {
                     docId: true,
+                    id: true,
                 }
             }
         }
     })
     if (!data) return NoRecordFound("Sale Order");
-    return { statusCode: 0, data };
+
+    let quotationWithPayments = data?.Quotation;
+    if (data?.Quotation?.id) {
+        const paymentData = await prisma.payment.findMany({
+            where: {
+                transactionType: "QUOTATION",
+                transactionId: data.Quotation.id,
+            },
+        });
+
+        quotationWithPayments = {
+            ...data.Quotation,
+            paymentData,
+        };
+    }
+
+    return { statusCode: 0, data: { ...data, Quotation: quotationWithPayments } };
 }
 
 async function getSearch(req) {
