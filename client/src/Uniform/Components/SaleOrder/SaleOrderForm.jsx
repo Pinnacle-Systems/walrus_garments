@@ -148,7 +148,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    quoteId,
+    quoteId: quoteId || undefined,
     terms
   }
 
@@ -206,12 +206,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             onClose()
           }
 
-          if (quoteId) {
-            quoteId = null
-          }
-
-
-
         } else {
           toast.error(returnData?.message);
         }
@@ -231,15 +225,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const saveData = (nextProcess) => {
 
     let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
-    if (!data?.quoteId) {
-      Swal.fire({
-        title: "QuoteId Missing",
-        icon: "success",
-      });
-      return
-
-    }
-
     if (!validateData(data)) {
 
 

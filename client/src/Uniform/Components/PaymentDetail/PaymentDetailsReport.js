@@ -215,6 +215,10 @@ const PaymentFormReport = ({
                                         <div>Customer</div>
                                     </th>
 
+                                    <th className="w-40 px-3 font-medium text-[13px] text-gray-900 text-center">
+                                        <div>Against Doc No</div>
+                                    </th>
+
                                     <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
 
@@ -262,6 +266,10 @@ const PaymentFormReport = ({
                                         />
                                     </th>
 
+                                    <th className="w-40 px-1 font-medium text-[13px] text-gray-900 text-center">
+
+                                    </th>
+
                                     <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
                                     </th>
@@ -304,6 +312,7 @@ const PaymentFormReport = ({
 
 
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+                                            <td className="py-1.5 text-center">{dataObj?.refDocId || "-"}</td>
                                             {rowActions && (
                                                 <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                     <div className="flex">
