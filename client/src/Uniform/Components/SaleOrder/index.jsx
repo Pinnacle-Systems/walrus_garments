@@ -161,8 +161,16 @@ const SaleOrder = () => {
     const onNew = () => {
         setId("");
         setReadOnly(false);
-        setCustomerId("")
-        setPartyId('')
+        setDocId("New");
+        setDate(getDateFromDateTime(new Date()));
+        setCustomerId("");
+        setPayTermId("");
+        setLocationId("");
+        setStoreId("");
+        setDcNo("");
+        setDcDate("");
+        setSaleOrderItems([]);
+        setPartyId('');
     }
 
     return (
