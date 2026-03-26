@@ -1,6 +1,15 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
+function validateStandardPriceMethod(priceMethod, itemPriceList) {
+    if (priceMethod !== "STANDARD") return;
+
+    const standardItem = itemPriceList?.[0];
+    if (!standardItem?.barcode?.trim() || !standardItem?.sku?.trim() || !standardItem?.salesPrice?.trim()) {
+        throw new Error("Barcode, SKU, and Sales Price are required when price method is STANDARD");
+    }
+}
+
 async function get(req) {
     const { companyId, active } = req.query
     const data = await prisma.item.findMany({
@@ -103,6 +112,7 @@ async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active,
         sectionId, sectionType, subCategory, mainCategory
     } = body
+    validateStandardPriceMethod(priceMethod, itemPriceList);
     const data = await prisma.item.create({
         data: {
             styleId: styleId ? parseInt(styleId) : undefined,
@@ -289,6 +299,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 async function update(id, body) {
     const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields, mainCategory, subCategory } = body
 
+    validateStandardPriceMethod(priceMethod, itemPriceList);
 
 
     const dataFound = await prisma.item.findUnique({
