@@ -956,13 +956,15 @@ export async function getMinStockAlertReport(req) {
             IP.itemId as itemId,
             IP.sizeId as sizeId,
             IP.colorId as colorId,
-            IP.minStockQty as minQtyForallSizes,
             MS.minStockQty as minQtyForThatItem, 
             Ms.locationId,
 
             MS.id as minimumStockId
             from itemPriceList IP 
-            LEFT JOIN MinimumStockQty MS ON MS.itemPriceListId = IP.id `
+            INNER JOIN MinimumStockQty MS ON MS.itemPriceListId = IP.id
+            WHERE MS.locationId IS NOT NULL
+            AND MS.minStockQty IS NOT NULL
+            AND MS.minStockQty != '' `
 
 
     // console.log(sql, "sql")
@@ -979,33 +981,21 @@ export async function getMinStockAlertReport(req) {
 
     const result = await itemWiseStockMinQty.map(minItem => {
 
-        // console.log(minItem?.minQtyForallSizes ? true : false)
+        const totalQty = stockData
+            ?.filter(s =>
+                s.itemId == minItem.itemId &&
+                String(s.sizeId ?? "") === String(minItem.sizeId ?? "") &&
+                String(s.colorId ?? "") === String(minItem.colorId ?? "") &&
+                s.storeId == minItem.locationId
+            )
+            .reduce((sum, s) => sum + (s._sum?.qty || 0), 0) || 0;
 
-        let totalQty
-        if (minItem?.minQtyForallSizes) {
-            totalQty = stockData?.filter(i => i.itemId == minItem?.itemId).reduce((sum, s) => sum + s._sum?.qty, 0);
-        } else {
-            totalQty = stockData
-                .filter(s =>
-                    s.itemId == minItem.itemId &&
-                    s.sizeId == minItem.sizeId &&
-                    s.storeId == minItem.locationId
-                )
-                .reduce((sum, s) => sum + s._sum?.qty, 0);
-
-        }
-
-        const minimumQty =
-            minItem.minQtyForallSizes ?? minItem.minQtyForThatItem;
-
-
-
-
+        const minimumQty = Number(minItem.minQtyForThatItem);
 
         return {
             ...minItem,
             availableQty: totalQty,
-            isLowStock: totalQty < minimumQty
+            isLowStock: Number.isFinite(minimumQty) && totalQty < minimumQty
         };
     });
 
@@ -1024,7 +1014,6 @@ export {
     update,
     remove,
 }
-
 
 
 

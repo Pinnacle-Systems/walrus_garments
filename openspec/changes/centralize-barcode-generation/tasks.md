@@ -26,23 +26,23 @@
 
 - [x] 4.1 Verify Item Settings save/load behavior for `STANDARD`, `SIZE`, and `SIZE_COLOR`
 - [x] 4.2 Verify Item Master create and edit flows in each centralized mode
-- [ ] 4.3 Verify Price Template Master and any other control-panel readers still load correctly after the control-panel schema change
-- [ ] 4.4 Verify opening stock, stock adjustment, and quick-add flows after `Item.priceMethod` removal
+- [x] 4.3 Verify Price Template Master and any other control-panel readers still load correctly after the control-panel schema change
+- [x] 4.4 Verify opening stock, stock adjustment, and quick-add flows after `Item.priceMethod` removal
 
 ## 5. Manual Verification Checklist
 
-- [ ] 5.1 With no saved `ItemControlPanel` barcode mode, open item-driven workflows and confirm the effective mode resolves to `STANDARD`
-- [ ] 5.2 In Item Settings, save `STANDARD`, reload the screen, and confirm `barcodeGenerationMethod` persists as the only barcode-mode setting
-- [ ] 5.3 In Item Settings, save `SIZE`, reload the screen, and confirm the saved mode persists
-- [ ] 5.4 In Item Settings, save `SIZE_COLOR`, reload the screen, and confirm the saved mode persists
-- [ ] 5.5 With Item Settings set to `STANDARD`, open Item Master and confirm there is no mode selector and only the standard barcode, SKU, and sales-price inputs are shown
-- [ ] 5.5.1 With Item Settings set to `STANDARD`, confirm Item Master does not apply an extra stricter validation rule that exists only for `STANDARD`
-- [ ] 5.6 With Item Settings set to `SIZE`, open Item Master and confirm there is no mode selector and size-based price rows are shown
-- [ ] 5.7 With Item Settings set to `SIZE_COLOR`, open Item Master and confirm there is no mode selector and size-color-based price rows are shown
-- [ ] 5.8 Create and edit an item successfully in each centralized mode without sending or depending on `priceMethod`
-- [ ] 5.9 Open Price Template Master and confirm it still loads correctly using centralized barcode-generation mode data
-- [ ] 5.10 In Opening Stock, confirm item price and barcode behavior follows the centralized mode for `STANDARD`, `SIZE`, and `SIZE_COLOR`
-- [ ] 5.11 In Stock Adjustment, confirm item price and barcode behavior follows the centralized mode for `STANDARD`, `SIZE`, and `SIZE_COLOR`
-- [ ] 5.12 Open quick-add item from Opening Stock and confirm the mode is inherited from the parent flow and is not editable in the modal
-- [ ] 5.13 Open quick-add item from Stock Adjustment and confirm the mode is inherited from the parent flow and is not editable in the modal
-- [ ] 5.14 Confirm remaining item-related screens do not show the centralized barcode-generation mode outside Item Settings and no longer show user-facing `Price Method` terminology where behavior is now derived from Item Settings
+- [x] 5.1 With no saved `ItemControlPanel` barcode mode, open item-driven workflows and confirm the effective mode resolves to `STANDARD`
+- [x] 5.2 In Item Settings, save `STANDARD`, reload the screen, and confirm `barcodeGenerationMethod` persists as the only barcode-mode setting
+- [x] 5.3 In Item Settings, save `SIZE`, reload the screen, and confirm the saved mode persists
+- [x] 5.4 In Item Settings, save `SIZE_COLOR`, reload the screen, and confirm the saved mode persists
+- [x] 5.5 With Item Settings set to `STANDARD`, open Item Master and confirm there is no mode selector and only the standard barcode, SKU, and sales-price inputs are shown
+- [x] 5.5.1 With Item Settings set to `STANDARD`, confirm Item Master does not apply an extra stricter validation rule that exists only for `STANDARD`
+- [x] 5.6 With Item Settings set to `SIZE`, open Item Master and confirm there is no mode selector and size-based price rows are shown
+- [x] 5.7 With Item Settings set to `SIZE_COLOR`, open Item Master and confirm there is no mode selector and size-color-based price rows are shown
+- [x] 5.8 Create and edit an item successfully in each centralized mode without sending or depending on `priceMethod`
+- [x] 5.9 Open Price Template Master and confirm it still loads correctly using centralized barcode-generation mode data
+- [x] 5.10 In Opening Stock, confirm item price and barcode behavior follows the centralized mode for `STANDARD`, `SIZE`, and `SIZE_COLOR`
+- [x] 5.11 In Stock Adjustment, confirm item price and barcode behavior follows the centralized mode for `STANDARD`, `SIZE`, and `SIZE_COLOR`
+- [x] 5.12 Open quick-add item from Opening Stock and confirm the mode is inherited from the parent flow and is not editable in the modal
+- [x] 5.13 Open quick-add item from Stock Adjustment and confirm the mode is inherited from the parent flow and is not editable in the modal
+- [x] 5.14 Confirm remaining item-related screens do not show the centralized barcode-generation mode outside Item Settings and no longer show user-facing `Price Method` terminology where behavior is now derived from Item Settings

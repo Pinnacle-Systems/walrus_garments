@@ -4954,7 +4954,6 @@ model ItemPriceList {
   purchasePrice   String?
   salesPrice      String?
   offerPrice      String?
-  minStockQty     String?
   sku             String?
   barcode         String?
   MinimumStockQty MinimumStockQty[]
@@ -4967,6 +4966,8 @@ model MinimumStockQty {
   Location        Location?      @relation(fields: [locationId], references: [id])
   locationId      Int?
   minStockQty     String?
+
+  @@unique([itemPriceListId, locationId])
 }
 
 model Section {

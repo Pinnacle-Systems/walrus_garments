@@ -15,12 +15,28 @@ import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterSe
 import { capitalizeFirstLetter, findFromList, resolveBarcodeGenerationMethod } from "../../Utils/helper";
 import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
 import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
-
-import { TriangleAlert } from "lucide-react";
 import { useGetItemControlPanelMasterQuery } from "../../redux/uniformService/ItemControlPanelService";
 import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategoryMasterService";
 import QuickAddSizeModal from "./QuickAddSizeModal";
 import QuickAddColorModal from "./QuickAddColorModal";
+import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
+
+const createStandardPriceRow = () => ({
+  sizeId: null,
+  colorId: null,
+  offerPrice: "",
+  salesPrice: "",
+  sku: "",
+  barcode: "",
+  MinimumStockQty: [createEmptyLocationThreshold()],
+});
+
+function sanitizePriceRowsForSave(priceRows = []) {
+  return priceRows.map((row) => ({
+    ...row,
+    MinimumStockQty: validateLocationThresholdRows(row?.MinimumStockQty || []).cleanedRows,
+  }));
+}
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -50,8 +66,6 @@ export default function Form() {
   const childRecord = useRef(0);
   const [itemPriceList, setItemPriceList] = useState([])
   const [sectionId, setSectionId] = useState('')
-  const [minStockQty, setMinStockQty] = useState("")
-  const [selectedItem, setSelectedItem] = useState({});
   const [gridIndex, setGridIndex] = useState();
   const [fields, setFields] = useState({});
   const [contextMenu, setContextMenu] = useState(null);
@@ -150,10 +164,10 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
-        setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
         setSku("")
         setBarcode("")
+        setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : [])
 
       } else {
         setName(data?.name ? data?.name : "")
@@ -167,7 +181,6 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
-        setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
         setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
         setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
@@ -193,10 +206,9 @@ export default function Form() {
         if (barcodeGenerationMethod === "STANDARD") {
           setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
-          setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
           setSku(data?.ItemPriceList?.[0]?.sku ? data?.ItemPriceList?.[0]?.sku : "")
           setBarcode(data?.ItemPriceList?.[0]?.barcode ? data?.ItemPriceList?.[0]?.barcode : "")
-          setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
+          setItemPriceList(data?.ItemPriceList?.length ? data?.ItemPriceList : [createStandardPriceRow()])
 
         } else {
           setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
@@ -252,11 +264,11 @@ export default function Form() {
         colorId: null,
         offerPrice,
         salesPrice,
-        minStockQty,
         sku: sku?.trim() || "",
-        barcode: barcode?.trim() || ""
+        barcode: barcode?.trim() || "",
+        MinimumStockQty: validateLocationThresholdRows(itemPriceList?.[0]?.MinimumStockQty || []).cleanedRows
       }] :
-      itemPriceList,
+      sanitizePriceRowsForSave(itemPriceList),
     sectionId,
     fields: Object.values(fields),
     mainCategory,
@@ -274,6 +286,14 @@ export default function Form() {
       if (!standardPrice?.barcode?.trim() || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
         return false;
       }
+    }
+
+    const hasStockAlertErrors = (barcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
+      .filter(Boolean)
+      .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
+
+    if (hasStockAlertErrors) {
+      return false;
     }
 
     if (data.name && data?.code) {
@@ -350,8 +370,11 @@ export default function Form() {
       return false;
     }
     if (!validateData(data)) {
+      const hasStockAlertErrors = (barcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
+        .filter(Boolean)
+        .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
       Swal.fire({
-        title: "Please fill all required fields...!",
+        title: hasStockAlertErrors ? "Please fix the stock alert rows before saving." : "Please fill all required fields...!",
         icon: "warning",
         timer: 1000,
       });
@@ -430,7 +453,8 @@ export default function Form() {
     setReadOnly(false);
     setSizeList([]);
     setColorList([]);
-    setItemPriceList([]);
+    setGridIndex(null);
+    setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : []);
   };
 
   const ACTIVE = (
@@ -495,26 +519,21 @@ export default function Form() {
     );
   };
 
-  function handleInputChangeForGrid(value, index, field) {
-
-    console.log(value, index, field, "value, index, field")
-
-    let gridField = "MinimumStockQty"
-
-
+  function handleMinimumStockRowsChange(rowIndex, rows) {
     setItemPriceList(orderDetails => {
       const newBlend = structuredClone(orderDetails);
-
-      const minStock = structuredClone(newBlend[gridIndex][gridField])
-      minStock[index][field] = value;
-
-      newBlend[gridIndex][gridField] = minStock;
-
-
-      return newBlend
-    }
-    );
+      if (!newBlend[rowIndex]) {
+        return orderDetails;
+      }
+      newBlend[rowIndex].MinimumStockQty = rows;
+      return newBlend;
+    });
   };
+
+  function getLowStockSummary(item) {
+    const configuredCount = getConfiguredLocationAlertCount(item?.MinimumStockQty || []);
+    return configuredCount ? `${configuredCount} locations set` : "No alerts set";
+  }
 
 
 
@@ -582,7 +601,7 @@ export default function Form() {
             colorName: combo.colorName,
             purchasePrice: 0,
             salesPrice: 0,
-            MinimumStockQty: [{ locationId: "", minStockQty: "" }]
+            MinimumStockQty: [createEmptyLocationThreshold()]
           };
           return {
             ...newItem,
@@ -600,7 +619,7 @@ export default function Form() {
           colorName: combo.colorName,
           purchasePrice: 0,
           salesPrice: 0,
-          MinimumStockQty: [{ locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }, { locationId: "", minStockQty: "" }]
+          MinimumStockQty: [createEmptyLocationThreshold()]
         };
         return {
           ...newItem,
@@ -661,6 +680,12 @@ export default function Form() {
 
     setFields(initialState);
   }, [itemControlData, itemControlLoading, itemControlFetching]);
+
+  useEffect(() => {
+    if (form && barcodeGenerationMethod === "STANDARD" && itemPriceList.length === 0) {
+      setItemPriceList([createStandardPriceRow()]);
+    }
+  }, [form, barcodeGenerationMethod, itemPriceList.length]);
 
 
   return (
@@ -909,7 +934,6 @@ export default function Form() {
                       </legend>
 
                       <div>
-
                         <div className="grid grid-cols-12 gap-4 px-2">
                           {barcodeGenerationMethod == "STANDARD" && (
                             <>
@@ -950,23 +974,21 @@ export default function Form() {
                                   setValue={setOfferPrice}
                                   readOnly={readOnly}
                                   disabled={childRecord.current > 0}
-                                // required={true}
                                 />
                               </div>
-                              <div className="col-span-2">
-                                <TextInputNew1
-                                  name="Minimun Stock Qty"
-                                  value={minStockQty}
-                                  setValue={setMinStockQty}
-                                  readOnly={readOnly}
-                                  disabled={childRecord.current > 0}
-                                />
+                              <div className="col-span-3 mt-5">
+                                <button
+                                  type="button"
+                                  onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
+                                  className="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                                >
+                                  Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
+                                </button>
                               </div>
                             </>
                           )}
 
                           {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-
                             <div className="col-span-3">
                               <div className="flex items-end gap-1">
                                 <div className="flex-1">
@@ -978,7 +1000,6 @@ export default function Form() {
                                     selected={sizeList}
                                     setSelected={(value) => {
                                       setSizeList(value)
-
                                     }}
                                   />
                                 </div>
@@ -995,7 +1016,6 @@ export default function Form() {
                           )}
 
                           {(barcodeGenerationMethod == "SIZE_COLOR") && (
-
                             <div className="col-span-3">
                               <div className="flex items-end gap-1">
                                 <div className="flex-1">
@@ -1007,7 +1027,6 @@ export default function Form() {
                                     selected={colorList}
                                     setSelected={(value) => {
                                       setColorList(value)
-
                                     }}
                                   />
                                 </div>
@@ -1023,184 +1042,134 @@ export default function Form() {
                             </div>
                           )}
                           {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setItems()
-                                }}
-                                className="px-3 py-1  rounded  items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
-                              >
-                                Add
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setItems()
+                              }}
+                              className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
+                            >
+                              Add
+                            </button>
                           )}
                         </div>
+
+                        {barcodeGenerationMethod == "STANDARD" && gridIndex === 0 && itemPriceList[0] && (
+                          <div className="px-2 pt-3 h-[280px] min-h-0">
+                            <LocationStockEditor
+                              rows={itemPriceList[0]?.MinimumStockQty || []}
+                              onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
+                              locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                              readOnly={readOnly}
+                              title="Stock Alerts"
+                            />
+                          </div>
+                        )}
+
                         {barcodeGenerationMethod != "STANDARD" && (
                           <>
                             <div className="grid grid-cols-12 gap-3 ">
-                              <div className={`col-span-10 w-full ${Object.keys(fields).length > 1 ? " h-[280px]" : " h-[280px]"} `}>
-                                <div className={` relative overflow-y-auto py-1 h-full`}>
-                                  <table className="w-full border-collapse table-fixed ">
+                              <div className={`col-span-8 w-full ${Object.keys(fields).length > 1 ? " h-[280px]" : " h-[280px]"} `}>
+                                <div className={`relative overflow-y-auto py-1 h-full`}>
+                                  <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
                                       <tr>
-                                        <th
-                                          className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          S.No
-                                        </th>
-                                        <th
-
-                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          Size Name
-                                        </th>
+                                        <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
                                         {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                          <th
-
-                                            className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
-                                          >
-                                            Color Name
-                                          </th>
+                                          <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
                                         )}
-                                        <th
-
-                                          className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          Barcode
-                                        </th>
-                                        <th
-
-                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          Sku
-                                        </th>
-
-                                        <th
-
-                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          Sales Price
-                                        </th>
-                                        <th
-
-                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          Offer Price
-                                        </th>
-                                        <th
-
-                                          className={`w-24 px-4 py-2 text-center font-medium text-[13px] `}
-                                        >
-                                          LowStockAlert
-                                        </th>
-
+                                        <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
+                                        <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
                                       </tr>
                                     </thead>
                                     <tbody>
-
                                       {itemPriceList.map((item, index) => (
-                                        <tr key={index} className=""
+                                        <tr
+                                          key={index}
                                           onContextMenu={(e) => {
                                             if (!readOnly) {
                                               handleRightSubGridClick(e, index, "notes");
                                             }
                                           }}
                                         >
-                                          <td className="border border-gray-200 w-12 px-1 py-1 text-center text-xs ">{index + 1}</td>
-                                          <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
+                                          <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                             {findFromList(item?.sizeId, sizeData?.data, "name")}
                                           </td>
-
                                           {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                            <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
+                                            <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
                                               {findFromList(item?.colorId, colorData?.data, "name")}
                                             </td>
                                           )}
-                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                          <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
                                             <input
                                               type="text"
-
                                               min="0"
                                               rows={1}
                                               onFocus={e => e.target.select()}
-                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
                                               value={item.barcode}
                                               disabled={readOnly}
                                               onChange={e => handleInputChange(e.target.value, index, "barcode")}
                                               onBlur={e => handleInputChange(e.target.value, index, "barcode")}
                                             />
                                           </td>
-
-                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                             <input
                                               type="text"
-
                                               min="0"
                                               rows={1}
                                               onFocus={e => e.target.select()}
-                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
                                               value={item.sku}
                                               disabled={readOnly}
                                               onChange={e => handleInputChange(e.target.value, index, "sku")}
                                               onBlur={e => handleInputChange(e.target.value, index, "sku")}
                                             />
                                           </td>
-
-
-                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                             <input
                                               type="text"
-
                                               min="0"
                                               rows={1}
                                               onFocus={e => e.target.select()}
-                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
                                               value={item.salesPrice}
                                               disabled={readOnly}
                                               onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
                                               onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
                                             />
                                           </td>
-                                          <td className="border border-gray-200 w-32 px-1 py-1 text-left text-xs">
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                             <input
                                               type="text"
-
                                               min="0"
                                               rows={1}
                                               onFocus={e => e.target.select()}
-                                              className="text-right rounded w-full px-1 py-1 text-xs "
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
                                               value={item.offerPrice}
                                               disabled={readOnly}
                                               onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
                                               onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
                                             />
                                           </td>
-                                          <td
-                                            className="border border-gray-200 w-32 px-1 py-1 text-left text-xs"
-
-                                          >
-
-                                            <TriangleAlert
-                                              onClick={() => {
-                                                setGridIndex(prev => (prev === index ? null : index));
-                                              }}
-                                              className={`w-4 h-4 transition-transform duration-200 ${gridIndex === index ? "rotate-90" : ""
-                                                } text-red-500`}
-                                            />
+                                          <td className="border border-gray-200 px-2 py-1 text-xs">
+                                            <button
+                                              type="button"
+                                              onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
+                                              className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                                            >
+                                              {getLowStockSummary(item)}
+                                            </button>
                                           </td>
-
-
-
-
                                         </tr>
                                       ))}
-
-
-
                                     </tbody>
                                   </table>
-
                                 </div>
                               </div>
                               {contextMenu && (
@@ -1209,7 +1178,6 @@ export default function Form() {
                                     position: "absolute",
                                     top: `${contextMenu.mouseY - 40}px`,
                                     left: `${contextMenu.mouseX - 80}px`,
-
                                     boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                     padding: "8px",
                                     borderRadius: "4px",
@@ -1226,81 +1194,33 @@ export default function Form() {
                                         handleCloseContextMenu();
                                       }}
                                     >
-                                      Delete{" "}
+                                      Delete
                                     </button>
-
                                   </div>
                                 </div>
                               )}
 
-                              {itemPriceList[gridIndex] && (
-                                <>
-                                  <div className="col-span-4">
-                                    <table className="w-full  table-fixed">
-                                      <thead className="bg-gray-200 text-gray-800">
-                                        <tr>
-                                          <th className="w-8 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">S.No</th>
-                                          <th className="w-32 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Location</th>
-                                          <th className="w-20 px-4 py-1.5 border border-gray-300 text-center font-medium text-xs">Minimun Stock Qty</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>{console.log()}
-                                        {(itemPriceList[gridIndex]?.MinimumStockQty)?.map((row, index) => (
-                                          <tr key={`${selectedItem.itemId}-${selectedItem.sizeId}-${index}`} className="border border-blue-gray-200 cursor-pointer">
-                                            <td className="py-0.5 border border-gray-300 text-[11px] text-center">
-                                              {index + 1}
-                                            </td>{console.log(row, "row")}
-                                            <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                              <select
-                                                onKeyDown={e => { if (e.key === "Delete") { handleInputChangeForGrid("", index, "locationId") } }}
-                                                tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
-                                                value={row.locationId}
-                                                onChange={(e) => {
-                                                  handleInputChangeForGrid(e.target.value, index, "locationId")
-                                                }}
-
-                                                disabled={readOnly}
-                                              >
-                                                <option >
-                                                </option>
-                                                {(id ? storeOptions : storeOptions?.filter(i => i.active
-                                                ))?.map((blend) =>
-                                                  <option value={blend.id} key={blend.id}>
-                                                    {blend?.storeName}
-                                                  </option>
-                                                )}
-                                              </select>
-                                            </td>
-                                            <td className=" border border-gray-300 text-[11px] py-1.5 px-2">
-                                              <input
-                                                type="text"
-
-                                                min="0"
-                                                rows={1}
-                                                onFocus={e => e.target.select()}
-                                                className="text-right rounded w-full px-1 py-1 text-xs "
-                                                value={row.minStockQty}
-                                                disabled={readOnly}
-                                                onChange={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
-                                                onBlur={e => handleInputChangeForGrid(e.target.value, index, "minStockQty")}
-                                              />
-                                            </td>
-
-
-                                          </tr>
-                                        ))}
-
-                                      </tbody>
-
-                                    </table>
+                              <div className="col-span-4 h-[280px] min-h-0">
+                                {itemPriceList[gridIndex] ? (
+                                  <LocationStockEditor
+                                    rows={itemPriceList[gridIndex]?.MinimumStockQty || []}
+                                    onChange={(rows) => handleMinimumStockRowsChange(gridIndex, rows)}
+                                    locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                                    readOnly={readOnly}
+                                    title={`Stock Alerts${barcodeGenerationMethod == "SIZE_COLOR"
+                                      ? ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")} / ${findFromList(itemPriceList[gridIndex]?.colorId, colorData?.data, "name")}`
+                                      : ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")}`
+                                      }`}
+                                  />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center text-xs text-gray-500">
+                                    Select a row to edit location-wise stock alerts.
                                   </div>
-                                </>
-                              )}
-
-
+                                )}
+                              </div>
                             </div>
-                          </>)}
-
+                          </>
+                        )}
                       </div>
 
                     </fieldset>

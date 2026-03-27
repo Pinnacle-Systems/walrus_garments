@@ -141,7 +141,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
           companyId,
           branchId,
           storeId: selectedLocationId,
-          itemPriceList: [{ sizeId: null, colorId: null, offerPrice: 0, salesPrice: 0, minStockQty: 0 }]
+          itemPriceList: [{ sizeId: null, colorId: null, offerPrice: 0, salesPrice: 0 }]
         }).unwrap();
         if (res.data?.data?.id || res.data?.id) {
           newItemIdMap[itm.toLowerCase().trim()] = res.data?.data?.id || res.data?.id;
