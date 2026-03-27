@@ -641,6 +641,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
         type: `CurrencyMaster/invalidateTags`,
         payload: ["Currency"],
       });
+
+      invalidateTagsDispatch()
+
       syncFormWithDb(undefined);
       await Swal.fire({
         icon: 'success',
@@ -668,6 +671,22 @@ export default function Form({ partyId, show, openModelForAddress }) {
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
       event.preventDefault();
       saveData();
+      return;
+    }
+    if (event.key === "Enter") {
+      const { tagName, type } = event.target;
+      if (tagName === "TEXTAREA" || tagName === "BUTTON" || type === "checkbox" || type === "radio" || type === "file") return;
+      event.preventDefault();
+      const container = event.currentTarget;
+      const focusable = Array.from(
+        container.querySelectorAll(
+          'input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([disabled]):not([readonly]), select:not([disabled])'
+        )
+      );
+      const idx = focusable.indexOf(event.target);
+      if (idx !== -1 && idx < focusable.length - 1) {
+        focusable[idx + 1].focus();
+      }
     }
   };
 
@@ -903,7 +922,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto p-3">
+          <div className="flex-1 overflow-auto p-3" onKeyDown={handleKeyDown}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
 
@@ -1721,7 +1740,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-3">
+            <div className="flex-1 overflow-auto p-3" onKeyDown={handleKeyDown}>
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
 

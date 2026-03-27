@@ -6,6 +6,7 @@ import { useAddColorMasterMutation, useDeleteColorMasterMutation, useGetColorMas
 import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
+import { statusDropdown } from '../../../Utils/DropdownData';
 
 
 
@@ -369,8 +370,9 @@ export default function Form() {
                         />
                         <div className='mt-5'>
 
-                          <ToggleButton name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-                        </div>
+                          <div className='mt-5'>
+                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                          </div>                        </div>
                         <div>
 
                         </div>

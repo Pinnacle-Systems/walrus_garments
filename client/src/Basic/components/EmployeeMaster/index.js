@@ -23,6 +23,7 @@ import {
   DisabledInput,
   ToggleButton,
   ReusableTable,
+  TextInputNew1,
 } from "../../../Inputs";
 
 import {
@@ -113,6 +114,9 @@ export default function Form() {
   const [formHeading, setFormHeading] = "";
   const childRecord = useRef(0);
   const dispatch = useDispatch();
+  const [aadharNo, setAadharNo] = useState("");
+
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -616,8 +620,8 @@ export default function Form() {
               Cards
             </button>
           </div>
-          </div>
         </div>
+      </div>
 
       <div className="bg-gray-100  rounded-xl shadow overflow-hidden">
         <div className="pt-2">
@@ -777,7 +781,7 @@ export default function Form() {
                     />
 
                     <div className="space-y-2">
-                      <TextInput
+                      <TextInputNew1
                         ref={nameRef}
                         name="Full Name"
                         value={name}
@@ -906,7 +910,7 @@ export default function Form() {
                       </div>
 
                       <div>
-                        <TextInput
+                        <TextInputNew1
                           name="Chamber no"
                           value={chamberNo}
                           setValue={setChamberNo}
@@ -934,7 +938,7 @@ export default function Form() {
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Additional Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
-                        <TextInput
+                        <TextInputNew1
                           name="Father Name"
                           value={fatherName}
                           setValue={setFatherName}
@@ -959,19 +963,29 @@ export default function Form() {
                       </div>
 
                       <div>
-                        <TextInput
+                        <TextInputNew1
                           name="Pan No"
                           value={panNo}
                           setValue={setPanNo}
-                          required
+                          // required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
                         {errors.panNo && <span className="text-red-500 text-xs ml-1">{errors.panNo}</span>}
                       </div>
-
                       <div>
-                        <TextInput
+                        <TextInputNew1
+                          name="Aadhar No"
+                          value={aadharNo}
+                          setValue={setAadharNo}
+                          type={"number"}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                        />
+                        {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
+                      </div>
+                      <div className="col-span-2">
+                        <TextInputNew1
                           name="Degree"
                           value={degree}
                           setValue={setDegree}
@@ -982,7 +996,8 @@ export default function Form() {
                       </div>
 
                       <div className="md:col-span-2">
-                        <TextInput
+                        <TextArea
+                          rows={2}
                           name="Specialization"
                           value={specialization}
                           setValue={setSpecialization}
@@ -991,6 +1006,7 @@ export default function Form() {
                         />
                         {errors.specialization && <span className="text-red-500 text-xs ml-1">{errors.specialization}</span>}
                       </div>
+
                     </div>
                   </div>
                 </div>
@@ -1009,7 +1025,7 @@ export default function Form() {
                       />
 
                       <div className="grid grid-cols-2 gap-2">
-                        <TextInput
+                        <TextInputNew1
                           name="IFSC No"
                           value={ifscNo}
                           setValue={setIfscNo}
@@ -1017,7 +1033,7 @@ export default function Form() {
                           disabled={childRecord.current > 0}
                         />
 
-                        <TextInput
+                        <TextInputNew1
                           name="Branch Name"
                           value={branchName}
                           setValue={setbranchName}
@@ -1028,12 +1044,12 @@ export default function Form() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-md border border-gray-200 sticky top-[200px]">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 mt-2">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact Information</h3>
                     <div className="space-y-2">
                       <div className="flex flex-wrap">
-                        <div className="w-full md:w-1/2">
-                          <TextInput
+                        <div className="w-full ">
+                          <TextInputNew1
                             name="Mobile No"
                             type="number"
                             value={mobile}
@@ -1045,19 +1061,19 @@ export default function Form() {
                           {errors.mobile && <span className="text-red-500 text-xs ml-1">{errors.mobile}</span>}
                         </div>
 
-                        <div className="w-full md:w-1/2">
-                          <TextInput
-                            name="Email Id"
-                            type="email"
-                            value={email}
-                            setValue={setEmail}
-                            readOnly={readOnly}
-                            disabled={childRecord.current > 0}
-                          />
-                          {errors.email && <span className="text-red-500 text-xs ml-1">{errors.email}</span>}
-                        </div>
-                      </div>
 
+                      </div>
+                      <div className="w-full">
+                        <TextInputNew1
+                          name="Email Id"
+                          type="email"
+                          value={email}
+                          setValue={setEmail}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                        />
+                        {errors.email && <span className="text-red-500 text-xs ml-1">{errors.email}</span>}
+                      </div>
                       <TextArea
                         name="Address"
                         rows="2"

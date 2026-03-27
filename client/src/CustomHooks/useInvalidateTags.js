@@ -9,6 +9,18 @@ const useInvalidateTags = () => {
             payload: ["Sample"],
         },
         {
+            type: `branchTypeMaster/invalidateTags`,
+            payload: ["branchType"],
+        },
+        {
+            type: `PartyMaster/invalidateTags`,
+            payload: ["Party"],
+        },
+        {
+            type: `locationMaster/invalidateTags`,
+            payload: ["LocationMaster"],
+        },
+        {
             type: `po/invalidateTags`,
             payload: ["po"],
         },
@@ -73,7 +85,7 @@ const useInvalidateTags = () => {
             type: `salesDelivery/invalidateTags`,
             payload: ["salesDelivery"],
         },
-               {
+        {
             type: `salesReturn/invalidateTags`,
             payload: ["salesReturn"],
         },

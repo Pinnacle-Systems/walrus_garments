@@ -252,7 +252,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
 
     function countryFromState() {
-        return state ? stateList.data.find(item => item.id === parseInt(state)).country?.name : ""
+        return state ? stateList?.data?.find(item => item.id === parseInt(state)).country?.name : ""
     }
 
     const handleView = (id) => {

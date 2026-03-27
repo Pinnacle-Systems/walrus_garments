@@ -53,12 +53,16 @@ export default function Form() {
       setName("");
       setCode("");
       setActive(id ? (data?.active ?? true) : true);
+      childRecord.current = data?.childRecord ? data.childRecord : 0;
+
     } else {
       // setReadOnly(true);
 
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(id ? (data?.active ?? false) : true);
+      childRecord.current = data?.childRecord ? data.childRecord : 0;
+
     }
 
   },
@@ -406,7 +410,7 @@ export default function Form() {
                             {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
 
                             <div className='mt-4'>
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} disabled={childRecord.current > 0} />
+                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                             </div>
 
                           </fieldset>

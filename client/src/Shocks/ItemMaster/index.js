@@ -996,7 +996,7 @@ export default function Form() {
                                     name="Sizes"
                                     required={true}
                                     disabled={readOnly}
-                                    options={multiSelectOption(sizeData?.data ? sizeData?.data : [], "name", "id")}
+                                    options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
                                     selected={sizeList}
                                     setSelected={(value) => {
                                       setSizeList(value)
@@ -1023,7 +1023,7 @@ export default function Form() {
                                     name="Colors"
                                     required={true}
                                     disabled={readOnly}
-                                    options={multiSelectOption(colorData?.data ? colorData?.data : [], "name", "id")}
+                                    options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
                                     selected={colorList}
                                     setSelected={(value) => {
                                       setColorList(value)

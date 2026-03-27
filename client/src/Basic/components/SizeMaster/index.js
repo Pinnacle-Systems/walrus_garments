@@ -130,7 +130,6 @@ export default function Form() {
             nameRef.current?.focus();
             return;
         }
-
         let foundItem;
         if (id) {
             foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == upperName.trim());
@@ -140,7 +139,7 @@ export default function Form() {
         }
         if (foundItem) {
             Swal.fire({
-                text: "The size name already exists.",
+                text: "The Size Name already exists.",
                 icon: "warning",
             });
             nameRef.current?.focus();
@@ -290,7 +289,7 @@ export default function Form() {
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={deleteData}
-                    itemsPerPage={10}
+                    itemsPerPage={15}
                 />
             </div>
 

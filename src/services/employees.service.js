@@ -86,7 +86,7 @@ async function getPaginated(req) {
     })
     return { statusCode: 0, data: data.map((d) => exclude({ ...d }, ["image"])), totalCount };
 }
-async function getEmployeeId(branchId,startTime,endTime) {
+async function getEmployeeId(branchId, startTime, endTime) {
 
     let lastObject = await prisma.employee.findFirst({
         where: {
@@ -105,26 +105,26 @@ async function getEmployeeId(branchId,startTime,endTime) {
                     }
                 }
             ],
-    
+
         },
         orderBy: {
             id: 'desc'
         }
     });
-    console.log(lastObject,"lastObject")
+    console.log(lastObject, "lastObject")
     const code = "EMP"
-    const branchObj  = await getTableRecordWithId(branchId, "branch")
+    const branchObj = await getTableRecordWithId(branchId, "branch")
     let newDocId = `${branchObj.branchCode}/${code}/1`
-    
+
     if (lastObject) {
         newDocId = `${branchObj.branchCode}/${code}/${parseInt(lastObject.regNo.split("/").at(-1)) + 1}`
     }
-    console.log(newDocId,"newDocId")
+    console.log(newDocId, "newDocId")
     return newDocId
 }
 async function get(req) {
-    const { branchId, active, employeeCategory , finYearId } = req.query
-    const data = await xprisma.employee.findMany({
+    const { branchId, active, employeeCategory, finYearId } = req.query
+    const data = await xprisma.Employee.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -139,18 +139,25 @@ async function get(req) {
                 }
             },
             EmployeeCategory: true,
-            
+            _count: {
+                select: {
+                    User: true
+                }
+            }
+
         }
     })
-    let finYearDate = await getFinYearStartTimeEndTime(finYearId);  
-    console.log("Regno",finYearDate)
-    let Regno = finYearDate ? (await getEmployeeId(branchId,finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    console.log("Regno", finYearDate)
+    let Regno = finYearDate ? (await getEmployeeId(branchId, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
 
-    return { statusCode: 0, data: data.map((item) => exclude({ ...item }, ["image"])) , Regno};
+    return { statusCode: 0, data: data.map((item) => exclude({ ...item }, ["image"])), Regno };
 }
 
 
 async function getOne(id) {
+    const childRecord = await prisma.User.count({ where: { employeeId: parseInt(id) } });
+
     const data = await xprisma.employee.findUnique({
         where: {
             id: parseInt(id)
@@ -175,7 +182,7 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("Employee");
-    return { statusCode: 0, data: exclude({ ...data }, ["image"]) };
+    return { statusCode: 0, data: exclude({ ...data, childRecord }, ["image"]) };
 }
 
 async function getSearch(req) {
@@ -226,47 +233,47 @@ async function create(req) {
     const image = req.file
     const { branchId, name, email, chamberNo, joiningDate, fatherName, dob, gender, maritalStatus, bloodGroup,
         panNo, consultFee, salaryPerMonth, commissionCharges, mobile, accountNo, ifscNo, branchName, degree,
-        specialization, localAddress, localCity, localPincode, permAddress, permCity,regNo,
+        specialization, localAddress, localCity, localPincode, permAddress, permCity, regNo,
         permPincode, department, employeeCategoryId, permanent, active } = await req.body
 
 
-console.log(permPincode,"permPincode")
+    console.log(permPincode, "permPincode")
 
     const data = await prisma.employee.create(
         {
             data: {
                 regNo: regNo ? regNo : undefined,
-                employeeCategoryId: employeeCategoryId  ?  parseInt(employeeCategoryId) : undefined,
+                employeeCategoryId: employeeCategoryId ? parseInt(employeeCategoryId) : undefined,
                 branchId: branchId ? parseInt(branchId) : undefined,
-                name : name ? name : undefined,
-                 email: email ? email : undefined , 
-                 chamberNo : chamberNo ? chamberNo : undefined,
-                  fatherName : fatherName ? fatherName : undefined, 
-                  dob: dob ? new Date(dob) : undefined,
-                   joiningDate: dob ? new Date(joiningDate) : undefined,
-                    gender : gender ? gender : undefined, 
-                    maritalStatus : maritalStatus ? maritalStatus : undefined,
-                    departmentId: department ? parseInt(department) : undefined,
-                    active: active ? JSON.parse(active) : undefined,
-                    bloodGroup : bloodGroup ? bloodGroup : undefined,
-                        panNo : panNo ? panNo : undefined,
-                        consultFee : consultFee ? consultFee : undefined,
-                        salaryPerMonth : salaryPerMonth ? salaryPerMonth : undefined,
-                        commissionCharges : commissionCharges ? commissionCharges : undefined,
-                        mobile: mobile ? parseInt(mobile) : undefined,
-                            accountNo: accountNo ? accountNo : undefined , 
-                        ifscNo : ifscNo ? ifscNo : undefined,
-                        branchName : branchName ? branchName : undefined,
-                        degree : degree ? degree : undefined, 
-                        specialization,
-                        localAddress, 
-                        localCity: localCity ? localCity : undefined,
-                        localPincode: localPincode ? parseInt(localPincode) : undefined,
-                            permAddress,
-                        permCityId: permCity ? parseInt(permCity)  : undefined, 
-                        permPincode: permPincode ? parseInt(permPincode) : undefined,
-                        image: image ? image.buffer : undefined,
-                        permanent: permanent ? JSON.parse(permanent) : undefined
+                name: name ? name : undefined,
+                email: email ? email : undefined,
+                chamberNo: chamberNo ? chamberNo : undefined,
+                fatherName: fatherName ? fatherName : undefined,
+                dob: dob ? new Date(dob) : undefined,
+                joiningDate: dob ? new Date(joiningDate) : undefined,
+                gender: gender ? gender : undefined,
+                maritalStatus: maritalStatus ? maritalStatus : undefined,
+                departmentId: department ? parseInt(department) : undefined,
+                active: active ? JSON.parse(active) : undefined,
+                bloodGroup: bloodGroup ? bloodGroup : undefined,
+                panNo: panNo ? panNo : undefined,
+                consultFee: consultFee ? consultFee : undefined,
+                salaryPerMonth: salaryPerMonth ? salaryPerMonth : undefined,
+                commissionCharges: commissionCharges ? commissionCharges : undefined,
+                mobile: mobile ? parseInt(mobile) : undefined,
+                accountNo: accountNo ? accountNo : undefined,
+                ifscNo: ifscNo ? ifscNo : undefined,
+                branchName: branchName ? branchName : undefined,
+                degree: degree ? degree : undefined,
+                specialization,
+                localAddress,
+                localCity: localCity ? localCity : undefined,
+                localPincode: localPincode ? parseInt(localPincode) : undefined,
+                permAddress,
+                permCityId: permCity ? parseInt(permCity) : undefined,
+                permPincode: permPincode ? parseInt(permPincode) : undefined,
+                image: image ? image.buffer : undefined,
+                permanent: permanent ? JSON.parse(permanent) : undefined
             }
         }
     )

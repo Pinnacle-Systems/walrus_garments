@@ -158,7 +158,7 @@ const PurchaseInward = () => {
                         inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                         directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hasPermission={hasPermission} addData={addData}
+                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hasPermission={hasPermission} addData={addData} invalidateTagsDispatch={invalidateTagsDispatch}
                     />
                 </div>
 

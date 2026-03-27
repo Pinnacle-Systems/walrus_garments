@@ -7,13 +7,6 @@ async function get(req) {
         where: {
             active: active ? Boolean(active) : undefined,
         },
-        // include: {
-        //     _count: {
-        //         select: {
-        //             Quo
-        //         }
-        //     }
-        // }
 
     });
     return { statusCode: 0, data };
@@ -21,7 +14,7 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = 0;
+    const childRecord = await prisma.quotation.count({ where: { termId: parseInt(id) } });
     const data = await prisma.termsAndConditionsNew.findUnique({
         where: {
             id: parseInt(id)

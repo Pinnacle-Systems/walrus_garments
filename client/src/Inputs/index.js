@@ -10,7 +10,7 @@ import { push } from "../redux/features/opentabs";
 import { useDispatch } from "react-redux";
 import { FaChevronLeft, FaChevronRight, FaEdit, FaInfoCircle, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
 import secureLocalStorage from "react-secure-storage";
-import { useGetPartyQuery } from "../redux/services/PartyMasterService";
+import { useDeletePartyMutation, useGetPartyQuery } from "../redux/services/PartyMasterService";
 import { useModal } from "../Basic/pages/home/context/ModalContext";
 import useOutsideClick from "../CustomHooks/handleOutsideClick";
 import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
@@ -3089,6 +3089,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     const { data: partyList } = useGetPartyQuery({
       params: { companyId, userId, isAddressCombined: true },
     });
+    const [removeData] = useDeletePartyMutation();
 
     console.log(searchTerm, "searchTerm")
 
@@ -3192,8 +3193,45 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
     };
 
-    const handleDelete = (id, e) => {
-      onDeleteItem?.(id);
+    const handleDelete = async (id, item) => {
+      // 1. Validation Check
+      if (childRecordCount(item?._count)) {
+        return Swal.fire({
+          icon: 'error',
+          text: 'Child Record Exists',
+        });
+      }
+
+      try {
+        // 2. Execute Delete (Assuming removeData is an RTK Query mutation)
+        const deldata = await removeData(id).unwrap();
+
+        // 3. Handle Business Logic Errors from API
+        if (deldata?.statusCode === 1) {
+          return Swal.fire({
+            icon: 'error',
+            text: deldata?.message || 'Action failed',
+          });
+        }
+
+
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted Successfully',
+          showConfirmButton: false,
+          timer: 2000
+        });
+
+
+      } catch (error) {
+        // 6. Handle Network or Server Errors
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error?.data?.message || error?.message || 'Something went wrong!',
+        });
+      }
     };
 
     /* ---------------------------------- JSX ---------------------------------- */
@@ -3382,7 +3420,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                       </button>
                       <button
                         className="text-red-600 hover:text-red-800 p-1"
-                        onClick={(e) => handleDelete(item?.id, e, item?.parentId)}
+                        onClick={(e) => handleDelete(item?.id, item)}
                         title="Delete Customer"
                       >
                         <FaTrash className="text-sm" />

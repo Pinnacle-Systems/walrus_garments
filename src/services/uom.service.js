@@ -29,13 +29,15 @@ async function get(req) {
 
 
 async function getOne(id) {
+    const childRecord = await prisma.directItems.count({ where: { uomId: parseInt(id) } });
+
     const data = await prisma.unitOfMeasurement.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!data) return NoRecordFound("unitOfMeasurement");
-    return { statusCode: 0, data: data };
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 
 }
 

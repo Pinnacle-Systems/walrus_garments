@@ -2,7 +2,6 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
-    console.log("hit")
     const { companyId, active } = req.query
     const data = await prisma.branchType.findMany({
         where: {
@@ -21,6 +20,8 @@ async function get(req) {
 }
 
 async function getOne(id) {
+    const childRecord = await prisma.Party.count({ where: { branchTypeId: parseInt(id) } });
+
     const data = await prisma.branchType.findUnique({
         where: {
             id: parseInt(id)
@@ -28,7 +29,7 @@ async function getOne(id) {
 
     })
     if (!data) return NoRecordFound("Branch");
-    return { statusCode: 0, data };
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {

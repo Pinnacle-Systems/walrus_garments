@@ -7,6 +7,17 @@ async function get(req) {
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
+        },
+        include: {
+            _count: {
+                select: {
+                    DirectInwardOrReturn: true,
+                    DirectReturnOrPoReturn: true,
+                    StockAdjustment: true,
+                    FromLocation: true,
+                    ToLocation: true
+                }
+            }
         }
     });
     return { statusCode: 0, data };
@@ -14,7 +25,7 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = 0;
+    const childRecord = await prisma.directInwardOrReturn.count({ where: { storeId: parseInt(id) } });
     const data = await prisma.location.findUnique({
         where: {
             id: parseInt(id)

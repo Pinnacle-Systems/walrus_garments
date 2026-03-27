@@ -261,7 +261,7 @@ export default function Form() {
       header: "Currency Name",
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
+      className: "font-medium text-gray-900 text-left pl-2 uppercase w-48",
     },
 
     {

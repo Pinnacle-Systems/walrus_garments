@@ -20,6 +20,7 @@ import BarCodePrintFormat from "./BarcodePrintFormat";
 import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 const PurchaseInwardForm = ({
   hasPermission, addData, onClose, id, setId, docId, setDocId, date, setDate,
@@ -31,7 +32,7 @@ const PurchaseInwardForm = ({
   inwardItemSelection, setInwardItemSelection,
   directInwardReturnItems, setDirectInwardReturnItems,
   partyId, setPartyId, onNew, branchList, locationData,
-  supplierList, yarnList, colorList, uomList,
+  supplierList, yarnList, colorList, uomList, invalidateTagsDispatch
 }) => {
   const [headerOpen, setHeaderOpen] = useState(true);
   const [vehicleNo, setVehicleNo] = useState("");
@@ -63,6 +64,8 @@ const PurchaseInwardForm = ({
 
   const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } =
     useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+
+
 
   // const [addData] = useAddDirectInwardOrReturnMutation();
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
@@ -127,6 +130,7 @@ const PurchaseInwardForm = ({
         toast.error(returnData.message);
       } else {
         Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
+        invalidateTagsDispatch()
         if (returnData.statusCode === 0) {
           if (nextProcess === "new") {
             syncFormWithDb(undefined)
@@ -317,7 +321,7 @@ const PurchaseInwardForm = ({
                         options={dropDownListObject(
                           id
                             ? storeOptions
-                            : storeOptions?.filter((item) => item.storeName.includes("NEW")),
+                            : storeOptions?.filter((item) => item.storeName.includes("NEW") && item.active),
                           "storeName", "id"
                         )}
                         value={storeId}
