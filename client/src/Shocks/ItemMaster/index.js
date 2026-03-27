@@ -12,7 +12,7 @@ import { useGetStyleMasterQuery } from "../../redux/uniformService/StyleMasterSe
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
 import { useGetHsnMasterQuery } from "../../redux/services/HsnMasterServices";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
-import { capitalizeFirstLetter, findFromList } from "../../Utils/helper";
+import { capitalizeFirstLetter, findFromList, resolveBarcodeGenerationMethod } from "../../Utils/helper";
 import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
 import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
 
@@ -36,7 +36,6 @@ export default function Form() {
   const [code, setCode] = useState("");
   const [hsnId, setHsnId] = useState('')
   const [salesPrice, setSalesPrice] = useState("")
-  const [priceMethodTypes, setPriceMethodTypes] = useState([])
 
 
   const [purchasePrice, setPurchasePrice] = useState('')
@@ -48,7 +47,6 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const [sizeList, setSizeList] = useState([])
   const [colorList, setColorList] = useState([])
-  const [priceMethod, setPriceMethod] = useState("STANDARD")
   const childRecord = useRef(0);
   const [itemPriceList, setItemPriceList] = useState([])
   const [sectionId, setSectionId] = useState('')
@@ -63,14 +61,6 @@ export default function Form() {
   const [showColorModal, setShowColorModal] = useState(false);
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
-
-  const isStandardPriceMethod = priceMethod === "STANDARD";
-  const standardBarcode = barcode?.trim() || "";
-  const standardSku = sku?.trim() || "";
-  const standardSalesPrice = salesPrice?.trim() || "";
-  const isStandardRequiredFieldMissing =
-    isStandardPriceMethod && (!standardBarcode || !standardSku || !standardSalesPrice);
-
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -142,25 +132,7 @@ export default function Form() {
 
 
   const AccessItemsColums = itemControlData?.data?.[0];
-
-
-
-  useEffect(() => {
-
-    const methods = [{ show: "STANDARD", value: "STANDARD" }];
-
-    if (AccessItemsColums?.sizeWise) {
-      methods.push({ show: "SIZE WISE", value: "SIZE" });
-    }
-
-    if (AccessItemsColums?.size_color_wise) {
-      methods.push({ show: "SIZE AND COLOR WISE", value: "SIZE_COLOR" });
-    }
-
-    setPriceMethodTypes(methods);
-
-  }, [AccessItemsColums]);
-  console.log(priceMethodTypes, "priceMethodTypes")
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(AccessItemsColums);
 
 
   const syncFormWithDb = useCallback(
@@ -178,7 +150,6 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
-        setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
         setSku("")
@@ -189,7 +160,6 @@ export default function Form() {
         setCode(data?.code ? data?.code : "")
         setItemType(data?.itemType ? data?.itemType : "")
         setHsnId(data?.hsnId ? data?.hsnId : "")
-        setPriceMethod(data?.priceMethod ? data?.priceMethod : "")
         setSizeId(data?.sizeId ? data?.sizeId : "")
         setPurchasePrice(data?.purchasePrice ? data?.purchasePrice : "")
         setPurchaseTaxType(data?.purchaseTaxType ? data?.purchaseTaxType : "")
@@ -220,7 +190,7 @@ export default function Form() {
 
 
 
-        if (data?.priceMethod === "STANDARD") {
+        if (barcodeGenerationMethod === "STANDARD") {
           setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setMinStockQty(data?.ItemPriceList?.[0]?.minStockQty ? data?.ItemPriceList?.[0]?.minStockQty : "")
@@ -258,7 +228,7 @@ export default function Form() {
         }
       }
     },
-    [id]
+    [barcodeGenerationMethod, id, itemControlData?.data, sizeData?.data, colorData?.data]
   );
 
   useEffect(() => {
@@ -274,8 +244,7 @@ export default function Form() {
     itemType,
     hsnId,
     active,
-    priceMethod,
-    itemPriceList: priceMethod === "STANDARD" ?
+    itemPriceList: barcodeGenerationMethod === "STANDARD" ?
       [{
         id: itemPriceList?.[0]?.id,
         itemId: itemPriceList?.[0]?.itemId,
@@ -284,8 +253,8 @@ export default function Form() {
         offerPrice,
         salesPrice,
         minStockQty,
-        sku: standardSku,
-        barcode: standardBarcode
+        sku: sku?.trim() || "",
+        barcode: barcode?.trim() || ""
       }] :
       itemPriceList,
     sectionId,
@@ -296,18 +265,18 @@ export default function Form() {
   };
 
   const validateData = (data) => {
-    if (!data.name || !data?.code || !data?.priceMethod) {
+    if (!data.name || !data?.code) {
       return false;
     }
 
-    if (data?.priceMethod === "STANDARD") {
+    if (barcodeGenerationMethod === "STANDARD") {
       const standardPrice = data?.itemPriceList?.[0];
       if (!standardPrice?.barcode?.trim() || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
         return false;
       }
     }
 
-    if (data.name && data?.code && data?.priceMethod) {
+    if (data.name && data?.code) {
       return true;
     }
     return false;
@@ -382,9 +351,7 @@ export default function Form() {
     }
     if (!validateData(data)) {
       Swal.fire({
-        title: isStandardPriceMethod
-          ? "Barcode, SKU, and Sales Price are required for standard price method."
-          : "Please fill all required fields...!",
+        title: "Please fill all required fields...!",
         icon: "warning",
         timer: 1000,
       });
@@ -767,7 +734,6 @@ export default function Form() {
                       onClick={() => {
                         saveData("close")
                       }}
-                      disabled={isStandardRequiredFieldMissing}
                       className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                   border border-blue-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600"
                     >
@@ -783,7 +749,6 @@ export default function Form() {
                       onClick={() => {
                         saveData("new")
                       }}
-                      disabled={isStandardRequiredFieldMissing}
 
                       className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-green-600"
@@ -946,27 +911,7 @@ export default function Form() {
                       <div>
 
                         <div className="grid grid-cols-12 gap-4 px-2">
-                          <div className="col-span-2">
-                            <DropdownInput
-                              name="Price Method"
-                              options={priceMethodTypes}
-                              value={priceMethod}
-                              setValue={(value) => {
-                                setPriceMethod(value)
-                                if (colorList || sizeList) {
-                                  setSizeList([])
-                                  setColorList([])
-                                  setItemPriceList([])
-                                }
-                              }}
-                              required
-                              readOnly={readOnly}
-                              disabled={childRecord.current > 0}
-                            />
-                          </div>
-
-
-                          {priceMethod == "STANDARD" && (
+                          {barcodeGenerationMethod == "STANDARD" && (
                             <>
                               <div className="col-span-2">
                                 <TextInputNew1
@@ -1020,17 +965,7 @@ export default function Form() {
                             </>
                           )}
 
-                          {priceMethod == "STANDARD" && (
-                            <div className="col-span-12 min-h-[20px] text-xs text-red-600">
-                              {isStandardRequiredFieldMissing
-                                ? "Barcode, SKU, and Sales Price are required when Price Method is STANDARD."
-                                : ""}
-                            </div>
-                          )}
-
-
-
-                          {(priceMethod == "SIZE" || priceMethod == "SIZE_COLOR") && (
+                          {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
 
                             <div className="col-span-3">
                               <div className="flex items-end gap-1">
@@ -1059,7 +994,7 @@ export default function Form() {
                             </div>
                           )}
 
-                          {(priceMethod == "SIZE_COLOR") && (
+                          {(barcodeGenerationMethod == "SIZE_COLOR") && (
 
                             <div className="col-span-3">
                               <div className="flex items-end gap-1">
@@ -1087,7 +1022,7 @@ export default function Form() {
                               </div>
                             </div>
                           )}
-                          {(priceMethod == "SIZE" || priceMethod == "SIZE_COLOR") && (
+                          {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
                             <>
                               <button
                                 type="button"
@@ -1101,7 +1036,7 @@ export default function Form() {
                             </>
                           )}
                         </div>
-                        {priceMethod != "STANDARD" && (
+                        {barcodeGenerationMethod != "STANDARD" && (
                           <>
                             <div className="grid grid-cols-12 gap-3 ">
                               <div className={`col-span-10 w-full ${Object.keys(fields).length > 1 ? " h-[280px]" : " h-[280px]"} `}>
@@ -1120,7 +1055,7 @@ export default function Form() {
                                         >
                                           Size Name
                                         </th>
-                                        {priceMethod == "SIZE_COLOR" && (
+                                        {barcodeGenerationMethod == "SIZE_COLOR" && (
                                           <th
 
                                             className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
@@ -1177,7 +1112,7 @@ export default function Form() {
                                             {findFromList(item?.sizeId, sizeData?.data, "name")}
                                           </td>
 
-                                          {priceMethod == "SIZE_COLOR" && (
+                                          {barcodeGenerationMethod == "SIZE_COLOR" && (
                                             <td className="border border-gray-200 w-80 px-1 py-1 text-left text-xs">
                                               {findFromList(item?.colorId, colorData?.data, "name")}
                                             </td>

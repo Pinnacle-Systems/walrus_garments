@@ -1,17 +1,23 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
-function validateStandardPriceMethod(priceMethod, itemPriceList) {
-    if (priceMethod !== "STANDARD") return;
+const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
 
-    const standardItem = itemPriceList?.[0];
-    if (!standardItem?.barcode?.trim() || !standardItem?.sku?.trim() || !standardItem?.salesPrice?.trim()) {
-        throw new Error("Barcode, SKU, and Sales Price are required when price method is STANDARD");
-    }
+async function getBarcodeGenerationMethod() {
+    const itemControlPanel = await prisma.ItemControlPanel.findFirst({
+        select: {
+            barcodeGenerationMethod: true,
+        }
+    });
+
+    return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
+}
+
+function validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList) {
+    return;
 }
 
 async function get(req) {
-    const { companyId, active } = req.query
     const data = await prisma.item.findMany({
         include: {
             ItemPriceList: true,
@@ -103,16 +109,20 @@ async function getSearch(req) {
                         contains: searchKey,
                     },
                 }
-            ],
+            ]
+        },
+        include: {
+            ItemPriceList: true,
         }
     })
-    return { statusCode: 0, data: data };
+    return { statusCode: 0, data };
 }
 async function create(body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, priceMethod, active,
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, active,
         sectionId, sectionType, subCategory, mainCategory
     } = body
-    validateStandardPriceMethod(priceMethod, itemPriceList);
+    const barcodeGenerationMethod = await getBarcodeGenerationMethod();
+    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
     const data = await prisma.item.create({
         data: {
             styleId: styleId ? parseInt(styleId) : undefined,
@@ -121,7 +131,6 @@ async function create(body) {
             hsnId: hsnId ? parseInt(hsnId) : undefined,
             code: code ? code : undefined,
             sectionId: sectionId ? parseInt(sectionId) : undefined,
-            priceMethod: priceMethod ? priceMethod : undefined,
             mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
             subCategoryId: subCategory ? parseInt(subCategory) : undefined,
 
@@ -155,9 +164,6 @@ async function create(body) {
 
         }
     });
-
-
-
     return { statusCode: 0, data: { data } };
 }
 
@@ -297,9 +303,10 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, priceMethod, active, itemPriceList, sectionId, fields, mainCategory, subCategory } = body
+    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory } = body
 
-    validateStandardPriceMethod(priceMethod, itemPriceList);
+    const barcodeGenerationMethod = await getBarcodeGenerationMethod();
+    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
 
 
     const dataFound = await prisma.item.findUnique({
@@ -332,7 +339,6 @@ async function update(id, body) {
                 hsnId: hsnId ? parseInt(hsnId) : undefined,
                 code: code ? code : undefined,
                 sectionId: sectionId ? parseInt(sectionId) : undefined,
-                priceMethod: priceMethod ? priceMethod : undefined,
                 active: active ? active : undefined,
                 mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
                 subCategoryId: subCategory ? parseInt(subCategory) : undefined,

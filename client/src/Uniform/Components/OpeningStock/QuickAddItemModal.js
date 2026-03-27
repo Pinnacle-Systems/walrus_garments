@@ -18,7 +18,7 @@ import { useGetSectionMasterQuery } from "../../../redux/uniformService/SectionM
 import { useGetItemCategoryQuery } from "../../../redux/uniformService/ItemCategoryMasterService";
 import { capitalizeFirstLetter, findFromList } from "../../../Utils/helper";
 
-const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit }) => {
+const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, barcodeGenerationMethod = "STANDARD" }) => {
   const params = getCommonParams();
   const [name, setName] = useState(itemName || "");
   const [code, setCode] = useState(itemName || "");
@@ -27,16 +27,18 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
   const [sectionId, setSectionId] = useState("");
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-  const [priceMethod, setPriceMethod] = useState("STANDARD");
   const [salesPrice, setSalesPrice] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
   const [minStockQty, setMinStockQty] = useState("");
+  const [sku, setSku] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [sizeList, setSizeList] = useState([]);
   const [colorList, setColorList] = useState([]);
   const [itemPriceList, setItemPriceList] = useState([]);
   const [active, setActive] = useState(true);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
+  const effectiveBarcodeGenerationMethod = barcodeGenerationMethod || "STANDARD";
 
   const [addItem] = useAddItemMasterMutation();
   const [updateItem] = useUpdateItemMasterMutation();
@@ -55,14 +57,15 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
       setSectionId(itemToEdit.sectionId || "");
       setMainCategory(itemToEdit.mainCategoryId || "");
       setSubCategory(itemToEdit.subCategoryId || "");
-      setPriceMethod(itemToEdit.priceMethod || "STANDARD");
       setActive(itemToEdit.active === undefined ? true : itemToEdit.active);
 
       if (itemToEdit.ItemPriceList) {
-        if (itemToEdit.priceMethod === "STANDARD") {
+        if (effectiveBarcodeGenerationMethod === "STANDARD") {
           setSalesPrice(itemToEdit.ItemPriceList[0]?.salesPrice || "");
           setOfferPrice(itemToEdit.ItemPriceList[0]?.offerPrice || "");
           setMinStockQty(itemToEdit.ItemPriceList[0]?.minStockQty || "");
+          setSku(itemToEdit.ItemPriceList[0]?.sku || "");
+          setBarcode(itemToEdit.ItemPriceList[0]?.barcode || "");
         } else {
           setItemPriceList(itemToEdit.ItemPriceList);
           const uniqueSizes = [...new Set(itemToEdit.ItemPriceList.filter(p => p.sizeId).map(p => p.sizeId))]
@@ -82,7 +85,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
         }
       }
     }
-  }, [itemToEdit, sizeData, colorData]);
+  }, [effectiveBarcodeGenerationMethod, itemToEdit, sizeData, colorData]);
 
   const handleSave = async () => {
     if (!name || !code || !itemType) {
@@ -90,25 +93,27 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
       return;
     }
 
-    if (priceMethod !== "STANDARD" && sizeList.length === 0) {
+    if (effectiveBarcodeGenerationMethod !== "STANDARD" && sizeList.length === 0) {
       toast.info("Please select at least one size");
       return;
     }
 
-    if (priceMethod === "SIZE_COLOR" && colorList.length === 0) {
+    if (effectiveBarcodeGenerationMethod === "SIZE_COLOR" && colorList.length === 0) {
       toast.info("Please select at least one color");
       return;
     }
 
     try {
       let itemPriceListToSave = [];
-      if (priceMethod === "STANDARD") {
+      if (effectiveBarcodeGenerationMethod === "STANDARD") {
         itemPriceListToSave = [{
           sizeId: null,
           colorId: null,
           offerPrice: offerPrice || 0,
           salesPrice: salesPrice || 0,
-          minStockQty: minStockQty || 0
+          minStockQty: minStockQty || 0,
+          sku: sku || "",
+          barcode: barcode || "",
         }];
       } else {
         itemPriceListToSave = itemPriceList.map(item => ({
@@ -128,7 +133,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
         sectionId,
         mainCategoryId: mainCategory,
         subCategoryId: subCategory,
-        priceMethod,
         itemPriceList: itemPriceListToSave,
         active,
         companyId: params.companyId,
@@ -154,13 +158,13 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
 
 
   useEffect(() => {
-    if (priceMethod === "SIZE") {
+    if (effectiveBarcodeGenerationMethod === "SIZE") {
       setItemPriceList(prev =>
         prev.filter(p => sizeList.some(s => s.value === p.sizeId))
       );
     }
 
-    if (priceMethod === "SIZE_COLOR") {
+    if (effectiveBarcodeGenerationMethod === "SIZE_COLOR") {
       setItemPriceList(prev =>
         prev.filter(
           p =>
@@ -169,17 +173,17 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
         )
       );
     }
-  }, [sizeList, colorList, priceMethod]);
+  }, [sizeList, colorList, effectiveBarcodeGenerationMethod]);
 
 
   const handleAddPriceRows = () => {
 
-    if (priceMethod === "SIZE" && sizeList.length === 0) {
+    if (effectiveBarcodeGenerationMethod === "SIZE" && sizeList.length === 0) {
       alert("Please select at least one Size");
       return;
     }
 
-    if (priceMethod === "SIZE_COLOR") {
+    if (effectiveBarcodeGenerationMethod === "SIZE_COLOR") {
       if (sizeList.length === 0) {
         alert("Please select Size");
         return;
@@ -195,7 +199,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
       const newList = [...prev];
 
       // SIZE METHOD
-      if (priceMethod === "SIZE") {
+      if (effectiveBarcodeGenerationMethod === "SIZE") {
         sizeList.forEach(size => {
 
           const exists = newList.some(
@@ -216,7 +220,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
       }
 
       // SIZE + COLOR METHOD
-      if (priceMethod === "SIZE_COLOR") {
+      if (effectiveBarcodeGenerationMethod === "SIZE_COLOR") {
         sizeList.forEach(size => {
 
           colorList.forEach(color => {
@@ -316,51 +320,14 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
           <fieldset className="border border-gray-300 rounded-lg p-4 bg-white h-[300px] ">
             <legend className="px-2 text-sm font-semibold text-gray-700">Pricing Information</legend>
             <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-4  ">
-                <DropdownInput
-                  name="Price Method"
-                  options={[
-                    { show: "STANDARD", value: "STANDARD" },
-                    { show: "SIZE WISE", value: "SIZE" },
-                    { show: "SIZE AND COLOR WISE", value: "SIZE_COLOR" },
-                  ]}
-                  value={priceMethod}
-                  setValue={(val) => {
-                    // if (priceMethod === "SIZE" && val === "SIZE_COLOR") {
-                    //   // Convert existing size data to size + color
-                    //   setItemPriceList(prev => {
-                    //     const newList = [];
-
-                    //     prev.forEach(p => {
-                    //       colorList.forEach(c => {
-                    //         const exists = newList.find(
-                    //           n => n.sizeId === p.sizeId && n.colorId === c.value
-                    //         );
-
-                    //         if (!exists) {
-                    //           newList.push({
-                    //             sizeId: p.sizeId,
-                    //             colorId: c.value,
-                    //             salesPrice: p.salesPrice,
-                    //             offerPrice: p.offerPrice,
-                    //             minStockQty: p.minStockQty,
-                    //           });
-                    //         }
-                    //       });
-                    //     });
-
-                    //     return newList;
-                    //   });
-                    // }
-
-                    setPriceMethod(val);
-                  }}
-                  required={true}
-                />
-              </div>
-
-              {priceMethod === "STANDARD" && (
+              {effectiveBarcodeGenerationMethod === "STANDARD" && (
                 <>
+                  <div className="col-span-2">
+                    <TextInputNew1 name="Barcode" value={barcode} setValue={setBarcode} />
+                  </div>
+                  <div className="col-span-2">
+                    <TextInputNew1 name="SKU" value={sku} setValue={setSku} />
+                  </div>
                   <div className="col-span-2">
                     <TextInputNew1 name="Sales Price" value={salesPrice} setValue={setSalesPrice} />
                   </div>
@@ -373,7 +340,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
                 </>
               )}
 
-              {(priceMethod === "SIZE" || priceMethod === "SIZE_COLOR") && (
+              {(effectiveBarcodeGenerationMethod === "SIZE" || effectiveBarcodeGenerationMethod === "SIZE_COLOR") && (
                 <div className="col-span-3">
                   <div className="flex items-end gap-1">
                     <div className="flex-1">
@@ -392,7 +359,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
                 </div>
               )}
 
-              {priceMethod === "SIZE_COLOR" && (
+              {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && (
                 <div className="col-span-3">
                   <div className="flex items-end gap-1">
                     <div className="flex-1">
@@ -411,7 +378,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
                 </div>
               )}
 
-              {(priceMethod !== "STANDARD") && (
+              {(effectiveBarcodeGenerationMethod !== "STANDARD") && (
                 <div className="col-span-1 px-1">
                   <button
                     type="button"
@@ -424,7 +391,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
               )}
             </div>
 
-            {priceMethod !== "STANDARD" && itemPriceList.length > 0 && (
+            {effectiveBarcodeGenerationMethod !== "STANDARD" && itemPriceList.length > 0 && (
               <div className="mt-4 border rounded  flex flex-col h-[180px]">
                 <div className="overflow-y-auto flex-1 h-full">
                   <table className="w-full text-xs text-left border-collapse">
@@ -432,7 +399,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
                       <tr>
                         <th className="p-2 border-b w-12 text-center bg-gray-100">S.No</th>
                         <th className="p-2 border-b bg-gray-100">Size Name</th>
-                        {priceMethod === "SIZE_COLOR" && <th className="p-2 border-b bg-gray-100">Color Name</th>}
+                        {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <th className="p-2 border-b bg-gray-100">Color Name</th>}
                         <th className="p-2 border-b w-32 bg-gray-100">Sales Price</th>
                         <th className="p-2 border-b w-32 bg-gray-100">Offer Price</th>
                       </tr>
@@ -442,7 +409,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit })
                         <tr key={idx} className="hover:bg-gray-50 border-b">
                           <td className="p-2 text-center border-r">{idx + 1}</td>
                           <td className="p-2 border-r">{findFromList(item.sizeId, sizeData?.data, "name")}</td>
-                          {priceMethod === "SIZE_COLOR" && <td className="p-2 border-r">{findFromList(item.colorId, colorData?.data, "name")}</td>}
+                          {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <td className="p-2 border-r">{findFromList(item.colorId, colorData?.data, "name")}</td>}
                           <td className="p-1 border-r">
                             <input
                               type="number"

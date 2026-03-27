@@ -3,12 +3,13 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { capitalizeFirstLetter, findFromList, getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { capitalizeFirstLetter, findFromList, getUniqueArrayByColor, getUniqueArrayBySize, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 
@@ -45,6 +46,8 @@ const YarnPoItems = ({
 
 
     const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
+    const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
+    const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
         if (!itemPriceList?.data || !itemId || !sizeId) return null;
@@ -63,14 +66,14 @@ const YarnPoItems = ({
         const newBlend = structuredClone(poItems);
         const currentItemId = field === "itemId" ? value : newBlend[index].itemId;
         const selectedItem = itemList?.data?.find(item => String(item.id) === String(currentItemId));
-        const isStandardPriceItem = selectedItem?.priceMethod === "STANDARD";
+        const isStandardPriceItem = barcodeGenerationMethod === "STANDARD";
 
         if (field === "itemId") {
             newBlend[index]["sizeId"] = "";
             newBlend[index]["colorId"] = "";
             newBlend[index]["barcode"] = "";
 
-            const standardPrice = selectedItem?.priceMethod === "STANDARD"
+            const standardPrice = barcodeGenerationMethod === "STANDARD"
                 ? selectedItem?.ItemPriceList?.[0]
                 : null;
 

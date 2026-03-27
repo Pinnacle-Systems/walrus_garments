@@ -5,14 +5,14 @@ import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Loader from "../Loader";
-import { uppercase } from "../../../Utils/helper";
+import { dropDownListObject } from "../../../Utils/contructObject";
+import { uppercase, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
 
 const ItemSettings = () => {
 
     const [id, setId] = useState("")
     const [sectionType, setSectionType] = useState(false)
-    const [sizeWise, setSizeWise] = useState(false)
-    const [sizeColor, setSizeColor] = useState(false)
+    const [barcodeGenerationMethod, setBarcodeGenerationMethod] = useState("STANDARD")
     const [field1, setField1] = useState("")
     const [field2, setField2] = useState("")
     const [field3, setField3] = useState("")
@@ -50,8 +50,7 @@ const ItemSettings = () => {
     const syncFormWithDb = useCallback((data) => {
         if (!id) {
             setSectionType(data?.sectionType ? data?.sectionType : false)
-            setSizeWise(data?.sizeWise ? data?.sizeWise : false)
-            setSizeColor(data?.size_color_wise ? data?.size_color_wise : false)
+            setBarcodeGenerationMethod(resolveBarcodeGenerationMethod(data))
             setField1(data?.field1 ? data?.field1 : "")
             setField2(data?.field2 ? data?.field2 : "")
             setField3(data?.field3 ? data?.field3 : "")
@@ -60,8 +59,7 @@ const ItemSettings = () => {
 
         } else {
             setSectionType(data?.sectionType ? data?.sectionType : false)
-            setSizeWise(data?.sizeWise ? data?.sizeWise : false)
-            setSizeColor(data?.size_color_wise ? data?.size_color_wise : false)
+            setBarcodeGenerationMethod(resolveBarcodeGenerationMethod(data))
             setField1(data?.field1 ? data?.field1 : "")
             setField2(data?.field2 ? data?.field2 : "")
             setField3(data?.field3 ? data?.field3 : "")
@@ -80,7 +78,7 @@ const ItemSettings = () => {
 
     const data = {
         id, field1, field2, field3, field4, field5,
-        sectionType, sizeWise, sizeColor
+        sectionType, barcodeGenerationMethod
     }
 
     const handleSubmitCustom = async (callback, data, text) => {
@@ -149,32 +147,24 @@ const ItemSettings = () => {
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-gray-600 mb-5  ">
-                                Price Method
+                                Barcode Generation Method
                             </p>
 
-                            <div className="space-y-3">
-                                <div className="flex flex-row gap-5 ">
-                                    <input
-                                        className="border border-gray-500 py-1 px-1"
-                                        type="checkbox"
-                                        onChange={(e) => setSizeWise(e.target.checked)}
-                                        checked={sizeWise}
-                                    />
-                                    <span className="font-bold ">Size Wise</span>
-
-                                </div>
-
-                                <div className="flex flex-row gap-5 ">
-                                    <input
-                                        className="border border-gray-500 py-1 px-1"
-                                        type="checkbox"
-                                        onChange={(e) => setSizeColor(e.target.checked)}
-                                        checked={sizeColor}
-                                    />
-                                    <span className="font-bold ">Size & color Wise</span>
-
-                                </div>
-                            </div>
+                            <select
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-[350px] bg-white"
+                                value={barcodeGenerationMethod}
+                                onChange={(e) => setBarcodeGenerationMethod(e.target.value)}
+                            >
+                                {dropDownListObject([
+                                    { show: "STANDARD", value: "STANDARD" },
+                                    { show: "SIZE", value: "SIZE" },
+                                    { show: "SIZE + COLOR", value: "SIZE_COLOR" },
+                                ], "show", "value").map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.show}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                     </div>

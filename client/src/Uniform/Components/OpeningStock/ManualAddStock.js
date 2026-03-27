@@ -18,6 +18,8 @@ import { dropDownListObject } from "../../../Utils/contructObject";
 import Swal from "sweetalert2";
 import QuickAddItemModal from "./QuickAddItemModal";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
+import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
 
 const ManualAddStock = ({ params }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
@@ -40,6 +42,7 @@ const ManualAddStock = ({ params }) => {
 
   // --- Queries & Mutations ---
   const { data: itemList } = useGetItemMasterQuery({ params });
+  const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -49,6 +52,7 @@ const ManualAddStock = ({ params }) => {
 
   const branchOptionsList = branchList?.data?.map((b) => ({ value: b.id, label: b.branchName })) || [];
   const locationOptionsList = locationList?.data?.map((l) => ({ value: l.id, label: l.storeName })) || [];
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
 
   React.useEffect(() => {
     if (branchId) setSelectedBranchId(branchId);
@@ -110,25 +114,13 @@ const ManualAddStock = ({ params }) => {
         if (["itemId", "sizeId", "colorId"].includes(field)) {
           const selectedItem = itemList?.data?.find((i) => i.id === updatedRow.itemId);
           if (selectedItem) {
-            const { priceMethod, ItemPriceList } = selectedItem;
-            let foundPrice = updatedRow.price;
-
-            if (priceMethod === "STANDARD") {
-              foundPrice = ItemPriceList?.[0]?.salesPrice || 0;
-            } else if (priceMethod === "SIZE") {
-              if (updatedRow.sizeId) {
-                const priceEntry = ItemPriceList?.find((p) => p.sizeId === updatedRow.sizeId);
-                if (priceEntry) foundPrice = priceEntry.salesPrice;
-              }
-            } else if (priceMethod === "SIZE_COLOR") {
-              if (updatedRow.sizeId && updatedRow.colorId) {
-                const priceEntry = ItemPriceList?.find(
-                  (p) => p.sizeId === updatedRow.sizeId && p.colorId === updatedRow.colorId
-                );
-                if (priceEntry) foundPrice = priceEntry.salesPrice;
-              }
-            }
-            updatedRow.price = foundPrice;
+            const itemBarcodeGenerationMethod = getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod);
+            updatedRow.price = getItemPriceForBarcodeGenerationMode(
+              selectedItem,
+              itemBarcodeGenerationMethod,
+              updatedRow.sizeId,
+              updatedRow.colorId
+            );
           }
         }
 
@@ -136,13 +128,6 @@ const ManualAddStock = ({ params }) => {
       })
     );
   };
-
-  const getStandardBarcodeMissingRowIndex = () =>
-    rows.findIndex((row) => {
-      if (!row.itemId) return false;
-      const selectedItem = itemList?.data?.find((item) => item.id === row.itemId);
-      return selectedItem?.priceMethod === "STANDARD" && !row.barcode?.toString().trim();
-    });
 
   // --- Modal Logic ---
   const openQuickAdd = (type, value, rowId, editItem = null) => {
@@ -164,11 +149,6 @@ const ManualAddStock = ({ params }) => {
     if (!selectedBranchId) { toast.warning("Please select a branch."); return; }
     if (!selectedLocationId) { toast.warning("Please select a location."); return; }
 
-    const missingBarcodeIdx = getStandardBarcodeMissingRowIndex();
-    if (missingBarcodeIdx !== -1) {
-      toast.warning(`Barcode is required for standard pricing item at row ${missingBarcodeIdx + 1}`);
-      return;
-    }
     const valid = rows.every((r) => r.itemId && r.qty);
     if (!valid) { toast.warning("Fill Item and Qty for all rows"); return; }
     if (!window.confirm("Save stock?")) return;
@@ -288,7 +268,9 @@ const ManualAddStock = ({ params }) => {
                               size: "",
                               colorId: "",
                               color: "",
-                              price: selectedItem?.priceMethod === "STANDARD" ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0 : ""
+                              price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
+                                ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
+                                : ""
                             });
                           }}
                           onInputChange={(v) => v.toUpperCase()}
@@ -348,6 +330,7 @@ const ManualAddStock = ({ params }) => {
           itemName={modalState.item.value}
           itemToEdit={modalState.item.editItem}
           onCreated={handleQuickSaveItem}
+          barcodeGenerationMethod={barcodeGenerationMethod}
         />
       )}
 
