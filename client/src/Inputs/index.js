@@ -1,6 +1,7 @@
 
 import validator from "validator";
-import React, { useEffect, useRef, useState, forwardRef } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { MultiSelect } from "react-multi-select-component";
 import { findFromList } from "../Utils/helper";
 import "./index.css";
@@ -16,6 +17,7 @@ import DynamicRenderer from "../Uniform/Components/Order/DynamicComponent";
 import Select, { components } from "react-select";
 import Modal from "../UiComponents/Modal";
 import { usePermissionForUsers } from "../Basic/components/HasPermission";
+import Swal from "sweetalert2";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -2653,34 +2655,104 @@ export const DropdownInputNew = forwardRef(({
   openOnFocus = false,
   show,
   searchable = false,
+  addNewLabel = "+ Add New",
+  childComponent = null,
+  addNewModalWidth = "w-[40%] h-[45%]",
+  widthClass
 }, ref) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [showAddNew, setShowAddNew] = useState(false);
+  const [editingOption, setEditingOption] = useState(null);
+  const [deletingOption, setDeletingOption] = useState(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
   const searchRef = useRef(null);
+  const listRef = useRef(null);
+  const openedByFocusRef = useRef(false);
 
   const isDisabled = readOnly || disabled;
 
+  const handleAddNewSuccess = (newValue) => {
+    beforeChange();
+    setValue(newValue);
+    setShowAddNew(false);
+    setIsOpen(false);
+    setSearch("");
+    if (onBlur) onBlur();
+  };
+
+  const handleDeleteSuccess = () => {
+    if (deletingOption && String(deletingOption.value) === String(value)) {
+      beforeChange();
+      setValue("");
+      if (onBlur) onBlur();
+    }
+    setDeletingOption(null);
+  };
+
+  // Use custom dropdown when addNewComponent is provided (native select can't host clickable options)
+  const useCustomDropdown = searchable || !!childComponent;
+
+  const updateDropdownPos = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom, left: rect.left, width: rect.width });
+    }
+  }, []);
+
   // Close on outside click (searchable mode)
   useEffect(() => {
-    if (!searchable) return;
+    if (!useCustomDropdown) return;
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      if (
+        containerRef.current && !containerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
         setSearch("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [searchable]);
+  }, [useCustomDropdown]);
 
-  // Focus search input when dropdown opens
+  // Focus search input when dropdown opens; reset highlight
   useEffect(() => {
     if (isOpen && searchRef.current) {
       searchRef.current.focus();
     }
+    if (!isOpen) setHighlightedIndex(-1);
   }, [isOpen]);
+
+  // Reset highlight when search changes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [search]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listRef.current) {
+      const item = listRef.current.children[highlightedIndex];
+      if (item) item.scrollIntoView({ block: "nearest" });
+    }
+  }, [highlightedIndex]);
+
+  // Reposition dropdown on resize or scroll while open
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleReposition = () => updateDropdownPos();
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [isOpen, updateDropdownPos]);
 
   useEffect(() => {
     if (ref?.current && openOnFocus) {
@@ -2688,8 +2760,8 @@ export const DropdownInputNew = forwardRef(({
     }
   }, [openOnFocus]);
 
-  // Native select (non-searchable)
-  if (!searchable) {
+  // Native select (non-searchable, no addNewComponent)
+  if (!useCustomDropdown) {
     const handleOnChange = (e) => {
       setValue(e.target.value);
     };
@@ -2740,7 +2812,7 @@ export const DropdownInputNew = forwardRef(({
     );
   }
 
-  // Searchable custom dropdown
+  // Custom dropdown (searchable or has addNewComponent)
   const selectedLabel = options?.find((o) => String(o.value) === String(value))?.show || "";
   const filtered = (options || []).filter((o) =>
     String(o.show).toLowerCase().includes(search.toLowerCase())
@@ -2755,17 +2827,34 @@ export const DropdownInputNew = forwardRef(({
   };
 
   return (
-    <div className={`mb-1 ${width} relative`} ref={containerRef}>
+    <div className={`mb-1 ${width}`} ref={containerRef}>
       {name && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
       <button
+        ref={buttonRef}
         type="button"
         disabled={isDisabled}
         tabIndex={tabIndex ?? undefined}
-        onClick={() => { if (!isDisabled) setIsOpen((o) => !o); }}
+        onFocus={() => {
+          if (!isDisabled) {
+            openedByFocusRef.current = true;
+            updateDropdownPos();
+            setIsOpen(true);
+          }
+        }}
+        onClick={() => {
+          if (!isDisabled) {
+            if (openedByFocusRef.current) {
+              openedByFocusRef.current = false;
+              return;
+            }
+            updateDropdownPos();
+            setIsOpen((o) => !o);
+          }
+        }}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-left
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm flex justify-between items-center
@@ -2780,8 +2869,12 @@ export const DropdownInputNew = forwardRef(({
         </svg>
       </button>
 
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+          className="bg-white border border-gray-300 rounded-lg shadow-lg"
+        >
           <div className="p-1.5 border-b border-gray-200">
             <input
               ref={searchRef}
@@ -2790,9 +2883,35 @@ export const DropdownInputNew = forwardRef(({
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
               className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.min(i + 1, filtered.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.max(i - 1, 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
+                    handleSelect(filtered[highlightedIndex].value);
+                  }
+                } else if (e.key === "Escape") {
+                  setIsOpen(false);
+                  setSearch("");
+                  buttonRef.current?.focus();
+                }
+              }}
             />
           </div>
-          <ul className="max-h-48 overflow-y-auto py-1">
+          <ul ref={listRef} className="max-h-48 overflow-y-auto py-1">
+            {childComponent && !isDisabled && (
+              <li
+                onClick={() => { setIsOpen(false); setSearch(""); setShowAddNew(true); }}
+                className="px-3 py-1.5 text-xs text-blue-600 font-semibold hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+              >
+                {addNewLabel}
+              </li>
+            )}
             {clear && (
               <li
                 onClick={() => handleSelect("")}
@@ -2807,17 +2926,84 @@ export const DropdownInputNew = forwardRef(({
               filtered.map((option, index) => (
                 <li
                   key={index}
-                  onClick={() => handleSelect(option.value)}
-                  className={`px-3 py-1.5 text-xs cursor-pointer hover:bg-blue-50
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  className={`group px-3 py-1.5 text-xs cursor-pointer flex justify-between items-center
+                    ${index === highlightedIndex ? "bg-blue-50" : ""}
                     ${String(option.value) === String(value) ? "bg-blue-100 font-semibold text-blue-700" : "text-gray-800"}`}
                 >
-                  {option.show}
+                  <span onClick={() => handleSelect(option.value)} className="flex-1 truncate">{option.show}</span>
+                  {(childComponent || childComponent) && !isDisabled && (
+                    <span className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {childComponent && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setIsOpen(false); setSearch(""); setEditingOption(option); }}
+                          className="p-0.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded"
+                        >
+                          <FaEdit size={10} />
+                        </button>
+                      )}
+                      {childComponent && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            console.log(option, "option")
+                            if (childRecordCount(option?._count)) {
+                              Swal.fire({
+                                title: `Child Record Exists`,
+                                icon: "warning",
+                              });
+                              return;
+                            }
+                            e.stopPropagation(); setIsOpen(false); setSearch(""); setDeletingOption(option)
+                          }}
+                          className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <FaTrash size={10} />
+                        </button>
+                      )}
+                    </span>
+                  )}
                 </li>
               ))
             )}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
+      {showAddNew && childComponent && (() => {
+        const AddNew = childComponent;
+        return (
+          <Modal isOpen={showAddNew} onClose={() => setShowAddNew(false)} widthClass={addNewModalWidth}>
+            <AddNew onSuccess={handleAddNewSuccess} onClose={() => setShowAddNew(false)} />
+          </Modal>
+        );
+      })()}
+      {editingOption && childComponent && (() => {
+        const EditComp = childComponent;
+        return (
+          <Modal isOpen={!!editingOption} onClose={() => setEditingOption(null)} widthClass={addNewModalWidth}>
+            <EditComp
+              editId={editingOption.value}
+              onSuccess={() => setEditingOption(null)}
+              onClose={() => setEditingOption(null)}
+            />
+          </Modal>
+        );
+      })()}
+      {deletingOption && childComponent && (() => {
+        const DeleteComp = childComponent;
+        return (
+          <Modal isOpen={!!deletingOption} onClose={() => setDeletingOption(null)} widthClass={addNewModalWidth}>
+            <DeleteComp
+              deleteId={deletingOption.value}
+              deleteLabel={deletingOption.show}
+              onSuccess={handleDeleteSuccess}
+              onClose={() => setDeletingOption(null)}
+            />
+          </Modal>
+        );
+      })()}
     </div>
   );
 });

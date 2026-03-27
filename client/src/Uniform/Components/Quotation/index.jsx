@@ -159,6 +159,7 @@ const Quotation = () => {
     return (
         <>
             {showManufacturer ? (
+                <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
                 <Quotaion
                     onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
                     docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
@@ -171,10 +172,8 @@ const Quotation = () => {
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                     supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} termsData={termsData}
                     term={term} setTerm={setTerm}
-
-
-
                 />
+                </div>
 
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">

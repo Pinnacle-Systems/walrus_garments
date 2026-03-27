@@ -15,24 +15,20 @@ import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
 
 const MODEL = "Employee Category Master";
-export default function Form() {
-
-    //  const [openTable,setOpenTable] = useState(false);
+export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
 
     const [form, setForm] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
-    const [id, setId] = useState("");
+    const [id, setId] = useState(editId || deleteId || "");
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
 
-
     const [searchValue, setSearchValue] = useState("");
     const nameRef = useRef(null);
     const childRecord = useRef(0);
     const formRef = useRef(null);
-
 
     const params = {
         companyId: secureLocalStorage.getItem(
@@ -46,7 +42,6 @@ export default function Form() {
         isLoading: isSingleLoading,
     } = useGetEmployeeCategoryByIdQuery(id, { skip: !id });
 
-
     const [addData] = useAddEmployeeCategoryMutation();
     const [updateData] = useUpdateEmployeeCategoryMutation();
     const [removeData] = useDeleteEmployeeCategoryMutation();
@@ -58,9 +53,7 @@ export default function Form() {
                 setCode("");
                 setActive(true);
                 childRecord.current = 0;
-
             } else {
-                // setReadOnly(true);
                 setName(data?.name || "");
                 setCode(data?.code || "");
                 setActive(id ? (data?.active ?? false) : true);
@@ -76,28 +69,30 @@ export default function Form() {
 
     const data = {
         name, code, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), id
-    }
+    };
 
     const validateData = (data) => {
-        if (data.name) {
-            return true;
-        }
+        if (data.name) return true;
         return false;
-    }
+    };
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
-            syncFormWithDb(undefined)
+            setId(returnData.data.id);
+            if (onSuccess) {
+                onSuccess(returnData.data.id);
+                return;
+            }
             await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
             });
             if (nextProcess == "new") {
-                onNew()
+                syncFormWithDb(undefined);
+                onNew();
             } else {
-                setForm(false)
+                setForm(false);
             }
         } catch (error) {
             await Swal.fire({
@@ -120,10 +115,7 @@ export default function Form() {
         };
 
         if (!validateData(finalData)) {
-            Swal.fire({
-                title: "Please fill all required fields...!",
-                icon: "error",
-            });
+            Swal.fire({ title: "Please fill all required fields...!", icon: "error" });
             nameRef.current?.focus();
             return;
         }
@@ -133,19 +125,13 @@ export default function Form() {
             foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
         } else {
             foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
-
         }
         if (foundItem) {
-            Swal.fire({
-                text: "The Employee Category Name already exists.",
-                icon: "warning",
-            });
+            Swal.fire({ text: "The Employee Category Name already exists.", icon: "warning" });
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
-        }
+        if (!window.confirm("Are you sure save the details ...?")) return;
         if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
@@ -155,31 +141,18 @@ export default function Form() {
 
     const deleteData = async (id) => {
         if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
+            if (!window.confirm("Are you sure to delete...?")) return;
             try {
                 const deldata = await removeData(id).unwrap();
                 if (deldata?.statusCode == 1) {
-                    await Swal.fire({
-                        icon: 'error',
-                        title: 'Submission error',
-                        text: deldata?.message || 'Something went wrong!',
-                    });
-                    return
+                    await Swal.fire({ icon: 'error', title: 'Submission error', text: deldata?.message || 'Something went wrong!' });
+                    return;
                 }
                 setId("");
-                await Swal.fire({
-                    title: "Deleted Successfully",
-                    icon: "success",
-                });
+                await Swal.fire({ title: "Deleted Successfully", icon: "success" });
                 setForm(false);
             } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Submission error',
-                    text: error.data?.message || 'Something went wrong!',
-                });
+                await Swal.fire({ icon: 'error', title: 'Submission error', text: error.data?.message || 'Something went wrong!' });
                 setForm(false);
             }
         }
@@ -198,33 +171,11 @@ export default function Form() {
         setReadOnly(false);
         setForm(true);
         setSearchValue("");
-        setTimeout(() => {
-            nameRef.current?.focus();
-        }, 100);
+        setTimeout(() => { nameRef.current?.focus(); }, 100);
     };
 
-    function onDataClick(id) {
-        setId(id);
-        setForm(true);
-    }
-
-    const tableHeaders = [
-        "S.NO", "Code", "Name", "Status", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "
-    ]
-    const tableDataNames = ["index+1", "dataObj.code", "dataObj.name", 'dataObj.active ? ACTIVE : INACTIVE', " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
-
-    const handleView = (id) => {
-        setId(id);
-        setForm(true);
-        setReadOnly(true);
-        console.log("view");
-    };
-    const handleEdit = (id) => {
-        setId(id);
-        setForm(true);
-        setReadOnly(false);
-        console.log("Edit");
-    };
+    const handleView = (id) => { setId(id); setForm(true); setReadOnly(true); };
+    const handleEdit = (id) => { setId(id); setForm(true); setReadOnly(false); };
 
     const ACTIVE = (
         <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
@@ -236,47 +187,154 @@ export default function Form() {
             <Power size={10} />
         </div>
     );
+
     const columns = [
-        {
-            header: "S.No",
-            accessor: (item, index) => index + 1,
-            className: "font-medium text-gray-900 w-12  text-center",
-        },
-
-        {
-            header: "Employee Category Name",
-            accessor: (item) => item?.name,
-            //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
-        },
-
-        {
-            header: "Status",
-            accessor: (item) => (item.active ? ACTIVE : INACTIVE),
-            //   cellClass: () => "font-medium text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-16",
-        },
-
+        { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
+        { header: "Employee Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left pl-2 uppercase w-96" },
+        { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
     useEffect(() => {
-        if (form && nameRef.current) {
+        if ((form || onSuccess) && nameRef.current) {
             nameRef.current.focus();
         }
-    }, [form]);
+    }, [form, onSuccess]);
+
+    const formBody = (
+        <div className="flex-1 overflow-auto p-3">
+            <div className="grid grid-cols-1 gap-3 h-full">
+                <div className="lg:col-span-2 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                        <div className="grid grid-cols-2 gap-3" ref={formRef}>
+                            <TextInputNew1
+                                name="Category Name"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                ref={nameRef}
+                            />
+                            <TextInputNew
+                                name="Code"
+                                type="text"
+                                value={code}
+                                setValue={setCode}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                            />
+                            <ToggleButton
+                                name="Status"
+                                options={statusDropdown}
+                                value={active}
+                                setActive={setActive}
+                                required={true}
+                                readOnly={readOnly}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    if (deleteId) {
+        const childCount = singleData?.data?.childRecord ?? 0;
+        const isLoadingRecord = isSingleFetching || isSingleLoading;
+
+        const handleConfirmDelete = async () => {
+            try {
+                const res = await removeData(deleteId).unwrap();
+                if (res?.statusCode === 1) {
+                    toast.error(res?.data?.message || "Cannot delete: child records exist");
+                    return;
+                }
+                toast.success("Employee Category deleted successfully");
+                onSuccess?.();
+            } catch (err) {
+                toast.error(err?.data?.message || "Failed to delete employee category");
+            }
+        };
+
+        return (
+            <div className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete Employee Category</h2>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
+                    {isLoadingRecord ? (
+                        <p className="text-xs text-gray-400">Checking records...</p>
+                    ) : childCount > 0 ? (
+                        <>
+                            <div className="flex flex-col items-center gap-2">
+                                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                </svg>
+                                <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
+                                <p className="text-xs text-gray-600 text-center">
+                                    <span className="font-semibold">"{deleteLabel}"</span> has{" "}
+                                    <span className="font-semibold text-red-600">{childCount} linked employee{childCount > 1 ? "s" : ""}</span>.
+                                    Remove them first before deleting this category.
+                                </p>
+                            </div>
+                            <button type="button" onClick={onClose}
+                                className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                Close
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-gray-700 text-center">
+                                Are you sure you want to delete{" "}
+                                <span className="font-semibold">"{deleteLabel}"</span>?
+                            </p>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={onClose}
+                                    className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                    Cancel
+                                </button>
+                                <button type="button" onClick={handleConfirmDelete}
+                                    className="px-4 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700 rounded">
+                                    Delete
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    if (onSuccess) {
+        return (
+            <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                        {editId ? "Edit Employee Category" : "Add New Employee Category"}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+                    >
+                        <Check size={14} />
+                        {editId ? "Update" : "Save"}
+                    </button>
+                </div>
+                {formBody}
+            </div>
+        );
+    }
 
     return (
-
         <div onKeyDown={handleKeyDown} className="p-1">
-            <div className="w-full flex bg-white p-1 justify-between  items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Employee Category  Master</h5>
+            <div className="w-full flex bg-white p-1 justify-between items-center">
+                <h5 className="text-2xl font-bold text-gray-800">Employee Category Master</h5>
                 <div className="flex items-center">
                     <button
-                        onClick={() => {
-                            setForm(true);
-                            onNew();
-                        }}
-                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                        onClick={() => { setForm(true); onNew(); }}
+                        className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >
                         + Add New Employee Category
                     </button>
@@ -300,47 +358,29 @@ export default function Form() {
                         isOpen={form}
                         form={form}
                         widthClass={"w-[40%] h-[40%]"}
-                        onClose={() => {
-                            setForm(false);
-                        }}
+                        onClose={() => { setForm(false); }}
                     >
-                        <div className="h-full flex flex-col bg-gray-200 ">
+                        <div className="h-full flex flex-col bg-gray-200">
                             <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                                 <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
-                                        {id
-                                            ? !readOnly
-                                                ? "Edit Employee Category  Master"
-                                                : "Employee Category  Master"
-                                            : "Add New Employee Category "}
+                                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                        {id ? (!readOnly ? "Edit Employee Category Master" : "Employee Category Master") : "Add New Employee Category"}
                                     </h2>
                                 </div>
                                 <div className="flex gap-2">
                                     <div>
                                         {readOnly && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setForm(false);
-                                                    setSearchValue("");
-                                                    setId(false);
-                                                }}
-                                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                                            >
+                                            <button type="button"
+                                                onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
+                                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
                                                 Cancel
                                             </button>
                                         )}
                                     </div>
                                     <div className="flex gap-2">
                                         {!readOnly && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    saveData("close")
-                                                }}
-                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs"
-                                            >
+                                            <button type="button" onClick={() => saveData("close")}
+                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
                                                 <Check size={14} />
                                                 {id ? "Update" : "Save & close"}
                                             </button>
@@ -348,69 +388,20 @@ export default function Form() {
                                     </div>
                                     <div className="flex gap-2">
                                         {(!readOnly && !id) && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    saveData("new")
-                                                }}
-
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"
-                                            >
+                                            <button type="button" onClick={() => saveData("new")}
+                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
                                                 <Check size={14} />
-                                                {"Save & New"}
+                                                Save & New
                                             </button>
                                         )}
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="flex-1 overflow-auto p-3 ">
-                                <div className="grid grid-cols-1  gap-3  h-full ">
-                                    <div className="lg:col-span-2 space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="grid grid-cols-2  gap-3 " ref={formRef}>
-
-
-
-                                                <TextInputNew1
-                                                    name="Category Name"
-                                                    type="text"
-                                                    value={name}
-                                                    setValue={setName}
-                                                    required={true}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                    ref={nameRef}
-                                                />
-
-                                                <TextInputNew
-                                                    name="Code"
-                                                    type="text"
-                                                    value={code}
-                                                    setValue={setCode}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                />
-                                                <ToggleButton
-                                                    name="Status"
-                                                    options={statusDropdown}
-                                                    value={active}
-                                                    setActive={setActive}
-                                                    required={true}
-                                                    readOnly={readOnly}
-                                                />
-
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {formBody}
                         </div>
                     </Modal>
                 )}
-            </div >
-        </div >
-    )
+            </div>
+        </div>
+    );
 }

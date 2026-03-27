@@ -7,7 +7,8 @@ import {
   useUpdateStateMutation,
   useDeleteStateMutation,
 } from "../../../redux/services/StateMasterService";
-import { useGetCountriesQuery, useAddCountryMutation } from "../../../redux/services/CountryMasterService";
+import { useGetCountriesQuery } from "../../../redux/services/CountryMasterService";
+import CountryMaster from "../CountryMaster";
 
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
@@ -25,23 +26,19 @@ import Swal from "sweetalert2";
 
 const MODEL = "State Master";
 
-export default function Form() {
+export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
   const [form, setForm] = useState(false);
   const [errors, setErrors] = useState({});
 
   const [openTable, setOpenTable] = useState(false);
 
   const [readOnly, setReadOnly] = useState(false);
-  const [id, setId] = useState("");
+  const [id, setId] = useState(editId || deleteId || "");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [active, setActive] = useState(true);
   const [country, setCountry] = useState("");
   const [gstNo, setGstNo] = useState("");
-
-  const [showCreateCountry, setShowCreateCountry] = useState(false);
-  const [newCountryName, setNewCountryName] = useState("");
-  const [newCountryCode, setNewCountryCode] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
   const nameRef = useRef(null);
@@ -73,7 +70,6 @@ export default function Form() {
   const [addData] = useAddStateMutation();
   const [updateData] = useUpdateStateMutation();
   const [removeData] = useDeleteStateMutation();
-  const [addCountry, { isLoading: isAddingCountry }] = useAddCountryMutation();
 
   const syncFormWithDb = useCallback((data) => {
 
@@ -107,6 +103,11 @@ export default function Form() {
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
+      setId(returnData.data.id);
+      if (onSuccess) {
+        onSuccess(returnData.data.id);
+        return;
+      }
       await Swal.fire({
         title: text + "Successfully",
         icon: "success",
@@ -212,16 +213,6 @@ export default function Form() {
     }
   };
 
-  const handleCountryChange = (val) => {
-    if (val === "__create_country__") {
-      setNewCountryName("");
-      setNewCountryCode("");
-      setShowCreateCountry(true);
-    } else {
-      setCountry(val);
-    }
-  };
-
   const handleKeyDown = (event) => {
     let charCode = String.fromCharCode(event.which).toLowerCase();
     if ((event.ctrlKey || event.metaKey) && charCode === "s") {
@@ -295,10 +286,163 @@ export default function Form() {
   const countryNameRef = useRef(null);
 
   useEffect(() => {
-    if (form && nameRef.current) {
+    if ((form || onSuccess) && nameRef.current) {
       nameRef.current.focus();
     }
-  }, [form]);
+  }, [form, onSuccess]);
+
+  const formBody = (
+    <div className="flex-1 overflow-auto p-3">
+      <div className="grid grid-cols-1 gap-3 h-full">
+        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+          <fieldset className="grid grid-cols-2 gap-2 rounded mt-2" ref={formRef}>
+            <div>
+              <TextInputNew1
+                name="State Name"
+                type="text"
+                value={name}
+                setValue={setName}
+                required={true}
+                readOnly={readOnly}
+                ref={nameRef}
+                disabled={childRecord.current > 0}
+              />
+            </div>
+            <div>
+              <DropdownInputNew
+                name="Country"
+                options={dropDownListObject(
+                  id
+                    ? countriesList?.data
+                    : countriesList?.data?.filter((item) => item?.active),
+                  "name",
+                  "id"
+                )}
+                value={country}
+                setValue={setCountry}
+                required={true}
+                readOnly={readOnly}
+                className={`w-[150px]`}
+                disabled={childRecord.current > 0}
+                addNewLabel="+ Add New Country"
+                childComponent={CountryMaster}
+
+                addNewModalWidth="w-[40%] h-[45%]"
+              />
+            </div>
+            <div>
+              <TextInputNew1
+                name="Code"
+                type="text"
+                value={code}
+                setValue={setCode}
+                required={true}
+                readOnly={readOnly}
+                disabled={childRecord.current > 0}
+              />
+            </div>
+            <div>
+              <ToggleButton
+                name="Status"
+                value={active}
+                setActive={setActive}
+                required={true}
+                readOnly={readOnly}
+              />
+            </div>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (deleteId) {
+    const childCount = singleData?.data?.childRecord ?? 0;
+    const isLoadingRecord = isSingleFetching || isSingleLoading;
+
+    const handleConfirmDelete = async () => {
+      try {
+        const res = await removeData(deleteId).unwrap();
+        if (res?.statusCode === 1) {
+          toast.error(res?.data?.message || "Cannot delete: child records exist");
+          return;
+        }
+        toast.success("State deleted successfully");
+        onSuccess?.();
+      } catch (err) {
+        toast.error(err?.data?.message || "Failed to delete state");
+      }
+    };
+
+    return (
+      <div className="h-full flex flex-col bg-gray-200">
+        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete State</h2>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
+          {isLoadingRecord ? (
+            <p className="text-xs text-gray-400">Checking records...</p>
+          ) : childCount > 0 ? (
+            <>
+              <div className="flex flex-col items-center gap-2">
+                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
+                <p className="text-xs text-gray-600 text-center">
+                  <span className="font-semibold">"{deleteLabel}"</span> has{" "}
+                  <span className="font-semibold text-red-600">{childCount} linked {childCount > 1 ? "cities" : "city"}</span>.
+                  Remove them first before deleting this state.
+                </p>
+              </div>
+              <button type="button" onClick={onClose}
+                className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-700 text-center">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">"{deleteLabel}"</span>?
+              </p>
+              <div className="flex gap-3">
+                <button type="button" onClick={onClose}
+                  className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleConfirmDelete}
+                  className="px-4 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700 rounded">
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (onSuccess) {
+    return (
+      <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
+        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+            {editId ? "Edit State" : "Add New State"}
+          </h2>
+          <button
+            type="button"
+            onClick={() => saveData("close")}
+            className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+          >
+            <Check size={14} />
+            {editId ? "Update" : "Save"}
+          </button>
+        </div>
+        {formBody}
+      </div>
+    );
+  }
 
   return (
 
@@ -399,144 +543,12 @@ export default function Form() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-3 ">
-                <div className="grid grid-cols-1  gap-3  h-full ">
-                  <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                    <fieldset className="grid grid-cols-2 gap-2 rounded mt-2" ref={formRef}>
-                      <div className=" ">
-                        <TextInputNew1
-                          name="State Name"
-                          type="text"
-                          value={name}
-                          setValue={setName}
-                          required={true}
-                          readOnly={readOnly}
-                          ref={nameRef}
-                          disabled={(childRecord.current > 0)}
-
-                        />
-                      </div>
-                      <div className="">
-                        <DropdownInputNew
-                          name="Country"
-                          options={[
-                            { show: "+ Create Country", value: "__create_country__" },
-                            ...dropDownListObject(
-                              id
-                                ? countriesList?.data
-                                : countriesList?.data?.filter(
-                                  (item) => item?.active
-                                ),
-                              "name",
-                              "id"
-                            )
-                          ]}
-                          value={country}
-                          setValue={handleCountryChange}
-                          required={true}
-                          readOnly={readOnly}
-                          className={`w-[150px]`}
-                          disabled={(childRecord.current > 0)}
-
-                        />
-                      </div>
-
-                      <div className="">
-                        <TextInputNew1
-                          name="Code"
-                          type="text"
-                          value={code}
-                          setValue={setCode}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={(childRecord.current > 0)}
-                        />
-                      </div>
-
-                      {/* <div className="">
-                              
-                              <TextInputNew
-                                name="GST No"
-                                type="text"
-                                value={gstNo}
-                                setValue={setGstNo}
-                                readOnly={readOnly}
-                              // disabled={(childRecord.current > 0)}
-
-                              />
-                            </div> */}
-
-                      <div>
-                        <ToggleButton
-                          name="Status"
-                          value={active}
-                          setActive={setActive}
-                          required={true}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    </fieldset>
-                  </div>
-                </div>
-              </div>
+              {formBody}
             </div>
           </Modal>
         )}
       </div>
 
-      {showCreateCountry && (
-        <Modal
-          isOpen={showCreateCountry}
-          widthClass={"w-[30%] h-[300px]"}
-          onClose={() => setShowCreateCountry(false)}
-        >
-          <div className="h-full flex flex-col bg-gray-200">
-            <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center bg-white">
-              <h2 className="text-lg font-semibold text-gray-800">Create Country</h2>
-              <button
-                onClick={async () => {
-                  if (!newCountryName || !newCountryCode) {
-                    return toast.error("Name and Code are required");
-                  }
-                  try {
-                    const res = await addCountry({
-                      name: newCountryName.toUpperCase(),
-                      code: newCountryCode.toUpperCase(),
-                      active: true,
-                      companyId: params.companyId,
-                    }).unwrap();
-                    setCountry(res.data.id);
-                    setShowCreateCountry(false);
-                    toast.success("Country created successfully");
-                  } catch (err) {
-                    toast.error(err.data?.message || "Failed to create country");
-                  }
-                }}
-                disabled={isAddingCountry}
-                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
-              >
-                <Check size={14} />
-                Save
-              </button>
-            </div>
-            <div className="p-4 flex flex-col gap-3 bg-white mx-3 mt-3 rounded">
-              <TextInputNew1
-                name="Country Name"
-                value={newCountryName}
-                setValue={setNewCountryName}
-                required={true}
-                autoFocus
-              />
-              <TextInputNew1
-                name="Code"
-                value={newCountryCode}
-                setValue={setNewCountryCode}
-                required={true}
-              />
-            </div>
-          </div>
-        </Modal>
-      )}
     </div >
   )
 }

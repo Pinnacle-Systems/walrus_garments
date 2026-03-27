@@ -7,7 +7,7 @@ import ReactPaginate from 'react-paginate';
 import { getAllowableReturnQty, getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 
 
-const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, poInwardOrDirectInward, readOnly , handleDone }) => {
+const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, poInwardOrDirectInward, readOnly, handleDone }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -40,110 +40,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
 
     const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
     return (
-        // <div className="flex flex-col w-full h-[80%]">
-        //     <div className=" w-full flex justify-around  bg-gray-700 p-1">
-        //         <div className=" text-white ml-5"> Purchase Order Items </div>
-        //         <div className="  ml-20">
-        //             <label className="text-white text-sm rounded-md m-1  border-none">Show Entries</label>
-        //             <select value={dataPerPage}
-        //                 onChange={(e) => setDataPerPage(e.target.value)} className='h-6 w-40 border border-gray-500 rounded mr-9'>
-        //                 {showEntries.map((option) => <option value={option.value} >{option.show}</option>)}
-        //             </select>
-        //         </div>
-        //     </div>
-        //     <>
-        //         <div
-        //             className="min-h-[400px]"
-        //         >
-        //             <table className=" text-center w-full table-fixed">
-        //                 <thead className="border-2 table-header">
-        //                     <tr className='h-2'>
-        //                         <th className='w-7'>
-        //                             <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
-        //                                 checked={getSelectAll(poItems?.data ? poItems.data : [])}
-        //                             />
-        //                         </th>
-        //                         <th
-        //                             className="border-2  top-0 stick-bg w-12">
-        //                             S. no.
-        //                         </th>
-        //                         <th
-        //                             className="border-2  top-0 stick-bg w-48"
-        //                         >
-        //                             <label>Po.No</label>
 
-        //                         </th>
-        //                         <th
-        //                             className="border-2  top-0 stick-bg"
-        //                         >
-        //                             <label>Po.Date</label>
-
-        //                         </th>
-        //                         <th className="border-2  top-0 stick-bg">
-        //                             <label>Yarn</label>
-
-        //                         </th>
-        //                         <th className="border-2  top-0 stick-bg">
-        //                             <label>Color</label>
-
-        //                         </th>
-
-        //                         <th className="border-2  top-0 stick-bg">
-        //                             <label>Uom</label>
-
-        //                         </th>
-        //                     </tr>
-        //                 </thead>
-        //                 {isLoadingIndicator ?
-        //                     <tbody>
-        //                         <tr>
-        //                             <td>
-        //                                 <Loader />
-        //                             </td>
-        //                         </tr>
-        //                     </tbody>
-        //                     :
-        //                     <tbody className="border-2">
-        //                         {poItems?.data?.map((dataObj, index) => (
-        //                             <tr
-        //                                 key={dataObj.id}
-        //                                 className="border-2 table-row "
-        //                                 onClick={() => handleChange(dataObj.id)}
-        //                             >
-        //                                 <td className='py-1'>
-        //                                     <input type="checkbox" name="" id="" checked={isItemAdded(dataObj.id)} />
-        //                                 </td>
-        //                                 <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
-        //                                 <td className='py-1'> {dataObj?.Po?.docId}</td>
-        //                                 <td className='py-1'>{getDateFromDateTimeToDisplay(dataObj?.Po?.createdAt)} </td>
-        //                                 <td className='py-1'> {dataObj?.Yarn?.name}</td>
-        //                                 <td className='py-1'> {dataObj?.Color?.name}</td>
-
-
-        //                                 <td className='py-1'> {dataObj?.Uom?.name}</td>
-        //                             </tr>
-        //                         ))}
-        //                     </tbody>
-        //                 }
-        //             </table>
-        //         </div>
-        //     </>
-        // <ReactPaginate
-        //     previousLabel={"<"}
-        //     nextLabel={">"}
-        //     breakLabel={"..."}
-        //     breakClassName={"break-me"}
-        //     forcePage={pageNumberToReactPaginateIndex(currentPageNumber)}
-        //     pageCount={Math.ceil(totalCount / dataPerPage)}
-        //     marginPagesDisplayed={1}
-        //     onPageChange={handleOnclick}
-        //     containerClassName={"flex justify-center m-2 gap-5 items-center"}
-        //     pageClassName={"border custom-circle text-center"}
-        //     disabledClassName={"p-1 bg-gray-200"}
-        //     previousLinkClassName={"border p-1 text-center"}
-        //     nextLinkClassName={"border p-1"}
-        //     activeClassName={"bg-blue-900 text-white px-2"} />
-        // </div>
         <div className='border border-gray-200  shadow-sm bg-[#f1f1f0]'>
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-3">
                 <div className="flex items-center gap-2">
@@ -157,9 +54,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ge
                         <button
                             type="button"
                             onClick={() => {
-                                // handleCancel();
-                                // setSearchValue("");
-                                // setId(false);
+
                             }}
                             className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
                         >

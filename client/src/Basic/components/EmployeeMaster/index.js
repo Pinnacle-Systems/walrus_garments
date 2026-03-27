@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import {
   TextInput,
   DropdownInput,
+  DropdownInputNew,
   TextArea,
   DateInput,
   DisabledInput,
@@ -42,6 +43,9 @@ import { getCommonParams, viewBase64String } from "../../../Utils/helper";
 import SingleImageFileUploadComponent from "../SingleImageUploadComponent";
 import EmployeeLeavingForm from "./EmployeeLeavingForm";
 import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService";
+import EmployeeCategoryMaster from "../EmployeeCategoryMaster";
+import DepartmentMaster from "../DepartmentMaster";
+import CityMaster from "../CityMaster";
 import { useDispatch } from "react-redux";
 import {
   Check,
@@ -857,15 +861,13 @@ export default function Form() {
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Official Details</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
-                        <DropdownInput
+                        <DropdownInputNew
                           ref={input3Ref}
                           name="Employee Category"
                           options={dropDownListObject(
                             id
                               ? employeeCategoryList?.data
-                              : employeeCategoryList?.data?.filter(
-                                (item) => item.active
-                              ),
+                              : employeeCategoryList?.data?.filter((item) => item.active),
                             "name",
                             "id"
                           )}
@@ -874,20 +876,20 @@ export default function Form() {
                           required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
-                          onKeyDown={(e) => handleKeyNext(e, null)}
+                          addNewLabel="+ Add New Employee Category"
+                          childComponent={EmployeeCategoryMaster}
+                          addNewModalWidth="w-[40%] h-[40%]"
                         />
                         {errors.employeeCategory && <span className="text-red-500 text-xs ml-1">{errors.employeeCategory}</span>}
                       </div>
 
                       <div>
-                        <DropdownInput
+                        <DropdownInputNew
                           name="Department"
                           options={dropDownListObject(
                             id
                               ? departmentList?.data
-                              : departmentList?.data?.filter(
-                                (item) => item.active
-                              ),
+                              : departmentList?.data?.filter((item) => item.active),
                             "name",
                             "id"
                           )}
@@ -896,6 +898,9 @@ export default function Form() {
                           readOnly={readOnly}
                           required={true}
                           disabled={childRecord.current > 0}
+                          addNewLabel="+ Add New Department"
+                          childComponent={DepartmentMaster}
+                          addNewModalWidth="w-[40%] h-[45%]"
                         />
                         {errors.department && <span className="text-red-500 text-xs ml-1">{errors.department}</span>}
                       </div>
@@ -1074,7 +1079,7 @@ export default function Form() {
                           disabled={childRecord.current > 0}
                           required
                         />
-                        <DropdownInput
+                        <DropdownInputNew
                           name="City/State"
                           options={dropDownListMergedObject(
                             (cityList?.data || []).filter((item) => id || item.active),
@@ -1086,6 +1091,9 @@ export default function Form() {
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           required
+                          addNewLabel="+ Add New City"
+                          childComponent={CityMaster}
+                          addNewModalWidth="w-[40%] h-[350px]"
                         />
                       </div>
                     </div>

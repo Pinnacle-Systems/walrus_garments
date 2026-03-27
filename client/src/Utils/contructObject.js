@@ -4,7 +4,7 @@ export const dropDownListObject = (data, showKey, valueKey) => {
     const outputData = [];
     if (!Array.isArray(data)) return outputData;
     for (let i of data) {
-        outputData.push({ show: i[showKey], value: i[valueKey] });
+        outputData.push({ show: i[showKey], value: i[valueKey], _count: i?._count });
     }
     return outputData;
 }
@@ -24,14 +24,14 @@ export const dropDownListMergedObject = (data) => {
     console.log(data, "datatata")
     const outputData = []
     for (let i of Data) {
-        outputData.push({ show: i?.name + " / " +  i?.state?.name, value: i["id"] })
+        outputData.push({ show: i?.name + " / " + i?.state?.name, value: i["id"] })
     }
     return outputData
 }
 
 export const multiSelectOption = (data, label, value) => {
-    console.log(data,"data");
-    
+    console.log(data, "data");
+
     const outputData = []
     for (let i of data) {
         outputData.push({ label: i[label], value: i[value] })

@@ -130,7 +130,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                                 handleInputChange(0.000, index, "qty", item?.balanceQty);
                                 return
                             }
-                            handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty", item?.balanceQty)
+                            handleInputChange(parseFloat(e.target.value), index, "qty", item?.balanceQty)
                         }}
                     />
                 </td>

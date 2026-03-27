@@ -457,271 +457,261 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         </PDFViewer>
       </Modal>
 
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <div className="flex items-center gap-3">
+      <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+        {/* Title bar */}
+        <div className="w-full shrink-0 rounded-md bg-[#f1f1f0] px-2 py-1 shadow-md">
+          <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-800">Estimate / Quotation</h1>
-            {/* <button
-              onClick={() => setIsHeaderOpen(!isHeaderOpen)}
-              className="p-1 hover:bg-gray-200 rounded-full transition-colors text-indigo-600"
-              title={isHeaderOpen ? "Collapse Header" : "Expand Header"}
-            >
-              {isHeaderOpen ? <FiChevronUp className="w-6 h-6" /> : <FiChevronDown className="w-6 h-6" />}
-            </button> */}
+            <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
+              <FaFileAlt className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
-          >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
         </div>
 
-      </div>
-      <div className="flex flex-col h-full mt-2 gap-2">
-        <div className="border border-slate-200 bg-white rounded-md shadow-sm">
-          <button
-            type="button"
-            onClick={() => setIsHeaderOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-50 transition-colors"
-          >
-            <span className="font-medium text-slate-700 text-sm">Header Details</span>
-            <FiChevronDown
-              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isHeaderOpen ? "rotate-180" : "rotate-0"
+        {/* Main content */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          {/* Collapsible header */}
+          <div className="shrink-0 rounded-md border border-slate-200 bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => setIsHeaderOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-slate-50"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="text-sm font-medium text-slate-700">Header Details</span>
+                {!isHeaderOpen && (
+                  <div className="hidden min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 md:flex">
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">No</span>
+                      <span className="font-medium text-slate-700">{docId || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Date</span>
+                      <span className="font-medium text-slate-700">{date || "-"}</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Customer</span>
+                      <span className="font-medium text-slate-700">
+                        {findFromList(customerId, supplierList?.data, "aliasName") ||
+                          findFromList(customerId, supplierList?.data, "name") || "-"}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              <FiChevronDown
+                className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isHeaderOpen ? "rotate-180" : "rotate-0"}`}
+              />
+            </button>
+
+            <div
+              className={`transition-all duration-300 ease-in-out ${isHeaderOpen
+                ? "max-h-[400px] opacity-100 overflow-visible"
+                : "max-h-0 opacity-0 overflow-hidden"
                 }`}
-            />
-          </button>
+            >
+              <div className="px-2 pb-2 overflow-visible">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
 
-          <div
-            className={`transition-all duration-300 ease-in-out ${isHeaderOpen
-              ? "max-h-[600px] opacity-100 overflow-visible"
-              : "max-h-0 opacity-0 overflow-hidden"
-              }`}
-          >
-            <div className="px-2 pb-2 overflow-visible">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
-
-                {/* Basic Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                  <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                  <div className="grid grid-cols-2 gap-1">
-                    <ReusableInput label="Quotation No" readOnly value={docId} />
-                    <ReusableInput label="Quotation Date" value={date} type="date" required readOnly disabled />
-                  </div>
-                </div>
-
-                {/* Customer Details */}
-                <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-3 overflow-visible">
-                  <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
-                  <div className="grid grid-cols-7 gap-1 overflow-visible">
-                    <div className="col-span-3 overflow-visible">
-
-                      <ReusableSearchableInput
-                        label="Customer Name"
-                        component="PartyMaster"
-                        placeholder="Search Customer Name..."
-                        optionList={supplierList?.data}
-                        setSearchTerm={(value) => { setCustomerId(value) }}
-                        searchTerm={customerId}
-                        show={"isClient"}
-                        required={true}
-                        disabled={id}
-                      />
-                    </div>
-                    <TextInput name="Phone Number" value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled required />
-                    <div className="col-span-3">
-                      <TextAreaNew
-                        name="Address"
-                        placeholder="Addres"
-                        value={findFromList(customerId, supplierList?.data, "address")}
-                        disabled
-                      />
+                  {/* Basic Details */}
+                  <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
+                    <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
+                    <div className="grid grid-cols-2 gap-1">
+                      <ReusableInput label="Quotation No" readOnly value={docId} />
+                      <ReusableInput label="Quotation Date" value={date} type="date" required readOnly disabled />
                     </div>
                   </div>
-                </div>
 
+                  {/* Customer Details */}
+                  <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-3 overflow-visible">
+                    <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
+                    <div className="grid grid-cols-7 gap-1 overflow-visible">
+                      <div className="col-span-3 overflow-visible">
+
+                        <ReusableSearchableInput
+                          label="Customer Name"
+                          component="PartyMaster"
+                          placeholder="Search Customer Name..."
+                          optionList={supplierList?.data}
+                          setSearchTerm={(value) => { setCustomerId(value) }}
+                          searchTerm={customerId}
+                          show={"isClient"}
+                          required={true}
+                          disabled={id}
+                        />
+                      </div>
+                      <TextInput name="Phone Number" value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled required />
+                      <div className="col-span-3">
+                        <TextAreaNew
+                          name="Address"
+                          placeholder="Addres"
+                          value={findFromList(customerId, supplierList?.data, "address")}
+                          disabled
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <QuotationItems
-          quoteItems={quoteItems}
-          setQuoteItems={setQuoteItems}
-          setInwardItemSelection={setInwardItemSelection}
-          supplierId={customerId}
-          handleRightClick={handleRightClick}
-          contextMenu={contextMenu}
-          handleCloseContextMenu={handleCloseContextMenu}
-          yarnList={yarnList}
-          colorList={colorList}
-          uomList={uomList}
-          itemList={itemList}
-          sizeList={sizeList}
-          readOnly={readOnly}
-          taxMethod={taxMethod}
-          setTaxMethod={setTaxMethod}
-          isHeaderOpen={isHeaderOpen}
-          itemPriceList={itemPriceList}
-          priceTemplateList={priceTemplateList}
-        />
 
-        <div className="grid grid-cols-12 gap-3">
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-
-            <div className="flex flex-col gap-2">
-              <h2 className="font-bold text-slate-700 mb-2 text-sm">Terms & Conditions</h2>
-
-              <select
-                value={term}
-                onChange={e => {
-                  setTerm(e.target.value)
-                }}
-                readOnly={readOnly}
-                className="text-left h-15  w-full rounded py-1 border-2 border-gray-200 text-[13px]"
-
-              >
-                <option value=""></option>
-                {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
-                  <option value={blend.id} key={blend.id}>
-                    {blend?.name}
-                  </option>
-                )}
-              </select>
-            </div>
-          </div>
-
-
-
-
-
-          <div className="border border-slate-200 p-1 bg-white rounded-md shadow-sm col-span-4">
-            <textarea
-              disabled={readOnly}
-              className="w-full h-20 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              value={terms}
-              onChange={e => setTerms(e.target.value)}
-              placeholder="Select or type Terms & Conditions..."
-            />
-          </div>
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm  col-span-3">
-            <h2 className="font-bold text-slate-700 mb-2 text-sm">Remarks</h2>
-            <textarea
+          {/* Items grid */}
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <QuotationItems
+              quoteItems={quoteItems}
+              setQuoteItems={setQuoteItems}
+              setInwardItemSelection={setInwardItemSelection}
+              supplierId={customerId}
+              handleRightClick={handleRightClick}
+              contextMenu={contextMenu}
+              handleCloseContextMenu={handleCloseContextMenu}
+              yarnList={yarnList}
+              colorList={colorList}
+              uomList={uomList}
+              itemList={itemList}
+              sizeList={sizeList}
               readOnly={readOnly}
-              value={remarks}
-              onChange={(e) => {
-                setRemarks(e.target.value)
-              }}
-              className="w-full h-10 overflow-auto px-2.5 py-2 text-xs border border-slate-300 rounded-md  focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-              placeholder="Additional notes..."
+              taxMethod={taxMethod}
+              setTaxMethod={setTaxMethod}
+              isHeaderOpen={isHeaderOpen}
+              itemPriceList={itemPriceList}
+              priceTemplateList={priceTemplateList}
             />
           </div>
 
-          <div className=" p-2 bg-white rounded-md shadow-sm col-span-3">
+          {/* Summary + footer */}
+          <div className="shrink-0 rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <div className="grid grid-cols-4 gap-3">
 
-            <div className="flex justify-between py-1 text-sm">
-              <span className="text-slate-600">Total Qty</span>
-              <span className="font-medium">{parseFloat(getTotalQty()).toFixed(3)}</span>
+
+
+              {/* Div 1 – Terms & Conditions */}
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-1">
+                <h2 className="font-bold text-slate-700 text-sm">Terms & Conditions</h2>
+                <select
+                  value={term}
+                  onChange={e => setTerm(e.target.value)}
+                  disabled={readOnly}
+                  className="w-full rounded border-2 border-gray-200 py-1 text-[13px]"
+                >
+                  <option value=""></option>
+                  {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
+                    <option value={blend.id} key={blend.id}>{blend?.name}</option>
+                  )}
+                </select>
+                <textarea
+                  disabled={readOnly}
+                  className="w-full flex-1 min-h-[60px] px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  value={terms}
+                  onChange={e => setTerms(e.target.value)}
+                  placeholder="Select or type Terms & Conditions..."
+                />
+              </div>
+
+              {/* Div 2 – Remarks */}
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-1">
+                <h2 className="font-bold text-slate-700 text-sm">Remarks</h2>
+                <textarea
+                  disabled={readOnly}
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  className="w-full flex-1 min-h-[80px] px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
+                  placeholder="Additional notes..."
+                />
+              </div>
+
+              {/* Div 3 – Bill Details */}
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
+                <h2 className="font-bold text-slate-700 text-sm mb-1">Bill Details</h2>
+                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
+                  <span className="text-slate-600">Total Qty</span>
+                  <span className="font-medium">{parseFloat(getTotalQty()).toFixed(3)}</span>
+                </div>
+                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
+                  <span className="text-slate-600">Before Tax</span>
+                  <span className="font-medium">Rs.{parseFloat(subtotal || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
+                  <span className="text-slate-600">Tax Amount</span>
+                  <span className="font-medium">Rs.{parseFloat(taxAmount || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
+                  <span className="text-slate-600 font-semibold">Net Amount</span>
+                  <span className="font-semibold text-indigo-700">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 py-1 text-sm">
+                  <span className="text-slate-600">Min. Advance</span>
+                  <input
+                    type="number"
+                    value={displayedMinimumAdvancePayment}
+                    onChange={(e) => {
+                      setMinimumAdvancePayment(e.target.value);
+                      setIsMinimumAdvanceManuallyEdited(true);
+                    }}
+                    readOnly={readOnly}
+                    className={`w-28 rounded border border-slate-300 px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
+                  />
+                </div>
+              </div>
+
+              {/* Div 4 – Actions */}
+              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-2">
+                <h2 className="font-bold text-slate-700 text-sm">Actions</h2>
+                <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center text-sm">
+                  <FiSave className="w-4 h-4 mr-2" />
+                  Save & New
+                </button>
+                <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center text-sm">
+                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                  Save & Close
+                </button>
+                <button
+                  className="bg-yellow-600 text-white px-3 py-1.5 rounded-md hover:bg-yellow-700 flex items-center justify-center text-sm"
+                  onClick={() => {
+                    if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
+                      setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
+                      setIsMinimumAdvanceManuallyEdited(true);
+                    }
+                    setReadOnly(false);
+                  }}
+                >
+                  <FiEdit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </button>
+                <button
+                  className="bg-slate-600 text-white px-3 py-1.5 rounded-md hover:bg-slate-700 flex items-center justify-center text-sm"
+                  onClick={() => {
+                    if (!quoteItems?.filter(i => i.itemId).length) {
+                      Swal.fire({ icon: 'warning', title: 'Please add some items first' });
+                      return;
+                    }
+                    setPrintOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Print
+                </button>
+                <button
+                  className="bg-orange-600 text-white px-3 py-1.5 rounded-md hover:bg-orange-700 flex items-center justify-center text-sm"
+                  onClick={() => {
+                    if (!quoteItems?.filter(i => i.itemId).length) {
+                      Swal.fire({ icon: 'warning', title: 'Please add some items first' });
+                      return;
+                    }
+                    setThermalPrintOpen(true);
+                  }}
+                >
+                  <FiPrinter className="w-4 h-4 mr-2" />
+                  Thermal Print
+                </button>
+              </div>
+
             </div>
-            <div className="flex justify-between py-1 text-sm">
-              <span className="text-slate-600">Before Tax Amount</span>
-              <span className="font-medium">Rs.{parseFloat(subtotal || 0).toFixed(2)} </span>
-            </div>
-            {/* <div className="flex justify-between py-1 text-sm">
-              <span className="text-slate-600">Tax Amount</span>
-              <span className="font-medium">Rs.{parseFloat(taxAmount || 0).toFixed(2)}</span>
-            </div> */}
-            <div className="flex justify-between py-1 text-sm">
-              <span className="text-slate-600">Net Amount</span>
-              <span className="font-medium">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between gap-2 py-1 text-sm">
-              <span className="text-slate-600">Minimum Advance</span>
-              <input
-                type="number"
-                value={displayedMinimumAdvancePayment}
-                onChange={(e) => {
-                  setMinimumAdvancePayment(e.target.value);
-                  setIsMinimumAdvanceManuallyEdited(true);
-                }}
-                readOnly={readOnly}
-                className={`w-32 rounded border border-slate-300 px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"
-                  }`}
-              />
-            </div>
-          </div>
-        </div>
-
-
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-1">
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-
-            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => {
-                if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
-                  setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
-                  setIsMinimumAdvanceManuallyEdited(true);
-                }
-                setReadOnly(false);
-              }}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              onClick={() => {
-                if (!quoteItems?.filter(i => i.itemId).length) {
-                  Swal.fire({
-                    icon: 'warning',
-                    title: `Please add some items first`,
-                  });
-                  return;
-                }
-                setPrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
-
-            <button
-              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
-              onClick={() => {
-                if (!quoteItems?.filter(i => i.itemId).length) {
-                  // toast.warning("Please add some items first");
-                  Swal.fire({
-                    icon: 'warning',
-                    title: `Please add some items first`,
-                  });
-
-                  return;
-                }
-                setThermalPrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Thermal Print
-            </button>
-          </div>
-        </div>
-      </div>
-
+          </div>{/* end shrink-0 summary+footer */}
+        </div>{/* end flex-1 content */}
+      </div>{/* end h-full outer */}
 
 
     </>

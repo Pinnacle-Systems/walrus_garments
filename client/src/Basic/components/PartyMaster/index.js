@@ -17,15 +17,16 @@ import {
 } from "../../../Utils/contructObject";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import {
-
   ToggleButton,
   DropdownInput,
+  DropdownInputNew,
   TextInput,
   TextArea,
   ReusableTable,
   TextInputNew1,
   childRecordCount,
 } from "../../../Inputs";
+import CityMaster from "../CityMaster";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMasterServices";
 import { toast } from "react-toastify";
@@ -537,6 +538,24 @@ export default function Form({ partyId, show, openModelForAddress }) {
       return false;
     }
 
+    if (upperPan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(upperPan)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid PAN Number',
+        text: 'PAN must be 10 characters: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F).',
+      });
+      return false;
+    }
+
+    if (upperAadhar && !/^[0-9]{12}$/.test(upperAadhar)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Aadhar Number',
+        text: 'Aadhar must be exactly 12 digits.',
+      });
+      return false;
+    }
+
     let foundItem;
 
     if (isBranch) {
@@ -804,6 +823,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
   const nameRef = useRef(null);
+  const countryNameRef = useRef(null)
 
   useEffect(() => {
     if (form && nameRef.current) {
@@ -1108,7 +1128,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                         <div className=" grid grid-cols-5 gap-3">
                           <div className="col-span-4">
-                            <DropdownInput
+                            <DropdownInputNew
                               name="City/State Name"
                               options={dropDownListMergedObject(
                                 id
@@ -1117,15 +1137,13 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                 "name",
                                 "id"
                               )}
-                              country={country}
-                              masterName="CITY MASTER"
-                              // lastTab={activeTab}
                               value={city}
                               setValue={setCity}
                               required={true}
                               readOnly={readOnly}
-                              // disabled={childRecord.current > 0}
-                              className="focus:ring-2 focus:ring-blue-100"
+                              addNewLabel="+ Add New City"
+                              childComponent={CityMaster}
+                              addNewModalWidth="w-[50%] h-[55%]"
                             />
                           </div>
                           <TextInput
@@ -1945,7 +1963,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                           <div className=" grid grid-cols-5 gap-3">
                             <div className="col-span-4">
-                              <DropdownInput
+                              <DropdownInputNew
                                 name="City/State Name"
                                 options={dropDownListMergedObject(
                                   id
@@ -1961,8 +1979,10 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                 setValue={setCity}
                                 required={true}
                                 readOnly={readOnly}
-                                // disabled={childRecord.current > 0}
                                 className="focus:ring-2 focus:ring-blue-100"
+                                addNewLabel="+ Add New City"
+                                childComponent={CityMaster}
+                                addNewModalWidth="w-[40%] h-[45%]"
                               />
                             </div>
                             <TextInput

@@ -26,12 +26,13 @@ import { setOpenPartyModal } from "../../../redux/features/openModel";
 import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
+import { StateMaster } from "..";
 const MODEL = "City Master";
 
-export default function Form() {
+export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
-    const [id, setId] = useState("");
+    const [id, setId] = useState(editId || deleteId || "");
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
     const [active, setActive] = useState(true);
@@ -119,7 +120,11 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
+            setId(returnData.data.id);
+            if (onSuccess) {
+                onSuccess(returnData.data.id);
+                return;
+            }
             await Swal.fire({
                 title: text + "Successfully",
                 icon: "success",
@@ -309,10 +314,174 @@ export default function Form() {
     const countryNameRef = useRef(null);
 
     useEffect(() => {
-        if (form && nameRef.current) {
+        if ((form || onSuccess) && nameRef.current) {
             nameRef.current.focus();
         }
-    }, [form]);
+    }, [form, onSuccess]);
+
+    const formBody = (
+        <div className="flex-1 overflow-auto p-3">
+            <div className="grid grid-cols-1 gap-3 h-full">
+                <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                    <div className="grid grid-cols-2 gap-3" ref={formRef}>
+                        <div>
+                            <TextInputNew1
+                                ref={nameRef}
+                                name="City Name"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                            />
+                        </div>
+                        <div>
+                            <TextInputNew1
+                                name="Code"
+                                type="text"
+                                value={code}
+                                setValue={setCode}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                            />
+                        </div>
+                        <div>
+                            <DropdownInputNew
+                                name="State"
+                                options={
+                                    Array.isArray(stateList?.data)
+                                        ? dropDownListObject(
+                                            id
+                                                ? stateList?.data
+                                                : stateList?.data?.filter((item) => item?.active),
+                                            "name",
+                                            "id"
+                                        )
+                                        : []
+                                }
+                                value={state}
+                                setValue={setState}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                addNewLabel="+ Add New State"
+                                childComponent={StateMaster}
+                                addNewModalWidth="w-[40%] h-[45%]"
+                            />
+                        </div>
+                        <div>
+                            <TextInputNew1
+                                name="Country"
+                                type="text"
+                                value={countryFromState()}
+                                disabled={true}
+                            />
+                        </div>
+                        <div>
+                            <ToggleButton
+                                name="Status"
+                                options={statusDropdown}
+                                value={active}
+                                setActive={setActive}
+                                required={true}
+                                readOnly={readOnly}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    if (deleteId) {
+        const childCount = singleData?.data?.childRecord ?? 0;
+        const isLoadingRecord = isSingleFetching || isSingleLoading;
+
+        const handleConfirmDelete = async () => {
+            try {
+                const res = await removeData(deleteId).unwrap();
+                if (res?.statusCode === 1) {
+                    toast.error(res?.data?.message || "Cannot delete: child records exist");
+                    return;
+                }
+                toast.success("City deleted successfully");
+                onSuccess?.();
+            } catch (err) {
+                toast.error(err?.data?.message || "Failed to delete city");
+            }
+        };
+
+        return (
+            <div className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete City</h2>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
+                    {isLoadingRecord ? (
+                        <p className="text-xs text-gray-400">Checking records...</p>
+                    ) : childCount > 0 ? (
+                        <>
+                            <div className="flex flex-col items-center gap-2">
+                                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                </svg>
+                                <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
+                                <p className="text-xs text-gray-600 text-center">
+                                    <span className="font-semibold">"{deleteLabel}"</span> has{" "}
+                                    <span className="font-semibold text-red-600">{childCount} linked record{childCount > 1 ? "s" : ""}</span>.
+                                    Remove them first before deleting this city.
+                                </p>
+                            </div>
+                            <button type="button" onClick={onClose}
+                                className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                Close
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-gray-700 text-center">
+                                Are you sure you want to delete{" "}
+                                <span className="font-semibold">"{deleteLabel}"</span>?
+                            </p>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={onClose}
+                                    className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                    Cancel
+                                </button>
+                                <button type="button" onClick={handleConfirmDelete}
+                                    className="px-4 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700 rounded">
+                                    Delete
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    if (onSuccess) {
+        return (
+            <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                        {editId ? "Edit City" : "Add New City"}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+                    >
+                        <Check size={14} />
+                        {editId ? "Update" : "Save"}
+                    </button>
+                </div>
+                {formBody}
+            </div>
+        );
+    }
+
     return (
 
         <div onKeyDown={handleKeyDown} className="p-1">
@@ -412,79 +581,7 @@ export default function Form() {
                                 </div>
                             </div>
 
-                            <div className="flex-1 overflow-auto p-3 ">
-                                <div className="grid grid-cols-1  gap-3  h-full ">
-                                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                        <div className="grid grid-cols-2  gap-3 " ref={formRef}>
-                                            <div className="">
-                                                <TextInputNew1
-                                                    ref={nameRef}
-                                                    name="City Name"
-                                                    type="text"
-                                                    value={name}
-                                                    setValue={setName}
-                                                    required={true}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                />
-                                            </div>
-                                            <div className="">
-                                                <TextInputNew1
-                                                    name="Code"
-                                                    type="text"
-                                                    value={code}
-                                                    setValue={setCode}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                />
-                                            </div>
-
-                                            <div className=" ">
-                                                <DropdownInputNew
-                                                    name="State"
-                                                    options={
-                                                        Array.isArray(stateList?.data)
-                                                            ? dropDownListObject(
-                                                                id
-                                                                    ? stateList?.data
-                                                                    : stateList?.data?.filter(
-                                                                        (item) => item?.active
-                                                                    ),
-                                                                "name",
-                                                                "id"
-                                                            )
-                                                            : []
-                                                    }
-                                                    value={state}
-                                                    setValue={setState}
-                                                    required={true}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                />
-                                            </div>
-                                            <div className="">
-                                                <TextInputNew1
-                                                    name="Country"
-                                                    type="text"
-                                                    value={countryFromState()}
-                                                    disabled={true}
-                                                />
-                                            </div>
-
-                                            <div className="">
-                                                <ToggleButton
-                                                    name="Status"
-                                                    options={statusDropdown}
-                                                    value={active}
-                                                    setActive={setActive}
-                                                    required={true}
-                                                    readOnly={readOnly}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {formBody}
                         </div>
                     </Modal>
                 )}
