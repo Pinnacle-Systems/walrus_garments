@@ -339,70 +339,97 @@ async function update(id, body) {
         PartyContactDetails, parentId, attachments, branchTypeId, aadharNo
     } = body;
 
+    // Fetch existing party with its current attachments
+    const existing = await prisma.party.findUnique({
+        where: { id: parseInt(id) },
+        include: { PartyAttachments: true }
+    });
+    if (!existing) return NoRecordFound("party");
+
+    const parsedAttachments = attachments ? JSON.parse(attachments) : [];
+
+    // Compute which existing attachment IDs were removed
+    const oldAttachmentIds = existing.PartyAttachments.map(a => parseInt(a.id));
+    const currentAttachmentIds = parsedAttachments.filter(a => a?.id).map(a => parseInt(a.id));
+    const removedAttachmentIds = getRemovedItems(oldAttachmentIds, currentAttachmentIds);
 
     let data;
-    data = await prisma.party.update({
-        where: { id: parseInt(id) },
-        data: {
-            isClient: isClient ? JSON.parse(isClient) : false,
-            isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
-            parentId: parentId ? String(parentId) : null,
-            name,
-            aliasName,
-            code: partyCode,
-            active: active ? JSON.parse(active) : false,
-            displayName,
-            isBranch: isBranch ? JSON.parse(isBranch) : false,
-            isAcc: isAcc ? JSON.parse(isAcc) : false,
-            isGy: isGy ? JSON.parse(isGy) : false,
-            isDy: isDy ? JSON.parse(isDy) : false,
+    await prisma.$transaction(async (tx) => {
 
-            address,
-            landMark,
-            cityId: cityId ? parseInt(cityId) : undefined,
-            pincode: pincode ? parseInt(pincode) : undefined,
-            email,
-            contact: contact ? parseInt(contact) : undefined,
-            currencyId: currencyId ? parseInt(currencyId) : undefined,
-            payTermDay,
-            panNo,
-            gstNo,
-            bankName: bankname,
-            branchName: bankBranchName,
-            accountNumber,
-            ifscCode,
-            msmeNo,
-            cinNo,
-            createdById: userId ? parseInt(userId) : undefined,
-            companyId: parseInt(companyId),
-            branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
-            aadharNo,
+        // Delete removed attachments
+        if (removedAttachmentIds.length > 0) {
+            await tx.partyAttachments.deleteMany({
+                where: { id: { in: removedAttachmentIds } }
+            });
+        }
 
-            contactPersonName: contactPersonName ? contactPersonName : null,
-            designation: designation ? designation : null,
-            department: department ? department : null,
-            contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
-            contactPersonNumber: contactNumber ? contactNumber : null,
-
-            PartyAttachments: {
-                createMany: attachments?.length > 0 ? {
-                    data: JSON.parse(attachments)?.map((temp) => {
-                        let newItem = {}
-                        // newItem["branchType"] = temp["branchType"] ? temp["branchType"] : null;
-                        newItem["name"] = temp["name"] ? temp["name"] : null;
-                        newItem["filePath"] = temp["filePath"] ? temp["filePath"] : null;
-
-
-                        return newItem
-                    })
-                } : undefined
+        // Update existing / create new attachments
+        await Promise.all(parsedAttachments.map(async (temp) => {
+            if (temp?.id) {
+                return tx.partyAttachments.update({
+                    where: { id: parseInt(temp.id) },
+                    data: {
+                        name: temp.name ?? undefined,
+                        filePath: temp.filePath ?? undefined,
+                    }
+                });
+            } else {
+                return tx.partyAttachments.create({
+                    data: {
+                        partyId: parseInt(id),
+                        name: temp.name ?? undefined,
+                        filePath: temp.filePath ?? undefined,
+                    }
+                });
             }
+        }));
 
-        },
+        // Update main party record
+        data = await tx.party.update({
+            where: { id: parseInt(id) },
+            data: {
+                isClient: isClient ? JSON.parse(isClient) : false,
+                isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
+                parentId: parentId ? String(parentId) : null,
+                name,
+                aliasName,
+                code: partyCode,
+                active: active ? JSON.parse(active) : false,
+                displayName,
+                isBranch: isBranch ? JSON.parse(isBranch) : false,
+                isAcc: isAcc ? JSON.parse(isAcc) : false,
+                isGy: isGy ? JSON.parse(isGy) : false,
+                isDy: isDy ? JSON.parse(isDy) : false,
+                address,
+                landMark,
+                cityId: cityId ? parseInt(cityId) : undefined,
+                pincode: pincode ? parseInt(pincode) : undefined,
+                email,
+                contact: contact ? parseInt(contact) : undefined,
+                currencyId: currencyId ? parseInt(currencyId) : undefined,
+                payTermDay,
+                panNo,
+                gstNo,
+                bankName: bankname,
+                branchName: bankBranchName,
+                accountNumber,
+                ifscCode,
+                msmeNo,
+                cinNo,
+                createdById: userId ? parseInt(userId) : undefined,
+                companyId: parseInt(companyId),
+                branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
+                aadharNo,
+                contactPersonName: contactPersonName ? contactPersonName : null,
+                designation: designation ? designation : null,
+                department: department ? department : null,
+                contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
+                contactPersonNumber: contactNumber ? contactNumber : null,
+            },
+        });
     });
 
-
-    return { statusCode: 0, data: data };
+    return { statusCode: 0, data };
 }
 
 async function updateMaterial(id, body) {

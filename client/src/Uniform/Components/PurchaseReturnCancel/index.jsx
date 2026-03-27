@@ -27,6 +27,7 @@ import { useGetTermsAndConditionsQuery } from "../../../redux/services/TermsAndC
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { usePermissionForUsers } from "../../../Basic/components/HasPermission";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -69,6 +70,7 @@ export default function Form() {
 
   const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
   const { data: termsAndCondition } = useGetTermsAndConditionsQuery({ params: { companyId } })
+  const [invalidateTagsDispatch] = useInvalidateTags();
 
 
   const { data: itemList } =
@@ -113,6 +115,7 @@ export default function Form() {
           });
           return;
         }
+        invalidateTagsDispatch()
         setId("");
         Swal.fire({
           title: "Deleted Successfully",

@@ -27,6 +27,7 @@ export default function Form() {
   const childRecord = useRef(0);
   const searchRef = useRef(null);
   const nameRef = useRef(null);
+  const formRef = useRef(null)
 
   console.log(readOnly, "readOnly")
   const params = {
@@ -278,7 +279,7 @@ export default function Form() {
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-2xl font-bold text-gray-800">BranchType Master</h5>
         <div className="flex items-center gap-3">
-          <input
+          {/* <input
             ref={searchRef}
             type="text"
             placeholder="Search..."
@@ -286,7 +287,7 @@ export default function Form() {
             onChange={(e) => setSearchValue(e.target.value.toUpperCase())}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-600 shadow-sm"
             autoFocus
-          />
+          /> */}
           <button
             onClick={() => {
               setForm(true);

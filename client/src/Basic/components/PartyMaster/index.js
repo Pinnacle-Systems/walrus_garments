@@ -222,6 +222,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
   const syncFormWithDb = useCallback(
     (data) => {
+
+      console.log(data, "datadatadata")
+
       // if(!id) 
       setPanNo(data?.panNo || "");
       setName(data?.name || "");
@@ -278,14 +281,15 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setParentId(data?.parentId ? data.parentId : "");
       setSupplier(id ? (data?.isSupplier ?? false) : false);
       setClient(id ? (data?.isClient ?? false) : true);
-      setBankName(data?.bankname || "");
-      setBankBranchName(data?.bankBranchName || "");
+      setBankName(data?.bankName ? data?.bankName : "");
+      setBankBranchName(data?.branchName ? data?.branchName : "");
       setIgst(data?.igst || false);
       setRawMaterial(data?.rawMaterial || false);
       setMaterial(data?.material || "");
       setMaterialActive(data?.materialActive ?? true);
       setProcessDetails(data?.processDetails || []);
       setAadharNo(data?.aadharNo || "");
+
       setStep(1);
     },
 
@@ -308,7 +312,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setGstNo(data?.gstNo ? data?.gstNo : "")
       setMsmeNo(data?.msmeNo ? data?.msmeNo : "")
       setCinNo(data?.cinNo ? data?.cinNo : "")
-
+      setAadharNo(data?.aadharNo ? data?.aadharNo : "")
     },
 
     [parentId]
@@ -373,7 +377,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  console.log(data, "datadatadata")
 
 
   const validateData = (data) => {
@@ -391,15 +394,13 @@ export default function Form({ partyId, show, openModelForAddress }) {
   };
 
 
-  const handleSubmitCustom = async (callback, data, text, exit = false) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
 
 
     try {
       const formData = new FormData();
       for (let key in data) {
 
-        console.log(key, "key")
-        console.log(data, "data")
 
         if (key == 'attachments') {
           formData.append(key, JSON.stringify(data[key].map(i => ({ ...i, filePath: (i.filePath instanceof File) ? i.filePath.name : i.filePath }))));
@@ -421,6 +422,12 @@ export default function Form({ partyId, show, openModelForAddress }) {
         returnData = await callback({ id, body: formData }).unwrap();
       } else {
         returnData = await callback(formData).unwrap();
+      }
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+      } else {
+        setForm(false)
       }
 
       await Swal.fire({
@@ -445,20 +452,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       });
       invalidateTagsDispatch()
 
-      setId(returnData?.data?.id);
-      onNew();
-      setForm(false)
-      setStep(1);
-      if (exit) {
-        // setForm(false);
-      }
-      if (exit) {
-        if (openPartyModal === true && lastTapName) {
-          dispatch(push({ name: lastTapName }));
-        }
 
-        dispatch(setOpenPartyModal(false));
-      }
 
 
     } catch (error) {
@@ -495,7 +489,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     const upperName = name.toUpperCase();
     const upperCode = partyCode.toUpperCase();
     const upperGst = (gstNo || "").toUpperCase();
@@ -605,9 +599,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
     }
 
     if (id) {
-      handleSubmitCustom(updateData, finalData, "Updated");
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, finalData, "Added");
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
 
@@ -970,9 +964,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         name="Customer/supplier"
                         options={dropDownListObject(
                           id
-                            ? allData?.data?.filter(i => i.id != id && !i.parentId)
+                            ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
                             : allData?.data?.filter(
-                              (item) => item.active && item.id != id && !item.parentId
+                              (item) => item.active && item.id != id && !item.parentId && item.gstNo
                             ),
                           "name",
                           "id"
@@ -1021,11 +1015,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                       <div className="col-span-2">
                         <TextInputNew1
-                          name={`${isSupplier ? "Supplier Name" : "Customer Name"}`}
+                          name={`${isSupplier && isClient ? "Customer / Supplier Name" : isSupplier ? "Supplier Name" : "Customer Name"}`}
                           type="text"
                           value={name}
                           inputClass="h-8"
-                          ref={countryNameRef}
+                          ref={nameRef}
                           setValue={setName}
                           required={true}
                           readOnly={readOnly}
@@ -1137,13 +1131,17 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                 "name",
                                 "id"
                               )}
+                              country={country}
+                              masterName="CITY MASTER"
+                              // lastTab={activeTab}
                               value={city}
                               setValue={setCity}
                               required={true}
                               readOnly={readOnly}
+                              className="focus:ring-2 focus:ring-blue-100"
                               addNewLabel="+ Add New City"
                               childComponent={CityMaster}
-                              addNewModalWidth="w-[50%] h-[55%]"
+                              addNewModalWidth="w-[40%] h-[45%]"
                             />
                           </div>
                           <TextInput
@@ -1181,7 +1179,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="">
+                      <div className="col-span-2">
 
                         <TextInputNew1
                           name="Contact Person Name"
@@ -1215,8 +1213,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         // disabled={childRecord.current > 0}
                         className="focus:ring-2 focus:ring-blue-100 w-10"
                       />
-                      <div className='col-span-1'>
-
+                      <div className='col-span-2'>
 
                         <TextInputNew1
                           name="Email"
@@ -1228,6 +1225,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           // disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
+
                       </div>
                       <div className='col-span-2'>
 
@@ -1266,49 +1264,26 @@ export default function Form({ partyId, show, openModelForAddress }) {
                     <div className="grid grid-cols-2 gap-2">
 
 
-                      {/* <DropdownInput
-                                                    name="Currency"
-                                                    options={dropDownListObject(
-                                                        id
-                                                            ? currencyList?.data ?? []
-                                                            : currencyList?.data?.filter(
-                                                                (item) => item.active
-                                                            ) ?? [],
-                                                        "name",
-                                                        "id"
-                                                    )}
-                                                    // lastTab={activeTab}
-                                                    masterName="CURRENCY MASTER"
-                                                    value={currency}
-                                                    setValue={setCurrency}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                    className="focus:ring-2 focus:ring-blue-100"
-                                                /> */}
 
-                      {/* <DropdownInput
-                                                    name="PayTerm"
-                                                    options={dropDownListObject(
-                                                        id
-                                                            ? payTermList?.data
-                                                            : payTermList?.data?.filter((item) => item.active),
-                                                        "name",
-                                                        "id"
-                                                    )}
-                                                    value={payTermDay}
-                                                    setValue={setPayTermDay}
-                                                    // required={true}
-                                                    readOnly={readOnly}
-                                                    disabled={childRecord.current > 0}
-                                                    className="focus:ring-2 focus:ring-blue-100"
-                                                /> */}
+
                       <TextInput
                         name="Pan No"
                         type="pan_no"
                         value={panNo}
                         setValue={setPanNo}
-                        readOnly={readOnly}
-                        // disabled={childRecord.current > 0}
+                        readOnly={readOnly || parentId || isBranch}
+                        disabled={childRecord.current > 0}
+                        className="focus:ring-2 focus:ring-blue-100"
+                      />
+                      <TextInput
+                        name="Aadhar No"
+                        type="text"
+                        value={aadharNo}
+                        setValue={setAadharNo}
+                        readOnly={readOnly || parentId || isBranch}
+                        // required={true}
+                        disabled={parentId || isBranch}
+
                         className="focus:ring-2 focus:ring-blue-100"
                       />
                       <TextInput
@@ -1317,7 +1292,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         value={gstNo}
                         setValue={setGstNo}
                         readOnly={readOnly || parentId || isBranch}
-                        required={true}
+                        // required={true}
                         disabled={parentId || isBranch}
 
                         className="focus:ring-2 focus:ring-blue-100"
@@ -1328,7 +1303,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         value={msmeNo}
                         setValue={setMsmeNo}
                         readOnly={readOnly}
-                        // disabled={childRecord.current > 0}
+                        disabled={parentId || isBranch}
                         className="focus:ring-2 focus:ring-blue-100"
                       />
                       <TextInput
@@ -1337,6 +1312,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         value={cinNo}
                         setValue={setCinNo}
                         readOnly={readOnly}
+                        disabled={parentId || isBranch}
+
                         className="focus:ring-2 focus:ring-blue-100"
                       />
 
@@ -2144,7 +2121,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           value={msmeNo}
                           setValue={setMsmeNo}
                           readOnly={readOnly}
-                          // disabled={childRecord.current > 0}
+                          disabled={parentId || isBranch}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput
@@ -2153,6 +2130,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           value={cinNo}
                           setValue={setCinNo}
                           readOnly={readOnly}
+                          disabled={parentId || isBranch}
+
                           className="focus:ring-2 focus:ring-blue-100"
                         />
 
@@ -2266,6 +2245,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                     onChange={(e) =>
                                       handleInputChange(e.target.value, index, "name")
                                     }
+                                    disabled={readOnly}
 
                                   />
                                 </td>
@@ -2340,6 +2320,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                           addNewComments();
                                         }
                                       }}
+                                      disabled={readOnly}
+
                                       onClick={addNewComments}
                                       className="flex items-center px-1 bg-blue-50 rounded"
                                     >
@@ -2349,6 +2331,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                     {/* Delete Button */}
                                     <button
                                       className="flex items-center px-1 bg-red-50 rounded"
+                                      disabled={readOnly}
                                       onClick={() => deleteRow(index)}
                                     >
                                       <svg

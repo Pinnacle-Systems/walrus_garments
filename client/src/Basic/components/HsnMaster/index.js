@@ -1,100 +1,88 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { toast } from "react-toastify";
-import { TextInput, ReusableTable, ToggleButton, TextInputNew1 } from "../../../Inputs";
+import { ReusableTable, ToggleButton, TextInputNew1 } from "../../../Inputs";
 import { useAddHsnMasterMutation, useDeleteHsnMasterMutation, useGetHsnMasterByIdQuery, useGetHsnMasterQuery, useUpdateHsnMasterMutation } from "../../../redux/services/HsnMasterServices";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
 
-const MODEL = "HSN Master";
-
-export default function Form() {
+export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
-
     const [readOnly, setReadOnly] = useState(false);
-    const [id, setId] = useState("");
+    const [id, setId] = useState(editId || deleteId || "");
     const [name, setName] = useState("");
     const [active, setActive] = useState(true);
     const [tax, setTax] = useState("");
-
+    const [searchValue, setSearchValue] = useState("");
 
     const nameRef = useRef(null);
     const childRecord = useRef(0);
     const formRef = useRef(null);
-
 
     const params = {
         companyId: secureLocalStorage.getItem(
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
     };
-    const { data: allData, isLoading, isFetching } = useGetHsnMasterQuery({ params });
+
+    const { data: allData } = useGetHsnMasterQuery({ params });
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetHsnMasterByIdQuery(id, { skip: !id });
 
-
     const [addData] = useAddHsnMasterMutation();
     const [updateData] = useUpdateHsnMasterMutation();
     const [removeData] = useDeleteHsnMasterMutation();
 
-    const syncFormWithDb = useCallback(
-        (data) => {
-            if (!id) {
-                setName("");
-                setActive(true);
-                setTax("");
-                childRecord.current = 0;
-
-            } else {
-                // if (id) setReadOnly(true);
-                setName(data?.name ? data.name : "");
-                setActive(id ? (data?.active ? data.active : false) : true);
-                setTax(data?.tax ? data?.tax : "");
-                childRecord.current = data?.childRecord ? data?.childRecord : 0;
-            }
-        },
-        [id]
-    );
+    const syncFormWithDb = useCallback((data) => {
+        if (!id) {
+            setName("");
+            setActive(true);
+            setTax("");
+            childRecord.current = 0;
+        } else {
+            setName(data?.name || "");
+            setActive(id ? (data?.active ?? false) : true);
+            setTax(data?.tax ? data?.tax : "");
+            childRecord.current = data?.childRecord ?? 0;
+        }
+    }, [id]);
 
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, tax, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
-    }
+        id, name, tax, active,
+        companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
+    };
 
-    const validateData = (data) => {
-        if (data.name && data.tax) {
-            return true;
-        }
-        return false;
-    }
+    const validateData = (data) => data.name && data.tax;
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
-            await callback(data).unwrap();
-            setId("")
-            syncFormWithDb(undefined)
-            await Swal.fire({
-                title: text + "  " + "Successfully",
-                icon: "success",
-            });
-            if (nextProcess == "new") {
-                onNew()
+            let returnData = await callback(data).unwrap();
+            setId(returnData.data.id);
+            if (onSuccess) {
+                onSuccess(returnData.data.id);
+                return;
+            }
+            await Swal.fire({ title: text + " Successfully", icon: "success" });
+            if (nextProcess === "new") {
+                syncFormWithDb(undefined);
+                onNew();
             } else {
-                setForm(false)
+                setForm(false);
             }
         } catch (error) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Submission error',
-                text: error.data?.message || 'Something went wrong!',
+                icon: "error",
+                title: "Submission error",
+                text: error.data?.message || "Something went wrong!",
             });
             nameRef.current?.focus();
         }
@@ -102,17 +90,10 @@ export default function Form() {
 
     const saveData = (nextProcess) => {
         const upperName = name.toUpperCase();
-
-        const finalData = {
-            ...data,
-            name: upperName,
-        };
+        const finalData = { ...data, name: upperName };
 
         if (!validateData(finalData)) {
-            Swal.fire({
-                title: "Please fill all required fields...!",
-                icon: "error",
-            });
+            Swal.fire({ title: "Please fill all required fields...!", icon: "error" });
             nameRef.current?.focus();
             return;
         }
@@ -122,19 +103,13 @@ export default function Form() {
             foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
         } else {
             foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
-
         }
         if (foundItem) {
-            Swal.fire({
-                text: "The HSN Code already exists.",
-                icon: "warning",
-            });
+            Swal.fire({ text: "The HSN Code already exists.", icon: "warning" });
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
-        }
+        if (!window.confirm("Are you sure save the details ...?")) return;
         if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
@@ -143,25 +118,19 @@ export default function Form() {
     };
 
     const deleteData = async (id) => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                await removeData(id).unwrap()
-                setId("");
-                await Swal.fire({
-                    title: "Deleted Successfully",
-                    icon: "success",
-                });
-                setId("");
-            } catch (error) {
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Submission error',
-                    text: error.data?.message || 'Something went wrong!',
-                });
-            }
+        if (!id) return;
+        if (!window.confirm("Are you sure to delete...?")) return;
+        try {
+            await removeData(id).unwrap();
+            setId("");
+            await Swal.fire({ title: "Deleted Successfully", icon: "success" });
+            setForm(false);
+        } catch (error) {
+            await Swal.fire({
+                icon: "error",
+                title: "Submission error",
+                text: error.data?.message || "Something went wrong!",
+            });
         }
     };
 
@@ -176,18 +145,14 @@ export default function Form() {
     const onNew = () => {
         setId("");
         setForm(true);
-        syncFormWithDb(undefined)
+        syncFormWithDb(undefined);
         setReadOnly(false);
-        setTax("")
-        setTimeout(() => {
-            nameRef.current?.focus();
-        }, 100);
+        setTimeout(() => { nameRef.current?.focus(); }, 100);
     };
 
-    function onDataClick(id) {
-        setId(id);
-        setForm(true);
-    }
+    const handleView = (id) => { setId(id); setForm(true); setReadOnly(true); };
+    const handleEdit = (id) => { setId(id); setForm(true); setReadOnly(false); };
+
     const ACTIVE = (
         <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
             <Power size={10} />
@@ -200,72 +165,158 @@ export default function Form() {
     );
 
     const columns = [
-        {
-            header: "S.No",
-            accessor: (item, index) => index + 1,
-            className: "font-medium text-gray-900 w-12  text-center",
-        },
-
-        {
-            header: "hsn",
-            accessor: (item) => item?.name,
-            //   cellClass: () => "font-medium  text-gray-900",
-            className: "font-medium text-gray-900 text-left uppercase w-72",
-        },
-
-        {
-            header: "Status",
-            accessor: (item) => (item.active ? ACTIVE : INACTIVE),
-            //   cellClass: () => "font-medium text-gray-900",
-            className: "font-medium text-gray-900 text-center uppercase w-16",
-        },
-
-
-
-
+        { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
+        { header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
+        { header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-20" },
+        { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
-    const handleView = (id) => {
-        setId(id);
-        setForm(true);
-        setReadOnly(true);
-        console.log("view");
-    };
-    const handleEdit = (id) => {
-
-        setId(id);
-        setForm(true);
-        setReadOnly(false);
-        console.log("Edit");
-    };
-
     useEffect(() => {
-        if (form && nameRef.current) {
+        if ((form || onSuccess) && nameRef.current) {
             nameRef.current.focus();
         }
-    }, [form]);
+    }, [form, onSuccess]);
 
-    const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
-
-    return (
-
-        <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
-            <div className="w-full flex bg-white p-1 justify-between  items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Hsn Master</h5>
-                <div className="flex items-center text-xs">
-                    <button
-                        onClick={() => {
-                            setForm(true);
-                            onNew();
-                        }}
-                        className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                    >
-                        + Add New Hsn
-                    </button>
+    const formBody = (
+        <div className="flex-1 overflow-auto p-3">
+            <div className="grid grid-cols-1 gap-3 h-full">
+                <div className="lg:col-span-2 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+                        <div className="grid grid-cols-2 gap-4" ref={formRef}>
+                            <TextInputNew1
+                                name="HSN Code"
+                                type="text"
+                                value={name}
+                                setValue={setName}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                                ref={nameRef}
+                            />
+                            <TextInputNew1
+                                name="Tax Percentage"
+                                type="number"
+                                max="100"
+                                value={tax}
+                                setValue={setTax}
+                                required={true}
+                                readOnly={readOnly}
+                                disabled={childRecord.current > 0}
+                            />
+                        </div>
+                        <div className="mt-3">
+                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    );
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 ">
+    // ── deleteId render path ──────────────────────────────────────────────────
+    if (deleteId) {
+        const childCount = singleData?.data?.childRecord ?? 0;
+        const isLoadingRecord = isSingleFetching || isSingleLoading;
+
+        const handleConfirmDelete = async () => {
+            try {
+                const res = await removeData(deleteId).unwrap();
+                if (res?.statusCode === 1) {
+                    toast.error(res?.data?.message || "Cannot delete: child records exist");
+                    return;
+                }
+                toast.success("HSN deleted successfully");
+                onSuccess?.();
+            } catch (err) {
+                toast.error(err?.data?.message || "Failed to delete HSN");
+            }
+        };
+
+        return (
+            <div className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete HSN</h2>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
+                    {isLoadingRecord ? (
+                        <p className="text-xs text-gray-400">Checking records...</p>
+                    ) : childCount > 0 ? (
+                        <>
+                            <div className="flex flex-col items-center gap-2">
+                                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                </svg>
+                                <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
+                                <p className="text-xs text-gray-600 text-center">
+                                    <span className="font-semibold">"{deleteLabel}"</span> has{" "}
+                                    <span className="font-semibold text-red-600">{childCount} linked record{childCount > 1 ? "s" : ""}</span>.
+                                    Remove them first before deleting this HSN.
+                                </p>
+                            </div>
+                            <button type="button" onClick={onClose}
+                                className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                Close
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-gray-700 text-center">
+                                Are you sure you want to delete{" "}
+                                <span className="font-semibold">"{deleteLabel}"</span>?
+                            </p>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={onClose}
+                                    className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                                    Cancel
+                                </button>
+                                <button type="button" onClick={handleConfirmDelete}
+                                    className="px-4 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700 rounded">
+                                    Delete
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // ── onSuccess (inline add/edit) render path ───────────────────────────────
+    if (onSuccess) {
+        return (
+            <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
+                <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                        {editId ? "Edit HSN" : "Add New HSN"}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => saveData("close")}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+                    >
+                        <Check size={14} />
+                        {editId ? "Update" : "Save"}
+                    </button>
+                </div>
+                {formBody}
+            </div>
+        );
+    }
+
+    // ── default (standalone page) render path ────────────────────────────────
+    return (
+        <div onKeyDown={handleKeyDown} className="p-1">
+            <div className="w-full flex bg-white p-1 justify-between items-center">
+                <h5 className="text-2xl font-bold text-gray-800">HSN Master</h5>
+                <button
+                    onClick={() => { setForm(true); onNew(); }}
+                    className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+                >
+                    + Add New HSN
+                </button>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
                 <ReusableTable
                     columns={columns}
                     data={allData?.data}
@@ -276,109 +327,41 @@ export default function Form() {
                 />
             </div>
 
-            <div>
-                {form === true && (
-                    <Modal
-                        isOpen={form}
-                        form={form}
-                        widthClass={"w-[40%] h-[45%]"}
-                        onClose={() => {
-                            setForm(false);
-                            // setErrors({});
-                        }}
-                    >
-                        <div className="h-full flex flex-col bg-gray-200">
-                            <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
-                                        {id
-                                            ? !readOnly
-                                                ? "Edit Hsn "
-                                                : "Hsn "
-                                            : "Add New Hsn"}
-                                    </h2>
-                                </div>
-                                <div className="flex gap-2">
-                                    <div>
-                                        {readOnly && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setForm(false);
-                                                    setSearchValue("");
-                                                    setId(false);
-                                                }}
-                                                className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {!readOnly && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    saveData("close")
-                                                }}
-                                                className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                           border border-blue-600 flex items-center gap-1 text-xs"
-                                            >
-                                                <Check size={14} />
-                                                {id ? "Update" : "Save & close"}
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {(!readOnly && !id) && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    saveData("new")
-                                                }}
-
-                                                className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                           border border-green-600 flex items-center gap-1 text-xs"
-                                            >
-                                                <Check size={14} />
-                                                {"Save & New"}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 overflow-auto p-3">
-                                <div className="grid grid-cols-1  gap-3  h-full">
-                                    <div className="lg:col-span- space-y-3">
-                                        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                                            <div className="space-y-4 ">
-                                                <fieldset className=' rounded mt-2'>
-
-                                                    <div className='grid grid-cols-3 my-2 gap-5' ref={formRef}>
-                                                        <TextInputNew1
-                                                            name="HSN Code"
-                                                            type="text"
-                                                            value={name}
-                                                            setValue={setName}
-                                                            required={true}
-                                                            readOnly={readOnly}
-                                                            disabled={(childRecord.current > 0)}
-                                                            ref={nameRef}
-                                                        />
-                                                        <TextInputNew1 name="Tax Percentage" type="text" max={"100"} value={tax} setValue={setTax} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                                                    </div>
-                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
-                                                </fieldset>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+            {form && (
+                <Modal isOpen={form} widthClass="w-[40%] h-[50%]" onClose={() => setForm(false)}>
+                    <div className="h-full flex flex-col bg-gray-200">
+                        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                            <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                                {id ? (!readOnly ? "Edit HSN" : "HSN") : "Add New HSN"}
+                            </h2>
+                            <div className="flex gap-2">
+                                {readOnly && (
+                                    <button type="button"
+                                        onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
+                                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
+                                        Cancel
+                                    </button>
+                                )}
+                                {!readOnly && (
+                                    <button type="button" onClick={() => saveData("close")}
+                                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
+                                        <Check size={14} />
+                                        {id ? "Update" : "Save & Close"}
+                                    </button>
+                                )}
+                                {!readOnly && !id && (
+                                    <button type="button" onClick={() => saveData("new")}
+                                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                                        <Check size={14} />
+                                        Save & New
+                                    </button>
+                                )}
                             </div>
                         </div>
-                    </Modal>
-                )}
-            </div>
+                        {formBody}
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 }

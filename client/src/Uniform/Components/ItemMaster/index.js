@@ -12,9 +12,13 @@ import { useGetPanelMasterQuery } from "../../../redux/uniformService/PanelMaste
 import FormHeader from "../../../Basic/components/FormHeader";
 import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, DropdownInputNew } from "../../../Inputs";
 import ReportTemplate from "../../../Basic/components/ReportTemplate";
 import { useGetItemTypeMasterQuery } from "../../../redux/uniformService/ItemTypeMasterService";
+import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import { useGetItemCategoryQuery } from "../../../redux/uniformService/ItemCategoryMasterService";
+import HsnMaster from "../../../Basic/components/HsnMaster";
+import ItemCategoryMaster from "../../../Shocks/ItemCategroyMaster";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { DELETE, PLUS } from "../../../icons";
 import Select from "react-dropdown-select";
@@ -31,6 +35,8 @@ export default function Form() {
   const [itemDescription, setItemDescription] = useState("");
   const [active, setActive] = useState(true);
   const [panelId, setPanelId] = useState([]);
+  const [hsnId, setHsnId] = useState("");
+  const [mainCategoryId, setMainCategoryId] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
   const nameRef = useRef(null);
@@ -56,6 +62,8 @@ export default function Form() {
   const [updateData] = useUpdateItemMasterMutation();
   const [removeData] = useDeleteItemMasterMutation();
   const { data: ItemTypeList } = useGetItemTypeMasterQuery({ params });
+  const { data: hsnList } = useGetHsnMasterQuery({ params });
+  const { data: itemCategoryList } = useGetItemCategoryQuery({ params });
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -65,6 +73,8 @@ export default function Form() {
       setPanelId(data?.ItemPanel ? data?.ItemPanel : [])
       setActive(id ? (data?.active ? data.active : false) : true);
       setItemDescription(data?.itemDescription ? data?.itemDescription : "");
+      setHsnId(data?.hsnId ? String(data.hsnId) : "");
+      setMainCategoryId(data?.mainCategoryId ? String(data.mainCategoryId) : "");
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
@@ -86,6 +96,8 @@ export default function Form() {
       sessionStorage.getItem("sessionId") + "userCompanyId"
     ),
     itemTypeId,
+    hsnId: hsnId ? parseInt(hsnId) : undefined,
+    mainCategoryId: mainCategoryId ? parseInt(mainCategoryId) : undefined,
   };
 
   const validateData = (data) => {
@@ -310,7 +322,7 @@ export default function Form() {
                       options={dropDownListObject(
                         id
                           ? ItemTypeList?.data
-                          : ItemTypeList?.data.filter((item) => item.active),
+                          : ItemTypeList?.data?.filter((item) => item.active),
                         "name",
                         "id"
                       )}
@@ -331,6 +343,32 @@ export default function Form() {
                       readOnly={readOnly}
                       disabled={childRecord.current > 0}
                       ref={nameRef}
+                    />
+                    <DropdownInputNew
+                      name="HSN Code"
+                      options={dropDownListObject(
+                        id ? hsnList?.data : hsnList?.data?.filter(i => i.active),
+                        "name", "id"
+                      )}
+                      value={hsnId}
+                      setValue={setHsnId}
+                      readOnly={readOnly}
+                      addNewLabel="+ Add New HSN"
+                      childComponent={HsnMaster}
+                      addNewModalWidth="w-[40%] h-[50%]"
+                    />
+                    <DropdownInputNew
+                      name="Item Category"
+                      options={dropDownListObject(
+                        id ? itemCategoryList?.data : itemCategoryList?.data?.filter(i => i.active),
+                        "name", "id"
+                      )}
+                      value={mainCategoryId}
+                      setValue={setMainCategoryId}
+                      readOnly={readOnly}
+                      addNewLabel="+ Add New Category"
+                      childComponent={ItemCategoryMaster}
+                      addNewModalWidth="w-[40%] h-[45%]"
                     />
                   </div>
                   <div className="col-span-2">

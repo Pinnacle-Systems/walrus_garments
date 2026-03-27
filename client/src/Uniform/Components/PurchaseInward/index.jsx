@@ -17,6 +17,7 @@ import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMaste
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { childRecordCount } from '../../../Inputs';
 import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 
 
@@ -64,6 +65,7 @@ const PurchaseInward = () => {
     const [addData] = useAddDirectInwardOrReturnMutation();
 
     const [removeData] = useDeleteDirectInwardOrReturnMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const { data: yarnList } =
@@ -121,6 +123,8 @@ const PurchaseInward = () => {
                         Swal.showLoading();
                     }
                 });
+                invalidateTagsDispatch()
+
             } catch (error) {
                 toast.error("something went wrong");
             }
