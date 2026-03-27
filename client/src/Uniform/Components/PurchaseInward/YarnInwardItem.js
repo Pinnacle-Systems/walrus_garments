@@ -17,6 +17,10 @@ import PurchaseYarnPoItems from "./YarnPoItem";
 import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import { useGetPoQuery } from "../../../redux/uniformService/PoServices";
 import Swal from "sweetalert2";
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const YarnInwardPoItems = ({
     id,
@@ -189,13 +193,9 @@ const YarnInwardPoItems = ({
     console.log(inwardItems, "inwardItems")
     return (
         <>
-
-
-            <div className="relative flex h-full min-h-0 flex-col rounded-md border border-slate-200 bg-white p-2 shadow-sm">
-                <div className="mb-2 flex shrink-0 items-center justify-between">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    <div className="flex gap-2 items-center">
-
+            <TransactionLineItemsSection
+                panelClassName="h-full"
+                actions={
                         <button className="font-bold text-slate-700 bord"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -220,12 +220,10 @@ const YarnInwardPoItems = ({
                         >
                             Fill Po Items
                         </button>
-                    </div>
-
-                </div>
-                <div className="relative min-h-0 flex-1 overflow-auto py-1">
-                    <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800">
+                }
+            >
+                    <table className={transactionTableClassName}>
+                        <thead className={transactionTableHeadClassName}>
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -333,7 +331,7 @@ const YarnInwardPoItems = ({
                                 </th>
                             </tr>
                         </thead>{console.log(inwardItems, "inwardItemsinIndividual")}
-                        <tbody className='overflow-y-auto  h-full w-full'>
+                        <tbody>
                             {(inwardItems || [])?.map((item, index) =>
                                 <PurchaseYarnPoItems yarnList={yarnList} uomList={uomList}
                                     colorList={colorList} deleteRow={handleDeleteRow}
@@ -346,7 +344,7 @@ const YarnInwardPoItems = ({
 
 
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
-                                <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                <tr className='font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 6 }).map(i =>
                                         <td className="table-data   "></td>
                                     )}
@@ -357,7 +355,6 @@ const YarnInwardPoItems = ({
                             }
                         </tbody>
                     </table>
-                </div>
                 {contextMenu && (
                     <div
                         style={{
@@ -396,7 +393,7 @@ const YarnInwardPoItems = ({
                         </div>
                     </div>
                 )}
-            </div>
+            </TransactionLineItemsSection>
         </>
     );
 };

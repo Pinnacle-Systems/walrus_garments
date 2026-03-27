@@ -9,6 +9,17 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableCellClassName,
+    transactionTableFocusCellClassName,
+    transactionTableHeadClassName,
+    transactionTableHeaderCellClassName,
+    transactionTableIndexCellClassName,
+    transactionTableNumberInputClassName,
+    transactionTableRowClassName,
+    transactionTableSelectInputClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const SalesReturnItems = ({
     id,
@@ -28,6 +39,11 @@ const SalesReturnItems = ({
     itemList,
     sizeList
 }) => {
+    const compactHeaderCellClassName = transactionTableHeaderCellClassName;
+    const compactCellClassName = transactionTableCellClassName;
+    const compactFocusCellClassName = transactionTableFocusCellClassName;
+    const compactSelectClassName = transactionTableSelectInputClassName;
+    const compactNumberInputClassName = transactionTableNumberInputClassName;
 
 
 
@@ -257,9 +273,10 @@ const SalesReturnItems = ({
 
 
 
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[380px]">
-                <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
+            <TransactionLineItemsSection
+                panelClassName="max-h-[380px] h-full"
+                contentClassName="h-[300px] overflow-hidden rounded-md border border-slate-200 !py-0"
+                actions={
                     <button className="font-bold text-slate-700 bord"
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -286,44 +303,44 @@ const SalesReturnItems = ({
                     >
                         {/* Fill  Items */}
                     </button>
-
-                </div>
-                <div className={` relative w-full h-[300px] overflow-y-auto py-1`}>
-                    <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800 top-0 sticky">
+                }
+            >
+                <div className="h-full overflow-x-auto overflow-y-auto">
+                    <table className={transactionTableClassName}>
+                        <thead className={transactionTableHeadClassName}>
                             <tr>
                                 <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-12`}
                                 >
                                     S.No
                                 </th>
                                 <th
 
-                                    className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-52`}
                                 >
                                     Item
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Size
                                 </th>
                                 <th
 
-                                    className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-32`}
                                 >
                                     Color
                                 </th>
                                 <th
 
-                                    className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-20`}
                                 >
                                     Hsn
                                 </th>
                                 <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-12`}
                                 >
                                     UOM
                                 </th>
@@ -331,13 +348,13 @@ const SalesReturnItems = ({
 
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Quantity
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Price
                                 </th>
@@ -345,7 +362,7 @@ const SalesReturnItems = ({
 
                                 <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Gross
                                 </th>
@@ -353,7 +370,7 @@ const SalesReturnItems = ({
 
                                 <th
 
-                                    className={`w-7 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className={`${compactHeaderCellClassName} w-7`}
                                 >
 
                                 </th>
@@ -363,18 +380,18 @@ const SalesReturnItems = ({
                         <tbody>
 
                             {(deliveryItems ? deliveryItems : [])?.map((row, index) =>
-                                <tr className="border border-blue-gray-200 cursor-pointer "
+                                <tr className={transactionTableRowClassName}
                                     onContextMenu={(e) => {
                                         if (!readOnly) {
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
                                 >
-                                    <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                    <td className={transactionTableIndexCellClassName}>{index + 1}</td>
+                                    <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly} className={compactSelectClassName}
                                             value={row.itemId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
                                             onBlur={(e) => {
@@ -392,10 +409,10 @@ const SalesReturnItems = ({
                                     </td>
                                     {/* {console.log(row,"row")} */}
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                    <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                            tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} className={compactSelectClassName}
                                             value={row.sizeId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                             onBlur={(e) => {
@@ -413,10 +430,10 @@ const SalesReturnItems = ({
                                         </select>
                                     </td>
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                    <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                            className={compactSelectClassName} value={row.colorId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "colorId")
@@ -436,10 +453,10 @@ const SalesReturnItems = ({
                                     </td>
 
 
-                                    <td className="py-0.5 border border-gray-300 text-[11px]">
+                                    <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "hsnId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.hsnId}
+                                            className={compactSelectClassName} value={row.hsnId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "hsnId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "hsnId")
@@ -459,10 +476,10 @@ const SalesReturnItems = ({
                                     </td>
 
 
-                                    <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+                                    <td className={`${compactFocusCellClassName} w-40`}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                            className={compactSelectClassName} value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
@@ -482,7 +499,7 @@ const SalesReturnItems = ({
                                     </td>
 
 
-                                    <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                    <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -490,7 +507,7 @@ const SalesReturnItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                                            className={compactNumberInputClassName}
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={row?.qty}
@@ -505,7 +522,7 @@ const SalesReturnItems = ({
                                         />
                                     </td>
 
-                                    <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                    <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -513,7 +530,7 @@ const SalesReturnItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="text-right rounded py-1 w-full px-1 table-data-input"
+                                            className={compactNumberInputClassName}
                                             onFocus={(e) => e.target.select()}
                                             value={(!row.price) ? 0 : row.price}
                                             disabled={readOnly || !row.qty}
@@ -532,7 +549,7 @@ const SalesReturnItems = ({
 
 
 
-                                    <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                                    <td className={`${compactCellClassName} text-right`}>
                                         {(parseFloat(row?.price) * parseFloat(row?.qty)).toFixed(3) || 0}</td>
 
 
@@ -558,7 +575,6 @@ const SalesReturnItems = ({
                             )}
                         </tbody>
                     </table>
-                </div>
                 {contextMenu && (
                     <div
                         style={{
@@ -597,7 +613,8 @@ const SalesReturnItems = ({
                         </div>
                     </div>
                 )}
-            </div>
+                </div>
+            </TransactionLineItemsSection>
         </>
     );
 };

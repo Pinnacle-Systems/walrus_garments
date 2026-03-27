@@ -144,12 +144,14 @@ export default function Form() {
   } return (
     <>
       {showManufacturer ? (
-        <PurchaseReturnForm isLoading={isLoading} isFetching={isFetching} poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} allData={allData} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
-          onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} supplierId={supplierId} setSupplierId={setSupplierId}
-          supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-          branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
-          termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission}
-        />
+        <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
+          <PurchaseReturnForm isLoading={isLoading} isFetching={isFetching} poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward} id={id} setId={setId} allData={allData} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems}
+            onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} supplierId={supplierId} setSupplierId={setSupplierId}
+            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+            branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
+            termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission}
+          />
+        </div>
 
       ) : (
         <div className="p-2 bg-[#F1F1F0] ">

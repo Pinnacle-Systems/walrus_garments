@@ -386,7 +386,7 @@ export const TextInput = ({
   return (
     <div className={`mb-2 ${width}`}>
       {name && (
-        <label className="block text-xs font-bold text-gray-600 mb-1">
+        <label className="mb-1 block text-[12px] font-bold text-gray-600">
           {required ? <RequiredLabel name={label ? label : name} /> : name}
         </label>
       )}
@@ -537,7 +537,7 @@ export const TextAreaNew = ({
   return (
     <div className=" w-full">
       {name && (
-        <label className="block text-xs font-bold text-gray-600 mb-1">
+        <label className="mb-1 block text-[12px] font-bold text-gray-600">
           {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
         </label>
       )}
@@ -1178,7 +1178,7 @@ export const DateInput = ({
     <div className="flex flex-col gap-1 w-full">
       <label
         htmlFor={name}
-        className={`text-xs font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+        className={`text-[12px] font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
           }`}
       >
         {inputHead ?? name}
@@ -1262,7 +1262,7 @@ export const DateInputNew = forwardRef(({
   return (
     <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
       {name && (
-        <label className={`block  font-bold text-slate-700 mb-1 text-ms ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+        <label className={`mb-1 block text-[12px] font-bold text-slate-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
           }`}>
           {name}
         </label>
@@ -1516,7 +1516,7 @@ export const DropdownWithSearch = forwardRef(({
   return (
     <div id={`dropdown${currentIndex}`} className={``}>
       {label && (
-        <label className="block text-xs font-bold text-slate-700 mb-1">
+        <label className="mb-1 block text-[12px] font-bold text-slate-700">
           {required ? <RequiredLabel name={label} /> : `${label}`}
         </label>
       )}
@@ -2374,7 +2374,7 @@ export const ReusableSearchableInput = forwardRef(
             {label}
           </label> */}
           {label && (
-            <label className="block text-xs font-bold text-gray-600 mb-1">
+            <label className="mb-1 block text-[12px] font-bold text-gray-600">
               {required ? <RequiredLabel name={label ? label : name} /> : label}
             </label>
           )}
@@ -3274,7 +3274,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
           ref={containerRef}
         >
           {label && (
-            <label className="block text-xs font-bold text-gray-600 mb-1">
+            <label className="mb-1 block text-[12px] font-bold text-gray-600">
               {required ? <RequiredLabel name={label || name} /> : label}
             </label>
           )}

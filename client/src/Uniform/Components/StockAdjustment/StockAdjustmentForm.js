@@ -25,6 +25,10 @@ import { useAddStockAdjustmentMutation, useGetStockAdjustmentByIdQuery, useUpdat
 import moment from "moment";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
+import TransactionLineItemsSection, {
+  transactionTableClassName,
+  transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, branchList, locationData, yarnList, hasPermission }) => {
@@ -363,12 +367,13 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
 
         </div>
-        <div className="w-full h-full bg-white border border-gray-200 rounded-md p-2">
-
-
-          <div className="overflow-x-auto h-[400px]">
-            <table className="min-w-full border border-gray-200">
-              <thead className="bg-gray-100 sticky top-0 z-10">
+        <TransactionLineItemsSection
+          title="List Of Items"
+          panelClassName="h-full"
+          contentClassName="h-[400px]"
+        >
+            <table className={transactionTableClassName}>
+              <thead className={transactionTableHeadClassName}>
                 <tr className="text-xs font-semibold text-gray-600">
                   <th className="border px-2 py-1.5 w-12">S.No</th>
                   <th className="border px-2 py-1.5 w-64 text-left">Item Name</th>
@@ -500,7 +505,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                 })}
               </tbody>
             </table>
-          </div>
           {contextMenu && (
             <div
               style={{
@@ -552,7 +556,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
             />
           )}
 
-        </div>
+        </TransactionLineItemsSection>
 
         <div className="flex flex-col md:flex-row gap-2 justify-between mt-0">
           <div className="flex gap-2 flex-wrap">

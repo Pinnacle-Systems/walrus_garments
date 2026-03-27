@@ -10,6 +10,17 @@ import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel
 import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableCellClassName,
+    transactionTableFocusCellClassName,
+    transactionTableHeadClassName,
+    transactionTableHeaderCellClassName,
+    transactionTableIndexCellClassName,
+    transactionTableNumberInputClassName,
+    transactionTableRowClassName,
+    transactionTableSelectInputClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const QuotationItems = ({
     id,
@@ -34,6 +45,12 @@ const QuotationItems = ({
     itemPriceList,
     priceTemplateList
 }) => {
+    const compactHeaderCellClassName = transactionTableHeaderCellClassName;
+    const compactCellClassName = transactionTableCellClassName;
+    const compactFocusCellClassName = transactionTableFocusCellClassName;
+    const compactSelectClassName = transactionTableSelectInputClassName;
+    const compactNumberInputClassName = transactionTableNumberInputClassName;
+    const compactDropdownClassName = "h-full w-full max-w-none rounded-none border-0 bg-transparent px-1 py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none";
 
 
 
@@ -323,73 +340,46 @@ const QuotationItems = ({
 
 
             <fieldset >
-                {/* <legend className="text-sm font-semibold text-slate-700">Items</legend> */}
-                <div className={`border border-slate-200 p-2 bg-white rounded-md shadow-sm ${isHeaderOpen ? " max-h-[330px]" : " max-h-[550px]"}`}>
-                    {/* <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    <button className="font-bold text-slate-700 bord"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                setInwardItemSelection(true)
-
-                            }
-                        }}
-                        disabled={true}
-                        onClick={() => {
-                            if (!supplierId) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: ` Choose Supplier`,
-                                    showConfirmButton: false,
-                                    timer: 2000
-                                });
-                            }
-                            else {
-
-                                setInwardItemSelection(true)
-                            }
-                        }}
-                    >
-                    </button>
-
-                </div> */}
-                    <div className={` relative w-full ${isHeaderOpen ? " h-[250px]" : " h-[350px]"} overflow-y-auto py-1`}>
-                        <table className="w-full border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-800 top-0 sticky">
+                <TransactionLineItemsSection
+                    panelClassName={`${isHeaderOpen ? "max-h-[330px]" : "max-h-[550px]"} h-full`}
+                    contentClassName={`${isHeaderOpen ? "h-[250px]" : "h-[350px]"} overflow-hidden rounded-md border border-slate-200 !py-0`}
+                >
+                    <div className="h-full overflow-x-auto overflow-y-auto">
+                        <table className={transactionTableClassName}>
+                            <thead className={transactionTableHeadClassName}>
                                 <tr>
                                     <th
-                                        className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-12`}
                                     >
                                         S.No
                                     </th>
                                     <th
 
-                                        className={`w-52 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-52`}
                                     >
                                         Item
                                     </th>
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Size
                                     </th>
                                     <th
 
-                                        className={`w-32 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-32`}
                                     >
                                         Color
                                     </th>
                                     <th
 
-                                        className={`w-20 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-20`}
                                     >
                                         Hsn
                                     </th>
                                     <th
 
-                                        className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-12`}
                                     >
                                         UOM
                                     </th>
@@ -397,13 +387,13 @@ const QuotationItems = ({
 
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Quantity
                                     </th>
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         {/* <div className="flex flex-col items-center gap-1.5 py-1 leading-none">
                                             <span className="uppercase ">Price</span>
@@ -421,37 +411,37 @@ const QuotationItems = ({
                                     </th>
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Price Type
                                     </th>
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Discount Type
                                     </th>
                                     <th
 
-                                        className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Discount
                                     </th>
                                     <th
 
-                                        className={`w-20 px-3 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-20`}
                                     >
                                         Tax Type
                                     </th>
                                     <th
 
-                                        className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Tax
                                     </th>
                                     {/* <th
 
-                                        className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Tax Total
                                     </th> */}
@@ -463,7 +453,7 @@ const QuotationItems = ({
                                     </th>
                                     <th
 
-                                        className={`w-7 px-3 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-7`}
                                     >
 
                                     </th>
@@ -489,18 +479,18 @@ const QuotationItems = ({
 
 
 
-                                        <tr className="border border-blue-gray-200 cursor-pointer "
+                                        <tr className={transactionTableRowClassName}
                                             onContextMenu={(e) => {
                                                 if (!readOnly) {
                                                     handleRightClick(e, index, "shiftTimeHrs");
                                                 }
                                             }}
                                         >
-                                            <td className="w-12 border border-gray-300 text-[11px]  text-center p-0.5 ">{index + 1}</td>
-                                            <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                            <td className={transactionTableIndexCellClassName}>{index + 1}</td>
+                                            <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                                                    tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                                    tabIndex={"0"} disabled={readOnly} className={compactSelectClassName}
                                                     value={row.itemId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
                                                     onBlur={(e) => {
@@ -518,10 +508,10 @@ const QuotationItems = ({
                                             </td>
                                             {/* {console.log(row,"row")} */}
 
-                                            <td className="py-0.5 border border-gray-300 text-[11px] ">
+                                            <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                                    tabIndex={"0"} className='text-left w-full rounded py-1 table-data-input'
+                                                    tabIndex={"0"} className={compactSelectClassName}
                                                     value={row.sizeId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                                     onBlur={(e) => {
@@ -539,10 +529,10 @@ const QuotationItems = ({
                                                 </select>
                                             </td>
 
-                                            <td className="py-0.5 border border-gray-300 text-[11px]">
+                                            <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                    className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                                    className={compactSelectClassName} value={row.colorId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                                     onBlur={(e) => {
                                                         handleInputChange((e.target.value), index, "colorId")
@@ -562,10 +552,10 @@ const QuotationItems = ({
                                             </td>
 
 
-                                            <td className="py-0.5 border border-gray-300 text-[11px]">
+                                            <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "hsnId") } }}
-                                                    className='text-left w-full rounded py-1 table-data-input' value={row.hsnId}
+                                                    className={compactSelectClassName} value={row.hsnId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "hsnId")}
                                                     onBlur={(e) => {
                                                         handleInputChange((e.target.value), index, "hsnId")
@@ -585,10 +575,10 @@ const QuotationItems = ({
                                             </td>
 
 
-                                            <td className="w-40 border border-gray-300 text-[11px] py-0.5">
+                                            <td className={`${compactFocusCellClassName} w-40`}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                                    className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                                    className={compactSelectClassName} value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={(e) => {
                                                         handleInputChange((e.target.value), index, "uomId")
                                                     }
@@ -608,7 +598,7 @@ const QuotationItems = ({
                                             </td>
 
 
-                                            <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -616,7 +606,7 @@ const QuotationItems = ({
                                                     }}
                                                     min={"0"}
                                                     type="number"
-                                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                    className={compactNumberInputClassName}
                                                     onFocus={(e) => e.target.select()}
                                                     // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                     value={row?.qty}
@@ -631,7 +621,7 @@ const QuotationItems = ({
                                                 />
                                             </td>
 
-                                            <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right relative">
+                                            <td className={`${compactFocusCellClassName} w-40 text-right relative`}>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -639,7 +629,7 @@ const QuotationItems = ({
                                                     }}
                                                     min={"0"}
                                                     type="number"
-                                                    className="text-right rounded py-1 w-full px-1 table-data-input"
+                                                    className={compactNumberInputClassName}
                                                     onFocus={(e) => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}
                                                     disabled={readOnly || !row.qty}
@@ -656,7 +646,7 @@ const QuotationItems = ({
 
 
                                             </td>
-                                            <td className={` text-[10px] px-1 rounded-sm font-bold shadow-xs leading-none py-0.5 ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
+                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
                                                 row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" : row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200"
                                                     : ""
                                                 }`}>
@@ -664,9 +654,9 @@ const QuotationItems = ({
 
                                             </td>
 
-                                            <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <select
-                                                    className="w-full text-[10px] bg-white border border-slate-200 rounded px-1 py-1 outline-none focus:ring-1  cursor-pointer shadow-sm mx-auto max-w-[120px]"
+                                                    className={compactDropdownClassName}
                                                     value={row.discountType}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
                                                 // disabled={readOnly}
@@ -678,7 +668,7 @@ const QuotationItems = ({
 
 
                                             </td>
-                                            <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -686,7 +676,7 @@ const QuotationItems = ({
                                                     }}
                                                     min={"0"}
                                                     type="number"
-                                                    className="text-right rounded py-1 w-full px-1 table-data-input"
+                                                    className={compactNumberInputClassName}
                                                     onFocus={(e) => e.target.select()}
                                                     value={(!row.discountValue) ? 0 : row.discountValue}
                                                     disabled={readOnly || !row.qty}
@@ -708,20 +698,18 @@ const QuotationItems = ({
                                                 {(subTotal).toFixed(2)}
 
                                             </td> */}
+                                            <td className={compactFocusCellClassName}>
+                                                <select
+                                                    className={compactDropdownClassName}
+                                                    value={row.taxMethod}
+                                                    onChange={(e) => handleInputChange(e.target.value, index, "taxMethod")}
+                                                >
+                                                    <option value="Inclusive">Inclusive</option>
+                                                    <option value="Exclusive">Exclusive</option>
+                                                </select>
+                                            </td>
 
-
-
-                                            <select
-                                                className="w-full text-[10px] bg-white border border-slate-200 rounded px-1 py-1 outline-none focus:ring-1  cursor-pointer shadow-sm mx-auto max-w-[120px]"
-                                                value={row.taxMethod}
-                                                onChange={(e) => handleInputChange(e.target.value, index, "taxMethod")}
-                                            // disabled={readOnly}
-                                            >
-                                                <option value="Inclusive">Inclusive</option>
-                                                <option value="Exclusive">Exclusive</option>
-                                            </select>
-
-                                            <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                            <td className={`${compactCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -729,7 +717,7 @@ const QuotationItems = ({
                                                     }}
                                                     min={"0"}
                                                     type="number"
-                                                    className="text-right rounded py-1 w-full px-1 table-data-input"
+                                                    className={compactNumberInputClassName}
                                                     onFocus={(e) => e.target.select()}
                                                     value={(!row.taxPercent) ? 0 : row.taxPercent}
                                                     disabled={true}
@@ -749,7 +737,7 @@ const QuotationItems = ({
                                                 {(taxTotal).toFixed(2)}
 
                                             </td> */}
-                                            <td className="w-40 py-0.5 border border-gray-300 text-[11px] text-right">
+                                            <td className={`${compactCellClassName} w-40 text-right`}>
                                                 {(total).toFixed(2)}
                                             </td>
 
@@ -782,7 +770,6 @@ const QuotationItems = ({
                                 )}
                             </tbody>
                         </table>
-                    </div>
                     {contextMenu && (
                         <div
                             style={{
@@ -821,7 +808,8 @@ const QuotationItems = ({
                             </div>
                         </div>
                     )}
-                </div>
+                    </div>
+                </TransactionLineItemsSection>
             </fieldset>
 
         </>

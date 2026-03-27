@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextInput } from "../../../Inputs";
+import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
@@ -24,6 +23,8 @@ import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintForm
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import SalesReturnItems from "./SalesReturnItems";
 import { useAddSalesReturnMutation, useGetSalesReturnByIdQuery, useGetSalesReturnQuery, useUpdateSalesReturnMutation } from "../../../redux/uniformService/salesReturnServices";
+import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
+import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 
 
 
@@ -52,6 +53,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
+  const [isHeaderOpen, setIsHeaderOpen] = useState(true);
 
 
 
@@ -358,6 +360,115 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setContextMenu(null);
   };
 
+  const summaryItems = [
+    { label: "No", value: docId },
+    { label: "Date", value: date },
+    {
+      label: "Customer",
+      value:
+        supplierDetails?.data?.name ||
+        findFromList(customerId, supplierList?.data, "name") ||
+        findFromList(customerId, supplierList?.data, "aliasName"),
+    },
+    {
+      label: "Phone",
+      value:
+        supplierDetails?.data?.contactPersonNumber ||
+        findFromList(customerId, supplierList?.data, "contactPersonNumber"),
+    },
+    {
+      label: "Address",
+      value:
+        supplierDetails?.data?.address ||
+        findFromList(customerId, supplierList?.data, "address"),
+    },
+    {
+      label: "Delivery",
+      value: findFromList(salesDeliveryId, salesDeliveryData?.data, "docId"),
+    },
+  ];
+
+  const footerContent = (
+    <CommonFormFooter
+      remarks={remarks}
+      setRemarks={setRemarks}
+      terms={terms}
+      setTerms={setTerms}
+      readOnly={readOnly}
+      totalsRows={[
+        {
+          key: "totalQty",
+          label: "Total Quantity",
+          value: getTotalQty() || 0,
+        },
+        {
+          key: "subtotal",
+          label: "Subtotal",
+          value: `₹${(subtotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+        },
+        {
+          key: "taxAmount",
+          label: "GST Amount",
+          value: `₹${(taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+        },
+        {
+          key: "netAmount",
+          label: "Net Amount",
+          value: `₹${(netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          emphasized: true,
+        },
+      ]}
+      leftActions={
+        <>
+          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2" />
+            Save & New
+          </button>
+          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <HiOutlineRefresh className="w-4 h-4 mr-2" />
+            Save & Close
+          </button>
+        </>
+      }
+      rightActions={
+        <>
+          <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+            onClick={() => setReadOnly(false)}
+          >
+            <FiEdit2 className="w-4 h-4 mr-2" />
+            Edit
+          </button>
+          <button
+            className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+            onClick={() => {
+              if (!deliveryItems?.filter(i => i.itemId).length) {
+                toast.warning("Please add some items first");
+                return;
+              }
+              setPrintOpen(true);
+            }}
+          >
+            <FiPrinter className="w-4 h-4 mr-2" />
+            Print
+          </button>
+          <button
+            className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
+            onClick={() => {
+              if (!deliveryItems?.filter(i => i.itemId).length) {
+                toast.warning("Please add some items first");
+                return;
+              }
+              setThermalPrintOpen(true);
+            }}
+          >
+            <FiPrinter className="w-4 h-4 mr-2" />
+            Thermal Print
+          </button>
+        </>
+      }
+    />
+  );
+
 
   return (
     <>
@@ -399,45 +510,26 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         </PDFViewer>
       </Modal>
 
-      <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-2xl font-bold text-gray-800">Sales Return</h1>
-          <button
-            onClick={onClose}
-            className="text-indigo-600 hover:text-indigo-700"
-            title="Open Report"
-          >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
-        </div>
+      <TransactionEntryShell
+        title="Sales Return"
+        onClose={onClose}
+        headerOpen={isHeaderOpen}
+        setHeaderOpen={setIsHeaderOpen}
+        summaryItems={summaryItems}
+        openStateClassName="max-h-[420px] opacity-100 overflow-visible"
+        headerBodyClassName="px-2 pb-2 overflow-visible"
+        footer={footerContent}
+        headerContent={(
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
-      </div>
-      <div className="space-y-3 h-full mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Basic Details
-            </h2>
-            <div className="grid grid-cols-2 gap-1">
+          <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
               <ReusableInput label="Sales Return No" readOnly value={docId} />
               <ReusableInput label="Sales Return Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+          </TransactionHeaderSection>
 
+          <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
 
-            </div>
-          </div>
-
-
-
-
-          <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-            <h2 className="font-medium text-slate-700 mb-2">
-              Customer Details
-            </h2>
-            <div className="grid grid-cols-4 gap-1">
-
-              <div className="col-span-2">
+              <div className="col-span-3 overflow-visible">
 
 
                 <ReusableSearchableInput
@@ -452,94 +544,48 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                   disabled={id}
                 />
               </div>
-              <TextInput name={"Phone Number"} value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled={true} required />
-            </div>
+              <TextInput
+                name={"Phone Number"}
+                value={
+                  supplierDetails?.data?.contactPersonNumber ||
+                  findFromList(customerId, supplierList?.data, "contactPersonNumber")
+                }
+                disabled={true}
+                required
+              />
+              <div className="col-span-3">
+                <TextAreaNew
+                  name="Address"
+                  placeholder="Address"
+                  value={
+                    supplierDetails?.data?.address ||
+                    findFromList(customerId, supplierList?.data, "address")
+                  }
+                  disabled
+                />
+              </div>
+            <div className="col-span-4">
             <DropdownInput name="Sales Order No"
               options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
               value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
+            </div>
+          </TransactionHeaderSection>
+
+
 
           </div>
-
-
-
+        )}
+      >
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <fieldset className="h-full min-h-0">
+            <SalesReturnItems
+              deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+              handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+              itemList={itemList} sizeList={sizeList}
+            />
+          </fieldset>
         </div>
-        <fieldset>
-          <SalesReturnItems
-            deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-            handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
-            itemList={itemList} sizeList={sizeList}
-          />
-        </fieldset>
-
-        <CommonFormFooter
-          remarks={remarks}
-          setRemarks={setRemarks}
-          terms={terms}
-          setTerms={setTerms}
-          totalQty={getTotalQty()}
-          subtotal={subtotal}
-          taxAmount={taxAmount}
-          netAmount={netAmount}
-        />
-
-
-
-        <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-              <HiOutlineRefresh className="w-4 h-4 mr-2" />
-              Save & Close
-            </button>
-
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-
-            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => setReadOnly(false)}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-
-            <button
-              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-              onClick={() => {
-                if (!deliveryItems?.filter(i => i.itemId).length) {
-                  toast.warning("Please add some items first");
-                  return;
-                }
-                setPrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Print
-            </button>
-
-            <button
-              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
-              onClick={() => {
-                if (!deliveryItems?.filter(i => i.itemId).length) {
-                  toast.warning("Please add some items first");
-                  return;
-                }
-                setThermalPrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Thermal Print
-            </button>
-          </div>
-        </div>
-      </div>
-
-
-
-
+      </TransactionEntryShell>
     </>
   );
 }

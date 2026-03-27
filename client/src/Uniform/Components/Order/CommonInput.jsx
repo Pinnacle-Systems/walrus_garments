@@ -188,7 +188,7 @@ export function ReusableDropdown({
   return (
     <div className="mb-2">
       {label && (
-        <label className="block text-xs text-slate-500 mb-1">
+        <label className="mb-1 block text-[12px] text-slate-500">
           {label}
         </label>
       )}
@@ -266,7 +266,7 @@ export function ReusableInput(
   return (
     <div className="mb-2">
       {label && (
-        <label className="block  font-bold text-slate-700 mb-1 text-xs">
+        <label className="mb-1 block text-[12px] font-bold text-slate-700">
           {label}
         </label>
       )}

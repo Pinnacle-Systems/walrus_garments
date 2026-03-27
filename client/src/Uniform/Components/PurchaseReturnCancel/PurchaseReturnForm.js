@@ -21,7 +21,7 @@ import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { directOrPoreturn } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 
-import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { ReusableInput } from "../Order/CommonInput";
@@ -36,6 +36,8 @@ import { groupBy } from "lodash";
 import { useGetDirectInwardOrReturnQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices.js";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
 import { useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService.js";
+import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell.jsx";
+import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection.jsx";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
@@ -71,6 +73,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [purchaseInwardId, setPurchaseInwardId] = useState("")
 
     const [taxTemplateId, setTaxTemplateId] = useState("4");
+    const [isHeaderOpen, setIsHeaderOpen] = useState(true);
 
     const [printModalOpen, setPrintModalOpen] = useState(false);
 
@@ -267,6 +270,56 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
+    const summaryItems = [
+        { label: "No", value: docId },
+        { label: "Date", value: date },
+        { label: "Type", value: poInwardOrDirectInward },
+        { label: "Branch", value: branchList?.data?.find(item => String(item.id) === String(locationId))?.branchName },
+        { label: "Location", value: storeOptions?.find(item => String(item.id) === String(storeId))?.storeName },
+        {
+            label: "Supplier",
+            value:
+                supplierList?.data?.find(item => String(item.id) === String(supplierId))?.aliasName ||
+                supplierList?.data?.find(item => String(item.id) === String(supplierId))?.name
+        },
+        { label: "Inward", value: purchaseInwardData?.data?.find(i => String(i.id) === String(purchaseInwardId))?.docId },
+    ];
+
+    const footerContent = (
+        <div className="flex flex-col md:flex-row gap-2 justify-between">
+            <div className="flex gap-2 flex-wrap">
+                <button
+                    onClick={() => hasPermission(() => saveData("new"), "create")}
+                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                    <FiSave className="w-4 h-4 mr-2" />
+                    Save & New
+                </button>
+                <button
+                    onClick={() => hasPermission(() => saveData("close"), "create")}
+                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                    Save & Close
+                </button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+                <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                    onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+                >
+                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    Edit
+                </button>
+                <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                    onClick={() => {
+                        setPrintModalOpen(true)
+                    }}
+                >
+                    <FiPrinter className="w-4 h-4 mr-2" />
+                    Print
+                </button>
+            </div>
+        </div>
+    );
+
     if (isTaxHookDetailsLoading) return <Loader />
 
     return (
@@ -338,43 +391,25 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 />
             </div>
 
-            <div className="w-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 overflow-y-auto">
-                <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
-                    <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-                        <FaFileAlt className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-            <div className="w-full h-[75vh]    py-2 ">
-
-
-
-
-                <div className="space-y-3 h-full ">
+            <TransactionEntryShell
+                title="Purchase Return"
+                onClose={onClose}
+                headerOpen={isHeaderOpen}
+                setHeaderOpen={setIsHeaderOpen}
+                summaryItems={summaryItems}
+                openStateClassName="max-h-[420px] opacity-100 overflow-visible"
+                headerBodyClassName="px-2 pb-2 overflow-visible"
+                footer={footerContent}
+                headerContent={(
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
 
 
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Return Details
-                            </h2>
-                            <div className="grid grid-cols-2 gap-1">
+                        <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2">
                                 <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
                                 />
                                 <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
-
-
-
-
-
-                            </div>
-                        </div>
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Location Details
-                            </h2>
-                            <div className="grid grid-cols-3 gap-2">
+                        </TransactionHeaderSection>
+                        <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-3 gap-2">
                                 <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
@@ -388,15 +423,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "NEW WAREHOUSE"), "storeName", "id")}
                                     value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
-                            </div>
+                        </TransactionHeaderSection>
 
-                        </div>
-
-                        <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-                            <h2 className="font-medium text-slate-700 mb-2">
-                                Supplier Details
-                            </h2>
-                            <div className="grid grid-cols-3 gap-2">
+                        <TransactionHeaderSection title="Supplier Details" className="col-span-2" bodyClassName="grid-cols-3 gap-2">
 
                                 <div className="col-span-2">
 
@@ -418,65 +447,20 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
 
 
-                            </div>
-
-                        </div>
+                        </TransactionHeaderSection>
 
                     </div>
-
-                    <div>
-                        <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
-                            removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
-                            supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
-                            branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                            purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList}
-                        />
-                    </div>
-
-
-
-
-
-
+                )}
+            >
+                <div className="space-y-3 h-full py-2">
+                    <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
+                        removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
+                        supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
+                        branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
+                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList}
+                    />
                 </div>
-
-                <div className="flex flex-col md:flex-row gap-2 justify-between">
-                    <div className="flex gap-2 flex-wrap">
-                        <button
-                            onClick={() => hasPermission(() => saveData("new"), "create")}
-
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                            <FiSave className="w-4 h-4 mr-2" />
-                            Save & New
-                        </button>
-                        <button
-                            onClick={() => hasPermission(() => saveData("close"), "create")}
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                            <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                            Save & Close
-                        </button>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                            // onClick={() => setReadOnly(false)}
-                            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
-
-                        >
-                            <FiEdit2 className="w-4 h-4 mr-2" />
-                            Edit
-                        </button>
-                        <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                            onClick={() => {
-                                setPrintModalOpen(true)
-                                // handlePrint()
-                            }}
-                        >
-                            <FiPrinter className="w-4 h-4 mr-2" />
-                            Print
-                        </button>
-                    </div>
-                </div>
-            </div>
+            </TransactionEntryShell>
         </ >
 
     )
