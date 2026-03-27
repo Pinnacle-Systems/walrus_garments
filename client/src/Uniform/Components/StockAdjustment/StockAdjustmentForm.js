@@ -23,6 +23,8 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useAddStockAdjustmentMutation, useGetStockAdjustmentByIdQuery, useUpdateStockAdjustmentMutation } from "../../../redux/uniformService/StockAdjustmentService";
 import moment from "moment";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
+import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
 
 const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, branchList, locationData, yarnList, hasPermission }) => {
@@ -59,6 +61,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
   // --- Queries & Mutations ---
   const { data: itemList } = useGetItemMasterQuery({ params });
+  const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -95,6 +98,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   const sizeOptions = sizeList?.data?.map((s) => ({ value: s.id, label: s.name })) || [];
   const colorOptions = colorList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
   const uomOptions = uomList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
 
 
   useEffect(() => {
@@ -133,25 +137,13 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
         if (["itemId", "sizeId", "colorId"].includes(field)) {
           const selectedItem = itemList?.data?.find((i) => i.id === updatedRow.itemId);
           if (selectedItem) {
-            const { priceMethod, ItemPriceList } = selectedItem;
-            let foundPrice = updatedRow.price;
-
-            if (priceMethod === "STANDARD") {
-              foundPrice = ItemPriceList?.[0]?.salesPrice || 0;
-            } else if (priceMethod === "SIZE") {
-              if (updatedRow.sizeId) {
-                const priceEntry = ItemPriceList?.find((p) => p.sizeId === updatedRow.sizeId);
-                if (priceEntry) foundPrice = priceEntry.salesPrice;
-              }
-            } else if (priceMethod === "SIZE_COLOR") {
-              if (updatedRow.sizeId && updatedRow.colorId) {
-                const priceEntry = ItemPriceList?.find(
-                  (p) => p.sizeId === updatedRow.sizeId && p.colorId === updatedRow.colorId
-                );
-                if (priceEntry) foundPrice = priceEntry.salesPrice;
-              }
-            }
-            updatedRow.price = foundPrice;
+            const itemBarcodeGenerationMethod = getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod);
+            updatedRow.price = getItemPriceForBarcodeGenerationMode(
+              selectedItem,
+              itemBarcodeGenerationMethod,
+              updatedRow.sizeId,
+              updatedRow.colorId
+            );
           }
         }
 
@@ -239,13 +231,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   const validateData = (d) =>
     !!(d?.branchId && d?.storeId);
 
-  const getStandardBarcodeMissingRowIndex = (items = []) =>
-    items.findIndex((row) => {
-      if (!row.itemId) return false;
-      const selectedItem = itemList?.data?.find((item) => item.id === row.itemId);
-      return selectedItem?.priceMethod === "STANDARD" && !row.barcode?.toString().trim();
-    });
-
   const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
     try {
       const returnData = await callback(payload).unwrap();
@@ -283,14 +268,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
     if (data?.stockAdjustmentItems?.filter((i) => i.itemId)?.length === 0) {
       Swal.fire({ title: "Please fill all adjustment Items...!", icon: "warning" });
-      return;
-    }
-    const missingBarcodeIdx = getStandardBarcodeMissingRowIndex(data?.stockAdjustmentItems?.filter((i) => i.itemId));
-    if (missingBarcodeIdx !== -1) {
-      Swal.fire({
-        title: `Barcode is required for standard pricing item at row ${missingBarcodeIdx + 1}`,
-        icon: "warning"
-      });
       return;
     }
     if (!isGridDatasValid(data?.stockAdjustmentItems?.filter((i) => i.itemId), false, mandatoryFields)) {
@@ -437,7 +414,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                                   size: "",
                                   colorId: "",
                                   color: "",
-                                  price: selectedItem?.priceMethod === "STANDARD" ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0 : ""
+                                  price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
+                                    ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
+                                    : ""
                                 });
                               }}
                               onInputChange={(v) => v.toUpperCase()}
@@ -569,6 +548,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
               itemName={modalState.item.value}
               itemToEdit={modalState.item.editItem}
               onCreated={handleQuickSaveItem}
+              barcodeGenerationMethod={barcodeGenerationMethod}
             />
           )}
 

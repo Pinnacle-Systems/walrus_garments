@@ -457,9 +457,7 @@ export function getUniqueArrayBySize(rowData, allData, key, itemId) {
 
   const item = rowData?.filter(i => i.id == itemId)?.[0]
 
-
-
-  if (item?.priceMethod == "STANDARD") {
+  if (getItemBarcodeGenerationMethod(item) == "STANDARD") {
     return allData
   } else {
     return allData?.filter(all =>
@@ -476,7 +474,7 @@ export function getUniqueArrayByColor(masterData, allData, key, itemId) {
   console.log(item, "item", masterData)
 
 
-  if (item?.priceMethod == "SIZE_COLOR") {
+  if (getItemBarcodeGenerationMethod(item) == "SIZE_COLOR") {
     return allData?.filter(all =>
       item?.ItemPriceList?.some(item => item[key] == all?.id)
     )
@@ -489,6 +487,32 @@ export function getUniqueArrayByColor(masterData, allData, key, itemId) {
 export function uppercase(inputValue) {
   if (!inputValue) return '';
   return inputValue.toUpperCase();
+}
+
+export const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
+
+export function resolveBarcodeGenerationMethod(itemControlPanel) {
+  return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
+}
+
+export function getItemBarcodeGenerationMethod(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
+  return item?.barcodeGenerationMethod || fallbackMethod;
+}
+
+export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMethod, sizeId, colorId) {
+  const priceList = item?.ItemPriceList || [];
+
+  if (barcodeGenerationMethod === "SIZE_COLOR") {
+    return priceList.find(
+      (price) => String(price.sizeId) === String(sizeId) && String(price.colorId) === String(colorId)
+    )?.salesPrice || 0;
+  }
+
+  if (barcodeGenerationMethod === "SIZE") {
+    return priceList.find((price) => String(price.sizeId) === String(sizeId))?.salesPrice || 0;
+  }
+
+  return priceList?.[0]?.salesPrice || 0;
 }
 
 

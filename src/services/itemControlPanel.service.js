@@ -1,21 +1,19 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
+const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
+
+function withResolvedBarcodeGenerationMethod(record) {
+    if (!record) return record;
+    return {
+        ...record,
+        barcodeGenerationMethod: record.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD,
+    };
+}
+
 async function get(req) {
-
-    const { companyId, active } = req.query
-
-    console.log(companyId, active, "companyId, active ")
-
-    let data = await prisma.ItemControlPanel.findMany({
-        where: {
-            active: active ? Boolean(active) : undefined,
-        }
-    });
-
-
-
-    return { statusCode: 0, data };
+    const data = await prisma.ItemControlPanel.findMany();
+    return { statusCode: 0, data: data.map(withResolvedBarcodeGenerationMethod) };
 }
 
 
@@ -27,36 +25,21 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return { statusCode: 0, data: { ...withResolvedBarcodeGenerationMethod(data), ...{ childRecord } } };
 }
 
 async function getSearch(req) {
-    const { searchKey } = req.params
-    const { companyId, active, } = req.query
-    const data = await prisma.ItemControlPanel.findMany({
-        where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
-            active: active ? Boolean(active) : undefined,
-            OR: [
-                {
-                    name: {
-                        contains: searchKey,
-                    },
-                }
-            ],
-        }
-    })
-    return { statusCode: 0, data: data };
+    const data = await prisma.ItemControlPanel.findMany();
+    return { statusCode: 0, data: data.map(withResolvedBarcodeGenerationMethod) };
 }
 
 async function create(body) {
-    const { field1, field2, field3, field4, field5, sectionType, sizeWise, sizeColor } = await body
+    const { field1, field2, field3, field4, field5, sectionType, barcodeGenerationMethod } = await body
     const data = await prisma.ItemControlPanel.create(
         {
             data: {
                 sectionType: sectionType ? Boolean(sectionType) : false,
-                sizeWise: sizeWise ? Boolean(sizeWise) : false,
-                size_color_wise: sizeColor ? sizeColor : false,
+                barcodeGenerationMethod: barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD,
                 field1: field1 ? field1 : undefined,
                 field2: field2 ? field2 : undefined,
                 field3: field3 ? field3 : undefined,
@@ -65,11 +48,11 @@ async function create(body) {
             }
         }
     )
-    return { statusCode: 0, data };
+    return { statusCode: 0, data: withResolvedBarcodeGenerationMethod(data) };
 }
 
 async function update(id, body) {
-    const { field1, field2, field3, field4, field5, sectionType, sizeWise, sizeColor } = await body
+    const { field1, field2, field3, field4, field5, sectionType, barcodeGenerationMethod } = await body
     const dataFound = await prisma.ItemControlPanel.findUnique({
         where: {
             id: parseInt(id)
@@ -84,8 +67,7 @@ async function update(id, body) {
         {
 
             sectionType: sectionType ? Boolean(sectionType) : false,
-            sizeWise: sizeWise ? Boolean(sizeWise) : false,
-            size_color_wise: sizeColor ? sizeColor : false,
+            barcodeGenerationMethod: barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD,
             field1: field1 ? field1 : "",
             field2: field2 ? field2 : '',
             field3: field3 ? field3 : "",
@@ -94,7 +76,7 @@ async function update(id, body) {
 
         },
     })
-    return { statusCode: 0, data };
+    return { statusCode: 0, data: withResolvedBarcodeGenerationMethod(data) };
 };
 
 async function remove(id) {

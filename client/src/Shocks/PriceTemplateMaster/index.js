@@ -51,7 +51,6 @@ export default function Form() {
   const [itemType, setItemType] = useState('')
   const [sizeList, setSizeList] = useState([])
   const [colorList, setColorList] = useState([])
-  const [priceMethod, setPriceMethod] = useState("STANDARD")
   const childRecord = useRef(0);
   const itemSelectRef = useRef(null);
   const [itemPriceList, setItemPriceList] = useState([])
@@ -137,7 +136,6 @@ export default function Form() {
         setSalesTaxType(data?.salesTaxType ? data?.salesTaxType : "")
         setActive(data?.active ? data?.active : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
-        setPriceMethod(data?.priceMethod ? data?.priceMethod : 'STANDARD')
         setMinStockQty(data?.minStockQty ? data?.minStockQty : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
 
@@ -922,6 +920,7 @@ export default function Form() {
           itemName={modalState.item.value}
           itemToEdit={modalState.item.editItem}
           onCreated={handleQuickSaveItem}
+          barcodeGenerationMethod={itemControlData?.data?.[0]?.barcodeGenerationMethod || "STANDARD"}
         />
       )}
     </div >

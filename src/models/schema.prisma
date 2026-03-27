@@ -4914,7 +4914,6 @@ model Item {
   salesTaxType              String?
   purchaseTaxType           String?
   active                    Boolean                     @default(false)
-  priceMethod               String?
   Section                   Section?                    @relation(fields: [sectionId], references: [id])
   sectionId                 Int?
   field1                    String?
@@ -4982,15 +4981,14 @@ model Section {
 }
 
 model ItemControlPanel {
-  id              Int     @id @default(autoincrement())
-  sectionType     Boolean @default(false)
-  sizeWise        Boolean @default(false)
-  size_color_wise Boolean @default(false)
-  field1          String?
-  field2          String?
-  field3          String?
-  field4          String?
-  field5          String?
+  id                      Int    @id @default(autoincrement())
+  sectionType             Boolean @default(false)
+  barcodeGenerationMethod String  @default("STANDARD")
+  field1                  String?
+  field2                  String?
+  field3                  String?
+  field4                  String?
+  field5                  String?
 }
 
 model Quotation {
