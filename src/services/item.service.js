@@ -17,6 +17,68 @@ function validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList) {
     return;
 }
 
+function validateAndNormalizeMinimumStockQtyRows(rows = []) {
+    const seenLocations = new Set();
+    const normalizedRows = [];
+
+    rows?.forEach((row, index) => {
+        const locationIdRaw = String(row?.locationId ?? "").trim();
+        const minStockQtyRaw = String(row?.minStockQty ?? "").trim();
+        const isBlank = !locationIdRaw && !minStockQtyRaw;
+
+        if (isBlank) {
+            return;
+        }
+
+        if (!locationIdRaw || !minStockQtyRaw) {
+            throw Error(`Stock alert row ${index + 1} must include both location and minimum stock quantity`);
+        }
+
+        if (!/^\d+$/.test(locationIdRaw)) {
+            throw Error(`Stock alert row ${index + 1} must use a valid location`);
+        }
+
+        if (!/^\d+$/.test(minStockQtyRaw)) {
+            throw Error(`Stock alert row ${index + 1} must use a non-negative whole number`);
+        }
+
+        const locationId = parseInt(locationIdRaw);
+
+        if (seenLocations.has(locationId)) {
+            throw Error(`Location can be configured only once per item row`);
+        }
+
+        seenLocations.add(locationId);
+        normalizedRows.push({
+            minStockQty: minStockQtyRaw,
+            locationId,
+        });
+    });
+
+    return normalizedRows;
+}
+
+async function syncMinimumStockQty(tx, itemPriceListId, minimumStockQtyRows = []) {
+    await tx.MinimumStockQty.deleteMany({
+        where: {
+            itemPriceListId: parseInt(itemPriceListId),
+        }
+    });
+
+    const normalizedRows = validateAndNormalizeMinimumStockQtyRows(minimumStockQtyRows);
+
+    if (!normalizedRows.length) {
+        return;
+    }
+
+    await tx.MinimumStockQty.createMany({
+        data: normalizedRows.map((row) => ({
+            ...row,
+            itemPriceListId: parseInt(itemPriceListId),
+        }))
+    });
+}
+
 async function get(req) {
     const data = await prisma.item.findMany({
         include: {
@@ -50,8 +112,6 @@ async function getOne(id) {
                             name: true
                         }
                     },
-                    minStockQty: true,
-
                     Size: {
                         select: {
                             name: true
@@ -139,24 +199,23 @@ async function create(body) {
             ItemPriceList: itemPriceList?.length > 0
                 ? {
                     create: itemPriceList.map((item) => ({
+                        ...(function () {
+                            const minimumStockQtyRows = validateAndNormalizeMinimumStockQtyRows(item?.MinimumStockQty);
+                            return {
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
                         offerPrice: item?.offerPrice || undefined,
                         salesPrice: item?.salesPrice || undefined,
-                        minStockQty: item?.minStockQty ? item?.minStockQty : undefined,
                         sku: item?.sku ? item?.sku : undefined,
                         barcode: item?.barcode ? item?.barcode : undefined,
 
-                        MinimumStockQty: item?.MinimumStockQty?.length > 0
+                        MinimumStockQty: minimumStockQtyRows.length > 0
                             ? {
-                                create: item?.MinimumStockQty?.filter(i => i.locationId)?.map((min) => ({
-                                    minStockQty: min?.minStockQty ? String(min?.minStockQty) : "",
-                                    locationId: min?.locationId ? parseInt(min?.locationId) : undefined,
-
-
-                                })),
+                                create: minimumStockQtyRows,
                             }
                             : undefined,
+                            };
+                        })()
                     })),
                 }
                 : undefined,
@@ -275,12 +334,14 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
                     colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
                     salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
-                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
                     barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
 
 
                 }
+            }).then(async (updatedPriceItem) => {
+                await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
+                return updatedPriceItem;
             })
         } else {
             return await tx.ItemPriceList.create({
@@ -290,11 +351,13 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
                     colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
                     salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
-                    minStockQty: priceItem?.minStockQty ? priceItem?.minStockQty : undefined,
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
                     barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
 
                 }
+            }).then(async (createdPriceItem) => {
+                await syncMinimumStockQty(tx, createdPriceItem.id, priceItem?.MinimumStockQty);
+                return createdPriceItem;
             })
         }
     })

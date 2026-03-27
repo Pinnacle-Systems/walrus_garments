@@ -17,6 +17,25 @@ import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices"
 import { useGetSectionMasterQuery } from "../../../redux/uniformService/SectionMasterService";
 import { useGetItemCategoryQuery } from "../../../redux/uniformService/ItemCategoryMasterService";
 import { capitalizeFirstLetter, findFromList } from "../../../Utils/helper";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "../../../Shocks/ItemMaster/LocationStockEditor";
+
+const createStandardPriceRow = () => ({
+  sizeId: null,
+  colorId: null,
+  offerPrice: "",
+  salesPrice: "",
+  sku: "",
+  barcode: "",
+  MinimumStockQty: [createEmptyLocationThreshold()],
+});
+
+function sanitizePriceRowsForSave(priceRows = []) {
+  return priceRows.map((row) => ({
+    ...row,
+    MinimumStockQty: validateLocationThresholdRows(row?.MinimumStockQty || []).cleanedRows,
+  }));
+}
 
 const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, barcodeGenerationMethod = "STANDARD" }) => {
   const params = getCommonParams();
@@ -29,12 +48,12 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const [subCategory, setSubCategory] = useState("");
   const [salesPrice, setSalesPrice] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
-  const [minStockQty, setMinStockQty] = useState("");
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
   const [sizeList, setSizeList] = useState([]);
   const [colorList, setColorList] = useState([]);
   const [itemPriceList, setItemPriceList] = useState([]);
+  const [gridIndex, setGridIndex] = useState(null);
   const [active, setActive] = useState(true);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
@@ -47,6 +66,8 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const { data: hsnData } = useGetHsnMasterQuery({ params });
   const { data: sectionData } = useGetSectionMasterQuery({ params });
   const { data: itemCategoryData } = useGetItemCategoryQuery({ params });
+  const { data: locationData } = useGetLocationMasterQuery({ params });
+  const storeOptions = locationData ? locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(1)) : [];
 
   React.useEffect(() => {
     if (itemToEdit && sizeData?.data && colorData?.data) {
@@ -63,9 +84,9 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
         if (effectiveBarcodeGenerationMethod === "STANDARD") {
           setSalesPrice(itemToEdit.ItemPriceList[0]?.salesPrice || "");
           setOfferPrice(itemToEdit.ItemPriceList[0]?.offerPrice || "");
-          setMinStockQty(itemToEdit.ItemPriceList[0]?.minStockQty || "");
           setSku(itemToEdit.ItemPriceList[0]?.sku || "");
           setBarcode(itemToEdit.ItemPriceList[0]?.barcode || "");
+          setItemPriceList(itemToEdit.ItemPriceList?.length ? itemToEdit.ItemPriceList : [createStandardPriceRow()]);
         } else {
           setItemPriceList(itemToEdit.ItemPriceList);
           const uniqueSizes = [...new Set(itemToEdit.ItemPriceList.filter(p => p.sizeId).map(p => p.sizeId))]
@@ -87,6 +108,12 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
     }
   }, [effectiveBarcodeGenerationMethod, itemToEdit, sizeData, colorData]);
 
+  useEffect(() => {
+    if (isOpen && effectiveBarcodeGenerationMethod === "STANDARD" && itemPriceList.length === 0) {
+      setItemPriceList([createStandardPriceRow()]);
+    }
+  }, [isOpen, effectiveBarcodeGenerationMethod, itemPriceList.length]);
+
   const handleSave = async () => {
     if (!name || !code || !itemType) {
       toast.info("Please fill required fields (Name, Code, Type)");
@@ -103,24 +130,33 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
       return;
     }
 
+    const hasStockAlertErrors = (effectiveBarcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
+      .filter(Boolean)
+      .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
+
+    if (hasStockAlertErrors) {
+      toast.info("Please fix the stock alert rows before saving");
+      return;
+    }
+
     try {
       let itemPriceListToSave = [];
       if (effectiveBarcodeGenerationMethod === "STANDARD") {
         itemPriceListToSave = [{
+          id: itemPriceList?.[0]?.id,
           sizeId: null,
           colorId: null,
           offerPrice: offerPrice || 0,
           salesPrice: salesPrice || 0,
-          minStockQty: minStockQty || 0,
           sku: sku || "",
           barcode: barcode || "",
+          MinimumStockQty: validateLocationThresholdRows(itemPriceList?.[0]?.MinimumStockQty || []).cleanedRows,
         }];
       } else {
-        itemPriceListToSave = itemPriceList.map(item => ({
+        itemPriceListToSave = sanitizePriceRowsForSave(itemPriceList).map(item => ({
           ...item,
           offerPrice: item.offerPrice || 0,
           salesPrice: item.salesPrice || 0,
-          minStockQty: item.minStockQty || 0
         }));
       }
 
@@ -212,7 +248,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
               colorId: null,
               salesPrice: 0,
               offerPrice: 0,
-              minStockQty: 0
+              MinimumStockQty: [createEmptyLocationThreshold()]
             });
           }
 
@@ -237,7 +273,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
                 colorId: color.value,
                 salesPrice: 0,
                 offerPrice: 0,
-                minStockQty: 0
+                MinimumStockQty: [createEmptyLocationThreshold()]
               });
             }
 
@@ -249,6 +285,19 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
       return newList;
     });
 
+  };
+
+  const handleMinimumStockRowsChange = (rowIndex, rows) => {
+    setItemPriceList((prev) =>
+      prev.map((item, index) =>
+        index === rowIndex ? { ...item, MinimumStockQty: rows } : item
+      )
+    );
+  };
+
+  const getLowStockSummary = (item) => {
+    const configuredCount = getConfiguredLocationAlertCount(item?.MinimumStockQty || []);
+    return configuredCount ? `${configuredCount} locations set` : "No alerts set";
   };
 
   return (
@@ -334,8 +383,14 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
                   <div className="col-span-2">
                     <TextInputNew1 name="Offer Price" value={offerPrice} setValue={setOfferPrice} />
                   </div>
-                  <div className="col-span-2">
-                    <TextInputNew1 name="Min Stock Qty" value={minStockQty} setValue={setMinStockQty} />
+                  <div className="col-span-3 mt-5">
+                    <button
+                      type="button"
+                      onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
+                      className="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
+                    </button>
                   </div>
                 </>
               )}
@@ -391,51 +446,88 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
               )}
             </div>
 
+            {effectiveBarcodeGenerationMethod === "STANDARD" && gridIndex === 0 && itemPriceList[0] && (
+              <div className="mt-4">
+                <LocationStockEditor
+                  rows={itemPriceList[0]?.MinimumStockQty || []}
+                  onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
+                  locationOptions={storeOptions?.filter((item) => item.active)}
+                  title="Stock Alerts"
+                />
+              </div>
+            )}
+
             {effectiveBarcodeGenerationMethod !== "STANDARD" && itemPriceList.length > 0 && (
-              <div className="mt-4 border rounded  flex flex-col h-[180px]">
-                <div className="overflow-y-auto flex-1 h-full">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-gray-100 sticky top-0 z-10">
-                      <tr>
-                        <th className="p-2 border-b w-12 text-center bg-gray-100">S.No</th>
-                        <th className="p-2 border-b bg-gray-100">Size Name</th>
-                        {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <th className="p-2 border-b bg-gray-100">Color Name</th>}
-                        <th className="p-2 border-b w-32 bg-gray-100">Sales Price</th>
-                        <th className="p-2 border-b w-32 bg-gray-100">Offer Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itemPriceList.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50 border-b">
-                          <td className="p-2 text-center border-r">{idx + 1}</td>
-                          <td className="p-2 border-r">{findFromList(item.sizeId, sizeData?.data, "name")}</td>
-                          {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <td className="p-2 border-r">{findFromList(item.colorId, colorData?.data, "name")}</td>}
-                          <td className="p-1 border-r">
-                            <input
-                              type="number"
-                              value={item.salesPrice}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setItemPriceList(prev => prev.map((p, i) => i === idx ? { ...p, salesPrice: val } : p));
-                              }}
-                              className="w-full p-1 border rounded focus:ring-1 focus:ring-indigo-500 outline-none"
-                            />
-                          </td>
-                          <td className="p-1">
-                            <input
-                              type="number"
-                              value={item.offerPrice}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setItemPriceList(prev => prev.map((p, i) => i === idx ? { ...p, offerPrice: val } : p));
-                              }}
-                              className="w-full p-1 border rounded focus:ring-1 focus:ring-indigo-500 outline-none"
-                            />
-                          </td>
+              <div className="mt-4 grid grid-cols-12 gap-3">
+                <div className="col-span-8 border rounded flex flex-col h-[220px]">
+                  <div className="overflow-y-auto flex-1 h-full">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-gray-100 sticky top-0 z-10">
+                        <tr>
+                          <th className="p-2 border-b w-12 text-center bg-gray-100">S.No</th>
+                          <th className="p-2 border-b bg-gray-100">Size Name</th>
+                          {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <th className="p-2 border-b bg-gray-100">Color Name</th>}
+                          <th className="p-2 border-b w-32 bg-gray-100">Sales Price</th>
+                          <th className="p-2 border-b w-32 bg-gray-100">Offer Price</th>
+                          <th className="p-2 border-b w-40 bg-gray-100">Stock Alerts</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {itemPriceList.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50 border-b">
+                            <td className="p-2 text-center border-r">{idx + 1}</td>
+                            <td className="p-2 border-r">{findFromList(item.sizeId, sizeData?.data, "name")}</td>
+                            {effectiveBarcodeGenerationMethod === "SIZE_COLOR" && <td className="p-2 border-r">{findFromList(item.colorId, colorData?.data, "name")}</td>}
+                            <td className="p-1 border-r">
+                              <input
+                                type="number"
+                                value={item.salesPrice}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setItemPriceList(prev => prev.map((p, i) => i === idx ? { ...p, salesPrice: val } : p));
+                                }}
+                                className="w-full p-1 border rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                              />
+                            </td>
+                            <td className="p-1 border-r">
+                              <input
+                                type="number"
+                                value={item.offerPrice}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setItemPriceList(prev => prev.map((p, i) => i === idx ? { ...p, offerPrice: val } : p));
+                                }}
+                                className="w-full p-1 border rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                              />
+                            </td>
+                            <td className="p-1">
+                              <button
+                                type="button"
+                                onClick={() => setGridIndex((prev) => (prev === idx ? null : idx))}
+                                className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === idx ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                              >
+                                {getLowStockSummary(item)}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="col-span-4">
+                  {itemPriceList[gridIndex] ? (
+                    <LocationStockEditor
+                      rows={itemPriceList[gridIndex]?.MinimumStockQty || []}
+                      onChange={(rows) => handleMinimumStockRowsChange(gridIndex, rows)}
+                      locationOptions={storeOptions?.filter((item) => item.active)}
+                      title={`Stock Alerts - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")}${effectiveBarcodeGenerationMethod === "SIZE_COLOR" ? ` / ${findFromList(itemPriceList[gridIndex]?.colorId, colorData?.data, "name")}` : ""}`}
+                    />
+                  ) : (
+                    <div className="flex h-full min-h-[220px] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center text-xs text-gray-500">
+                      Select a row to edit location-wise stock alerts.
+                    </div>
+                  )}
                 </div>
               </div>
             )}

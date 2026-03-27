@@ -48,7 +48,11 @@ async function create(req, res, next) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 res.statusCode = 200;
-                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                const target = Array.isArray(error.meta?.target) ? error.meta.target.join("_") : error.meta?.target || "";
+                const message = target.includes("itemPriceListId_locationId")
+                    ? "Location already configured for this item row"
+                    : `${target.split("_")[1].toUpperCase()} Already exists`;
+                res.json({ statusCode: 1, message })
                 console.log(res.statusCode)
             }
         } else {
@@ -66,7 +70,11 @@ async function update(req, res, next) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
                 res.statusCode = 200;
-                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                const target = Array.isArray(error.meta?.target) ? error.meta.target.join("_") : error.meta?.target || "";
+                const message = target.includes("itemPriceListId_locationId")
+                    ? "Location already configured for this item row"
+                    : `${target.split("_")[1].toUpperCase()} Already exists`;
+                res.json({ statusCode: 1, message })
                 console.log(res.statusCode)
             }
         } else {
