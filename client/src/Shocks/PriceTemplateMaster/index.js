@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power, Plus } from "lucide-react";
 import { DropdownInput, DropdownInputSearch, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
@@ -97,6 +98,7 @@ export default function Form() {
   const [addData] = useAddpriceTemplateMutation();
   const [updateData] = useUpdatepriceTemplateMutation();
   const [removeData] = useDeletepriceTemplateMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
 
 
@@ -194,6 +196,7 @@ export default function Form() {
       await callback(data).unwrap();
       setId("");
       syncFormWithDb(undefined);
+      dispatchInvalidate();
       await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -282,6 +285,7 @@ export default function Form() {
           return;
         }
         setId("");
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
@@ -547,7 +551,6 @@ export default function Form() {
   };
   const formRef = useRef(null);
 
-  console.log(priceTemplate, "priceTemplate")
 
 
   return (

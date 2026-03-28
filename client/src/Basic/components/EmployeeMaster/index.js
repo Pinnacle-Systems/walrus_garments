@@ -48,6 +48,7 @@ import EmployeeCategoryMaster from "../EmployeeCategoryMaster";
 import DepartmentMaster from "../DepartmentMaster";
 import CityMaster from "../CityMaster";
 import { useDispatch } from "react-redux";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import {
   Check,
   ChevronLeft,
@@ -114,6 +115,7 @@ export default function Form() {
   const [formHeading, setFormHeading] = "";
   const childRecord = useRef(0);
   const dispatch = useDispatch();
+  const [dispatchInvalidate] = useInvalidateTags();
   const [aadharNo, setAadharNo] = useState("");
 
 
@@ -217,6 +219,7 @@ export default function Form() {
         setLeavingReason("");
         setCanRejoin(false);
         setRejoinReason("");
+        setAadharNo("")
         return;
       }
       // setReadOnly(true);
@@ -261,7 +264,7 @@ export default function Form() {
       setLeavingReason(data?.leavingReason || "");
       setCanRejoin(data?.canRejoin || false);
       setRejoinReason(data?.rejoinReason || "");
-
+      setAadharNo(data?.aadharNo ? data?.aadharNo : "")
       secureLocalStorage.setItem(
         sessionStorage.getItem("sessionId") + "currentEmployeeSelected",
         data?.id
@@ -313,12 +316,12 @@ export default function Form() {
     canRejoin,
     rejoinReason,
     regNo,
-    employeeCategory, department
+    employeeCategory, department, aadharNo
   };
 
 
 
-  const handleSubmitCustom = async (callback, data, text) => {
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData;
       const formData = new FormData();
@@ -335,25 +338,18 @@ export default function Form() {
       } else {
         returnData = await callback(formData).unwrap();
       }
-      setId(returnData.data.id);
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined);
+        onNew();
+      } else {
+        setForm(false);
+      } dispatchInvalidate();
       await Swal.fire({
         title: text + " Successfully",
         icon: "success",
       });
       setSearchValue("");
       setStep(1);
-      dispatch({
-        type: `EmployeeCategoryMaster/invalidateTags`,
-        payload: ["Employee Category"],
-      });
-      dispatch({
-        type: `DepartmentMaster/invalidateTags`,
-        payload: ["Department"],
-      });
-      dispatch({
-        type: `CityMaster/invalidateTags`,
-        payload: ["City/State Name"],
-      });
       setNewForm(false);
     } catch (error) {
       await Swal.fire({
@@ -368,13 +364,13 @@ export default function Form() {
   console.log(data, "dataaaaaaaaaaa")
 
   const validateData = (data) => {
-    if (data.name && data.gender && data.dob && data.employeeCategory && data.department && data.joiningDate && data.fatherName && data.panNo && data.mobile && data.localAddress && data.permCity && data.permPincode) {
+    if (data.name && data.gender && data.dob && data.employeeCategory && data.department && data.joiningDate && data.fatherName && data.panNo && data.mobile && data.localAddress && data.permCity && data.permPincode && data.aadharNo) {
       return true;
     }
     return false;
   }
 
-  const saveData = () => {
+  const saveData = (nextProcess) => {
     const upperName = name.toUpperCase();
     const finalData = {
       ...data,
@@ -394,9 +390,9 @@ export default function Form() {
       return;
     }
     if (id) {
-      handleSubmitCustom(updateData, finalData, "Updated");
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, finalData, "Added");
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   };
   const deleteData = async (id) => {
@@ -408,18 +404,7 @@ export default function Form() {
       try {
         await removeData(id).unwrap();
         setId("");
-        dispatch({
-          type: `EmployeeCategoryMaster/invalidateTags`,
-          payload: ["Employee Category"],
-        });
-        dispatch({
-          type: `DepartmentMaster/invalidateTags`,
-          payload: ["Department"],
-        });
-        dispatch({
-          type: `cityMaster/invalidateTags`,
-          payload: ["City/State Name"],
-        });
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
@@ -459,6 +444,7 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    syncFormWithDb(undefined)
     setTimeout(() => {
       nameRef.current?.focus();
     }, 100);
@@ -545,7 +531,7 @@ export default function Form() {
       header: "Employee Id",
       accessor: (item) => item?.regNo,
       //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-24",
+      className: "font-medium text-gray-900 text-left uppercase w-40",
     },
 
     {
@@ -738,30 +724,29 @@ export default function Form() {
               </div>
               <div className="flex gap-2">
                 <div>
-                  {!readOnly && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForm(false);
-                        setSearchValue("");
-                        setId(false);
-                      }}
-                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
-                    >
+                  {readOnly && (
+                    <button type="button"
+                      onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
                       Cancel
                     </button>
                   )}
                 </div>
                 <div className="flex gap-2">
                   {!readOnly && (
-                    <button
-                      type="button"
-                      onClick={saveData}
-                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"
-                    >
+                    <button type="button" onClick={() => saveData("close")}
+                      className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
                       <Check size={14} />
-                      {id ? "Update" : "Save"}
+                      {id ? "Update" : "Save & close"}
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {(!readOnly && !id) && (
+                    <button type="button" onClick={() => saveData("new")}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                      <Check size={14} />
+                      Save & New
                     </button>
                   )}
                 </div>
@@ -1085,32 +1070,38 @@ export default function Form() {
                       />
                       {errors.localAddress && <span className="text-red-500 text-xs ml-1">{errors.localAddress}</span>}
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <TextInput
-                          name="Pincode"
-                          type="number"
-                          value={permPincode}
-                          setValue={setPermPincode}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          required
-                        />
-                        <DropdownInputNew
-                          name="City/State"
-                          options={dropDownListMergedObject(
-                            (cityList?.data || []).filter((item) => id || item.active),
-                            "name",
-                            "id"
-                          )}
-                          value={permCity}
-                          setValue={setPermCity}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          required
-                          addNewLabel="+ Add New City"
-                          childComponent={CityMaster}
-                          addNewModalWidth="w-[40%] h-[350px]"
-                        />
+                      <div className="col-span-2 flex flex-row gap-2  ">
+                        <div className="w-20" >
+                          <TextInput
+                            name="Pincode"
+                            type="number"
+                            value={permPincode}
+                            setValue={setPermPincode}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            required
+                          />
+                        </div>
+                        <div className="w-64">
+
+                          <DropdownInputNew
+                            name="City/State"
+                            options={dropDownListMergedObject(
+                              (cityList?.data || []).filter((item) => id || item.active),
+                              "name",
+                              "id"
+                            )}
+                            value={permCity}
+                            setValue={setPermCity}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            required
+                            addNewLabel="+ Add New City"
+                            childComponent={CityMaster}
+                            addNewModalWidth="w-[40%] h-[350px]"
+                          />
+                        </div>
+
                       </div>
                     </div>
                   </div>

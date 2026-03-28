@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import "../../../../src/swapStyle.css";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
@@ -52,6 +53,7 @@ export default function Form() {
     const [addData] = useAddPaytermMasterMutation();
     const [updateData] = useUpdatePaytermMasterMutation();
     const [removeData] = useDeletePaytermMasterMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -93,6 +95,7 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData?.data?.id)
+            dispatchInvalidate();
             await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -176,6 +179,7 @@ export default function Form() {
                     return
                 }
                 setId("");
+                dispatchInvalidate();
                 await Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",

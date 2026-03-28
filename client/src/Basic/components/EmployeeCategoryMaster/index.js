@@ -13,6 +13,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 const MODEL = "Employee Category Master";
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
@@ -45,6 +46,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [addData] = useAddEmployeeCategoryMutation();
     const [updateData] = useUpdateEmployeeCategoryMutation();
     const [removeData] = useDeleteEmployeeCategoryMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -84,6 +86,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 onSuccess(returnData.data.id);
                 return;
             }
+            dispatchInvalidate();
             await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -149,6 +152,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     return;
                 }
                 setId("");
+                dispatchInvalidate();
                 await Swal.fire({ title: "Deleted Successfully", icon: "success" });
                 setForm(false);
             } catch (error) {
@@ -171,6 +175,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setReadOnly(false);
         setForm(true);
         setSearchValue("");
+        syncFormWithDb(undefined)
+
         setTimeout(() => { nameRef.current?.focus(); }, 100);
     };
 
@@ -216,7 +222,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 disabled={childRecord.current > 0}
                                 ref={nameRef}
                             />
-                            <TextInputNew
+                            <TextInputNew1
                                 name="Code"
                                 type="text"
                                 value={code}
@@ -231,6 +237,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 setActive={setActive}
                                 required={true}
                                 readOnly={readOnly}
+
                             />
                         </div>
                     </div>

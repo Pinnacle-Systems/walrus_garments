@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { CheckBox, DropdownInput, TextArea } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { useDispatch } from "react-redux";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { poTypes, } from '../../../Utils/DropdownData';
 import {
     useGetTermsAndConditionsQuery,
@@ -35,6 +36,7 @@ export default function Form() {
 
     const childRecord = useRef(0);
     const dispatch = useDispatch();
+    const [dispatchInvalidate] = useInvalidateTags();
 
 
 
@@ -104,6 +106,7 @@ export default function Form() {
             await callback(data).unwrap();
             setId("")
             syncFormWithDb(undefined)
+            dispatchInvalidate();
             await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
@@ -151,6 +154,7 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
+                dispatchInvalidate();
                 await Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",

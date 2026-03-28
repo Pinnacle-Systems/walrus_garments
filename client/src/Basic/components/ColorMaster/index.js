@@ -6,6 +6,7 @@ import { useAddColorMasterMutation, useDeleteColorMasterMutation, useGetColorMas
 import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { statusDropdown } from '../../../Utils/DropdownData';
 
 
@@ -48,6 +49,7 @@ export default function Form() {
   const [addData] = useAddColorMasterMutation();
   const [updateData] = useUpdateColorMasterMutation();
   const [removeData] = useDeleteColorMasterMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -92,7 +94,7 @@ export default function Form() {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData?.data?.id)
-
+      dispatchInvalidate();
       await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -165,6 +167,7 @@ export default function Form() {
       try {
         await removeData(id)
         setId("");
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",

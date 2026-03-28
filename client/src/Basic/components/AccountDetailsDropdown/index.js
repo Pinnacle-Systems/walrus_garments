@@ -5,7 +5,7 @@ import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
-export default function AccountDetailsDropDown({ items = [], setLogout}) {
+export default function AccountDetailsDropDown({ items = [], setLogout }) {
 
   const dispatch = useDispatch()
 
@@ -14,15 +14,17 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
   const navBatItemsStyle = hideNavBar ? "hidden" : "";
 
   const handleOutsideClick = () => {
-    sethideNavBar(false);
+    sethideNavBar(true);
   };
+
+  console.log(navBatItemsStyle, 'navBatItemsStyle', hideNavBar)
 
   const ref = useOutsideClick(handleOutsideClick);
 
   const toggleNavMenu = () => {
     sethideNavBar(!hideNavBar);
   };
-    console.log(items, "allowedPages")
+  console.log(items, "allowedPages")
 
   return (
     <div className="relative text-left">
@@ -40,7 +42,7 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
       <div
         className={`-ml-20 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
       >
-        <button className="nav-dropdown-bg z-99 p-2 w-full" onClick={() => { dispatch(push({id:1000000, name: "ACCOUNT SETTINGS"}))}}>
+        <button className="nav-dropdown-bg z-99 p-2 w-full" onClick={() => { dispatch(push({ id: 1000000, name: "ACCOUNT SETTINGS" })) }}>
           <pre>ACCOUNT SETTINGS</pre>
         </button>
         {items.map((item, index) => (
@@ -49,7 +51,7 @@ export default function AccountDetailsDropDown({ items = [], setLogout}) {
             type="link"
             className="nav-dropdown-bg z-99 p-2 text-start block w-full"
             onClick={(e) => {
-              dispatch(push({id:item.id, name: item.name}))
+              dispatch(push({ id: item.id, name: item.name }))
               secureLocalStorage.setItem(
                 sessionStorage.getItem("sessionId") + "currentPage",
                 item.id

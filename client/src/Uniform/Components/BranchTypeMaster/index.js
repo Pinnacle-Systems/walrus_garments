@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import { useAddbranchTypeMutation, useDeletebranchTypeMutation, useGetbranchTypeByIdQuery, useGetbranchTypeQuery, useUpdatebranchTypeMutation } from "../../../redux/uniformService/BranchTypeMaster";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Check, Plus, Power } from "lucide-react";
@@ -47,6 +48,7 @@ export default function Form() {
   const [addData] = useAddbranchTypeMutation();
   const [updateData] = useUpdatebranchTypeMutation();
   const [removeData] = useDeletebranchTypeMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
   const syncFormWithDb = useCallback((data) => {
     if (!id) {
@@ -89,6 +91,7 @@ export default function Form() {
     try {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
+      dispatchInvalidate();
       // toast.success(text + "Successfully");
       await Swal.fire({
         title: text + "  " + "Successfully",
@@ -180,6 +183,7 @@ export default function Form() {
           return
         }
         setId("");
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
@@ -211,6 +215,7 @@ export default function Form() {
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+    syncFormWithDb(undefined)
     setTimeout(() => {
       nameRef.current?.focus();
     }, 100);

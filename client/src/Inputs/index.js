@@ -2818,12 +2818,27 @@ export const DropdownInputNew = forwardRef(({
     String(o.show).toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSelect = (optionValue) => {
+  const handleSelect = (optionValue, fromKeyboard = false) => {
     beforeChange();
     setValue(optionValue);
     setIsOpen(false);
     setSearch("");
     if (onBlur) onBlur();
+    if (fromKeyboard) {
+      // Move focus to the next focusable input/select after this dropdown button
+      setTimeout(() => {
+        if (!buttonRef.current) return;
+        const allFocusable = Array.from(
+          document.querySelectorAll(
+            'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled])'
+          )
+        ).filter(el => el.offsetParent !== null);
+        const nextInput = allFocusable.find(
+          el => buttonRef.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+        );
+        if (nextInput) nextInput.focus();
+      }, 0);
+    }
   };
 
   return (
@@ -2893,7 +2908,7 @@ export const DropdownInputNew = forwardRef(({
                 } else if (e.key === "Enter") {
                   e.preventDefault();
                   if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
-                    handleSelect(filtered[highlightedIndex].value);
+                    handleSelect(filtered[highlightedIndex].value, true);
                   }
                 } else if (e.key === "Escape") {
                   setIsOpen(false);

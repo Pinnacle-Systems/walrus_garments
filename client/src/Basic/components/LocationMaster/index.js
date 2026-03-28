@@ -12,6 +12,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 const MODEL = "Location Master"
 
@@ -52,6 +53,7 @@ export default function Form() {
     const [addData] = useAddLocationMasterMutation();
     const [updateData] = useUpdateLocationMasterMutation();
     const [removeData] = useDeleteLocationMasterMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -100,6 +102,7 @@ export default function Form() {
         try {
             let returnData = await callback(data).unwrap();
             setId(returnData.data.id)
+            dispatchInvalidate();
             // toast.success(text + "Successfully");
             await Swal.fire({
                 title: text + "  " + "Successfully",
@@ -172,6 +175,7 @@ export default function Form() {
             try {
                 await removeData(id)
                 setId("");
+                dispatchInvalidate();
                 await Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",

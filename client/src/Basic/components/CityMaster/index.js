@@ -17,6 +17,7 @@ import ReportTemplate from "../ReportTemplate";
 import { dropDownListObject } from '../../../Utils/contructObject';
 import Loader from "../Loader";
 import { useDispatch } from "react-redux";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import Mastertable from "../MasterTable/Mastertable";
 import MastersForm from '../MastersForm/MastersForm';
 import { statusDropdown } from "../../../Utils/DropdownData";
@@ -27,6 +28,8 @@ import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { StateMaster } from "..";
+
+
 const MODEL = "City Master";
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
@@ -45,6 +48,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const childRecord = useRef(0);
     const dispatch = useDispatch();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const params = {
         companyId: secureLocalStorage.getItem(
@@ -86,7 +90,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             // setReadOnly(true);
             setName(data?.name || "");
             setCode(data?.code || "");
-            setActive(data?.active ? data?.active : true);
+            setActive(id ? (data?.active ?? false) : true);
             setState(data?.stateId || "");
             childRecord.current = data?.childRecord ? data.childRecord : 0;
         }
@@ -112,6 +116,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setReadOnly(false);
         setForm(true);
         setSearchValue("");
+        syncFormWithDb(undefined)
         setTimeout(() => {
             nameRef.current?.focus();
         }, 100);
@@ -126,19 +131,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 return;
             }
             await Swal.fire({
-                title: text + "Successfully",
+                title: text + "  " + "Successfully",
                 icon: "success",
             });
+            dispatchInvalidate();
             if (nextProcess == "new") {
                 syncFormWithDb(undefined)
                 onNew()
             } else {
                 setForm(false)
             }
-            dispatch({
-                type: `StateMaster/invalidateTags`,
-                payload: ['State'],
-            });
 
         } catch (error) {
             await Swal.fire({
@@ -221,10 +223,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             try {
                 await removeData(id)
                 setId("");
-                dispatch({
-                    type: `countryMaster/invalidateTags`,
-                    payload: ['Countries'],
-                });
+                dispatchInvalidate();
                 await Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
@@ -376,6 +375,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 type="text"
                                 value={countryFromState()}
                                 disabled={true}
+
                             />
                         </div>
                         <div>
@@ -386,6 +386,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 setActive={setActive}
                                 required={true}
                                 readOnly={readOnly}
+
                             />
                         </div>
                     </div>

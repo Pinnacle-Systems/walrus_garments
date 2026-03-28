@@ -366,8 +366,18 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     "PAYMENTS"
   ];
 
+  const masterGroup = [
+    "COMMON",
+    "USER",
+    "ITEM GROUP"
+  ]
+
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))
     .filter(Boolean);
+
+  const masterGroupSorted = masterGroup.map(name => mastersGroup?.find(item => item.name === name))
+    .filter(Boolean);
+
 
   console.log(sorted, "sorted");
 
@@ -376,7 +386,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     {
       heading: 'Masters',
       logo: <Table size={24} />,
-      groups: mastersGroup,
+      groups: masterGroupSorted,
       pages: masters,
       type: "Master"
 

@@ -21,6 +21,7 @@ import moment from 'moment';
 import Modal from '../../../UiComponents/Modal';
 import { Check, Plus, Power } from 'lucide-react';
 import Swal from 'sweetalert2';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 
 
@@ -47,6 +48,7 @@ export default function Form() {
   const [addData] = useAddFinYearMutation();
   const [updateData] = useUpdateFinYearMutation();
   const [removeData] = useDeleteFinYearMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -102,6 +104,7 @@ export default function Form() {
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id)
       syncFormWithDb(undefined)
+      dispatchInvalidate();
       // toast.success(text + "Successfully");
       Swal.fire({
         title: text + "  " + "Successfully",
@@ -160,6 +163,7 @@ export default function Form() {
           return
         }
         setId("");
+        dispatchInvalidate();
         Swal.fire({
           title: "Deleted Successfully",
           icon: "success",

@@ -1,15 +1,15 @@
-import React, { useEffect, useState,useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
-    useGetPageGroupQuery,
-    useGetPageGroupByIdQuery,
-    useAddPageGroupMutation,
-    useUpdatePageGroupMutation,
-    useDeletePageGroupMutation
+  useGetPageGroupQuery,
+  useGetPageGroupByIdQuery,
+  useAddPageGroupMutation,
+  useUpdatePageGroupMutation,
+  useDeletePageGroupMutation
 } from "../../../redux/services/PageGroupMasterServices";
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput } from "../../../Inputs";
+import { TextInput, CheckBox, DropdownInput, TextInputNew, TextInputNew1 } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
 import { pageType } from "../../../Utils/DropdownData"
 
@@ -26,17 +26,17 @@ export default function Form() {
 
 
   const [searchValue, setSearchValue] = useState("");
-  const childRecord=useRef(0);
+  const childRecord = useRef(0);
 
 
-  
-  const { data: allData, isLoading, isFetching } = useGetPageGroupQuery({searchParams:searchValue});
+
+  const { data: allData, isLoading, isFetching } = useGetPageGroupQuery({ searchParams: searchValue });
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetPageGroupByIdQuery(id, {skip: !id});
- 
+  } = useGetPageGroupByIdQuery(id, { skip: !id });
+
 
   const [addData] = useAddPageGroupMutation();
   const [updateData] = useUpdatePageGroupMutation();
@@ -62,10 +62,10 @@ export default function Form() {
 
   const validateData = (data) => {
     if (data.name && data.type) {
-        return true;
+      return true;
     }
     return false;
-}
+  }
 
   const handleSubmitCustom = async (callback, data, text) => {
     try {
@@ -140,19 +140,19 @@ export default function Form() {
   if (!form)
     return (
       <ReportTemplate
-      heading={MODEL}
-      tableHeaders={tableHeaders}
-      tableDataNames={tableDataNames}
-      loading={
-        isLoading || isFetching
-      }
-      setForm={setForm}
-      data={allData?.data}
-      onClick={onDataClick}
-      onNew={onNew}
-      searchValue={searchValue}
-      setSearchValue={setSearchValue}
-    />
+        heading={MODEL}
+        tableHeaders={tableHeaders}
+        tableDataNames={tableDataNames}
+        loading={
+          isLoading || isFetching
+        }
+        setForm={setForm}
+        data={allData?.data}
+        onClick={onDataClick}
+        onNew={onNew}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+      />
     );
 
   return (
@@ -171,7 +171,7 @@ export default function Form() {
           saveData={saveData}
           setReadOnly={setReadOnly}
           deleteData={deleteData}
-          
+
         />
         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
           <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
@@ -179,7 +179,7 @@ export default function Form() {
               <fieldset className="frame my-1">
                 <legend className="sub-heading">Page Info</legend>
                 <div className="grid grid-cols-1 my-2">
-                  <TextInput
+                  <TextInputNew1
                     name="Page Name"
                     type="text"
                     value={name}
@@ -208,7 +208,7 @@ export default function Form() {
             </div>
           </div>
           <div className="frame hidden md:block overflow-x-hidden">
-          <FormReport
+            <FormReport
               searchValue={searchValue}
               setSearchValue={setSearchValue}
               setId={setId}
@@ -216,7 +216,7 @@ export default function Form() {
               tableDataNames={tableDataNames}
               data={allData?.data}
               loading={
-                  isLoading || isFetching
+                isLoading || isFetching
               }
             />
           </div>

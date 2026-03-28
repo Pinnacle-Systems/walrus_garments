@@ -14,6 +14,7 @@ import { statusDropdown } from '../../../Utils/DropdownData';
 import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 const MODEL = "Size Master"
 export default function Form() {
@@ -55,6 +56,7 @@ export default function Form() {
     const [addData] = useAddSizeMasterMutation();
     const [updateData] = useUpdateSizeMasterMutation();
     const [removeData] = useDeleteSizeMasterMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -93,6 +95,7 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
+            dispatchInvalidate();
             // toast.success(text + "Successfully");
             await Swal.fire({
                 title: text + "  " + "Successfully",
@@ -171,6 +174,7 @@ export default function Form() {
                     return
                 }
                 setId("");
+                dispatchInvalidate();
                 await Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",

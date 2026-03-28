@@ -234,7 +234,7 @@ async function create(req) {
     const { branchId, name, email, chamberNo, joiningDate, fatherName, dob, gender, maritalStatus, bloodGroup,
         panNo, consultFee, salaryPerMonth, commissionCharges, mobile, accountNo, ifscNo, branchName, degree,
         specialization, localAddress, localCity, localPincode, permAddress, permCity, regNo,
-        permPincode, department, employeeCategoryId, permanent, active } = await req.body
+        permPincode, department, employeeCategoryId, permanent, active, aadharNo } = await req.body
 
 
     console.log(permPincode, "permPincode")
@@ -273,7 +273,8 @@ async function create(req) {
                 permCityId: permCity ? parseInt(permCity) : undefined,
                 permPincode: permPincode ? parseInt(permPincode) : undefined,
                 image: image ? image.buffer : undefined,
-                permanent: permanent ? JSON.parse(permanent) : undefined
+                permanent: permanent ? JSON.parse(permanent) : undefined,
+                aadharNo: aadharNo ? String(aadharNo) : undefined,
             }
         }
     )
@@ -285,7 +286,7 @@ async function update(id, req) {
     const { name, email, regNo, chamberNo, joiningDate, fatherName, dob, gender, maritalStatus, bloodGroup,
         panNo, consultFee, salaryPerMonth, commissionCharges, mobile, accountNo, ifscNo, branchName, degree,
         specialization, localAddress, localCity, localPincode, permAddress, permCity, permPincode, department, employeeCategoryId, active,
-        leavingReason, leavingDate, canRejoin, rejoinReason, isDeleteImage } = await req.body
+        leavingReason, leavingDate, canRejoin, rejoinReason, isDeleteImage, aadharNo } = await req.body
     const dataFound = await prisma.employee.findFirst({
         where: {
             id: parseInt(id),
@@ -310,7 +311,9 @@ async function update(id, req) {
             permPincode: permPincode ? parseInt(permPincode) : undefined,
             employeeCategoryId: employeeCategoryId ? parseInt(employeeCategoryId) : undefined, active: active ? JSON.parse(active) : undefined,
             leavingDate: leavingDate ? new Date(leavingDate) : undefined, leavingReason, rejoinReason,
-            canRejoin: canRejoin ? JSON.parse(canRejoin) : undefined
+            canRejoin: canRejoin ? JSON.parse(canRejoin) : undefined,
+            aadharNo: aadharNo ? String(aadharNo) : undefined,
+
         },
     })
     return { statusCode: 0, data: exclude({ ...data }, ["image"]) };

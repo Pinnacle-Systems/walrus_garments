@@ -14,6 +14,7 @@ import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 const MODEL = "Uom Master";
 
 export default function Form() {
@@ -50,6 +51,7 @@ export default function Form() {
   const [addData] = useAddUnitOfMeasurementMasterMutation();
   const [updateData] = useUpdateUnitOfMeasurementMasterMutation();
   const [removeData] = useDeleteUnitOfMeasurementMasterMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -90,6 +92,7 @@ export default function Form() {
       await callback(data).unwrap();
       setId("");
       syncFormWithDb(undefined);
+      dispatchInvalidate();
       await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -158,6 +161,7 @@ export default function Form() {
       try {
         await removeData(id).unwrap()
         setId("");
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",

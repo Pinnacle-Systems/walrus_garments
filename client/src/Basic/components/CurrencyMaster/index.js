@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../../Inputs';
 import { useDispatch, useSelector } from 'react-redux';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
@@ -63,6 +64,7 @@ export default function Form() {
   const [addData] = useAddCurrencyMasterMutation();
   const [updateData] = useUpdateCurrencyMasterMutation();
   const [removeData] = useDeleteCurrencyMasterMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -109,6 +111,7 @@ export default function Form() {
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
+      dispatchInvalidate();
       await Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -189,6 +192,7 @@ export default function Form() {
           return
         }
         setId("");
+        dispatchInvalidate();
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",

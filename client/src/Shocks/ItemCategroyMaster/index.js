@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power } from "lucide-react";
 import { ReusableTable, TextInputNew1, ToggleButton } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
@@ -36,6 +37,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [addData] = useAddItemCategoryMutation();
     const [updateData] = useUpdateItemCategoryMutation();
     const [removeData] = useDeleteItemCategoryMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback((data) => {
         if (!id) {
@@ -68,6 +70,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 onSuccess(returnData.data.id);
                 return;
             }
+            dispatchInvalidate();
             await Swal.fire({ title: text + " Successfully", icon: "success" });
             if (nextProcess === "new") {
                 syncFormWithDb(undefined);
@@ -124,6 +127,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 return;
             }
             setId("");
+            dispatchInvalidate();
             await Swal.fire({ title: "Deleted Successfully", icon: "success" });
             setForm(false);
         } catch (error) {

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power, Plus } from "lucide-react";
 import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
@@ -103,6 +104,7 @@ export default function Form() {
   const [addData] = useAddItemMasterMutation();
   const [updateData] = useUpdateItemMasterMutation();
   const [removeData] = useDeleteItemMasterMutation();
+  const [dispatchInvalidate] = useInvalidateTags();
 
 
   const {
@@ -318,6 +320,7 @@ export default function Form() {
         return;
       }
       setId(returnData.data.id);
+      dispatchInvalidate();
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -419,6 +422,7 @@ export default function Form() {
             return;
           }
           setId("");
+          dispatchInvalidate();
           Swal.fire({
             title: "Deleted Successfully",
             icon: "success",

@@ -22,6 +22,7 @@ import MastersForm from '../MastersForm/MastersForm';
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 
 const MODEL = "State Master";
@@ -58,6 +59,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     useGetCountriesQuery({ params });
 
   const { data: allData, isLoading, isFetching } = useGetStateQuery({ params, searchParams: searchValue });
+  const [invalidateTagsDispatch] = useInvalidateTags();
 
 
 
@@ -109,22 +111,21 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         return;
       }
       await Swal.fire({
-        title: text + "Successfully",
+        title: text + "  " + "Successfully",
         icon: "success",
       });
+      invalidateTagsDispatch()
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
       } else {
         setForm(false)
       }
-      dispatch({
-        type: `countryMaster/invalidateTags`,
-        payload: ['Countries'],
-      });
+
 
     } catch (error) {
-      await Swal.fire({
+      console.log(error, "error for state master")
+      Swal.fire({
         icon: 'error',
         title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
@@ -193,6 +194,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       try {
         await removeData(id)
         setId("");
+        invalidateTagsDispatch()
         dispatch({
           type: `countryMaster/invalidateTags`,
           payload: ['Countries'],
@@ -222,6 +224,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   };
 
   const onNew = () => {
+    syncFormWithDb(undefined)
     setId("");
     setReadOnly(false);
     setForm(true);

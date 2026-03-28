@@ -385,15 +385,78 @@ label {
   opacity: 1;
 }
 
-.swal2-styled.swal2-confirm,
-.swal2-styled.swal2-cancel {
-  color: gray !important;
-  font-weight: 600 !important;
+/* ── SweetAlert2 Global Redesign ── */
+.swal2-popup {
+  width: 360px !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  border-radius: 14px !important;
+  padding: 28px 24px 20px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  font-family: inherit !important;
 }
 
-.swal2-styled.swal2-confirm:hover,
+.swal2-title {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin-bottom: 4px !important;
+  padding: 0 !important;
+}
+
+.swal2-html-container {
+  font-size: 0.82rem !important;
+  color: #64748b !important;
+  margin: 6px 0 0 !important;
+}
+
+.swal2-icon {
+  transform: scale(0.65) !important;
+  margin: -10px auto 0px !important;
+}
+
+.swal2-actions {
+  margin-top: 18px !important;
+  gap: 8px !important;
+}
+
+.swal2-styled.swal2-confirm {
+  background-color: #4f46e5 !important;
+  color: #fff !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 7px 22px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: background 0.2s !important;
+}
+
+.swal2-styled.swal2-confirm:hover {
+  background-color: #4338ca !important;
+  filter: none !important;
+}
+
+.swal2-styled.swal2-cancel {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 7px 22px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: background 0.2s !important;
+}
+
 .swal2-styled.swal2-cancel:hover {
-  filter: brightness(1.1);
+  background-color: #e2e8f0 !important;
+  filter: none !important;
+}
+
+.swal2-timer-progress-bar {
+  background: #4f46e5 !important;
+  height: 3px !important;
 }
 
 .custom-multiselect .dropdown-content {
@@ -421,7 +484,6 @@ label {
   box-shadow: none;
 }
 
-.header{
+.header {
   z-index: 5;
 }
-

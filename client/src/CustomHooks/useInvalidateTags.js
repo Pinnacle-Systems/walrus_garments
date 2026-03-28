@@ -4,13 +4,35 @@ const useInvalidateTags = () => {
     const dispatch = useDispatch();
 
     const apiInvalidateData = [
+
         {
-            type: `Sample/invalidateTags`,
-            payload: ["Sample"],
+            type: `countryMaster/invalidateTags`,
+            payload: ["Countries"],
         },
+        {
+            type: `stateMaster/invalidateTags`,
+            payload: ["State"],
+        },
+        {
+            type: `cityMaster/invalidateTags`,
+            payload: ["City"],
+        },
+        {
+            type: `currencyMaster/invalidateTags`,
+            payload: ["CurrencyMaster"],
+        },
+        {
+            type: `paytermMaster/invalidateTags`,
+            payload: ["PaytermMaster"],
+        },
+
         {
             type: `branchTypeMaster/invalidateTags`,
             payload: ["branchType"],
+        },
+        {
+            type: `finYearMaster/invalidateTags`,
+            payload: ["FinYear"],
         },
         {
             type: `PartyMaster/invalidateTags`,
@@ -19,6 +41,56 @@ const useInvalidateTags = () => {
         {
             type: `locationMaster/invalidateTags`,
             payload: ["LocationMaster"],
+        },
+        {
+            type: `termsAndConditionsMaster/invalidateTags`,
+            payload: ["TermsAndConditions"],
+        },
+        {
+            type: `employeeCategoryMaster/invalidateTags`,
+            payload: ["EmployeeCategory"],
+        },
+        {
+            type: `departmentMaster/invalidateTags`,
+            payload: ["Department"],
+        },
+        {
+            type: `employeeMaster/invalidateTags`,
+            payload: ["Employee"],
+        },
+        {
+            type: `colorMaster/invalidateTags`,
+            payload: ["ColorMaster"],
+        },
+        {
+            type: `sizeMaster/invalidateTags`,
+            payload: ["SizeMaster"],
+        },
+        {
+            type: `uomMaster/invalidateTags`,
+            payload: ["Uom"],
+        },
+        {
+            type: `hsnMaster/invalidateTags`,
+            payload: ["HsnMaster"],
+        },
+        {
+            type: `ItemCategoryMaster/invalidateTags`,
+            payload: ["ItemCategoryMaster"],
+        },
+        {
+            type: `itemMaster/invalidateTags`,
+            payload: ["ItemMaster"],
+        },
+        {
+            type: `priceTemplate/invalidateTags`,
+            payload: ["priceTemplate"],
+        },
+
+
+        {
+            type: `Sample/invalidateTags`,
+            payload: ["Sample"],
         },
         {
             type: `po/invalidateTags`,
@@ -89,6 +161,7 @@ const useInvalidateTags = () => {
             type: `salesReturn/invalidateTags`,
             payload: ["salesReturn"],
         },
+
 
     ];
 

@@ -25,6 +25,7 @@ import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { push } from "../../../redux/features/opentabs";
 import Swal from "sweetalert2";
 import NotificationBell from "../Notification";
+import PageSearch from "./PageSearch";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -173,12 +174,14 @@ const Header = ({ profile, setProfile }) => {
                     alt="" />
             </div>
             <div className="mr-9 flex items-center  justify-content-between">
-                <div className='flex items-center text-[12px] border rounded-full relative mr-3'>
+                {/* <div className='flex items-center text-[12px] border rounded-full relative mr-3'>
                     <input className=' px-2 py-1 w-60 text-[12px] rounded-full' placeholder='search' type='text' name='password' id='password' />
                     <div className='absolute right-2  text-neutral-500'>
                         <Search size={15} />
                     </div>
-                </div>
+                </div> */}
+                <PageSearch pageList={allowedPages?.filter(i => i.active)} />
+
                 <div className="mr-3 bg-beige p-2 rounded-full ">
                     <NotificationBell />
                 </div>

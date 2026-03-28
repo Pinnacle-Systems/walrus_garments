@@ -7,6 +7,7 @@ import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
@@ -37,6 +38,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [addData] = useAddHsnMasterMutation();
     const [updateData] = useUpdateHsnMasterMutation();
     const [removeData] = useDeleteHsnMasterMutation();
+    const [dispatchInvalidate] = useInvalidateTags();
 
     const syncFormWithDb = useCallback((data) => {
         if (!id) {
@@ -71,6 +73,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 onSuccess(returnData.data.id);
                 return;
             }
+            dispatchInvalidate();
             await Swal.fire({ title: text + " Successfully", icon: "success" });
             if (nextProcess === "new") {
                 syncFormWithDb(undefined);
@@ -123,6 +126,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         try {
             await removeData(id).unwrap();
             setId("");
+            dispatchInvalidate();
             await Swal.fire({ title: "Deleted Successfully", icon: "success" });
             setForm(false);
         } catch (error) {

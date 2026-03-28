@@ -117,6 +117,7 @@ model Branch {
   address                            String?
   gstNo                              String?
   panNo                              String?
+  logo                               String?
   DeliveryBranchPo                   Po[]                   @relation(name: "deliveryBranch")
   PoRaised                           Po[]                   @relation(name: "poRaisedBranch")
   PInwardOrReturn                    PInwardOrReturn[]
@@ -367,6 +368,7 @@ model Employee {
   rejoinReason       String?
   createdAt          DateTime?         @default(now())
   updatedAt          DateTime?         @updatedAt
+  aadharNo           String?
   User               User[]
 }
 
@@ -4982,7 +4984,7 @@ model Section {
 }
 
 model ItemControlPanel {
-  id                      Int    @id @default(autoincrement())
+  id                      Int     @id @default(autoincrement())
   sectionType             Boolean @default(false)
   barcodeGenerationMethod String  @default("STANDARD")
   field1                  String?

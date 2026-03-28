@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { usePermissionForUsers } from "../HasPermission";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 const MODEL = "Country Master";
 
@@ -40,6 +41,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const childRecord = useRef(0);
   const { hasPermission } = usePermissionForUsers()
+
+  const [invalidateTagsDispatch] = useInvalidateTags();
+
 
 
   const params = {
@@ -71,6 +75,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const syncFormWithDb = useCallback(
     (data) => {
+      console.log(id, 'id for countyMastyer', data)
+
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(id ? data?.active ?? false : true);
@@ -78,13 +84,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     },
     [id]
   );
-  console.log(childRecord.current, "childRecord");
+
 
   useEffect(() => {
     if (singleData?.data) {
       syncFormWithDb(singleData.data);
     }
-  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData,]);
 
   const data = {
     name,
@@ -115,6 +121,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         title: text + "  " + "Successfully",
         icon: "success",
       });
+      invalidateTagsDispatch()
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
@@ -193,12 +200,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           });
           return;
         }
-        setId("");
         await Swal.fire({
           title: "Deleted Successfully",
           icon: "success",
         });
         setForm(false);
+        invalidateTagsDispatch()
       } catch (error) {
         await Swal.fire({
           icon: 'error',
@@ -219,6 +226,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   };
 
   const onNew = () => {
+    syncFormWithDb(undefined)
     setId("");
     setReadOnly(false);
     setForm(true);
@@ -234,6 +242,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     console.log("view");
   };
   const handleEdit = (id) => {
+    // syncFormWithDb(undefined)
+
     setId(id);
     setForm(true);
     setReadOnly(false);
@@ -454,6 +464,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             onClose={() => {
               setForm(false);
               setErrors({});
+              // syncFormWithDb(undefined)
+
             }}
           >
             <div className="h-full flex flex-col  bg-gray-200">
