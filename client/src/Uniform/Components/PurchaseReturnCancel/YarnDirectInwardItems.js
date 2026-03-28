@@ -82,7 +82,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                 panelClassName="h-full min-h-0"
                 contentClassName="h-full min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
             >
-                    <div className="h-full min-h-0 overflow-x-auto overflow-y-scroll bg-gray-300">
+                <div className="h-full min-h-0 overflow-x-auto overflow-y-scroll ">
                     <table className={transactionTableClassName}>
                         <thead className={`${transactionTableHeadClassName} shadow-sm`} >
                             <tr>
@@ -214,7 +214,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                             </tr>
                         </tfoot>
                     </table>
-                    </div>
+                </div>
                 {contextMenu && (
                     <div
                         style={{

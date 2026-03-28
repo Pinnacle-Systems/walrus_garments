@@ -277,295 +277,295 @@ const YarnPoItems = ({
                 panelClassName="h-full"
                 contentClassName="overflow-hidden rounded-md border border-slate-200 !py-0"
             >
-                    <div className="h-full overflow-x-auto overflow-y-auto bg-gray-300">
-                        <table className={transactionTableClassName}>
-                            <thead className={`${transactionTableHeadClassName} shadow-sm`}>
-                                <tr className="py-2">
-                                    <th
-                                        className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        S.No
-                                    </th>
-                                    <th
+                <div className="h-full overflow-x-auto overflow-y-auto ">
+                    <table className={transactionTableClassName}>
+                        <thead className={`${transactionTableHeadClassName} shadow-sm`}>
+                            <tr className="py-2">
+                                <th
+                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    S.No
+                                </th>
+                                <th
 
-                                        className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Item  <span className="text-red-500">*</span>
-                                    </th>
+                                    className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Item  <span className="text-red-500">*</span>
+                                </th>
+                                <th
+
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Size  <span className="text-red-500">*</span>
+                                </th>
+                                <th
+
+                                    className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Color  <span className="text-red-500">*</span>
+                                </th>
+                                <th
+
+                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    UOM  <span className="text-red-500">*</span>
+                                </th>
+                                <th
+
+                                    className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Barcode  <span className="text-red-500">*</span>
+                                </th>
+                                {allData?.data?.map(element => (
+                                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
+                                    Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
+                                        <>
+                                            <th
+                                                key={i}
+                                                className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                            >
+                                                {capitalizeFirstLetter(element?.[i])}  <span className="text-red-500">*</span>
+                                            </th>
+
+                                        </>
+                                    ))
+                                ))}
+                                {id && (
                                     <th
 
                                         className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
-                                        Size  <span className="text-red-500">*</span>
+                                        Stock  Quantity  <span className="text-red-500">*</span>
                                     </th>
-                                    <th
+                                )}
 
-                                        className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Color  <span className="text-red-500">*</span>
-                                    </th>
-                                    <th
+                                <th
 
-                                        className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        UOM  <span className="text-red-500">*</span>
-                                    </th>
-                                    <th
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Quantity  <span className="text-red-500">*</span>
+                                </th>
+                                <th
 
-                                        className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Barcode  <span className="text-red-500">*</span>
-                                    </th>
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Price  <span className="text-red-500">*</span>
+                                </th>
+
+
+                                <th
+
+                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                >
+                                    Gross
+                                </th>
+
+
+                                <th
+
+                                    className={`w-7 bg-gray-200 px-0 py-1 text-center font-medium text-[12px] `}
+                                >
+
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="bg-white">
+
+                            {(poItems ? poItems : [])?.map((row, index) =>
+                                <tr key={index} className="border border-blue-gray-200 cursor-pointer "
+                                    onContextMenu={(e) => {
+                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty))) {
+                                            handleRightClick(e, index, "shiftTimeHrs");
+                                        }
+                                    }}
+                                >
+                                    <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
+                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.itemId}
+                                            options={itemOptions}
+                                            disabled={readOnly}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                        />
+                                    </td>
+                                    {/* {console.log(row,"row")} */}
+
+                                    <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.sizeId}
+                                            options={getSizeOptions(row)}
+                                            disabled={readOnly || !row.itemId}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                        />
+                                    </td>
+
+                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.colorId}
+                                            options={getColorOptions(row)}
+                                            disabled={readOnly || !row.sizeId}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                        />
+                                    </td>
+
+
+
+
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <SearchableTableCellSelect
+                                            value={row.uomId}
+                                            options={uomOptions}
+                                            disabled={readOnly}
+                                            onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                        />
+                                    </td>
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right">
+                                        <div className="flex h-full min-h-[22px] items-center justify-end px-1">
+                                            {row.barcode || ""}
+                                        </div>
+                                    </td>
+
                                     {allData?.data?.map(element => (
                                         // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                         Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                                             <>
-                                                <th
-                                                    key={i}
-                                                    className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                                >
-                                                    {capitalizeFirstLetter(element?.[i])}  <span className="text-red-500">*</span>
-                                                </th>
+                                                <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                                    <input
+                                                        onKeyDown={e => {
+                                                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                            if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
+                                                        }}
 
+                                                        className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                                        onFocus={(e) => e.target.select()}
+                                                        // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
+                                                        value={row[i]}
+                                                        // disabled={readOnly || !row.uomId}
+                                                        onChange={(e) =>
+                                                            handleInputChange(e.target.value, index, i)
+                                                        }
+                                                        onBlur={(e) => {
+                                                            handleInputChange(e.target.value.toFixed(3), index, i);
+                                                        }
+                                                        }
+                                                    />
+                                                </td>
+                                                {console.log(element?.[i], 'element')}
+                                                {console.log(i, 'iiiiiiiiiiii')}
                                             </>
                                         ))
                                     ))}
-                                    {id && (
-                                        <th
 
-                                            className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                        >
-                                            Stock  Quantity  <span className="text-red-500">*</span>
-                                        </th>
+                                    {id && (
+                                        <td className="border border-gray-300 p-0 text-[11px] text-right">
+                                            {formatThreeDecimals(row?.stockQty)}
+                                        </td>
                                     )}
 
-                                    <th
-
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Quantity  <span className="text-red-500">*</span>
-                                    </th>
-                                    <th
-
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Price  <span className="text-red-500">*</span>
-                                    </th>
-
-
-                                    <th
-
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                    >
-                                        Gross
-                                    </th>
-
-
-                                    <th
-
-                                        className={`w-7 bg-gray-200 px-0 py-1 text-center font-medium text-[12px] `}
-                                    >
-
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="bg-white">
-
-                                {(poItems ? poItems : [])?.map((row, index) =>
-                                    <tr key={index} className="border border-blue-gray-200 cursor-pointer "
-                                        onContextMenu={(e) => {
-                                            if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty))) {
-                                                handleRightClick(e, index, "shiftTimeHrs");
-                                            }
-                                        }}
-                                    >
-                                        <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                            <SearchableTableCellSelect
-                                                value={row.itemId}
-                                                options={itemOptions}
-                                                disabled={readOnly}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
-                                            />
-                                        </td>
-                                        {/* {console.log(row,"row")} */}
-
-                                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                            <SearchableTableCellSelect
-                                                value={row.sizeId}
-                                                options={getSizeOptions(row)}
-                                                disabled={readOnly || !row.itemId}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
-                                            />
-                                        </td>
-
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                            <SearchableTableCellSelect
-                                                value={row.colorId}
-                                                options={getColorOptions(row)}
-                                                disabled={readOnly || !row.sizeId}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
-                                            />
-                                        </td>
-
-
-
-
-                                        <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                            <SearchableTableCellSelect
-                                                value={row.uomId}
-                                                options={uomOptions}
-                                                disabled={readOnly}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
-                                            />
-                                        </td>
-                                        <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right">
-                                            <div className="flex h-full min-h-[22px] items-center justify-end px-1">
-                                                {row.barcode || ""}
-                                            </div>
-                                        </td>
-
-                                        {allData?.data?.map(element => (
-                                            // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
-                                            Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
-                                                <>
-                                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
-                                                        <input
-                                                            onKeyDown={e => {
-                                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                                if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
-                                                            }}
-
-                                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
-                                                            onFocus={(e) => e.target.select()}
-                                                            // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                                            value={row[i]}
-                                                            // disabled={readOnly || !row.uomId}
-                                                            onChange={(e) =>
-                                                                handleInputChange(e.target.value, index, i)
-                                                            }
-                                                            onBlur={(e) => {
-                                                                handleInputChange(e.target.value.toFixed(3), index, i);
-                                                            }
-                                                            }
-                                                        />
-                                                    </td>
-                                                    {console.log(element?.[i], 'element')}
-                                                    {console.log(i, 'iiiiiiiiiiii')}
-                                                </>
-                                            ))
-                                        ))}
-
-                                        {id && (
-                                            <td className="border border-gray-300 p-0 text-[11px] text-right">
-                                                {formatThreeDecimals(row?.stockQty)}
-                                            </td>
-                                        )}
-
-                                        <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
-                                            <input
-                                                onKeyDown={e => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
-                                                value={(row?.qty)}
-                                                disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
-                                                onChange={(e) => {
-                                                    if (id) {
-                                                        if (row?.stockQty)
-                                                            handleInputChange(e.target.value, index, "qty")
-                                                    } else {
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                        <input
+                                            onKeyDown={e => {
+                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                                            }}
+                                            min={"0"}
+                                            type="number"
+                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                            onFocus={(e) => e.target.select()}
+                                            // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
+                                            value={(row?.qty)}
+                                            disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
+                                            onChange={(e) => {
+                                                if (id) {
+                                                    if (row?.stockQty)
                                                         handleInputChange(e.target.value, index, "qty")
-
-                                                    }
-
-                                                }}
-                                                onBlur={(e) => {
-                                                    handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
-                                                }
-                                                }
-                                            />
-                                        </td>
-
-                                        <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
-                                            <input
-                                                onKeyDown={e => {
-                                                    if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0.00", index, "price") }
-                                                }}
-                                                min={"0"}
-                                                type="number"
-                                                className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
-                                                onFocus={(e) => e.target.select()}
-                                                value={(row?.price)}
-                                                disabled={readOnly || !row.qty}
-                                                onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "price")
-                                                }
-                                                onBlur={(e) => {
-                                                    handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+                                                } else {
+                                                    handleInputChange(e.target.value, index, "qty")
 
                                                 }
-                                                }
 
-                                            />
-
-                                        </td>
-
-
-
-                                        <td className='border border-gray-300 p-0 text-[11px] text-right'>
-                                            {formatTwoDecimals(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0)}</td>
-
-
-
-
-                                        <td className="w-16 border border-gray-300 p-0 text-center">
-                                            <button
-                                                onClick={() => addNewRow(index)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        e.preventDefault();
-                                                        addNewRow(index);
-                                                    }
-                                                }}
-                                                className="h-full w-full rounded-none bg-blue-50 py-0"
-                                            >
-                                                +
-                                            </button>
-                                        </td>
-
-
-
-                                    </tr>
-                                )}
-                            </tbody>
-                            <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 bg-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
-                                <tr>
-                                    <td
-                                        colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
-                                        className="bg-gray-300 px-1 py-1 text-right text-[12px]"
-                                    >
-                                        Total:
+                                            }}
+                                            onBlur={(e) => {
+                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                            }
+                                            }
+                                        />
                                     </td>
-                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
-                                        {(poItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
+
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                        <input
+                                            onKeyDown={e => {
+                                                if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
+                                                if (e.key === "Delete") { handleInputChange("0.00", index, "price") }
+                                            }}
+                                            min={"0"}
+                                            type="number"
+                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                            onFocus={(e) => e.target.select()}
+                                            value={(row?.price)}
+                                            disabled={readOnly || !row.qty}
+                                            onChange={(e) =>
+                                                handleInputChange(e.target.value, index, "price")
+                                            }
+                                            onBlur={(e) => {
+                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
+
+                                            }
+                                            }
+
+                                        />
+
                                     </td>
-                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
-                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
-                                        {formatTwoDecimals((poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0))}
+
+
+
+                                    <td className='border border-gray-300 p-0 text-[11px] text-right'>
+                                        {formatTwoDecimals(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0)}</td>
+
+
+
+
+                                    <td className="w-16 border border-gray-300 p-0 text-center">
+                                        <button
+                                            onClick={() => addNewRow(index)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    addNewRow(index);
+                                                }
+                                            }}
+                                            className="h-full w-full rounded-none bg-blue-50 py-0"
+                                        >
+                                            +
+                                        </button>
                                     </td>
-                                    <td className="px-1 py-1 bg-gray-100"></td>
+
+
+
                                 </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                            )}
+                        </tbody>
+                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
+                            <tr>
+                                <td
+                                    colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
+                                    className="bg-gray-300 px-1 py-1 text-right text-[12px]"
+                                >
+                                    Total:
+                                </td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
+                                    {(poItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
+                                </td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
+                                    {formatTwoDecimals((poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0))}
+                                </td>
+                                <td className="px-1 py-1 bg-gray-100"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
                 {contextMenu && (
                     <div
                         style={{
