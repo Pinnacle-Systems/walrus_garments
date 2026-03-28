@@ -67,22 +67,22 @@ const YarnDirectItem = ({ itemList, uomList,
                     }
                 }}
             >
-                <td className='py-0.5 border border-gray-300 text-[11px] text-center'>{index + 1}</td>
+                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-center'>{index + 1}</td>
                 {/* <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{item?.poNo}</td> */}
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.itemId, itemList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.itemId, itemList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
 
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.colorId, colorList?.data, "name")} </td>
 
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-left p-0.5'>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>
 
                     {item?.barcode} </td>
                 {stockControlData?.data?.map(element => (
                     // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                         <>
-                            <td className="w-40  border-blue-gray-200 text-[11px] border border-gray-300 py-0.5 text-right">
+                            <td className="w-40 border border-gray-300 bg-white py-0.5 text-[11px] text-right">
                                 <input
                                     onKeyDown={e => {
                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -107,15 +107,15 @@ const YarnDirectItem = ({ itemList, uomList,
                         </>
                     ))
                 ))}
-                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.allowedReturnQty}</td>
-                <td className='w-12 border border-gray-300 text-[11px]  text-right p-0.5'>{item?.stockQty}</td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-right'>{item?.allowedReturnQty}</td>
+                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-right'>{item?.stockQty}</td>
 
 
 
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
+                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-right' >
                     {item.price ? (parseFloat(item.price).toFixed(2)) : ""}
                 </td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>
+                <td className='border border-gray-300 bg-white py-0.5 text-[11px]'>
                     <input
                         type="number"
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "qty") } }}
@@ -159,7 +159,7 @@ const YarnDirectItem = ({ itemList, uomList,
                     <div className='text-center'>
                     </div>
                 </td>
-                <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
+                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-right'>
                     {item.price * item.qty ? parseFloat(item.price * item.qty || 0).toFixed(2) : ""}
 
                 </td>

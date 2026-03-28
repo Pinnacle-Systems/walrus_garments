@@ -452,12 +452,12 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     </div>
                 )}
             >
-                <div className="space-y-3 h-full py-2">
+                <div className="min-h-0 flex-1 overflow-hidden">
                     <ReturnItems poInwardOrDirectInward={poInwardOrDirectInward} storeId={storeId} setStoreId={setStoreId}
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList}
+                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen}
                     />
                 </div>
             </TransactionEntryShell>

@@ -277,7 +277,7 @@ const YarnPoItems = ({
                 panelClassName="h-full"
                 contentClassName="overflow-hidden rounded-md border border-slate-200 !py-0"
             >
-                    <div className="h-full overflow-x-auto overflow-y-auto">
+                    <div className="h-full overflow-x-auto overflow-y-auto bg-gray-300">
                         <table className={transactionTableClassName}>
                             <thead className={`${transactionTableHeadClassName} shadow-sm`}>
                                 <tr className="py-2">
@@ -370,7 +370,7 @@ const YarnPoItems = ({
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="bg-white">
 
                                 {(poItems ? poItems : [])?.map((row, index) =>
                                     <tr key={index} className="border border-blue-gray-200 cursor-pointer "
@@ -554,11 +554,11 @@ const YarnPoItems = ({
                                     >
                                         Total:
                                     </td>
-                                    <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                         {(poItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
                                     </td>
-                                    <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300"></td>
-                                    <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                         {formatTwoDecimals((poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0))}
                                     </td>
                                     <td className="px-1 py-1 bg-gray-100"></td>
