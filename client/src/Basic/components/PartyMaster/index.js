@@ -1890,7 +1890,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           required={true}
                           setValue={setPartyCode}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
+                          // disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                       </div>
@@ -1933,8 +1933,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           <TextArea name="Address"
                             inputClass="h-10" value={address}
                             setValue={setAddress} required={true}
-                            readOnly={readOnly} d
-                            isabled={(childRecord.current > 0)} />
+                            readOnly={readOnly}
+                          // disabled={(childRecord.current > 0)}
+                          />
                         </div>
                         <div className="col-span-2">
                           <div className="grid grid-cols-5 gap-2">
@@ -2109,7 +2110,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           value={panNo}
                           setValue={setPanNo}
                           readOnly={readOnly || parentId || isBranch}
-                          disabled={childRecord.current > 0}
+                          disabled={parentId || isBranch}
                           className="focus:ring-2 focus:ring-blue-100"
                         />
                         <TextInput

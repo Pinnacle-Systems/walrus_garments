@@ -182,7 +182,7 @@ const Login = () => {
         <div className="w-full lg:w-[45%] h-full flex items-center justify-center px-8 sm:px-16 bg-[radial-gradient(circle_at_top_left,#F1F3F6_0%,#FFFFFF_100%)] relative overflow-hidden">
           {/* Subtle noise/grain texture */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.98, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -250,15 +250,15 @@ const Login = () => {
 
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-3.5 w-3.5 text-black border-stone-300 rounded focus:ring-black cursor-pointer"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-xs text-stone-700 cursor-pointer">
-                    Remember me
-                  </label>
+                  {/* <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-3.5 w-3.5 text-black border-stone-300 rounded focus:ring-black cursor-pointer"
+                    />
+                    <label htmlFor="remember-me" className="ml-2 block text-xs text-stone-700 cursor-pointer">
+                      Remember me
+                    </label> */}
                 </div>
               </div>
 

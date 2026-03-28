@@ -61,7 +61,7 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = 0;
+    const childRecord = await prisma.directInwardOrReturn.count({ where: { supplierId: parseInt(id) } });
     const data = await prisma.party.findUnique({
         where: {
             id: parseInt(id)
@@ -87,6 +87,17 @@ async function getOne(id) {
             PartyContactDetails: true,
             BranchContactDetails: true,
             PartyAttachments: true,
+            _count: {
+                select: {
+                    DirectInwardOrReturn: true,
+                    DirectReturnOrPoReturn: true,
+                    Quotation: true,
+                    Saleorder: true,
+                    SalesDelivery: true,
+                    SalesReturn: true
+
+                }
+            }
 
 
 
@@ -94,7 +105,9 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("party");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    const { _count, ...rest } = data;
+
+    return { statusCode: 0, data: { ...rest, childRecord: Object.values(_count) } };
 }
 
 async function getSearch(req) {

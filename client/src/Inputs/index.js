@@ -1722,7 +1722,6 @@ export function isValidPAN(pan) {
 export const ReusableTable = ({
   columns,
   data,
-  itemsPerPage = 15,
   onView,
   onEdit,
   onDelete,
@@ -1730,6 +1729,8 @@ export const ReusableTable = ({
   rowActions = true,
   width
 }) => {
+
+  const itemsPerPage = 15;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(data?.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
