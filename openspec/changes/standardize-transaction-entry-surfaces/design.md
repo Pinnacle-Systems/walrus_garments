@@ -12,6 +12,7 @@ The design goal is no longer limited to making tables look similar. The goal is 
 - Standardize header-detail presentation inside the shell, including fieldset-like section cards with consistent legend/title treatment delivered through shared presentational helpers while keeping group structure screen-owned.
 - Standardize collapsed summary presentation while allowing each screen to choose which values to show and in what order, provided the screen supplies the same visible display strings used in the expanded fields for any summarized value. Optional linked-document values should render as empty when absent rather than using a generic placeholder.
 - Standardize transaction-entry typography inside the shared shell, including section headers, field labels, collapsed summary labels and values, footer notes, and footer totals text, so dense transaction layouts still feel like one product family.
+- Standardize footer composition inside the shared shell, including a shared configurable footer treatment for the standardized sales transaction screens and a compact layout that gives more height back to the line-item workspace.
 - Standardize shared table concerns inside that shell: sticky headers, spacing, row numbering, required markers, read-only behavior, action placement, empty-row handling, and inline-editing feel.
 - Allow each in-scope transaction flow to keep its own business-specific header fields, columns, editors, validations, and row-level modals.
 - Make the core sales and purchase document screens adopt the same entry-shell pattern through shared layout and presentation primitives.
@@ -65,7 +66,19 @@ The content region should scroll independently while footer actions remain visib
 Alternative considered: let the whole page continue to scroll normally.
 This was rejected because it reduces the operational value of a compact collapsed header and makes primary actions harder to keep visible.
 
-8. Roll out by transaction family with verification after each family.
+8. Share the standardized sales footers through one configurable implementation.
+The sales transaction screens already share the same shell and mostly the same footer responsibilities. Their common footer structure should therefore be expressed through one shared configurable implementation rather than repeated local markup, so typography, spacing, totals presentation, and action layout can be tuned centrally while each screen still supplies its own handlers and optional controls.
+
+Alternative considered: keep sales footer markup local and only standardize the surrounding shell.
+This was rejected because recent typography and density refinements already proved that the footer is part of the same shared transaction-entry surface and should not drift independently.
+
+9. Compact the pinned footer instead of treating footer density as a separate follow-up.
+The pinned footer should use a shorter, denser layout that preserves terms, remarks, totals, and transaction actions without consuming unnecessary height. Height savings should come from tighter spacing, smaller repeated chrome, shorter controls where safe, and responsive horizontal grouping or wrap behavior on medium-width workspaces.
+
+Alternative considered: leave footer compaction for a separate follow-up change after shell standardization.
+This was rejected because footer height directly affects the amount of visible line-item workspace inside the shared shell, so keeping it separate would split ownership of one interaction surface across multiple changes.
+
+10. Roll out by transaction family with verification after each family.
 Because layout refactors can disturb keyboard flow, focus order, modals, summary mapping, and action availability, the migration should proceed screen-by-screen or family-by-family with targeted smoke testing.
 
 Alternative considered: perform one broad cosmetic pass over every screen with light verification.
@@ -78,6 +91,8 @@ This was rejected because transaction entry screens contain many subtle interact
 - [Collapsed summary fields may become inconsistent or incomplete if configured ad hoc] -> Keep summary selection flexible but standardize the shell rendering and require consumers to pass display-ready values.
 - [Expanded header groups may still look inconsistent if styling remains screen-specific] -> Define a mandatory tiny shared fieldset-style presentational helper and migrate every in-scope screen to it.
 - [Typography could drift again if some transaction screens keep local one-off text sizing] -> Treat type size as part of the shared transaction-entry contract and update the shared primitives before allowing per-screen overrides.
+- [Shared footers could become too generic to understand] -> Keep the shared footer API focused on the sections that already recur across the standardized sales screens instead of creating a universal footer abstraction.
+- [Compact footer changes could make the pinned region feel cramped or cause medium-width wrapping issues] -> Define compact spacing and wrap behavior intentionally, then verify representative desktop and laptop widths.
 - [Consumers may pass generic fallback strings that do not match intended empty-state behavior for optional linked documents] -> Treat linked-document absence as blank in both expanded and collapsed states and verify that behavior during rollout.
 - [Collapsed values can drift from expanded field values if summary mapping uses alternate sources] -> Require consuming screens to pass the same visible display strings used by the expanded header fields whenever those fields are summarized.
 - [Some in-scope screens have unusually tall auxiliary sections or custom modal triggers] -> Standardize the shell while allowing local exceptions inside the scrollable content region.

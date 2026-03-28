@@ -9,6 +9,7 @@ Core sales and purchase transaction entry screens still feel inconsistent even w
 - Standardize header-detail presentation inside that shell, including Purchase Inward-style fieldset/legend group styling for expanded header sections via shared presentational helpers while keeping header structure and field composition screen-specific.
 - Standardize collapsed header-summary presentation while keeping summary field selection and ordering flexible per screen; when a screen chooses to summarize a field, it should pass the same visible display string shown in the expanded field, and optional linked-document values should appear blank when absent rather than showing fallback placeholder text.
 - Standardize transaction-entry typography within that shell, including shared font-size tiers for section headers, field labels, collapsed summary labels and values, footer notes, and totals text so compact transaction layouts remain visually consistent across screens.
+- Standardize footer composition within that shell, including a shared configurable footer treatment for the standardized sales transaction screens and a compact responsive layout that reduces footer height while preserving terms, remarks, totals, and transaction-specific actions.
 - Standardize line-item table behavior and visual treatment within that shell, including sticky headers, spacing, row numbering, action placement, empty states, and editable/read-only treatment.
 - Apply the shared transaction-entry pattern to Purchase Inward, Estimate / Quotation, Sale Order, Sales Invoice, Sales Delivery, Sales Return, and Purchase Return / Cancel.
 - Preserve transaction-specific columns, business logic, pricing/tax rules, lot/barcode flows, validations, and specialized row editors while aligning the surrounding workspace and table behavior.
@@ -16,7 +17,7 @@ Core sales and purchase transaction entry screens still feel inconsistent even w
 ## Capabilities
 
 ### New Capabilities
-- `transaction-entry-surfaces`: Defines a consistent transaction entry shell and line-item table experience derived from the recent Purchase Inward reference, including collapsible summary headers, fixed footer layout, scrollable content regions, standardized line-item tables, and shared transaction-entry typography.
+- `transaction-entry-surfaces`: Defines a consistent transaction entry shell and line-item table experience derived from the recent Purchase Inward reference, including collapsible summary headers, shared compact footer behavior, fixed footer layout, scrollable content regions, standardized line-item tables, and shared transaction-entry typography.
 
 ### Modified Capabilities
 
@@ -24,4 +25,4 @@ Core sales and purchase transaction entry screens still feel inconsistent even w
 
 - Affected code is primarily in `client/src/Uniform/Components/**` sales and purchase transaction forms and their line-item table/grid components.
 - This change is UI-focused and should not require backend API, database, or business-rule changes.
-- Shared shell, header-summary, footer, and table primitives will likely be introduced to reduce duplication and keep future transaction screens aligned to the Purchase Inward pattern.
+- Shared shell, header-summary, footer, and table primitives will likely be introduced or expanded to reduce duplication and keep future transaction screens aligned to the Purchase Inward pattern.

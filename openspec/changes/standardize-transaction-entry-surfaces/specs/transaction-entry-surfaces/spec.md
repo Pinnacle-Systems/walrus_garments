@@ -77,6 +77,33 @@ The system SHALL render supported transaction-entry screens with a shared typogr
 - **THEN** that footer content follows the shared transaction-entry typography scale
 - **AND** footer notes and totals remain visually consistent across the supported transaction screens
 
+### Requirement: Standardized transaction screens use a compact shared footer surface
+The system SHALL render supported transaction-entry screens with a compact footer surface inside the standardized transaction shell. This footer surface MUST preserve the same footer responsibilities while reducing unnecessary vertical footprint, and the standardized sales transaction screens MUST route their common footer structure through a shared configurable implementation rather than separate near-duplicate local markup.
+
+#### Scenario: Opening a supported transaction screen with a footer
+- **WHEN** a user opens a supported transaction-entry screen such as Purchase Inward, Estimate / Quotation, Sale Order, Sales Invoice, Sales Delivery, Sales Return, or Purchase Return / Cancel
+- **THEN** the footer appears within the standardized pinned footer region
+- **AND** the footer uses a denser layout than the previous card-heavy composition
+- **AND** the surrounding transaction shell retains the same pinned-footer behavior
+
+#### Scenario: Opening a standardized sales transaction screen
+- **WHEN** a user opens a standardized sales transaction screen such as Estimate / Quotation, Sale Order, Sales Delivery, Sales Invoice, or Sales Return
+- **THEN** the common footer structure for notes, totals, and actions is rendered through the shared configurable sales-footer implementation
+- **AND** the consuming screen still provides its own values, handlers, and optional controls
+- **AND** the screen no longer depends on a one-off local footer layout for the common sales-footer sections
+
+#### Scenario: Using the footer in editable or read-only mode
+- **WHEN** a supported transaction-entry screen shows footer content in editable or read-only state
+- **THEN** the compact footer still exposes terms-related inputs where applicable, remarks where applicable, totals, and transaction-specific actions in the main footer area
+- **AND** save, edit, print, barcode, thermal-print, or other screen-specific actions remain available according to the consuming screen's existing behavior
+- **AND** inputs that are not editable remain visible in their appropriate disabled or read-only state
+
+#### Scenario: Footer content wraps on a narrower workspace
+- **WHEN** a supported transaction-entry screen is opened on a workspace where all footer sections cannot fit on one horizontal band
+- **THEN** the compact footer may wrap its sections responsively
+- **AND** wrapped sections retain compact spacing and usable control sizes
+- **AND** required totals and actions remain visible and operable without clipping
+
 ### Requirement: Transaction entry screens use a consistent line-item table surface
 The system SHALL render transaction line-item entry areas with a consistent table surface derived from the recent Purchase Inward reference pattern. This surface MUST provide a consistent section container, heading treatment, scroll region, table header styling, spacing, and row numbering across transaction screens, while allowing screen-specific columns.
 

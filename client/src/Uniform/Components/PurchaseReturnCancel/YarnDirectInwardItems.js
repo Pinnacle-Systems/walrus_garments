@@ -9,7 +9,7 @@ import TransactionLineItemsSection, {
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList, headerOpen
 
 }) => {
 
@@ -41,9 +41,11 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
     };
 
     useEffect(() => {
-        if (directInwardReturnItems?.length >= 12) return
+        const targetRows = headerOpen ? 9 : 15;
+
+        if (directInwardReturnItems?.length >= targetRows) return
         setDirectInwardReturnItems(prev => {
-            let newArray = Array?.from({ length: 12 - prev?.length }, () => {
+            let newArray = Array?.from({ length: targetRows - prev?.length }, () => {
                 return {
                     itemId: "",
                     colorId: "",
@@ -56,7 +58,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
             return [...prev, ...newArray]
         }
         )
-    }, [setDirectInwardReturnItems, directInwardReturnItems])
+    }, [setDirectInwardReturnItems, directInwardReturnItems, headerOpen])
 
     const addNewRow = () => {
         const newRow = {
@@ -77,78 +79,46 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
     return (
         <>
             <TransactionLineItemsSection
-                panelClassName="h-[390px]"
-                contentClassName="h-[350px]"
-                actions={
-                    <button className="font-bold text-slate-700 bord"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                setInwardItemSelection(true)
-
-                            }
-                        }}
-                        onClick={() => {
-                            if (!supplierId) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: ` Choose Supplier`,
-                                });
-                                return
-                            }
-                            if (!purchaseInwardId) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: `Select Purchase Inward No`,
-                                });
-                                return
-                            }
-
-
-                            setInwardItemSelection(true)
-
-                        }}
-                    >
-                        Fill Inward Items
-                    </button>
-                }
+                panelClassName="h-full min-h-0"
+                contentClassName="h-full min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
             >
+                    <div className="h-full min-h-0 overflow-x-auto overflow-y-scroll bg-gray-300">
                     <table className={transactionTableClassName}>
-                        <thead className={transactionTableHeadClassName} >
+                        <thead className={`${transactionTableHeadClassName} shadow-sm`} >
                             <tr>
                                 <th
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     S.No
                                 </th>
 
                                 <th
 
-                                    className={`w-60 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-60 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Item
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Size
                                 </th>
                                 <th
 
-                                    className={`w-36 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-36 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Color
                                 </th>
                                 <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     UOM
                                 </th>
                                 <th
 
-                                    className={`w-20 px-4 py-2 text-left font-medium text-[13px] `}
+                                    className="w-20 bg-gray-200 px-1 py-1 text-left font-medium text-[12px]"
                                 >
                                     Barcode
                                 </th>
@@ -157,7 +127,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                         <>
                                             <th
                                                 key={i}
-                                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
+                                                className="w-28 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                             >
                                                 {capitalizeFirstLetter(element?.[i])}
                                             </th>
@@ -168,34 +138,34 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
 
                                 <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Allowed Return Qty
                                 </th>
                                 <th
 
-                                    className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Stock Qty
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Price
                                 </th>
                                 <th
 
-                                    className={`w-16 px-4 py-2 text-center font-medium text-[13px] `}
+                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
 
                                 >
-                                    Return Qty
+                                    Return Qty <span className="text-red-500">*</span>
                                 </th>
 
 
                                 <th
 
-                                    className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Gross
                                 </th>
@@ -209,7 +179,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                             </tr>
                         </thead>
 
-                        <tbody className='w-full'>
+                        <tbody className='w-full bg-white'>
                             {(directInwardReturnItems || [])?.map((item, index) => <YarnDirectItem itemList={itemList} uomList={uomList}
                                 colorList={colorList} deleteRow={deleteRow}
                                 sizeList={sizeList}
@@ -219,15 +189,15 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData}
                             />)}
                             {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
-                                <tr className='w-12 border border-gray-300 text-[11px]  h-8 text-center p-0.5'>
+                                <tr className='w-12 border border-gray-300 bg-white text-[11px] h-8 text-center p-0.5'>
                                     {Array.from({ length: 12 }).map(i =>
-                                        <td className=" table-data "></td>
+                                        <td className="border border-gray-300 bg-white p-0 text-[11px]"></td>
                                     )}
 
                                 </tr>)
                             }
                         </tbody>
-                        <tfoot className="bg-gray-300 font-bold sticky bottom-0 z-10 border-t-2 border-gray-300">
+                        <tfoot className="sticky bottom-0 z-10 border-t-2 border-gray-300 bg-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
                                     colSpan={6 + (stockControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0) || 0) + 3}
@@ -235,15 +205,16 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 >
                                     Total:
                                 </td>
-                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                     {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
                                 </td>
-                                <td className="px-1 py-1 text-right text-[11px] border border-gray-300 bg-gray-300">
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                     {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(3)}
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 {contextMenu && (
                     <div
                         style={{
