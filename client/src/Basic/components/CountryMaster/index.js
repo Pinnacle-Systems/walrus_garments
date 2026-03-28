@@ -114,6 +114,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       let returnData = await callback(data).unwrap();
       setId(returnData.data.id);
       if (onSuccess) {
+        await Swal.fire({
+          title: "Saved Successfully",
+          icon: "success",
+        });
         onSuccess(returnData.data.id);
         return;
       }

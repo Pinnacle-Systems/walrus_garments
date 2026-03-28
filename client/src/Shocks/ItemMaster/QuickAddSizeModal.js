@@ -42,7 +42,10 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
 
       const response = await addSize(payload).unwrap();
       if (response.statusCode === 0) {
-        toast.success("Size created successfully");
+        Swal.fire({
+          title: "Size Created Successfully",
+          icon: "success",
+        });
         onCreated(response.data);
         onClose();
       } else {

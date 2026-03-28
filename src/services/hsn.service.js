@@ -14,6 +14,7 @@ async function get(req) {
                     // DirectItems: true,
                     // DirectReturnItems: true,
                     // LegacyStock: true,
+                    Item: true,
                     QuotationItems: true,
                     SaleOrderItems: true,
                     SalesInvoiceItems: true,

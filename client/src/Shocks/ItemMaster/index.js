@@ -279,7 +279,7 @@ export default function Form() {
   };
 
   const validateData = (data) => {
-    if (!data.name || !data?.code) {
+    if (!data.name || !data?.code || !data?.hsnId || !data?.mainCategory) {
       return false;
     }
 
@@ -363,15 +363,7 @@ export default function Form() {
       );
     }
 
-    if (foundItem) {
-      Swal.fire({
-        text: "The Style Item Name already exists.",
-        icon: "warning",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return false;
-    }
+
     if (!validateData(data)) {
       const hasStockAlertErrors = (barcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
         .filter(Boolean)
@@ -382,6 +374,40 @@ export default function Form() {
         timer: 1000,
       });
       return;
+    }
+
+    if (itemPriceList?.length <= 0) {
+      Swal.fire({
+        text: "Please Fill The Item Priceing Information ",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+
+    }
+
+
+    if (itemPriceList?.filter(i => i.sizeId == null && i.colorId == null)?.length > 1) {
+      Swal.fire({
+        text: "Please select only one size and color.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
+
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Item Name already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return;
@@ -840,7 +866,7 @@ export default function Form() {
                         )}
                         value={hsnId}
                         setValue={setHsnId}
-                        // required
+                        required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
                       />
@@ -871,7 +897,7 @@ export default function Form() {
 
                     <div className="col-span-2">
                       <DropdownInput
-                        name="Main Category"
+                        name="Item Category"
                         options={dropDownListObject(
                           id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active),
                           "name",
@@ -884,7 +910,7 @@ export default function Form() {
                         disabled={childRecord.current > 0}
                       />
                     </div>
-                    <div className="col-span-2">
+                    {/* <div className="col-span-2">
                       <DropdownInput
                         name="Sub Category"
                         options={dropDownListObject(
@@ -898,7 +924,7 @@ export default function Form() {
                         readOnly={readOnly || !mainCategory}
                         disabled={childRecord.current > 0}
                       />
-                    </div>
+                    </div> */}
 
 
 

@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
   const params = getCommonParams();
   const [name, setName] = useState(colorName || "");
+  const [code, setCode] = useState("");
   const [active, setActive] = useState(true);
 
 
@@ -22,31 +23,55 @@ const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
 
     let foundItem = allData?.data?.some(item => item.name === name);
 
+    let foundCode = allData?.data?.some(item => item.code === code);
+
+
+    console.log(foundItem, foundCode, "foundItem");
+
+
+    if (!name) {
+      Swal.fire({
+        text: "Please Fill Color Name",
+        icon: "warning",
+      }); return;
+    }
+
+    if (!code) {
+      Swal.fire({
+        text: "Please Fill Color Code",
+        icon: "warning",
+      }); return;
+    }
+
 
     if (foundItem) {
-      Swal.fire({
+      await Swal.fire({
         text: "The Color Name already exists.",
         icon: "warning",
       });
       return false;
     }
-
-    if (!name) {
-      toast.info("Please fill color name");
-      return;
+    if (foundCode) {
+      await Swal.fire({
+        text: "The Color Code already exists.",
+        icon: "warning",
+      });
+      return false;
     }
-
     try {
       const payload = {
         name,
         active,
         companyId: params.companyId,
+        code
       };
 
       const response = await addColor(payload).unwrap();
       if (response.statusCode === 0) {
-        toast.success("Color created successfully");
-        onCreated(response.data);
+        Swal.fire({
+          title: "Color Created Successfully",
+          icon: "success",
+        }); onCreated(response.data);
         onClose();
       } else {
         toast.error(response.message || "Failed to create color");
@@ -72,6 +97,14 @@ const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
             name="Color Name"
             value={name}
             setValue={setName}
+            required={true}
+          />
+        </div>
+        <div className="space-y-4">
+          <TextInput
+            name="Color Code"
+            value={code}
+            setValue={setCode}
             required={true}
           />
         </div>

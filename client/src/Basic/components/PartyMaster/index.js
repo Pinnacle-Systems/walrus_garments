@@ -27,6 +27,7 @@ import {
   childRecordCount,
 } from "../../../Inputs";
 import CityMaster from "../CityMaster";
+import BranchTypeMaster from "../../../Uniform/Components/BranchTypeMaster";
 import { useGetProcessMasterQuery } from "../../../redux/uniformService/ProcessMasterService";
 import { useGetCurrencyMasterQuery } from "../../../redux/services/CurrencyMasterServices";
 import { toast } from "react-toastify";
@@ -1008,7 +1009,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                     </div>
                     <div className="col-span-2">
-                      <DropdownInput
+                      <DropdownInputNew
                         name="Branch Type"
                         options={dropDownListObject(
                           id
@@ -1017,17 +1018,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
                               (item) => item.active
                             ),
                           "name",
-                          "id" || []
+                          "id"
                         )}
                         value={branchTypeId}
-                        openOnFocus={true}
                         setValue={(value) => {
                           setBranchTypeId(value)
-
                         }}
                         required={true}
                         readOnly={readOnly}
                         disabled={childRecord.current > 0 || !isBranch || !parentId}
+                        addNewLabel="+ Add New Branch Type"
+                        childComponent={BranchTypeMaster}
+                        addNewModalWidth="w-[40%] h-[45%]"
                       />
                     </div>
                     {!isBranch && (
@@ -1826,7 +1828,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
                       </div>
                       <div className="col-span-2">
-                        <DropdownInput
+                        <DropdownInputNew
                           name="Branch Type"
                           options={dropDownListObject(
                             id
@@ -1835,17 +1837,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                 (item) => item.active
                               ),
                             "name",
-                            "id" || []
+                            "id"
                           )}
                           value={branchTypeId}
-                          openOnFocus={true}
                           setValue={(value) => {
                             setBranchTypeId(value)
-
                           }}
                           required={true}
                           readOnly={readOnly}
                           disabled={childRecord.current > 0 || !isBranch || !parentId}
+                          addNewLabel="+ Add New Branch Type"
+                          childComponent={BranchTypeMaster}
+                          addNewModalWidth="w-[40%] h-[45%]"
                         />
                       </div>
                       {!isBranch && (

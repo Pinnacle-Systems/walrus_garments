@@ -15,6 +15,7 @@ async function get(req) {
         include: {
             _count: {
                 select: {
+                    ItemPriceList: true,
                     DirectItems: true,
                     DirectReturnItems: true,
                     LegacyStock: true,

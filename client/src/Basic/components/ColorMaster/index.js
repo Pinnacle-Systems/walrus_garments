@@ -117,12 +117,11 @@ export default function Form() {
 
   const saveData = (nextProcess) => {
     const upperName = name.toUpperCase();
-    const upperCode = code.toUpperCase();
 
     const finalData = {
       ...data,
       name: upperName,
-      code: upperCode
+      code
     };
 
     if (!validateData(finalData)) {
@@ -141,12 +140,27 @@ export default function Form() {
       foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
 
     }
+
+    let foundItemColor;
+    if (id) {
+      foundItemColor = allData?.data?.filter(i => i.id != id)?.some(item => item.code == code);
+    } else {
+      foundItemColor = allData?.data?.some(item => item.code == code);
+
+    }
     if (foundItem) {
       Swal.fire({
         text: "The Color Name already exists.",
         icon: "warning",
       });
       nameRef.current?.focus();
+      return false;
+    }
+    if (foundItemColor) {
+      Swal.fire({
+        text: "The Color Code  already exists.",
+        icon: "warning",
+      });
       return false;
     }
     if (!window.confirm("Are you sure save the details ...?")) {
