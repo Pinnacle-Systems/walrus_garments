@@ -127,21 +127,20 @@ const SalesDelivery = () => {
     return (
         <>
             {showManufacturer ? (
-                <SalesReturnForm
-                    onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
-                    docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
-                    transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
-                    customerId={customerId} setCustomerId={setCustomerId} payTermId={payTermId} setPayTermId={setPayTermId}
-                    locationId={locationId} setLocationId={setLocationId} storeId={storeId} setStoreId={setStoreId}
-                    poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
-                    inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
-                    deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
-                    partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                    supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId}
-
-
-
-                />
+                <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
+                    <SalesReturnForm
+                        onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
+                        docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
+                        transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
+                        customerId={customerId} setCustomerId={setCustomerId} payTermId={payTermId} setPayTermId={setPayTermId}
+                        locationId={locationId} setLocationId={setLocationId} storeId={storeId} setStoreId={setStoreId}
+                        poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
+                        inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
+                        deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
+                        partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
+                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId}
+                    />
+                </div>
 
             ) : (
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">

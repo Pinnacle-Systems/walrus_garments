@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
-import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
-import { FiChevronDown, FiChevronUp, FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
+import { FiChevronUp, FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { useAddDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import moment from "moment";
@@ -25,6 +24,8 @@ import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices"
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
+import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 
 
 
@@ -381,6 +382,140 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       ? String(singleData.data.minimumAdvancePayment)
       : minimumAdvancePayment;
 
+  const summaryItems = [
+    { label: "No", value: docId },
+    { label: "Date", value: date },
+    {
+      label: "Customer",
+      value:
+        supplierDetails?.data?.name ||
+        findFromList(customerId, supplierList?.data, "name") ||
+        findFromList(customerId, supplierList?.data, "aliasName"),
+    },
+    {
+      label: "Phone",
+      value:
+        supplierDetails?.data?.contactPersonNumber ||
+        findFromList(customerId, supplierList?.data, "contactPersonNumber"),
+    },
+    {
+      label: "Address",
+      value:
+        supplierDetails?.data?.address ||
+        findFromList(customerId, supplierList?.data, "address"),
+    },
+  ];
+
+  const footerContent = (
+    <CommonFormFooter
+      remarks={remarks}
+      setRemarks={setRemarks}
+      terms={terms}
+      setTerms={setTerms}
+      readOnly={readOnly}
+      showTermSelect
+      termValue={term}
+      onTermChange={setTerm}
+      termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
+        value: blend.id,
+        label: blend?.name,
+      }))}
+      totalsRows={[
+        {
+          key: "totalQty",
+          label: "Total Qty",
+          value: parseFloat(getTotalQty()).toFixed(3),
+        },
+        {
+          key: "beforeTax",
+          label: "Before Tax",
+          value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+        },
+        {
+          key: "taxAmount",
+          label: "Tax Amount",
+          value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+        },
+        {
+          key: "netAmount",
+          label: "Net Amount",
+          value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          emphasized: true,
+        },
+      ]}
+      extraTotalsContent={
+        <div className="flex items-center justify-between gap-2 py-1 text-[12px]">
+          <span className="text-slate-600">Min. Advance</span>
+          <input
+            type="number"
+            value={displayedMinimumAdvancePayment}
+            onChange={(e) => {
+              setMinimumAdvancePayment(e.target.value);
+              setIsMinimumAdvanceManuallyEdited(true);
+            }}
+            readOnly={readOnly}
+            className={`w-28 rounded border border-slate-300 px-2 py-1 text-right text-[12px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
+          />
+        </div>
+      }
+      leftActions={
+        <>
+          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2" />
+            Save & New
+          </button>
+          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <HiOutlineRefresh className="w-4 h-4 mr-2" />
+            Save & Close
+          </button>
+        </>
+      }
+      rightActions={
+        <>
+          <button
+            className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+            onClick={() => {
+              if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
+                setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
+                setIsMinimumAdvanceManuallyEdited(true);
+              }
+              setReadOnly(false);
+            }}
+          >
+            <FiEdit2 className="w-4 h-4 mr-2" />
+            Edit
+          </button>
+          <button
+            className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+            onClick={() => {
+              if (!quoteItems?.filter(i => i.itemId).length) {
+                Swal.fire({ icon: 'warning', title: 'Please add some items first' });
+                return;
+              }
+              setPrintOpen(true);
+            }}
+          >
+            <FiPrinter className="w-4 h-4 mr-2" />
+            Print
+          </button>
+          <button
+            className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm"
+            onClick={() => {
+              if (!quoteItems?.filter(i => i.itemId).length) {
+                Swal.fire({ icon: 'warning', title: 'Please add some items first' });
+                return;
+              }
+              setThermalPrintOpen(true);
+            }}
+          >
+            <FiPrinter className="w-4 h-4 mr-2" />
+            Thermal Print
+          </button>
+        </>
+      }
+    />
+  );
+
 
   console.log(netAmount, "netAmount", taxAmount, 'taxAmount')
 
@@ -457,75 +592,23 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         </PDFViewer>
       </Modal>
 
-      <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
-        {/* Title bar */}
-        <div className="w-full shrink-0 rounded-md bg-[#f1f1f0] px-2 py-1 shadow-md">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-800">Estimate / Quotation</h1>
-            <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-              <FaFileAlt className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-          {/* Collapsible header */}
-          <div className="shrink-0 rounded-md border border-slate-200 bg-white shadow-sm">
-            <button
-              type="button"
-              onClick={() => setIsHeaderOpen((o) => !o)}
-              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-slate-50"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="text-sm font-medium text-slate-700">Header Details</span>
-                {!isHeaderOpen && (
-                  <div className="hidden min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 md:flex">
-                    <span className="flex items-center gap-1">
-                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">No</span>
-                      <span className="font-medium text-slate-700">{docId || "-"}</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Date</span>
-                      <span className="font-medium text-slate-700">{date || "-"}</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="uppercase tracking-wide text-[10px] font-semibold text-slate-400">Customer</span>
-                      <span className="font-medium text-slate-700">
-                        {findFromList(customerId, supplierList?.data, "aliasName") ||
-                          findFromList(customerId, supplierList?.data, "name") || "-"}
-                      </span>
-                    </span>
-                  </div>
-                )}
-              </div>
-              <FiChevronDown
-                className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isHeaderOpen ? "rotate-180" : "rotate-0"}`}
-              />
-            </button>
-
-            <div
-              className={`transition-all duration-300 ease-in-out ${isHeaderOpen
-                ? "max-h-[400px] opacity-100 overflow-visible"
-                : "max-h-0 opacity-0 overflow-hidden"
-                }`}
-            >
-              <div className="px-2 pb-2 overflow-visible">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
-
-                  {/* Basic Details */}
-                  <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                    <h2 className="font-medium text-slate-700 mb-2">Basic Details</h2>
-                    <div className="grid grid-cols-2 gap-1">
+      <TransactionEntryShell
+        title="Estimate / Quotation"
+        onClose={onClose}
+        headerOpen={isHeaderOpen}
+        setHeaderOpen={setIsHeaderOpen}
+        summaryItems={summaryItems}
+        openStateClassName="max-h-[400px] opacity-100 overflow-visible"
+        headerBodyClassName="px-2 pb-2 overflow-visible"
+        footer={footerContent}
+        headerContent={(
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
+                  <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
                       <ReusableInput label="Quotation No" readOnly value={docId} />
                       <ReusableInput label="Quotation Date" value={date} type="date" required readOnly disabled />
-                    </div>
-                  </div>
+                  </TransactionHeaderSection>
 
-                  {/* Customer Details */}
-                  <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-3 overflow-visible">
-                    <h2 className="font-medium text-slate-700 mb-2">Customer Details</h2>
-                    <div className="grid grid-cols-7 gap-1 overflow-visible">
+                  <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
                       <div className="col-span-3 overflow-visible">
 
                         <ReusableSearchableInput
@@ -540,24 +623,31 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
                           disabled={id}
                         />
                       </div>
-                      <TextInput name="Phone Number" value={findFromList(customerId, supplierList?.data, "contactPersonNumber")} disabled required />
+                      <TextInput
+                        name="Phone Number"
+                        value={
+                          supplierDetails?.data?.contactPersonNumber ||
+                          findFromList(customerId, supplierList?.data, "contactPersonNumber")
+                        }
+                        disabled
+                        required
+                      />
                       <div className="col-span-3">
                         <TextAreaNew
                           name="Address"
-                          placeholder="Addres"
-                          value={findFromList(customerId, supplierList?.data, "address")}
+                          placeholder="Address"
+                          value={
+                            supplierDetails?.data?.address ||
+                            findFromList(customerId, supplierList?.data, "address")
+                          }
                           disabled
                         />
                       </div>
-                    </div>
-                  </div>
+                  </TransactionHeaderSection>
 
-                </div>
-              </div>
-            </div>
           </div>
-
-          {/* Items grid */}
+        )}
+      >
           <div className="min-h-0 flex-1 overflow-hidden">
             <QuotationItems
               quoteItems={quoteItems}
@@ -580,138 +670,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               priceTemplateList={priceTemplateList}
             />
           </div>
-
-          {/* Summary + footer */}
-          <div className="shrink-0 rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
-            <div className="grid grid-cols-4 gap-3">
-
-
-
-              {/* Div 1 – Terms & Conditions */}
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-1">
-                <h2 className="font-bold text-slate-700 text-sm">Terms & Conditions</h2>
-                <select
-                  value={term}
-                  onChange={e => setTerm(e.target.value)}
-                  disabled={readOnly}
-                  className="w-full rounded border-2 border-gray-200 py-1 text-[13px]"
-                >
-                  <option value=""></option>
-                  {(id ? termsData?.data : termsData?.data?.filter(item => item?.active))?.map((blend) =>
-                    <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                  )}
-                </select>
-                <textarea
-                  disabled={readOnly}
-                  className="w-full flex-1 min-h-[60px] px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                  value={terms}
-                  onChange={e => setTerms(e.target.value)}
-                  placeholder="Select or type Terms & Conditions..."
-                />
-              </div>
-
-              {/* Div 2 – Remarks */}
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-1">
-                <h2 className="font-bold text-slate-700 text-sm">Remarks</h2>
-                <textarea
-                  disabled={readOnly}
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  className="w-full flex-1 min-h-[80px] px-2.5 py-2 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500"
-                  placeholder="Additional notes..."
-                />
-              </div>
-
-              {/* Div 3 – Bill Details */}
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                <h2 className="font-bold text-slate-700 text-sm mb-1">Bill Details</h2>
-                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
-                  <span className="text-slate-600">Total Qty</span>
-                  <span className="font-medium">{parseFloat(getTotalQty()).toFixed(3)}</span>
-                </div>
-                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
-                  <span className="text-slate-600">Before Tax</span>
-                  <span className="font-medium">Rs.{parseFloat(subtotal || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
-                  <span className="text-slate-600">Tax Amount</span>
-                  <span className="font-medium">Rs.{parseFloat(taxAmount || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-1 text-sm border-b border-slate-100">
-                  <span className="text-slate-600 font-semibold">Net Amount</span>
-                  <span className="font-semibold text-indigo-700">Rs.{parseFloat(netAmount || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2 py-1 text-sm">
-                  <span className="text-slate-600">Min. Advance</span>
-                  <input
-                    type="number"
-                    value={displayedMinimumAdvancePayment}
-                    onChange={(e) => {
-                      setMinimumAdvancePayment(e.target.value);
-                      setIsMinimumAdvanceManuallyEdited(true);
-                    }}
-                    readOnly={readOnly}
-                    className={`w-28 rounded border border-slate-300 px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200 focus:border-indigo-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
-                  />
-                </div>
-              </div>
-
-              {/* Div 4 – Actions */}
-              <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm flex flex-col gap-2">
-                <h2 className="font-bold text-slate-700 text-sm">Actions</h2>
-                <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center text-sm">
-                  <FiSave className="w-4 h-4 mr-2" />
-                  Save & New
-                </button>
-                <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center text-sm">
-                  <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                  Save & Close
-                </button>
-                <button
-                  className="bg-yellow-600 text-white px-3 py-1.5 rounded-md hover:bg-yellow-700 flex items-center justify-center text-sm"
-                  onClick={() => {
-                    if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
-                      setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
-                      setIsMinimumAdvanceManuallyEdited(true);
-                    }
-                    setReadOnly(false);
-                  }}
-                >
-                  <FiEdit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>
-                <button
-                  className="bg-slate-600 text-white px-3 py-1.5 rounded-md hover:bg-slate-700 flex items-center justify-center text-sm"
-                  onClick={() => {
-                    if (!quoteItems?.filter(i => i.itemId).length) {
-                      Swal.fire({ icon: 'warning', title: 'Please add some items first' });
-                      return;
-                    }
-                    setPrintOpen(true);
-                  }}
-                >
-                  <FiPrinter className="w-4 h-4 mr-2" />
-                  Print
-                </button>
-                <button
-                  className="bg-orange-600 text-white px-3 py-1.5 rounded-md hover:bg-orange-700 flex items-center justify-center text-sm"
-                  onClick={() => {
-                    if (!quoteItems?.filter(i => i.itemId).length) {
-                      Swal.fire({ icon: 'warning', title: 'Please add some items first' });
-                      return;
-                    }
-                    setThermalPrintOpen(true);
-                  }}
-                >
-                  <FiPrinter className="w-4 h-4 mr-2" />
-                  Thermal Print
-                </button>
-              </div>
-
-            </div>
-          </div>{/* end shrink-0 summary+footer */}
-        </div>{/* end flex-1 content */}
-      </div>{/* end h-full outer */}
+      </TransactionEntryShell>
 
 
     </>

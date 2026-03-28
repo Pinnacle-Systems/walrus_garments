@@ -10,6 +10,10 @@ import { useGetdesignQuery } from '../../../redux/uniformService/DesignMasterSer
 import { useGetgsmQuery } from '../../../redux/uniformService/GsmMasterServices';
 import { useGetDiaQuery } from '../../../redux/uniformService/DiaMasterServices';
 import { useGetLoopLengthQuery } from '../../../redux/uniformService/LoopLengthMasterServices';
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 
 const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params, storeId }) => {
@@ -142,9 +146,9 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
 
     return (
         <>
-            <div className={`relative w-full overflow-y-auto py-1`}>
-                <table className="table-data text-xs table-auto border border-gray-500  w-full">
-                    <thead className='bg-blue-200 border border-gray-500 top-0'>
+            <TransactionLineItemsSection title="List Of Items">
+                <table className={transactionTableClassName}>
+                    <thead className={transactionTableHeadClassName}>
                         <tr className='h-8'>
                             <th className='text-center w-8 table-data '>
                                 S.no
@@ -261,7 +265,7 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                         }
                     </tbody>
                 </table>
-            </div>
+            </TransactionLineItemsSection>
         </>
     )
 }

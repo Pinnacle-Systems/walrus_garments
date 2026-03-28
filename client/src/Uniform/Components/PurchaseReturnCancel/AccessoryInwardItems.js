@@ -5,6 +5,10 @@ import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/Access
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params, storeId }) => {
 
@@ -85,9 +89,9 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
 
     return (
         <>
-                  <div className={` relative w-full overflow-y-auto py-1`}>
-                    <table className="w-full border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800">
+                  <TransactionLineItemsSection title="List Of Items">
+                    <table className={transactionTableClassName}>
+                                    <thead className={transactionTableHeadClassName}>
                                         <tr>
                                             <th
                                                 className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -229,7 +233,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                 }       
                                         </tbody>   
                 </table>
-            </div>
+            </TransactionLineItemsSection>
         </>
     )
 }

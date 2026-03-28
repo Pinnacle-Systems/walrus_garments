@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import YarnDirectItem from './YarnDirectItem';
 import { capitalizeFirstLetter } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
@@ -72,9 +76,10 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
 
     return (
         <>
-            <div className=" bg-white rounded-md shadow-sm h-[390px]">
-                <div className="flex justify-between items-center mb-2 ">
-                    <h2 className="font-bold text-slate-700">List Of Items</h2>
+            <TransactionLineItemsSection
+                panelClassName="h-[390px]"
+                contentClassName="h-[350px]"
+                actions={
                     <button className="font-bold text-slate-700 bord"
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -106,11 +111,10 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                     >
                         Fill Inward Items
                     </button>
-                </div>
-
-                <div className={` w-full h-[350px]  overflow-auto overflow-y-auto  `}>
-                    <table className="w-full border-collapse table-fixed ">
-                        <thead className="bg-gray-200 text-gray-800 top-0 sticky" >
+                }
+            >
+                    <table className={transactionTableClassName}>
+                        <thead className={transactionTableHeadClassName} >
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -240,7 +244,6 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                             </tr>
                         </tfoot>
                     </table>
-                </div>
                 {contextMenu && (
                     <div
                         style={{
@@ -279,7 +282,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                         </div>
                     </div>
                 )}
-            </div>
+            </TransactionLineItemsSection>
         </>
     )
 }
