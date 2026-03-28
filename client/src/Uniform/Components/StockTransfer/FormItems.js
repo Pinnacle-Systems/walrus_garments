@@ -11,6 +11,10 @@ import FromOrderDetails from "./FromOrderDetails";
 import Swal from "sweetalert2";
 import OrderToGeneral from "./OrderToGeneral";
 import TransferItems from "./TranferItems";
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferType, singleData, id,
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
@@ -147,23 +151,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 />
             </Modal>
 
-
-
-
-            <div className="border h-full border-slate-200 p-2 bg-white rounded-md shadow-sm h-full">
-                <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-bold text-slate-700">Transfer Items</h2>
-
-
-                </div>
-
-
-                <div className="flex flex-row gap-40 h-[380px] overflow-y-auto">
-                    <div className="w-full flex flex-col h-full">
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="relative">
-                                <table className="w-full border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
+            <TransactionLineItemsSection
+                title="Transfer Items"
+                panelClassName="h-full"
+                titleClassName="font-bold"
+                contentClassName="h-[380px]"
+            >
+                                <table className={transactionTableClassName}>
+                                    <thead className={transactionTableHeadClassName}>
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">BarCode</th>
@@ -190,7 +185,6 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                         />)}
                                     </tbody>
                                 </table>
-                            </div>
 
                             {contextMenuFromOrder && (
                                 <div
@@ -219,10 +213,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </TransactionLineItemsSection>
 
 
 
@@ -233,7 +224,6 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 }
 
 export default FormItems;
-
 
 
 

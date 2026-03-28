@@ -7,6 +7,10 @@ import { HiPlus } from 'react-icons/hi';
 import { useEffect } from 'react';
 import AccessoryPoItem from './AccessoryPoItem';
 import Swal from 'sweetalert2';
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInwardItemSelection, purchaseInwardId, params, id, supplierId,
     contextMenu, handleCloseContextMenu, handleRightClick, colorList, uomList, accessoryList, sizeList, poInwardOrDirectInward
@@ -138,23 +142,10 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                     </tbody>
                 </table>
             </div> */}
-            <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm max-h-[250px] overflow-auto">
-                <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-medium text-slate-700">List Of Items</h2>
-                    {/* <div className="flex gap-2 items-center">
-
-                        <button
-                            onClick={() => {
-                                addNewRow()
-                            }}
-                            className="hover:bg-green-600 text-green-600 hover:text-white border border-green-600 px-2 py-1 rounded-md flex items-center text-xs"
-                        >
-                            <HiPlus className="w-3 h-3 mr-1" />
-                            Add Item
-                        </button>
-                    </div> */}
-                    <div className="flex gap-2 items-center">
-
+            <TransactionLineItemsSection
+                title="List Of Items"
+                panelClassName="max-h-[250px]"
+                actions={
                         <button className="font-bold text-slate-700 bord"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -180,11 +171,10 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                         >
                             Fill Accessory Po Items
                         </button>
-                    </div>
-                </div>
-                <div className={` relative w-full overflow-y-auto py-1`}>
-                    <table className="w-full border-collapse table-fixed">
-                        <thead className="bg-gray-200 text-gray-800">
+                }
+            >
+                    <table className={transactionTableClassName}>
+                        <thead className={transactionTableHeadClassName}>
                             <tr>
                                 <th
                                     className={`w-12 px-4 py-2 text-center font-medium text-[13px] `}
@@ -321,7 +311,6 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                             }
                         </tbody>
                     </table>
-                </div>
                 {contextMenu && (
                     <div
                         style={{
@@ -360,7 +349,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, setInward
                         </div>
                     </div>
                 )}
-            </div>
+            </TransactionLineItemsSection>
         </>
     )
 }

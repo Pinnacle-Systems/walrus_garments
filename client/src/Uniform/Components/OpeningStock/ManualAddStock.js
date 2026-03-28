@@ -20,6 +20,10 @@ import QuickAddItemModal from "./QuickAddItemModal";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
+import TransactionLineItemsSection, {
+  transactionTableClassName,
+  transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const ManualAddStock = ({ params }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
@@ -226,10 +230,12 @@ const ManualAddStock = ({ params }) => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto h-[450px]">
-        <table className="min-w-full table-fixed">
-          <thead className="bg-gray-200 sticky top-0 z-10">
+      <TransactionLineItemsSection
+        title="List Of Items"
+        contentClassName="h-[450px]"
+      >
+        <table className={transactionTableClassName}>
+          <thead className={transactionTableHeadClassName}>
             <tr>
               <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
               <th className="border border-gray-400 text-sm py-1 w-64 text-center px-2">Item Name</th>
@@ -319,7 +325,7 @@ const ManualAddStock = ({ params }) => {
             })}
           </tbody>
         </table>
-      </div>
+      </TransactionLineItemsSection>
 
       {/* --- Quick Add Modals --- */}
 

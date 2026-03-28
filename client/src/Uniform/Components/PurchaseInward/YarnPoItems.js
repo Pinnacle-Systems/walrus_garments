@@ -12,6 +12,10 @@ import { useGetStockReportControlQuery } from "../../../redux/uniformService/Sto
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import TransactionLineItemsSection, {
+    transactionTableClassName,
+    transactionTableHeadClassName,
+} from "../ReusableComponents/TransactionLineItemsSection";
 
 const YarnPoItems = ({
     id,
@@ -269,43 +273,13 @@ const YarnPoItems = ({
     return (
         <>
 
-
-
-            <div className="flex h-full min-h-0 flex-col rounded-md border border-slate-200 bg-white p-2 shadow-sm">
-                <div className="mb-1 flex shrink-0 items-center justify-between">
-                    <h2 className="font-bold text-slate-700">List Of Inward Items</h2>
-                    {/* <button className="font-bold text-slate-700 "
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                setInwardItemSelection(true)
-
-                            }
-                        }}
-                        disabled={true}
-                        onClick={() => {
-                            if (!supplierId) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: ` Choose Supplier`,
-                                    showConfirmButton: false,
-                                    timer: 2000
-                                });
-                            }
-                            else {
-
-                                setInwardItemSelection(true)
-                            }
-                        }}
-                    >
-                        Fill Inward Items
-                    </button> */}
-
-                </div>
-                <div className="relative min-h-0 flex-1 overflow-hidden rounded-md border border-slate-200">
+            <TransactionLineItemsSection
+                panelClassName="h-full"
+                contentClassName="overflow-hidden rounded-md border border-slate-200 !py-0"
+            >
                     <div className="h-full overflow-x-auto overflow-y-auto">
-                        <table className="w-full border-collapse table-fixed">
-                            <thead className="sticky top-0 z-20 bg-gray-200 text-gray-800 shadow-sm">
+                        <table className={transactionTableClassName}>
+                            <thead className={`${transactionTableHeadClassName} shadow-sm`}>
                                 <tr className="py-2">
                                     <th
                                         className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
@@ -592,7 +566,6 @@ const YarnPoItems = ({
                             </tfoot>
                         </table>
                     </div>
-                </div>
                 {contextMenu && (
                     <div
                         style={{
@@ -631,7 +604,7 @@ const YarnPoItems = ({
                         </div>
                     </div>
                 )}
-            </div>
+            </TransactionLineItemsSection>
         </>
     );
 };
