@@ -273,14 +273,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const summaryItems = [
         { label: "No", value: docId },
         { label: "Date", value: date },
-        { label: "Type", value: poInwardOrDirectInward },
         { label: "Branch", value: branchList?.data?.find(item => String(item.id) === String(locationId))?.branchName },
         { label: "Location", value: storeOptions?.find(item => String(item.id) === String(storeId))?.storeName },
         {
             label: "Supplier",
-            value:
-                supplierList?.data?.find(item => String(item.id) === String(supplierId))?.aliasName ||
-                supplierList?.data?.find(item => String(item.id) === String(supplierId))?.name
+            value: supplierList?.data?.find(item => String(item.id) === String(supplierId))?.name
         },
         { label: "Inward", value: purchaseInwardData?.data?.find(i => String(i.id) === String(purchaseInwardId))?.docId },
     ];
@@ -401,19 +398,20 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 headerBodyClassName="px-2 pb-2 overflow-visible"
                 footer={footerContent}
                 headerContent={(
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.2fr_1.2fr_0.75fr_1fr_1.1fr]">
 
 
-                        <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2">
+                        <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
                                 <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
                                 />
                                 <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
                         </TransactionHeaderSection>
-                        <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-3 gap-2">
-                                <DropdownInput name="Return Type"
+                        <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-2 gap-2">
+                                {/* <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
+                                */}
                                 <DropdownInput name="Branch"
                                     options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
                                     value={locationId}
