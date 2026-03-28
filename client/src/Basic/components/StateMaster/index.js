@@ -348,7 +348,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 disabled={childRecord.current > 0}
               />
             </div>
-            <div>
+            <div className="mt-5">
               <ToggleButton
                 name="Status"
                 value={active}

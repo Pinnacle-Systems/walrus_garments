@@ -2674,7 +2674,7 @@ export const DropdownInputNew = forwardRef(({
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const listRef = useRef(null);
-  const openedByFocusRef = useRef(false);
+  const isMouseDownRef = useRef(false);
 
   const isDisabled = readOnly || disabled;
 
@@ -2854,19 +2854,18 @@ export const DropdownInputNew = forwardRef(({
         type="button"
         disabled={isDisabled}
         tabIndex={tabIndex ?? undefined}
+        onMouseDown={() => { isMouseDownRef.current = true; }}
         onFocus={() => {
-          if (!isDisabled) {
-            openedByFocusRef.current = true;
+          if (!isDisabled && !isMouseDownRef.current) {
+            // Keyboard / Tab navigation — open immediately
             updateDropdownPos();
             setIsOpen(true);
           }
+          isMouseDownRef.current = false;
         }}
         onClick={() => {
           if (!isDisabled) {
-            if (openedByFocusRef.current) {
-              openedByFocusRef.current = false;
-              return;
-            }
+            isMouseDownRef.current = false;
             updateDropdownPos();
             setIsOpen((o) => !o);
           }

@@ -364,7 +364,7 @@ export default function Form() {
   console.log(data, "dataaaaaaaaaaa")
 
   const validateData = (data) => {
-    if (data.name && data.gender && data.dob && data.employeeCategory && data.department && data.joiningDate && data.fatherName && data.panNo && data.mobile && data.localAddress && data.permCity && data.permPincode && data.aadharNo) {
+    if (data.name && data.gender && data.dob && data.employeeCategory && data.department && data.joiningDate && data.mobile && data.localAddress && data.permCity && data.permPincode && data.aadharNo) {
       return true;
     }
     return false;
@@ -964,6 +964,7 @@ export default function Form() {
                           value={aadharNo}
                           setValue={setAadharNo}
                           type={"number"}
+                          required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                         />
