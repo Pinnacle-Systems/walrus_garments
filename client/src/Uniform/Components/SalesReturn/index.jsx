@@ -15,6 +15,7 @@ import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices'
 import SalesReturnReport from './SalesReturnReport';
 import SalesReturnForm from './SalesReturnForm';
 import { useDeleteSalesReturnMutation } from '../../../redux/uniformService/salesReturnServices';
+import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 
 
 
@@ -66,6 +67,8 @@ const SalesDelivery = () => {
         useGetUomQuery({ params });
     const { data: hsnList } =
         useGetHsnMasterQuery({ params });
+    const { data: termsData } =
+        useGetTermsandCondtionsQuery({ params: { ...params } });
 
 
     const handleView = (id) => {
@@ -139,6 +142,7 @@ const SalesDelivery = () => {
                         deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId}
+                        termsData={termsData}
                     />
                 </div>
 

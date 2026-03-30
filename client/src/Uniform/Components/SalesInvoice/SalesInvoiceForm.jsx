@@ -47,6 +47,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const [specialInstructions, setSpecialInstructions] = useState('')
   const [remarks, setRemarks] = useState("")
   const [terms, setTerms] = useState("")
+  const [term, setTerm] = useState("")
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -118,6 +119,12 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
       inwardTyperef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    if (!id) {
+      setTerm("");
+    }
+  }, [id]);
 
 
   const syncFormWithDb = useCallback((data) => {
@@ -391,6 +398,10 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     { label: "Address", value: customerAddress },
   ];
 
+  const handleTermTemplateChange = (value) => {
+    setTerm(value);
+  };
+
   const footerContent = (
     <CommonFormFooter
       remarks={remarks}
@@ -399,27 +410,38 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
       setTerms={setTerms}
       readOnly={readOnly}
       showTermSelect
-      termValue=""
-      onTermChange={() => {}}
+      termValue={term}
+      onTermChange={handleTermTemplateChange}
       termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
         value: blend.id,
         label: blend?.name,
+        templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
       totalsRows={[
         {
           key: "totalQty",
           label: "Total Qty",
           value: parseFloat(getTotalQty()).toFixed(3),
+          summaryColumn: "left",
         },
         {
           key: "beforeTaxAmount",
-          label: "Before Tax Amount",
+          label: "Gross Amount",
           value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+          summaryColumn: "right",
+        },
+        {
+          key: "taxAmount",
+          label: "Tax Amount",
+          value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
         },
         {
           key: "netAmount",
           label: "Net Amount",
           value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
+          emphasized: true,
         },
         ...(shouldShowPaymentReceived
           ? [
@@ -427,6 +449,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                 key: "paymentReceived",
                 label: "Payment Received",
                 value: `Rs.${parseFloat(paymentReceivedAmount || 0).toFixed(2)}`,
+                summaryColumn: "left",
               },
             ]
           : []),

@@ -31,7 +31,7 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 
 const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems, 
-  yarnList, colorList, uomList, hsnList, convertSalesInvoiceId, invalidateTagsDispatch , termsData, term, setTerm ,dispatch
+  yarnList, colorList, uomList, hsnList, convertSalesInvoiceId, invalidateTagsDispatch , termsData, dispatch
 
 
 
@@ -51,6 +51,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
+  const [term, setTerm] = useState("")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -103,6 +104,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       inwardTyperef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    if (!id) {
+      setTerm("");
+    }
+  }, [id]);
 
 
   const syncFormWithDb = useCallback((data) => {
@@ -394,6 +401,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     },
   ];
 
+  const handleTermTemplateChange = (value) => {
+    setTerm(value);
+  };
+
   const footerContent = (
     <CommonFormFooter
       remarks={remarks}
@@ -403,26 +414,37 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       readOnly={readOnly}
       showTermSelect
       termValue={term}
-      onTermChange={setTerm}
+      onTermChange={handleTermTemplateChange}
       termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
         value: blend.id,
         label: blend?.name,
+        templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
       totalsRows={[
         {
           key: "totalQty",
           label: "Total Qty",
           value: parseFloat(getTotalQty()).toFixed(3),
+          summaryColumn: "left",
         },
         {
           key: "beforeTaxAmount",
-          label: "Before Tax Amount",
+          label: "Gross Amount",
           value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+          summaryColumn: "right",
+        },
+        {
+          key: "taxAmount",
+          label: "Tax Amount",
+          value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
         },
         {
           key: "netAmount",
           label: "Net Amount",
           value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
+          emphasized: true,
         },
       ]}
       leftActions={

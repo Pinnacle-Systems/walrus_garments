@@ -19,6 +19,7 @@ import SalesDeliveryForm from './SalesDeliveryForm';
 import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices';
 import { useGetSalesInvoiceByIdQuery } from '../../../redux/uniformService/salesInvoiceServices';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 
 
 
@@ -98,6 +99,8 @@ const SalesDelivery = () => {
         useGetUomQuery({ params });
     const { data: hsnList } =
         useGetHsnMasterQuery({ params });
+    const { data: termsData } =
+        useGetTermsandCondtionsQuery({ params: { ...params } });
 
 
     const handleView = (id) => {
@@ -158,6 +161,7 @@ const SalesDelivery = () => {
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} 
                         invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} convertSalesInvoiceId={convertSalesInvoiceId} 
+                        termsData={termsData}
                     />
                 </div>
 

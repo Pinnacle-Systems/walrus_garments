@@ -31,7 +31,7 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 
 const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setQuoteItems, quoteItems,
-  yarnList, colorList, uomList, termsData, term, setTerm
+  yarnList, colorList, uomList, termsData
 
 
 }) => {
@@ -52,6 +52,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [terms, setTerms] = useState("")
+  const [term, setTerm] = useState("")
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
@@ -105,6 +106,12 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     }
   }, []);
 
+  useEffect(() => {
+    if (!id) {
+      setTerm("");
+    }
+  }, [id]);
+
 
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
@@ -120,7 +127,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
-    setTerm(data?.termId ? String(data.termId) : "");
     setRemarks(data?.remarks || "");
     setTerms(data?.termsAndCondition || "");
     if (data?.minimumAdvancePayment !== null && data?.minimumAdvancePayment !== undefined && data?.minimumAdvancePayment !== "") {
@@ -161,7 +167,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    termId: term ? parseInt(term) : undefined,
     termsAndCondition: terms,
     taxMethod
   }
@@ -409,6 +414,10 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     },
   ];
 
+  const handleTermTemplateChange = (value) => {
+    setTerm(value);
+  };
+
   const footerContent = (
     <CommonFormFooter
       remarks={remarks}
@@ -418,32 +427,37 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       readOnly={readOnly}
       showTermSelect
       termValue={term}
-      onTermChange={setTerm}
+      onTermChange={handleTermTemplateChange}
       termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
         value: blend.id,
         label: blend?.name,
+        templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
       totalsRows={[
         {
           key: "totalQty",
           label: "Total Qty",
           value: parseFloat(getTotalQty()).toFixed(3),
+          summaryColumn: "left",
         },
         {
           key: "beforeTax",
-          label: "Before Tax",
+          label: "Gross Amount",
           value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+          summaryColumn: "right",
         },
         {
           key: "taxAmount",
           label: "Tax Amount",
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
         },
         {
           key: "netAmount",
           label: "Net Amount",
           value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
           emphasized: true,
+          summaryColumn: "right",
         },
       ]}
       extraTotalsContent={
@@ -461,6 +475,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           />
         </div>
       }
+      extraTotalsContentColumn="left"
       leftActions={
         <>
           <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">

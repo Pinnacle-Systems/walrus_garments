@@ -19,6 +19,7 @@ import SaleInvoiceReport from './SalesInvoiceReport';
 import { useDeleteSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 
 
 
@@ -95,6 +96,8 @@ const SalesInvoice = () => {
 
     const { data: uomList } =
         useGetUomQuery({ params });
+    const { data: termsData } =
+        useGetTermsandCondtionsQuery({ params: { ...params } });
 
 
 
@@ -175,6 +178,7 @@ const SalesInvoice = () => {
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId} invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
                         sourceSaleOrderDocId={saleOrderToConvertData?.data?.docId || ""}
                         sourceAdvanceReceived={(saleOrderToConvertData?.data?.Quotation?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
+                        termsData={termsData}
                     />
                 </div>
 
