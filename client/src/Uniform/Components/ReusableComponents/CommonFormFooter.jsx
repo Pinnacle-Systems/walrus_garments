@@ -1,28 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
+import Modal from "../../../UiComponents/Modal";
 
 const defaultTotalsRows = ({ totalQty, subtotal, taxAmount, netAmount }) => [
   {
     key: "totalQty",
     label: "Total Quantity",
     value: totalQty || 0,
+    summaryColumn: "left",
   },
   {
     key: "subtotal",
-    label: "Subtotal",
+    label: "Gross Amount",
     value: `₹${(subtotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+    summaryColumn: "right",
   },
   {
     key: "taxAmount",
     label: "GST Amount",
     value: `₹${(taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+    summaryColumn: "right",
   },
   {
     key: "netAmount",
     label: "Net Amount",
     value: `₹${(netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
     emphasized: true,
+    summaryColumn: "right",
   },
 ];
+
+const resolveSummaryColumn = (row = {}) => {
+  if (row.summaryColumn === "left" || row.summaryColumn === "right") {
+    return row.summaryColumn;
+  }
+
+  const identity = String(row.key || row.label || "").toLowerCase();
+  const leftColumnTokens = ["qty", "quantity", "payment", "advance", "received", "minimum"];
+
+  return leftColumnTokens.some((token) => identity.includes(token)) ? "left" : "right";
+};
 
 const CommonFormFooter = ({
   remarks,
@@ -40,99 +56,190 @@ const CommonFormFooter = ({
   termOptions = [],
   totalsRows,
   extraTotalsContent = null,
+  extraTotalsContentColumn = "left",
   leftActions = null,
   rightActions = null,
   remarksPlaceholder = "Additional notes...",
   termsPlaceholder = "Select or type Terms & Conditions...",
 }) => {
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const resolvedTotalsRows =
     totalsRows && totalsRows.length > 0
       ? totalsRows
       : defaultTotalsRows({ totalQty, subtotal, taxAmount, netAmount });
+  const leftSummaryRows = resolvedTotalsRows.filter((row) => resolveSummaryColumn(row) === "left");
+  const rightSummaryRows = resolvedTotalsRows.filter((row) => resolveSummaryColumn(row) === "right");
 
-  const termsColumnClassName = showTermSelect ? "md:col-span-4" : "md:col-span-5";
-  const remarksColumnClassName = showTermSelect ? "md:col-span-3" : "md:col-span-4";
+  const showTemplateControl = showTermSelect && !readOnly;
+  const termsColumnClassName = "md:col-span-4";
+  const remarksColumnClassName = "md:col-span-2";
+  const totalsColumnClassName = "md:col-span-6";
+
+  const handleTemplateSelection = (value) => {
+    const normalizedValue = value ? String(value) : "";
+
+    if (!normalizedValue) {
+      onTermChange("");
+      return false;
+    }
+
+    const selectedOption = termOptions.find((option) => String(option.value) === normalizedValue);
+
+    if (!selectedOption) {
+      onTermChange("");
+      return false;
+    }
+
+    const nextTermsText = selectedOption.templateText || "";
+    const hasExistingTerms = Boolean((terms || "").trim());
+    const shouldReplace =
+      !hasExistingTerms ||
+      (terms || "") === nextTermsText ||
+      window.confirm("Replace current terms with the selected template?");
+
+    if (!shouldReplace) {
+      return false;
+    }
+
+    setTerms(nextTermsText);
+    onTermChange(normalizedValue, selectedOption);
+    return true;
+  };
+
+  const renderSummaryRows = (rows) =>
+    rows.map((row, index) => (
+      <div
+        key={row.key || row.label || index}
+        className={[
+          "flex justify-between py-0.5 text-[12px]",
+          row.emphasized ? "border-t border-slate-100 pt-1.5" : "",
+          row.className || "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <span
+          className={[
+            row.emphasized ? "font-semibold text-slate-700" : "text-slate-600",
+            row.labelClassName || "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {row.label}
+        </span>
+        <span
+          className={[
+            row.emphasized ? "font-semibold text-indigo-700" : "font-medium",
+            row.valueClassName || "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {row.value}
+        </span>
+      </div>
+    ));
 
   return (
     <div className="space-y-1.5">
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
-        {showTermSelect ? (
-          <div className="rounded-md border border-slate-200 bg-white p-1.5 shadow-sm md:col-span-2">
-            <div className="flex flex-col gap-1">
-              <h2 className="mb-1 text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
-              <select
-                value={termValue}
-                onChange={(e) => onTermChange(e.target.value)}
-                disabled={readOnly}
-                className="h-9 w-full rounded border border-gray-200 px-2 py-1 text-left text-[11px]"
-              >
-                <option value=""></option>
-                {termOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <Modal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        widthClass="w-[420px] max-h-[70vh]"
+      >
+        <div className="flex max-h-[calc(70vh-3.5rem)] flex-col">
+          <div className="mb-3 border-b border-slate-100 pb-2">
+            <h3 className="text-sm font-bold text-slate-800">Apply Terms Template</h3>
+            <p className="text-[11px] text-slate-500">Choose a template to fill the terms text below.</p>
           </div>
-        ) : null}
 
-        <div className={`rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
-          <textarea
-            disabled={readOnly}
-            className="h-14 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-            value={terms || ""}
-            onChange={(e) => setTerms(e.target.value)}
-            placeholder={termsPlaceholder}
-          />
+          <div className="flex-1 space-y-1 overflow-y-auto pr-1">
+            {termOptions.length > 0 ? (
+              termOptions.map((option) => {
+                const isSelected = String(option.value) === String(termValue || "");
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      if (handleTemplateSelection(option.value)) {
+                        setIsTemplateModalOpen(false);
+                      }
+                    }}
+                    className={[
+                      "w-full rounded-md border px-3 py-2 text-left transition-colors",
+                      isSelected
+                        ? "border-indigo-300 bg-indigo-50"
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
+                    ].join(" ")}
+                  >
+                    <div className="text-[12px] font-semibold text-slate-700">{option.label}</div>
+                    {option.templateText ? (
+                      <div className="mt-1 max-h-8 overflow-hidden text-[11px] leading-4 text-slate-500">
+                        {option.templateText}
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="rounded-md border border-dashed border-slate-200 px-3 py-4 text-center text-[11px] text-slate-500">
+                No templates available.
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
+        <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
+          <div className="flex h-full flex-col gap-1">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
+              {showTemplateControl ? (
+                <button
+                  type="button"
+                  className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                  onClick={() => setIsTemplateModalOpen(true)}
+                >
+                  Apply template
+                </button>
+              ) : null}
+            </div>
+            <textarea
+              disabled={readOnly}
+              className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+              value={terms || ""}
+              onChange={(e) => setTerms(e.target.value)}
+              placeholder={termsPlaceholder}
+            />
+          </div>
         </div>
 
-        <div className={`rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
+        <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
           <h2 className="mb-1 text-[12px] font-bold text-slate-700">Remarks</h2>
           <textarea
             readOnly={readOnly}
             value={remarks || ""}
             onChange={(e) => setRemarks(e.target.value)}
-            className="h-8 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+            className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
             placeholder={remarksPlaceholder}
           />
         </div>
 
-        <div className="rounded-md bg-white p-1.5 shadow-sm md:col-span-3">
-          {resolvedTotalsRows.map((row, index) => (
-            <div
-              key={row.key || row.label || index}
-              className={[
-                "flex justify-between py-0.5 text-[12px]",
-                row.emphasized ? "border-t border-slate-100 pt-1.5" : "",
-                row.className || "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <span
-                className={[
-                  row.emphasized ? "font-semibold text-slate-700" : "text-slate-600",
-                  row.labelClassName || "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {row.label}
-              </span>
-              <span
-                className={[
-                  row.emphasized ? "font-semibold text-indigo-700" : "font-medium",
-                  row.valueClassName || "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {row.value}
-              </span>
+        <div className={`rounded-md bg-white p-1.5 shadow-sm ${totalsColumnClassName}`}>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-1 md:grid-cols-2">
+            <div>
+              {renderSummaryRows(leftSummaryRows)}
+              {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
             </div>
-          ))}
-          {extraTotalsContent ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
+            <div>
+              {renderSummaryRows(rightSummaryRows)}
+              {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
+            </div>
+          </div>
         </div>
       </div>
 

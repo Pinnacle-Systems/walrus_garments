@@ -86,6 +86,9 @@ const SaleOrderItems = ({
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
+                newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
+            } else {
+                newBlend[index]["taxMethod"] = "";
             }
         }
 
@@ -147,7 +150,7 @@ const SaleOrderItems = ({
                 weightPerBag: "0.00",
                 id: '',
                 poItemsId: "",
-                taxMethod: "Inclusive"
+                taxMethod: ""
             }));
             return [...prev, ...newArray];
         });
@@ -156,7 +159,7 @@ const SaleOrderItems = ({
     const addNewRow = () => {
         setSaleOrderItems([...saleOrderItems, {
             itemId: "", qty: "", tax: "0", colorId: "", uomId: "",
-            price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: ""
+            price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: "", taxMethod: ""
         }]);
     };
 
@@ -408,9 +411,10 @@ const SaleOrderItems = ({
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     className={compactDropdownClassName}
-                                                    value={row.taxMethod}
+                                                    value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
                                                     onChange={e => handleInputChange(e.target.value, index, "taxMethod")}
                                                 >
+                                                    <option value=""></option>
                                                     <option value="Inclusive">Inclusive</option>
                                                     <option value="Exclusive">Exclusive</option>
                                                 </select>

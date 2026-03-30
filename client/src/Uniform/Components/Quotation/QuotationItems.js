@@ -102,6 +102,9 @@ const QuotationItems = ({
                 // Auto-fill tax based on the new HSN ID
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
+                newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
+            } else {
+                newBlend[index]["taxMethod"] = "";
             }
         }
 
@@ -177,7 +180,7 @@ const QuotationItems = ({
                     weightPerBag: "0.00",
                     id: '',
                     poItemsId: "",
-                    taxMethod: "Inclusive"
+                    taxMethod: ""
                 };
             });
             return [...prev, ...newArray];
@@ -195,7 +198,8 @@ const QuotationItems = ({
             discountTypes: "",
             discountValue: "0.00",
             id: '',
-            poItemsId: ""
+            poItemsId: "",
+            taxMethod: ""
         };
         setQuoteItems([...quoteItems, newRow]);
     };
@@ -702,9 +706,10 @@ const QuotationItems = ({
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     className={compactDropdownClassName}
-                                                    value={row.taxMethod}
+                                                    value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "taxMethod")}
                                                 >
+                                                    <option value=""></option>
                                                     <option value="Inclusive">Inclusive</option>
                                                     <option value="Exclusive">Exclusive</option>
                                                 </select>

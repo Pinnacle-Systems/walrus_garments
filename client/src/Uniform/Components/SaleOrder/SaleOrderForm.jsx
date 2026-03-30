@@ -100,6 +100,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   }, []);
 
+  useEffect(() => {
+    if (!id) {
+      setTerm("");
+    }
+  }, [id]);
+
 
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
@@ -119,7 +125,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     if (data?.date) setDate(data?.date);
     setRemarks(data?.remarks || "");
     setTerms(data?.terms || "");
-
   }, [id]);
 
   useEffect(() => {
@@ -368,6 +373,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     { label: "Address", value: customerAddress },
   ];
 
+  const handleTermTemplateChange = (value) => {
+    setTerm(value);
+  };
+
   const footerContent = (
     <CommonFormFooter
       remarks={remarks}
@@ -377,26 +386,37 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       readOnly={readOnly}
       showTermSelect
       termValue={term}
-      onTermChange={setTerm}
+      onTermChange={handleTermTemplateChange}
       termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
         value: blend.id,
         label: blend?.name,
+        templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
       totalsRows={[
         {
           key: "totalQty",
           label: "Total Qty",
           value: parseFloat(getTotalQty()).toFixed(3),
+          summaryColumn: "left",
         },
         {
           key: "beforeTaxAmount",
-          label: "Before Tax Amount",
+          label: "Gross Amount",
           value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+          summaryColumn: "right",
+        },
+        {
+          key: "taxAmount",
+          label: "Tax Amount",
+          value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
         },
         {
           key: "netAmount",
           label: "Net Amount",
           value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          summaryColumn: "right",
+          emphasized: true,
         },
         ...(shouldShowAdvanceReceived
           ? [
@@ -404,6 +424,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                 key: "advanceReceived",
                 label: "Advance Received",
                 value: `Rs.${parseFloat(advanceReceivedAmount || 0).toFixed(2)}`,
+                summaryColumn: "left",
               },
             ]
           : []),

@@ -19,6 +19,7 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeletesaleOrderMutation } from '../../../redux/uniformService/saleOrderServices';
+import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 
@@ -101,6 +102,8 @@ const SaleOrder = () => {
 
     const { data: uomList } =
         useGetUomQuery({ params });
+    const { data: termsData } =
+        useGetTermsandCondtionsQuery({ params: { ...params } });
 
 
 
@@ -190,7 +193,7 @@ const SaleOrder = () => {
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} quoteId={convertQuotationId}
                         sourceQuotationDocId={quotationToConvertData?.data?.docId || ""}
                         sourceQuotationAdvanceReceived={(quotationToConvertData?.data?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
-                        invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
+                        invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} termsData={termsData}
                     />
                 </div>
 

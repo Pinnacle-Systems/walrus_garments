@@ -45,7 +45,6 @@ const Quotation = () => {
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const [quoteItems, setQuoteItems] = useState([]);
     const [partyId, setPartyId] = useState('')
-    const [term, setTerm] = useState("")
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const dispatch = useDispatch();
@@ -171,7 +170,6 @@ const Quotation = () => {
                     quoteItems={quoteItems} setQuoteItems={setQuoteItems}
                     partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                     supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} termsData={termsData}
-                    term={term} setTerm={setTerm}
                 />
                 </div>
 
