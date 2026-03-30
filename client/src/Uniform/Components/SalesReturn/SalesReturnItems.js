@@ -10,6 +10,7 @@ import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableCellClassName,
     transactionTableFocusCellClassName,
@@ -70,9 +71,9 @@ const SalesReturnItems = ({
 
     useEffect(() => {
         if (id) return
-        if (deliveryItems?.length >= 9) return;
+        if (deliveryItems?.length >= standardTransactionPlaceholderRowCount) return;
         setDeliveryItems((prev) => {
-            let newArray = Array.from({ length: 9 - prev.length }, (i) => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, (i) => {
                 return {
                     itemId: "",
                     qty: "0.00",
@@ -274,8 +275,8 @@ const SalesReturnItems = ({
 
 
             <TransactionLineItemsSection
-                panelClassName="max-h-[380px] h-full"
-                contentClassName="h-[300px] overflow-hidden rounded-md border border-slate-200 !py-0"
+                panelClassName="h-full min-h-0"
+                contentClassName="min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
                 actions={
                     <button className="font-bold text-slate-700 bord"
                         onKeyDown={(e) => {

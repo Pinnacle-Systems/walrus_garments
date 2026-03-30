@@ -8,6 +8,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { Loader } from "lucide-react";
 import { DELETE, PLUS } from "../../../icons";
 import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplierOutside, taxTypeId }) => {
 
@@ -24,9 +25,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     };
 
     useEffect(() => {
-        if (poItems?.length >= 1) return
+        if (poItems?.length >= standardTransactionPlaceholderRowCount) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 1 - prev.length }, i => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, i => {
                 return { accessoryItemId: "", accessoryGroupId: "", accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
             })
             return [...prev, ...newArray]
@@ -526,4 +527,3 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
 }
 
 export default AccessoryPoItems
-

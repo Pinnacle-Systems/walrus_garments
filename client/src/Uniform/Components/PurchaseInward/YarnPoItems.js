@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
@@ -13,6 +13,7 @@ import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService
 import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -37,7 +38,6 @@ const YarnPoItems = ({
     headerOpen,
     itemPriceList
 }) => {
-
     const formatThreeDecimals = (value) => {
         const parsed = parseFloat(value);
         return Number.isFinite(parsed) ? parsed.toFixed(3) : "0.000";
@@ -142,14 +142,10 @@ const YarnPoItems = ({
 
 
     useEffect(() => {
-        // if (id) return;
-
-        const targetRows = headerOpen ? 9 : 15;
-
-        if (poItems?.length >= targetRows) return;
+        if (poItems?.length >= standardTransactionPlaceholderRowCount) return;
 
         setPoItems((prev) => {
-            const newArray = Array.from({ length: targetRows - prev.length }, () => ({
+            const newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, () => ({
                 itemId: "",
                 barcode: "",
                 qty: "0.00",

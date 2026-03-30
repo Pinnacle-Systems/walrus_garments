@@ -11,6 +11,7 @@ import TaxDetailsFullTemplate from '../TaxDetailsCompleteTemplate';
 import Modal from '../../../UiComponents/Modal';
 import { priceWithTax, sumArray } from '../../../Utils/helper'
 import { YarnLotGrid } from './LotGrid';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isSupplierOutside, taxTypeId, greyFilter }) => {
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
@@ -29,9 +30,9 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
 
 
     useEffect(() => {
-        if (poItems.length >= 12) return
+        if (poItems.length >= standardTransactionPlaceholderRowCount) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 12 - prev.length }, i => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, i => {
                 return {
                     yarnId: "", qty: "0.000", taxPercent: "0.000", colorId: "", uomId: "", price: "0.00", discountType: "Percentage",
                     discountValue: "0.00",

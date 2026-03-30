@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableCellClassName,
     transactionTableFocusCellClassName,
@@ -159,7 +160,7 @@ const QuotationItems = ({
 
     useEffect(() => {
         if (id) return
-        const length = isHeaderOpen ? 9 : 12
+        const length = standardTransactionPlaceholderRowCount
         if (quoteItems?.length >= length) return;
         setQuoteItems((prev) => {
             let newArray = Array.from({ length: length - prev.length }, (i) => {
@@ -339,10 +340,10 @@ const QuotationItems = ({
         <>
 
 
-            <fieldset >
+            <fieldset className="h-full min-h-0">
                 <TransactionLineItemsSection
-                    panelClassName={`${isHeaderOpen ? "max-h-[330px]" : "max-h-[550px]"} h-full`}
-                    contentClassName={`${isHeaderOpen ? "h-[250px]" : "h-[350px]"} overflow-hidden rounded-md border border-slate-200 !py-0`}
+                    panelClassName="h-full min-h-0"
+                    contentClassName="min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
                 >
                     <div className="h-full overflow-x-auto overflow-y-auto">
                         <table className={transactionTableClassName}>

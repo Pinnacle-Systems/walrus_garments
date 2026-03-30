@@ -54,17 +54,17 @@ const CommonFormFooter = ({
   const remarksColumnClassName = showTermSelect ? "md:col-span-3" : "md:col-span-4";
 
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
         {showTermSelect ? (
-          <div className="rounded-md border border-slate-200 bg-white p-2 shadow-sm md:col-span-2">
-            <div className="flex flex-col gap-2">
-              <h2 className="mb-2 text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
+          <div className="rounded-md border border-slate-200 bg-white p-1.5 shadow-sm md:col-span-2">
+            <div className="flex flex-col gap-1">
+              <h2 className="mb-1 text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
               <select
                 value={termValue}
                 onChange={(e) => onTermChange(e.target.value)}
                 disabled={readOnly}
-                className="h-15 w-full rounded border-2 border-gray-200 py-1 text-left text-[11px]"
+                className="h-9 w-full rounded border border-gray-200 px-2 py-1 text-left text-[11px]"
               >
                 <option value=""></option>
                 {termOptions.map((option) => (
@@ -77,34 +77,34 @@ const CommonFormFooter = ({
           </div>
         ) : null}
 
-        <div className={`rounded-md border border-slate-200 bg-white p-1 shadow-sm ${termsColumnClassName}`}>
+        <div className={`rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
           <textarea
             disabled={readOnly}
-            className="h-20 w-full overflow-auto rounded-md border border-slate-300 px-2.5 py-2 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+            className="h-14 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
             value={terms || ""}
             onChange={(e) => setTerms(e.target.value)}
             placeholder={termsPlaceholder}
           />
         </div>
 
-        <div className={`rounded-md border border-slate-200 bg-white p-2 shadow-sm ${remarksColumnClassName}`}>
-          <h2 className="mb-2 text-[12px] font-bold text-slate-700">Remarks</h2>
+        <div className={`rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
+          <h2 className="mb-1 text-[12px] font-bold text-slate-700">Remarks</h2>
           <textarea
             readOnly={readOnly}
             value={remarks || ""}
             onChange={(e) => setRemarks(e.target.value)}
-            className="h-10 w-full overflow-auto rounded-md border border-slate-300 px-2.5 py-2 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+            className="h-8 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
             placeholder={remarksPlaceholder}
           />
         </div>
 
-        <div className="rounded-md bg-white p-2 shadow-sm md:col-span-3">
+        <div className="rounded-md bg-white p-1.5 shadow-sm md:col-span-3">
           {resolvedTotalsRows.map((row, index) => (
             <div
               key={row.key || row.label || index}
               className={[
-                "flex justify-between py-1 text-[12px]",
-                row.emphasized ? "border-t border-slate-100 pt-2" : "",
+                "flex justify-between py-0.5 text-[12px]",
+                row.emphasized ? "border-t border-slate-100 pt-1.5" : "",
                 row.className || "",
               ]
                 .filter(Boolean)
@@ -132,12 +132,12 @@ const CommonFormFooter = ({
               </span>
             </div>
           ))}
-          {extraTotalsContent ? <div className="pt-1">{extraTotalsContent}</div> : null}
+          {extraTotalsContent ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
         </div>
       </div>
 
       {leftActions || rightActions ? (
-        <div className="mt-1 flex flex-col justify-between gap-2 md:flex-row">
+        <div className="mt-0.5 flex flex-col justify-between gap-1.5 md:flex-row md:items-center">
           <div className="flex flex-wrap gap-2">{leftActions}</div>
           <div className="flex flex-wrap gap-2">{rightActions}</div>
         </div>

@@ -221,9 +221,12 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
           });
           dispatch(push({ name: "SALES INVOICE", projectId: null }));
           invalidateTagsDispatch()
-          if (nextProcess == "new" || nextProcess == "close") {
+          if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
+          }
+          else if (nextProcess == "close") {
+            onClose()
           }
           else {
             setId(returnData?.data?.id);

@@ -6,6 +6,7 @@ import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterS
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useEffect } from 'react';
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -221,7 +222,7 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                             {directInwardReturnItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} 
                                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} storeId={storeId}
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                                                {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
+                                                {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
                                                     <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                                         {Array.from({ length: 13 }).map(i =>
                                                             <td className="table-data w-14  "></td>

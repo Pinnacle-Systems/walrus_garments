@@ -8,6 +8,7 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableCellClassName,
     transactionTableFocusCellClassName,
@@ -130,7 +131,7 @@ const SalesDeliveryItems = ({
 
     useEffect(() => {
         if (id) return;
-        const length = isHeaderOpen ? 9 : 12;
+        const length = standardTransactionPlaceholderRowCount;
         if (deliveryItems?.length >= length) return;
         setDeliveryItems((prev) => {
             let newArray = Array.from({ length: length - prev.length }, () => ({
@@ -207,10 +208,10 @@ const SalesDeliveryItems = ({
 
     return (
         <>
-            <fieldset>
+            <fieldset className="h-full min-h-0">
                 <TransactionLineItemsSection
-                    panelClassName={`${isHeaderOpen ? "max-h-[330px]" : "max-h-[550px]"} h-full`}
-                    contentClassName={`${isHeaderOpen ? "h-[250px]" : "h-[350px]"} overflow-hidden rounded-md border border-slate-200 !py-0`}
+                    panelClassName="h-full min-h-0"
+                    contentClassName="min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
                 >
                     <div className="h-full overflow-x-auto overflow-y-auto">
                         <table className={transactionTableClassName}>

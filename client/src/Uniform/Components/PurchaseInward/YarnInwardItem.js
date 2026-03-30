@@ -18,6 +18,7 @@ import { FaPlus, FaTrashAlt } from "react-icons/fa";
 import { useGetPoQuery } from "../../../redux/uniformService/PoServices";
 import Swal from "sweetalert2";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -86,9 +87,9 @@ const YarnInwardPoItems = ({
 
     useEffect(() => {
         if (id) return
-        if (inwardItems?.length >= 1) return;
+        if (inwardItems?.length >= standardTransactionPlaceholderRowCount) return;
         setInwardItems((prev) => {
-            let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, (i) => {
                 return {
                     yarnId: "",
                     qty: "0.00",
@@ -343,7 +344,7 @@ const YarnInwardPoItems = ({
                                     purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
 
 
-                            {Array.from({ length: 1 - inwardItems?.length }).map(i =>
+                            {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems?.length) }).map(i =>
                                 <tr className='font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 6 }).map(i =>
                                         <td className="table-data   "></td>

@@ -15,6 +15,7 @@ import Modal from '../../../UiComponents/Modal';
 import { priceWithTax, sumArray } from '../../../Utils/helper';
 import { useGetLoopLengthQuery } from '../../../redux/uniformService/LoopLengthMasterServices';
 import { FabricLotGrid } from './LotGrid';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 
 const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isSupplierOutside, taxTypeId, greyFilter }) => {
@@ -31,9 +32,9 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
     };
 
     useEffect(() => {
-        if (poItems.length >= 12) return
+        if (poItems.length >= standardTransactionPlaceholderRowCount) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 12 - prev.length }, i => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, i => {
                 return {
                     fabricId: "", qty: "0.000", noOfRolls: "0", colorId: "", taxPercent: "0.000", uomId: "", gaugeId: "", designId: "",
                     gsmId: "", loopLengthId: "", kDiaId: "", fDiaId: "", price: "", discountType: "Percentage", discountValue: "0.00",

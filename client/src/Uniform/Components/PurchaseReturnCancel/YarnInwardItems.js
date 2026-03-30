@@ -14,6 +14,7 @@ import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi';
 import YarnPoItem from './YarnPoItem';
 import Swal from 'sweetalert2';
 import { useGetStockReportControlQuery } from '../../../redux/uniformService/StockReportControl.Services';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 
 const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, readOnly, id, deleteRow, handleEdit, contextMenu,
@@ -213,7 +214,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 readOnly={readOnly}
                                 directInwardReturnItems={directInwardReturnItems} allData={allData}
                             />)}
-                            {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
+                            {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
                                 <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                     {Array.from({ length: 10 }).map(i =>
                                         <td className="table-data   "></td>

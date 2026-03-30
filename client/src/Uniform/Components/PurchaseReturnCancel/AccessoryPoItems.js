@@ -12,6 +12,7 @@ import TaxDetailsFullTemplate from '../TaxDetailsCompleteTemplate';
 
 import Modal from '../../../UiComponents/Modal';
 import { priceWithTax } from '../../../Utils/helper';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplierOutside, taxTypeId }) => {
 
@@ -28,9 +29,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
     };
 
     useEffect(() => {
-        if (poItems.length >= 12) return
+        if (poItems.length >= standardTransactionPlaceholderRowCount) return
         setPoItems(prev => {
-            let newArray = Array.from({ length: 12 - prev.length }, i => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, i => {
                 return { accessoryId: "", qty: "", colorId: "", taxPercent: "0.000", sizeId: "", uomId: "", qty: "", price: "", discountType: "Percentage", discountValue: 0 }
             })
             return [...prev, ...newArray]

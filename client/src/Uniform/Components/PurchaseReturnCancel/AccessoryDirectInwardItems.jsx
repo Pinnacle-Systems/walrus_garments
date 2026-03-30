@@ -6,6 +6,7 @@ import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMaste
 import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/AccessoryMasterServices';
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
 import { useEffect } from 'react';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirectInwardReturnItems, readOnly, deleteRow, purchaseInwardId, params }) => {
 
@@ -106,7 +107,7 @@ const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirec
                             uomList={uomList}
                             colorList={colorList}
                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                        {Array.from({ length: 1 - directInwardReturnItems.length }).map(i =>
+                        {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems.length) }).map(i =>
                             <tr className=' text-gray-800 h-8 border border-gray-600'>
                                 {Array.from({ length: 12 }).map(i =>
                                     <td className="table-data   "></td>
