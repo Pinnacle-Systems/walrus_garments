@@ -35,6 +35,7 @@ const TransactionLineItemsSection = ({
 
 export const transactionTableClassName = "w-full border-collapse table-fixed";
 export const transactionTableHeadClassName = "sticky top-0 z-10 bg-slate-100 text-slate-700";
+export const standardTransactionPlaceholderRowCount = 20;
 export const transactionTableHeaderCellClassName = "bg-gray-200 px-1 py-1 text-center font-medium text-[12px]";
 export const transactionTableRowClassName = "border border-blue-gray-200 cursor-pointer";
 export const transactionTableIndexCellClassName = "w-12 border border-gray-300 p-0 text-center text-[11px]";

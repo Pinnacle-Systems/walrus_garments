@@ -3,6 +3,7 @@ import YarnDirectItem from './YarnDirectItem';
 import { capitalizeFirstLetter } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -41,7 +42,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
     };
 
     useEffect(() => {
-        const targetRows = headerOpen ? 9 : 15;
+        const targetRows = standardTransactionPlaceholderRowCount;
 
         if (directInwardReturnItems?.length >= targetRows) return
         setDirectInwardReturnItems(prev => {
@@ -188,7 +189,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 readOnly={readOnly}
                                 handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData}
                             />)}
-                            {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
+                            {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
                                 <tr className='w-12 border border-gray-300 bg-white text-[11px] h-8 text-center p-0.5'>
                                     {Array.from({ length: 12 }).map(i =>
                                         <td className="border border-gray-300 bg-white p-0 text-[11px]"></td>

@@ -11,6 +11,7 @@ import { useGetgsmQuery } from '../../../redux/uniformService/GsmMasterServices'
 import { useGetDiaQuery } from '../../../redux/uniformService/DiaMasterServices';
 import { useGetLoopLengthQuery } from '../../../redux/uniformService/LoopLengthMasterServices';
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -231,7 +232,7 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                             diaList={diaList}
                             item={item} handleInputChangeLotNo={handleInputChangeLotNo} stockId={item.stockId} noOfRolls={item.noOfRolls} removeItem={removeItem} key={item.poItemsId}
                             qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
-                        {Array.from({ length: 8 - inwardItems.length }).map(i =>
+                        {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems.length) }).map(i =>
                             <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                 <td className='table-data'>
                                 </td>

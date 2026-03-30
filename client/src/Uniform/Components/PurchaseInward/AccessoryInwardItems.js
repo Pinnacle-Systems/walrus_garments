@@ -6,6 +6,7 @@ import { useGetAccessoryMasterQuery } from '../../../redux/uniformService/Access
 import { useGetSizeMasterQuery } from '../../../redux/uniformService/SizeMasterService';
 import { HiPlus } from 'react-icons/hi';
 import { useEffect } from 'react';
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, purchaseInwardId, params ,id}) => {
 
@@ -58,9 +59,9 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
     };
      useEffect(() => {
         if(id) return
-        if (inwardItems?.length >= 1) return;
+        if (inwardItems?.length >= standardTransactionPlaceholderRowCount) return;
         setInwardItems((prev) => {
-          let newArray = Array.from({ length: 1 - prev.length }, (i) => {
+          let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, (i) => {
             return {
               yarnId: "",
               qty: "0.00",
@@ -278,7 +279,7 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                         <tbody className='overflow-y-auto  h-full w-full'>
                                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} 
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
-                                                {Array.from({ length: 1 - inwardItems?.length }).map(i =>
+                                                {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems?.length) }).map(i =>
                                                     <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
                                                         {Array.from({ length: 15 }).map(i =>
                                                             <td className="table-data   "></td>
