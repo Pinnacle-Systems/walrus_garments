@@ -120,8 +120,8 @@ const SaleOrder = () => {
         setReadOnly(false);
     };
 
-    const handleConvertToInvoice = (dataObj) => {
-        dispatch(push({ name: "SALES INVOICE", projectId: dataObj.id }));
+    const handleConvertToDelivery = (dataObj) => {
+        dispatch(push({ name: "SALES DELIVERY", projectId: dataObj.id }));
     };
 
     const handleDelete = async (id, childRecord) => {
@@ -193,6 +193,10 @@ const SaleOrder = () => {
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} quoteId={convertQuotationId}
                         sourceQuotationDocId={quotationToConvertData?.data?.docId || ""}
                         sourceQuotationAdvanceReceived={(quotationToConvertData?.data?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
+                        sourceQuotationPackingChargeEnabled={Boolean(quotationToConvertData?.data?.packingChargeEnabled)}
+                        sourceQuotationPackingCharge={quotationToConvertData?.data?.packingCharge || ""}
+                        sourceQuotationShippingChargeEnabled={Boolean(quotationToConvertData?.data?.shippingChargeEnabled)}
+                        sourceQuotationShippingCharge={quotationToConvertData?.data?.shippingCharge || ""}
                         invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} termsData={termsData}
                     />
                 </div>
@@ -217,7 +221,7 @@ const SaleOrder = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                            onConvertToInvoice={handleConvertToInvoice}
+                            onConvertToDelivery={handleConvertToDelivery}
                         />
                     </div>
 

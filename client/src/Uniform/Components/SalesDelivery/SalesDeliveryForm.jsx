@@ -31,7 +31,7 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 
 const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems, 
-  yarnList, colorList, uomList, hsnList, convertSalesInvoiceId, invalidateTagsDispatch , termsData, dispatch
+  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch , termsData, dispatch, totalReceivedAmount = 0
 
 
 
@@ -52,6 +52,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [term, setTerm] = useState("")
+  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  const [packingCharge, setPackingCharge] = useState("");
+  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  const [shippingCharge, setShippingCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -68,6 +72,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   const params = {
     branchId, companyId, userId, finYearId
+  };
+  const parseChargeAmount = (value) => {
+    const parsedValue = parseFloat(value);
+    return Number.isFinite(parsedValue) ? parsedValue : 0;
+  };
+  const formatChargeValue = (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+    return parseChargeAmount(value).toFixed(2);
   };
 
 
@@ -108,6 +122,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   useEffect(() => {
     if (!id) {
       setTerm("");
+      setPackingChargeEnabled(false);
+      setPackingCharge("");
+      setShippingChargeEnabled(false);
+      setShippingCharge("");
     }
   }, [id]);
 
@@ -115,7 +133,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const syncFormWithDb = useCallback((data) => {
     console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
-    if (convertSalesInvoiceId || !id) return
+    if (convertSaleOrderId || !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -140,10 +158,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
+    const nextPackingCharge = formatChargeValue(data?.packingCharge);
+    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    setPackingCharge(nextPackingCharge);
+    setShippingCharge(nextShippingCharge);
+    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
-  }, [id]);
+  }, [convertSaleOrderId, id]);
 
   useEffect(() => {
     if (id) {
@@ -161,7 +185,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     payTermId,
     id, userId,
     storeId,
-    deliveryItems: deliveryItems?.filter(i => i.itemId),
+    deliveryItems: deliveryItems?.filter(i => i.itemId && parseFloat(i?.qty || 0) > 0),
     discountType,
     discountValue,
     dcNo,
@@ -173,7 +197,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     branchId,
     customerId,
     terms,
-    salesInvoiceId : convertSalesInvoiceId
+    saleOrderId : convertSaleOrderId || singleData?.data?.saleOrderId,
+    packingChargeEnabled,
+    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
+    shippingChargeEnabled,
+    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
 
   }
 
@@ -187,7 +215,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     return false
   }
-  console.log(convertSalesInvoiceId, "convertSalesInvoiceId")
+  console.log(convertSaleOrderId, "convertSaleOrderId")
 
 
 
@@ -275,6 +303,21 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
+    if (!data?.deliveryItems?.length) {
+      Swal.fire({
+        title: "Please keep at least one delivery line...!",
+        icon: "warning",
+      });
+      return;
+    }
+    if (convertSaleOrderId && totalReceivedAmount < adjustedNetAmount) {
+      Swal.fire({
+        title: "Insufficient Payment",
+        text: `Received payment (${parseFloat(totalReceivedAmount || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
+        icon: "warning",
+      });
+      return;
+    }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
@@ -354,8 +397,47 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     );
   };
 
-
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const adjustedNetAmount = netAmount + extraCharges;
+  const activeLinkedSaleOrder = linkedSaleOrder || singleData?.data?.Saleorder;
+  const linkedSaleOrderDocId = activeLinkedSaleOrder?.docId || "";
+  const chargeRows = [
+    ...(packingChargeEnabled
+      ? [{
+          key: "packingCharge",
+          label: "Packing Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={packingCharge}
+              onChange={(event) => setPackingCharge(event.target.value)}
+              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+    ...(shippingChargeEnabled
+      ? [{
+          key: "shippingCharge",
+          label: "Shipping Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={shippingCharge}
+              onChange={(event) => setShippingCharge(event.target.value)}
+              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+  ];
   function isSupplierOutside() {
     if (supplierDetails) {
       return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
@@ -380,6 +462,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const summaryItems = [
     { label: "No", value: docId },
     { label: "Date", value: date },
+    { label: "Sale Order", value: linkedSaleOrderDocId || "-" },
     {
       label: "Customer",
       value:
@@ -420,6 +503,34 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      chargeOptions={[
+        {
+          key: "packingChargeToggle",
+          label: "Packing",
+          checked: packingChargeEnabled,
+          onToggle: (checked) => {
+            setPackingChargeEnabled(checked);
+            if (!checked) {
+              setPackingCharge("");
+            } else if (!packingCharge) {
+              setPackingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "shippingChargeToggle",
+          label: "Shipping",
+          checked: shippingChargeEnabled,
+          onToggle: (checked) => {
+            setShippingChargeEnabled(checked);
+            if (!checked) {
+              setShippingCharge("");
+            } else if (!shippingCharge) {
+              setShippingCharge("0.00");
+            }
+          },
+        },
+      ]}
       totalsRows={[
         {
           key: "totalQty",
@@ -439,10 +550,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
+        ...chargeRows,
         {
           key: "netAmount",
           label: "Net Amount",
-          value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
           emphasized: true,
         },
@@ -551,9 +663,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
-                <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
-                    <ReusableInput label="Sales Delivery No" readOnly value={docId} />
-                    <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
+                <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-12 gap-2">
+                    <div className="col-span-4">
+                      <ReusableInput label="Sales Delivery No" readOnly value={docId} />
+                    </div>
+                    <div className="col-span-4">
+                      <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
+                    </div>
+                    <div className="col-span-4">
+                      <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || "-"} />
+                    </div>
                 </TransactionHeaderSection>
 
                 <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
@@ -598,6 +717,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         <div className="min-h-0 flex-1 overflow-hidden">
           <fieldset className="h-full min-h-0">
             <SalesDeliveryItems
+              id={id}
               deliveryItems={deliveryItems}
               setDeliveryItems={setDeliveryItems}
               setInwardItemSelection={setInwardItemSelection}
@@ -616,6 +736,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
             />
           </fieldset>
         </div>

@@ -32,6 +32,13 @@ function calculateInvoiceNetAmount(invoiceItems = []) {
     }, 0);
 }
 
+function getChargeAdjustedAmount(amount, { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge }) {
+    const packingAmount = packingChargeEnabled ? parseFloat(packingCharge || 0) : 0;
+    const shippingAmount = shippingChargeEnabled ? parseFloat(shippingCharge || 0) : 0;
+
+    return amount + (Number.isFinite(packingAmount) ? packingAmount : 0) + (Number.isFinite(shippingAmount) ? shippingAmount : 0);
+}
+
 function getSalesInvoiceLedgerData({ customerId, amount, docId }) {
     return {
         EntryType: "Sales",
@@ -107,22 +114,11 @@ async function get(req) {
                     }
                 },
             },
-            SalesDelivery: {
-                select: {
-                    id: true,
-                    docId: true
-                }
-            },
             Saleorder: {
                 select: {
                     quotationId: true,
                 }
             },
-            _count: {
-                select: {
-                    SalesDelivery: true,
-                }
-            }
         },
         orderBy: {
             id: "desc"
@@ -238,13 +234,30 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, invoiceItems, finYearId, branchId, saleOrderId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        invoiceItems,
+        finYearId,
+        branchId,
+        saleOrderId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
-    const netAmount = calculateInvoiceNetAmount(invoiceItems);
+    const netAmount = getChargeAdjustedAmount(calculateInvoiceNetAmount(invoiceItems), {
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    });
 
 
     const data = await prisma.salesInvoice.create(
@@ -255,6 +268,10 @@ async function create(body) {
                 // discountValue: discountValue ? discountValue : "",
                 // branchId: branchId ? parseInt(branchId) : "",
                 saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 docId: docId,
                 SalesInvoiceItems: {
                     createMany: invoiceItems?.length > 0 ? {
@@ -342,7 +359,17 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, invoiceItems, branchId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        invoiceItems,
+        branchId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
     const dataFound = await prisma.salesInvoice.findUnique({
         where: {
@@ -358,7 +385,12 @@ async function update(id, body) {
     let oldItemIds = dataFound?.SalesInvoiceItems.map(item => parseInt(item.id))
     let currentItemIds = invoiceItems.filter(i => i?.id)?.map(item => parseInt(item.id))
     let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
-    const netAmount = calculateInvoiceNetAmount(invoiceItems);
+    const netAmount = getChargeAdjustedAmount(calculateInvoiceNetAmount(invoiceItems), {
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    });
 
     let salesInvoiceData;
 
@@ -381,6 +413,10 @@ async function update(id, body) {
                 customerId: customerId ? parseInt(customerId) : undefined,
 
                 branchId: branchId ? parseInt(branchId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 Ledger: customerId ? {
                     upsert: {
                         create: getSalesInvoiceLedgerData({

@@ -4,6 +4,169 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
+function parseAmount(value) {
+    const parsed = parseFloat(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge }) {
+    const lineNetAmount = (deliveryItems || []).reduce((acc, curr) => {
+        const price = parseAmount(curr?.price);
+        const qty = parseAmount(curr?.qty);
+        const taxPercent = parseAmount(curr?.taxPercent);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseAmount(curr?.discountValue);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (discountType === "Percentage") {
+            discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packingAmount = packingChargeEnabled ? parseAmount(packingCharge) : 0;
+    const shippingAmount = shippingChargeEnabled ? parseAmount(shippingCharge) : 0;
+
+    return lineNetAmount + packingAmount + shippingAmount;
+}
+
+function isSameSourceLine(saleOrderItem, deliveryItem) {
+    return String(saleOrderItem?.itemId || "") === String(deliveryItem?.itemId || "")
+        && String(saleOrderItem?.sizeId || "") === String(deliveryItem?.sizeId || "")
+        && String(saleOrderItem?.colorId || "") === String(deliveryItem?.colorId || "")
+        && String(saleOrderItem?.uomId || "") === String(deliveryItem?.uomId || "")
+        && String(saleOrderItem?.hsnId || "") === String(deliveryItem?.hsnId || "");
+}
+
+function resolveSaleOrderItemId(deliveryItem, saleOrderItems = []) {
+    if (deliveryItem?.saleOrderItemId) {
+        return parseInt(deliveryItem.saleOrderItemId);
+    }
+
+    const matchedItem = saleOrderItems.find((saleOrderItem) => isSameSourceLine(saleOrderItem, deliveryItem));
+    return matchedItem?.id ? parseInt(matchedItem.id) : null;
+}
+
+function getRemainingQtyBySaleOrderItemId(saleOrder, excludeSalesDeliveryId = null) {
+    const saleOrderItems = saleOrder?.SaleOrderItems || [];
+    const deliveredQtyBySaleOrderItemId = new Map();
+
+    for (const salesDelivery of saleOrder?.SalesDelivery || []) {
+        if (excludeSalesDeliveryId && parseInt(salesDelivery?.id) === parseInt(excludeSalesDeliveryId)) {
+            continue;
+        }
+
+        for (const deliveryItem of salesDelivery?.SalesDeliveryItems || []) {
+            const saleOrderItemId = resolveSaleOrderItemId(deliveryItem, saleOrderItems);
+            if (!saleOrderItemId) continue;
+
+            deliveredQtyBySaleOrderItemId.set(
+                saleOrderItemId,
+                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseAmount(deliveryItem?.qty)
+            );
+        }
+    }
+
+    const remainingQtyBySaleOrderItemId = new Map();
+
+    for (const saleOrderItem of saleOrderItems) {
+        const orderedQty = parseAmount(saleOrderItem?.qty);
+        const deliveredQty = deliveredQtyBySaleOrderItemId.get(parseInt(saleOrderItem.id)) || 0;
+        remainingQtyBySaleOrderItemId.set(
+            parseInt(saleOrderItem.id),
+            Math.max(0, orderedQty - deliveredQty)
+        );
+    }
+
+    return remainingQtyBySaleOrderItemId;
+}
+
+async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId = null) {
+    if (!saleOrderId) return null;
+
+    const saleOrder = await prisma.saleorder.findUnique({
+        where: {
+            id: parseInt(saleOrderId),
+        },
+        include: {
+            SaleOrderItems: true,
+            SalesDelivery: {
+                include: {
+                    SalesDeliveryItems: true,
+                }
+            },
+            Quotation: {
+                select: {
+                    id: true,
+                }
+            }
+        }
+    });
+
+    if (!saleOrder) return null;
+
+    const quotationPaymentData = saleOrder?.Quotation?.id
+        ? await prisma.payment.findMany({
+            where: {
+                transactionType: "QUOTATION",
+                transactionId: saleOrder.Quotation.id,
+            },
+        })
+        : [];
+
+    return {
+        saleOrder,
+        remainingQtyBySaleOrderItemId: getRemainingQtyBySaleOrderItemId(saleOrder, excludeSalesDeliveryId),
+        totalReceivedAmount: quotationPaymentData.reduce(
+            (acc, curr) => acc + parseAmount(curr?.paidAmount),
+            0
+        ),
+    };
+}
+
+function validateConvertedDelivery({ saleOrderValidationState, deliveryItems, packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge }) {
+    if (!saleOrderValidationState) return null;
+
+    const deliveryNetAmount = calculateDeliveryNetAmount(deliveryItems, {
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    });
+
+    if (saleOrderValidationState.totalReceivedAmount < deliveryNetAmount) {
+        return `Payment received is insufficient for this delivery. Required ${deliveryNetAmount.toFixed(2)}, received ${saleOrderValidationState.totalReceivedAmount.toFixed(2)}.`;
+    }
+
+    for (const deliveryItem of (deliveryItems || []).filter((item) => item?.itemId)) {
+        const saleOrderItemId = resolveSaleOrderItemId(deliveryItem, saleOrderValidationState.saleOrder?.SaleOrderItems);
+        if (!saleOrderItemId) {
+            return "Each converted delivery line must be tied to a sale order line.";
+        }
+
+        const remainingQty = saleOrderValidationState.remainingQtyBySaleOrderItemId.get(parseInt(saleOrderItemId)) || 0;
+        const requestedQty = parseAmount(deliveryItem?.qty);
+
+        if (requestedQty > remainingQty + 0.0001) {
+            return "One or more delivery quantities exceed the remaining sale order quantity.";
+        }
+    }
+
+    return null;
+}
+
 
 
 
@@ -87,7 +250,15 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            SalesDeliveryItems: true
+            SalesDeliveryItems: true,
+            Saleorder: {
+                select: {
+                    id: true,
+                    docId: true,
+                    date: true,
+                    createdAt: true,
+                }
+            }
         }
     })
     if (!data) return NoRecordFound("size");
@@ -114,7 +285,33 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, deliveryItems, finYearId, branchId, salesInvoiceId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        deliveryItems,
+        finYearId,
+        branchId,
+        saleOrderId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
+
+    const saleOrderValidationState = await getSaleOrderValidationState(saleOrderId);
+    const validationMessage = validateConvertedDelivery({
+        saleOrderValidationState,
+        deliveryItems,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    });
+
+    if (validationMessage) {
+        return { statusCode: 1, message: validationMessage };
+    }
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -129,12 +326,17 @@ async function create(body) {
                 // discountType: discountType ? discountType : "",
                 // discountValue: discountValue ? discountValue : "",
                 branchId: branchId ? parseInt(branchId) : "",
-                salesInvoiceId: salesInvoiceId ? parseInt(salesInvoiceId) : undefined,
+                saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 docId: docId,
                 SalesDeliveryItems: {
                     createMany: deliveryItems?.length > 0 ? {
                         data: deliveryItems?.map((temp) => {
                             let newItem = {}
+                            newItem["saleOrderItemId"] = temp["saleOrderItemId"] ? parseInt(temp["saleOrderItemId"]) : null;
                             newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
                             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
@@ -165,6 +367,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
             },
             data: {
                 quotationId: parseInt(quotationId),
+                saleOrderItemId: item["saleOrderItemId"] ? parseInt(item["saleOrderItemId"]) : null,
                 itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
@@ -190,6 +393,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
         let data = await tx.SalesDeliveryItems.create({
             data: {
                 quotationId: parseInt(quotationId),
+                saleOrderItemId: item["saleOrderItemId"] ? parseInt(item["saleOrderItemId"]) : null,
                 itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
                 sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
                 colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
@@ -210,7 +414,32 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, deliveryItems, branchId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        deliveryItems,
+        branchId,
+        saleOrderId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
+
+    const saleOrderValidationState = await getSaleOrderValidationState(saleOrderId, id);
+    const validationMessage = validateConvertedDelivery({
+        saleOrderValidationState,
+        deliveryItems,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    });
+
+    if (validationMessage) {
+        return { statusCode: 1, message: validationMessage };
+    }
 
     const dataFound = await prisma.SalesDelivery.findUnique({
         where: {
@@ -247,6 +476,11 @@ async function update(id, body) {
                 customerId: customerId ? parseInt(customerId) : undefined,
 
                 branchId: branchId ? parseInt(branchId) : undefined,
+                saleOrderId: saleOrderId ? parseInt(saleOrderId) : dataFound?.saleOrderId,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
             },
         })
 
@@ -255,6 +489,7 @@ async function update(id, body) {
                 await tx.salesDeliveryItems.update({
                     where: { id: parseInt(item.id) },
                     data: {
+                        saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
                         itemId: item.itemId ? parseInt(item.itemId) : null,
                         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                         colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -268,6 +503,7 @@ async function update(id, body) {
                 await tx.salesDeliveryItems.create({
                     data: {
                         salesDeliveryId: salesDeliveryData.id,
+                        saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
                         itemId: item.itemId ? parseInt(item.itemId) : null,
                         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                         colorId: item.colorId ? parseInt(item.colorId) : null,

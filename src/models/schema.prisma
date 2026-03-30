@@ -5011,6 +5011,10 @@ model Quotation {
   discountValue         String?
   taxType               String?
   minimumAdvancePayment String?
+  packingChargeEnabled  Boolean?            @default(false)
+  packingCharge         String?
+  shippingChargeEnabled Boolean?            @default(false)
+  shippingCharge        String?
   remarks               String?
   termsAndCondition     String?
   TermsAndConditions    TermsAndConditions? @relation(fields: [termId], references: [id])
@@ -5083,11 +5087,16 @@ model Saleorder {
   quotationId        Int?
   Quotation          Quotation?          @relation(fields: [quotationId], references: [id])
   taxType            String?
+  packingChargeEnabled Boolean?          @default(false)
+  packingCharge      String?
+  shippingChargeEnabled Boolean?         @default(false)
+  shippingCharge     String?
   remarks            String?
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
   termId             Int?
   SaleOrderItems     SaleOrderItems[]
+  SalesDelivery      SalesDelivery[]
   SalesInvoice       SalesInvoice[]
 }
 
@@ -5112,6 +5121,7 @@ model SaleOrderItems {
   taxPercent    String?
   taxMethod     String?
   priceType     String?
+  SalesDeliveryItems SalesDeliveryItems[]
 }
 
 model ItemCategory {
@@ -5174,12 +5184,16 @@ model SalesDelivery {
   updatedBy          User?                @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById        Int?
   taxType            String?
+  packingChargeEnabled Boolean?          @default(false)
+  packingCharge      String?
+  shippingChargeEnabled Boolean?         @default(false)
+  shippingCharge     String?
   remarks            String?
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions?  @relation(fields: [termId], references: [id])
   termId             Int?
-  salesInvoiceId     Int?
-  SalesInvoice       SalesInvoice?        @relation(fields: [salesInvoiceId], references: [id])
+  saleOrderId        Int?
+  Saleorder          Saleorder?           @relation(fields: [saleOrderId], references: [id])
   SalesDeliveryItems SalesDeliveryItems[]
   SalesReturn        SalesReturn[]
 }
@@ -5188,6 +5202,8 @@ model SalesDeliveryItems {
   id              Int                @id @default(autoincrement())
   SalesDelivery   SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
   salesDeliveryId Int?
+  SaleOrderItems  SaleOrderItems?    @relation(fields: [saleOrderItemId], references: [id])
+  saleOrderItemId Int?
   Item            Item?              @relation(fields: [itemId], references: [id])
   itemId          Int?
   Size            Size?              @relation(fields: [sizeId], references: [id])
@@ -5222,6 +5238,10 @@ model SalesInvoice {
   updatedBy          User?               @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById        Int?
   taxType            String?
+  packingChargeEnabled Boolean?          @default(false)
+  packingCharge      String?
+  shippingChargeEnabled Boolean?         @default(false)
+  shippingCharge     String?
   remarks            String?
   termsAndCondition  String?
   TermsAndConditions TermsAndConditions? @relation(fields: [termId], references: [id])
@@ -5229,7 +5249,6 @@ model SalesInvoice {
   saleOrderId        Int?
   Saleorder          Saleorder?          @relation(fields: [saleOrderId], references: [id])
   SalesInvoiceItems  SalesInvoiceItems[]
-  SalesDelivery      SalesDelivery[]
   Ledger             Ledger?
 }
 
@@ -5271,6 +5290,10 @@ model SalesReturn {
   updatedBy        User?              @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById      Int?
   taxType          String?
+  packingChargeEnabled Boolean?          @default(false)
+  packingCharge    String?
+  shippingChargeEnabled Boolean?         @default(false)
+  shippingCharge   String?
   salesDeliveryId  Int?
   SalesDelivery    SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id])
   SalesReturnItems SalesReturnItems[]

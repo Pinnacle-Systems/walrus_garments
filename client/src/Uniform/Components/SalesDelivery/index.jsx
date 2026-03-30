@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { useSelector, useDispatch } from 'react-redux';
-import { push } from '../../../redux/features/opentabs';
-import { findFromList, getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
+import { getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
-import moment from 'moment';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
 import Swal from 'sweetalert2';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
@@ -12,12 +10,11 @@ import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
-import SalesDeliveryItems from './SalesDeliveryItems';
 import SalesDeliveryReport from './SalesDeliveryReport';
 import { useDeleteSalesDeliveryMutation } from '../../../redux/uniformService/salesDeliveryServices';
 import SalesDeliveryForm from './SalesDeliveryForm';
 import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices';
-import { useGetSalesInvoiceByIdQuery } from '../../../redux/uniformService/salesInvoiceServices';
+import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 
@@ -51,29 +48,24 @@ const SalesDelivery = () => {
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES DELIVERY");
-    const convertSalesInvoiceId = currentTab?.projectId;
+    const convertSaleOrderId = currentTab?.projectId;
 
-    console.log(currentTab,"currentTab")
-
-    const { data: salesInvoiceToConvertData } =
-        useGetSalesInvoiceByIdQuery(convertSalesInvoiceId, { skip: !convertSalesInvoiceId });
+    const { data: saleOrderToConvertData } =
+        useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
 
     useEffect(() => {
-        if (salesInvoiceToConvertData?.data && convertSalesInvoiceId) {
-            const invoiceData = salesInvoiceToConvertData?.data;
+        if (saleOrderToConvertData?.data && convertSaleOrderId) {
+            const saleOrderData = saleOrderToConvertData?.data;
             setId("");
-            setCustomerId(invoiceData.customerId);
-            setDeliveryItems(invoiceData.SalesInvoiceItems);
-            setPayTermId(invoiceData.payTermId || "");
-            setLocationId(invoiceData.branchId || "");
-            setStoreId(invoiceData.storeId || "");
+            setCustomerId(saleOrderData.customerId);
+            setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
+            setPayTermId(saleOrderData.payTermId || "");
+            setLocationId(saleOrderData.branchId || "");
+            setStoreId(saleOrderData.storeId || "");
             setReadOnly(false);
             setShowManufacturer(true);
-
-            // Important: Clear the conversion flag so it doesn't re-trigger
-            // dispatch(push({ name: "SALES DELIVERY", id: null }));
         }
-    }, [salesInvoiceToConvertData, convertSalesInvoiceId, dispatch]);
+    }, [saleOrderToConvertData, convertSaleOrderId]);
 
     const params = {
         branchId, userId, finYearId
@@ -159,8 +151,10 @@ const SalesDelivery = () => {
                         inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                         deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} 
-                        invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} convertSalesInvoiceId={convertSalesInvoiceId} 
+                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList}
+                        invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} convertSaleOrderId={convertSaleOrderId}
+                        linkedSaleOrder={saleOrderToConvertData?.data}
+                        totalReceivedAmount={saleOrderToConvertData?.data?.totalReceivedAmount || 0}
                         termsData={termsData}
                     />
                 </div>

@@ -31,7 +31,7 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, termsData ,invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, sourceQuotationPackingChargeEnabled = false, sourceQuotationPackingCharge = "", sourceQuotationShippingChargeEnabled = false, sourceQuotationShippingCharge = "", termsData ,invalidateTagsDispatch ,dispatch
 
 
 }) => {
@@ -49,6 +49,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [terms, setTerms] = useState("")
+  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  const [packingCharge, setPackingCharge] = useState("");
+  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  const [shippingCharge, setShippingCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
@@ -59,6 +63,16 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { branchId, companyId, userId, finYearId } = getCommonParams()
   const params = {
     branchId, companyId, userId, finYearId
+  };
+  const parseChargeAmount = (value) => {
+    const parsedValue = parseFloat(value);
+    return Number.isFinite(parsedValue) ? parsedValue : 0;
+  };
+  const formatChargeValue = (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+    return parseChargeAmount(value).toFixed(2);
   };
 
   const { data: supplierDetails } =
@@ -101,10 +115,37 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   }, []);
 
   useEffect(() => {
-    if (!id) {
+    if (!id && !quoteId) {
       setTerm("");
+      setPackingChargeEnabled(false);
+      setPackingCharge("");
+      setShippingChargeEnabled(false);
+      setShippingCharge("");
     }
-  }, [id]);
+  }, [id, quoteId]);
+
+  useEffect(() => {
+    if (!quoteId || id) {
+      return;
+    }
+
+    const nextPackingCharge = formatChargeValue(sourceQuotationPackingCharge);
+    const nextShippingCharge = formatChargeValue(sourceQuotationShippingCharge);
+    const shouldEnablePacking = Boolean(sourceQuotationPackingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0;
+    const shouldEnableShipping = Boolean(sourceQuotationShippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0;
+
+    setPackingChargeEnabled(shouldEnablePacking);
+    setPackingCharge(shouldEnablePacking ? nextPackingCharge : "");
+    setShippingChargeEnabled(shouldEnableShipping);
+    setShippingCharge(shouldEnableShipping ? nextShippingCharge : "");
+  }, [
+    id,
+    quoteId,
+    sourceQuotationPackingCharge,
+    sourceQuotationPackingChargeEnabled,
+    sourceQuotationShippingCharge,
+    sourceQuotationShippingChargeEnabled,
+  ]);
 
 
   const syncFormWithDb = useCallback((data) => {
@@ -125,6 +166,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     if (data?.date) setDate(data?.date);
     setRemarks(data?.remarks || "");
     setTerms(data?.terms || "");
+    const nextPackingCharge = formatChargeValue(data?.packingCharge);
+    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    setPackingCharge(nextPackingCharge);
+    setShippingCharge(nextShippingCharge);
+    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
   }, [id]);
 
   useEffect(() => {
@@ -155,7 +202,11 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     branchId,
     customerId,
     quoteId: quoteId || undefined,
-    terms
+    terms,
+    packingChargeEnabled,
+    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
+    shippingChargeEnabled,
+    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
   }
 
 
@@ -328,6 +379,44 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const adjustedNetAmount = netAmount + extraCharges;
+  const chargeRows = [
+    ...(packingChargeEnabled
+      ? [{
+          key: "packingCharge",
+          label: "Packing Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={packingCharge}
+              onChange={(event) => setPackingCharge(event.target.value)}
+              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+    ...(shippingChargeEnabled
+      ? [{
+          key: "shippingCharge",
+          label: "Shipping Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={shippingCharge}
+              onChange={(event) => setShippingCharge(event.target.value)}
+              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+  ];
   function isSupplierOutside() {
     if (supplierDetails) {
       return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
@@ -392,6 +481,34 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      chargeOptions={[
+        {
+          key: "packingChargeToggle",
+          label: "Packing",
+          checked: packingChargeEnabled,
+          onToggle: (checked) => {
+            setPackingChargeEnabled(checked);
+            if (!checked) {
+              setPackingCharge("");
+            } else if (!packingCharge) {
+              setPackingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "shippingChargeToggle",
+          label: "Shipping",
+          checked: shippingChargeEnabled,
+          onToggle: (checked) => {
+            setShippingChargeEnabled(checked);
+            if (!checked) {
+              setShippingCharge("");
+            } else if (!shippingCharge) {
+              setShippingCharge("0.00");
+            }
+          },
+        },
+      ]}
       totalsRows={[
         {
           key: "totalQty",
@@ -411,10 +528,11 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
+        ...chargeRows,
         {
           key: "netAmount",
           label: "Net Amount",
-          value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
           emphasized: true,
         },
