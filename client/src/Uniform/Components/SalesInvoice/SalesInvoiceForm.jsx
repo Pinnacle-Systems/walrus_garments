@@ -48,6 +48,10 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const [remarks, setRemarks] = useState("")
   const [terms, setTerms] = useState("")
   const [term, setTerm] = useState("")
+  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  const [packingCharge, setPackingCharge] = useState("");
+  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  const [shippingCharge, setShippingCharge] = useState("");
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -71,6 +75,16 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
   const params = {
     branchId, companyId, userId, finYearId
+  };
+  const parseChargeAmount = (value) => {
+    const parsedValue = parseFloat(value);
+    return Number.isFinite(parsedValue) ? parsedValue : 0;
+  };
+  const formatChargeValue = (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+    return parseChargeAmount(value).toFixed(2);
   };
 
 
@@ -123,6 +137,10 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   useEffect(() => {
     if (!id) {
       setTerm("");
+      setPackingChargeEnabled(false);
+      setPackingCharge("");
+      setShippingChargeEnabled(false);
+      setShippingCharge("");
     }
   }, [id]);
 
@@ -155,6 +173,12 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
+    const nextPackingCharge = formatChargeValue(data?.packingCharge);
+    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    setPackingCharge(nextPackingCharge);
+    setShippingCharge(nextShippingCharge);
+    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -188,7 +212,11 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     branchId,
     customerId,
     terms,
-    saleOrderId: convertSaleOrderId
+    saleOrderId: convertSaleOrderId,
+    packingChargeEnabled,
+    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
+    shippingChargeEnabled,
+    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
   }
 
   console.log(convertSaleOrderId, "convertSaleOrderId")
@@ -359,6 +387,44 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     );
   };
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const adjustedNetAmount = netAmount + extraCharges;
+  const chargeRows = [
+    ...(packingChargeEnabled
+      ? [{
+          key: "packingCharge",
+          label: "Packing Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={packingCharge}
+              onChange={(event) => setPackingCharge(event.target.value)}
+              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+    ...(shippingChargeEnabled
+      ? [{
+          key: "shippingCharge",
+          label: "Shipping Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={shippingCharge}
+              onChange={(event) => setShippingCharge(event.target.value)}
+              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+  ];
 
   const handleRightClick = (event, rowIndex, type) => {
     event.preventDefault();
@@ -417,6 +483,34 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      chargeOptions={[
+        {
+          key: "packingChargeToggle",
+          label: "Packing",
+          checked: packingChargeEnabled,
+          onToggle: (checked) => {
+            setPackingChargeEnabled(checked);
+            if (!checked) {
+              setPackingCharge("");
+            } else if (!packingCharge) {
+              setPackingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "shippingChargeToggle",
+          label: "Shipping",
+          checked: shippingChargeEnabled,
+          onToggle: (checked) => {
+            setShippingChargeEnabled(checked);
+            if (!checked) {
+              setShippingCharge("");
+            } else if (!shippingCharge) {
+              setShippingCharge("0.00");
+            }
+          },
+        },
+      ]}
       totalsRows={[
         {
           key: "totalQty",
@@ -436,10 +530,11 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
+        ...chargeRows,
         {
           key: "netAmount",
           label: "Net Amount",
-          value: `Rs.${parseFloat(netAmount || 0).toFixed(2)}`,
+          value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
           emphasized: true,
         },

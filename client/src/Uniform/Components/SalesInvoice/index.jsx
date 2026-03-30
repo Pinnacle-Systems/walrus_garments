@@ -146,10 +146,6 @@ const SalesInvoice = () => {
 
     };
 
-    const handleConvertToDelivery = (dataObj) => {
-        dispatch(push({ name: "SALES DELIVERY", projectId: dataObj.id }));
-    };
-
     const handleMakePayment = (dataObj) => {
         dispatch(push({ name: "PAYMENTS", transactionType: "SALESINVOICE", id: dataObj.id }));
     };
@@ -202,7 +198,6 @@ const SalesInvoice = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                            onConvertToDelivery={handleConvertToDelivery}
                             onMakePayment={handleMakePayment}
                         />
                     </div>

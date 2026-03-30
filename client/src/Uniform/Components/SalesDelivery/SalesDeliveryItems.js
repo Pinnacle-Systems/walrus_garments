@@ -41,7 +41,8 @@ const SalesDeliveryItems = ({
     setTaxMethod,
     isHeaderOpen,
     itemPriceList,
-    priceTemplateList
+    priceTemplateList,
+    restrictSourceLineEdits = false,
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -134,6 +135,7 @@ const SalesDeliveryItems = ({
 
     useEffect(() => {
         if (id) return;
+        if (restrictSourceLineEdits) return;
         const length = standardTransactionPlaceholderRowCount;
         if (deliveryItems?.length >= length) return;
         setDeliveryItems((prev) => {
@@ -154,9 +156,10 @@ const SalesDeliveryItems = ({
             }));
             return [...prev, ...newArray];
         });
-    }, [transType, setDeliveryItems, deliveryItems, isHeaderOpen]);
+    }, [transType, setDeliveryItems, deliveryItems, isHeaderOpen, id, restrictSourceLineEdits]);
 
     const addNewRow = () => {
+        if (restrictSourceLineEdits) return;
         setDeliveryItems([...deliveryItems, {
             itemId: "", qty: "", tax: "0", colorId: "", uomId: "",
             price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: "", taxMethod: ""
@@ -254,7 +257,7 @@ const SalesDeliveryItems = ({
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
-                                                    tabIndex="0" disabled={readOnly}
+                                                    tabIndex="0" disabled={readOnly || restrictSourceLineEdits}
                                                     className={compactSelectClassName}
                                                     value={row.itemId}
                                                     onChange={e => handleInputChange(e.target.value, index, "itemId")}
@@ -276,7 +279,7 @@ const SalesDeliveryItems = ({
                                                     value={row.sizeId}
                                                     onChange={e => handleInputChange(e.target.value, index, "sizeId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    disabled={readOnly || !row.itemId}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.itemId}
                                                 >
                                                     <option></option>
                                                     {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map(blend => (
@@ -293,7 +296,7 @@ const SalesDeliveryItems = ({
                                                     value={row.colorId}
                                                     onChange={e => handleInputChange(e.target.value, index, "colorId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    disabled={readOnly || !row.sizeId}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.sizeId}
                                                 >
                                                     <option hidden></option>
                                                     {(id ? colorList?.data : getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId))?.map(blend => (
@@ -310,7 +313,7 @@ const SalesDeliveryItems = ({
                                                     value={row.hsnId}
                                                     onChange={e => handleInputChange(e.target.value, index, "hsnId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "hsnId")}
-                                                    disabled={readOnly || !row.sizeId}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.sizeId}
                                                 >
                                                     <option hidden></option>
                                                     {hsnList?.data?.map(blend => (
@@ -327,7 +330,7 @@ const SalesDeliveryItems = ({
                                                     value={row.uomId}
                                                     onChange={e => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "uomId")}
-                                                    disabled={readOnly || !row.colorId}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.colorId}
                                                 >
                                                     <option hidden></option>
                                                     {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map(blend => (
@@ -364,7 +367,7 @@ const SalesDeliveryItems = ({
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}
-                                                    disabled={readOnly || !row.qty}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.qty}
                                                     onChange={e => handleInputChange(e.target.value, index, "price")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price")}
                                                 />
@@ -383,6 +386,7 @@ const SalesDeliveryItems = ({
                                                     className={compactDropdownClassName}
                                                     value={row.discountType}
                                                     onChange={e => handleInputChange(e.target.value, index, "discountType")}
+                                                    disabled={readOnly || restrictSourceLineEdits}
                                                 >
                                                     <option value=""></option>
                                                     <option value="Flat">Flat</option>
@@ -401,7 +405,7 @@ const SalesDeliveryItems = ({
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.discountValue) ? 0 : row.discountValue}
-                                                    disabled={readOnly || !row.qty}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.qty}
                                                     onChange={e => handleInputChange(e.target.value, index, "discountValue")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue")}
                                                 />
@@ -413,6 +417,7 @@ const SalesDeliveryItems = ({
                                                     className={compactDropdownClassName}
                                                     value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
                                                     onChange={e => handleInputChange(e.target.value, index, "taxMethod")}
+                                                    disabled={readOnly || restrictSourceLineEdits}
                                                 >
                                                     <option value=""></option>
                                                     <option value="Inclusive">Inclusive</option>

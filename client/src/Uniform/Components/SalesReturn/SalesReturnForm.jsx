@@ -47,6 +47,10 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const [remarks, setRemarks] = useState("")
   const [terms, setTerms] = useState("")
   const [term, setTerm] = useState("")
+  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  const [packingCharge, setPackingCharge] = useState("");
+  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  const [shippingCharge, setShippingCharge] = useState("");
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -65,6 +69,16 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
   const params = {
     branchId, companyId, userId, finYearId
+  };
+  const parseChargeAmount = (value) => {
+    const parsedValue = parseFloat(value);
+    return Number.isFinite(parsedValue) ? parsedValue : 0;
+  };
+  const formatChargeValue = (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return "";
+    }
+    return parseChargeAmount(value).toFixed(2);
   };
 
 
@@ -92,6 +106,10 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   useEffect(() => {
     if (!id) {
       setTerm("");
+      setPackingChargeEnabled(false);
+      setPackingCharge("");
+      setShippingChargeEnabled(false);
+      setShippingCharge("");
     }
   }, [id]);
 
@@ -130,6 +148,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
     setPayTermId(data?.payTermId ? data?.payTermId : "");
     setCustomerId(data?.customerId ? data?.customerId : "");
+    setSalesDeliveryId(data?.salesDeliveryId ? data?.salesDeliveryId : "");
     setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
     setDcNo(data?.dcNo ? data.dcNo : "")
     setLocationId(data?.branchId ? data?.branchId : "")
@@ -138,6 +157,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
+    const nextPackingCharge = formatChargeValue(data?.packingCharge);
+    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    setPackingCharge(nextPackingCharge);
+    setShippingCharge(nextShippingCharge);
+    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -170,7 +195,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    terms
+    terms,
+    salesDeliveryId,
+    packingChargeEnabled,
+    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
+    shippingChargeEnabled,
+    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
 
   }
 
@@ -349,6 +379,44 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   }
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const adjustedNetAmount = netAmount + extraCharges;
+  const chargeRows = [
+    ...(packingChargeEnabled
+      ? [{
+          key: "packingCharge",
+          label: "Packing Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={packingCharge}
+              onChange={(event) => setPackingCharge(event.target.value)}
+              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+    ...(shippingChargeEnabled
+      ? [{
+          key: "shippingCharge",
+          label: "Shipping Charge",
+          summaryColumn: "right",
+          renderValue: () => (
+            <input
+              type="number"
+              value={shippingCharge}
+              onChange={(event) => setShippingCharge(event.target.value)}
+              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          ),
+        }]
+      : []),
+  ];
   function isSupplierOutside() {
     if (supplierDetails) {
       return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
@@ -417,6 +485,34 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      chargeOptions={[
+        {
+          key: "packingChargeToggle",
+          label: "Packing",
+          checked: packingChargeEnabled,
+          onToggle: (checked) => {
+            setPackingChargeEnabled(checked);
+            if (!checked) {
+              setPackingCharge("");
+            } else if (!packingCharge) {
+              setPackingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "shippingChargeToggle",
+          label: "Shipping",
+          checked: shippingChargeEnabled,
+          onToggle: (checked) => {
+            setShippingChargeEnabled(checked);
+            if (!checked) {
+              setShippingCharge("");
+            } else if (!shippingCharge) {
+              setShippingCharge("0.00");
+            }
+          },
+        },
+      ]}
       totalsRows={[
         {
           key: "totalQty",
@@ -436,10 +532,11 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           value: `₹${(taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
           summaryColumn: "right",
         },
+        ...chargeRows,
         {
           key: "netAmount",
           label: "Net Amount",
-          value: `₹${(netAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          value: `₹${(adjustedNetAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
           emphasized: true,
           summaryColumn: "right",
         },
