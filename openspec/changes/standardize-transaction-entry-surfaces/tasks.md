@@ -16,7 +16,7 @@
 - [x] 2.2 Refactor Purchase Inward to be the canonical implementation of the shared transaction-entry shell and table surface where older subflows still diverge.
 - [x] 2.3 Refactor Estimate / Quotation, Sale Order, Sales Invoice, Sales Delivery, and Sales Return to match the Purchase Inward baseline for both the transaction-entry shell and the line-item table surface.
 - [x] 2.4 Refactor Purchase Return / Cancel to match the shared shell and line-item table standard.
-- [ ] 2.8 Compact the standardized transaction footers so pinned footer height is reduced while preserving notes, totals, and transaction-specific actions across Purchase Inward and the other in-scope transaction forms.
+- [x] 2.8 Compact the standardized transaction footers so pinned footer height is reduced while preserving notes, totals, and transaction-specific actions across Purchase Inward and the other in-scope transaction forms.
 
 ## 3. Verify behavioral parity
 

@@ -241,9 +241,12 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           });
           invalidateTagsDispatch()
 
-          if (nextProcess == "new" || nextProcess == "close") {
+          if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
+          }
+          else if (nextProcess == "close") {
+            onClose()
           }
           else {
             setId(returnData?.data?.id);

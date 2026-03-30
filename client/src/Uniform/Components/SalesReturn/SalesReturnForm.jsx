@@ -242,9 +242,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         });
 
         if (returnData.statusCode === 0) {
-          if (nextProcess == "new" || nextProcess == "close") {
+          if (nextProcess == "new") {
             syncFormWithDb(undefined);
             onNew()
+          }
+          else if (nextProcess == "close") {
+            onClose()
           }
           else {
             setId(returnData?.data?.id);
