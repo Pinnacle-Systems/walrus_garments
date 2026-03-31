@@ -84,7 +84,6 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
             // toast.success(text + "Successfully");
             Swal.fire({
                 title: text + "  " + "Successfully",
@@ -97,6 +96,8 @@ export default function Form() {
             } else {
                 setForm(false)
             }
+            setId("")
+
         } catch (error) {
             console.log("handle");
         }

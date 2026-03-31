@@ -71,14 +71,10 @@ export default function Form() {
             } else {
                 // setReadOnly(true);
                 setName(data?.name ? data.name : "");
-                const totalDays = data?.days ? parseInt(data.days) : 0;
-                const y = Math.floor(totalDays / 365);
-                const rem = totalDays % 365;
-                const m = Math.floor(rem / 30);
-                const d = rem % 30;
-                setYears(y);
-                setMonths(m);
-                setDays(d);
+
+                setYears(data?.years ? data?.years : 0);
+                setMonths(data?.months ? data?.months : 0);
+                setDays(data?.days ? data?.days : 0);
                 setActive(id ? (data?.active ?? false) : true);
                 setAliasName(data?.aliasName ? data?.aliasName : "")
                 childRecord.current = data?.childRecord ? data?.childRecord : 0;
@@ -94,7 +90,7 @@ export default function Form() {
     const totalDays = (parseInt(years) || 0) * 365 + (parseInt(months) || 0) * 30 + (parseInt(days) || 0);
 
     const data = {
-        id, aliasName: aliasName.trim(), name, days: totalDays, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, aliasName: aliasName.trim(), name, days: totalDays, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"), years, months, days
     }
 
     const validateData = (data) => {
@@ -107,7 +103,7 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData?.data?.id)
+            // setId(returnData?.data?.id)
             dispatchInvalidate();
             await Swal.fire({
                 title: text + "  " + "Successfully",
@@ -119,6 +115,8 @@ export default function Form() {
             } else {
                 setForm(false);
             }
+            setId("")
+
 
         } catch (error) {
             await Swal.fire({
@@ -150,11 +148,11 @@ export default function Form() {
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.aliasName?.trim().toUpperCase() == upperAlias.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == name.trim());
         } else {
-            foundItem = allData?.data?.some(item => item?.aliasName?.trim().toUpperCase() == upperAlias.trim());
-
+            foundItem = allData?.data?.some(item => item?.name?.trim().toUpperCase() == name.trim());
         }
+
         if (foundItem) {
             Swal.fire({
                 text: "The PayTerm already exists.",
@@ -286,7 +284,7 @@ export default function Form() {
 
         {
             header: "Pay Term",
-            accessor: (item) => item?.aliasName,
+            accessor: (item) => item?.name,
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-left uppercase w-96",
         },
@@ -417,7 +415,9 @@ export default function Form() {
                                                 <div className="grid grid-cols-2  gap-3 ">
 
                                                     <div className='mb-3 '>
-                                                        <TextInputNew1 name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
+                                                        <TextInputNew1 name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                            ref={nameRef}
+                                                        />
                                                     </div>
 
 

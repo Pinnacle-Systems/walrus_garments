@@ -45,21 +45,24 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, days, companyId, active, aliasName } = await body
+    const { name, days, months, years, companyId, active, aliasName } = await body
     const data = await prisma.payTerm.create(
         {
             data: {
-                name, aliasName : aliasName ? aliasName : undefined,
-                 days: days ? parseInt(days) : undefined, 
-                 companyId: parseInt(companyId), active
+                name, aliasName: aliasName ? aliasName : undefined,
+                days: days ? parseInt(days) : undefined,
+                months: months ? parseInt(months) : undefined,
+                years: years ? parseInt(years) : undefined,
+                companyId: parseInt(companyId), active
             }
         }
     )
     return { statusCode: 0, data };
+
 }
 
 async function update(id, body) {
-    const { name, days, companyId, active  , aliasName} = await body
+    const { name, days, months, years, companyId, active, aliasName } = await body
     const dataFound = await prisma.payTerm.findUnique({
         where: {
             id: parseInt(id)
@@ -71,8 +74,13 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            name, days: days ? parseInt(days) : undefined, companyId: parseInt(companyId), active ,
-            aliasName : aliasName ? aliasName : undefined
+            name,
+            days: days ? parseInt(days) : undefined,
+            months: months ? parseInt(months) : undefined,
+            years: years ? parseInt(years) : undefined,
+            companyId: parseInt(companyId),
+            active,
+            aliasName: aliasName ? aliasName : undefined
         }
     })
     return { statusCode: 0, data };

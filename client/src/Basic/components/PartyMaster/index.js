@@ -430,6 +430,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       } else {
         setForm(false)
       }
+      setId("")
 
       await Swal.fire({
         icon: 'success',

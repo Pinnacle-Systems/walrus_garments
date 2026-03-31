@@ -343,7 +343,10 @@ export default function Form() {
         onNew();
       } else {
         setForm(false);
-      } dispatchInvalidate();
+      }
+      setId("")
+
+      dispatchInvalidate();
       await Swal.fire({
         title: text + " Successfully",
         icon: "success",
@@ -385,6 +388,17 @@ export default function Form() {
       nameRef.current?.focus();
       return
     }
+
+
+    if (!data?.aadharNo?.trim()) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Required Field Missing',
+        text: 'Please fill in at least one: Aadhar number.',
+      });
+      return false;
+    }
+
 
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
@@ -949,11 +963,11 @@ export default function Form() {
                         {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
                       </div>
                       <div>
-                        <TextInputNew1
+                        <TextInput
                           name="Aadhar No"
                           value={aadharNo}
+                          type="aadhar"
                           setValue={setAadharNo}
-                          type={"number"}
                           required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
@@ -961,9 +975,11 @@ export default function Form() {
                         {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
                       </div>
                       <div>
-                        <TextInputNew1
+                        <TextInput
                           name="Pan No"
                           value={panNo}
+                          type="pan_no"
+
                           setValue={setPanNo}
                           // required
                           readOnly={readOnly}

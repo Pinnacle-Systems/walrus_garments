@@ -101,7 +101,6 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id)
             dispatchInvalidate();
             // toast.success(text + "Successfully");
             await Swal.fire({
@@ -115,6 +114,8 @@ export default function Form() {
             } else {
                 setForm(false)
             }
+            setId("")
+
         } catch (error) {
             await Swal.fire({
                 icon: 'error',

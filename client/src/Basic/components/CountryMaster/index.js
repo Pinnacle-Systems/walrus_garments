@@ -22,6 +22,7 @@ import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { usePermissionForUsers } from "../HasPermission";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const MODEL = "Country Master";
 
@@ -36,15 +37,22 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState({});
 
-  const [searchValue, setSearchValue] = useState("");
-  const formRef = useRef(null);
-
   const childRecord = useRef(0);
-  const { hasPermission } = usePermissionForUsers()
+  const { hasPermission } = usePermissionForUsers();
+
+  const codeRef = useRef(null);
+  const formRef = useRef(null);
+  const statusRef = useRef(null);
 
   const [invalidateTagsDispatch] = useInvalidateTags();
 
-
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: countryNameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -55,7 +63,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     data: allData,
     isLoading,
     isFetching,
-  } = useGetCountriesQuery({ params, searchParams: searchValue });
+  } = useGetCountriesQuery({ params });
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -120,7 +128,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId(returnData.data.id);
       if (onSuccess) {
         await Swal.fire({
           title: "Saved Successfully",
@@ -140,6 +147,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       } else {
         setForm(false)
       }
+      setId("")
+
     } catch (error) {
       await Swal.fire({
         icon: 'error',
@@ -302,8 +311,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setForm(true);
   }
 
-  const countryNameRef = useRef(null);
-
   useEffect(() => {
     if ((form || onSuccess) && countryNameRef.current) {
       countryNameRef.current.focus();
@@ -325,6 +332,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 readOnly={readOnly}
                 ref={countryNameRef}
                 disabled={childRecord.current > 0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    codeRef.current?.focus();
+                  }
+                }}
               />
             </div>
             <div className="mb-3 ml-5">
@@ -335,7 +348,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 setValue={setCode}
                 required={true}
                 readOnly={readOnly}
+                ref={codeRef}
                 disabled={childRecord.current > 0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    statusRef.current?.focus();
+                  }
+                }}
               />
             </div>
           </div>
@@ -347,7 +367,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               setActive={setActive}
               required={true}
               readOnly={readOnly}
-            />
+              onKeyDown={handlers.handleToggleKeyDown}
+              ref={toggleButtonRef} />
           </div>
 
         </div>
@@ -364,13 +385,22 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       try {
         const res = await removeData(deleteId).unwrap();
         if (res?.statusCode === 1) {
-          toast.error(res?.data?.message || "Cannot delete: child records exist");
+          Swal.fire({
+            title: res?.data?.message || "Cannot delete: child records exist",
+            icon: "error",
+          });
           return;
         }
-        toast.success("Country deleted successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
         onSuccess?.();
       } catch (err) {
-        toast.error(err?.data?.message || "Failed to delete country");
+        Swal.fire({
+          title: err?.data?.message || "Failed to delete country",
+          icon: "error",
+        });
       }
     };
 
@@ -433,6 +463,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           <button
             type="button"
             onClick={() => saveData("close")}
+            ref={saveCloseButtonRef}
+            onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
             className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
           >
             <Check size={14} />
@@ -520,6 +552,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("close")
                         }}
+                        ref={saveCloseButtonRef}
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                   border border-blue-600 flex items-center gap-1 text-xs"
                       >
@@ -535,7 +570,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("new")
                         }}
-
+                        ref={saveNewButtonRef} // ✅ Add ref
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                       >

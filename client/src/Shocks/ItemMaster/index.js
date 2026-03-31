@@ -5,7 +5,7 @@ import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power, Plus } from "lucide-react";
-import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount } from "../../Inputs";
+import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount, DropdownInputNew } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
 import { ItemTypes, statusDropdown } from "../../Utils/DropdownData";
 import { dropDownListObject, multiSelectOption } from "../../Utils/contructObject";
@@ -20,6 +20,8 @@ import { useGetItemControlPanelMasterQuery } from "../../redux/uniformService/It
 import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategoryMasterService";
 import QuickAddSizeModal from "./QuickAddSizeModal";
 import QuickAddColorModal from "./QuickAddColorModal";
+import HsnMaster from "../../Basic/components/HsnMaster";
+import ItemCategroyMaster from "../ItemCategroyMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
 
 const createStandardPriceRow = () => ({
@@ -319,7 +321,8 @@ export default function Form() {
         });
         return;
       }
-      setId(returnData.data.id);
+      setId("")
+
       dispatchInvalidate();
       Swal.fire({
         title: text + "  " + "Successfully",
@@ -518,6 +521,12 @@ export default function Form() {
       accessor: (item) => item.code,
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
+    },
+    {
+      header: "HSN Code",
+      accessor: (item) => item.hsn?.name,
+      className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
+      search: "HSN Code",
     },
     {
       header: "Status",
@@ -859,25 +868,29 @@ export default function Form() {
 
 
                     <div className="col-span-1">
-                      <DropdownInput
+                      <DropdownInputNew
                         name="HSN"
-                        options={dropDownListObject(
-                          id ? hsnData?.data : hsnData?.data?.filter(item => item.active),
-                          "name",
-                          "id"
-                        )}
+                        options={hsnData?.data?.filter(item => id || item.active).map(item => ({
+                          show: item?.country?.name ? `${item.name} (${item.country.name})` : item.name,
+                          value: item.id,
+                          _count: item?._count
+                        }))}
                         value={hsnId}
                         setValue={setHsnId}
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
+                        addNewLabel="+ Add New HSN"
+                        childComponent={HsnMaster}
+                        addNewModalWidth="w-[45%] h-[400px]"
+                        searchable={true}
                       />
                     </div>
 
                     {AccessItemsColums?.sectionType && (
                       <>
                         <div className="col-span-2">
-                          <DropdownInput
+                          <DropdownInputNew
                             name="Section Type"
                             options={dropDownListObject(
                               id ? sectionData?.data : sectionData?.data?.filter(item => item.active),
@@ -898,7 +911,7 @@ export default function Form() {
 
 
                     <div className="col-span-2">
-                      <DropdownInput
+                      <DropdownInputNew
                         name="Item Category"
                         options={dropDownListObject(
                           id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active),
@@ -910,6 +923,10 @@ export default function Form() {
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
+                        addNewLabel="+ Add New Category"
+                        childComponent={ItemCategroyMaster}
+                        addNewModalWidth="w-[45%] h-[400px]"
+                        searchable={true}
                       />
                     </div>
                     {/* <div className="col-span-2">

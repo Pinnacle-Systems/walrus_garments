@@ -93,7 +93,7 @@ export default function Form() {
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId(returnData?.data?.id)
+      // setId(returnData?.data?.id)
       dispatchInvalidate();
       await Swal.fire({
         title: text + "  " + "Successfully",
@@ -113,6 +113,8 @@ export default function Form() {
       });
       nameRef.current?.focus();
     }
+    setId("")
+
   };
 
   const saveData = (nextProcess) => {
@@ -299,7 +301,7 @@ export default function Form() {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={deleteData}
-          itemsPerPage={10}
+          itemsPerPage={15}
         />
       </div>
 

@@ -81,7 +81,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id);
+            // setId(returnData.data.id);
             if (onSuccess) {
                 onSuccess(returnData.data.id);
                 return;
@@ -97,6 +97,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             } else {
                 setForm(false);
             }
+            setId("")
+
         } catch (error) {
             await Swal.fire({
                 icon: 'error',
@@ -257,16 +259,24 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             try {
                 const res = await removeData(deleteId).unwrap();
                 if (res?.statusCode === 1) {
-                    toast.error(res?.data?.message || "Cannot delete: child records exist");
+                    Swal.fire({
+                        title: res?.data?.message || "Cannot delete: child records exist",
+                        icon: "error",
+                    });
                     return;
                 }
-                toast.success("Employee Category deleted successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                });
                 onSuccess?.();
             } catch (err) {
-                toast.error(err?.data?.message || "Failed to delete employee category");
+                Swal.fire({
+                    title: err?.data?.message || "Failed to delete country",
+                    icon: "error",
+                });
             }
         };
-
         return (
             <div className="h-full flex flex-col bg-gray-200">
                 <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">

@@ -90,7 +90,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId(returnData.data.id)
+      // setId(returnData.data.id)
       if (onSuccess) {
         onSuccess(returnData.data.id);
         await Swal.fire({
@@ -112,6 +112,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       } else {
         setForm(false)
       }
+      setId("")
+
     } catch (error) {
       await Swal.fire({
         icon: 'error',
@@ -325,13 +327,22 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       try {
         const res = await removeData(deleteId).unwrap();
         if (res?.statusCode === 1) {
-          toast.error(res?.data?.message || "Cannot delete: child records exist");
+          Swal.fire({
+            title: res?.data?.message || "Cannot delete: child records exist",
+            icon: "error",
+          });
           return;
         }
-        toast.success("Branch Type deleted successfully");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
         onSuccess?.();
       } catch (err) {
-        toast.error(err?.data?.message || "Failed to delete branch type");
+        Swal.fire({
+          title: err?.data?.message || "Failed to delete country",
+          icon: "error",
+        });
       }
     };
 

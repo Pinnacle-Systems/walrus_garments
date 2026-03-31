@@ -206,6 +206,8 @@ export default function Form() {
       } else {
         setForm(false)
       }
+      setId("")
+
     } catch (error) {
       await Swal.fire({
         icon: 'error',

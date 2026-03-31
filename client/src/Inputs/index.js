@@ -1,6 +1,6 @@
 
 import validator from "validator";
-import React, { useEffect, useRef, useState, forwardRef, useCallback } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useCallback, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { MultiSelect } from "react-multi-select-component";
 import { findFromList } from "../Utils/helper";
@@ -1715,15 +1715,23 @@ export const DropdownWithSearchNew = ({
 //   );
 // };
 
-export const ToggleButton = ({
+export const ToggleButton = forwardRef(({
   name,
   value,
   setActive,
   required,
   readOnly,
   disabled = false,
-}) => {
+  onKeyDown,
+}, ref) => {
   const [isToggled, setIsToggled] = useState(false);
+  const labelRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      labelRef.current?.focus();
+    }
+  }));
 
   useEffect(() => {
     if (value) {
@@ -1733,12 +1741,32 @@ export const ToggleButton = ({
     }
   }, [value, isToggled]);
 
+
+
   return (
     <div>
       <div className="">
-        {/* <label className={`md:text-start flex`}>{required ? <RequiredLabel name={name} /> : `${name}`}</label> */}
-        <div className="flex items-center">
-          <label className="relative inline-flex items-center cursor-pointer">
+        <label className={`block  font-bold text-slate-700 mb-1 text-xs`}>
+          {required ? <RequiredLabel name={name} /> : `${name}`}
+        </label>
+        <div className="flex items-center mt-1">
+          <label className="relative inline-flex items-center cursor-pointer"
+            ref={labelRef}
+            tabIndex={0}
+
+            onKeyDown={(e) => {
+              // Handle Space or Enter to toggle
+              if ((e.key === ' ' || e.key === 'Enter') && !readOnly && !disabled) {
+                e.preventDefault();
+                setIsToggled(!isToggled);
+                setActive(!value);
+              }
+              // ✅ Call parent's onKeyDown if provided
+              if (onKeyDown) {
+                onKeyDown(e);
+              }
+            }}
+          >
             <input
               type="checkbox"
               className="sr-only peer"
@@ -1751,17 +1779,21 @@ export const ToggleButton = ({
               }}
               disabled={disabled}
               required
+              tabIndex={-1}
+
             />
             <div className="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 peer transition duration-300"></div>
             <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-6 transition-transform duration-300 shadow-sm"></div>
           </label>
 
-          <span className="ml-2 block text-xs font-bold text-gray-600">{value ? "Active" : "Inactive"}</span>
+          <span className="ml-2 block text-xs font-bold text-gray-600">
+            {value ? "Active" : "Inactive"}
+          </span>
         </div>
       </div>
     </div>
   );
-};
+});
 
 
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
@@ -3244,6 +3276,16 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     const [openModel, setOpenModel] = useState(false);
     const [childId, setChildId] = useState('')
 
+    const focusNext = (currentTarget) => {
+      const allFocusable = Array.from(
+        document.querySelectorAll(
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), button:not([disabled])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+      const idx = allFocusable.indexOf(currentTarget);
+      if (idx >= 0 && allFocusable[idx + 1]) allFocusable[idx + 1].focus();
+    };
+
     const [search, setSearch] = useState("");           // 🔹 search text
     const [filteredPages, setFilteredPages] = useState([]);
     const [isListShow, setIsListShow] = useState(false);
@@ -3294,34 +3336,33 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
 
     /* ---------------------------- ARROW NAVIGATION --------------------------- */
-
     useEffect(() => {
-      const pageSearch = document.getElementById("pageSearch");
-      if (!pageSearch) return;
+      const container = containerRef.current;
+      if (!container) return;
 
       const handler = (e) => {
+        if (!isDropdownOpen) return;
 
-        const items = pageSearch.querySelectorAll('[tabindex="0"]');
+        const focusableItems = Array.from(
+          container.querySelectorAll('input, [tabindex="0"]')
+        ).filter((item) => item.offsetParent !== null);
 
-
-
-
-        const index = Array.from(items).indexOf(document.activeElement);
+        const currentIndex = focusableItems.indexOf(document.activeElement);
 
         if (e.key === "ArrowDown") {
-          items[index + 1]?.focus();
           e.preventDefault();
-        }
-
-        if (e.key === "ArrowUp") {
-          items[index - 1]?.focus();
+          const nextIndex = (currentIndex + 1) % focusableItems.length;
+          focusableItems[nextIndex]?.focus();
+        } else if (e.key === "ArrowUp") {
           e.preventDefault();
+          const prevIndex = (currentIndex - 1 + focusableItems.length) % focusableItems.length;
+          focusableItems[prevIndex]?.focus();
         }
       };
 
-      pageSearch.addEventListener("keydown", handler);
-      return () => pageSearch.removeEventListener("keydown", handler);
-    }, []);
+      container.addEventListener("keydown", handler);
+      return () => container.removeEventListener("keydown", handler);
+    }, [isDropdownOpen, filteredPages]);
 
 
     /* ---------------------------------- HANDLERS ------------------------------ */
@@ -3445,8 +3486,8 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                     setIsDropdownOpen(true);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && nextRef?.current) {
-                      nextRef.current.focus();
+                    if (e.key === "Enter") {
+                      focusNext(e.target);
                     }
                   }}
                   disabled={disabled || readOnly}
@@ -3541,11 +3582,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                         setSearch("");
                         setIsListShow(false);
                         setIsDropdownOpen(false);
-                        if (nextRef?.current) {
-                          e.preventDefault();
-                          nextRef?.current?.focus();
-                        }
-
+                        focusNext(containerRef.current?.querySelector('input') || e.target);
                       }
                     }}
                   >

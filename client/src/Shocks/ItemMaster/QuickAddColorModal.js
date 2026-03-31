@@ -87,9 +87,9 @@ const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
       <div className="p-4 bg-white rounded-lg shadow-xl">
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <h2 className="text-lg font-bold text-gray-800">Quick Add Color</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-red-500">
+          {/* <button onClick={onClose} className="text-gray-500 hover:text-red-500">
             <X className="w-5 h-5" />
-          </button>
+          </button> */}
         </div>
 
         <div className="space-y-4">
