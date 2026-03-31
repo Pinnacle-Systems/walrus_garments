@@ -11,6 +11,7 @@ import { Check, Plus, Power, Trash2, Paperclip } from 'lucide-react';
 import Modal from '../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 import { useAddTermsandCondtionsMutation, useDeleteTermsandCondtionsMutation, useGetTermsandCondtionsByIdQuery, useGetTermsandCondtionsQuery, useUpdateTermsandCondtionsMutation } from '../../redux/services/Term&ConditionsMasterService';
+import { useFormKeyboardNavigation } from '../../CustomHooks/useFormKeyboardNavigation';
 
 const MODEL = "Counts Master"
 
@@ -34,7 +35,14 @@ export default function Form() {
     };
     const { data: allData, isLoading, isFetching } = useGetTermsandCondtionsQuery({ params, searchParams: searchValue });
 
-    console.log(allData, "data")
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        secondInputRef: termsAndConditionRef,
+        toggleButtonRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
 
     const {
         data: singleData,
@@ -100,6 +108,8 @@ export default function Form() {
 
         } catch (error) {
             console.log("handle");
+            nameRef.current?.focus();
+
         }
     };
 
@@ -186,6 +196,9 @@ export default function Form() {
         setReadOnly(false);
         setPendingFile(null);
         setAttachments([]);
+        setTimeout(() => {
+            nameRef.current?.focus();
+        }, 100);
     };
 
     function onDataClick(id) {
@@ -275,6 +288,13 @@ export default function Form() {
 
     const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
+
+    useEffect(() => {
+        if (form && nameRef.current) {
+            nameRef.current.focus();
+        }
+    }, [form]);
+
     return (
 
         <div
@@ -347,8 +367,9 @@ export default function Form() {
                                     <div className="flex gap-2">
                                         {!readOnly && (
                                             <button
-                                                ref={saveCloseBtnRef}
-                                                type="button"
+                                                ref={saveCloseButtonRef}
+                                                tabIndex={0} // ✅ Add tabIndex
+                                                onKeyDown={handlers.handleSaveCloseKeyDown(saveData)} type="button"
                                                 onClick={() => { saveData("close") }}
                                                 className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
                                                 border border-blue-600 flex items-center gap-1 text-xs"
@@ -361,8 +382,9 @@ export default function Form() {
                                     <div className="flex gap-2">
                                         {(!readOnly && !id) && (
                                             <button
-                                                ref={saveNewBtnRef}
-                                                type="button"
+                                                ref={saveNewButtonRef} // ✅ Add ref
+                                                tabIndex={0} // ✅ Add tabIndex
+                                                onKeyDown={handlers.handleSaveNewKeyDown(saveData)} type="button"
                                                 onClick={() => { saveData("new") }}
                                                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
                                                 border border-green-600 flex items-center gap-1 text-xs"
@@ -382,7 +404,7 @@ export default function Form() {
 
 
                                             <div className="">
-                                                <TextInputNew1 name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} ref={firstInputFocus} />
+                                                <TextInputNew1 name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} />
 
                                             </div>
                                             <div className='  flex   col-span-2 flex-col'>
@@ -395,7 +417,7 @@ export default function Form() {
                                                     value={termsAndCondition}
                                                     disabled={readOnly}
                                                     onChange={(e) => setTermsAndCondition(e.target.value)}
-
+                                                    ref={termsAndConditionRef}
                                                     onKeyDown={(e) => {
                                                         if (e.ctrlKey && e.key === "Enter") {
                                                             e.preventDefault();
@@ -420,7 +442,9 @@ export default function Form() {
                                                 />
                                             </div>
                                             <div className='mt-5'>
-                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                                    onKeyDown={handlers.handleToggleKeyDown}
+                                                    ref={toggleButtonRef} />
                                             </div>
 
                                         </div>

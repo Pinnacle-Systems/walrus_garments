@@ -42,6 +42,7 @@ import Loader from "../Loader";
 import { getImageUrlPath } from "../../../Constants";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { useGetPartyBranchByIdQuery } from "../../../redux/services/PartyBranchMasterService";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const MODEL = "Party Master";
 
@@ -97,7 +98,13 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
 
 
@@ -856,7 +863,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
 
-  const nameRef = useRef(null);
   const countryNameRef = useRef(null)
 
   useEffect(() => {
@@ -1929,6 +1935,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           className="bg-gray-100 p-1 rounded-lg"
                           activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
                           inactiveClass="text-gray-500"
+                        // onKeyDown={handlers.handleToggleKeyDown}
+                        // ref={toggleButtonRef}
                         />
                       </div>
 

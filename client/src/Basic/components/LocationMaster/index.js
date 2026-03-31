@@ -13,6 +13,7 @@ import { Check, Plus, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const MODEL = "Location Master"
 
@@ -30,7 +31,7 @@ export default function Form() {
     const [errors, setErrors] = useState({});
 
     const [searchValue, setSearchValue] = useState("");
-    const nameRef = useRef(null);
+    // const nameRef = useRef(null);
     const childRecord = useRef(0);
     const formRef = useRef(null);
     // const dispatch = useDispatch();
@@ -54,6 +55,15 @@ export default function Form() {
     const [updateData] = useUpdateLocationMasterMutation();
     const [removeData] = useDeleteLocationMasterMutation();
     const [dispatchInvalidate] = useInvalidateTags();
+
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        toggleButtonRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
+
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -348,6 +358,8 @@ export default function Form() {
                                                 onClick={() => {
                                                     saveData("close")
                                                 }}
+                                                ref={saveCloseButtonRef}
+                                                onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                                                 border border-blue-600 flex items-center gap-1 text-xs"
                                             >
@@ -363,7 +375,9 @@ export default function Form() {
                                                 onClick={() => {
                                                     saveData("new")
                                                 }}
-
+                                                ref={saveNewButtonRef}
+                                                tabIndex={0}
+                                                onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                                                 border border-green-600 flex items-center gap-1 text-xs"
                                             >
@@ -401,7 +415,10 @@ export default function Form() {
                                                     />
                                                 </div>
                                                 <div className='mt-2'>
-                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                                        onKeyDown={handlers.handleToggleKeyDown}
+                                                        ref={toggleButtonRef}
+                                                    />
                                                 </div>
 
 

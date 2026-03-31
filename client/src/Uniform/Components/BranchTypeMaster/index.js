@@ -8,6 +8,7 @@ import { Check, Plus, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 const MODEL = "Department Master";
@@ -27,7 +28,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const searchRef = useRef(null);
-  const nameRef = useRef(null);
+  // const nameRef = useRef(null);
   const formRef = useRef(null)
 
   console.log(readOnly, "readOnly")
@@ -44,6 +45,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     isLoading: isSingleLoading,
   } = useGetbranchTypeByIdQuery(id, { skip: !id });
 
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
   const [addData] = useAddbranchTypeMutation();
   const [updateData] = useUpdatebranchTypeMutation();
@@ -496,6 +505,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("close")
                         }}
+                        ref={saveCloseButtonRef}
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                            border border-blue-600 flex items-center gap-1 text-xs"
                       >
@@ -511,7 +522,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("new")
                         }}
-
+                        ref={saveNewButtonRef}
+                        tabIndex={0}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                            border border-green-600 flex items-center gap-1 text-xs"
                       >
@@ -546,7 +559,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
 
                             <div className='mt-4'>
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                onKeyDown={handlers.handleToggleKeyDown}
+                                ref={toggleButtonRef}
+                              />
                             </div>
 
                           </fieldset>

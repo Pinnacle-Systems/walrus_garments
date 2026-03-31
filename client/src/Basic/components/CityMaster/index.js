@@ -28,6 +28,7 @@ import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { StateMaster } from "..";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 const MODEL = "City Master";
@@ -77,6 +78,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [addData] = useAddCityMutation();
     const [updateData] = useUpdateCityMutation();
     const [removeData] = useDeleteCityMutation();
+
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: countryNameRef,
+        toggleButtonRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
 
     const syncFormWithDb = useCallback((data) => {
         if (!id) {
@@ -322,7 +331,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         },
 
     ];
-    const countryNameRef = useRef(null);
 
     useEffect(() => {
         if ((form || onSuccess) && nameRef.current) {
@@ -398,7 +406,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 setActive={setActive}
                                 required={true}
                                 readOnly={readOnly}
-
+                                onKeyDown={handlers.handleToggleKeyDown}
+                                ref={toggleButtonRef}
                             />
                         </div>
                     </div>
@@ -493,6 +502,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     <button
                         type="button"
                         onClick={() => saveData("close")}
+                        ref={saveCloseButtonRef}
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
                     >
                         <Check size={14} />
@@ -579,6 +590,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                                 onClick={() => {
                                                     saveData("close");
                                                 }}
+                                                ref={saveCloseButtonRef}
+                                                onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                   border border-blue-600 flex items-center gap-1 text-xs"
                                             >
@@ -594,6 +607,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                                 onClick={() => {
                                                     saveData("new");
                                                 }}
+                                                ref={saveNewButtonRef}
+                                                tabIndex={0}
+                                                onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                                             >

@@ -368,7 +368,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               required={true}
               readOnly={readOnly}
               onKeyDown={handlers.handleToggleKeyDown}
-              ref={toggleButtonRef} />
+              ref={toggleButtonRef}
+            />
           </div>
 
         </div>
@@ -570,8 +571,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("new")
                         }}
-                        ref={saveNewButtonRef} // ✅ Add ref
-                        tabIndex={0} // ✅ Add tabIndex
+                        ref={saveNewButtonRef}
+                        tabIndex={0}
                         onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"

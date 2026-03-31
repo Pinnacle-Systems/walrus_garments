@@ -15,6 +15,7 @@ import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
@@ -27,7 +28,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const nameRef = useRef(null);
+  // const nameRef = useRef(null);
   const childRecord = useRef(0);
   const formRef = useRef(null);
 
@@ -47,6 +48,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [updateData] = useUpdateDepartmentMutation();
   const [removeData] = useDeleteDepartmentMutation();
   const [dispatchInvalidate] = useInvalidateTags();
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
+
 
   const syncFormWithDb = useCallback((data) => {
     if (!id) {
@@ -231,7 +241,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 />
               </div>
               <div className="mt-3">
-                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
+                <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly}
+                  onKeyDown={handlers.handleToggleKeyDown}
+                  ref={toggleButtonRef}
+                />
               </div>
             </div>
           </div>
@@ -326,6 +339,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           <button
             type="button"
             onClick={() => saveData("close")}
+            ref={saveCloseButtonRef}
+            onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
             className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
           >
             <Check size={14} />
@@ -390,6 +405,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   <div className="flex gap-2">
                     {!readOnly && (
                       <button type="button" onClick={() => saveData("close")}
+                        ref={saveCloseButtonRef}
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
                         <Check size={14} />
                         {id ? "Update" : "Save & close"}
@@ -399,6 +416,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   <div className="flex gap-2">
                     {(!readOnly && !id) && (
                       <button type="button" onClick={() => saveData("new")}
+                        ref={saveNewButtonRef}
+                        tabIndex={0}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
                         <Check size={14} />
                         Save & New

@@ -8,6 +8,7 @@ import Modal from '../../../UiComponents/Modal';
 import Swal from 'sweetalert2';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { statusDropdown } from '../../../Utils/DropdownData';
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 
@@ -25,7 +26,7 @@ export default function Form() {
   const [code, setCode] = useState("");
 
 
-  const nameRef = useRef(null);
+  // const nameRef = useRef(null);
   const childRecord = useRef(0);
   const formRef = useRef(null);
 
@@ -50,6 +51,16 @@ export default function Form() {
   const [updateData] = useUpdateColorMasterMutation();
   const [removeData] = useDeleteColorMasterMutation();
   const [dispatchInvalidate] = useInvalidateTags();
+
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -350,6 +361,8 @@ export default function Form() {
                         onClick={() => {
                           saveData("close")
                         }}
+                        ref={saveCloseButtonRef}
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                   border border-blue-600 flex items-center gap-1 text-xs"
                       >
@@ -365,7 +378,9 @@ export default function Form() {
                         onClick={() => {
                           saveData("new")
                         }}
-
+                        ref={saveNewButtonRef}
+                        tabIndex={0}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                       >
@@ -392,7 +407,10 @@ export default function Form() {
                         <div className=''>
 
                           <div className='mt-4'>
-                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                              onKeyDown={handlers.handleToggleKeyDown}
+                              ref={toggleButtonRef}
+                            />
                           </div>                        </div>
                         <div>
 

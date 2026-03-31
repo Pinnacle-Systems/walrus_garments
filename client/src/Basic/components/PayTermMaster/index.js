@@ -16,6 +16,8 @@ import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import "../../../../src/swapStyle.css";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+
 const MODEL = "Pay Term Master";
 
 export default function Form() {
@@ -34,7 +36,7 @@ export default function Form() {
     const [aliasName, setAliasName] = useState("")
 
     const [searchValue, setSearchValue] = useState("");
-    const nameRef = useRef(null);
+    // const nameRef = useRef(null);
     const formRef = useRef(null);
     const childRecord = useRef(0);
 
@@ -56,6 +58,16 @@ export default function Form() {
     const [updateData] = useUpdatePaytermMasterMutation();
     const [removeData] = useDeletePaytermMasterMutation();
     const [dispatchInvalidate] = useInvalidateTags();
+
+
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        toggleButtonRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
+
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -380,6 +392,9 @@ export default function Form() {
                                                 onClick={() => {
                                                     saveData("close")
                                                 }}
+                                                ref={saveCloseButtonRef}
+                                                tabIndex={0} // ✅ Add tabIndex
+                                                onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                   border border-blue-600 flex items-center gap-1 text-xs"
                                             >
@@ -395,7 +410,9 @@ export default function Form() {
                                                 onClick={() => {
                                                     saveData("new")
                                                 }}
-
+                                                ref={saveNewButtonRef} // ✅ Add ref
+                                                tabIndex={0} // ✅ Add tabIndex
+                                                onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                                                 className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                   border border-green-600 flex items-center gap-1 text-xs"
                                             >
@@ -479,7 +496,10 @@ export default function Form() {
                                                     Total Days : <span className="font-bold text-gray-700 text-[12px]">{totalDays} Days</span>
                                                 </div>
                                                 <div className='mt-1'>
-                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                                        onKeyDown={handlers.handleToggleKeyDown}
+                                                        ref={toggleButtonRef}
+                                                    />
                                                 </div>
 
                                             </div>
