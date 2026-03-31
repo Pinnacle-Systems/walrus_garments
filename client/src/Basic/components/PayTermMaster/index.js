@@ -340,7 +340,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[40%] h-[60%]"}
+                        widthClass={"w-[40%] h-[55%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -475,10 +475,10 @@ export default function Form() {
                                                     </div>
 
                                                 </div>
-                                                <div className="mt-2 text-xs text-center text-gray-500 w-full">
-                                                    Total Days : <span className="font-bold text-gray-700">{totalDays} Days</span>
+                                                <div className="mt-4 text-xs text-center text-gray-500 w-full">
+                                                    Total Days : <span className="font-bold text-gray-700 text-[12px]">{totalDays} Days</span>
                                                 </div>
-                                                <div className='mt-4'>
+                                                <div className='mt-1'>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </div>
 

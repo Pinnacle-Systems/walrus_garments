@@ -257,7 +257,7 @@ export default function Form() {
       setImage(data?.imageBase64 ? viewBase64String(data?.imageBase64) : null);
       setEmployeeCategory(data?.employeeCategoryId || "");
       setPermanent(data?.permanent || "");
-      setActive(data?.active ? data?.active : true);
+      setActive(id ? data?.active ? data?.active : false : true);
 
       // Employee Leaving Form states
       setLeavingDate(data?.leavingDate || "");
@@ -848,7 +848,7 @@ export default function Form() {
                       />
                       {errors.active && <span className="text-red-500 text-xs ml-1">{errors.active}</span>}
 
-                      {!active && (
+                      {/* {!active && (
                         <button
                           type="button"
                           onClick={() => setLeavingForm(true)}
@@ -856,7 +856,7 @@ export default function Form() {
                         >
                           Add Leaving Details
                         </button>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>

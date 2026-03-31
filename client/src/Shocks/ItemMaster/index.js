@@ -972,7 +972,7 @@ export default function Form() {
                         />
                       </div>
                     ))}
-                    <div className="col-span-1 mt-5">
+                    <div className="col-span-1 ">
                       <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                     </div>
 

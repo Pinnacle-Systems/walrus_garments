@@ -1918,7 +1918,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         />
                       </div>
 
-                      <div className=" ml-2 mt-5">
+                      <div className=" ml-2 mt-1">
                         <ToggleButton
                           name="Status"
                           options={statusDropdown}
@@ -2149,7 +2149,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         />
                         <TextInput
                           name="GST No"
-                          type="text"
+                          type="gst_no"
                           value={gstNo}
                           setValue={setGstNo}
                           readOnly={readOnly || parentId || isBranch}
