@@ -112,8 +112,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) return;
         if (id) {
+            if (!window.confirm("Are you sure update the details ...?")) {
+                return;
+            }
+        } if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
             handleSubmitCustom(addData, finalData, "Added", nextProcess);
@@ -170,8 +173,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
-        { header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-20" },
+        { header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-36" },
+        { header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-28" },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -208,7 +211,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 disabled={childRecord.current > 0}
                             />
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-5">
                             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
                         </div>
                     </div>
@@ -332,7 +335,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             </div>
 
             {form && (
-                <Modal isOpen={form} widthClass="w-[40%] h-[50%]" onClose={() => setForm(false)}>
+                <Modal isOpen={form} widthClass="w-[40%] h-[40%]" onClose={() => setForm(false)}>
                     <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                             <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">

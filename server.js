@@ -68,6 +68,7 @@ import {
   salesInvoice,
   payments,
   pointOfSales,
+  subCategory,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -239,6 +240,7 @@ app.use("/stockAdjustment", stockAdjustment);
 app.use("/priceTemplate", priceTemplate);
 app.use('/payment', payments)
 app.use("/pointOfSales", pointOfSales)
+app.use("/SubCategory", subCategory)
 
 
 

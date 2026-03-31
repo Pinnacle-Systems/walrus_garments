@@ -402,48 +402,91 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
                         <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
-                                <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
-                                />
-                                <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
+                            <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
+                            />
+                            <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
                         </TransactionHeaderSection>
                         <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-2 gap-2">
-                                {/* <DropdownInput name="Return Type"
+                            {/* <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
                                     value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
                                 */}
-                                <DropdownInput name="Branch"
-                                    options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
-                                    value={locationId}
-                                    setValue={(value) => { setLocationId(value); setStoreId("") }}
-                                    required={true} readOnly={id || readOnly} />
-                                <DropdownInput name="Location"
-                                    options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "NEW WAREHOUSE"), "storeName", "id")}
-                                    value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
+                            <DropdownInput name="Branch"
+                                options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
+                                value={locationId}
+                                setValue={(value) => { setLocationId(value); setStoreId("") }}
+                                required={true} readOnly={id || readOnly} />
+                            <DropdownInput name="Location"
+                                options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "NEW WAREHOUSE"), "storeName", "id")}
+                                value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
                         </TransactionHeaderSection>
 
                         <TransactionHeaderSection title="Supplier Details" className="col-span-2" bodyClassName="grid-cols-3 gap-2">
 
-                                <div className="col-span-2">
+                            <div className="col-span-3">
 
-                                    <ReusableSearchableInput
-                                        label="Supplier Id"
-                                        component="PartyMaster"
-                                        placeholder="Search Supplier Id..."
-                                        optionList={supplierList?.data}
-                                        setSearchTerm={(value) => { setSupplierId(value); }}
-                                        searchTerm={supplierId}
-                                        show={"isSupplier"}
-                                        required={true}
-                                        disabled={id}
-                                    />
-                                </div>
+                                <ReusableSearchableInput
+                                    label="Supplier Id"
+                                    component="PartyMaster"
+                                    placeholder="Search Supplier Id..."
+                                    optionList={supplierList?.data}
+                                    setSearchTerm={(value) => { setSupplierId(value); }}
+                                    searchTerm={supplierId}
+                                    show={"isSupplier"}
+                                    required={true}
+                                    disabled={id}
+                                />
+                            </div>
 
-                                <DropdownInput name="Purchase Inward No"
-                                    options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
-                                    value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
+                            <DropdownInput name="Purchase Inward No"
+                                options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
+                                value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
 
+                            <div className="w-28 mt-6">
+                                <button
+                                    className="flex items-center gap-1 px-1 py-[1px] text-[10px] font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-300 transition-all"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            setInwardItemSelection(true);
+                                        }
+                                    }}
+                                    disabled={!supplierId}
+                                    onClick={() => {
+                                        if (!supplierId) {
+                                            Swal.fire({
+                                                icon: "warning",
+                                                title: "Choose Supplier",
+                                            });
+                                            return;
+                                        }
+                                        if (!purchaseInwardId) {
+                                            Swal.fire({
+                                                icon: "warning",
+                                                title: "Select Purchase Inward No",
+                                            });
+                                            return;
+                                        }
+                                        setInwardItemSelection(true);
+                                    }}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-3 h-3"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h10" />
+                                    </svg>
+
+                                    Fill Inward Items
+                                </button>
+
+                            </div>
 
                         </TransactionHeaderSection>
 

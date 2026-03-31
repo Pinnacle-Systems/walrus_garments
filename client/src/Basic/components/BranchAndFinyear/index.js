@@ -90,15 +90,15 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center bg-transparent w-full max-w-md mx-auto p-4">
-            <motion.div 
+        <div className="flex flex-col items-center justify-center bg-transparent w-full max-w-md mx-auto">
+            <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full bg-white rounded-[40px] shadow-2xl overflow-hidden border border-stone-100"
+                className="w-full bg-white  shadow-2xl overflow-hidden border border-stone-100"
             >
-                <div className="px-8 pt-10 pb-6">
-                    <h2 className="text-2xl font-bold text-stone-900 mb-2">Session Details</h2>
-                    <p className="text-stone-500 text-sm">Please select your working environment.</p>
+                <div className="px-2 pt-2 pb-2">
+                    <h2 className="text-2xl font-bold text-center text-stone-900 mb-2">Session Details</h2>
+                    <p className="text-stone-500 text-center text-sm">Please select your working environment.</p>
                 </div>
 
                 <form className="px-8 pb-10 space-y-6">
@@ -115,7 +115,7 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                                 name="branch"
                                 value={currentBranch}
                                 onChange={(e) => { setCurrentBranch(e.target.value) }}
-                                className="block w-full pl-11 pr-10 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
+                                className="block w-full pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
                             >
                                 <option value="" hidden>Select Branch</option>
                                 {dropDownListObject(branches, "branchName", "id").map((branch) => (
@@ -143,7 +143,7 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                                 name="finyear"
                                 value={currentFinYear}
                                 onChange={(e) => { setcurrentFinYear(e.target.value) }}
-                                className="block w-full pl-11 pr-10 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
+                                className="block w-full pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
                             >
                                 <option value="" hidden>Select Financial Year</option>
                                 {dropDownFinYear(finYears).map((finyear) => (
@@ -161,7 +161,7 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                     <div className="flex gap-4 pt-4">
                         <button
                             onClick={() => { setIsGlobalOpen(false) }}
-                            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 border border-stone-200 text-stone-600 rounded-2xl font-bold text-sm hover:bg-stone-50 hover:text-stone-900 transition-all active:scale-[0.98]"
+                            className="flex-1 flex items-center justify-center gap-2 py-1.5 px-4 border border-stone-200 text-stone-600 rounded-2xl font-bold text-sm hover:bg-stone-50 hover:text-stone-900 transition-all active:scale-[0.98]"
                             type="button"
                         >
                             <ArrowLeft className="h-4 w-4" />
@@ -169,10 +169,10 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                         </button>
                         <button
                             onClick={onSubmit}
-                            className="flex-[2] py-3.5 px-6 bg-stone-900 text-white rounded-2xl font-bold text-sm hover:bg-black shadow-lg shadow-stone-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            className="flex-[2] py-3.5 px-4 bg-stone-900 text-white rounded-2xl font-bold text-sm hover:bg-black shadow-lg shadow-stone-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                             type="button"
                         >
-                            Enter Workspace
+                            Workspace
                             <ChevronRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -182,4 +182,4 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
     );
 };
 
-export default BranchAndFinYearForm;
+export default BranchAndFinYearForm;

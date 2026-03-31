@@ -109,8 +109,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) return;
         if (id) {
+            if (!window.confirm("Are you sure update the details ...?")) {
+                return;
+            }
+        } if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
         } else {
             handleSubmitCustom(addData, finalData, "Added", nextProcess);
@@ -183,7 +186,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             <div className="grid grid-cols-1 gap-3 h-full">
                 <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                        <div className="grid grid-cols-1 gap-3" ref={formRef}>
+                        <div className="grid grid-cols-2 gap-3" ref={formRef}>
                             <TextInputNew1
                                 name="Item Category Name"
                                 type="text"
@@ -194,8 +197,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 disabled={childRecord.current > 0}
                                 ref={nameRef}
                             />
+
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-5">
                             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
                         </div>
                     </div>
@@ -319,7 +323,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             </div>
 
             {form && (
-                <Modal isOpen={form} widthClass="w-[40%] h-[45%]" onClose={() => setForm(false)}>
+                <Modal isOpen={form} widthClass="w-[40%] h-[40%]" onClose={() => setForm(false)}>
                     <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                             <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">

@@ -409,8 +409,10 @@ export default function Form() {
       });
       return false;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);

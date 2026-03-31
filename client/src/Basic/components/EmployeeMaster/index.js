@@ -386,8 +386,10 @@ export default function Form() {
       return
     }
 
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -819,7 +821,7 @@ export default function Form() {
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
+                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[90px]">
                     <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
                     <div className="space-y-2">{console.log(active, "active")}
                       <ToggleButton
@@ -946,18 +948,6 @@ export default function Form() {
                         />
                         {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
                       </div>
-
-                      <div>
-                        <TextInputNew1
-                          name="Pan No"
-                          value={panNo}
-                          setValue={setPanNo}
-                          // required
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                        {errors.panNo && <span className="text-red-500 text-xs ml-1">{errors.panNo}</span>}
-                      </div>
                       <div>
                         <TextInputNew1
                           name="Aadhar No"
@@ -970,6 +960,18 @@ export default function Form() {
                         />
                         {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
                       </div>
+                      <div>
+                        <TextInputNew1
+                          name="Pan No"
+                          value={panNo}
+                          setValue={setPanNo}
+                          // required
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                        />
+                        {errors.panNo && <span className="text-red-500 text-xs ml-1">{errors.panNo}</span>}
+                      </div>
+
                       <div className="col-span-2">
                         <TextInputNew1
                           name="Degree"

@@ -17,6 +17,11 @@ async function get(req) {
                     FromLocation: true,
                     ToLocation: true
                 }
+            },
+            Location: {
+                select: {
+                    company: true
+                }
             }
         }
     });

@@ -391,15 +391,67 @@ export const TextInput = ({
         </label>
       )}
       <input
-        type={type}
+        type={type === "pan_no" || type === "aadhar" || type === "gst_no" ? "text" : type}
         value={value}
-        onChange={(e) =>
-          type === "number"
-            ? setValue(e.target.value)
-            : handleOnChange(e, setValue)
-        }
+        onChange={(e) => {
+          if (type === "pan_no") {
+            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            let formatted = "";
+            for (let i = 0; i < Math.min(raw.length, 10); i++) {
+              if (i < 5) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 9) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              }
+            }
+            setValue(formatted);
+          } else if (type === "gst_no") {
+            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            let formatted = "";
+            for (let i = 0; i < Math.min(raw.length, 15); i++) {
+              if (i < 2) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 7) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 11) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 11) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 12) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 13) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else {
+                if (/[A-Z0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              }
+            }
+            setValue(formatted);
+          } else if (type === "aadhar") {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 12);
+            setValue(digits);
+          } else if (type === "number") {
+            setValue(e.target.value);
+          } else {
+            handleOnChange(e, setValue);
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === " ") {
+            e.preventDefault();
+          }
+          if (type === "aadhar" && !/[\d]/.test(e.key) && !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
             e.preventDefault();
           }
         }}
@@ -1736,6 +1788,7 @@ export const ReusableTable = ({
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
+  const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
 
   const { hasPermission } = usePermissionForUsers()
@@ -1865,62 +1918,99 @@ export const ReusableTable = ({
                     </td>
                   </tr>
                 ) : (
-                  currentItems?.map((item, index) => (
+                  currentItems?.map((item, index) => {
 
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                        }`}
-                    >
+                    const hasChildRecords = childRecordCount(item?._count) > 0
 
-                      {columns?.map((column, colIndex) => (
-                        <td
-                          key={colIndex}
-                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
-                        >
-                          {column.accessor(item, indexOfFirstItem + index)}
-                        </td>
-                      ))}
-                      {rowActions && (
-                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                          <div className="flex">
-                            {onView && (
-                              <button
-                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                onClick={() => hasPermission(() => onView(item.id), "read")}
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }`}
+                      >
+
+                        {columns?.map((column, colIndex) => (
+                          <td
+                            key={colIndex}
+                            className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
+                          >
+                            {column.accessor(item, indexOfFirstItem + index)}
+                          </td>
+                        ))}
+                        {rowActions && (
+                          <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                            <div className="flex">
+                              {onView && (
+                                <button
+                                  className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                  onClick={() => hasPermission(() => onView(item.id), "read")}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              )}
+                              {onEdit && (
+                                <button
+                                  className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                  onClick={() => hasPermission(() => onEdit(item.id), "edit")}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                  </svg>
+                                </button>
+                              )}
+                              <div className="relative inline-block"
+                                onMouseEnter={() =>
+                                  setHoveredDeleteId(item.id)
+                                }
+                                onMouseLeave={() => setHoveredDeleteId(null)}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            )}
-                            {onEdit && (
-                              <button
-                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                onClick={() => hasPermission(() => onEdit(item.id), "edit")}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </button>
-                            )}
-                            {onDelete && (
-                              <button
-                                className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => hasPermission(() => onDelete(item.id), "delete", item?._count)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                {/* <span className="text-xs">delete</span> */}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))
+                                {onDelete && (
+                                  <button
+                                    className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
+                                    onClick={() =>
+                                      hasPermission(() => onDelete(item.id), "delete", item?._count)
+                                    }
+                                    disabled={hasChildRecords}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-4 w-4"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                                {console.log(childRecordCount(item?._count > 0), "childRecord")}
+                                {hasChildRecords && hoveredDeleteId === item.id && (
+                                  <div className="absolute z-10 top-full left-0 mt-1 w-96 bg-gray-800 text-white text-xs rounded p-2 shadow">
+                                    {hasChildRecords
+                                      ? "Cannot delete : Child records exist"
+                                      : "Click to delete"}
+                                  </div>
+                                )}
+
+                              </div>
+
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    )
+
+                  }
+
+
+                  )
                 )}
               </tbody>
             </table>
@@ -2596,8 +2686,22 @@ export const TextInputNew1 = forwardRef(({
   onBlur = null,
   width = "full",
   max,
-  handleChange
+  handleChange,
+  onKeyDown
 }, ref) => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const allFocusable = Array.from(
+        document.querySelectorAll(
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), button:not([disabled])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+      const idx = allFocusable.indexOf(e.target);
+      if (idx >= 0 && allFocusable[idx + 1]) allFocusable[idx + 1].focus();
+    }
+    if (onKeyDown) onKeyDown(e);
+  };
   return (
     <div className={`mb ${width}`}>
       {name && (
@@ -2615,6 +2719,7 @@ export const TextInputNew1 = forwardRef(({
           if (handleChange) handleChange(val);
         }}
         onBlur={onBlur}
+        onKeyDown={handleKeyDown}
         placeholder={name}
         readOnly={readOnly}
         disabled={disabled}
@@ -2634,6 +2739,7 @@ export function childRecordCount(count) {
   return Object.values(count).some(v => v > 0);
 
 }
+
 
 
 export const DropdownInputNew = forwardRef(({
@@ -2863,6 +2969,25 @@ export const DropdownInputNew = forwardRef(({
           }
           isMouseDownRef.current = false;
         }}
+        onKeyDown={(e) => {
+          if (isDisabled) return;
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!isOpen) {
+              updateDropdownPos();
+              setIsOpen(true);
+            }
+            // Focus the search input; ArrowDown/Up on it will then navigate options
+            setTimeout(() => searchRef.current?.focus(), 0);
+          } else if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            updateDropdownPos();
+            setIsOpen((o) => !o);
+          } else if (e.key === "Escape") {
+            setIsOpen(false);
+            setSearch("");
+          }
+        }}
         onClick={() => {
           if (!isDisabled) {
             isMouseDownRef.current = false;
@@ -3022,6 +3147,9 @@ export const DropdownInputNew = forwardRef(({
     </div>
   );
 });
+
+
+
 
 
 export const PriceInputWithTax = forwardRef(({

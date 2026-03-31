@@ -76,7 +76,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const syncFormWithDb = useCallback((data) => {
 
     // setReadOnly(true);
-    setActive(true)
+    // setActive(true)
     setName(data?.name || "");
     setCode(data?.code || "");
     setActive(id ? (data?.active ?? false) : true);
@@ -178,9 +178,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }
 
 
-
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -488,6 +489,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             widthClass={"w-[40%] h-[320px]"}
             onClose={() => {
               setForm(false);
+              setId("")
+
             }}
           >
             <div className="h-full flex flex-col bg-gray-200 ">

@@ -143,8 +143,10 @@ export default function Form() {
       nameRef.current?.focus();
       return false;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);

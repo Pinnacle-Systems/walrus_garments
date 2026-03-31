@@ -253,8 +253,10 @@ export default function Form() {
       itemSelectRef.current?.focus();
       return;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, data, "Updated", nextProcess);
@@ -699,7 +701,7 @@ export default function Form() {
 
 
 
-                    <div className="col-span-1 mt-5">
+                    <div className="col-span-1 mt-6">
                       <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                     </div>
 

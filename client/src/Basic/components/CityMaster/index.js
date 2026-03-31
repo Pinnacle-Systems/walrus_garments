@@ -179,10 +179,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
+            foundItem = allData?.data
+                ?.filter((i) => i.id !== id)
+                ?.some(
+                    (item) =>
+                        item.name?.trim().toLowerCase() == name?.trim().toLowerCase() && item.stateId == state
+                );
         } else {
-            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
-
+            foundItem = allData?.data?.some(
+                (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase() && item.stateId == state
+            );
         }
         if (foundItem) {
             Swal.fire({
@@ -192,8 +198,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
+        if (id) {
+            if (!window.confirm("Are you sure update the details ...?")) {
+                return;
+            }
         }
         if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -497,6 +505,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                             setForm(true);
                             onNew();
+                            setId("")
+
                         }}
                         className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                     >

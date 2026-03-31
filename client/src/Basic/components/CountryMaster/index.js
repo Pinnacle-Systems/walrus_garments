@@ -75,7 +75,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const syncFormWithDb = useCallback(
     (data) => {
-      console.log(id, 'id for countyMastyer', data)
+
+      console.log(id, "id in country Master")
+      if (!id) {
+        setName("");
+        setCode("");
+        setActive(true);
+        childRecord.current = 0;
+        return;
+      }
 
       setName(data?.name || "");
       setCode(data?.code || "");
@@ -178,8 +186,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       countryNameRef.current?.focus();
       return false;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -230,8 +240,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   };
 
   const onNew = () => {
-    syncFormWithDb(undefined)
     setId("");
+    syncFormWithDb(undefined)
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
@@ -329,14 +339,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               />
             </div>
           </div>
-          <ToggleButton
-            name="Status"
-            options={statusDropdown}
-            value={active}
-            setActive={setActive}
-            required={true}
-            readOnly={readOnly}
-          />
+          <div className="mt-2">
+            <ToggleButton
+              name="Status"
+              options={statusDropdown}
+              value={active}
+              setActive={setActive}
+              required={true}
+              readOnly={readOnly}
+            />
+          </div>
+
         </div>
       </div>
     </div>
@@ -468,6 +481,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             onClose={() => {
               setForm(false);
               setErrors({});
+              setId("")
               // syncFormWithDb(undefined)
 
             }}

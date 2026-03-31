@@ -84,6 +84,8 @@ const Login = () => {
                 );
                 navigate(PRODUCT_ADMIN_HOME_PATH);
               } else {
+                console.log("result", result?.data);
+
                 const currentPlanActive =
                   result.data.userInfo.role.company.Subscription.some(
                     (sub) => sub.planStatus
@@ -150,7 +152,6 @@ const Login = () => {
               setLoading(false);
             }
           }
-          console.log("result", result.data.data);
         },
         (error) => {
           console.log(error);

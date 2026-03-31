@@ -157,8 +157,10 @@ export default function Form() {
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
+        if (id) {
+            if (!window.confirm("Are you sure update the details ...?")) {
+                return;
+            }
         }
         if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -247,8 +249,8 @@ export default function Form() {
         },
 
         {
-            header: "Location",
-            accessor: (item) => item?.storeName,
+            header: "Company/Branch - Location",
+            accessor: (item) => item?.Location?.company?.name + " -" + item?.storeName,
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-left uppercase w-72",
         },
@@ -294,7 +296,7 @@ export default function Form() {
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={deleteData}
-                    itemsPerPage={10}
+                    itemsPerPage={15}
                 />
             </div>
 
@@ -307,6 +309,8 @@ export default function Form() {
                         onClose={() => {
                             setForm(false);
                             setErrors({});
+                            setId("")
+
                         }}
                     >
                         <div className="h-full flex flex-col bg-gray-200 ">
@@ -379,7 +383,7 @@ export default function Form() {
 
                                                 <div className=' '>
                                                     <DropdownInput
-                                                        name="Branch"
+                                                        name="Company/Branch"
                                                         options={dropDownListObject(id ? branchList?.data : branchList?.data?.filter(item => item.active), "branchName", "id")}
                                                         value={locationId}
                                                         setValue={setLocationId}
@@ -395,7 +399,7 @@ export default function Form() {
                                                         disabled={childRecord.current > 0}
                                                     />
                                                 </div>
-                                                <div className=''>
+                                                <div className='mt-2'>
                                                     <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                                                 </div>
 

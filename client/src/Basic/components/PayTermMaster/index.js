@@ -26,7 +26,9 @@ export default function Form() {
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [name, setName] = useState("");
-    const [days, setdays] = useState("");
+    const [years, setYears] = useState(0);
+    const [months, setMonths] = useState(0);
+    const [days, setDays] = useState(0);
     const [active, setActive] = useState(true);
     const [errors, setErrors] = useState({});
     const [aliasName, setAliasName] = useState("")
@@ -59,7 +61,9 @@ export default function Form() {
         (data) => {
             if (!id) {
                 setName("");
-                setdays("");
+                setYears(0);
+                setMonths(0);
+                setDays(0);
                 setActive(true);
                 childRecord.current = 0;
 
@@ -67,7 +71,14 @@ export default function Form() {
             } else {
                 // setReadOnly(true);
                 setName(data?.name ? data.name : "");
-                setdays(data?.days ? data.days : "");
+                const totalDays = data?.days ? parseInt(data.days) : 0;
+                const y = Math.floor(totalDays / 365);
+                const rem = totalDays % 365;
+                const m = Math.floor(rem / 30);
+                const d = rem % 30;
+                setYears(y);
+                setMonths(m);
+                setDays(d);
                 setActive(id ? (data?.active ?? false) : true);
                 setAliasName(data?.aliasName ? data?.aliasName : "")
                 childRecord.current = data?.childRecord ? data?.childRecord : 0;
@@ -80,12 +91,14 @@ export default function Form() {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+    const totalDays = (parseInt(years) || 0) * 365 + (parseInt(months) || 0) * 30 + (parseInt(days) || 0);
+
     const data = {
-        id, aliasName: aliasName.trim(), name, days, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, aliasName: aliasName.trim(), name, days: totalDays, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
     }
 
     const validateData = (data) => {
-        if (data.name && data.days) {
+        if (data.name) {
             return true;
         }
         return false;
@@ -150,8 +163,10 @@ export default function Form() {
             nameRef.current?.focus();
             return false;
         }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
+        if (id) {
+            if (!window.confirm("Are you sure update the details ...?")) {
+                return;
+            }
         }
         if (id) {
             handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -222,10 +237,16 @@ export default function Form() {
 
 
     useEffect(() => {
-        // if (id) return
-
-        setAliasName(` ${days}${" "}${name}`);
-    }, [name, days])
+        const y = parseInt(years) || 0;
+        const m = parseInt(months) || 0;
+        const d = parseInt(days) || 0;
+        const parts = [];
+        if (y > 0) parts.push(`${y}Y`);
+        if (m > 0) parts.push(`${m}M`);
+        if (d > 0) parts.push(`${d}D`);
+        const period = parts.length > 0 ? parts.join(" ") : "0D";
+        setAliasName(`${period} ${name}`.trim());
+    }, [name, years, months, days])
 
 
     const tableHeaders = [
@@ -321,7 +342,7 @@ export default function Form() {
                     <Modal
                         isOpen={form}
                         form={form}
-                        widthClass={"w-[40%] h-[45%]"}
+                        widthClass={"w-[40%] h-[60%]"}
                         onClose={() => {
                             setForm(false);
                             setErrors({});
@@ -395,25 +416,72 @@ export default function Form() {
                                             <div className="">
                                                 <div className="grid grid-cols-2  gap-3 ">
 
-                                                    <div className='mb-3'>
-                                                        <TextInputNew1 name="Days" type="number" required={true} value={days} setValue={setdays} readOnly={readOnly} disabled={(childRecord.current > 0)}
-                                                            ref={nameRef}
-                                                        />
-                                                    </div>
                                                     <div className='mb-3 '>
                                                         <TextInputNew1 name="Pay Term" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
                                                     </div>
 
-                                                    <div className='mb-3 '>
-                                                        <TextInput name="AliasName" type="text" value={aliasName} setValue={setAliasName} readOnly={readOnly} disabled={(childRecord.current > 0) || true} />
-                                                    </div>
 
+                                                </div>
 
-                                                    <div className='mb-5'>
-                                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                <div className="mt-2">
+                                                    <label className="block text-xs font-bold text-gray-600 mb-1">
+                                                        Pay Term Period
+                                                    </label>
+                                                    <div className="grid grid-cols-3 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-gray-600 mb-1">Year</label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={years}
+                                                                onChange={(e) => setYears(e.target.value)}
+                                                                readOnly={readOnly}
+                                                                disabled={readOnly}
+                                                                className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-gray-600 mb-1">Month</label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="11"
+                                                                value={months}
+                                                                onChange={(e) => setMonths(e.target.value)}
+                                                                readOnly={readOnly}
+                                                                disabled={readOnly}
+                                                                className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-gray-600 mb-1">Days</label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="29"
+                                                                value={days}
+                                                                onChange={(e) => setDays(e.target.value)}
+                                                                readOnly={readOnly}
+                                                                disabled={readOnly}
+                                                                className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm"
+                                                            />
+                                                        </div>
                                                     </div>
 
                                                 </div>
+                                                <div className="mt-2 text-xs text-center text-gray-500 w-full">
+                                                    Total Days : <span className="font-bold text-gray-700">{totalDays} Days</span>
+                                                </div>
+                                                <div className='mt-4'>
+                                                    <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>

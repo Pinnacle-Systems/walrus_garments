@@ -163,8 +163,10 @@ export default function Form() {
       });
       return false;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -385,9 +387,9 @@ export default function Form() {
 
                         <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
                         />
-                        <div className='mt-5'>
+                        <div className=''>
 
-                          <div className='mt-5'>
+                          <div className='mt-4'>
                             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
                           </div>                        </div>
                         <div>

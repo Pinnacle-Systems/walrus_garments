@@ -286,15 +286,15 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
   const calculateTotals = () => {
     let subtotal = 0;
     let taxAmount = 0;
-    
+
     poItems.forEach(item => {
       const qty = parseFloat(item.qty || 0);
       const price = parseFloat(item.price || 0);
       const taxRate = parseFloat(item.taxPercent || 0);
-      
+
       const lineGross = qty * price;
       const lineTax = (lineGross * taxRate) / 100;
-      
+
       subtotal += lineGross;
       taxAmount += lineTax;
     });
@@ -312,6 +312,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
     ...poItems,
     ...Array(Math.max(0, 10 - poItems.length)).fill({}),
   ];
+  console.log(filledPoItems, "filledPoItems")
 
   if (isTaxHookDetailsLoading) return <Loader />;
 
@@ -404,7 +405,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           {/* ── Item Table ── */}
           <View style={styles.tableHeader}>
             <Text style={[styles.th, { flex: COL.sno }]}>#</Text>
-            <Text style={[styles.th, { flex: COL.item, textAlign: "left" }]}>Item Description</Text>
+            <Text style={[styles.th, { flex: COL.item, textAlign: "left" }]}>Item Name</Text>
             <Text style={[styles.th, { flex: COL.size }]}>Size</Text>
             <Text style={[styles.th, { flex: COL.color }]}>Color</Text>
             <Text style={[styles.th, { flex: COL.uom }]}>UOM</Text>

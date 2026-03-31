@@ -13,7 +13,7 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
         },
         select: {
-            name: true, code: true, active: true, id: true,
+            name: true, code: true, active: true, id: true,stateId : true,
             state: {
                 select: {
                     name: true,

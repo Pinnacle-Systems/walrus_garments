@@ -4925,7 +4925,7 @@ model Item {
   field5                    String?
   MainCategory              ItemCategory?               @relation("MainCategory", fields: [mainCategoryId], references: [id])
   mainCategoryId            Int?
-  SubCategory               ItemCategory?               @relation("SubCategory", fields: [subCategoryId], references: [id])
+  SubCategory               SubCategory?                @relation(fields: [subCategoryId], references: [id])
   subCategoryId             Int?
   DirectItems               DirectItems[]
   Stock                     Stock[]
@@ -5115,12 +5115,22 @@ model SaleOrderItems {
 }
 
 model ItemCategory {
-  id           Int      @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String?
   code         String?
-  active       Boolean? @default(false)
-  MainCategory Item[]   @relation("MainCategory")
-  SubCategory  Item[]   @relation("SubCategory")
+  active       Boolean?      @default(false)
+  MainCategory Item[]        @relation("MainCategory")
+  SubCategory  SubCategory[]
+}
+
+model SubCategory {
+  id             Int           @id @default(autoincrement())
+  ItemCategory   ItemCategory? @relation(fields: [itemCategoryId], references: [id])
+  itemCategoryId Int?
+  name           String?
+  code           String?
+  active         Boolean?      @default(false)
+  SubCategory    Item[]
 }
 
 model StockAdjustment {

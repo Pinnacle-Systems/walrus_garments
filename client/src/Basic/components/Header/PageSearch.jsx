@@ -67,7 +67,9 @@ const PageSearch = ({ pageList }) => {
                 </div>
             </div>
             {isListShow &&
-                <ul className='absolute max-h-[300px] overflow-auto bg-gray-100 top-7  text-[15px] w-[250px] '>{console.log(isListShow, "isListShow")}
+                <ul className='absolute max-h-[300px] overflow-auto bg-white top-7  text-[15px] w-[250px] border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm'>{console.log(isListShow, "isListShow")}
 
                     {filteredPages?.map((page) => <li className='cursor-pointer'
                         key={page.id}
@@ -80,7 +82,10 @@ const PageSearch = ({ pageList }) => {
                             }
                         }}
 
-                        onClick={() => { dispatch(push(page)); setSearch(""); setIsListShow((false)); }} > <pre> {page.name} </pre></li>)}
+                        onClick={() => { dispatch(push(page)); setSearch(""); setIsListShow((false)); }} >
+                        <pre
+                            className='text-[12px] text-neutral-800'
+                        > {page.name} </pre></li>)}
                 </ul>
             }
         </div>

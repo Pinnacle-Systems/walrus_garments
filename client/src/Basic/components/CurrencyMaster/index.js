@@ -167,8 +167,10 @@ export default function Form() {
       nameRef.current?.focus();
       return false;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
-      return;
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
     }
     if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
@@ -351,8 +353,8 @@ export default function Form() {
                       <button
                         type="button"
                         onClick={() => saveData("close")}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600
-                                border border-green-600 flex items-center gap-1 text-xs"
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600
+                                border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
                         {id ? "Update" : "Save & close"}

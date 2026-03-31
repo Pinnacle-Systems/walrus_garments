@@ -600,6 +600,12 @@ export default function Form({ partyId, show, openModelForAddress }) {
     }
 
     if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
+    }
+
+    if (id) {
       handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
       handleSubmitCustom(addData, finalData, "Added", nextProcess);
@@ -676,15 +682,28 @@ export default function Form({ partyId, show, openModelForAddress }) {
     }
     if (event.key === "Enter") {
       const { tagName, type } = event.target;
-      if (tagName === "TEXTAREA" || tagName === "BUTTON" || type === "checkbox" || type === "radio" || type === "file") return;
+
+      // Skip only these
+      if (
+        tagName === "BUTTON" ||
+        type === "checkbox" ||
+        type === "radio" ||
+        type === "file"
+      ) return;
+
       event.preventDefault();
+      event.stopPropagation();
+
       const container = event.currentTarget;
+
       const focusable = Array.from(
         container.querySelectorAll(
-          'input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([disabled]):not([readonly]), select:not([disabled])'
+          'input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), select:not([disabled])'
         )
       );
+
       const idx = focusable.indexOf(event.target);
+
       if (idx !== -1 && idx < focusable.length - 1) {
         focusable[idx + 1].focus();
       }
@@ -980,7 +999,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
                     <div className="col-span-2">
-                      <DropdownInput
+                      <DropdownInputNew
                         name="Customer/supplier"
                         options={dropDownListObject(
                           id
@@ -1298,7 +1317,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                       />
                       <TextInput
                         name="Aadhar No"
-                        type="text"
+                        type="aadhar"
                         value={aadharNo}
                         setValue={setAadharNo}
                         readOnly={readOnly || parentId || isBranch}
@@ -1309,7 +1328,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                       />
                       <TextInput
                         name="GST No"
-                        type="text"
+                        type="gst_no"
                         value={gstNo}
                         setValue={setGstNo}
                         readOnly={readOnly || parentId || isBranch}
@@ -1799,7 +1818,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
                       <div className="col-span-2">
-                        <DropdownInput
+                        <DropdownInputNew
                           name="Customer/supplier"
                           options={dropDownListObject(
                             id
@@ -1898,7 +1917,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         />
                       </div>
 
-                      <div className=" ml-2">
+                      <div className=" ml-2 mt-5">
                         <ToggleButton
                           name="Status"
                           options={statusDropdown}
@@ -2118,7 +2137,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         />
                         <TextInput
                           name="Aadhar No"
-                          type="text"
+                          type="aadhar"
                           value={aadharNo}
                           setValue={setAadharNo}
                           readOnly={readOnly || parentId || isBranch}
